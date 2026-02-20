@@ -1,71 +1,182 @@
 
 
-# Plan: Analisis Real con Extraccion de Datos del Listing
+# Upgrade: Forensic Intelligence Report -- Display All Data + New Sections
 
-## Problema Actual
+## The Problem
 
-La funcion de analisis recibe la URL pero NO entra a la pagina web. Solo envia la URL al modelo de IA que "inventa" datos basandose en lo que puede inferir del texto de la URL. Por eso el precio, tamano y caracteristicas no coinciden con la propiedad real.
+The edge function already generates 20+ forensic metrics (price per m², cap rate, break-even, stress tests, investor fit, assumptions, etc.) stored inside `score_explanations.forensic`, but the Analysis page shows NONE of them. The current report is ~40% of its potential.
 
-## Solucion
+## What We Will Add (All Sections)
 
-Integrar **Firecrawl** para hacer scraping real de la pagina del listing antes de enviar los datos al modelo de IA. Asi el analisis se basa en datos reales extraidos de la pagina.
+### A. Display Existing Hidden Data (Already Generated, Not Shown)
 
-## Pasos
+**1. Deal Quality Card**
+- Price per m² and per sqft
+- Micro-market median price per m²
+- Premium/discount % vs median (color-coded: green = discount, red = premium)
+- Fair value range estimate
+- Visual gauge: "Overpriced by +8.7% vs local median"
 
-### 1. Conectar Firecrawl
-- Conectar el servicio de Firecrawl al proyecto para tener acceso a la API de scraping
-- Esto hara disponible `FIRECRAWL_API_KEY` como variable de entorno en las funciones backend
+**2. Yield & Returns Card**
+- Cap rate %
+- Gross yield %
+- Net yield % (after expenses)
+- Gross annual rent
+- Net annual rent
 
-### 2. Modificar la funcion `analyze-property`
+**3. Cash Flow Simulation Card**
+- Monthly cash flow (unleveraged)
+- Leveraged cash flow at 75% LTV
+- Visual: positive = green, negative = red
 
-Flujo actual:
+**4. Break-Even Analysis Card**
+- Break-even purchase price
+- Break-even monthly rent
+- Clear numeric display
+
+**5. Stress Test Card**
+- Market drop -15% scenario (estimated value)
+- Rental decline -10% scenario (yield impact)
+
+**6. Capital Efficiency & Risk-Return**
+- Capital efficiency score (0-100 gauge)
+- Risk-return quadrant visual (2x2 matrix with property dot plotted)
+
+**7. Investor Fit Card**
+- "Best For" list (green checkmarks)
+- "Not Ideal For" list (red X marks)
+
+**8. Assumptions Disclosure**
+- Annual appreciation, rental growth, vacancy rate, maintenance, interest rate, operating expenses
+- Transparent footer card
+
+**9. Opportunity Cost**
+- Return gap vs best alternative
+- One-line verdict
+
+### B. NEW Data to Generate (Edge Function Additions)
+
+**10. Neighborhood Intelligence**
+- Walk score estimate (0-100)
+- Transit score estimate (0-100)
+- Nearest airport distance
+- Tourist/expat demand level
+- Safety/crime context
+- School quality indicator
+
+**11. Comparable Sales Table**
+- 3-5 recent comparable transactions
+- Each with: address, price, size, price/m², date sold
+- Shows how subject property compares
+
+**12. Rental Comp Analysis**
+- 3-4 similar rentals in the area
+- Monthly rent, size, price/m²/month
+- Shows rental income potential grounded in reality
+
+**13. Cost Breakdown**
+- Estimated closing costs (notary, tax, agency fees)
+- Annual property tax estimate
+- Annual insurance estimate
+- Annual maintenance estimate
+- Total Year-1 cost of ownership
+
+**14. Mortgage Scenario Table**
+- 3 scenarios: 60% LTV, 75% LTV, 90% LTV
+- Monthly payment, total interest, cash-on-cash return for each
+
+**15. Exit Strategy Analysis**
+- Best exit window (years)
+- Estimated selling costs (%)
+- Net proceeds after 5 years (base case)
+- Internal Rate of Return (IRR)
+
+**16. Market Context Snapshot**
+- Average days on market in the area
+- Year-over-year price change %
+- Supply/demand ratio
+- New construction pipeline
+
+**17. Property Description Summary**
+- Key features extracted from listing (terrace, views, elevator, parking, pool, etc.)
+- Renovation status
+- Energy rating if available
+- Floor/orientation
+
+**18. Investment Decision Summary**
+- Structured verdict block with checkmarks/X:
+  - Capital growth asset? Y/N
+  - Yield-optimized? Y/N
+  - Strong liquidity? Y/N
+  - Low regulatory risk? Y/N
+  - Cash-flow positive? Y/N
+
+### C. Visual Enhancements
+
+**19. Property Image**
+- Extract listing photo URL via Firecrawl (already scraping, just need to capture image)
+- Display hero image at top of report
+
+**20. Comparison Radar Chart**
+- 5-axis radar chart comparing this property vs market average across: ROI, Stability, Demand, Risk, Liquidity
+
+**21. Score Trend Sparkline on Dashboard**
+- Small visual on dashboard cards showing score relative to market
+
+## Technical Implementation
+
+### Edge Function Changes (`analyze-property/index.ts`)
+
+Add new fields to the AI tool schema:
+
 ```text
-URL --> IA adivina datos --> Guarda en BD
+neighborhood_scores: { walk_score, transit_score, nearest_airport, tourist_demand, safety_rating }
+comparable_sales: [{ address, price, size_sqm, price_per_sqm, date_sold }]  (3-5 items)
+rental_comps: [{ address, monthly_rent, size_sqm, rent_per_sqm }]  (3-4 items)
+cost_breakdown: { closing_costs, annual_tax, annual_insurance, annual_maintenance, total_year1 }
+mortgage_scenarios: [{ ltv, monthly_payment, total_interest, cash_on_cash }]  (3 scenarios)
+exit_strategy: { best_exit_years, selling_costs_pct, net_proceeds_5yr, irr }
+market_context: { avg_days_on_market, yoy_price_change, supply_demand_ratio, new_construction }
+property_features: [string]  (extracted key features like "sea views", "elevator", "terrace")
+energy_rating: string
+floor_info: string
+renovation_status: string
+investment_classification: { capital_growth, yield_optimized, strong_liquidity, low_regulatory_risk, cash_flow_positive }
+listing_image_url: string  (extracted from scraped content)
 ```
 
-Nuevo flujo:
-```text
-URL --> Firecrawl extrae contenido real de la pagina --> IA analiza datos reales --> Guarda en BD
-```
+All new fields stored inside `score_explanations.forensic` (no DB migration needed).
 
-Cambios concretos en `supabase/functions/analyze-property/index.ts`:
+### Frontend Changes (`Analysis.tsx`)
 
-- Antes de llamar al modelo de IA, hacer una llamada a la API de Firecrawl para extraer el contenido markdown de la pagina del listing
-- Incluir el contenido real de la pagina en el prompt del modelo de IA, para que analice datos reales (precio, m2, habitaciones, localizacion, fotos, etc.)
-- Actualizar el system prompt para indicar a la IA que debe extraer los datos exactos del contenido proporcionado, no inventarlos
+Complete redesign of the report layout with all new sections. Organized in this order:
 
-### 3. Actualizar el prompt de la IA
+1. Hero (with image if available) + badges + price + key specs
+2. Global Score circle + Subscores
+3. Deal Quality metrics (price/m², premium/discount, fair value)
+4. Yield & Cash Flow side-by-side
+5. Break-Even + Mortgage Scenarios
+6. Stress Tests + Risk-Return Matrix
+7. Neighborhood Intelligence
+8. Comparable Sales table
+9. Rental Comps table
+10. Cost Breakdown
+11. Property Features + Description
+12. Pros / Cons / Red Flags / Opportunities (existing, keep)
+13. 5-Year Scenarios + Charts (existing, keep)
+14. Exit Strategy + IRR
+15. Investment Classification verdict
+16. Investor Fit (Best For / Not For)
+17. Opportunity Cost vs alternatives
+18. Capital Efficiency Score
+19. Assumptions Disclosure (transparent footer)
+20. Alternatives section (existing, enhanced with reasoning)
 
-Cambiar de:
-> "Generate realistic data based on what you can infer from the URL"
+### No Database Migration Required
+All new fields fit inside the existing `score_explanations` JSONB column under the `forensic` key.
 
-A:
-> "Extract the exact property data from the scraped content below. Use the real price, real size, real location. Do NOT invent data -- use only what is in the listing content."
-
-Esto garantiza que el precio, tamano, habitaciones, localizacion y demas datos sean los reales de la propiedad.
-
-### 4. Sin cambios en el frontend
-
-La pagina de analisis (`Analysis.tsx`) y el dashboard ya funcionan correctamente. Solo cambia el origen de los datos -- ahora seran reales en lugar de inventados.
-
-## Seccion Tecnica
-
-### Firecrawl API Call (dentro del edge function)
-```text
-POST https://api.firecrawl.dev/v1/scrape
-Body: { url: listingUrl, formats: ["markdown"], onlyMainContent: true }
-```
-
-### Flujo del Edge Function modificado
-1. Recibir URL del usuario
-2. Validar autenticacion
-3. Llamar a Firecrawl para extraer contenido de la pagina (markdown)
-4. Si Firecrawl falla, continuar con el flujo actual (solo URL) como fallback
-5. Enviar contenido real + URL al modelo de IA para analisis
-6. Guardar resultado en base de datos
-7. Devolver analisis al usuario
-
-### Manejo de errores
-- Si Firecrawl no puede acceder a la pagina (paywall, CAPTCHA, etc.), el sistema hara fallback al analisis basado solo en URL con una nota indicando que los datos son estimados
-- Timeout de Firecrawl: 30 segundos maximo
+### Estimated Scope
+- Edge function: ~80 new lines (schema additions + prompt updates)
+- Analysis.tsx: Major expansion (~400-500 new lines for all sections)
+- No new dependencies needed (recharts already installed for radar chart)
 
