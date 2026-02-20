@@ -87,10 +87,10 @@ async function scrapeListingPage(url: string): Promise<{ content: string | null;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 45000);
 
-    const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
       method: "POST",
       headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, waitFor: 5000 }),
+      body: JSON.stringify({ url, formats: ["markdown", "links"], onlyMainContent: true, waitFor: 5000 }),
       signal: controller.signal,
     });
     clearTimeout(timeout);
@@ -186,7 +186,50 @@ ANALYSIS FRAMEWORK — Apply in order of priority:
    - 5-year base, optimistic, and downside projections
    - Break-even analysis
    - Cash flow simulation
-   - Stress test scenarios`;
+   - Stress test scenarios
+
+8. NEIGHBORHOOD INTELLIGENCE (NEW):
+   - Estimate walk score (0-100) and transit score (0-100)
+   - Nearest airport and distance
+   - Tourist/expat demand level (Low/Medium/High/Very High)
+   - Safety/crime rating (Low/Medium/High)
+   - School quality nearby
+
+9. COMPARABLE TRANSACTIONS (NEW):
+   - List 3-5 recent comparable sales nearby with address, price, size, price/m², date
+   - List 3-4 similar rentals with address, monthly rent, size, rent/m²
+
+10. COST BREAKDOWN (NEW):
+    - Estimated closing costs (notary, tax, agency fees)
+    - Annual property tax, insurance, maintenance
+    - Total Year-1 cost of ownership
+
+11. MORTGAGE SCENARIOS (NEW):
+    - Calculate for 60%, 75%, 90% LTV
+    - Monthly payment, total interest, cash-on-cash return for each
+
+12. EXIT STRATEGY (NEW):
+    - Best exit window (years), selling costs %
+    - Net proceeds after 5 years (base case)
+    - Internal Rate of Return (IRR)
+
+13. MARKET CONTEXT (NEW):
+    - Average days on market, YoY price change %
+    - Supply/demand ratio, new construction pipeline
+
+14. PROPERTY FEATURES (NEW):
+    - Extract key features: terrace, views, elevator, parking, pool, etc.
+    - Renovation status, energy rating, floor/orientation
+
+15. INVESTMENT CLASSIFICATION (NEW):
+    - Capital growth asset? Y/N
+    - Yield-optimized? Y/N
+    - Strong liquidity? Y/N
+    - Low regulatory risk? Y/N
+    - Cash-flow positive? Y/N
+
+16. LISTING IMAGE (NEW):
+    - Extract the main listing photo URL from the scraped content if available`;
 
   if (scrapedContent) {
     const systemPrompt = `You are a forensic real estate investment analyst producing institutional-grade reports. Extract EXACT data from the listing. Never invent details.
@@ -413,7 +456,7 @@ serve(async (req) => {
                       required: ["city", "score", "roi", "risk", "price", "insight"],
                     },
                   },
-                  // NEW forensic fields
+                  // Forensic financial fields
                   price_per_sqm: { type: "number", description: "Price per m² of the property" },
                   price_per_sqft: { type: "number", description: "Price per sq ft" },
                   market_median_sqm: { type: "number", description: "Micro-market median price per m²" },
@@ -447,6 +490,113 @@ serve(async (req) => {
                       operating_expenses: { type: "string" },
                     },
                   },
+                  // NEW: Neighborhood Intelligence
+                  neighborhood_scores: {
+                    type: "object",
+                    properties: {
+                      walk_score: { type: "integer", description: "Walkability 0-100" },
+                      transit_score: { type: "integer", description: "Transit access 0-100" },
+                      nearest_airport: { type: "string", description: "Nearest airport and distance" },
+                      tourist_demand: { type: "string", description: "Low/Medium/High/Very High" },
+                      safety_rating: { type: "string", description: "Low/Medium/High" },
+                      school_quality: { type: "string", description: "Brief indicator" },
+                    },
+                  },
+                  // NEW: Comparable Sales
+                  comparable_sales: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        address: { type: "string" },
+                        price: { type: "string" },
+                        size_sqm: { type: "number" },
+                        price_per_sqm: { type: "number" },
+                        date_sold: { type: "string" },
+                      },
+                      required: ["address", "price", "size_sqm", "price_per_sqm"],
+                    },
+                    description: "3-5 recent comparable sales",
+                  },
+                  // NEW: Rental Comps
+                  rental_comps: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        address: { type: "string" },
+                        monthly_rent: { type: "string" },
+                        size_sqm: { type: "number" },
+                        rent_per_sqm: { type: "number" },
+                      },
+                      required: ["address", "monthly_rent", "size_sqm"],
+                    },
+                    description: "3-4 similar rentals in the area",
+                  },
+                  // NEW: Cost Breakdown
+                  cost_breakdown: {
+                    type: "object",
+                    properties: {
+                      closing_costs: { type: "string" },
+                      annual_tax: { type: "string" },
+                      annual_insurance: { type: "string" },
+                      annual_maintenance: { type: "string" },
+                      total_year1: { type: "string" },
+                    },
+                  },
+                  // NEW: Mortgage Scenarios
+                  mortgage_scenarios: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        ltv: { type: "integer" },
+                        monthly_payment: { type: "string" },
+                        total_interest: { type: "string" },
+                        cash_on_cash: { type: "number", description: "Cash-on-cash return %" },
+                      },
+                      required: ["ltv", "monthly_payment", "total_interest", "cash_on_cash"],
+                    },
+                    description: "3 scenarios: 60%, 75%, 90% LTV",
+                  },
+                  // NEW: Exit Strategy
+                  exit_strategy: {
+                    type: "object",
+                    properties: {
+                      best_exit_years: { type: "integer" },
+                      selling_costs_pct: { type: "number" },
+                      net_proceeds_5yr: { type: "string" },
+                      irr: { type: "number", description: "Internal Rate of Return %" },
+                    },
+                  },
+                  // NEW: Market Context
+                  market_context: {
+                    type: "object",
+                    properties: {
+                      avg_days_on_market: { type: "integer" },
+                      yoy_price_change: { type: "number", description: "Year-over-year %" },
+                      supply_demand_ratio: { type: "string" },
+                      new_construction: { type: "string" },
+                    },
+                  },
+                  // NEW: Property Features
+                  property_features: { type: "array", items: { type: "string" }, description: "Key features: sea views, elevator, terrace, pool, parking, etc." },
+                  energy_rating: { type: "string", description: "Energy rating if available" },
+                  floor_info: { type: "string", description: "Floor/orientation info" },
+                  renovation_status: { type: "string", description: "New/Renovated/Needs work/Unknown" },
+                  // NEW: Investment Classification
+                  investment_classification: {
+                    type: "object",
+                    properties: {
+                      capital_growth: { type: "boolean" },
+                      yield_optimized: { type: "boolean" },
+                      strong_liquidity: { type: "boolean" },
+                      low_regulatory_risk: { type: "boolean" },
+                      cash_flow_positive: { type: "boolean" },
+                    },
+                  },
+                  // NEW: Listing image
+                  listing_image_url: { type: "string", description: "Main listing photo URL extracted from content" },
                 },
                 required: [
                   "address", "city", "country", "price", "currency", "property_type",
@@ -513,6 +663,20 @@ serve(async (req) => {
       investor_best_for: analysis.investor_best_for,
       investor_not_for: analysis.investor_not_for,
       assumptions: analysis.assumptions,
+      // NEW fields
+      neighborhood_scores: analysis.neighborhood_scores,
+      comparable_sales: analysis.comparable_sales,
+      rental_comps: analysis.rental_comps,
+      cost_breakdown: analysis.cost_breakdown,
+      mortgage_scenarios: analysis.mortgage_scenarios,
+      exit_strategy: analysis.exit_strategy,
+      market_context: analysis.market_context,
+      property_features: analysis.property_features,
+      energy_rating: analysis.energy_rating,
+      floor_info: analysis.floor_info,
+      renovation_status: analysis.renovation_status,
+      investment_classification: analysis.investment_classification,
+      listing_image_url: analysis.listing_image_url,
     };
 
     // Merge forensic extras into score_explanations for storage
