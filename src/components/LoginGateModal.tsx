@@ -4,14 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
-import { Mail, Lock, User } from "lucide-react";
+import { Mail, Lock } from "lucide-react";
 
 interface LoginGateModalProps {
   open: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-const LoginGateModal = ({ open, onClose }: LoginGateModalProps) => {
+const LoginGateModal = ({ open, onClose, onSuccess }: LoginGateModalProps) => {
   const [mode, setMode] = useState<"initial" | "email">("initial");
   const [isSignUp, setIsSignUp] = useState(true);
   const [email, setEmail] = useState("");
@@ -49,6 +50,7 @@ const LoginGateModal = ({ open, onClose }: LoginGateModalProps) => {
         if (error) throw error;
       }
       onClose();
+      onSuccess?.();
     } catch (err: any) {
       setError(err.message || "Authentication failed.");
     } finally {
@@ -88,19 +90,8 @@ const LoginGateModal = ({ open, onClose }: LoginGateModalProps) => {
 
           <AnimatePresence mode="wait">
             {mode === "initial" ? (
-              <motion.div
-                key="initial"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="space-y-3"
-              >
-                <Button
-                  variant="outline"
-                  className="w-full h-12 text-sm font-medium border-border hover:bg-secondary"
-                  onClick={handleGoogle}
-                  disabled={loading}
-                >
+              <motion.div key="initial" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
+                <Button variant="outline" className="w-full h-12 text-sm font-medium border-border hover:bg-secondary" onClick={handleGoogle} disabled={loading}>
                   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
                     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
@@ -109,63 +100,26 @@ const LoginGateModal = ({ open, onClose }: LoginGateModalProps) => {
                   </svg>
                   Continue with Google
                 </Button>
-
-                <Button
-                  variant="outline"
-                  className="w-full h-12 text-sm font-medium border-border hover:bg-secondary"
-                  onClick={() => setMode("email")}
-                >
-                  <Mail className="mr-2 h-4 w-4" />
-                  Continue with Email
+                <Button variant="outline" className="w-full h-12 text-sm font-medium border-border hover:bg-secondary" onClick={() => setMode("email")}>
+                  <Mail className="mr-2 h-4 w-4" /> Continue with Email
                 </Button>
               </motion.div>
             ) : (
-              <motion.div
-                key="email"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="space-y-3"
-              >
+              <motion.div key="email" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="email"
-                    placeholder="Email address"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="pl-10 h-12 bg-secondary border-border"
-                  />
+                  <Input type="email" placeholder="Email address" value={email} onChange={(e) => setEmail(e.target.value)} className="pl-10 h-12 bg-secondary border-border" />
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-12 bg-secondary border-border"
-                  />
+                  <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10 h-12 bg-secondary border-border" />
                 </div>
-                <Button
-                  variant="hero"
-                  className="w-full h-12"
-                  onClick={handleEmail}
-                  disabled={loading || !email || !password}
-                >
+                <Button variant="hero" className="w-full h-12" onClick={handleEmail} disabled={loading || !email || !password}>
                   {isSignUp ? "Create Account" : "Sign In"}
                 </Button>
                 <div className="flex items-center justify-between">
-                  <button
-                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    onClick={() => setMode("initial")}
-                  >
-                    Back
-                  </button>
-                  <button
-                    className="text-xs text-primary hover:underline"
-                    onClick={() => setIsSignUp(!isSignUp)}
-                  >
+                  <button className="text-xs text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMode("initial")}>Back</button>
+                  <button className="text-xs text-primary hover:underline" onClick={() => setIsSignUp(!isSignUp)}>
                     {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
                   </button>
                 </div>
@@ -173,13 +127,8 @@ const LoginGateModal = ({ open, onClose }: LoginGateModalProps) => {
             )}
           </AnimatePresence>
 
-          {error && (
-            <p className="text-xs text-destructive mt-3 text-center">{error}</p>
-          )}
-
-          <p className="text-[11px] text-muted-foreground text-center mt-6">
-            No credit card required. Free forever plan available.
-          </p>
+          {error && <p className="text-xs text-destructive mt-3 text-center">{error}</p>}
+          <p className="text-[11px] text-muted-foreground text-center mt-6">No credit card required. Free forever plan available.</p>
         </motion.div>
       </motion.div>
     </AnimatePresence>
