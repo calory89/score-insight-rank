@@ -155,6 +155,14 @@ serve(async (req) => {
       scrapedContent = result.content;
       isEstimated = result.isEstimated;
       scrapeFailed = result.isEstimated;
+
+      // If scraping failed AND no manual content provided, return immediately so user can paste content
+      if (scrapeFailed && !manual_content) {
+        console.log("Scrape failed, returning scrape_failed flag for manual input");
+        return new Response(JSON.stringify({ success: false, scrape_failed: true, error: "Scraping blocked by site" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Step 2: Build prompts based on scraped content
