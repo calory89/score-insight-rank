@@ -25,15 +25,37 @@ const AlternativesSection = () => {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-8"
         >
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            You Might Be Overpaying.<br />
-            <span className="text-gradient-primary">Here's What Performs Better.</span>
+            You Might Be Overpaying.
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Better alternatives found by RealHunt users — higher score, better ROI, lower risk.
+            Here are higher-performing alternatives analyzed by RealHunt users.
           </p>
+        </motion.div>
+
+        {/* Comparison Stats */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="max-w-2xl mx-auto mb-10"
+        >
+          <div className="grid grid-cols-3 gap-4">
+            <div className="rounded-xl border border-border bg-card p-4 text-center">
+              <p className="text-xs text-muted-foreground mb-1">This Property</p>
+              <p className="text-2xl font-mono font-bold text-foreground">81</p>
+            </div>
+            <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center">
+              <p className="text-xs text-muted-foreground mb-1">Best Alternative</p>
+              <p className="text-2xl font-mono font-bold text-primary">94</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4 text-center">
+              <p className="text-xs text-muted-foreground mb-1">ROI Difference</p>
+              <p className="text-2xl font-mono font-bold text-primary">+3.7%</p>
+            </div>
+          </div>
         </motion.div>
 
         <div className="max-w-3xl mx-auto space-y-3">

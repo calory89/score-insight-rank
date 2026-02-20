@@ -10,9 +10,8 @@ const plans = [
     description: "Try before you commit",
     features: [
       "3 analyses per month",
-      "RealHunt Global Score™",
+      "Full Global Score",
       "Basic AI summary",
-      "Top-level subscores",
     ],
     cta: "Get Started Free",
     variant: "hero-outline" as const,
@@ -30,7 +29,7 @@ const plans = [
       "Risk tier classification",
       "PDF export",
       "Portfolio tracking",
-      "Better opportunity alerts",
+      "Opportunity alerts",
     ],
     cta: "Start Pro Trial",
     variant: "hero" as const,
@@ -66,7 +65,7 @@ const PricingSection = () => {
               transition={{ delay: i * 0.1 }}
               className={`rounded-2xl border p-6 md:p-8 ${
                 plan.highlight
-                  ? "border-primary/40 bg-card glow-primary"
+                  ? "border-primary/40 bg-card glow-primary relative scale-[1.03]"
                   : "border-border bg-card"
               }`}
             >
@@ -92,6 +91,11 @@ const PricingSection = () => {
               <Button variant={plan.variant} className="w-full">
                 {plan.cta}
               </Button>
+              {plan.highlight && (
+                <p className="text-[11px] text-muted-foreground text-center mt-4">
+                  Cancel anytime. Less than 0.1% of the average property price.
+                </p>
+              )}
             </motion.div>
           ))}
         </div>
