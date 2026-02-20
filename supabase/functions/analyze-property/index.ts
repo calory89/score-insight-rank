@@ -42,6 +42,42 @@ function isRealEstateUrl(url: string): boolean {
   }
 }
 
+// Detect if scraped content is actually a CAPTCHA, cookie wall, or blocked page
+function isBlockedContent(content: string): boolean {
+  const lowerContent = content.toLowerCase();
+  const blockedSignals = [
+    "captcha", "robot", "not a robot", "verify you are human",
+    "access denied", "403 forbidden", "please enable cookies",
+    "enable javascript", "browser is outdated", "cloudflare",
+    "just a moment", "checking your browser", "ray id",
+    "please wait while we verify", "security check",
+    "acepta nuestras cookies", "cookies policy", "política de cookies",
+    "aceptar cookies", "cookie consent", "cookie settings",
+  ];
+  const matchCount = blockedSignals.filter(s => lowerContent.includes(s)).length;
+  // If multiple blocked signals found, it's likely a wall page
+  if (matchCount >= 2) return true;
+  
+  // If content is very short and contains a blocked signal, it's suspicious
+  if (content.length < 300 && matchCount >= 1) return true;
+  
+  // Check if content lacks ANY real estate signals (price, bedrooms, m², etc.)
+  const realEstateSignals = [
+    /\d{2,3}\s*m²/i, /\d{2,3}\s*sqm/i, /\d{3,4}\s*sq\s*ft/i,
+    /bedroom/i, /dormitorio/i, /habitaci/i, /chambre/i, /zimmer/i,
+    /bathroom/i, /baño/i, /salle de bain/i,
+    /€\s*[\d.,]+/i, /£\s*[\d.,]+/i, /\$\s*[\d.,]+/i,
+    /[\d.,]+\s*€/i, /[\d.,]+\s*£/i,
+    /price/i, /precio/i, /prix/i, /preis/i, /prezzo/i,
+  ];
+  const hasRealEstateData = realEstateSignals.some(r => r.test(content));
+  
+  // If no real estate data found in content, treat as blocked
+  if (!hasRealEstateData && content.length < 2000) return true;
+  
+  return false;
+}
+
 async function scrapeListingPage(url: string): Promise<{ content: string | null; isEstimated: boolean }> {
   const apiKey = Deno.env.get("FIRECRAWL_API_KEY");
   if (!apiKey) return { content: null, isEstimated: true };
@@ -54,7 +90,7 @@ async function scrapeListingPage(url: string): Promise<{ content: string | null;
     const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
       method: "POST",
       headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, waitFor: 3000 }),
+      body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, waitFor: 5000 }),
       signal: controller.signal,
     });
     clearTimeout(timeout);
@@ -66,7 +102,16 @@ async function scrapeListingPage(url: string): Promise<{ content: string | null;
 
     const data = await response.json();
     const markdown = data.data?.markdown || data.markdown || null;
-    if (!markdown || markdown.trim().length < 50) return { content: null, isEstimated: true };
+    if (!markdown || markdown.trim().length < 50) {
+      console.log("Content too short or empty");
+      return { content: null, isEstimated: true };
+    }
+
+    // CRITICAL: Validate content is actually a listing, not a CAPTCHA/cookie wall
+    if (isBlockedContent(markdown)) {
+      console.log("Blocked content detected (CAPTCHA/cookie wall), triggering fallback");
+      return { content: null, isEstimated: true };
+    }
 
     console.log("Scrape successful, content length:", markdown.length);
     const truncated = markdown.length > 12000 ? markdown.substring(0, 12000) + "\n\n[Content truncated...]" : markdown;
@@ -192,11 +237,14 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseKey, {
+    // Auth client for user verification
+    const supabaseAuth = createClient(supabaseUrl, supabaseKey, {
       global: { headers: { Authorization: authHeader } },
     });
+    // Service role client for DB operations (bypasses RLS)
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Invalid session" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -224,13 +272,9 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
-
     // --- Duplicate detection: check if same URL already analyzed by this user ---
     let existingAnalysisId: string | null = null;
     if (url && url !== "manual-entry") {
-      // Normalize URL for comparison (strip hash/fragment)
       const normalizedUrl = url.split("#")[0].replace(/\/$/, "");
       const { data: existingByUrl } = await supabase
         .from("analyses")
