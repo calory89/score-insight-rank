@@ -359,8 +359,27 @@ const Analysis = () => {
           <ArrowLeft className="h-4 w-4 mr-1" /> Back to Dashboard
         </Button>
 
+        {/* ===== PROJECT SITE WARNING ===== */}
+        {(d.data_source === "project_website" || confidenceLevel === "low") && (
+          <Section delay={0} className="mb-6">
+            <div className="rounded-xl border-2 border-score-average/40 bg-score-average/5 p-5">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-6 w-6 text-score-average flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-foreground text-sm mb-1">⚠️ Project / Developer Website — Limited Data</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    This URL is not a standard property listing (like Zillow, Idealista, etc.). It appears to be a real estate company or developer website.
+                    The data shown below is <strong>limited and partially estimated</strong>. Financial metrics may not be accurate.
+                    For a precise analysis, paste a direct listing URL with specific property details (price, size, location).
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Section>
+        )}
+
         {/* ===== 1. HERO WITH IMAGE ===== */}
-        <Section delay={0} className="mb-8">
+        <Section delay={0.05} className="mb-8">
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
             {f.listing_image_url && (
               <div className="h-48 md:h-64 w-full overflow-hidden">

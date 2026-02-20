@@ -234,12 +234,16 @@ ANALYSIS FRAMEWORK — Apply in order of priority:
     - Extract the main listing photo URL from the scraped content if available`;
 
   const listingWarning = !isStandardListing ? `
-IMPORTANT: This is NOT a standard property listing. It appears to be a real estate project/developer website.
-- Extract whatever property/project data you can find (prices, locations, property types, sizes)
-- If multiple properties/units are mentioned, analyze the primary or most representative one
-- Mark data_source context as "project_website" in your analysis
-- Be honest about data limitations - many metrics will be estimated
-- Focus on what IS available: location analysis, market context, neighborhood intelligence
+CRITICAL: This is NOT a property listing — it is a real estate company/developer/project WEBSITE.
+You MUST follow these strict rules:
+- DO NOT invent a specific property address, price, size, bedrooms, or bathrooms if they are not EXPLICITLY stated in the content.
+- If the page shows MULTIPLE projects or units without a single clear listing, set address to the company/project name, price to null, size_sqm to null, bedrooms to null, bathrooms to null.
+- For city/country: ONLY use location info that is EXPLICITLY mentioned in the page content. If no location is mentioned, set city to "Unknown" and country to "Unknown".
+- Set global_score to a LOWER range (30-55) reflecting the lack of concrete data.
+- The ai_summary MUST start with "[PROJECT SITE — LIMITED DATA]" and explain this is a developer/project website, not a specific listing.
+- For financial metrics (cap_rate, yields, cash flow, break-even, mortgage scenarios): set to null unless specific unit pricing is provided.
+- Focus your analysis on: what the company offers, market context IF location is clear, general observations.
+- Do NOT hallucinate comparable sales, rental comps, or neighborhood scores unless the location is explicitly confirmed in the content.
 ` : "";
 
   if (scrapedContent) {
