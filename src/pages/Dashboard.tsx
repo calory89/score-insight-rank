@@ -45,25 +45,10 @@ const Dashboard = () => {
       });
   }, [user]);
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = () => {
     if (!url.trim() || analyzing) return;
-    setAnalyzing(true);
-    setAnalyzeError("");
-    try {
-      const { data, error } = await supabase.functions.invoke("analyze-property", {
-        body: { url },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      if (data?.data?.id) {
-        navigate(`/analysis/${data.data.id}`);
-      } else {
-        setAnalyzing(false);
-      }
-    } catch (e: any) {
-      setAnalyzeError(e.message || "Analysis failed. Try again.");
-      setAnalyzing(false);
-    }
+    // Navigate immediately to loading page — analysis happens there
+    navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
   };
 
   if (authLoading || !user) return null;

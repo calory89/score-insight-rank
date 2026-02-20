@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,46 +15,153 @@ import {
 } from "recharts";
 import confetti from "canvas-confetti";
 
+// --- helpers ---
 const scoreColor = (v: number) => {
   if (v >= 80) return "text-score-excellent";
   if (v >= 65) return "text-score-good";
   if (v >= 50) return "text-score-average";
   return "text-score-poor";
 };
-
 const scoreBg = (v: number) => {
   if (v >= 80) return "bg-score-excellent";
   if (v >= 65) return "bg-score-good";
   if (v >= 50) return "bg-score-average";
   return "bg-score-poor";
 };
-
 const verdictColor = (v: string) => {
   if (v === "Strong") return "text-score-excellent border-score-excellent/20 bg-score-excellent/10";
   if (v === "Moderate") return "text-score-average border-score-average/20 bg-score-average/10";
   return "text-score-poor border-score-poor/20 bg-score-poor/10";
 };
-
 const classificationColor = (c: string) => {
   if (c === "Emerging") return "text-primary border-primary/20 bg-primary/10";
   if (c === "Stable") return "text-score-good border-score-good/20 bg-score-good/10";
   if (c === "Overpriced") return "text-score-average border-score-average/20 bg-score-average/10";
   return "text-accent-foreground border-accent/30 bg-accent/20";
 };
-
 const sqmToAcres = (sqm: number) => (sqm * 0.000247105).toFixed(3);
 const sqmToSqft = (sqm: number) => Math.round(sqm * 10.7639);
 
-type Analysis = any;
+type AnalysisData = any;
 
+// --- FOMO Loading Steps ---
+const fomoSteps = [
+  { text: "Accessing listing page…", sub: "Extracting real property data" },
+  { text: "Reading price, size & features…", sub: "Parsing listing content" },
+  { text: "Analyzing market signals…", sub: "Comparing 450+ listings in the area" },
+  { text: "Calculating risk exposure…", sub: "Running 12 financial models" },
+  { text: "Computing ROI projections…", sub: "5-year scenario simulation" },
+  { text: "Generating forensic report…", sub: "Final score calibration" },
+];
+
+const FomoLoader = ({ step }: { step: number }) => (
+  <div className="min-h-screen bg-background">
+    <Navbar />
+    <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl">
+      <Button variant="ghost" size="sm" className="mb-6 text-muted-foreground" onClick={() => window.history.back()}>
+        <ArrowLeft className="h-4 w-4 mr-1" /> Cancel
+      </Button>
+
+      {/* Hero skeleton with pulsing */}
+      <div className="rounded-2xl border border-border bg-card overflow-hidden mb-8">
+        <div className="p-6 md:p-8 space-y-4">
+          <div className="flex gap-2">
+            <Skeleton className="h-5 w-24 rounded-full" />
+            <Skeleton className="h-5 w-20 rounded-full" />
+          </div>
+          <Skeleton className="h-7 w-3/4" />
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-9 w-40" />
+          <div className="flex gap-4">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-16" />
+          </div>
+        </div>
+      </div>
+
+      {/* FOMO center block */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="rounded-2xl border border-primary/20 bg-card p-8 md:p-12 mb-8"
+      >
+        <div className="flex flex-col items-center text-center">
+          {/* Animated spinner */}
+          <div className="relative mx-auto mb-8 h-20 w-20">
+            <div className="absolute inset-0 rounded-full border-2 border-border" />
+            <div className="absolute inset-0 rounded-full border-2 border-t-primary animate-spin" style={{ animationDuration: "1.5s" }} />
+            <div className="absolute inset-2 rounded-full border border-primary/20 animate-pulse" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="h-3 w-3 rounded-full bg-primary animate-pulse" />
+            </div>
+          </div>
+
+          {/* Current step */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={step}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.4 }}
+              className="mb-6"
+            >
+              <p className="text-base font-semibold text-foreground mb-1">{fomoSteps[step]?.text}</p>
+              <p className="text-xs text-muted-foreground">{fomoSteps[step]?.sub}</p>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Progress bar */}
+          <div className="w-full max-w-xs">
+            <div className="flex items-center gap-1.5 mb-3">
+              {fomoSteps.map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-1.5 rounded-full transition-all duration-700 ${
+                    i <= step ? "flex-[2] bg-primary" : "flex-1 bg-border"
+                  }`}
+                />
+              ))}
+            </div>
+            <p className="text-[10px] text-muted-foreground">
+              Step {step + 1} of {fomoSteps.length}
+            </p>
+          </div>
+
+          {/* FOMO social proof */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 2 }}
+            className="text-[11px] text-muted-foreground mt-6 border-t border-border pt-4"
+          >
+            🔥 <span className="text-foreground font-medium">{Math.floor(Math.random() * 30) + 12} investors</span> analyzed properties in this area today
+          </motion.p>
+        </div>
+      </motion.div>
+
+      {/* Bottom skeletons for anticipation */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 opacity-30">
+        <Skeleton className="h-52 rounded-2xl" />
+        <div className="lg:col-span-2">
+          <Skeleton className="h-52 rounded-2xl" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 opacity-20">
+        <Skeleton className="h-28 rounded-2xl" />
+        <Skeleton className="h-28 rounded-2xl" />
+      </div>
+    </div>
+  </div>
+);
+
+// --- Subscore Bar ---
 const SubscoreBar = ({ label, value, explanation }: { label: string; value: number; explanation?: { positive: string; negative: string } }) => {
   const [open, setOpen] = useState(false);
   return (
     <div>
-      <div
-        className="flex items-center gap-3 cursor-pointer group py-1.5"
-        onClick={() => setOpen(!open)}
-      >
+      <div className="flex items-center gap-3 cursor-pointer group py-1.5" onClick={() => setOpen(!open)}>
         <span className="text-xs text-muted-foreground w-32 flex-shrink-0 group-hover:text-foreground transition-colors">{label}</span>
         <div className="flex-1 h-2 rounded-full bg-secondary overflow-hidden">
           <motion.div
@@ -65,18 +172,12 @@ const SubscoreBar = ({ label, value, explanation }: { label: string; value: numb
           />
         </div>
         <span className={`text-xs font-mono w-8 text-right font-medium ${scoreColor(value)}`}>{value}</span>
-        {explanation && (
-          open ? <ChevronUp className="h-3 w-3 text-muted-foreground" /> : <ChevronDown className="h-3 w-3 text-muted-foreground" />
-        )}
+        {explanation && (open ? <ChevronUp className="h-3 w-3 text-muted-foreground" /> : <ChevronDown className="h-3 w-3 text-muted-foreground" />)}
       </div>
       <AnimatePresence>
         {open && explanation && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="ml-32 pl-3 border-l border-border mb-2 overflow-hidden"
-          >
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+            className="ml-32 pl-3 border-l border-border mb-2 overflow-hidden">
             <div className="py-2 space-y-1.5">
               <div className="flex items-start gap-2">
                 <span className="text-xs text-primary font-medium flex-shrink-0">+</span>
@@ -94,69 +195,58 @@ const SubscoreBar = ({ label, value, explanation }: { label: string; value: numb
   );
 };
 
-/* Skeleton placeholder sections */
-const AnalysisSkeleton = () => (
-  <div className="min-h-screen bg-background">
-    <Navbar />
-    <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl">
-      <Skeleton className="h-8 w-40 mb-6" />
-      {/* Hero skeleton */}
-      <div className="rounded-2xl border border-border bg-card overflow-hidden mb-8">
-        <div className="p-6 md:p-8 space-y-4">
-          <div className="flex gap-2">
-            <Skeleton className="h-5 w-24 rounded-full" />
-            <Skeleton className="h-5 w-20 rounded-full" />
-          </div>
-          <Skeleton className="h-7 w-3/4" />
-          <Skeleton className="h-4 w-48" />
-          <Skeleton className="h-9 w-40" />
-          <div className="flex gap-4">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-4 w-16" />
-            <Skeleton className="h-4 w-20" />
-          </div>
-        </div>
-      </div>
-      {/* Score + subscores skeleton */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        <div className="rounded-2xl border border-border bg-card p-6 flex flex-col items-center justify-center">
-          <Skeleton className="h-40 w-40 rounded-full" />
-          <Skeleton className="h-3 w-48 mt-4" />
-        </div>
-        <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-6 space-y-4">
-          <Skeleton className="h-4 w-40" />
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center gap-3">
-              <Skeleton className="h-3 w-32" />
-              <Skeleton className="h-2 flex-1 rounded-full" />
-              <Skeleton className="h-3 w-8" />
-            </div>
-          ))}
-        </div>
-      </div>
-      {/* Insight skeleton */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <Skeleton className="h-28 rounded-2xl" />
-        <Skeleton className="h-28 rounded-2xl" />
-      </div>
-      {/* Forensic skeleton */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-36 rounded-2xl" />)}
-      </div>
-    </div>
-  </div>
-);
-
+// --- Main Component ---
 const Analysis = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const urlToAnalyze = searchParams.get("url");
+  const isLoadingMode = !id && !!urlToAnalyze;
+
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [data, setData] = useState<Analysis | null>(null);
+  const [data, setData] = useState<AnalysisData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [analyzeError, setAnalyzeError] = useState("");
   const [showWhyNot90, setShowWhyNot90] = useState(false);
   const [revealed, setRevealed] = useState(false);
+  const [fomoStep, setFomoStep] = useState(0);
+  const fomoTimerRef = useRef<ReturnType<typeof setInterval>>();
 
+  // FOMO step progression
+  useEffect(() => {
+    if (!analyzing) return;
+    fomoTimerRef.current = setInterval(() => {
+      setFomoStep((prev) => Math.min(prev + 1, fomoSteps.length - 1));
+    }, 4000);
+    return () => clearInterval(fomoTimerRef.current);
+  }, [analyzing]);
+
+  // Mode 1: Loading mode — trigger analysis
+  useEffect(() => {
+    if (!isLoadingMode || !user) return;
+    setAnalyzing(true);
+    setLoading(false);
+
+    (async () => {
+      try {
+        const { data: result, error } = await supabase.functions.invoke("analyze-property", {
+          body: { url: urlToAnalyze },
+        });
+        if (error) throw error;
+        if (result?.error) throw new Error(result.error);
+        if (result?.data?.id) {
+          // Replace URL so back button goes to dashboard
+          navigate(`/analysis/${result.data.id}`, { replace: true });
+        }
+      } catch (e: any) {
+        setAnalyzeError(e.message || "Analysis failed");
+        setAnalyzing(false);
+      }
+    })();
+  }, [isLoadingMode, user, urlToAnalyze, navigate]);
+
+  // Mode 2: View existing analysis
   useEffect(() => {
     if (!id || !user) return;
     supabase
@@ -164,14 +254,14 @@ const Analysis = () => {
       .select("*")
       .eq("id", id)
       .single()
-      .then(({ data, error }) => {
-        if (error || !data) navigate("/dashboard");
-        else {
-          setData(data);
-          // Short delay then reveal with confetti
+      .then(({ data: result, error }) => {
+        if (error || !result) {
+          navigate("/dashboard");
+        } else {
+          setData(result);
+          setAnalyzing(false);
           setTimeout(() => {
             setRevealed(true);
-            // Fire confetti 🎉
             confetti({
               particleCount: 120,
               spread: 80,
@@ -184,31 +274,53 @@ const Analysis = () => {
       });
   }, [id, user, navigate]);
 
-  if (loading) return <AnalysisSkeleton />;
+  // Show FOMO loader while analyzing
+  if (analyzing && !data) {
+    return <FomoLoader step={fomoStep} />;
+  }
+
+  if (analyzeError) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl text-center">
+          <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-8 max-w-md mx-auto">
+            <AlertTriangle className="h-8 w-8 text-destructive mx-auto mb-4" />
+            <h2 className="text-lg font-semibold text-foreground mb-2">Analysis Failed</h2>
+            <p className="text-sm text-muted-foreground mb-4">{analyzeError}</p>
+            <Button variant="ghost" onClick={() => navigate("/dashboard")}>
+              <ArrowLeft className="h-4 w-4 mr-1" /> Back to Dashboard
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="h-8 w-8 rounded-full border-2 border-t-primary border-border animate-spin" />
+      </div>
+    );
+  }
+
   if (!data) return null;
 
   const d = data;
   const explanations = (d.score_explanations || {}) as Record<string, { positive: string; negative: string }>;
-
-  // Compute final score value immediately (no animation that changes the number)
   const globalScore = d.global_score;
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl">
-        {/* Back */}
         <Button variant="ghost" size="sm" className="mb-6 text-muted-foreground" onClick={() => navigate("/dashboard")}>
           <ArrowLeft className="h-4 w-4 mr-1" /> Back to Dashboard
         </Button>
 
         {/* HERO */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: revealed ? 1 : 0.15 }}
-          transition={{ duration: 0.8 }}
-          className="mb-8"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: revealed ? 1 : 0.15 }} transition={{ duration: 0.8 }} className="mb-8">
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
             <div className="relative p-6 md:p-8 bg-gradient-hero">
               <div className="flex flex-col md:flex-row gap-6 items-start">
@@ -226,7 +338,6 @@ const Analysis = () => {
                     <MapPin className="h-3.5 w-3.5" /> {d.city}, {d.country}
                   </div>
                   <p className="text-2xl md:text-3xl font-bold font-mono text-foreground">{d.price}</p>
-
                   <div className="flex flex-wrap gap-4 mt-4 text-xs text-muted-foreground">
                     {d.property_type && <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> {d.property_type}</span>}
                     {d.size_sqm && (
@@ -247,12 +358,8 @@ const Analysis = () => {
 
         {/* SCORE + SUBSCORES */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: revealed ? 1 : 0.15 }}
-            transition={{ duration: 0.8, delay: 0.1 }}
-            className="rounded-2xl border border-border bg-card p-6 flex flex-col items-center justify-center"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: revealed ? 1 : 0.15 }} transition={{ duration: 0.8, delay: 0.1 }}
+            className="rounded-2xl border border-border bg-card p-6 flex flex-col items-center justify-center">
             <div className="relative">
               <svg className="w-40 h-40 -rotate-90" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--border))" strokeWidth="5" />
@@ -274,12 +381,8 @@ const Analysis = () => {
             )}
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: revealed ? 1 : 0.15 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="lg:col-span-2 rounded-2xl border border-border bg-card p-6"
-          >
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: revealed ? 1 : 0.15 }} transition={{ duration: 0.8, delay: 0.2 }}
+            className="lg:col-span-2 rounded-2xl border border-border bg-card p-6">
             <h3 className="text-sm font-semibold text-foreground mb-4">Subscore Breakdown</h3>
             <div className="space-y-1">
               <SubscoreBar label="ROI Potential" value={d.roi_potential} explanation={explanations.roi_potential} />
@@ -288,7 +391,6 @@ const Analysis = () => {
               <SubscoreBar label="Risk Level" value={d.risk_level} explanation={explanations.risk_level} />
               <SubscoreBar label="Liquidity Outlook" value={d.liquidity_outlook} explanation={explanations.liquidity_outlook} />
             </div>
-
             {d.why_not_90 && (d.why_not_90 as string[]).length > 0 && (
               <div className="mt-4 pt-4 border-t border-border">
                 <button onClick={() => setShowWhyNot90(!showWhyNot90)} className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
@@ -334,9 +436,7 @@ const Analysis = () => {
             </h3>
             <ul className="space-y-2">
               {(d.pros as string[])?.map((p: string, i: number) => (
-                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                  <span className="text-primary mt-0.5">+</span> {p}
-                </li>
+                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2"><span className="text-primary mt-0.5">+</span> {p}</li>
               ))}
             </ul>
           </div>
@@ -346,9 +446,7 @@ const Analysis = () => {
             </h3>
             <ul className="space-y-2">
               {(d.cons as string[])?.map((c: string, i: number) => (
-                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                  <span className="text-score-average mt-0.5">−</span> {c}
-                </li>
+                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2"><span className="text-score-average mt-0.5">−</span> {c}</li>
               ))}
             </ul>
           </div>
@@ -358,9 +456,7 @@ const Analysis = () => {
             </h3>
             <ul className="space-y-2">
               {(d.red_flags as string[])?.map((r: string, i: number) => (
-                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                  <span className="text-score-poor mt-0.5">⚠</span> {r}
-                </li>
+                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2"><span className="text-score-poor mt-0.5">⚠</span> {r}</li>
               ))}
             </ul>
           </div>
@@ -370,9 +466,7 @@ const Analysis = () => {
             </h3>
             <ul className="space-y-2">
               {(d.opportunity_signals as string[])?.map((o: string, i: number) => (
-                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2">
-                  <span className="text-primary mt-0.5">★</span> {o}
-                </li>
+                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2"><span className="text-primary mt-0.5">★</span> {o}</li>
               ))}
             </ul>
           </div>
