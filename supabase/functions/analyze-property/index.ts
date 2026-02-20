@@ -16,7 +16,7 @@ async function scrapeListingPage(url: string): Promise<{ content: string | null;
   try {
     console.log("Scraping listing page:", url);
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000);
+    const timeout = setTimeout(() => controller.abort(), 45000);
 
     const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
       method: "POST",
@@ -28,6 +28,7 @@ async function scrapeListingPage(url: string): Promise<{ content: string | null;
         url,
         formats: ["markdown"],
         onlyMainContent: true,
+        waitFor: 3000,
       }),
       signal: controller.signal,
     });
@@ -44,13 +45,13 @@ async function scrapeListingPage(url: string): Promise<{ content: string | null;
     const markdown = data.data?.markdown || data.markdown || null;
 
     if (!markdown || markdown.trim().length < 50) {
-      console.warn("Firecrawl returned insufficient content");
+      console.warn("Firecrawl returned insufficient content, length:", markdown?.length || 0);
       return { content: null, isEstimated: true };
     }
 
     console.log("Scrape successful, content length:", markdown.length);
-    // Truncate to avoid token limits (keep first ~8000 chars)
-    const truncated = markdown.length > 8000 ? markdown.substring(0, 8000) + "\n\n[Content truncated...]" : markdown;
+    // Truncate to avoid token limits (keep first ~12000 chars for better data extraction)
+    const truncated = markdown.length > 12000 ? markdown.substring(0, 12000) + "\n\n[Content truncated...]" : markdown;
     return { content: truncated, isEstimated: false };
   } catch (error) {
     console.error("Scrape failed:", error);
@@ -63,11 +64,14 @@ function buildPrompts(url: string, scrapedContent: string | null, isEstimated: b
     const systemPrompt = `You are a forensic real estate investment analyst. You will receive the REAL content scraped from a property listing page. You must extract the EXACT data from this content — do NOT invent or guess any property details.
 
 CRITICAL RULES:
-- Use the REAL price, REAL size, REAL number of bedrooms/bathrooms from the listing
+- Use the REAL price from the listing. Match the EXACT number and currency shown.
+- Use the REAL size. If the listing shows acres, convert to m² (1 acre = 4046.86 m²). If it shows ft², convert to m² (1 ft² = 0.0929 m²). Always provide size_sqm.
+- Use the REAL number of bedrooms/bathrooms from the listing
 - Use the REAL address and location from the listing
-- If a data point is not available in the listing, use null or a reasonable estimate clearly marked
+- If a data point is not available in the listing, use null
 - Your investment analysis (scores, pros, cons, ROI projections) should be based on these REAL data points
-- Consider location economics, price per sqm, rental yield, market cycle, regulatory environment`;
+- Consider location economics, price per sqm, rental yield, market cycle, regulatory environment
+- NEVER use data from a different property. If the content doesn't clearly show property details, say so in the summary.`;
 
     const userPrompt = `Analyze this property listing for investment potential.
 
@@ -78,15 +82,18 @@ REAL LISTING CONTENT (scraped from the page):
 ${scrapedContent}
 ---
 
-Extract the exact property details from the content above and provide a complete forensic investment analysis. Use ONLY the real data from the listing.`;
+INSTRUCTIONS:
+1. Extract the EXACT property details from the content above (price, address, size, bedrooms, bathrooms, etc.)
+2. If the listing shows size in acres or sq ft, convert to m² for the size_sqm field
+3. Use the EXACT price shown in the listing — do NOT change currency or amount
+4. Provide a complete forensic investment analysis based on REAL data only`;
 
     return { systemPrompt, userPrompt };
   }
 
-  // Fallback: URL-only analysis
   const systemPrompt = `You are a forensic real estate investment analyst. Given a property listing URL, generate a comprehensive investment analysis. You must respond using the analyze_property tool.
 
-NOTE: The listing page could not be scraped directly, so you must infer data from the URL and your knowledge. Mark this as an ESTIMATED analysis.
+NOTE: The listing page could not be scraped directly, so you must infer data from the URL and your knowledge. Mark this as an ESTIMATED analysis. Include "[ESTIMATED]" at the start of ai_summary.
 
 Consider: location economics, price per sqm, rental yield, market cycle, regulatory environment, liquidity conditions.`;
 
