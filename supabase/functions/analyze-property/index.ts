@@ -6,6 +6,97 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+async function scrapeListingPage(url: string): Promise<{ content: string | null; isEstimated: boolean }> {
+  const apiKey = Deno.env.get("FIRECRAWL_API_KEY");
+  if (!apiKey) {
+    console.warn("FIRECRAWL_API_KEY not configured, falling back to URL-only analysis");
+    return { content: null, isEstimated: true };
+  }
+
+  try {
+    console.log("Scraping listing page:", url);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+
+    const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        url,
+        formats: ["markdown"],
+        onlyMainContent: true,
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.error("Firecrawl error:", response.status, errText);
+      return { content: null, isEstimated: true };
+    }
+
+    const data = await response.json();
+    const markdown = data.data?.markdown || data.markdown || null;
+
+    if (!markdown || markdown.trim().length < 50) {
+      console.warn("Firecrawl returned insufficient content");
+      return { content: null, isEstimated: true };
+    }
+
+    console.log("Scrape successful, content length:", markdown.length);
+    // Truncate to avoid token limits (keep first ~8000 chars)
+    const truncated = markdown.length > 8000 ? markdown.substring(0, 8000) + "\n\n[Content truncated...]" : markdown;
+    return { content: truncated, isEstimated: false };
+  } catch (error) {
+    console.error("Scrape failed:", error);
+    return { content: null, isEstimated: true };
+  }
+}
+
+function buildPrompts(url: string, scrapedContent: string | null, isEstimated: boolean) {
+  if (scrapedContent) {
+    const systemPrompt = `You are a forensic real estate investment analyst. You will receive the REAL content scraped from a property listing page. You must extract the EXACT data from this content — do NOT invent or guess any property details.
+
+CRITICAL RULES:
+- Use the REAL price, REAL size, REAL number of bedrooms/bathrooms from the listing
+- Use the REAL address and location from the listing
+- If a data point is not available in the listing, use null or a reasonable estimate clearly marked
+- Your investment analysis (scores, pros, cons, ROI projections) should be based on these REAL data points
+- Consider location economics, price per sqm, rental yield, market cycle, regulatory environment`;
+
+    const userPrompt = `Analyze this property listing for investment potential.
+
+URL: ${url}
+
+REAL LISTING CONTENT (scraped from the page):
+---
+${scrapedContent}
+---
+
+Extract the exact property details from the content above and provide a complete forensic investment analysis. Use ONLY the real data from the listing.`;
+
+    return { systemPrompt, userPrompt };
+  }
+
+  // Fallback: URL-only analysis
+  const systemPrompt = `You are a forensic real estate investment analyst. Given a property listing URL, generate a comprehensive investment analysis. You must respond using the analyze_property tool.
+
+NOTE: The listing page could not be scraped directly, so you must infer data from the URL and your knowledge. Mark this as an ESTIMATED analysis.
+
+Consider: location economics, price per sqm, rental yield, market cycle, regulatory environment, liquidity conditions.`;
+
+  const userPrompt = `Analyze this property listing URL for investment potential: ${url}
+
+WARNING: Could not scrape the listing page. Generate analysis based on what you can infer from the URL (location, platform, property type). Note in the summary that data is estimated.`;
+
+  return { systemPrompt, userPrompt };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -43,18 +134,13 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const systemPrompt = `You are a forensic real estate investment analyst. Given a property listing URL, generate a comprehensive investment analysis. You must respond using the analyze_property tool.
+    // Step 1: Scrape listing page with Firecrawl
+    const { content: scrapedContent, isEstimated } = await scrapeListingPage(url);
 
-IMPORTANT: Generate realistic, data-driven analysis. Consider:
-- Location economics (tourism, infrastructure, employment)
-- Price per sqm relative to area median
-- Rental yield potential
-- Market cycle position
-- Regulatory environment
-- Liquidity conditions
+    // Step 2: Build prompts based on scraped content
+    const { systemPrompt, userPrompt } = buildPrompts(url, scrapedContent, isEstimated);
 
-Generate plausible data that would be typical for the location and property type suggested by the URL. Be specific with numbers and locations.`;
-
+    // Step 3: Call AI with real data
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -65,7 +151,7 @@ Generate plausible data that would be typical for the location and property type
         model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Analyze this property listing URL for investment potential: ${url}\n\nGenerate a complete forensic investment analysis with realistic data based on what you can infer from the URL (location, platform, property type).` },
+          { role: "user", content: userPrompt },
         ],
         tools: [
           {
@@ -76,11 +162,11 @@ Generate plausible data that would be typical for the location and property type
               parameters: {
                 type: "object",
                 properties: {
-                  address: { type: "string", description: "Full property address or best guess" },
+                  address: { type: "string", description: "Full property address from listing" },
                   city: { type: "string" },
                   country: { type: "string" },
-                  price: { type: "string", description: "Formatted price e.g. €215,000" },
-                  currency: { type: "string", description: "Currency symbol" },
+                  price: { type: "string", description: "Exact price from listing e.g. $549,000" },
+                  currency: { type: "string" },
                   image_url: { type: "string", description: "Leave empty string" },
                   property_type: { type: "string", description: "Apartment, House, Villa, Studio, etc." },
                   size_sqm: { type: "number" },
