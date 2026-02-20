@@ -57,6 +57,8 @@ const Dashboard = () => {
       if (data?.error) throw new Error(data.error);
       if (data?.data?.id) {
         navigate(`/analysis/${data.data.id}`);
+      } else {
+        setAnalyzing(false);
       }
     } catch (e: any) {
       setAnalyzeError(e.message || "Analysis failed. Try again.");

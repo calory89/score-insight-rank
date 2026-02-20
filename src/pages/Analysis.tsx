@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,9 +9,11 @@ import {
   TrendingUp, TrendingDown, AlertTriangle, Sparkles, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, Area, AreaChart,
 } from "recharts";
+import confetti from "canvas-confetti";
 
 const scoreColor = (v: number) => {
   if (v >= 80) return "text-score-excellent";
@@ -39,6 +41,9 @@ const classificationColor = (c: string) => {
   if (c === "Overpriced") return "text-score-average border-score-average/20 bg-score-average/10";
   return "text-accent-foreground border-accent/30 bg-accent/20";
 };
+
+const sqmToAcres = (sqm: number) => (sqm * 0.000247105).toFixed(3);
+const sqmToSqft = (sqm: number) => Math.round(sqm * 10.7639);
 
 type Analysis = any;
 
@@ -89,6 +94,60 @@ const SubscoreBar = ({ label, value, explanation }: { label: string; value: numb
   );
 };
 
+/* Skeleton placeholder sections */
+const AnalysisSkeleton = () => (
+  <div className="min-h-screen bg-background">
+    <Navbar />
+    <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl">
+      <Skeleton className="h-8 w-40 mb-6" />
+      {/* Hero skeleton */}
+      <div className="rounded-2xl border border-border bg-card overflow-hidden mb-8">
+        <div className="p-6 md:p-8 space-y-4">
+          <div className="flex gap-2">
+            <Skeleton className="h-5 w-24 rounded-full" />
+            <Skeleton className="h-5 w-20 rounded-full" />
+          </div>
+          <Skeleton className="h-7 w-3/4" />
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-9 w-40" />
+          <div className="flex gap-4">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-4 w-20" />
+          </div>
+        </div>
+      </div>
+      {/* Score + subscores skeleton */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        <div className="rounded-2xl border border-border bg-card p-6 flex flex-col items-center justify-center">
+          <Skeleton className="h-40 w-40 rounded-full" />
+          <Skeleton className="h-3 w-48 mt-4" />
+        </div>
+        <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-6 space-y-4">
+          <Skeleton className="h-4 w-40" />
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-2 flex-1 rounded-full" />
+              <Skeleton className="h-3 w-8" />
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* Insight skeleton */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <Skeleton className="h-28 rounded-2xl" />
+        <Skeleton className="h-28 rounded-2xl" />
+      </div>
+      {/* Forensic skeleton */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-36 rounded-2xl" />)}
+      </div>
+    </div>
+  </div>
+);
+
 const Analysis = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
@@ -96,6 +155,7 @@ const Analysis = () => {
   const [data, setData] = useState<Analysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [showWhyNot90, setShowWhyNot90] = useState(false);
+  const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
     if (!id || !user) return;
@@ -106,21 +166,32 @@ const Analysis = () => {
       .single()
       .then(({ data, error }) => {
         if (error || !data) navigate("/dashboard");
-        else setData(data);
+        else {
+          setData(data);
+          // Short delay then reveal with confetti
+          setTimeout(() => {
+            setRevealed(true);
+            // Fire confetti 🎉
+            confetti({
+              particleCount: 120,
+              spread: 80,
+              origin: { y: 0.6 },
+              colors: ["#0faf6e", "#4ade80", "#facc15", "#ffffff"],
+            });
+          }, 300);
+        }
         setLoading(false);
       });
   }, [id, user, navigate]);
 
-  if (loading) return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="h-8 w-8 rounded-full border-2 border-t-primary border-border animate-spin" />
-    </div>
-  );
-
+  if (loading) return <AnalysisSkeleton />;
   if (!data) return null;
 
   const d = data;
   const explanations = (d.score_explanations || {}) as Record<string, { positive: string; negative: string }>;
+
+  // Compute final score value immediately (no animation that changes the number)
+  const globalScore = d.global_score;
 
   return (
     <div className="min-h-screen bg-background">
@@ -132,9 +203,13 @@ const Analysis = () => {
         </Button>
 
         {/* HERO */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: revealed ? 1 : 0.15 }}
+          transition={{ duration: 0.8 }}
+          className="mb-8"
+        >
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
-            {/* Property header with gradient bg */}
             <div className="relative p-6 md:p-8 bg-gradient-hero">
               <div className="flex flex-col md:flex-row gap-6 items-start">
                 <div className="flex-1 min-w-0">
@@ -154,7 +229,12 @@ const Analysis = () => {
 
                   <div className="flex flex-wrap gap-4 mt-4 text-xs text-muted-foreground">
                     {d.property_type && <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> {d.property_type}</span>}
-                    {d.size_sqm && <span className="flex items-center gap-1"><Ruler className="h-3.5 w-3.5" /> {d.size_sqm} m²</span>}
+                    {d.size_sqm && (
+                      <span className="flex items-center gap-1">
+                        <Ruler className="h-3.5 w-3.5" />
+                        {d.size_sqm} m² · {sqmToSqft(d.size_sqm)} ft² · {sqmToAcres(d.size_sqm)} acres
+                      </span>
+                    )}
                     {d.bedrooms && <span className="flex items-center gap-1"><BedDouble className="h-3.5 w-3.5" /> {d.bedrooms} bed</span>}
                     {d.bathrooms && <span className="flex items-center gap-1"><Bath className="h-3.5 w-3.5" /> {d.bathrooms} bath</span>}
                     {d.year_built && <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> Built {d.year_built}</span>}
@@ -167,17 +247,20 @@ const Analysis = () => {
 
         {/* SCORE + SUBSCORES */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Score ring */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-            className="rounded-2xl border border-border bg-card p-6 flex flex-col items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: revealed ? 1 : 0.15 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="rounded-2xl border border-border bg-card p-6 flex flex-col items-center justify-center"
+          >
             <div className="relative">
               <svg className="w-40 h-40 -rotate-90" viewBox="0 0 100 100">
                 <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--border))" strokeWidth="5" />
                 <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--primary))" strokeWidth="5" strokeLinecap="round"
-                  strokeDasharray="264" strokeDashoffset={264 - (264 * d.global_score) / 100} />
+                  strokeDasharray="264" strokeDashoffset={264 - (264 * globalScore) / 100} />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className={`text-5xl font-bold font-mono leading-none ${scoreColor(d.global_score)}`}>{d.global_score}</span>
+                <span className={`text-5xl font-bold font-mono leading-none ${scoreColor(globalScore)}`}>{globalScore}</span>
                 <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest mt-1">Global Score</span>
               </div>
             </div>
@@ -191,9 +274,12 @@ const Analysis = () => {
             )}
           </motion.div>
 
-          {/* Subscores */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-            className="lg:col-span-2 rounded-2xl border border-border bg-card p-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: revealed ? 1 : 0.15 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="lg:col-span-2 rounded-2xl border border-border bg-card p-6"
+          >
             <h3 className="text-sm font-semibold text-foreground mb-4">Subscore Breakdown</h3>
             <div className="space-y-1">
               <SubscoreBar label="ROI Potential" value={d.roi_potential} explanation={explanations.roi_potential} />
@@ -203,7 +289,6 @@ const Analysis = () => {
               <SubscoreBar label="Liquidity Outlook" value={d.liquidity_outlook} explanation={explanations.liquidity_outlook} />
             </div>
 
-            {/* Why not 90+? */}
             {d.why_not_90 && (d.why_not_90 as string[]).length > 0 && (
               <div className="mt-4 pt-4 border-t border-border">
                 <button onClick={() => setShowWhyNot90(!showWhyNot90)} className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
@@ -228,20 +313,20 @@ const Analysis = () => {
 
         {/* PRIMARY INSIGHT + AI SUMMARY */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: revealed ? 1 : 0.15 }} transition={{ duration: 0.8, delay: 0.3 }}
             className="rounded-2xl border border-primary/15 bg-primary/5 p-6">
             <p className="text-xs font-medium text-primary mb-2">Primary Insight</p>
             <p className="text-sm text-foreground leading-relaxed">{d.primary_insight}</p>
           </motion.div>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: revealed ? 1 : 0.15 }} transition={{ duration: 0.8, delay: 0.35 }}
             className="rounded-2xl border border-border bg-card p-6">
             <p className="text-xs font-medium text-foreground mb-2">AI Summary</p>
             <p className="text-sm text-muted-foreground leading-relaxed">{d.ai_summary}</p>
           </motion.div>
         </div>
 
-        {/* FORENSIC ANALYSIS: PROS / CONS / RED FLAGS / OPPORTUNITIES */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+        {/* FORENSIC ANALYSIS */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: revealed ? 1 : 0.15 }} transition={{ duration: 0.8, delay: 0.4 }}
           className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="rounded-2xl border border-border bg-card p-6">
             <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
@@ -294,7 +379,7 @@ const Analysis = () => {
         </motion.div>
 
         {/* SCENARIO SIMULATION */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: revealed ? 1 : 0.15 }} transition={{ duration: 0.8, delay: 0.45 }}
           className="rounded-2xl border border-border bg-card p-6 mb-8">
           <h3 className="text-sm font-semibold text-foreground mb-4">5-Year Scenario Simulation</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -320,7 +405,7 @@ const Analysis = () => {
         {/* CHARTS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {(d.price_history as any[])?.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: revealed ? 1 : 0.15 }} transition={{ duration: 0.8, delay: 0.5 }}
               className="rounded-2xl border border-border bg-card p-6">
               <h3 className="text-sm font-semibold text-foreground mb-4">Price Evolution Index</h3>
               <div className="h-48">
@@ -343,7 +428,7 @@ const Analysis = () => {
             </motion.div>
           )}
           {(d.yield_trend as any[])?.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: revealed ? 1 : 0.15 }} transition={{ duration: 0.8, delay: 0.55 }}
               className="rounded-2xl border border-border bg-card p-6">
               <h3 className="text-sm font-semibold text-foreground mb-4">Yield Trend (%)</h3>
               <div className="h-48">
@@ -363,7 +448,7 @@ const Analysis = () => {
 
         {/* ALTERNATIVES */}
         {(d.alternatives as any[])?.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: revealed ? 1 : 0.15 }} transition={{ duration: 0.8, delay: 0.6 }}
             className="rounded-2xl border border-border bg-card p-6 mb-8">
             <h3 className="text-sm font-semibold text-foreground mb-1">Users who analyzed this property ultimately invested in:</h3>
             <p className="text-xs text-muted-foreground mb-6">Higher-performing alternatives discovered by RealHunt users.</p>
