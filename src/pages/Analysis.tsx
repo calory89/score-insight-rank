@@ -235,12 +235,12 @@ const Analysis = () => {
       if (manualText) body.manual_content = manualText;
       const { data: result, error } = await supabase.functions.invoke("analyze-property", { body });
       if (error) throw error;
-      if (result?.error) throw new Error(result.error);
-      if (result?.scrape_failed && !manualText) {
+      if (result?.scrape_failed) {
         setScrapeFailed(true);
         setAnalyzing(false);
         return;
       }
+      if (result?.error) throw new Error(result.error);
       if (result?.data?.id) {
         navigate(`/analysis/${result.data.id}`, { replace: true });
       }
@@ -257,9 +257,9 @@ const Analysis = () => {
     runAnalysis(urlToAnalyze!);
   }, [isLoadingMode, user, urlToAnalyze]);
 
-  // Mode 2: View existing analysis
+  // Mode 2: View existing analysis (works for any user — public ranking links)
   useEffect(() => {
-    if (!id || !user) return;
+    if (!id) return;
     supabase
       .from("analyses")
       .select("*")
@@ -267,7 +267,7 @@ const Analysis = () => {
       .single()
       .then(({ data: result, error }) => {
         if (error || !result) {
-          navigate("/dashboard");
+          navigate("/");
         } else {
           setData(result);
           setAnalyzing(false);
@@ -283,7 +283,7 @@ const Analysis = () => {
         }
         setLoading(false);
       });
-  }, [id, user, navigate]);
+  }, [id, navigate]);
 
   // Show FOMO loader while analyzing
   if (analyzing && !data) {

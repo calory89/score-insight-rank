@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Globe, TrendingUp, MapPin, Filter } from "lucide-react";
+import { Globe, TrendingUp, MapPin, Filter, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -23,6 +24,7 @@ const scoreColor = (v: number) => {
 };
 
 const GlobalRanking = () => {
+  const navigate = useNavigate();
   const [rankings, setRankings] = useState<RankedProperty[]>([]);
   const [loading, setLoading] = useState(true);
   const [countries, setCountries] = useState<string[]>([]);
@@ -141,7 +143,8 @@ const GlobalRanking = () => {
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.05 }}
-                  className="flex sm:grid sm:grid-cols-12 gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors items-center"
+                  onClick={() => navigate(`/analysis/${prop.id}`)}
+                  className="flex sm:grid sm:grid-cols-12 gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors items-center cursor-pointer group"
                 >
                   <div className="hidden sm:block sm:col-span-1 font-mono text-sm text-muted-foreground">{i + 1}</div>
                   <div className="flex-1 sm:col-span-5 flex items-center gap-2 min-w-0">
@@ -160,7 +163,7 @@ const GlobalRanking = () => {
                     </span>
                   </div>
                   <div className="hidden sm:block sm:col-span-2 text-center font-mono text-sm text-foreground truncate">{prop.price || "—"}</div>
-                  <div className="sm:col-span-2 text-right">
+                  <div className="sm:col-span-2 text-right flex items-center justify-end gap-2">
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
                       prop.verdict === "Strong" ? "text-score-excellent bg-score-excellent/10" :
                       prop.verdict === "Moderate" ? "text-score-average bg-score-average/10" :
@@ -168,6 +171,7 @@ const GlobalRanking = () => {
                     }`}>
                       {prop.verdict || "—"}
                     </span>
+                    <ArrowRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 </motion.div>
               ))
