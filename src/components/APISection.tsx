@@ -19,15 +19,14 @@ const APISection = () => {
           viewport={{ once: true }}
           className="max-w-2xl mx-auto text-center"
         >
-          <span className="text-xs font-medium text-primary uppercase tracking-wider">Coming Soon</span>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mt-4 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             RealHunt API
           </h2>
           <p className="text-muted-foreground mb-10">
-            Integrate real estate intelligence into your platform.
+            Real estate intelligence infrastructure for banks, agents, and investment platforms.
           </p>
 
-          <div className="flex items-center justify-center gap-4 flex-wrap mb-8">
+          <div className="flex items-center justify-center gap-3 flex-wrap mb-8">
             {useCases.map((uc) => (
               <div
                 key={uc.label}
