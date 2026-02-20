@@ -50,7 +50,6 @@ async function scrapeListingPage(url: string): Promise<{ content: string | null;
     }
 
     console.log("Scrape successful, content length:", markdown.length);
-    // Truncate to avoid token limits (keep first ~12000 chars for better data extraction)
     const truncated = markdown.length > 12000 ? markdown.substring(0, 12000) + "\n\n[Content truncated...]" : markdown;
     return { content: truncated, isEstimated: false };
   } catch (error) {
@@ -59,47 +58,101 @@ async function scrapeListingPage(url: string): Promise<{ content: string | null;
   }
 }
 
-function buildPrompts(url: string, scrapedContent: string | null, isEstimated: boolean) {
+function buildManualEntryContent(manualFields: any): string {
+  const lines: string[] = ["PROPERTY DETAILS (provided by user):"];
+  if (manualFields.city) lines.push(`Location: ${manualFields.city}`);
+  if (manualFields.price) lines.push(`Asking Price: ${manualFields.price}`);
+  if (manualFields.size) lines.push(`Size: ${manualFields.size} ${manualFields.sizeUnit === "sqft" ? "sq ft" : "m²"}`);
+  if (manualFields.bedrooms) lines.push(`Bedrooms: ${manualFields.bedrooms}`);
+  if (manualFields.propertyType) lines.push(`Property Type: ${manualFields.propertyType}`);
+  if (manualFields.strategy) lines.push(`Investment Strategy: ${manualFields.strategy}`);
+  if (manualFields.listingUrl) lines.push(`Listing URL: ${manualFields.listingUrl}`);
+  return lines.join("\n");
+}
+
+function determineConfidence(dataSource: string, contentLength: number): string {
+  if (dataSource === "scraped" && contentLength > 500) return "high";
+  if (dataSource === "pasted" && contentLength > 200) return "high";
+  if (dataSource === "pasted" && contentLength > 50) return "medium";
+  if (dataSource === "manual_entry") return "medium";
+  return "low";
+}
+
+function buildPrompts(url: string, scrapedContent: string | null, isEstimated: boolean, dataSource: string) {
+  const forensicInstructions = `
+ANALYSIS FRAMEWORK — Apply these in order of priority:
+
+1. DEAL QUALITY (Highest Priority):
+   - Asking price vs micro-market median
+   - Price per m² vs area percentiles
+   - Fair value estimate, over/underpricing %
+   - Cap rate, gross yield, net yield estimates
+   - Deal Verdict: Strong / Fair / Weak
+
+2. RENTAL PERFORMANCE & DEMAND:
+   - Rental yield (long-term + short-term potential)
+   - Vacancy rates, days-on-market (rental)
+   - Occupancy levels, seasonal volatility
+   - Tenant demand index
+
+3. LIQUIDITY & EXIT RISK:
+   - Days-on-market (sale), transaction volume
+   - Absorption rate, market depth
+   - Resale difficulty in downturn
+
+4. MARKET MOMENTUM & CYCLE POSITION:
+   - 1-year and 5-year appreciation trends
+   - Construction permits, supply pipeline
+   - Net migration trends
+   - Cycle Position: Early / Mid / Late / Overheated
+
+5. MACRO & REGULATORY RISK:
+   - Legal stability, property tax burden
+   - Rental regulation risk
+   - Economic concentration risk
+
+6. PROPERTY-SPECIFIC RISK:
+   - Building age, maintenance risk
+   - HOA burden, renovation cost exposure
+   - Energy rating impact, environmental risk
+
+7. SCENARIO MODELING:
+   - 5-year base, optimistic, and downside projections
+   - Projected IRR range
+   - Risk-adjusted return estimate`;
+
   if (scrapedContent) {
-    const systemPrompt = `You are a forensic real estate investment analyst. You will receive the REAL content scraped from a property listing page. You must extract the EXACT data from this content — do NOT invent or guess any property details.
+    const systemPrompt = `You are a forensic real estate investment analyst producing institutional-grade reports. You will receive REAL content from a property listing. Extract EXACT data — do NOT invent details.
 
 CRITICAL RULES:
-- Use the REAL price from the listing. Match the EXACT number and currency shown.
-- Use the REAL size. If the listing shows acres, convert to m² (1 acre = 4046.86 m²). If it shows ft², convert to m² (1 ft² = 0.0929 m²). Always provide size_sqm.
-- Use the REAL number of bedrooms/bathrooms from the listing
-- Use the REAL address and location from the listing
-- If a data point is not available in the listing, use null
-- Your investment analysis (scores, pros, cons, ROI projections) should be based on these REAL data points
-- Consider location economics, price per sqm, rental yield, market cycle, regulatory environment
-- NEVER use data from a different property. If the content doesn't clearly show property details, say so in the summary.`;
+- Use the REAL price, size, bedrooms, bathrooms, address from the listing
+- If size is in acres, convert to m² (1 acre = 4046.86 m²). If ft², convert (1 ft² = 0.0929 m²)
+- If a data point is not available, use null
+- Your analysis must be forensic, data-dense, and defensible
+- Never fabricate precision — if data is incomplete, note it in the summary
+${forensicInstructions}`;
 
     const userPrompt = `Analyze this property listing for investment potential.
 
 URL: ${url}
+Data Source: ${dataSource === "scraped" ? "Direct page scrape" : dataSource === "pasted" ? "User-provided listing text" : "Manual entry by user"}
 
-REAL LISTING CONTENT (scraped from the page):
+LISTING CONTENT:
 ---
 ${scrapedContent}
 ---
 
-INSTRUCTIONS:
-1. Extract the EXACT property details from the content above (price, address, size, bedrooms, bathrooms, etc.)
-2. If the listing shows size in acres or sq ft, convert to m² for the size_sqm field
-3. Use the EXACT price shown in the listing — do NOT change currency or amount
-4. Provide a complete forensic investment analysis based on REAL data only`;
+Provide a complete forensic investment analysis based on the data above. Be rigorous and analytical.`;
 
     return { systemPrompt, userPrompt };
   }
 
-  const systemPrompt = `You are a forensic real estate investment analyst. Given a property listing URL, generate a comprehensive investment analysis. You must respond using the analyze_property tool.
-
-NOTE: The listing page could not be scraped directly, so you must infer data from the URL and your knowledge. Mark this as an ESTIMATED analysis. Include "[ESTIMATED]" at the start of ai_summary.
-
-Consider: location economics, price per sqm, rental yield, market cycle, regulatory environment, liquidity conditions.`;
+  const systemPrompt = `You are a forensic real estate investment analyst. Given a property URL, generate a comprehensive investment analysis using your knowledge. Include "[ESTIMATED]" at the start of ai_summary since the listing page could not be accessed directly.
+${forensicInstructions}`;
 
   const userPrompt = `Analyze this property listing URL for investment potential: ${url}
 
-WARNING: Could not scrape the listing page. Generate analysis based on what you can infer from the URL (location, platform, property type). Note in the summary that data is estimated.`;
+WARNING: Could not access the listing page. Generate analysis based on what you can infer from the URL (location, platform, property type). Note in the summary that data is estimated.`;
 
   return { systemPrompt, userPrompt };
 }
@@ -111,8 +164,7 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Not authenticated" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -125,50 +177,56 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Invalid session" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { url, manual_content } = await req.json();
-    if (!url) {
-      return new Response(JSON.stringify({ error: "URL is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const { url, manual_content, manual_fields } = await req.json();
+    if (!url && !manual_fields?.city) {
+      return new Response(JSON.stringify({ error: "URL or property details required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    // Step 1: Use manual content if provided, otherwise scrape
+    // Determine data source and content
     let scrapedContent: string | null = null;
     let isEstimated = false;
-    let scrapeFailed = false;
+    let dataSource = "scraped";
 
-    if (manual_content && manual_content.trim().length > 50) {
+    if (manual_fields && manual_fields.city) {
+      // Manual entry form
+      scrapedContent = buildManualEntryContent(manual_fields);
+      isEstimated = false;
+      dataSource = "manual_entry";
+      console.log("Using manual entry fields");
+    } else if (manual_content && manual_content.trim().length > 50) {
+      // Pasted content
       scrapedContent = manual_content.trim().substring(0, 12000);
       isEstimated = false;
-      console.log("Using manual content, length:", scrapedContent.length);
-    } else {
+      dataSource = "pasted";
+      console.log("Using pasted content, length:", scrapedContent.length);
+    } else if (url) {
+      // Try scraping
       const result = await scrapeListingPage(url);
       scrapedContent = result.content;
       isEstimated = result.isEstimated;
-      scrapeFailed = result.isEstimated;
 
-      // If scraping failed AND no manual content provided, return immediately so user can paste content
-      if (scrapeFailed && !manual_content) {
-        console.log("Scrape failed, returning scrape_failed flag for manual input");
-        return new Response(JSON.stringify({ success: false, scrape_failed: true, error: "Scraping blocked by site" }), {
+      if (result.isEstimated) {
+        console.log("Scrape failed, returning scrape_failed flag");
+        return new Response(JSON.stringify({ success: false, scrape_failed: true, error: "Listing is protected" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      dataSource = "scraped";
     }
 
-    // Step 2: Build prompts based on scraped content
-    const { systemPrompt, userPrompt } = buildPrompts(url, scrapedContent, isEstimated);
+    const confidenceLevel = determineConfidence(dataSource, scrapedContent?.length || 0);
+    const { systemPrompt, userPrompt } = buildPrompts(url || manual_fields?.listingUrl || "", scrapedContent, isEstimated, dataSource);
 
-    // Step 3: Call AI with real data
+    // Call AI
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -236,20 +294,12 @@ serve(async (req) => {
                   upside_scenario: { type: "number", description: "Best case % change" },
                   price_history: {
                     type: "array",
-                    items: {
-                      type: "object",
-                      properties: { year: { type: "string" }, value: { type: "number" } },
-                      required: ["year", "value"],
-                    },
+                    items: { type: "object", properties: { year: { type: "string" }, value: { type: "number" } }, required: ["year", "value"] },
                     description: "5-6 years of price index data (base 100)",
                   },
                   yield_trend: {
                     type: "array",
-                    items: {
-                      type: "object",
-                      properties: { year: { type: "string" }, value: { type: "number" } },
-                      required: ["year", "value"],
-                    },
+                    items: { type: "object", properties: { year: { type: "string" }, value: { type: "number" } }, required: ["year", "value"] },
                     description: "5-6 years of yield % data",
                   },
                   alternatives: {
@@ -309,16 +359,18 @@ serve(async (req) => {
 
     const analysis = JSON.parse(toolCall.function.arguments);
 
-    // Save to database
+    // Save to database with confidence level
     const { data: saved, error: dbError } = await supabase
       .from("analyses")
       .insert({
         user_id: user.id,
-        url,
+        url: url || manual_fields?.listingUrl || "manual-entry",
         ...analysis,
         image_url: analysis.image_url || "",
         market_rank: analysis.market_rank || Math.floor(Math.random() * 30) + 5,
         market_total: analysis.market_total || Math.floor(Math.random() * 150) + 100,
+        confidence_level: confidenceLevel,
+        data_source: dataSource,
       })
       .select()
       .single();
@@ -328,7 +380,7 @@ serve(async (req) => {
       throw new Error("Failed to save analysis");
     }
 
-    return new Response(JSON.stringify({ success: true, data: saved, scrape_failed: scrapeFailed }), {
+    return new Response(JSON.stringify({ success: true, data: saved }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

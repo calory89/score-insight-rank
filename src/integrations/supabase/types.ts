@@ -22,10 +22,12 @@ export type Database = {
           bathrooms: number | null
           bedrooms: number | null
           city: string | null
+          confidence_level: string | null
           cons: Json | null
           country: string | null
           created_at: string
           currency: string | null
+          data_source: string | null
           demand_strength: number | null
           downside_scenario: number | null
           global_score: number | null
@@ -65,10 +67,12 @@ export type Database = {
           bathrooms?: number | null
           bedrooms?: number | null
           city?: string | null
+          confidence_level?: string | null
           cons?: Json | null
           country?: string | null
           created_at?: string
           currency?: string | null
+          data_source?: string | null
           demand_strength?: number | null
           downside_scenario?: number | null
           global_score?: number | null
@@ -108,10 +112,12 @@ export type Database = {
           bathrooms?: number | null
           bedrooms?: number | null
           city?: string | null
+          confidence_level?: string | null
           cons?: Json | null
           country?: string | null
           created_at?: string
           currency?: string | null
+          data_source?: string | null
           demand_strength?: number | null
           downside_scenario?: number | null
           global_score?: number | null

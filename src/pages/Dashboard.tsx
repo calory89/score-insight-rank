@@ -201,6 +201,15 @@ const Dashboard = () => {
                           <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full ${verdictColor(a.verdict)}`}>
                             {a.verdict}
                           </span>
+                          {a.confidence_level && (
+                            <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                              a.confidence_level === "high" ? "text-score-excellent bg-score-excellent/10" :
+                              a.confidence_level === "medium" ? "text-score-average bg-score-average/10" :
+                              "text-score-poor bg-score-poor/10"
+                            }`}>
+                              {a.confidence_level} conf.
+                            </span>
+                          )}
                           <span className="text-[10px] text-muted-foreground flex items-center gap-1">
                             <Calendar className="h-3 w-3" /> {new Date(a.created_at).toLocaleDateString()}
                           </span>

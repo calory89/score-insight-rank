@@ -4,9 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
+import ProtectedListingFallback from "@/components/ProtectedListingFallback";
 import {
   ArrowLeft, MapPin, Building2, Calendar, Ruler, BedDouble, Bath,
   TrendingUp, TrendingDown, AlertTriangle, Sparkles, ChevronDown, ChevronUp, ArrowRight,
+  Shield, Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,6 +41,11 @@ const classificationColor = (c: string) => {
   if (c === "Overpriced") return "text-score-average border-score-average/20 bg-score-average/10";
   return "text-accent-foreground border-accent/30 bg-accent/20";
 };
+const confidenceColor = (c: string) => {
+  if (c === "high") return "text-score-excellent border-score-excellent/20 bg-score-excellent/10";
+  if (c === "medium") return "text-score-average border-score-average/20 bg-score-average/10";
+  return "text-score-poor border-score-poor/20 bg-score-poor/10";
+};
 const sqmToAcres = (sqm: number) => (sqm * 0.000247105).toFixed(3);
 const sqmToSqft = (sqm: number) => Math.round(sqm * 10.7639);
 
@@ -62,7 +69,6 @@ const FomoLoader = ({ step }: { step: number }) => (
         <ArrowLeft className="h-4 w-4 mr-1" /> Cancel
       </Button>
 
-      {/* Hero skeleton with pulsing */}
       <div className="rounded-2xl border border-border bg-card overflow-hidden mb-8">
         <div className="p-6 md:p-8 space-y-4">
           <div className="flex gap-2">
@@ -80,14 +86,12 @@ const FomoLoader = ({ step }: { step: number }) => (
         </div>
       </div>
 
-      {/* FOMO center block */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="rounded-2xl border border-primary/20 bg-card p-8 md:p-12 mb-8"
       >
         <div className="flex flex-col items-center text-center">
-          {/* Animated spinner */}
           <div className="relative mx-auto mb-8 h-20 w-20">
             <div className="absolute inset-0 rounded-full border-2 border-border" />
             <div className="absolute inset-0 rounded-full border-2 border-t-primary animate-spin" style={{ animationDuration: "1.5s" }} />
@@ -97,7 +101,6 @@ const FomoLoader = ({ step }: { step: number }) => (
             </div>
           </div>
 
-          {/* Current step */}
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
@@ -112,7 +115,6 @@ const FomoLoader = ({ step }: { step: number }) => (
             </motion.div>
           </AnimatePresence>
 
-          {/* Progress bar */}
           <div className="w-full max-w-xs">
             <div className="flex items-center gap-1.5 mb-3">
               {fomoSteps.map((_, i) => (
@@ -129,7 +131,6 @@ const FomoLoader = ({ step }: { step: number }) => (
             </p>
           </div>
 
-          {/* FOMO social proof */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -141,12 +142,9 @@ const FomoLoader = ({ step }: { step: number }) => (
         </div>
       </motion.div>
 
-      {/* Bottom skeletons for anticipation */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 opacity-30">
         <Skeleton className="h-52 rounded-2xl" />
-        <div className="lg:col-span-2">
-          <Skeleton className="h-52 rounded-2xl" />
-        </div>
+        <div className="lg:col-span-2"><Skeleton className="h-52 rounded-2xl" /></div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 opacity-20">
         <Skeleton className="h-28 rounded-2xl" />
@@ -195,6 +193,42 @@ const SubscoreBar = ({ label, value, explanation }: { label: string; value: numb
   );
 };
 
+// --- ConfidenceBadge ---
+const ConfidenceBadge = ({ level }: { level: string }) => {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const label = level === "high" ? "High" : level === "medium" ? "Medium" : "Low";
+  const explanation = level === "high"
+    ? "Analysis based on complete listing data."
+    : level === "medium"
+    ? "Analysis based on partial data. Some metrics are estimated."
+    : "Limited data available. Scores are approximations.";
+
+  return (
+    <div className="relative inline-flex">
+      <button
+        onClick={() => setShowTooltip(!showTooltip)}
+        className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full border flex items-center gap-1 ${confidenceColor(level)}`}
+      >
+        <Shield className="h-3 w-3" />
+        Confidence: {label}
+        <Info className="h-2.5 w-2.5 opacity-60" />
+      </button>
+      <AnimatePresence>
+        {showTooltip && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            className="absolute top-full left-0 mt-1 z-20 rounded-lg border border-border bg-card p-3 shadow-lg min-w-[220px]"
+          >
+            <p className="text-[11px] text-muted-foreground leading-relaxed">{explanation}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 // --- Main Component ---
 const Analysis = () => {
   const { id } = useParams<{ id: string }>();
@@ -213,8 +247,7 @@ const Analysis = () => {
   const [fomoStep, setFomoStep] = useState(0);
   const fomoTimerRef = useRef<ReturnType<typeof setInterval>>();
   const [scrapeFailed, setScrapeFailed] = useState(false);
-  const [manualContent, setManualContent] = useState("");
-  const [retrying, setRetrying] = useState(false);
+  const [submittingFallback, setSubmittingFallback] = useState(false);
 
   // FOMO step progression
   useEffect(() => {
@@ -225,14 +258,12 @@ const Analysis = () => {
     return () => clearInterval(fomoTimerRef.current);
   }, [analyzing]);
 
-  const runAnalysis = async (url: string, manualText?: string) => {
+  const runAnalysis = async (body: any) => {
     setAnalyzing(true);
     setAnalyzeError("");
     setScrapeFailed(false);
     setFomoStep(0);
     try {
-      const body: any = { url };
-      if (manualText) body.manual_content = manualText;
       const { data: result, error } = await supabase.functions.invoke("analyze-property", { body });
       if (error) throw error;
       if (result?.scrape_failed) {
@@ -247,6 +278,7 @@ const Analysis = () => {
     } catch (e: any) {
       setAnalyzeError(e.message || "Analysis failed");
       setAnalyzing(false);
+      setSubmittingFallback(false);
     }
   };
 
@@ -254,10 +286,10 @@ const Analysis = () => {
   useEffect(() => {
     if (!isLoadingMode || !user) return;
     setLoading(false);
-    runAnalysis(urlToAnalyze!);
+    runAnalysis({ url: urlToAnalyze });
   }, [isLoadingMode, user, urlToAnalyze]);
 
-  // Mode 2: View existing analysis (works for any user — public ranking links)
+  // Mode 2: View existing analysis
   useEffect(() => {
     if (!id) return;
     supabase
@@ -274,9 +306,7 @@ const Analysis = () => {
           setTimeout(() => {
             setRevealed(true);
             confetti({
-              particleCount: 120,
-              spread: 80,
-              origin: { y: 0.6 },
+              particleCount: 120, spread: 80, origin: { y: 0.6 },
               colors: ["#0faf6e", "#4ade80", "#facc15", "#ffffff"],
             });
           }, 300);
@@ -285,51 +315,42 @@ const Analysis = () => {
       });
   }, [id, navigate]);
 
+  // Fallback handlers
+  const handleManualEntry = (data: any) => {
+    setSubmittingFallback(true);
+    runAnalysis({ url: urlToAnalyze || "manual-entry", manual_fields: data });
+  };
+
+  const handlePasteContent = (content: string) => {
+    setSubmittingFallback(true);
+    runAnalysis({ url: urlToAnalyze || "manual-entry", manual_content: content });
+  };
+
+  const handleUploadFiles = (files: File[]) => {
+    // Coming soon
+  };
+
   // Show FOMO loader while analyzing
   if (analyzing && !data) {
     return <FomoLoader step={fomoStep} />;
   }
 
-  // Show scrape failed — ask for manual paste
+  // Show premium fallback when scrape fails
   if (scrapeFailed && !analyzing) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="container mx-auto px-4 pt-20 pb-16 max-w-2xl">
+        <div className="container mx-auto px-4 pt-20 pb-16">
           <Button variant="ghost" size="sm" className="mb-6 text-muted-foreground" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-4 w-4 mr-1" /> Back to Dashboard
           </Button>
-          <div className="rounded-2xl border border-primary/20 bg-card p-8">
-            <div className="text-center mb-6">
-              <AlertTriangle className="h-8 w-8 text-score-average mx-auto mb-3" />
-              <h2 className="text-lg font-semibold text-foreground mb-2">
-                This site doesn't allow automatic access
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                But we can still analyze it in <span className="text-primary font-semibold">15 seconds</span>! Just copy and paste all the listing information below.
-              </p>
-            </div>
-            <textarea
-              value={manualContent}
-              onChange={(e) => setManualContent(e.target.value)}
-              placeholder={"Paste the full listing here…\n\nFor example:\n• Price: €350,000\n• Location: Madrid, Spain\n• 3 bedrooms, 2 bathrooms\n• 120 m²\n• Year built: 1985\n• Any other details from the listing page"}
-              className="w-full h-48 rounded-xl border border-border bg-secondary/50 p-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 resize-none"
-            />
-            <Button
-              variant="hero"
-              className="w-full mt-4"
-              disabled={manualContent.trim().length < 20 || retrying}
-              onClick={() => {
-                setRetrying(true);
-                runAnalysis(urlToAnalyze || "", manualContent);
-              }}
-            >
-              {retrying ? "Analyzing…" : "Analyze Now"} <ArrowRight className="ml-1 h-4 w-4" />
-            </Button>
-            <p className="text-[11px] text-muted-foreground text-center mt-3">
-              We'll extract price, location, size, rooms, and everything else automatically.
-            </p>
-          </div>
+          <ProtectedListingFallback
+            url={urlToAnalyze || ""}
+            onManualEntry={handleManualEntry}
+            onPasteContent={handlePasteContent}
+            onUploadFiles={handleUploadFiles}
+            submitting={submittingFallback}
+          />
         </div>
       </div>
     );
@@ -366,6 +387,8 @@ const Analysis = () => {
   const d = data;
   const explanations = (d.score_explanations || {}) as Record<string, { positive: string; negative: string }>;
   const globalScore = d.global_score;
+  const confidenceLevel = d.confidence_level || "high";
+  const dataSource = d.data_source || "scraped";
 
   return (
     <div className="min-h-screen bg-background">
@@ -388,6 +411,7 @@ const Analysis = () => {
                     <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full border ${verdictColor(d.verdict)}`}>
                       {d.verdict}
                     </span>
+                    <ConfidenceBadge level={confidenceLevel} />
                   </div>
                   <h1 className="text-xl md:text-2xl font-bold text-foreground mb-1">{d.address || `${d.city}, ${d.country}`}</h1>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
