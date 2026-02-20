@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { Search, ArrowRight, Calendar } from "lucide-react";
+import { Search, ArrowRight, Calendar, Building2 } from "lucide-react";
 
 const verdictColor = (v: string) => {
   if (v === "Strong") return "text-score-excellent bg-score-excellent/10";
@@ -47,7 +47,6 @@ const Dashboard = () => {
 
   const handleAnalyze = () => {
     if (!url.trim() || analyzing) return;
-    // Navigate immediately to loading page — analysis happens there
     navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
   };
 
@@ -101,31 +100,43 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
                 onClick={() => navigate(`/analysis/${a.id}`)}
-                className="rounded-xl border border-border bg-card p-5 hover:border-primary/20 transition-all cursor-pointer group"
+                className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/20 transition-all cursor-pointer group"
               >
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="min-w-0">
-                    <h3 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-                      {a.address || `${a.city}, ${a.country}`}
-                    </h3>
-                    <p className="text-xs text-muted-foreground mt-0.5">{a.price} · {a.property_type}</p>
+                {/* Property image */}
+                {a.image_url ? (
+                  <div className="h-32 w-full bg-secondary overflow-hidden">
+                    <img src={a.image_url} alt={a.address || "Property"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   </div>
-                  <div className="flex-shrink-0 h-12 w-12 rounded-lg bg-secondary flex items-center justify-center">
-                    <span className={`font-mono text-lg font-bold ${scoreColor(a.global_score)}`}>{a.global_score}</span>
+                ) : (
+                  <div className="h-20 w-full bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center">
+                    <Building2 className="h-6 w-6 text-muted-foreground/30" />
                   </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full ${verdictColor(a.verdict)}`}>
-                      {a.verdict}
+                )}
+                <div className="p-5">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                        {a.address || `${a.city}, ${a.country}`}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-0.5">{a.price} · {a.property_type}</p>
+                    </div>
+                    <div className="flex-shrink-0 h-12 w-12 rounded-lg bg-secondary flex items-center justify-center">
+                      <span className={`font-mono text-lg font-bold ${scoreColor(a.global_score)}`}>{a.global_score}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full ${verdictColor(a.verdict)}`}>
+                        {a.verdict}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <Calendar className="h-3 w-3" /> {new Date(a.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">
+                      View Report →
                     </span>
-                    <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                      <Calendar className="h-3 w-3" /> {new Date(a.created_at).toLocaleDateString()}
-                    </span>
                   </div>
-                  <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">
-                    View Report →
-                  </span>
                 </div>
               </motion.div>
             ))}

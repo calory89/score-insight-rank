@@ -130,7 +130,7 @@ serve(async (req) => {
       });
     }
 
-    const { url } = await req.json();
+    const { url, manual_content } = await req.json();
     if (!url) {
       return new Response(JSON.stringify({ error: "URL is required" }), {
         status: 400,
@@ -141,8 +141,21 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    // Step 1: Scrape listing page with Firecrawl
-    const { content: scrapedContent, isEstimated } = await scrapeListingPage(url);
+    // Step 1: Use manual content if provided, otherwise scrape
+    let scrapedContent: string | null = null;
+    let isEstimated = false;
+    let scrapeFailed = false;
+
+    if (manual_content && manual_content.trim().length > 50) {
+      scrapedContent = manual_content.trim().substring(0, 12000);
+      isEstimated = false;
+      console.log("Using manual content, length:", scrapedContent.length);
+    } else {
+      const result = await scrapeListingPage(url);
+      scrapedContent = result.content;
+      isEstimated = result.isEstimated;
+      scrapeFailed = result.isEstimated;
+    }
 
     // Step 2: Build prompts based on scraped content
     const { systemPrompt, userPrompt } = buildPrompts(url, scrapedContent, isEstimated);
@@ -307,7 +320,7 @@ serve(async (req) => {
       throw new Error("Failed to save analysis");
     }
 
-    return new Response(JSON.stringify({ success: true, data: saved }), {
+    return new Response(JSON.stringify({ success: true, data: saved, scrape_failed: scrapeFailed }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

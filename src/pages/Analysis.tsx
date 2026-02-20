@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import {
   ArrowLeft, MapPin, Building2, Calendar, Ruler, BedDouble, Bath,
-  TrendingUp, TrendingDown, AlertTriangle, Sparkles, ChevronDown, ChevronUp,
+  TrendingUp, TrendingDown, AlertTriangle, Sparkles, ChevronDown, ChevronUp, ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -212,6 +212,9 @@ const Analysis = () => {
   const [revealed, setRevealed] = useState(false);
   const [fomoStep, setFomoStep] = useState(0);
   const fomoTimerRef = useRef<ReturnType<typeof setInterval>>();
+  const [scrapeFailed, setScrapeFailed] = useState(false);
+  const [manualContent, setManualContent] = useState("");
+  const [retrying, setRetrying] = useState(false);
 
   // FOMO step progression
   useEffect(() => {
@@ -222,29 +225,37 @@ const Analysis = () => {
     return () => clearInterval(fomoTimerRef.current);
   }, [analyzing]);
 
+  const runAnalysis = async (url: string, manualText?: string) => {
+    setAnalyzing(true);
+    setAnalyzeError("");
+    setScrapeFailed(false);
+    setFomoStep(0);
+    try {
+      const body: any = { url };
+      if (manualText) body.manual_content = manualText;
+      const { data: result, error } = await supabase.functions.invoke("analyze-property", { body });
+      if (error) throw error;
+      if (result?.error) throw new Error(result.error);
+      if (result?.scrape_failed && !manualText) {
+        setScrapeFailed(true);
+        setAnalyzing(false);
+        return;
+      }
+      if (result?.data?.id) {
+        navigate(`/analysis/${result.data.id}`, { replace: true });
+      }
+    } catch (e: any) {
+      setAnalyzeError(e.message || "Analysis failed");
+      setAnalyzing(false);
+    }
+  };
+
   // Mode 1: Loading mode — trigger analysis
   useEffect(() => {
     if (!isLoadingMode || !user) return;
-    setAnalyzing(true);
     setLoading(false);
-
-    (async () => {
-      try {
-        const { data: result, error } = await supabase.functions.invoke("analyze-property", {
-          body: { url: urlToAnalyze },
-        });
-        if (error) throw error;
-        if (result?.error) throw new Error(result.error);
-        if (result?.data?.id) {
-          // Replace URL so back button goes to dashboard
-          navigate(`/analysis/${result.data.id}`, { replace: true });
-        }
-      } catch (e: any) {
-        setAnalyzeError(e.message || "Analysis failed");
-        setAnalyzing(false);
-      }
-    })();
-  }, [isLoadingMode, user, urlToAnalyze, navigate]);
+    runAnalysis(urlToAnalyze!);
+  }, [isLoadingMode, user, urlToAnalyze]);
 
   // Mode 2: View existing analysis
   useEffect(() => {
@@ -277,6 +288,51 @@ const Analysis = () => {
   // Show FOMO loader while analyzing
   if (analyzing && !data) {
     return <FomoLoader step={fomoStep} />;
+  }
+
+  // Show scrape failed — ask for manual paste
+  if (scrapeFailed && !analyzing) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto px-4 pt-20 pb-16 max-w-2xl">
+          <Button variant="ghost" size="sm" className="mb-6 text-muted-foreground" onClick={() => navigate("/dashboard")}>
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back to Dashboard
+          </Button>
+          <div className="rounded-2xl border border-primary/20 bg-card p-8">
+            <div className="text-center mb-6">
+              <AlertTriangle className="h-8 w-8 text-score-average mx-auto mb-3" />
+              <h2 className="text-lg font-semibold text-foreground mb-2">
+                This site doesn't allow automatic access
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                But we can still analyze it in <span className="text-primary font-semibold">15 seconds</span>! Just copy and paste all the listing information below.
+              </p>
+            </div>
+            <textarea
+              value={manualContent}
+              onChange={(e) => setManualContent(e.target.value)}
+              placeholder={"Paste the full listing here…\n\nFor example:\n• Price: €350,000\n• Location: Madrid, Spain\n• 3 bedrooms, 2 bathrooms\n• 120 m²\n• Year built: 1985\n• Any other details from the listing page"}
+              className="w-full h-48 rounded-xl border border-border bg-secondary/50 p-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40 resize-none"
+            />
+            <Button
+              variant="hero"
+              className="w-full mt-4"
+              disabled={manualContent.trim().length < 20 || retrying}
+              onClick={() => {
+                setRetrying(true);
+                runAnalysis(urlToAnalyze || "", manualContent);
+              }}
+            >
+              {retrying ? "Analyzing…" : "Analyze Now"} <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
+            <p className="text-[11px] text-muted-foreground text-center mt-3">
+              We'll extract price, location, size, rooms, and everything else automatically.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (analyzeError) {
