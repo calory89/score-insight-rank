@@ -15,13 +15,13 @@ const filters = ["All Budgets", "< €100K", "€100K–€300K", "€300K+"];
 const GlobalRanking = () => {
   return (
     <section id="rankings" className="py-24 md:py-32 relative">
-      <div className="absolute inset-0 bg-gradient-hero opacity-50" />
+      <div className="absolute inset-0 bg-gradient-hero opacity-40" />
       <div className="container relative mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className="text-center mb-6"
         >
           <div className="inline-flex items-center gap-2 mb-4">
             <Globe className="h-4 w-4 text-primary" />
@@ -30,8 +30,11 @@ const GlobalRanking = () => {
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Top Performing Properties Worldwide
           </h2>
-          <p className="text-muted-foreground max-w-lg mx-auto">
-            Objective. Data-driven. Independent. No sponsored positions.
+          <p className="text-muted-foreground max-w-lg mx-auto mb-2">
+            Based on 14,000+ analyses generated worldwide. Updated daily.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            No sponsored placements. Rankings are purely data-driven.
           </p>
         </motion.div>
 

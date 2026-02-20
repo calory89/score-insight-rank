@@ -7,6 +7,7 @@ import ValueProposition from "@/components/ValueProposition";
 import PricingSection from "@/components/PricingSection";
 import TrustSection from "@/components/TrustSection";
 import APISection from "@/components/APISection";
+import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 
 const Index = () => {
@@ -21,6 +22,7 @@ const Index = () => {
       <PricingSection />
       <TrustSection />
       <APISection />
+      <FinalCTA />
       <Footer />
     </div>
   );

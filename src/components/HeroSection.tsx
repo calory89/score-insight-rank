@@ -1,17 +1,43 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { ArrowRight, Search } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import AnalysisLoader from "@/components/AnalysisLoader";
+import LoginGateModal from "@/components/LoginGateModal";
 
 const HeroSection = () => {
   const [url, setUrl] = useState("");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+  const [showLoginGate, setShowLoginGate] = useState(false);
+  const { user } = useAuth();
+
+  const handleAnalyze = () => {
+    if (!url.trim()) return;
+    setAnalyzing(true);
+    setShowResults(false);
+  };
+
+  const handleAnalysisComplete = useCallback(() => {
+    setAnalyzing(false);
+    setShowResults(true);
+    if (!user) {
+      setShowLoginGate(true);
+    }
+  }, [user]);
+
+  const handleLoginClose = () => {
+    setShowLoginGate(false);
+  };
+
+  const isBlurred = showResults && !user;
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-hero" />
-      <div className="absolute inset-0 grid-pattern opacity-30" />
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-primary/5 blur-[120px]" />
+      <div className="absolute inset-0 bg-gradient-hero opacity-80" />
+      <div className="absolute inset-0 grid-pattern opacity-20" />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/3 blur-[140px]" />
 
       <div className="container relative mx-auto px-4 py-20">
         <motion.div
@@ -32,14 +58,14 @@ const HeroSection = () => {
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-foreground leading-[1.1] mb-6">
             Paste Any Listing.{" "}
-            <span className="text-gradient-primary">Get the Score.</span>
+            <span className="text-gradient-primary">Know If It's a Good Deal.</span>
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed">
-            Know the Risk Before You Invest. Avoid expensive mistakes. Save thousands of euros and hours.
+            We analyze risk, ROI, demand, liquidity, and market strength — so you don't buy blind.
           </p>
 
-          {/* URL Input */}
+          {/* URL Input — 15% larger */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -47,25 +73,26 @@ const HeroSection = () => {
             className="max-w-2xl mx-auto mb-4"
           >
             <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-cta rounded-2xl opacity-20 group-focus-within:opacity-40 blur transition-opacity duration-300" />
-              <div className="relative flex items-center bg-card rounded-xl border border-border p-2">
+              <div className="absolute -inset-0.5 bg-gradient-cta rounded-2xl opacity-15 group-focus-within:opacity-30 blur transition-opacity duration-300" />
+              <div className="relative flex items-center bg-card rounded-xl border border-border p-2.5">
                 <Search className="ml-3 h-5 w-5 text-muted-foreground flex-shrink-0" />
                 <input
                   type="url"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
-                  placeholder="Paste a Zillow, Idealista, Rightmove, or Airbnb URL..."
-                  className="flex-1 bg-transparent px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                  onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
+                  placeholder="Paste any Zillow, Idealista, Rightmove, or Airbnb URL…"
+                  className="flex-1 bg-transparent px-4 py-4 text-base text-foreground placeholder:text-muted-foreground focus:outline-none"
                 />
-                <Button variant="hero" size="lg" className="rounded-lg">
-                  Analyze <ArrowRight className="ml-1 h-4 w-4" />
+                <Button variant="hero" size="lg" className="rounded-lg h-12 px-6" onClick={handleAnalyze}>
+                  Analyze Property — Free <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               </div>
             </div>
           </motion.div>
 
           <p className="text-xs text-muted-foreground mb-8">
-            Free analysis · Transparent model · No paid rankings
+            3 free analyses · No credit card · 50+ platforms supported
           </p>
 
           <motion.div
@@ -74,22 +101,41 @@ const HeroSection = () => {
             transition={{ delay: 0.6, duration: 0.5 }}
             className="flex items-center justify-center gap-4"
           >
-            <Button variant="hero-outline" size="sm">
+            <Button variant="hero-outline" size="sm" onClick={() => { setShowResults(true); }}>
               See Example Report
             </Button>
           </motion.div>
         </motion.div>
 
         {/* Score Preview */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.8 }}
-          className="max-w-4xl mx-auto mt-20"
-        >
-          <ScorePreview />
-        </motion.div>
+        {showResults && (
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className={`max-w-4xl mx-auto mt-20 relative ${isBlurred ? "select-none" : ""}`}
+          >
+            {isBlurred && (
+              <div className="absolute inset-0 z-10 backdrop-blur-md rounded-2xl" />
+            )}
+            <ScorePreview />
+          </motion.div>
+        )}
+
+        {!showResults && (
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8, duration: 0.8 }}
+            className="max-w-4xl mx-auto mt-20"
+          >
+            <ScorePreview />
+          </motion.div>
+        )}
       </div>
+
+      <AnalysisLoader active={analyzing} onComplete={handleAnalysisComplete} />
+      <LoginGateModal open={showLoginGate} onClose={handleLoginClose} />
     </section>
   );
 };
@@ -145,9 +191,23 @@ const ScorePreview = () => {
         </div>
       </div>
 
-      <div className="mt-6 pt-6 border-t border-border">
+      {/* Insight line */}
+      <div className="mt-5 flex items-center gap-2">
+        <span className="text-xs text-muted-foreground">Performs better than</span>
+        <span className="text-xs font-mono font-semibold text-primary">72%</span>
+        <span className="text-xs text-muted-foreground">of listings in this area.</span>
+      </div>
+
+      <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
+        <p className="text-xs font-medium text-primary mb-1">Primary Insight</p>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          <span className="text-primary font-medium">AI Summary:</span> This property shows strong demand signals in a stabilizing market. ROI potential is above average for this region, though moderate risk exists due to recent regulatory changes. Liquidity is favorable with average days-on-market below the regional median.
+          This property is slightly overpriced relative to comparable listings. ROI potential is above average for this region, though moderate risk exists due to recent regulatory changes.
+        </p>
+      </div>
+
+      <div className="mt-4 pt-4 border-t border-border">
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          <span className="text-primary font-medium">AI Summary:</span> Strong demand signals in a stabilizing market. Liquidity is favorable with average days-on-market below the regional median. Priced 6% above median market value.
         </p>
       </div>
     </div>
