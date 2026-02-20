@@ -18,7 +18,7 @@ const AlternativesSection = () => {
           viewport={{ once: true }}
           className="text-center mb-4"
         >
-          <span className="text-xs font-medium text-primary uppercase tracking-wider">Intelligent Cross-Analysis</span>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Intelligent Cross-Analysis</span>
         </motion.div>
 
         <motion.div
@@ -27,11 +27,11 @@ const AlternativesSection = () => {
           viewport={{ once: true }}
           className="text-center mb-8"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
             You Might Be Overpaying.
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Here are higher-performing alternatives analyzed by RealHunt users.
+            Higher-performing alternatives analyzed by RealHunt users.
           </p>
         </motion.div>
 
@@ -42,18 +42,18 @@ const AlternativesSection = () => {
           viewport={{ once: true }}
           className="max-w-2xl mx-auto mb-10"
         >
-          <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-xl border border-border bg-card p-4 text-center">
-              <p className="text-xs text-muted-foreground mb-1">This Property</p>
-              <p className="text-2xl font-mono font-bold text-foreground">81</p>
+          <div className="grid grid-cols-3 gap-3 sm:gap-4">
+            <div className="rounded-xl border border-border bg-card p-3 sm:p-4 text-center">
+              <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">This Property</p>
+              <p className="text-xl sm:text-2xl font-mono font-bold text-foreground">81</p>
             </div>
-            <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-center">
-              <p className="text-xs text-muted-foreground mb-1">Best Alternative</p>
-              <p className="text-2xl font-mono font-bold text-primary">94</p>
+            <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 sm:p-4 text-center">
+              <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">Best Alternative</p>
+              <p className="text-xl sm:text-2xl font-mono font-bold text-primary">94</p>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4 text-center">
-              <p className="text-xs text-muted-foreground mb-1">ROI Difference</p>
-              <p className="text-2xl font-mono font-bold text-primary">+3.7%</p>
+            <div className="rounded-xl border border-border bg-card p-3 sm:p-4 text-center">
+              <p className="text-[10px] sm:text-xs text-muted-foreground mb-1">ROI Difference</p>
+              <p className="text-xl sm:text-2xl font-mono font-bold text-primary">+3.7%</p>
             </div>
           </div>
         </motion.div>
@@ -66,19 +66,19 @@ const AlternativesSection = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="group rounded-xl border border-border bg-card p-4 md:p-5 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+              className="group rounded-xl border border-border bg-card p-4 md:p-5 hover:border-primary/20 transition-all duration-300 cursor-pointer"
             >
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-4 flex-1 min-w-0">
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="font-mono text-lg font-bold text-primary">{alt.score}</span>
+              <div className="flex items-center justify-between gap-3 sm:gap-4">
+                <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+                  <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <span className="font-mono text-base sm:text-lg font-bold text-primary">{alt.score}</span>
                   </div>
                   <div className="min-w-0">
                     <h4 className="text-sm font-semibold text-foreground truncate">{alt.city}</h4>
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-xs text-muted-foreground">{alt.price}</span>
-                      <span className="text-xs text-muted-foreground">ROI {alt.roi}</span>
-                      <span className="text-xs text-primary">{alt.risk} Risk</span>
+                    <div className="flex items-center gap-2 sm:gap-3 mt-1 flex-wrap">
+                      <span className="text-[11px] sm:text-xs text-muted-foreground">{alt.price}</span>
+                      <span className="text-[11px] sm:text-xs text-muted-foreground">ROI {alt.roi}</span>
+                      <span className={`text-[11px] sm:text-xs ${alt.risk === "Low" ? "text-primary" : "text-score-average"}`}>{alt.risk} Risk</span>
                     </div>
                   </div>
                 </div>
@@ -87,7 +87,7 @@ const AlternativesSection = () => {
                     <TrendingUp className="h-3 w-3" />
                     <span className="text-xs font-mono font-medium">{alt.change}</span>
                   </div>
-                  <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                 </div>
               </div>
             </motion.div>

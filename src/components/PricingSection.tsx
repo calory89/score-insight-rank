@@ -47,10 +47,10 @@ const PricingSection = () => {
           viewport={{ once: true }}
           className="text-center mb-16"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
             Simple, transparent pricing
           </h2>
-          <p className="text-muted-foreground max-w-md mx-auto">
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
             If one bad decision costs €20,000… €29 is not expensive.
           </p>
         </motion.div>
@@ -65,7 +65,7 @@ const PricingSection = () => {
               transition={{ delay: i * 0.1 }}
               className={`rounded-2xl border p-6 md:p-8 ${
                 plan.highlight
-                  ? "border-primary/40 bg-card glow-primary relative scale-[1.03]"
+                  ? "border-primary/30 bg-card glow-primary relative scale-[1.04]"
                   : "border-border bg-card"
               }`}
             >
@@ -77,7 +77,7 @@ const PricingSection = () => {
               <h3 className="text-lg font-semibold text-foreground">{plan.name}</h3>
               <p className="text-sm text-muted-foreground mt-1 mb-4">{plan.description}</p>
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-bold text-foreground">{plan.price}</span>
+                <span className={`font-bold text-foreground ${plan.highlight ? "text-5xl" : "text-4xl"}`}>{plan.price}</span>
                 <span className="text-sm text-muted-foreground">{plan.period}</span>
               </div>
               <ul className="space-y-3 mb-8">

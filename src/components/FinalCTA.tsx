@@ -22,9 +22,10 @@ const FinalCTA = () => {
           <p className="text-xl text-muted-foreground mb-10">
             Know if it's a good deal.
           </p>
-          <Button variant="hero" size="lg" className="h-14 px-10 text-base" onClick={scrollToHero}>
+          <Button variant="hero" size="lg" className="h-14 sm:h-16 px-10 sm:px-12 text-base" onClick={scrollToHero}>
             Analyze Your First Property — Free <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
+          <p className="text-xs text-muted-foreground mt-4">No credit card required.</p>
         </motion.div>
       </div>
     </section>

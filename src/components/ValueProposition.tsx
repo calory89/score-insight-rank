@@ -14,10 +14,10 @@ const ValueProposition = () => {
             Don't Buy Blind.
           </h2>
           <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-4">
-            One bad investment can cost you <span className="text-foreground font-semibold">€50,000</span>.
+            One mistake can cost you <span className="text-foreground font-semibold">€50,000</span>.
           </p>
           <p className="text-lg md:text-xl text-muted-foreground leading-relaxed mb-8">
-            RealHunt is <span className="text-primary font-semibold">free</span>.
+            RealHunt helps you <span className="text-foreground font-semibold">avoid it</span>.
           </p>
           <div className="rounded-xl border border-border bg-card/50 p-6 md:p-8">
             <p className="text-sm text-muted-foreground leading-relaxed italic">
