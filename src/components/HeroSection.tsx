@@ -4,70 +4,37 @@ import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import AnalysisLoader from "@/components/AnalysisLoader";
 import LoginGateModal from "@/components/LoginGateModal";
 import ScorePreview from "@/components/ScorePreview";
 
 const HeroSection = () => {
   const [url, setUrl] = useState("");
-  const [analyzing, setAnalyzing] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [showLoginGate, setShowLoginGate] = useState(false);
-  const [analyzeError, setAnalyzeError] = useState("");
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const runAnalysis = useCallback(async (listingUrl: string) => {
-    setAnalyzeError("");
-    try {
-      const { data, error } = await supabase.functions.invoke("analyze-property", {
-        body: { url: listingUrl },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      if (data?.data?.id) {
-        navigate(`/analysis/${data.data.id}`);
-      }
-    } catch (e: any) {
-      setAnalyzeError(e.message || "Analysis failed.");
-      setShowResults(false);
-    }
-  }, [navigate]);
-
   const handleAnalyze = () => {
     if (!url.trim()) return;
-    setAnalyzing(true);
-    setShowResults(false);
-    setAnalyzeError("");
-  };
-
-  const handleAnalysisComplete = useCallback(() => {
-    setAnalyzing(false);
     if (!user) {
-      setShowResults(true);
       setShowLoginGate(true);
-    } else {
-      runAnalysis(url);
+      return;
     }
-  }, [user, url, runAnalysis]);
+    // Navigate to analysis loading page — Analysis.tsx handles the actual API call
+    navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
+  };
 
   const handleLoginClose = () => {
     setShowLoginGate(false);
-    // After login, if user is now authenticated, run the analysis
-    if (user && url.trim()) {
-      runAnalysis(url);
-    }
   };
 
-  // Re-check after auth state changes
   const handleLoginSuccess = () => {
     setShowLoginGate(false);
-    setShowResults(false);
-    // Small delay for auth state to propagate
-    setTimeout(() => {
-      if (url.trim()) runAnalysis(url);
-    }, 500);
+    if (url.trim()) {
+      setTimeout(() => {
+        navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
+      }, 500);
+    }
   };
 
   const isBlurred = showResults && !user;
@@ -125,14 +92,12 @@ const HeroSection = () => {
                     className="flex-1 bg-transparent px-3 sm:px-4 py-4 sm:py-5 text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0"
                   />
                 </div>
-                <Button variant="hero" size="lg" className="rounded-lg h-12 sm:h-14 px-4 sm:px-6 text-sm sm:text-base flex-shrink-0" onClick={handleAnalyze} disabled={analyzing}>
-                  {analyzing ? "Analyzing…" : "Analyze Property — Free"} <ArrowRight className="ml-1 h-4 w-4 hidden sm:inline" />
+                <Button variant="hero" size="lg" className="rounded-lg h-12 sm:h-14 px-4 sm:px-6 text-sm sm:text-base flex-shrink-0" onClick={handleAnalyze}>
+                  Analyze Property — Free <ArrowRight className="ml-1 h-4 w-4 hidden sm:inline" />
                 </Button>
               </div>
             </div>
           </motion.div>
-
-          {analyzeError && <p className="text-xs text-destructive mb-4">{analyzeError}</p>}
 
           <p className="text-xs text-muted-foreground mb-8">
             3 free analyses · No credit card · 50+ platforms supported
@@ -179,7 +144,6 @@ const HeroSection = () => {
         )}
       </div>
 
-      <AnalysisLoader active={analyzing} onComplete={handleAnalysisComplete} />
       <LoginGateModal open={showLoginGate} onClose={handleLoginClose} onSuccess={handleLoginSuccess} />
     </section>
   );

@@ -6,12 +6,45 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const REAL_ESTATE_DOMAINS = [
+  "zillow.com", "realtor.com", "redfin.com", "trulia.com", "homes.com",
+  "idealista.com", "idealista.pt", "fotocasa.es", "pisos.com", "habitaclia.com",
+  "rightmove.co.uk", "zoopla.co.uk", "onthemarket.com", "primelocation.com",
+  "immobilienscout24.de", "immowelt.de", "immonet.de",
+  "seloger.com", "leboncoin.fr", "pap.fr", "logic-immo.com",
+  "immobiliare.it", "casa.it", "subito.it",
+  "funda.nl", "jaap.nl", "pararius.com",
+  "hemnet.se", "boliga.dk", "finn.no",
+  "daft.ie", "myhome.ie",
+  "sreality.cz", "otodom.pl", "ingatlan.com",
+  "sahibinden.com", "hepsiemlak.com",
+  "cian.ru", "avito.ru",
+  "airbnb.com", "airbnb.co.uk", "airbnb.es", "airbnb.fr", "airbnb.de", "airbnb.it",
+  "booking.com", "vrbo.com",
+  "propertyfinder.ae", "bayut.com", "dubizzle.com",
+  "99.co", "propertyguru.com", "edgeprop.my",
+  "domain.com.au", "realestate.com.au",
+  "trademe.co.nz",
+  "magicbricks.com", "99acres.com", "housing.com",
+  "lamudi.com", "lamudi.co.id",
+  "olx.com", "mercadolibre.com",
+  "point2homes.com", "century21.com", "coldwellbanker.com", "sothebysrealty.com",
+  "propertypal.com", "nestoria.com",
+];
+
+function isRealEstateUrl(url: string): boolean {
+  if (!url || url === "manual-entry") return true;
+  try {
+    const hostname = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+    return REAL_ESTATE_DOMAINS.some(d => hostname === d || hostname.endsWith("." + d));
+  } catch {
+    return false;
+  }
+}
+
 async function scrapeListingPage(url: string): Promise<{ content: string | null; isEstimated: boolean }> {
   const apiKey = Deno.env.get("FIRECRAWL_API_KEY");
-  if (!apiKey) {
-    console.warn("FIRECRAWL_API_KEY not configured, falling back to URL-only analysis");
-    return { content: null, isEstimated: true };
-  }
+  if (!apiKey) return { content: null, isEstimated: true };
 
   try {
     console.log("Scraping listing page:", url);
@@ -20,34 +53,20 @@ async function scrapeListingPage(url: string): Promise<{ content: string | null;
 
     const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url,
-        formats: ["markdown"],
-        onlyMainContent: true,
-        waitFor: 3000,
-      }),
+      headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ url, formats: ["markdown"], onlyMainContent: true, waitFor: 3000 }),
       signal: controller.signal,
     });
-
     clearTimeout(timeout);
 
     if (!response.ok) {
-      const errText = await response.text();
-      console.error("Firecrawl error:", response.status, errText);
+      console.error("Firecrawl error:", response.status);
       return { content: null, isEstimated: true };
     }
 
     const data = await response.json();
     const markdown = data.data?.markdown || data.markdown || null;
-
-    if (!markdown || markdown.trim().length < 50) {
-      console.warn("Firecrawl returned insufficient content, length:", markdown?.length || 0);
-      return { content: null, isEstimated: true };
-    }
+    if (!markdown || markdown.trim().length < 50) return { content: null, isEstimated: true };
 
     console.log("Scrape successful, content length:", markdown.length);
     const truncated = markdown.length > 12000 ? markdown.substring(0, 12000) + "\n\n[Content truncated...]" : markdown;
@@ -80,56 +99,60 @@ function determineConfidence(dataSource: string, contentLength: number): string 
 
 function buildPrompts(url: string, scrapedContent: string | null, isEstimated: boolean, dataSource: string) {
   const forensicInstructions = `
-ANALYSIS FRAMEWORK — Apply these in order of priority:
+ANALYSIS FRAMEWORK — Apply in order of priority:
 
 1. DEAL QUALITY (Highest Priority):
-   - Asking price vs micro-market median
-   - Price per m² vs area percentiles
-   - Fair value estimate, over/underpricing %
-   - Cap rate, gross yield, net yield estimates
-   - Deal Verdict: Strong / Fair / Weak
+   - Calculate exact price per m² and price per sq ft
+   - Estimate micro-market median price per m² 
+   - Position in p25/p50/p75/p90 percentiles
+   - Premium/discount % vs median
+   - Fair value estimate (range)
+   - Cap rate (realistic), gross yield, net yield
+   - Over/underpriced verdict with exact %
 
 2. RENTAL PERFORMANCE & DEMAND:
-   - Rental yield (long-term + short-term potential)
-   - Vacancy rates, days-on-market (rental)
-   - Occupancy levels, seasonal volatility
+   - Gross rental yield estimate
+   - Net rental yield (after expenses)
+   - Vacancy rate estimate
    - Tenant demand index
+   - Seasonal volatility if applicable
 
 3. LIQUIDITY & EXIT RISK:
-   - Days-on-market (sale), transaction volume
-   - Absorption rate, market depth
+   - Days-on-market estimate
+   - Transaction volume context
    - Resale difficulty in downturn
 
 4. MARKET MOMENTUM & CYCLE POSITION:
-   - 1-year and 5-year appreciation trends
-   - Construction permits, supply pipeline
-   - Net migration trends
+   - 1-year and 5-year appreciation
+   - Supply pipeline risk
    - Cycle Position: Early / Mid / Late / Overheated
 
 5. MACRO & REGULATORY RISK:
-   - Legal stability, property tax burden
+   - Property tax burden context
    - Rental regulation risk
    - Economic concentration risk
 
 6. PROPERTY-SPECIFIC RISK:
-   - Building age, maintenance risk
-   - HOA burden, renovation cost exposure
-   - Energy rating impact, environmental risk
+   - Building age risk
+   - Maintenance/renovation exposure
+   - Energy/environmental risk
 
 7. SCENARIO MODELING:
    - 5-year base, optimistic, and downside projections
-   - Projected IRR range
-   - Risk-adjusted return estimate`;
+   - Break-even analysis
+   - Cash flow simulation
+   - Stress test scenarios`;
 
   if (scrapedContent) {
-    const systemPrompt = `You are a forensic real estate investment analyst producing institutional-grade reports. You will receive REAL content from a property listing. Extract EXACT data — do NOT invent details.
+    const systemPrompt = `You are a forensic real estate investment analyst producing institutional-grade reports. Extract EXACT data from the listing. Never invent details.
 
 CRITICAL RULES:
-- Use the REAL price, size, bedrooms, bathrooms, address from the listing
+- Use the REAL price, size, bedrooms, bathrooms, address
 - If size is in acres, convert to m² (1 acre = 4046.86 m²). If ft², convert (1 ft² = 0.0929 m²)
-- If a data point is not available, use null
-- Your analysis must be forensic, data-dense, and defensible
-- Never fabricate precision — if data is incomplete, note it in the summary
+- If data is missing, use null
+- Be forensic, data-dense, defensible
+- Never fabricate precision
+- Include SPECIFIC NUMBERS in all analyses — no vague language
 ${forensicInstructions}`;
 
     const userPrompt = `Analyze this property listing for investment potential.
@@ -142,17 +165,16 @@ LISTING CONTENT:
 ${scrapedContent}
 ---
 
-Provide a complete forensic investment analysis based on the data above. Be rigorous and analytical.`;
+Provide a complete forensic investment analysis. Be rigorous and analytical. Include precise numerical estimates for all metrics.`;
 
     return { systemPrompt, userPrompt };
   }
 
-  const systemPrompt = `You are a forensic real estate investment analyst. Given a property URL, generate a comprehensive investment analysis using your knowledge. Include "[ESTIMATED]" at the start of ai_summary since the listing page could not be accessed directly.
+  const systemPrompt = `You are a forensic real estate investment analyst. Given a property URL, generate analysis using your knowledge. Mark "[ESTIMATED]" at start of ai_summary.
 ${forensicInstructions}`;
 
-  const userPrompt = `Analyze this property listing URL for investment potential: ${url}
-
-WARNING: Could not access the listing page. Generate analysis based on what you can infer from the URL (location, platform, property type). Note in the summary that data is estimated.`;
+  const userPrompt = `Analyze this property listing URL: ${url}
+WARNING: Could not access listing page. Analyze based on URL inference. Note data is estimated.`;
 
   return { systemPrompt, userPrompt };
 }
@@ -182,6 +204,20 @@ serve(async (req) => {
     }
 
     const { url, manual_content, manual_fields } = await req.json();
+
+    // Non-real-estate URL check
+    if (url && url !== "manual-entry" && !manual_fields && !manual_content) {
+      if (!isRealEstateUrl(url)) {
+        return new Response(JSON.stringify({ 
+          success: false, 
+          not_real_estate: true, 
+          error: "RealHunt only works with real estate property listings. Please paste a URL from a property listing platform (Zillow, Idealista, Rightmove, Airbnb, etc.)." 
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     if (!url && !manual_fields?.city) {
       return new Response(JSON.stringify({ error: "URL or property details required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -191,31 +227,44 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
+    // --- Duplicate detection: check if same URL already analyzed by this user ---
+    let existingAnalysisId: string | null = null;
+    if (url && url !== "manual-entry") {
+      // Normalize URL for comparison (strip hash/fragment)
+      const normalizedUrl = url.split("#")[0].replace(/\/$/, "");
+      const { data: existingByUrl } = await supabase
+        .from("analyses")
+        .select("id")
+        .eq("user_id", user.id)
+        .ilike("url", `${normalizedUrl}%`)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      
+      if (existingByUrl && existingByUrl.length > 0) {
+        existingAnalysisId = existingByUrl[0].id;
+        console.log("Found existing analysis to update:", existingAnalysisId);
+      }
+    }
+
     // Determine data source and content
     let scrapedContent: string | null = null;
     let isEstimated = false;
     let dataSource = "scraped";
 
     if (manual_fields && manual_fields.city) {
-      // Manual entry form
       scrapedContent = buildManualEntryContent(manual_fields);
       isEstimated = false;
       dataSource = "manual_entry";
-      console.log("Using manual entry fields");
     } else if (manual_content && manual_content.trim().length > 50) {
-      // Pasted content
       scrapedContent = manual_content.trim().substring(0, 12000);
       isEstimated = false;
       dataSource = "pasted";
-      console.log("Using pasted content, length:", scrapedContent.length);
     } else if (url) {
-      // Try scraping
       const result = await scrapeListingPage(url);
       scrapedContent = result.content;
       isEstimated = result.isEstimated;
 
       if (result.isEstimated) {
-        console.log("Scrape failed, returning scrape_failed flag");
         return new Response(JSON.stringify({ success: false, scrape_failed: true, error: "Listing is protected" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
@@ -244,17 +293,17 @@ serve(async (req) => {
             type: "function",
             function: {
               name: "analyze_property",
-              description: "Return a complete forensic property investment analysis",
+              description: "Return a complete forensic property investment analysis with precise financial metrics",
               parameters: {
                 type: "object",
                 properties: {
-                  address: { type: "string", description: "Full property address from listing" },
+                  address: { type: "string" },
                   city: { type: "string" },
                   country: { type: "string" },
-                  price: { type: "string", description: "Exact price from listing e.g. $549,000" },
+                  price: { type: "string", description: "Exact price e.g. £750,000" },
                   currency: { type: "string" },
                   image_url: { type: "string", description: "Leave empty string" },
-                  property_type: { type: "string", description: "Apartment, House, Villa, Studio, etc." },
+                  property_type: { type: "string" },
                   size_sqm: { type: "number" },
                   year_built: { type: "integer" },
                   bedrooms: { type: "integer" },
@@ -263,17 +312,17 @@ serve(async (req) => {
                   roi_potential: { type: "integer", description: "0-100" },
                   market_stability: { type: "integer", description: "0-100" },
                   demand_strength: { type: "integer", description: "0-100" },
-                  risk_level: { type: "integer", description: "0-100 where 100 = lowest risk" },
+                  risk_level: { type: "integer", description: "0-100 where 100=lowest risk" },
                   liquidity_outlook: { type: "integer", description: "0-100" },
                   market_classification: { type: "string", enum: ["Emerging", "Stable", "Overpriced", "Premium Zone"] },
                   verdict: { type: "string", enum: ["Strong", "Moderate", "Risky"] },
-                  market_rank: { type: "integer", description: "Rank among local listings" },
-                  market_total: { type: "integer", description: "Total listings in area" },
-                  percentile: { type: "integer", description: "Percentile performance 0-100" },
-                  pros: { type: "array", items: { type: "string" }, description: "3-5 investment pros" },
-                  cons: { type: "array", items: { type: "string" }, description: "3-5 investment cons" },
-                  red_flags: { type: "array", items: { type: "string" }, description: "1-3 red flags" },
-                  opportunity_signals: { type: "array", items: { type: "string" }, description: "1-3 opportunity signals" },
+                  market_rank: { type: "integer" },
+                  market_total: { type: "integer" },
+                  percentile: { type: "integer" },
+                  pros: { type: "array", items: { type: "string" }, description: "3-5 investment pros with specific numbers" },
+                  cons: { type: "array", items: { type: "string" }, description: "3-5 investment cons with specific numbers" },
+                  red_flags: { type: "array", items: { type: "string" } },
+                  opportunity_signals: { type: "array", items: { type: "string" } },
                   score_explanations: {
                     type: "object",
                     properties: {
@@ -285,22 +334,20 @@ serve(async (req) => {
                     },
                     required: ["roi_potential", "market_stability", "demand_strength", "risk_level", "liquidity_outlook"],
                   },
-                  primary_insight: { type: "string", description: "One-line verdict" },
-                  ai_summary: { type: "string", description: "2-3 sentence analytical summary" },
-                  why_not_90: { type: "array", items: { type: "string" }, description: "3 reasons why score isn't 90+" },
-                  projected_roi_low: { type: "number", description: "5-year low ROI %" },
-                  projected_roi_high: { type: "number", description: "5-year high ROI %" },
-                  downside_scenario: { type: "number", description: "Worst case % change" },
-                  upside_scenario: { type: "number", description: "Best case % change" },
+                  primary_insight: { type: "string", description: "One-line analytical verdict with numbers" },
+                  ai_summary: { type: "string", description: "2-3 sentence data-dense summary with specific metrics" },
+                  why_not_90: { type: "array", items: { type: "string" } },
+                  projected_roi_low: { type: "number" },
+                  projected_roi_high: { type: "number" },
+                  downside_scenario: { type: "number" },
+                  upside_scenario: { type: "number" },
                   price_history: {
                     type: "array",
                     items: { type: "object", properties: { year: { type: "string" }, value: { type: "number" } }, required: ["year", "value"] },
-                    description: "5-6 years of price index data (base 100)",
                   },
                   yield_trend: {
                     type: "array",
                     items: { type: "object", properties: { year: { type: "string" }, value: { type: "number" } }, required: ["year", "value"] },
-                    description: "5-6 years of yield % data",
                   },
                   alternatives: {
                     type: "array",
@@ -316,7 +363,40 @@ serve(async (req) => {
                       },
                       required: ["city", "score", "roi", "risk", "price", "insight"],
                     },
-                    description: "4-5 better alternative properties in nearby markets",
+                  },
+                  // NEW forensic fields
+                  price_per_sqm: { type: "number", description: "Price per m² of the property" },
+                  price_per_sqft: { type: "number", description: "Price per sq ft" },
+                  market_median_sqm: { type: "number", description: "Micro-market median price per m²" },
+                  premium_discount_pct: { type: "number", description: "Premium(+)/Discount(-) vs median %" },
+                  fair_value_low: { type: "string", description: "Fair value estimate low end" },
+                  fair_value_high: { type: "string", description: "Fair value estimate high end" },
+                  cap_rate: { type: "number", description: "Estimated cap rate %" },
+                  gross_yield: { type: "number", description: "Gross rental yield %" },
+                  net_yield: { type: "number", description: "Net rental yield after expenses %" },
+                  gross_annual_rent: { type: "string", description: "Estimated gross annual rent" },
+                  net_annual_rent: { type: "string", description: "Estimated net annual rent" },
+                  monthly_cash_flow: { type: "string", description: "Net monthly cash flow (unleveraged)" },
+                  leveraged_cash_flow: { type: "string", description: "Monthly cash flow at 75% LTV" },
+                  break_even_price: { type: "string", description: "Break-even purchase price" },
+                  break_even_rent: { type: "string", description: "Break-even monthly rent" },
+                  stress_test_market_drop: { type: "string", description: "Value if market drops 15%" },
+                  stress_test_rental_decline: { type: "string", description: "Yield impact of 10% rental decline" },
+                  opportunity_cost_vs_best: { type: "string", description: "5-year return gap vs best alternative" },
+                  capital_efficiency_score: { type: "integer", description: "0-100 return per unit invested vs top quartile" },
+                  risk_return_quadrant: { type: "string", description: "High Return/Low Risk, High Return/High Risk, Low Return/Low Risk, Low Return/High Risk" },
+                  investor_best_for: { type: "array", items: { type: "string" }, description: "2-3 ideal investor types" },
+                  investor_not_for: { type: "array", items: { type: "string" }, description: "2-3 non-ideal investor types" },
+                  assumptions: {
+                    type: "object",
+                    properties: {
+                      annual_appreciation: { type: "string" },
+                      rental_growth: { type: "string" },
+                      vacancy_rate: { type: "string" },
+                      maintenance_cost: { type: "string" },
+                      interest_rate: { type: "string" },
+                      operating_expenses: { type: "string" },
+                    },
                   },
                 },
                 required: [
@@ -328,7 +408,7 @@ serve(async (req) => {
                   "projected_roi_low", "projected_roi_high", "downside_scenario", "upside_scenario",
                   "price_history", "yield_trend", "alternatives",
                 ],
-                additionalProperties: false,
+                additionalProperties: true,
               },
             },
           },
@@ -344,7 +424,7 @@ serve(async (req) => {
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits depleted. Please add credits." }), {
+        return new Response(JSON.stringify({ error: "AI credits depleted." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
@@ -359,25 +439,110 @@ serve(async (req) => {
 
     const analysis = JSON.parse(toolCall.function.arguments);
 
-    // Save to database with confidence level
-    const { data: saved, error: dbError } = await supabase
-      .from("analyses")
-      .insert({
-        user_id: user.id,
-        url: url || manual_fields?.listingUrl || "manual-entry",
-        ...analysis,
-        image_url: analysis.image_url || "",
-        market_rank: analysis.market_rank || Math.floor(Math.random() * 30) + 5,
-        market_total: analysis.market_total || Math.floor(Math.random() * 150) + 100,
-        confidence_level: confidenceLevel,
-        data_source: dataSource,
-      })
-      .select()
-      .single();
+    // Extract standard DB fields and keep extra forensic fields in score_explanations
+    const forensicExtras = {
+      price_per_sqm: analysis.price_per_sqm,
+      price_per_sqft: analysis.price_per_sqft,
+      market_median_sqm: analysis.market_median_sqm,
+      premium_discount_pct: analysis.premium_discount_pct,
+      fair_value_low: analysis.fair_value_low,
+      fair_value_high: analysis.fair_value_high,
+      cap_rate: analysis.cap_rate,
+      gross_yield: analysis.gross_yield,
+      net_yield: analysis.net_yield,
+      gross_annual_rent: analysis.gross_annual_rent,
+      net_annual_rent: analysis.net_annual_rent,
+      monthly_cash_flow: analysis.monthly_cash_flow,
+      leveraged_cash_flow: analysis.leveraged_cash_flow,
+      break_even_price: analysis.break_even_price,
+      break_even_rent: analysis.break_even_rent,
+      stress_test_market_drop: analysis.stress_test_market_drop,
+      stress_test_rental_decline: analysis.stress_test_rental_decline,
+      opportunity_cost_vs_best: analysis.opportunity_cost_vs_best,
+      capital_efficiency_score: analysis.capital_efficiency_score,
+      risk_return_quadrant: analysis.risk_return_quadrant,
+      investor_best_for: analysis.investor_best_for,
+      investor_not_for: analysis.investor_not_for,
+      assumptions: analysis.assumptions,
+    };
 
-    if (dbError) {
-      console.error("DB error:", dbError);
-      throw new Error("Failed to save analysis");
+    // Merge forensic extras into score_explanations for storage
+    const enrichedExplanations = {
+      ...(analysis.score_explanations || {}),
+      forensic: forensicExtras,
+    };
+
+    const dbPayload = {
+      user_id: user.id,
+      url: url || manual_fields?.listingUrl || "manual-entry",
+      address: analysis.address,
+      city: analysis.city,
+      country: analysis.country,
+      price: analysis.price,
+      currency: analysis.currency,
+      image_url: analysis.image_url || "",
+      property_type: analysis.property_type,
+      size_sqm: analysis.size_sqm,
+      year_built: analysis.year_built,
+      bedrooms: analysis.bedrooms,
+      bathrooms: analysis.bathrooms,
+      global_score: analysis.global_score,
+      roi_potential: analysis.roi_potential,
+      market_stability: analysis.market_stability,
+      demand_strength: analysis.demand_strength,
+      risk_level: analysis.risk_level,
+      liquidity_outlook: analysis.liquidity_outlook,
+      market_classification: analysis.market_classification,
+      verdict: analysis.verdict,
+      market_rank: analysis.market_rank || Math.floor(Math.random() * 30) + 5,
+      market_total: analysis.market_total || Math.floor(Math.random() * 150) + 100,
+      percentile: analysis.percentile,
+      pros: analysis.pros,
+      cons: analysis.cons,
+      red_flags: analysis.red_flags,
+      opportunity_signals: analysis.opportunity_signals,
+      score_explanations: enrichedExplanations,
+      primary_insight: analysis.primary_insight,
+      ai_summary: analysis.ai_summary,
+      why_not_90: analysis.why_not_90,
+      projected_roi_low: analysis.projected_roi_low,
+      projected_roi_high: analysis.projected_roi_high,
+      downside_scenario: analysis.downside_scenario,
+      upside_scenario: analysis.upside_scenario,
+      price_history: analysis.price_history,
+      yield_trend: analysis.yield_trend,
+      alternatives: analysis.alternatives,
+      confidence_level: confidenceLevel,
+      data_source: dataSource,
+    };
+
+    let saved;
+    if (existingAnalysisId) {
+      // Update existing analysis
+      const { data: updated, error: dbError } = await supabase
+        .from("analyses")
+        .update(dbPayload)
+        .eq("id", existingAnalysisId)
+        .select()
+        .single();
+      if (dbError) {
+        console.error("DB update error:", dbError);
+        throw new Error("Failed to update analysis");
+      }
+      saved = updated;
+      console.log("Updated existing analysis:", existingAnalysisId);
+    } else {
+      // Insert new
+      const { data: inserted, error: dbError } = await supabase
+        .from("analyses")
+        .insert(dbPayload)
+        .select()
+        .single();
+      if (dbError) {
+        console.error("DB insert error:", dbError);
+        throw new Error("Failed to save analysis");
+      }
+      saved = inserted;
     }
 
     return new Response(JSON.stringify({ success: true, data: saved }), {
