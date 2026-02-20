@@ -14,7 +14,138 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      analyses: {
+        Row: {
+          address: string | null
+          ai_summary: string | null
+          alternatives: Json | null
+          bathrooms: number | null
+          bedrooms: number | null
+          city: string | null
+          cons: Json | null
+          country: string | null
+          created_at: string
+          currency: string | null
+          demand_strength: number | null
+          downside_scenario: number | null
+          global_score: number | null
+          id: string
+          image_url: string | null
+          liquidity_outlook: number | null
+          market_classification: string | null
+          market_rank: number | null
+          market_stability: number | null
+          market_total: number | null
+          opportunity_signals: Json | null
+          percentile: number | null
+          price: string | null
+          price_history: Json | null
+          primary_insight: string | null
+          projected_roi_high: number | null
+          projected_roi_low: number | null
+          property_type: string | null
+          pros: Json | null
+          red_flags: Json | null
+          risk_level: number | null
+          roi_potential: number | null
+          score_explanations: Json | null
+          size_sqm: number | null
+          upside_scenario: number | null
+          url: string
+          user_id: string
+          verdict: string | null
+          why_not_90: Json | null
+          year_built: number | null
+          yield_trend: Json | null
+        }
+        Insert: {
+          address?: string | null
+          ai_summary?: string | null
+          alternatives?: Json | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string | null
+          cons?: Json | null
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          demand_strength?: number | null
+          downside_scenario?: number | null
+          global_score?: number | null
+          id?: string
+          image_url?: string | null
+          liquidity_outlook?: number | null
+          market_classification?: string | null
+          market_rank?: number | null
+          market_stability?: number | null
+          market_total?: number | null
+          opportunity_signals?: Json | null
+          percentile?: number | null
+          price?: string | null
+          price_history?: Json | null
+          primary_insight?: string | null
+          projected_roi_high?: number | null
+          projected_roi_low?: number | null
+          property_type?: string | null
+          pros?: Json | null
+          red_flags?: Json | null
+          risk_level?: number | null
+          roi_potential?: number | null
+          score_explanations?: Json | null
+          size_sqm?: number | null
+          upside_scenario?: number | null
+          url: string
+          user_id: string
+          verdict?: string | null
+          why_not_90?: Json | null
+          year_built?: number | null
+          yield_trend?: Json | null
+        }
+        Update: {
+          address?: string | null
+          ai_summary?: string | null
+          alternatives?: Json | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string | null
+          cons?: Json | null
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          demand_strength?: number | null
+          downside_scenario?: number | null
+          global_score?: number | null
+          id?: string
+          image_url?: string | null
+          liquidity_outlook?: number | null
+          market_classification?: string | null
+          market_rank?: number | null
+          market_stability?: number | null
+          market_total?: number | null
+          opportunity_signals?: Json | null
+          percentile?: number | null
+          price?: string | null
+          price_history?: Json | null
+          primary_insight?: string | null
+          projected_roi_high?: number | null
+          projected_roi_low?: number | null
+          property_type?: string | null
+          pros?: Json | null
+          red_flags?: Json | null
+          risk_level?: number | null
+          roi_potential?: number | null
+          score_explanations?: Json | null
+          size_sqm?: number | null
+          upside_scenario?: number | null
+          url?: string
+          user_id?: string
+          verdict?: string | null
+          why_not_90?: Json | null
+          year_built?: number | null
+          yield_trend?: Json | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
