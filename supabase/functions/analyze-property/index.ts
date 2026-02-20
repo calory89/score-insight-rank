@@ -32,13 +32,14 @@ const REAL_ESTATE_DOMAINS = [
   "propertypal.com", "nestoria.com",
 ];
 
-function isRealEstateUrl(url: string): boolean {
-  if (!url || url === "manual-entry") return true;
+function isRealEstateUrl(url: string): { isListing: boolean; isRealEstateSite: boolean } {
+  if (!url || url === "manual-entry") return { isListing: true, isRealEstateSite: true };
   try {
     const hostname = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
-    return REAL_ESTATE_DOMAINS.some(d => hostname === d || hostname.endsWith("." + d));
+    const isListing = REAL_ESTATE_DOMAINS.some(d => hostname === d || hostname.endsWith("." + d));
+    return { isListing, isRealEstateSite: true }; // We now accept all URLs
   } catch {
-    return false;
+    return { isListing: false, isRealEstateSite: false };
   }
 }
 
@@ -134,7 +135,8 @@ function buildManualEntryContent(manualFields: any): string {
   return lines.join("\n");
 }
 
-function determineConfidence(dataSource: string, contentLength: number): string {
+function determineConfidence(dataSource: string, contentLength: number, isStandardListing: boolean): string {
+  if (!isStandardListing) return "low"; // Non-listing websites always get low confidence
   if (dataSource === "scraped" && contentLength > 500) return "high";
   if (dataSource === "pasted" && contentLength > 200) return "high";
   if (dataSource === "pasted" && contentLength > 50) return "medium";
@@ -142,7 +144,7 @@ function determineConfidence(dataSource: string, contentLength: number): string 
   return "low";
 }
 
-function buildPrompts(url: string, scrapedContent: string | null, isEstimated: boolean, dataSource: string) {
+function buildPrompts(url: string, scrapedContent: string | null, isEstimated: boolean, dataSource: string, isStandardListing: boolean = true) {
   const forensicInstructions = `
 ANALYSIS FRAMEWORK — Apply in order of priority:
 
@@ -231,9 +233,18 @@ ANALYSIS FRAMEWORK — Apply in order of priority:
 16. LISTING IMAGE (NEW):
     - Extract the main listing photo URL from the scraped content if available`;
 
+  const listingWarning = !isStandardListing ? `
+IMPORTANT: This is NOT a standard property listing. It appears to be a real estate project/developer website.
+- Extract whatever property/project data you can find (prices, locations, property types, sizes)
+- If multiple properties/units are mentioned, analyze the primary or most representative one
+- Mark data_source context as "project_website" in your analysis
+- Be honest about data limitations - many metrics will be estimated
+- Focus on what IS available: location analysis, market context, neighborhood intelligence
+` : "";
+
   if (scrapedContent) {
     const systemPrompt = `You are a forensic real estate investment analyst producing institutional-grade reports. Extract EXACT data from the listing. Never invent details.
-
+${listingWarning}
 CRITICAL RULES:
 - Use the REAL price, size, bedrooms, bathrooms, address
 - If size is in acres, convert to m² (1 acre = 4046.86 m²). If ft², convert (1 ft² = 0.0929 m²)
@@ -247,6 +258,7 @@ ${forensicInstructions}`;
 
 URL: ${url}
 Data Source: ${dataSource === "scraped" ? "Direct page scrape" : dataSource === "pasted" ? "User-provided listing text" : "Manual entry by user"}
+${!isStandardListing ? "⚠️ NOTE: This is a project/developer website, not a standard listing portal. Extract what you can." : ""}
 
 LISTING CONTENT:
 ---
@@ -259,6 +271,7 @@ Provide a complete forensic investment analysis. Be rigorous and analytical. Inc
   }
 
   const systemPrompt = `You are a forensic real estate investment analyst. Given a property URL, generate analysis using your knowledge. Mark "[ESTIMATED]" at start of ai_summary.
+${listingWarning}
 ${forensicInstructions}`;
 
   const userPrompt = `Analyze this property listing URL: ${url}
@@ -296,17 +309,12 @@ serve(async (req) => {
 
     const { url, manual_content, manual_fields } = await req.json();
 
-    // Non-real-estate URL check
+    // URL classification - accept all URLs but flag non-listing sites
+    let isStandardListing = true;
     if (url && url !== "manual-entry" && !manual_fields && !manual_content) {
-      if (!isRealEstateUrl(url)) {
-        return new Response(JSON.stringify({ 
-          success: false, 
-          not_real_estate: true, 
-          error: "RealHunt only works with real estate property listings. Please paste a URL from a property listing platform (Zillow, Idealista, Rightmove, Airbnb, etc.)." 
-        }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      const urlCheck = isRealEstateUrl(url);
+      isStandardListing = urlCheck.isListing;
+      // We no longer reject non-listing URLs - we try to analyze them with a warning
     }
 
     if (!url && !manual_fields?.city) {
@@ -351,16 +359,17 @@ serve(async (req) => {
       scrapedContent = result.content;
       isEstimated = result.isEstimated;
 
-      if (result.isEstimated) {
+      if (result.isEstimated && isStandardListing) {
+        // Only trigger fallback for standard listing sites
         return new Response(JSON.stringify({ success: false, scrape_failed: true, error: "Listing is protected" }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      dataSource = "scraped";
+      dataSource = isStandardListing ? "scraped" : "project_website";
     }
 
-    const confidenceLevel = determineConfidence(dataSource, scrapedContent?.length || 0);
-    const { systemPrompt, userPrompt } = buildPrompts(url || manual_fields?.listingUrl || "", scrapedContent, isEstimated, dataSource);
+    const confidenceLevel = determineConfidence(dataSource, scrapedContent?.length || 0, isStandardListing);
+    const { systemPrompt, userPrompt } = buildPrompts(url || manual_fields?.listingUrl || "", scrapedContent, isEstimated, dataSource, isStandardListing);
 
     // Call AI
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -758,7 +767,7 @@ serve(async (req) => {
       saved = inserted;
     }
 
-    return new Response(JSON.stringify({ success: true, data: saved }), {
+    return new Response(JSON.stringify({ success: true, data: saved, non_listing_warning: !isStandardListing }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
