@@ -263,11 +263,6 @@ const Analysis = () => {
     try {
       const { data: result, error } = await supabase.functions.invoke("analyze-property", { body });
       if (error) throw error;
-      if (result?.not_real_estate) {
-        setAnalyzeError("RealHunt only works with real estate property listings.");
-        setAnalyzing(false);
-        return;
-      }
       if (result?.scrape_failed) { setScrapeFailed(true); setAnalyzing(false); return; }
       if (result?.error) throw new Error(result.error);
       if (result?.data?.id) navigate(`/analysis/${result.data.id}`, { replace: true });

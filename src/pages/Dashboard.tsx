@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
-import { Search, ArrowRight, Calendar, Building2, TrendingUp, MapPin, Globe, Shield, BarChart3 } from "lucide-react";
+import {
+  Search, ArrowRight, Calendar, Building2, TrendingUp, MapPin, Globe,
+  Shield, BarChart3, Heart, GitCompare, Filter, Star,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const verdictColor = (v: string) => {
   if (v === "Strong") return "text-score-excellent bg-score-excellent/10";
@@ -29,11 +33,15 @@ const riskLabel = (v: number) => {
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [analyses, setAnalyses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [url, setUrl] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState("");
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  const [compareIds, setCompareIds] = useState<Set<string>>(new Set());
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/");
@@ -41,15 +49,41 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("analyses")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        setAnalyses(data || []);
-        setLoading(false);
-      });
+    // Load analyses and favorites in parallel
+    Promise.all([
+      supabase.from("analyses").select("*").order("created_at", { ascending: false }),
+      supabase.from("favorites").select("analysis_id").eq("user_id", user.id),
+    ]).then(([{ data: analysesData }, { data: favData }]) => {
+      setAnalyses(analysesData || []);
+      setFavoriteIds(new Set((favData || []).map((f: any) => f.analysis_id)));
+      setLoading(false);
+    });
   }, [user]);
+
+  const toggleFavorite = async (e: React.MouseEvent, analysisId: string) => {
+    e.stopPropagation();
+    if (!user) return;
+    const isFav = favoriteIds.has(analysisId);
+    if (isFav) {
+      await supabase.from("favorites").delete().eq("user_id", user.id).eq("analysis_id", analysisId);
+      setFavoriteIds(prev => { const n = new Set(prev); n.delete(analysisId); return n; });
+    } else {
+      await supabase.from("favorites").insert({ user_id: user.id, analysis_id: analysisId });
+      setFavoriteIds(prev => new Set(prev).add(analysisId));
+      toast({ title: "Added to favorites", description: "Property saved to your collection." });
+    }
+  };
+
+  const toggleCompare = (e: React.MouseEvent, analysisId: string) => {
+    e.stopPropagation();
+    setCompareIds(prev => {
+      const n = new Set(prev);
+      if (n.has(analysisId)) n.delete(analysisId);
+      else if (n.size < 4) n.add(analysisId);
+      else toast({ title: "Max 4 properties", description: "Remove one to add another.", variant: "destructive" });
+      return n;
+    });
+  };
 
   const handleAnalyze = () => {
     if (!url.trim() || analyzing) return;
@@ -58,9 +92,10 @@ const Dashboard = () => {
 
   if (authLoading || !user) return null;
 
-  // Compute stats
   const avgScore = analyses.length > 0 ? Math.round(analyses.reduce((s, a) => s + (a.global_score || 0), 0) / analyses.length) : 0;
   const countriesAnalyzed = [...new Set(analyses.map(a => a.country).filter(Boolean))].length;
+
+  const displayAnalyses = showFavoritesOnly ? analyses.filter(a => favoriteIds.has(a.id)) : analyses;
 
   return (
     <div className="min-h-screen bg-background">
@@ -87,14 +122,14 @@ const Dashboard = () => {
               <p className="text-2xl font-bold font-mono text-foreground">{countriesAnalyzed}</p>
             </div>
             <div className="rounded-xl border border-border bg-card p-4 text-center">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Strong Verdicts</p>
-              <p className="text-2xl font-bold font-mono text-score-excellent">{analyses.filter(a => a.verdict === "Strong").length}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Favorites</p>
+              <p className="text-2xl font-bold font-mono text-primary">{favoriteIds.size}</p>
             </div>
           </div>
         )}
 
         {/* New analysis input */}
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center bg-card rounded-xl border border-border p-2">
             <div className="flex items-center flex-1 min-w-0">
               <Search className="ml-3 h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -103,7 +138,7 @@ const Dashboard = () => {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
-                placeholder="Paste a new listing URL to analyze…"
+                placeholder="Paste any real estate URL to analyze…"
                 className="flex-1 bg-transparent px-3 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0"
               />
             </div>
@@ -111,22 +146,54 @@ const Dashboard = () => {
               {analyzing ? "Analyzing…" : "Analyze"} <ArrowRight className="ml-1 h-3 w-3" />
             </Button>
           </div>
+          <p className="text-[10px] text-muted-foreground mt-1.5 ml-1">
+            Works with Zillow, Idealista, Airbnb, developer websites, and any real estate page.
+          </p>
           {analyzeError && <p className="text-xs text-destructive mt-2">{analyzeError}</p>}
         </div>
+
+        {/* Filter + Compare bar */}
+        {analyses.length > 0 && (
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                className={`text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-colors ${
+                  showFavoritesOnly ? "border-primary/30 bg-primary/10 text-primary" : "border-border bg-card text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Star className="h-3 w-3" /> Favorites{showFavoritesOnly ? ` (${displayAnalyses.length})` : ""}
+              </button>
+            </div>
+            <AnimatePresence>
+              {compareIds.size >= 2 && (
+                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}>
+                  <Button variant="hero" size="sm" onClick={() => navigate(`/compare?ids=${[...compareIds].join(",")}`)}>
+                    <GitCompare className="h-3.5 w-3.5 mr-1" /> Compare {compareIds.size} Properties
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
 
         {/* Analyses list */}
         {loading ? (
           <div className="flex justify-center py-16">
             <div className="h-6 w-6 rounded-full border-2 border-t-primary border-border animate-spin" />
           </div>
-        ) : analyses.length === 0 ? (
+        ) : displayAnalyses.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-muted-foreground text-sm">No analyses yet. Paste a listing URL above to get started.</p>
+            <p className="text-muted-foreground text-sm">
+              {showFavoritesOnly ? "No favorites yet. Click the heart icon on any property." : "No analyses yet. Paste a listing URL above to get started."}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
-            {analyses.map((a, i) => {
+            {displayAnalyses.map((a, i) => {
               const risk = riskLabel(a.risk_level || 0);
+              const isFav = favoriteIds.has(a.id);
+              const isCompare = compareIds.has(a.id);
               return (
                 <motion.div
                   key={a.id}
@@ -134,7 +201,9 @@ const Dashboard = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04 }}
                   onClick={() => navigate(`/analysis/${a.id}`)}
-                  className="rounded-xl border border-border bg-card overflow-hidden hover:border-primary/20 transition-all cursor-pointer group"
+                  className={`rounded-xl border bg-card overflow-hidden hover:border-primary/20 transition-all cursor-pointer group ${
+                    isCompare ? "border-primary/30 ring-1 ring-primary/20" : "border-border"
+                  }`}
                 >
                   <div className="flex flex-col sm:flex-row">
                     {/* Image */}
@@ -149,7 +218,7 @@ const Dashboard = () => {
                     )}
 
                     <div className="flex-1 p-5">
-                      {/* Top row: title + score */}
+                      {/* Top row: title + actions + score */}
                       <div className="flex items-start justify-between gap-3 mb-3">
                         <div className="min-w-0">
                           <h3 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
@@ -159,9 +228,28 @@ const Dashboard = () => {
                             <MapPin className="h-3 w-3" /> {a.city}, {a.country} · {a.price} · {a.property_type}
                           </p>
                         </div>
-                        <div className="flex-shrink-0 h-14 w-14 rounded-lg bg-secondary flex flex-col items-center justify-center">
-                          <span className={`font-mono text-xl font-bold ${scoreColor(a.global_score)}`}>{a.global_score}</span>
-                          <span className="text-[8px] text-muted-foreground uppercase">score</span>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {/* Favorite button */}
+                          <button
+                            onClick={(e) => toggleFavorite(e, a.id)}
+                            className={`p-1.5 rounded-lg transition-colors ${isFav ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}
+                            title={isFav ? "Remove from favorites" : "Add to favorites"}
+                          >
+                            <Heart className={`h-4 w-4 ${isFav ? "fill-current" : ""}`} />
+                          </button>
+                          {/* Compare checkbox */}
+                          <button
+                            onClick={(e) => toggleCompare(e, a.id)}
+                            className={`p-1.5 rounded-lg transition-colors ${isCompare ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}
+                            title={isCompare ? "Remove from comparison" : "Add to comparison"}
+                          >
+                            <GitCompare className="h-4 w-4" />
+                          </button>
+                          {/* Score */}
+                          <div className="h-14 w-14 rounded-lg bg-secondary flex flex-col items-center justify-center">
+                            <span className={`font-mono text-xl font-bold ${scoreColor(a.global_score)}`}>{a.global_score}</span>
+                            <span className="text-[8px] text-muted-foreground uppercase">score</span>
+                          </div>
                         </div>
                       </div>
 
@@ -183,9 +271,9 @@ const Dashboard = () => {
                             <BarChart3 className="h-3 w-3" /> {a.market_classification}
                           </span>
                         )}
-                        {a.roi_potential != null && (
-                          <span className="text-xs text-muted-foreground">
-                            ROI Score: <span className={`font-mono font-medium ${scoreColor(a.roi_potential)}`}>{a.roi_potential}</span>
+                        {a.data_source === "project_website" && (
+                          <span className="text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full bg-score-average/10 text-score-average border border-score-average/20">
+                            Project Site
                           </span>
                         )}
                       </div>
