@@ -392,7 +392,7 @@ const Analysis = () => {
         {/* ===== 1. HERO WITH IMAGE ===== */}
         <Section delay={0.05} className="mb-8">
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
-            {f.listing_image_url && (
+            {f.listing_image_url && typeof f.listing_image_url === 'string' && f.listing_image_url.startsWith('http') && (
               <div className="h-48 md:h-64 w-full overflow-hidden">
                 <img src={f.listing_image_url} alt={d.address || "Property"} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
               </div>
@@ -414,10 +414,10 @@ const Analysis = () => {
                   <p className="text-2xl md:text-3xl font-bold font-mono text-foreground">{d.price}</p>
                   <div className="flex flex-wrap gap-4 mt-4 text-xs text-muted-foreground">
                     {d.property_type && <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> {d.property_type}</span>}
-                    {d.size_sqm && <span className="flex items-center gap-1"><Ruler className="h-3.5 w-3.5" />{d.size_sqm} m² · {sqmToSqft(d.size_sqm)} ft²</span>}
+                    {d.size_sqm != null && <span className="flex items-center gap-1"><Ruler className="h-3.5 w-3.5" />{d.size_sqm} m² · {sqmToSqft(d.size_sqm)} ft²</span>}
                     {d.bedrooms != null && <span className="flex items-center gap-1"><BedDouble className="h-3.5 w-3.5" /> {d.bedrooms} bed</span>}
                     {d.bathrooms != null && <span className="flex items-center gap-1"><Bath className="h-3.5 w-3.5" /> {d.bathrooms} bath</span>}
-                    {d.year_built && <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> Built {d.year_built}</span>}
+                    {d.year_built != null && <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> Built {d.year_built}</span>}
                     {f.floor_info && <span className="flex items-center gap-1"><Home className="h-3.5 w-3.5" /> {f.floor_info}</span>}
                   </div>
                   {/* Property Features Tags */}
@@ -551,8 +551,8 @@ const Analysis = () => {
           <Section delay={0.25} className="rounded-2xl border border-border bg-card p-6 mb-8">
             <SectionHeader icon={DollarSign} title="Deal Quality Analysis" subtitle="Price positioning vs market" />
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <MetricCard icon={Ruler} label="Price/m²" value={f.price_per_sqm ? `${curr}${f.price_per_sqm.toLocaleString()}` : undefined} />
-              <MetricCard icon={Ruler} label="Price/sqft" value={f.price_per_sqft ? `${curr}${f.price_per_sqft.toLocaleString()}` : undefined} />
+              {d.size_sqm != null && <MetricCard icon={Ruler} label="Price/m²" value={f.price_per_sqm ? `${curr}${f.price_per_sqm.toLocaleString()}` : undefined} />}
+              {d.size_sqm != null && <MetricCard icon={Ruler} label="Price/sqft" value={f.price_per_sqft ? `${curr}${f.price_per_sqft.toLocaleString()}` : undefined} />}
               <MetricCard icon={BarChart3} label="Market Median/m²" value={f.market_median_sqm ? `${curr}${f.market_median_sqm.toLocaleString()}` : undefined} />
               <MetricCard icon={Percent} label="vs Median" value={f.premium_discount_pct != null ? `${f.premium_discount_pct > 0 ? "+" : ""}${f.premium_discount_pct}%` : undefined}
                 positive={premiumPositive} sub={f.premium_discount_pct != null ? (f.premium_discount_pct < 0 ? "Below market — discount" : "Above market — premium") : undefined} />
