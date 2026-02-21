@@ -709,7 +709,7 @@ const Analysis = () => {
                     <th className="text-left py-2 px-3 text-muted-foreground font-medium">Address</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">Price</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">Size</th>
-                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">€/m²</th>
+                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">{curr}/m²</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">Date</th>
                   </tr>
                 </thead>
@@ -740,7 +740,7 @@ const Analysis = () => {
                     <th className="text-left py-2 px-3 text-muted-foreground font-medium">Address</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">Monthly Rent</th>
                     <th className="text-right py-2 px-3 text-muted-foreground font-medium">Size</th>
-                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">€/m²/mo</th>
+                    <th className="text-right py-2 px-3 text-muted-foreground font-medium">{curr}/m²/mo</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -798,11 +798,11 @@ const Analysis = () => {
             </div>
             <div className="rounded-xl bg-secondary p-4 text-center">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Downside</p>
-              <p className="text-lg font-mono font-bold text-score-poor">{d.downside_scenario}%</p>
+              <p className="text-lg font-mono font-bold text-score-poor">{d.downside_scenario != null && Math.abs(d.downside_scenario) < 100 ? `${d.downside_scenario}%` : "—"}</p>
             </div>
             <div className="rounded-xl bg-secondary p-4 text-center">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Upside</p>
-              <p className="text-lg font-mono font-bold text-primary">+{d.upside_scenario}%</p>
+              <p className="text-lg font-mono font-bold text-primary">{d.upside_scenario != null && d.upside_scenario < 200 ? `+${d.upside_scenario}%` : "—"}</p>
             </div>
             <div className="rounded-xl bg-secondary p-4 text-center">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Verdict</p>
