@@ -445,10 +445,10 @@ serve(async (req) => {
                   primary_insight: { type: "string", description: "One-line analytical verdict with numbers" },
                   ai_summary: { type: "string", description: "2-3 sentence data-dense summary with specific metrics" },
                   why_not_90: { type: "array", items: { type: "string" } },
-                  projected_roi_low: { type: "number" },
-                  projected_roi_high: { type: "number" },
-                  downside_scenario: { type: "number" },
-                  upside_scenario: { type: "number" },
+                   projected_roi_low: { type: "number", description: "5-year projected ROI LOW estimate as PERCENTAGE (e.g. 3.5 meaning 3.5%). Must be between -50 and 100." },
+                   projected_roi_high: { type: "number", description: "5-year projected ROI HIGH estimate as PERCENTAGE (e.g. 8.2 meaning 8.2%). Must be between -50 and 100." },
+                   downside_scenario: { type: "number", description: "5-year downside scenario as PERCENTAGE change (e.g. -8.5 meaning -8.5% loss). Must be between -100 and 0. NEVER use absolute values." },
+                   upside_scenario: { type: "number", description: "5-year upside scenario as PERCENTAGE gain (e.g. 15.0 meaning +15% gain). Must be between 0 and 100. NEVER use absolute values." },
                   price_history: {
                     type: "array",
                     items: { type: "object", properties: { year: { type: "string" }, value: { type: "number" } }, required: ["year", "value"] },
@@ -654,7 +654,29 @@ serve(async (req) => {
 
     const analysis = JSON.parse(toolCall.function.arguments);
 
-    // Extract standard DB fields and keep extra forensic fields in score_explanations
+    // SANITY CHECKS: Clamp percentage fields that AI sometimes returns as absolute values
+    const clampPct = (v: any, min: number, max: number) => {
+      if (v == null || typeof v !== "number") return v;
+      // If value looks like an absolute number (> max * 10), it's clearly wrong
+      if (Math.abs(v) > max * 10) return null;
+      return Math.max(min, Math.min(max, v));
+    };
+    analysis.upside_scenario = clampPct(analysis.upside_scenario, 0, 100);
+    analysis.downside_scenario = clampPct(analysis.downside_scenario, -100, 0);
+    // downside might be positive (AI returns 8.5 meaning -8.5%)
+    if (analysis.downside_scenario != null && analysis.downside_scenario > 0) {
+      analysis.downside_scenario = -analysis.downside_scenario;
+    }
+    analysis.projected_roi_low = clampPct(analysis.projected_roi_low, -50, 100);
+    analysis.projected_roi_high = clampPct(analysis.projected_roi_high, -50, 100);
+    analysis.global_score = clampPct(analysis.global_score, 0, 100);
+    analysis.roi_potential = clampPct(analysis.roi_potential, 0, 100);
+    analysis.market_stability = clampPct(analysis.market_stability, 0, 100);
+    analysis.demand_strength = clampPct(analysis.demand_strength, 0, 100);
+    analysis.risk_level = clampPct(analysis.risk_level, 0, 100);
+    analysis.liquidity_outlook = clampPct(analysis.liquidity_outlook, 0, 100);
+    analysis.percentile = clampPct(analysis.percentile, 0, 100);
+
     const forensicExtras = {
       price_per_sqm: analysis.price_per_sqm,
       price_per_sqft: analysis.price_per_sqft,
