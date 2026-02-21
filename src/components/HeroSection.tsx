@@ -30,10 +30,18 @@ const HeroSection = () => {
 
   const handleLoginSuccess = () => {
     setShowLoginGate(false);
+    // Don't navigate immediately - let AuthContext update first
+    // The user will now be logged in, so clicking "Analyze" again will work
     if (url.trim()) {
-      setTimeout(() => {
-        navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
-      }, 500);
+      // Small delay to ensure auth state propagates
+      const checkAndNavigate = () => {
+        const interval = setInterval(() => {
+          // Auth state should be updated by now
+          clearInterval(interval);
+          navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
+        }, 800);
+      };
+      checkAndNavigate();
     }
   };
 

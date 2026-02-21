@@ -14,7 +14,7 @@ const REAL_ESTATE_DOMAINS = [
   "seloger.com", "leboncoin.fr", "pap.fr", "logic-immo.com",
   "immobiliare.it", "casa.it", "subito.it",
   "funda.nl", "jaap.nl", "pararius.com",
-  "hemnet.se", "boliga.dk", "finn.no",
+  "hemnet.se", "boliga.dk", "boligsiden.dk", "home.dk", "edc.dk", "nybolig.dk", "danbolig.dk", "finn.no",
   "daft.ie", "myhome.ie",
   "sreality.cz", "otodom.pl", "ingatlan.com",
   "sahibinden.com", "hepsiemlak.com",
@@ -363,9 +363,9 @@ serve(async (req) => {
       scrapedContent = result.content;
       isEstimated = result.isEstimated;
 
-      if (result.isEstimated && isStandardListing) {
-        // Only trigger fallback for standard listing sites
-        return new Response(JSON.stringify({ success: false, scrape_failed: true, error: "Listing is protected" }), {
+      if (result.isEstimated) {
+        // Trigger fallback for ALL sites when scrape fails - don't hallucinate data
+        return new Response(JSON.stringify({ success: false, scrape_failed: true, error: "Could not access listing page. The site may be protected or temporarily unavailable." }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
