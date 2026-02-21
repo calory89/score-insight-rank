@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Menu, X, LogOut, LayoutDashboard } from "lucide-react";
+import { Menu, X, LogOut, LayoutDashboard, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginGateModal from "@/components/LoginGateModal";
 
@@ -41,6 +41,9 @@ const Navbar = () => {
                 <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="text-xs gap-1">
                   <LayoutDashboard className="h-3.5 w-3.5" /> Dashboard
                 </Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/settings")} className="text-xs gap-1">
+                  <Settings className="h-3.5 w-3.5" /> Settings
+                </Button>
                 <span className="text-xs text-muted-foreground truncate max-w-[120px]">{user.email}</span>
                 <Button variant="ghost" size="sm" onClick={signOut}>
                   <LogOut className="h-4 w-4" />
@@ -72,6 +75,7 @@ const Navbar = () => {
             {user ? (
               <>
                 <Button variant="ghost" size="sm" className="w-full" onClick={() => { navigate("/dashboard"); setIsOpen(false); }}>Dashboard</Button>
+                <Button variant="ghost" size="sm" className="w-full" onClick={() => { navigate("/settings"); setIsOpen(false); }}>Settings</Button>
                 <Button variant="ghost" size="sm" className="w-full" onClick={signOut}>Sign Out</Button>
               </>
             ) : (

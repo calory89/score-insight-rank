@@ -51,7 +51,7 @@ const Compare = () => {
   const [properties, setProperties] = useState<AnalysisData[]>([]);
   const [loading, setLoading] = useState(true);
   const [allAnalyses, setAllAnalyses] = useState<AnalysisData[]>([]);
-  const [showPicker, setShowPicker] = useState(false);
+  const [showPicker, setShowPicker] = useState(ids.length === 1);
 
   useEffect(() => {
     if (!user) return;

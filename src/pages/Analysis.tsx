@@ -10,7 +10,7 @@ import {
   TrendingUp, TrendingDown, AlertTriangle, Sparkles, ChevronDown, ChevronUp,
   Shield, Info, Target, DollarSign, PiggyBank, BarChart3, Home,
   Compass, Scale, Clock, Zap, CheckCircle2, XCircle, Eye,
-  Landmark, Percent, ArrowUpRight, ArrowDownRight,
+  Landmark, Percent, ArrowUpRight, ArrowDownRight, GitCompare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -274,7 +274,8 @@ const Analysis = () => {
   };
 
   useEffect(() => {
-    if (!isLoadingMode || !user) return;
+    if (!isLoadingMode) return;
+    if (!user) return; // Wait for auth state to settle
     setLoading(false);
     runAnalysis({ url: urlToAnalyze });
   }, [isLoadingMode, user, urlToAnalyze]);
@@ -355,9 +356,14 @@ const Analysis = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl">
-        <Button variant="ghost" size="sm" className="mb-6 text-muted-foreground" onClick={() => navigate("/dashboard")}>
-          <ArrowLeft className="h-4 w-4 mr-1" /> Back to Dashboard
-        </Button>
+        <div className="flex items-center justify-between mb-6">
+          <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => navigate("/dashboard")}>
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back to Dashboard
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => navigate(`/compare?ids=${id}`)}>
+            <GitCompare className="h-3.5 w-3.5 mr-1" /> Compare
+          </Button>
+        </div>
 
         {/* ===== PROJECT SITE WARNING ===== */}
         {(d.data_source === "project_website" || confidenceLevel === "low") && (

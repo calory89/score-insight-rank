@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import Analysis from "./pages/Analysis";
 import Compare from "./pages/Compare";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="/analysis/loading" element={<Analysis />} />
             <Route path="/analysis/:id" element={<Analysis />} />
             <Route path="/compare" element={<Compare />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
