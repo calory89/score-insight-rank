@@ -250,7 +250,10 @@ You MUST follow these strict rules:
     const systemPrompt = `You are a forensic real estate investment analyst producing institutional-grade reports. Extract EXACT data from the listing. Never invent details.
 ${listingWarning}
 CRITICAL RULES:
-- Use the REAL price, size, bedrooms, bathrooms, address
+- Use the REAL price, size, bedrooms, bathrooms, address FROM THE SCRAPED CONTENT
+- NEVER convert currencies. If the listing price is in £ (GBP), report it in £. If in DKK, report in DKK. If in €, report in €. The "currency" field must match.
+- The "price" string must show the ORIGINAL currency symbol and amount exactly as listed (e.g. "£750,000" not "€875,000")
+- All financial metrics (fair value, rent, cash flow, etc.) must use the SAME currency as the listing
 - If size is in acres, convert to m² (1 acre = 4046.86 m²). If ft², convert (1 ft² = 0.0929 m²)
 - If data is missing, use null
 - Be forensic, data-dense, defensible
@@ -405,9 +408,9 @@ serve(async (req) => {
                   address: { type: "string" },
                   city: { type: "string" },
                   country: { type: "string" },
-                  price: { type: "string", description: "Exact price e.g. £750,000" },
-                  currency: { type: "string" },
-                  image_url: { type: "string", description: "Leave empty string" },
+                   price: { type: "string", description: "EXACT price from listing in ORIGINAL currency, e.g. £750,000, kr 1.795.000, €485,000. NEVER convert." },
+                   currency: { type: "string", description: "ISO currency code matching the listing: GBP, EUR, USD, DKK, SEK, NOK, etc." },
+                  image_url: { type: "string", description: "Main listing photo URL if found in scraped content. Empty string if not available." },
                   property_type: { type: "string" },
                   size_sqm: { type: "number" },
                   year_built: { type: "integer" },

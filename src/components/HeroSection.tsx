@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,13 +14,16 @@ const HeroSection = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  // Store pending URL so we can navigate after auth state updates
+  const pendingUrlRef = useRef<string | null>(null);
+
   const handleAnalyze = () => {
     if (!url.trim()) return;
     if (!user) {
+      pendingUrlRef.current = url.trim();
       setShowLoginGate(true);
       return;
     }
-    // Navigate to analysis loading page — Analysis.tsx handles the actual API call
     navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
   };
 
@@ -30,20 +33,17 @@ const HeroSection = () => {
 
   const handleLoginSuccess = () => {
     setShowLoginGate(false);
-    // Don't navigate immediately - let AuthContext update first
-    // The user will now be logged in, so clicking "Analyze" again will work
-    if (url.trim()) {
-      // Small delay to ensure auth state propagates
-      const checkAndNavigate = () => {
-        const interval = setInterval(() => {
-          // Auth state should be updated by now
-          clearInterval(interval);
-          navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
-        }, 800);
-      };
-      checkAndNavigate();
-    }
+    // Store the URL, will navigate once auth state updates via useEffect
   };
+
+  // Watch for auth state changes — if user just logged in and has a pending URL, navigate
+  useEffect(() => {
+    if (user && pendingUrlRef.current) {
+      const pendingUrl = pendingUrlRef.current;
+      pendingUrlRef.current = null;
+      navigate(`/analysis/loading?url=${encodeURIComponent(pendingUrl)}`);
+    }
+  }, [user, navigate]);
 
   const isBlurred = showResults && !user;
 

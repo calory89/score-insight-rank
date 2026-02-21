@@ -273,9 +273,12 @@ const Analysis = () => {
     }
   };
 
+  const analysisTriggered = useRef(false);
   useEffect(() => {
     if (!isLoadingMode) return;
     if (!user) return; // Wait for auth state to settle
+    if (analysisTriggered.current) return; // Prevent re-triggering
+    analysisTriggered.current = true;
     setLoading(false);
     runAnalysis({ url: urlToAnalyze });
   }, [isLoadingMode, user, urlToAnalyze]);
@@ -342,6 +345,8 @@ const Analysis = () => {
   const globalScore = d.global_score;
   const confidenceLevel = d.confidence_level || "high";
   const premiumPositive = f.premium_discount_pct != null ? f.premium_discount_pct < 0 : null;
+  // Currency symbol from data
+  const curr = d.currency === "GBP" ? "£" : d.currency === "USD" ? "$" : d.currency === "DKK" ? "kr" : d.currency === "SEK" ? "kr" : d.currency === "NOK" ? "kr" : "€";
 
   // Radar chart data
   const radarData = [
@@ -506,14 +511,49 @@ const Analysis = () => {
           </Section>
         </div>
 
-        {/* ===== 3. DEAL QUALITY ===== */}
+        {/* ===== KEY FINDINGS — PROS / CONS / RED FLAGS / OPPORTUNITIES ===== */}
+        <Section delay={0.23} className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" /> Pros</h3>
+            <ul className="space-y-2">
+              {(d.pros as string[])?.map((p: string, i: number) => (
+                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2"><span className="text-primary mt-0.5">+</span> {p}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2"><TrendingDown className="h-4 w-4 text-score-average" /> Cons</h3>
+            <ul className="space-y-2">
+              {(d.cons as string[])?.map((c: string, i: number) => (
+                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2"><span className="text-score-average mt-0.5">−</span> {c}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-score-poor" /> Red Flags</h3>
+            <ul className="space-y-2">
+              {(d.red_flags as string[])?.map((r: string, i: number) => (
+                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2"><span className="text-score-poor mt-0.5">⚠</span> {r}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-6">
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Opportunity Signals</h3>
+            <ul className="space-y-2">
+              {(d.opportunity_signals as string[])?.map((o: string, i: number) => (
+                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2"><span className="text-primary mt-0.5">★</span> {o}</li>
+              ))}
+            </ul>
+          </div>
+        </Section>
+
         {(f.price_per_sqm || f.cap_rate || f.fair_value_low) && (
           <Section delay={0.25} className="rounded-2xl border border-border bg-card p-6 mb-8">
             <SectionHeader icon={DollarSign} title="Deal Quality Analysis" subtitle="Price positioning vs market" />
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <MetricCard icon={Ruler} label="Price/m²" value={f.price_per_sqm ? `€${f.price_per_sqm.toLocaleString()}` : undefined} />
-              <MetricCard icon={Ruler} label="Price/sqft" value={f.price_per_sqft ? `€${f.price_per_sqft.toLocaleString()}` : undefined} />
-              <MetricCard icon={BarChart3} label="Market Median/m²" value={f.market_median_sqm ? `€${f.market_median_sqm.toLocaleString()}` : undefined} />
+              <MetricCard icon={Ruler} label="Price/m²" value={f.price_per_sqm ? `${curr}${f.price_per_sqm.toLocaleString()}` : undefined} />
+              <MetricCard icon={Ruler} label="Price/sqft" value={f.price_per_sqft ? `${curr}${f.price_per_sqft.toLocaleString()}` : undefined} />
+              <MetricCard icon={BarChart3} label="Market Median/m²" value={f.market_median_sqm ? `${curr}${f.market_median_sqm.toLocaleString()}` : undefined} />
               <MetricCard icon={Percent} label="vs Median" value={f.premium_discount_pct != null ? `${f.premium_discount_pct > 0 ? "+" : ""}${f.premium_discount_pct}%` : undefined}
                 positive={premiumPositive} sub={f.premium_discount_pct != null ? (f.premium_discount_pct < 0 ? "Below market — discount" : "Above market — premium") : undefined} />
             </div>
@@ -679,7 +719,7 @@ const Analysis = () => {
                       <td className="py-2.5 px-3 text-foreground">{comp.address}</td>
                       <td className="py-2.5 px-3 text-right font-mono text-foreground">{comp.price}</td>
                       <td className="py-2.5 px-3 text-right text-muted-foreground">{comp.size_sqm} m²</td>
-                      <td className="py-2.5 px-3 text-right font-mono text-primary">€{comp.price_per_sqm?.toLocaleString()}</td>
+                      <td className="py-2.5 px-3 text-right font-mono text-primary">{curr}{comp.price_per_sqm?.toLocaleString()}</td>
                       <td className="py-2.5 px-3 text-right text-muted-foreground">{comp.date_sold || "—"}</td>
                     </tr>
                   ))}
@@ -709,7 +749,7 @@ const Analysis = () => {
                       <td className="py-2.5 px-3 text-foreground">{comp.address}</td>
                       <td className="py-2.5 px-3 text-right font-mono text-primary">{comp.monthly_rent}</td>
                       <td className="py-2.5 px-3 text-right text-muted-foreground">{comp.size_sqm} m²</td>
-                      <td className="py-2.5 px-3 text-right font-mono text-muted-foreground">€{comp.rent_per_sqm?.toFixed(1)}</td>
+                      <td className="py-2.5 px-3 text-right font-mono text-muted-foreground">{curr}{comp.rent_per_sqm?.toFixed(1)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -746,41 +786,7 @@ const Analysis = () => {
           </Section>
         )}
 
-        {/* ===== PROS / CONS / RED FLAGS / OPPORTUNITIES ===== */}
-        <Section delay={0.48} className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="rounded-2xl border border-border bg-card p-6">
-            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" /> Pros</h3>
-            <ul className="space-y-2">
-              {(d.pros as string[])?.map((p: string, i: number) => (
-                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2"><span className="text-primary mt-0.5">+</span> {p}</li>
-              ))}
-            </ul>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-6">
-            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2"><TrendingDown className="h-4 w-4 text-score-average" /> Cons</h3>
-            <ul className="space-y-2">
-              {(d.cons as string[])?.map((c: string, i: number) => (
-                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2"><span className="text-score-average mt-0.5">−</span> {c}</li>
-              ))}
-            </ul>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-6">
-            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-score-poor" /> Red Flags</h3>
-            <ul className="space-y-2">
-              {(d.red_flags as string[])?.map((r: string, i: number) => (
-                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2"><span className="text-score-poor mt-0.5">⚠</span> {r}</li>
-              ))}
-            </ul>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-6">
-            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> Opportunity Signals</h3>
-            <ul className="space-y-2">
-              {(d.opportunity_signals as string[])?.map((o: string, i: number) => (
-                <li key={i} className="text-xs text-muted-foreground flex items-start gap-2"><span className="text-primary mt-0.5">★</span> {o}</li>
-              ))}
-            </ul>
-          </div>
-        </Section>
+
 
         {/* ===== 5-YEAR SCENARIO SIMULATION ===== */}
         <Section delay={0.5} className="rounded-2xl border border-border bg-card p-6 mb-8">
