@@ -259,6 +259,12 @@ CRITICAL RULES:
 - Be forensic, data-dense, defensible
 - Never fabricate precision
 - Include SPECIFIC NUMBERS in all analyses — no vague language
+
+ANTI-HALLUCINATION RULES (MANDATORY):
+- If the listing says "Ask agent", "Contact agent", "POA", "Not specified", or similar for SIZE: set size_sqm to null. Do NOT estimate or guess.
+- If year_built is NOT explicitly stated as a number in the listing content: set year_built to null. Do NOT estimate or guess based on property style/type.
+- NEVER estimate or infer size_sqm or year_built — only use values EXPLICITLY written in the listing text.
+- When MULTIPLE PRICES exist (e.g. Lifetime Lease price vs full market value, shared ownership vs market price), use the FULL MARKET VALUE as the "price" field, and clearly explain BOTH prices in ai_summary and primary_insight (e.g. "Guide price £320,500 via Lifetime Lease for over-60s; full market value £485,000").
 ${forensicInstructions}`;
 
     const userPrompt = `Analyze this property listing for investment potential.
@@ -412,8 +418,8 @@ serve(async (req) => {
                    currency: { type: "string", description: "ISO currency code matching the listing: GBP, EUR, USD, DKK, SEK, NOK, etc." },
                   image_url: { type: "string", description: "Main listing photo URL if found in scraped content. Empty string if not available." },
                   property_type: { type: "string" },
-                  size_sqm: { type: "number" },
-                  year_built: { type: "integer" },
+                  size_sqm: { type: "number", nullable: true, description: "Total property size in m². Set to null if listing says 'Ask agent', 'Contact agent', 'Not specified', or if size is NOT explicitly stated as a number." },
+                  year_built: { type: "integer", nullable: true, description: "Year the property was built. Set to null if NOT explicitly stated as a year number in the listing content. Do NOT guess based on property style." },
                   bedrooms: { type: "integer" },
                   bathrooms: { type: "integer" },
                   global_score: { type: "integer", description: "0-100 overall investment score" },
@@ -676,6 +682,39 @@ serve(async (req) => {
     analysis.risk_level = clampPct(analysis.risk_level, 0, 100);
     analysis.liquidity_outlook = clampPct(analysis.liquidity_outlook, 0, 100);
     analysis.percentile = clampPct(analysis.percentile, 0, 100);
+
+    // POST-AI VALIDATION: Prevent hallucinated size_sqm and year_built
+    if (scrapedContent && analysis.size_sqm != null) {
+      const contentLower = scrapedContent.toLowerCase();
+      const hasAskAgent = contentLower.includes("ask agent") || contentLower.includes("contact agent") || contentLower.includes("not specified") || contentLower.includes("poa");
+      if (hasAskAgent) {
+        console.log("Size nulled: listing says ask agent/not specified");
+        analysis.size_sqm = null;
+      } else {
+        // Check if the size value actually appears in the content
+        const sizeStr = String(Math.round(analysis.size_sqm));
+        const sqftEquiv = String(Math.round(analysis.size_sqm * 10.7639));
+        const hasSizeInContent = contentLower.includes(sizeStr + " m") ||
+          contentLower.includes(sizeStr + "m") ||
+          contentLower.includes(sizeStr + " sq") ||
+          contentLower.includes(sqftEquiv + " sq") ||
+          contentLower.includes(sqftEquiv + "sq") ||
+          contentLower.includes(sizeStr + " ft") ||
+          /\b\d+['′]\d+/.test(scrapedContent); // room dimensions like 14'5
+        if (!hasSizeInContent) {
+          console.log("Size nulled: value not found in scraped content");
+          analysis.size_sqm = null;
+        }
+      }
+    }
+
+    if (scrapedContent && analysis.year_built != null) {
+      const yearStr = String(analysis.year_built);
+      if (!scrapedContent.includes(yearStr)) {
+        console.log("year_built nulled: value not found in scraped content");
+        analysis.year_built = null;
+      }
+    }
 
     const forensicExtras = {
       price_per_sqm: analysis.price_per_sqm,
