@@ -973,13 +973,14 @@ const Analysis = () => {
             <p className="text-xs text-muted-foreground mb-6">Higher-performing alternatives discovered by RealHunt users.</p>
             <div className="space-y-3">
               {(d.alternatives as any[]).map((alt: any, i: number) => (
-                <div key={i} className="flex items-center justify-between gap-4 rounded-xl border border-border bg-secondary/50 p-4 hover:border-primary/20 transition-colors">
+                <div key={i} onClick={() => navigate(`/rankings?city=${encodeURIComponent(alt.city?.split(",")[0]?.trim() || "")}`)}
+                  className="flex items-center justify-between gap-4 rounded-xl border border-border bg-secondary/50 p-4 hover:border-primary/20 transition-colors cursor-pointer group">
                   <div className="flex items-center gap-4 min-w-0">
                     <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <span className={`font-mono text-sm font-bold ${scoreColor(alt.score)}`}>{alt.score}</span>
                     </div>
                     <div className="min-w-0">
-                      <h4 className="text-sm font-semibold text-foreground truncate">{alt.city}</h4>
+                      <h4 className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">{alt.city}</h4>
                       <div className="flex items-center gap-3 mt-0.5">
                         <span className="text-[11px] text-muted-foreground">{alt.price}</span>
                         <span className="text-[11px] text-muted-foreground">ROI {alt.roi}</span>
@@ -988,6 +989,7 @@ const Analysis = () => {
                       <p className="text-[11px] text-muted-foreground mt-1 truncate">{alt.insight}</p>
                     </div>
                   </div>
+                  <ArrowUpRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
                 </div>
               ))}
             </div>
