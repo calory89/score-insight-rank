@@ -227,17 +227,140 @@ const InlineReportPreview = ({ reportId }: { reportId: string }) => {
   );
 };
 
+// --- Ready Report Preview Card ---
+const ReadyReportCard = ({ reportId, onViewFull }: { reportId: string; onViewFull: () => void }) => {
+  const [report, setReport] = useState<any>(null);
+
+  useEffect(() => {
+    supabase
+      .from("analyses")
+      .select("id, address, city, country, global_score, price, currency, image_url, verdict, confidence_level, property_type, size_sqm, bedrooms, bathrooms, year_built, roi_potential, market_stability, demand_strength, risk_level, liquidity_outlook, market_classification")
+      .eq("id", reportId)
+      .single()
+      .then(({ data }) => { if (data) setReport(data); });
+  }, [reportId]);
+
+  if (!report) return (
+    <div className="rounded-2xl border-2 border-primary bg-primary/10 p-6 animate-pulse">
+      <div className="flex gap-4">
+        <Skeleton className="h-32 w-48 rounded-xl" />
+        <div className="flex-1 space-y-3">
+          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+          <Skeleton className="h-8 w-24" />
+        </div>
+      </div>
+    </div>
+  );
+
+  const curr = report.currency === "GBP" ? "£" : report.currency === "USD" ? "$" : report.currency === "DKK" ? "kr" : report.currency === "SEK" ? "kr" : report.currency === "NOK" ? "kr" : "€";
+  const subscores = [
+    { label: "ROI Potential", value: report.roi_potential },
+    { label: "Market Stability", value: report.market_stability },
+    { label: "Demand Strength", value: report.demand_strength },
+    { label: "Risk Level", value: report.risk_level },
+    { label: "Liquidity Outlook", value: report.liquidity_outlook },
+  ].filter(s => s.value != null);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -20, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="rounded-2xl border-2 border-primary overflow-hidden bg-card shadow-lg"
+    >
+      {report.image_url && (
+        <div className="relative h-44 sm:h-52">
+          <img src={report.image_url} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+          {report.market_classification && (
+            <span className={`absolute top-3 left-3 text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full border ${classificationColor(report.market_classification)}`}>
+              {report.market_classification}
+            </span>
+          )}
+          {report.verdict && (
+            <span className={`absolute top-3 ${report.market_classification ? "left-36" : "left-3"} text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full border ${verdictColor(report.verdict)}`}>
+              {report.verdict}
+            </span>
+          )}
+          {report.global_score != null && (
+            <div className={`absolute top-3 right-3 rounded-xl px-3 py-1.5 ${scoreBg(report.global_score)} text-white font-mono text-xl font-bold shadow-lg flex flex-col items-center`}>
+              {report.global_score}
+              <span className="text-[8px] font-normal uppercase tracking-widest opacity-80">Score</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="p-5 space-y-4">
+        <div>
+          {report.confidence_level && (
+            <span className={`text-[9px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded-full border mb-2 inline-flex items-center gap-1 ${confidenceColor(report.confidence_level)}`}>
+              <Shield className="h-2.5 w-2.5" /> Confidence: {report.confidence_level === "high" ? "High" : report.confidence_level === "medium" ? "Medium" : "Low"}
+            </span>
+          )}
+          <h3 className="text-lg font-semibold text-foreground mt-1">
+            {report.address || `${report.city || "Property"}${report.country ? `, ${report.country}` : ""}`}
+          </h3>
+          {(report.city || report.country) && report.address && (
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+              <MapPin className="h-3 w-3" /> {report.city}{report.country ? `, ${report.country}` : ""}
+            </p>
+          )}
+          {report.price && (
+            <p className="text-2xl font-bold font-mono text-foreground mt-2">{curr}{report.price}</p>
+          )}
+          <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-muted-foreground">
+            {report.property_type && <span className="flex items-center gap-1"><Building2 className="h-3 w-3" /> {report.property_type}</span>}
+            {report.size_sqm && <span className="flex items-center gap-1"><Ruler className="h-3 w-3" /> {report.size_sqm} m²</span>}
+            {report.bedrooms && <span className="flex items-center gap-1"><BedDouble className="h-3 w-3" /> {report.bedrooms} bed</span>}
+            {report.bathrooms && <span className="flex items-center gap-1"><Bath className="h-3 w-3" /> {report.bathrooms} bath</span>}
+            {report.year_built && <span className="flex items-center gap-1"><Calendar className="h-3 w-3" /> Built {report.year_built}</span>}
+          </div>
+        </div>
+
+        {subscores.length > 0 && (
+          <div className="border-t border-border pt-3 space-y-1.5">
+            {subscores.map(s => (
+              <div key={s.label} className="flex items-center gap-3">
+                <span className="text-[10px] text-muted-foreground w-28 flex-shrink-0">{s.label}</span>
+                <div className="flex-1 h-1.5 rounded-full bg-secondary overflow-hidden">
+                  <div className={`h-full rounded-full ${scoreBg(s.value)}`} style={{ width: `${s.value}%` }} />
+                </div>
+                <span className={`text-[10px] font-mono w-6 text-right ${scoreColor(s.value)}`}>{s.value}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <Button onClick={onViewFull} className="w-full" variant="hero" size="lg">
+          <Eye className="h-4 w-4 mr-2" /> View full report
+          <ArrowUpRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
+    </motion.div>
+  );
+};
+
 const FomoLoader = ({ step, readyReportId, onViewReady }: { step: number; readyReportId?: string; onViewReady?: () => void }) => {
   const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * realEstateTips.length));
   const [recentReports, setRecentReports] = useState<any[]>([]);
   const [previewId, setPreviewId] = useState<string | null>(null);
   const previewRef = useRef<HTMLDivElement>(null);
+  const readyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (previewId && previewRef.current) {
       previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [previewId]);
+
+  useEffect(() => {
+    if (readyReportId && readyRef.current) {
+      readyRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [readyReportId]);
+
   useEffect(() => {
     const interval = setInterval(() => {
       setTipIndex(prev => (prev + 1) % realEstateTips.length);
@@ -263,24 +386,12 @@ const FomoLoader = ({ step, readyReportId, onViewReady }: { step: number; readyR
     <Navbar />
     <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl">
 
-      {/* Ready banner */}
+      {/* Ready report preview card */}
       <AnimatePresence>
         {readyReportId && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="mb-6"
-          >
-            <button
-              onClick={onViewReady}
-              className="w-full rounded-2xl border-2 border-primary bg-primary/10 p-4 flex items-center justify-center gap-3 hover:bg-primary/20 transition-colors"
-            >
-              <CheckCircle2 className="h-5 w-5 text-primary" />
-              <span className="text-sm font-semibold text-primary">Your report is ready! Click to view</span>
-              <ArrowUpRight className="h-4 w-4 text-primary" />
-            </button>
-          </motion.div>
+          <div ref={readyRef} className="mb-6">
+            <ReadyReportCard reportId={readyReportId} onViewFull={onViewReady!} />
+          </div>
         )}
       </AnimatePresence>
 
