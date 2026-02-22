@@ -492,8 +492,8 @@ const Analysis = () => {
           </div>
         </div>
 
-        {/* ===== PROJECT SITE WARNING ===== */}
-        {(d.data_source === "project_website" || confidenceLevel === "low") && (
+        {/* ===== PROJECT SITE WARNING (excluded for ecobeachcity) ===== */}
+        {(d.data_source === "project_website" || confidenceLevel === "low") && !d.url?.toLowerCase().includes("ecobeachcity") && (
           <Section delay={0} className="mb-6">
             <div className="rounded-xl border-2 border-score-average/40 bg-score-average/5 p-5">
               <div className="flex items-start gap-3">

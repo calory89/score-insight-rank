@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Search } from "lucide-react";
+import { ArrowRight, Search, Layers } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginGateModal from "@/components/LoginGateModal";
 import ScorePreview from "@/components/ScorePreview";
@@ -110,6 +110,30 @@ const HeroSection = () => {
           <p className="text-xs text-muted-foreground mb-2">
             5 free analyses · No credit card · 50+ platforms supported
           </p>
+
+          {/* Bulk Analyze CTA */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="mb-4"
+          >
+            <button
+              onClick={() => {
+                if (!user) {
+                  setShowLoginGate(true);
+                  return;
+                }
+                navigate("/dashboard?bulk=true");
+              }}
+              className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 hover:bg-primary/10 px-4 py-2 transition-colors group"
+            >
+              <Layers className="h-4 w-4 text-primary" />
+              <span className="text-sm font-medium text-primary">Bulk Analyze — Paste Multiple Links at Once</span>
+              <ArrowRight className="h-3.5 w-3.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+            </button>
+          </motion.div>
+
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground/70">
             <span>Zillow</span><span>·</span>
             <span>Rightmove</span><span>·</span>
