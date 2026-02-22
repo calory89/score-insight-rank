@@ -326,11 +326,32 @@ const Analysis = () => {
   const analysisTriggered = useRef(false);
   useEffect(() => {
     if (!isLoadingMode) return;
-    if (!user) return; // Wait for auth state to settle
-    if (analysisTriggered.current) return; // Prevent re-triggering
+    if (!user) return;
+    if (analysisTriggered.current) return;
     analysisTriggered.current = true;
     setLoading(false);
-    runAnalysis({ url: urlToAnalyze });
+
+    // Cache check: if this URL was already analyzed by anyone, show cached result instantly
+    const checkCache = async () => {
+      if (!urlToAnalyze) return false;
+      const normalizedUrl = urlToAnalyze.split("#")[0].replace(/\/$/, "");
+      const { data: cached } = await supabase
+        .from("analyses")
+        .select("id")
+        .ilike("url", `${normalizedUrl}%`)
+        .not("global_score", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (cached && cached.length > 0) {
+        navigate(`/analysis/${cached[0].id}`, { replace: true });
+        return true;
+      }
+      return false;
+    };
+
+    checkCache().then((found) => {
+      if (!found) runAnalysis({ url: urlToAnalyze });
+    });
   }, [isLoadingMode, user, urlToAnalyze]);
 
   useEffect(() => {

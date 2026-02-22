@@ -6,10 +6,10 @@ import { ArrowRight, Search } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginGateModal from "@/components/LoginGateModal";
 import ScorePreview from "@/components/ScorePreview";
+import ExampleReportsCarousel from "@/components/ExampleReportsCarousel";
 
 const HeroSection = () => {
   const [url, setUrl] = useState("");
-  const [showResults, setShowResults] = useState(false);
   const [showLoginGate, setShowLoginGate] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -45,7 +45,7 @@ const HeroSection = () => {
     }
   }, [user, navigate]);
 
-  const isBlurred = showResults && !user;
+
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
@@ -117,39 +117,24 @@ const HeroSection = () => {
             transition={{ delay: 0.6, duration: 0.5 }}
             className="flex items-center justify-center gap-4"
           >
-            <Button variant="hero-outline" size="sm" onClick={() => { setShowResults(true); }}>
-              See Example Report
+            <Button variant="hero-outline" size="sm" onClick={() => document.getElementById("example-reports")?.scrollIntoView({ behavior: "smooth" })}>
+              See Example Reports
             </Button>
           </motion.div>
         </motion.div>
 
-        {/* Score Preview */}
-        <AnimatePresence>
-          {showResults && (
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className={`max-w-4xl mx-auto mt-16 sm:mt-20 relative ${isBlurred ? "select-none" : ""}`}
-            >
-              {isBlurred && (
-                <div className="absolute inset-0 z-10 backdrop-blur-md rounded-2xl" />
-              )}
-              <ScorePreview />
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {!showResults && (
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.8 }}
-            className="max-w-4xl mx-auto mt-16 sm:mt-20"
-          >
-            <ScorePreview />
-          </motion.div>
-        )}
+        {/* Example Reports Carousel */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, duration: 0.8 }}
+          className="max-w-5xl mx-auto mt-16 sm:mt-20" id="example-reports"
+        >
+          <div className="text-center mb-6">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Real Reports from Real Users</p>
+          </div>
+          <ExampleReportsCarousel />
+        </motion.div>
       </div>
 
       <LoginGateModal open={showLoginGate} onClose={handleLoginClose} onSuccess={handleLoginSuccess} />
