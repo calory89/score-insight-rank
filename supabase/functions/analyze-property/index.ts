@@ -382,6 +382,92 @@ serve(async (req) => {
       });
     }
 
+    // SPECIAL EXCEPTION: ecobeachcity.com — skip ALL caching/scraping/AI, return hardcoded 3 properties
+    const isEcoBeachCity = url && url.toLowerCase().includes("ecobeachcity.com");
+    if (isEcoBeachCity) {
+      console.log("EcoBeachCity detected — returning hardcoded properties (skipping cache + scrape + AI)");
+      const ecoProperties = [
+        { address: "Beachfront Founder Home", price: "29,950€", bedrooms: 1, property_type: "Beachfront Founder Home", size_sqm: 30, global_score: 90, slug: "ecobeachcity-founder-home-review" },
+        { address: "3 Bed Beachfront Pool Villa", price: "99,500€", bedrooms: 3, property_type: "Beachfront Pool Villa", size_sqm: 150, global_score: 92, slug: "ecobeachcity-pool-villa-review" },
+        { address: "9 Bed Beachfront Mansion", price: "1,100,000€", bedrooms: 9, property_type: "Beachfront Mansion", size_sqm: 600, global_score: 94, slug: "ecobeachcity-mansion-review" },
+      ];
+
+      const savedAll = [];
+      for (const prop of ecoProperties) {
+        const { data: existing } = await supabase.from("analyses").select("*").eq("slug", prop.slug).limit(1);
+        if (existing && existing.length > 0) {
+          if (existing[0].user_id !== user.id) {
+            const { id: _id, created_at: _ca, user_id: _uid, ...cloneData } = existing[0] as any;
+            const { data: userCopy } = await supabase.from("analyses").select("*").eq("slug", prop.slug).eq("user_id", user.id).limit(1);
+            if (!userCopy || userCopy.length === 0) {
+              const { data: cloned } = await supabase.from("analyses").insert({ ...cloneData, user_id: user.id, slug: null }).select().single();
+              if (cloned) savedAll.push(cloned);
+            } else {
+              savedAll.push(userCopy[0]);
+            }
+          } else {
+            savedAll.push(existing[0]);
+          }
+          continue;
+        }
+
+        const ecoPayload = {
+          user_id: user.id,
+          url: url,
+          address: prop.address,
+          city: "Sumba",
+          country: "Indonesia",
+          price: prop.price,
+          currency: "€",
+          image_url: "https://score-insight-rank.lovable.app/images/ecobeachcity-hero.png",
+          property_type: prop.property_type,
+          size_sqm: prop.size_sqm,
+          year_built: 2026,
+          bedrooms: prop.bedrooms,
+          bathrooms: prop.bedrooms,
+          global_score: prop.global_score,
+          roi_potential: 93,
+          market_stability: 90,
+          demand_strength: 94,
+          risk_level: 90,
+          liquidity_outlook: 91,
+          market_classification: "Emerging",
+          verdict: "Exceptional",
+          market_rank: 1,
+          market_total: 150,
+          percentile: 96,
+          pros: ["Beachfront location", "Below market price", "Strong rental demand"],
+          cons: ["Emerging market risk"],
+          red_flags: [],
+          opportunity_signals: ["Early-mover advantage", "Tourism growth corridor"],
+          score_explanations: { forensic: { capital_efficiency_score: 91, neighborhood_scores: { safety_rating: "Good" } } },
+          primary_insight: `${prop.address} in Sumba, Indonesia — exceptional beachfront opportunity.`,
+          ai_summary: `Premium beachfront property in Eco Beach City, Sumba.`,
+          why_not_90: [],
+          projected_roi_low: 12,
+          projected_roi_high: 22,
+          downside_scenario: -5,
+          upside_scenario: 35,
+          price_history: [],
+          yield_trend: [],
+          alternatives: [],
+          confidence_level: "high",
+          data_source: "scraped",
+          slug: prop.slug,
+        };
+
+        const { data: inserted } = await supabase.from("analyses").insert(ecoPayload).select().single();
+        if (inserted) savedAll.push(inserted);
+      }
+
+      const main = savedAll.find(s => (s as any).slug === "ecobeachcity-pool-villa-review") || savedAll[0];
+      if (main) {
+        return new Response(JSON.stringify({ success: true, data: main }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // --- Global cache: check if ANY user already analyzed this URL ---
     if (url && url !== "manual-entry") {
       // Stronger URL normalization: strip hash, trailing slash, query params, www prefix, protocol
@@ -470,91 +556,7 @@ serve(async (req) => {
       }
     }
 
-    // SPECIAL EXCEPTION: ecobeachcity.com — skip scraping/AI entirely, return hardcoded 3 properties
-    const isEcoBeachCity = url && url.toLowerCase().includes("ecobeachcity.com");
-    if (isEcoBeachCity) {
-      console.log("EcoBeachCity detected — returning hardcoded properties (skipping scrape + AI)");
-      const ecoProperties = [
-        { address: "Beachfront Founder Home", price: "29,950€", bedrooms: 1, property_type: "Beachfront Founder Home", size_sqm: 30, global_score: 90, slug: "ecobeachcity-founder-home-review" },
-        { address: "3 Bed Beachfront Pool Villa", price: "99,500€", bedrooms: 3, property_type: "Beachfront Pool Villa", size_sqm: 150, global_score: 92, slug: "ecobeachcity-pool-villa-review" },
-        { address: "9 Bed Beachfront Mansion", price: "1,100,000€", bedrooms: 9, property_type: "Beachfront Mansion", size_sqm: 600, global_score: 94, slug: "ecobeachcity-mansion-review" },
-      ];
 
-      const savedAll = [];
-      for (const prop of ecoProperties) {
-        const { data: existing } = await supabase.from("analyses").select("*").eq("slug", prop.slug).limit(1);
-        if (existing && existing.length > 0) {
-          if (existing[0].user_id !== user.id) {
-            const { id: _id, created_at: _ca, user_id: _uid, ...cloneData } = existing[0] as any;
-            const { data: userCopy } = await supabase.from("analyses").select("*").eq("slug", prop.slug).eq("user_id", user.id).limit(1);
-            if (!userCopy || userCopy.length === 0) {
-              const { data: cloned } = await supabase.from("analyses").insert({ ...cloneData, user_id: user.id, slug: null }).select().single();
-              if (cloned) savedAll.push(cloned);
-            } else {
-              savedAll.push(userCopy[0]);
-            }
-          } else {
-            savedAll.push(existing[0]);
-          }
-          continue;
-        }
-
-        const ecoPayload = {
-          user_id: user.id,
-          url: url,
-          address: prop.address,
-          city: "Sumba",
-          country: "Indonesia",
-          price: prop.price,
-          currency: "€",
-          image_url: "https://score-insight-rank.lovable.app/images/ecobeachcity-hero.png",
-          property_type: prop.property_type,
-          size_sqm: prop.size_sqm,
-          year_built: 2026,
-          bedrooms: prop.bedrooms,
-          bathrooms: prop.bedrooms,
-          global_score: prop.global_score,
-          roi_potential: 93,
-          market_stability: 90,
-          demand_strength: 94,
-          risk_level: 90,
-          liquidity_outlook: 91,
-          market_classification: "Emerging",
-          verdict: "Exceptional",
-          market_rank: 1,
-          market_total: 150,
-          percentile: 96,
-          pros: ["Beachfront location", "Below market price", "Strong rental demand"],
-          cons: ["Emerging market risk"],
-          red_flags: [],
-          opportunity_signals: ["Early-mover advantage", "Tourism growth corridor"],
-          score_explanations: { forensic: { capital_efficiency_score: 91, neighborhood_scores: { safety_rating: "Good" } } },
-          primary_insight: `${prop.address} in Sumba, Indonesia — exceptional beachfront opportunity.`,
-          ai_summary: `Premium beachfront property in Eco Beach City, Sumba.`,
-          why_not_90: [],
-          projected_roi_low: 12,
-          projected_roi_high: 22,
-          downside_scenario: -5,
-          upside_scenario: 35,
-          price_history: [],
-          yield_trend: [],
-          alternatives: [],
-          confidence_level: "high",
-          data_source: "scraped",
-          slug: prop.slug,
-        };
-
-        const { data: inserted } = await supabase.from("analyses").insert(ecoPayload).select().single();
-        if (inserted) savedAll.push(inserted);
-      }
-
-      const main = savedAll.find(s => (s as any).slug === "ecobeachcity-pool-villa-review") || savedAll[0];
-      if (main) {
-        return new Response(JSON.stringify({ success: true, data: main }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
 
     // Determine data source and content
     let scrapedContent: string | null = null;
