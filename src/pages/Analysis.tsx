@@ -10,11 +10,13 @@ import {
   TrendingUp, TrendingDown, AlertTriangle, Sparkles, ChevronDown, ChevronUp,
   Shield, Info, Target, DollarSign, PiggyBank, BarChart3, Home,
   Compass, Scale, Clock, Zap, CheckCircle2, XCircle, Eye,
-  Landmark, Percent, ArrowUpRight, ArrowDownRight, GitCompare,
+  Landmark, Percent, ArrowUpRight, ArrowDownRight, GitCompare, Flag, X, Send,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import {
   LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, Area, AreaChart,
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
@@ -297,7 +299,11 @@ const Analysis = () => {
   const fomoTimerRef = useRef<ReturnType<typeof setInterval>>();
   const [scrapeFailed, setScrapeFailed] = useState(false);
   const [submittingFallback, setSubmittingFallback] = useState(false);
-
+  const [showReportError, setShowReportError] = useState(false);
+  const [reportDescription, setReportDescription] = useState("");
+  const [reportCategory, setReportCategory] = useState("wrong_data");
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const { toast } = useToast();
   useEffect(() => {
     if (!analyzing) return;
     fomoTimerRef.current = setInterval(() => {
@@ -445,6 +451,9 @@ const Analysis = () => {
             )}
             <Button variant="outline" size="sm" onClick={() => navigate(`/compare?ids=${id}`)}>
               <GitCompare className="h-3.5 w-3.5 mr-1" /> Compare
+            </Button>
+            <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setShowReportError(true)}>
+              <Flag className="h-3.5 w-3.5 mr-1" /> Report Error
             </Button>
           </div>
         </div>
@@ -1075,6 +1084,98 @@ const Analysis = () => {
           </Section>
         )}
       </div>
+
+      {/* Report Error Modal */}
+      <AnimatePresence>
+        {showReportError && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
+            onClick={() => setShowReportError(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl"
+            >
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <Flag className="h-4 w-4 text-destructive" /> Report an Error
+                </h3>
+                <button onClick={() => setShowReportError(false)} className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-secondary transition-colors">
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </button>
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">What's wrong?</label>
+                  <select
+                    value={reportCategory}
+                    onChange={(e) => setReportCategory(e.target.value)}
+                    className="h-10 w-full rounded-md border border-border bg-secondary/50 px-3 text-sm text-foreground"
+                  >
+                    <option value="wrong_data">Wrong price or data</option>
+                    <option value="wrong_score">Score seems incorrect</option>
+                    <option value="wrong_classification">Wrong site classification</option>
+                    <option value="missing_data">Missing information</option>
+                    <option value="other">Other issue</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Describe the issue *</label>
+                  <Textarea
+                    value={reportDescription}
+                    onChange={(e) => setReportDescription(e.target.value)}
+                    placeholder="e.g. The price shown is incorrect, the actual listing price is..."
+                    rows={4}
+                    className="bg-secondary/50"
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  Analysis: {d?.address || d?.url} · ID: {id}
+                </p>
+                <Button
+                  variant="hero"
+                  className="w-full"
+                  disabled={reportSubmitting || !reportDescription.trim()}
+                  onClick={async () => {
+                    if (!user || !reportDescription.trim()) return;
+                    setReportSubmitting(true);
+                    try {
+                      const { data: ticket, error } = await (supabase
+                        .from("tickets" as any)
+                        .insert({
+                          user_id: user.id,
+                          subject: `[Error Report] ${reportCategory.replace("_", " ")} — ${d?.address || d?.url || "Unknown"}`,
+                          category: "error_report",
+                          priority: "high",
+                        })
+                        .select()
+                        .single() as any);
+                      if (error || !ticket) throw error || new Error("Failed");
+                      await (supabase.from("ticket_messages" as any).insert({
+                        ticket_id: ticket.id,
+                        user_id: user.id,
+                        message: `**Error Type:** ${reportCategory.replace("_", " ")}\n**Analysis URL:** ${d?.url}\n**Analysis ID:** ${id}\n**Address:** ${d?.address || "N/A"}\n**Price shown:** ${d?.price || "N/A"}\n**Score:** ${d?.global_score || "N/A"}\n\n**Description:**\n${reportDescription}`,
+                        is_admin: false,
+                      }) as any);
+                      toast({ title: "Error reported", description: `Ticket ${ticket.ticket_number} created. We'll review it shortly.` });
+                      setShowReportError(false);
+                      setReportDescription("");
+                    } catch (e: any) {
+                      toast({ title: "Error", description: e?.message || "Could not submit report", variant: "destructive" });
+                    } finally {
+                      setReportSubmitting(false);
+                    }
+                  }}
+                >
+                  {reportSubmitting ? "Submitting…" : "Submit Report"}
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
