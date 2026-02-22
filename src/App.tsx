@@ -13,6 +13,8 @@ import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
 import Rankings from "./pages/Rankings";
 import Tickets from "./pages/Tickets";
+import Discover from "./pages/Discover";
+import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +37,9 @@ const App = () => (
               <Route path="/admin" element={<Admin />} />
               <Route path="/rankings" element={<Rankings />} />
               <Route path="/tickets" element={<Tickets />} />
+              <Route path="/discover" element={<Discover />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/profile/:userId" element={<Profile />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
