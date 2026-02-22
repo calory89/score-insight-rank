@@ -347,9 +347,9 @@ const Analysis = () => {
     }, 3500);
     // Safety timeout: prevent infinite loading
     const safetyTimeout = setTimeout(() => {
-      setAnalyzeError("Analysis is taking longer than expected. Please try again.");
+      setAnalyzeError("Analysis is taking longer than expected. The property website may be slow or protected. Please try again.");
       setAnalyzing(false);
-    }, 90000);
+    }, 180000);
     return () => {
       clearInterval(fomoTimerRef.current);
       clearTimeout(safetyTimeout);
