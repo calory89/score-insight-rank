@@ -10,7 +10,7 @@ import {
   TrendingUp, TrendingDown, AlertTriangle, Sparkles, ChevronDown, ChevronUp,
   Shield, Info, Target, DollarSign, PiggyBank, BarChart3, Home,
   Compass, Scale, Clock, Zap, CheckCircle2, XCircle, Eye,
-  Landmark, Percent, ArrowUpRight, ArrowDownRight, GitCompare, Flag, X, Send,
+  Landmark, Percent, ArrowUpRight, ArrowDownRight, GitCompare, Flag, X, Send, Heart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -303,7 +303,29 @@ const Analysis = () => {
   const [reportDescription, setReportDescription] = useState("");
   const [reportCategory, setReportCategory] = useState("wrong_data");
   const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
   const { toast } = useToast();
+
+  // Check if this analysis is favorited
+  useEffect(() => {
+    if (!user || !id) return;
+    supabase.from("favorites").select("id").eq("user_id", user.id).eq("analysis_id", id).then(({ data: favs }) => {
+      setIsFavorited(!!(favs && favs.length > 0));
+    });
+  }, [user, id]);
+
+  const handleToggleFavorite = async () => {
+    if (!user || !id) return;
+    if (isFavorited) {
+      await supabase.from("favorites").delete().eq("user_id", user.id).eq("analysis_id", id);
+      setIsFavorited(false);
+      toast({ title: "Removed from favorites" });
+    } else {
+      await supabase.from("favorites").insert({ user_id: user.id, analysis_id: id });
+      setIsFavorited(true);
+      toast({ title: "Added to favorites", description: "Property saved to your collection." });
+    }
+  };
   useEffect(() => {
     if (!analyzing) return;
     fomoTimerRef.current = setInterval(() => {
@@ -449,6 +471,15 @@ const Analysis = () => {
                 <Eye className="h-3.5 w-3.5 mr-1" /> See Property
               </Button>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              className={isFavorited ? "text-primary border-primary/30 bg-primary/10" : ""}
+              onClick={handleToggleFavorite}
+            >
+              <Heart className={`h-3.5 w-3.5 mr-1 ${isFavorited ? "fill-current" : ""}`} />
+              {isFavorited ? "Saved" : "Favorite"}
+            </Button>
             <Button variant="outline" size="sm" onClick={() => navigate(`/compare?ids=${id}`)}>
               <GitCompare className="h-3.5 w-3.5 mr-1" /> Compare
             </Button>

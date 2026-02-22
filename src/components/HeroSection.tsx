@@ -107,9 +107,24 @@ const HeroSection = () => {
             </div>
           </motion.div>
 
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground mb-2">
             5 free analyses · No credit card · 50+ platforms supported
           </p>
+          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground/70">
+            <span>Zillow</span><span>·</span>
+            <span>Idealista</span><span>·</span>
+            <span>Rightmove</span><span>·</span>
+            <span>Redfin</span><span>·</span>
+            <span>Zoopla</span><span>·</span>
+            <span>Funda</span><span>·</span>
+            <span>ImmobilienScout24</span><span>·</span>
+            <span>SeLoger</span><span>·</span>
+            <span>Hemnet</span><span>·</span>
+            <span>Airbnb</span><span>·</span>
+            <span>Realtor.com</span><span>·</span>
+            <span>Domain.com.au</span><span>·</span>
+            <span>+40 more</span>
+          </div>
         </motion.div>
 
         {/* Example Reports Carousel */}
