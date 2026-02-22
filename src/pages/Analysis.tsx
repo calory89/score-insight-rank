@@ -198,7 +198,10 @@ const FomoLoader = ({ step }: { step: number }) => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.8 + idx * 0.1 }}
-                onClick={() => navigate(`/analysis/${report.id}`)}
+                onClick={() => {
+                  // Must use window.location because navigate() won't work while analyzing state blocks rendering
+                  window.location.href = `/analysis/${report.id}`;
+                }}
                 className="rounded-xl border border-border bg-card hover:border-primary/30 hover:bg-primary/5 p-4 text-left transition-all group"
               >
                 <div className="flex items-start gap-3">
@@ -698,94 +701,116 @@ const Analysis = () => {
           </Section>
         )}
 
-        {/* ===== GLOBAL SCORE + SUBSCORES (MOVED UP) ===== */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <Section delay={0.05} className="rounded-2xl border border-border bg-card p-6 flex flex-col items-center justify-center">
-            <div className="relative">
-              <svg className="w-40 h-40 -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--border))" strokeWidth="5" />
-                <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--primary))" strokeWidth="5" strokeLinecap="round"
-                  strokeDasharray="264" strokeDashoffset={264 - (264 * globalScore) / 100} />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className={`text-5xl font-bold font-mono leading-none ${scoreColor(globalScore)}`}>{globalScore}</span>
-                <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest mt-1">Global Score</span>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-4 text-center">
-              Better than <span className="font-mono font-semibold text-primary">{d.percentile}%</span> of comparable listings.
-            </p>
-            {d.market_rank && d.market_rank <= d.market_total && <p className="text-[11px] text-muted-foreground mt-1">Rank: <span className="font-mono text-foreground">#{d.market_rank}</span> of {d.market_total}</p>}
-          </Section>
-
-          <Section delay={0.08} className="lg:col-span-2 rounded-2xl border border-border bg-card p-6">
-            <h3 className="text-sm font-semibold text-foreground mb-4">Subscore Breakdown</h3>
-            <div className="space-y-1">
-              <SubscoreBar label="ROI Potential" value={d.roi_potential} explanation={explanations.roi_potential} />
-              <SubscoreBar label="Market Stability" value={d.market_stability} explanation={explanations.market_stability} />
-              <SubscoreBar label="Demand Strength" value={d.demand_strength} explanation={explanations.demand_strength} />
-              <SubscoreBar label="Risk Level" value={d.risk_level} explanation={explanations.risk_level} />
-              <SubscoreBar label="Liquidity Outlook" value={d.liquidity_outlook} explanation={explanations.liquidity_outlook} />
-            </div>
-            {d.why_not_90 && (d.why_not_90 as string[]).length > 0 && (
-              <div className="mt-4 pt-4 border-t border-border">
-                <button onClick={() => setShowWhyNot90(!showWhyNot90)} className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                  Why not 90+? {showWhyNot90 ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                </button>
-                <AnimatePresence>
-                  {showWhyNot90 && (
-                    <motion.ul initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-2 space-y-1 overflow-hidden">
-                      {(d.why_not_90 as string[]).map((r: string, i: number) => (
-                        <li key={i} className="text-xs text-muted-foreground flex items-start gap-2"><span className="text-score-average mt-0.5">•</span> {r}</li>
-                      ))}
-                    </motion.ul>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
-          </Section>
-        </div>
-
-        {/* ===== PROPERTY INFO ===== */}
-        <Section delay={0.1} className="mb-8">
+        {/* ===== UNIFIED PROPERTY CARD: Image + Info + Score + Subscores ===== */}
+        <Section delay={0.05} className="mb-8">
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
+            {/* Property Image */}
             {(() => {
               const imgUrl = f.listing_image_url || d.image_url;
               return imgUrl && typeof imgUrl === 'string' && imgUrl.startsWith('http') ? (
-                <div className="h-48 md:h-64 w-full overflow-hidden">
+                <div className="h-48 md:h-64 w-full overflow-hidden relative">
                   <img src={imgUrl} alt={d.address || "Property"} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  {/* Score overlay on image */}
+                  <div className="absolute top-4 right-4">
+                    <div className={`h-16 w-16 rounded-2xl bg-card/90 backdrop-blur-sm border border-border flex flex-col items-center justify-center shadow-lg`}>
+                      <span className={`text-2xl font-bold font-mono leading-none ${scoreColor(globalScore)}`}>{globalScore}</span>
+                      <span className="text-[7px] font-medium text-muted-foreground uppercase tracking-wider mt-0.5">Score</span>
+                    </div>
+                  </div>
+                  {/* Badges overlay on image */}
+                  <div className="absolute top-4 left-4 flex flex-wrap gap-1.5">
+                    <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full border backdrop-blur-sm bg-card/80 ${classificationColor(d.market_classification)}`}>{d.market_classification}</span>
+                    <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full border backdrop-blur-sm bg-card/80 ${verdictColor(d.verdict)}`}>{d.verdict}</span>
+                  </div>
                 </div>
               ) : null;
             })()}
-            <div className="relative p-6 md:p-8 bg-gradient-hero">
-              <div className="flex flex-col md:flex-row gap-6 items-start">
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-3">
+
+            {/* Property Info + Score Row */}
+            <div className="p-5 md:p-6">
+              {/* Badges (if no image) + Confidence */}
+              <div className="flex flex-wrap items-center gap-2 mb-3">
+                {!(f.listing_image_url || d.image_url) && (
+                  <>
                     <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full border ${classificationColor(d.market_classification)}`}>{d.market_classification}</span>
                     <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full border ${verdictColor(d.verdict)}`}>{d.verdict}</span>
-                    <ConfidenceBadge level={confidenceLevel} />
-                    {f.renovation_status && <Badge variant="outline" className="text-[10px]">{f.renovation_status}</Badge>}
-                    {f.energy_rating && <Badge variant="outline" className="text-[10px]">Energy: {f.energy_rating}</Badge>}
+                  </>
+                )}
+                <ConfidenceBadge level={confidenceLevel} />
+                {f.renovation_status && <Badge variant="outline" className="text-[10px]">{f.renovation_status}</Badge>}
+                {f.energy_rating && <Badge variant="outline" className="text-[10px]">Energy: {f.energy_rating}</Badge>}
+              </div>
+
+              <h1 className="text-xl md:text-2xl font-bold text-foreground mb-1">{d.address || `${d.city}, ${d.country}`}</h1>
+              <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
+                <MapPin className="h-3.5 w-3.5" /> {d.city}, {d.country}
+              </div>
+              <p className="text-2xl md:text-3xl font-bold font-mono text-foreground mb-3">{d.price}</p>
+
+              <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                {d.property_type && <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> {d.property_type}</span>}
+                {d.size_sqm != null && <span className="flex items-center gap-1"><Ruler className="h-3.5 w-3.5" />{d.size_sqm} m² · {sqmToSqft(d.size_sqm)} ft²</span>}
+                {d.bedrooms != null && <span className="flex items-center gap-1"><BedDouble className="h-3.5 w-3.5" /> {d.bedrooms} bed</span>}
+                {d.bathrooms != null && <span className="flex items-center gap-1"><Bath className="h-3.5 w-3.5" /> {d.bathrooms} bath</span>}
+                {d.year_built != null && <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> Built {d.year_built}</span>}
+                {f.floor_info && <span className="flex items-center gap-1"><Home className="h-3.5 w-3.5" /> {f.floor_info}</span>}
+              </div>
+              {f.property_features?.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {(f.property_features as string[]).map((feat: string, i: number) => (
+                    <Badge key={i} variant="secondary" className="text-[10px] font-normal">{feat}</Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Divider */}
+            <div className="border-t border-border" />
+
+            {/* Global Score Circle + Subscores */}
+            <div className="p-5 md:p-6">
+              <div className="flex flex-col md:flex-row gap-6 items-center">
+                {/* Score Circle */}
+                <div className="relative flex-shrink-0">
+                  <svg className="w-36 h-36 md:w-40 md:h-40 -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--border))" strokeWidth="5" />
+                    <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--primary))" strokeWidth="5" strokeLinecap="round"
+                      strokeDasharray="264" strokeDashoffset={264 - (264 * globalScore) / 100} />
+                  </svg>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className={`text-5xl font-bold font-mono leading-none ${scoreColor(globalScore)}`}>{globalScore}</span>
+                    <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest mt-1">Global Score</span>
                   </div>
-                  <h1 className="text-xl md:text-2xl font-bold text-foreground mb-1">{d.address || `${d.city}, ${d.country}`}</h1>
-                  <div className="flex items-center gap-1 text-sm text-muted-foreground mb-4">
-                    <MapPin className="h-3.5 w-3.5" /> {d.city}, {d.country}
+                </div>
+
+                {/* Subscores */}
+                <div className="flex-1 w-full">
+                  <h3 className="text-sm font-semibold text-foreground mb-3">Subscore Breakdown</h3>
+                  <div className="space-y-1">
+                    <SubscoreBar label="ROI Potential" value={d.roi_potential} explanation={explanations.roi_potential} />
+                    <SubscoreBar label="Market Stability" value={d.market_stability} explanation={explanations.market_stability} />
+                    <SubscoreBar label="Demand Strength" value={d.demand_strength} explanation={explanations.demand_strength} />
+                    <SubscoreBar label="Risk Level" value={d.risk_level} explanation={explanations.risk_level} />
+                    <SubscoreBar label="Liquidity Outlook" value={d.liquidity_outlook} explanation={explanations.liquidity_outlook} />
                   </div>
-                  <p className="text-2xl md:text-3xl font-bold font-mono text-foreground">{d.price}</p>
-                  <div className="flex flex-wrap gap-4 mt-4 text-xs text-muted-foreground">
-                    {d.property_type && <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> {d.property_type}</span>}
-                    {d.size_sqm != null && <span className="flex items-center gap-1"><Ruler className="h-3.5 w-3.5" />{d.size_sqm} m² · {sqmToSqft(d.size_sqm)} ft²</span>}
-                    {d.bedrooms != null && <span className="flex items-center gap-1"><BedDouble className="h-3.5 w-3.5" /> {d.bedrooms} bed</span>}
-                    {d.bathrooms != null && <span className="flex items-center gap-1"><Bath className="h-3.5 w-3.5" /> {d.bathrooms} bath</span>}
-                    {d.year_built != null && <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> Built {d.year_built}</span>}
-                    {f.floor_info && <span className="flex items-center gap-1"><Home className="h-3.5 w-3.5" /> {f.floor_info}</span>}
-                  </div>
-                  {/* Property Features Tags */}
-                  {f.property_features?.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-3">
-                      {(f.property_features as string[]).map((feat: string, i: number) => (
-                        <Badge key={i} variant="secondary" className="text-[10px] font-normal">{feat}</Badge>
-                      ))}
+                  <p className="text-xs text-muted-foreground mt-3">
+                    Better than <span className="font-mono font-semibold text-primary">{d.percentile}%</span> of comparable listings.
+                    {d.market_rank && d.market_rank <= d.market_total && <span className="ml-2">Rank: <span className="font-mono text-foreground">#{d.market_rank}</span> of {d.market_total}</span>}
+                  </p>
+                  {d.why_not_90 && (d.why_not_90 as string[]).length > 0 && (
+                    <div className="mt-3 pt-3 border-t border-border">
+                      <button onClick={() => setShowWhyNot90(!showWhyNot90)} className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                        Why not 90+? {showWhyNot90 ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                      </button>
+                      <AnimatePresence>
+                        {showWhyNot90 && (
+                          <motion.ul initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-2 space-y-1 overflow-hidden">
+                            {(d.why_not_90 as string[]).map((r: string, i: number) => (
+                              <li key={i} className="text-xs text-muted-foreground flex items-start gap-2"><span className="text-score-average mt-0.5">•</span> {r}</li>
+                            ))}
+                          </motion.ul>
+                        )}
+                      </AnimatePresence>
                     </div>
                   )}
                 </div>
