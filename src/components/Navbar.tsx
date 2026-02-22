@@ -26,9 +26,7 @@ const Navbar = () => {
       >
         <div className="container mx-auto flex h-14 sm:h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => { navigate("/"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
-            <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-gradient-cta flex items-center justify-center">
-              <span className="font-mono text-xs sm:text-sm font-bold text-primary-foreground">R</span>
-            </div>
+            <img src="/images/logo.png" alt="RealHunt" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg object-cover" />
             <span className="text-base sm:text-lg font-semibold text-foreground">RealHunt</span>
           </div>
 

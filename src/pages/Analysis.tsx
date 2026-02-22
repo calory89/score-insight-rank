@@ -499,15 +499,16 @@ const Analysis = () => {
           <div className="flex items-center gap-2">
             {d?.url && d.url !== "manual-entry" && (
               <Button
-                variant={d.url?.toLowerCase().includes("ecobeachcity") ? "hero" : "outline"}
-                size={d.url?.toLowerCase().includes("ecobeachcity") ? "lg" : "sm"}
+                variant="outline"
+                size="sm"
+                className="text-xs"
                 onClick={() => {
                   let url = d.url;
                   if (url && !url.startsWith("http")) url = "https://" + url;
                   window.open(url, "_blank");
                 }}
               >
-                <Eye className="h-3.5 w-3.5 mr-1" /> {d.url?.toLowerCase().includes("ecobeachcity") ? "Visit Project Website →" : "See Property"}
+                <Eye className="h-3.5 w-3.5 mr-1" /> <span className="hidden sm:inline">Visit Website</span><span className="sm:hidden">Visit</span>
               </Button>
             )}
             <Button
@@ -570,11 +571,14 @@ const Analysis = () => {
 
         <Section delay={0.05} className="mb-8">
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
-            {f.listing_image_url && typeof f.listing_image_url === 'string' && f.listing_image_url.startsWith('http') && (
-              <div className="h-48 md:h-64 w-full overflow-hidden">
-                <img src={f.listing_image_url} alt={d.address || "Property"} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-              </div>
-            )}
+            {(() => {
+              const imgUrl = f.listing_image_url || d.image_url;
+              return imgUrl && typeof imgUrl === 'string' && imgUrl.startsWith('http') ? (
+                <div className="h-48 md:h-64 w-full overflow-hidden">
+                  <img src={imgUrl} alt={d.address || "Property"} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                </div>
+              ) : null;
+            })()}
             <div className="relative p-6 md:p-8 bg-gradient-hero">
               <div className="flex flex-col md:flex-row gap-6 items-start">
                 <div className="flex-1 min-w-0">
