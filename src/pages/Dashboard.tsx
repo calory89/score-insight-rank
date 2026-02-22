@@ -69,24 +69,62 @@ const UpgradeModal = ({ open, onClose }: { open: boolean; onClose: () => void })
 };
 
 // Bulk Analyze Modal
-const BulkAnalyzeModal = ({ open, onClose, isPro, onUpgrade }: { open: boolean; onClose: () => void; isPro: boolean; onUpgrade: () => void }) => {
+const BulkAnalyzeModal = ({ open, onClose, isPro, onUpgrade, user }: { open: boolean; onClose: () => void; isPro: boolean; onUpgrade: () => void; user: any }) => {
   const navigate = useNavigate();
   const [urls, setUrls] = useState("");
+  const [bulkResults, setBulkResults] = useState<any[]>([]);
+  const [bulkRunning, setBulkRunning] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState(0);
+  const [bulkTotal, setBulkTotal] = useState(0);
   const { toast } = useToast();
 
   if (!open) return null;
 
-  const handleBulk = () => {
+  const parseUrls = (text: string): string[] => {
+    // Split by newlines, spaces, commas, tabs — then filter valid-looking URLs
+    return text
+      .split(/[\n\r,\t ]+/)
+      .map(l => l.trim())
+      .filter(l => l.length > 8 && (l.startsWith("http") || l.includes(".")));
+  };
+
+  const detectedUrls = parseUrls(urls);
+
+  const handleBulk = async () => {
     if (!isPro) {
       onUpgrade();
       return;
     }
-    const lines = urls.split("\n").map(l => l.trim()).filter(l => l.length > 5);
-    if (lines.length === 0) return;
-    // Navigate to first one, queue the rest (simplified: analyze one by one)
-    toast({ title: `Starting ${lines.length} analyses…`, description: "Each property will be analyzed sequentially." });
-    navigate(`/analysis/loading?url=${encodeURIComponent(lines[0])}`);
-    onClose();
+    if (detectedUrls.length === 0) return;
+
+    setBulkRunning(true);
+    setBulkResults([]);
+    setBulkProgress(0);
+    setBulkTotal(detectedUrls.length);
+
+    const results: any[] = [];
+    for (let i = 0; i < detectedUrls.length; i++) {
+      setBulkProgress(i + 1);
+      try {
+        const { data: result, error } = await supabase.functions.invoke("analyze-property", {
+          body: { url: detectedUrls[i] },
+        });
+        if (error) throw error;
+        if (result?.data) {
+          results.push(result.data);
+        } else if (result?.data?.id) {
+          // Fetch full data
+          const { data: full } = await supabase.from("analyses").select("*").eq("id", result.data.id).single();
+          if (full) results.push(full);
+        }
+      } catch (e: any) {
+        results.push({ url: detectedUrls[i], error: true, address: detectedUrls[i] });
+      }
+      setBulkResults([...results]);
+    }
+
+    setBulkRunning(false);
+    toast({ title: `✅ ${results.filter(r => !r.error).length} of ${detectedUrls.length} analyzed successfully` });
   };
 
   return (
@@ -95,7 +133,7 @@ const BulkAnalyzeModal = ({ open, onClose, isPro, onUpgrade }: { open: boolean; 
         className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4" onClick={onClose}>
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-lg rounded-2xl border border-primary/30 bg-card p-6 shadow-xl">
+          className="w-full max-w-lg rounded-2xl border border-primary/30 bg-card p-6 shadow-xl max-h-[85vh] overflow-y-auto">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Layers className="h-5 w-5 text-primary" />
@@ -103,34 +141,94 @@ const BulkAnalyzeModal = ({ open, onClose, isPro, onUpgrade }: { open: boolean; 
             </div>
             <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>
           </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            Paste multiple property URLs (one per line) to analyze them all at once.
-          </p>
-          {!isPro && (
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 mb-4 flex items-center gap-2">
-              <Lock className="h-4 w-4 text-primary flex-shrink-0" />
-              <p className="text-xs text-primary">Bulk Analyze is a <strong>Pro feature</strong>. Upgrade to analyze multiple properties at once.</p>
-            </div>
-          )}
-          <Textarea
-            value={urls}
-            onChange={(e) => setUrls(e.target.value)}
-            placeholder={"https://www.zillow.com/homedetails/...\nhttps://www.rightmove.co.uk/properties/...\nhttps://www.redfin.com/..."}
-            className="min-h-[140px] text-sm font-mono mb-4"
-            disabled={!isPro}
-          />
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">
-              {urls.split("\n").filter(l => l.trim().length > 5).length} URLs detected
-            </span>
-            <Button variant="hero" size="sm" onClick={handleBulk}>
-              {isPro ? (
-                <>Analyze All <ArrowRight className="ml-1 h-3.5 w-3.5" /></>
-              ) : (
-                <>Upgrade to Pro <Crown className="ml-1 h-3.5 w-3.5" /></>
+
+          {bulkResults.length > 0 ? (
+            /* Results view */
+            <div className="space-y-3">
+              {bulkRunning && (
+                <div className="text-center mb-4">
+                  <div className="h-4 w-4 rounded-full border-2 border-t-primary border-border animate-spin mx-auto mb-2" />
+                  <p className="text-xs text-muted-foreground">Analyzing {bulkProgress} of {bulkTotal}…</p>
+                </div>
               )}
-            </Button>
-          </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {bulkResults.map((r, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    onClick={() => { if (r.id && !r.error) { onClose(); navigate(`/analysis/${r.id}`); } }}
+                    className={`rounded-xl border p-4 transition-all ${
+                      r.error
+                        ? "border-destructive/30 bg-destructive/5 cursor-default"
+                        : "border-border bg-card hover:border-primary/30 cursor-pointer group"
+                    }`}
+                  >
+                    {r.error ? (
+                      <div>
+                        <p className="text-xs text-destructive font-medium mb-1">Failed</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{r.address}</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <span className={`text-2xl font-bold font-mono ${scoreColor(r.global_score || 0)}`}>
+                            {r.global_score || "—"}
+                          </span>
+                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${verdictColor(r.verdict || "")}`}>
+                            {r.verdict || "—"}
+                          </span>
+                        </div>
+                        <p className="text-xs font-medium text-foreground truncate">{r.address || r.city || "Property"}</p>
+                        <p className="text-[10px] text-muted-foreground">{r.city}{r.city && r.country ? ", " : ""}{r.country}</p>
+                        {r.price && <p className="text-xs font-mono text-foreground mt-1">{r.price}</p>}
+                        <p className="text-[10px] text-primary mt-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                          View full report <ArrowRight className="h-2.5 w-2.5" />
+                        </p>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </div>
+              {!bulkRunning && (
+                <Button variant="ghost" size="sm" className="w-full mt-2" onClick={() => { setBulkResults([]); setUrls(""); }}>
+                  Analyze More
+                </Button>
+              )}
+            </div>
+          ) : (
+            /* Input view */
+            <>
+              <p className="text-sm text-muted-foreground mb-4">
+                Paste multiple property URLs — separated by new lines, spaces, or commas.
+              </p>
+              {!isPro && (
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 mb-4 flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-primary flex-shrink-0" />
+                  <p className="text-xs text-primary">Bulk Analyze is a <strong>Pro feature</strong>. Upgrade to analyze multiple properties at once.</p>
+                </div>
+              )}
+              <Textarea
+                value={urls}
+                onChange={(e) => setUrls(e.target.value)}
+                placeholder={"https://www.zillow.com/homedetails/...\nhttps://www.rightmove.co.uk/properties/...\nhttps://www.redfin.com/..."}
+                className="min-h-[140px] text-sm font-mono mb-4"
+                disabled={!isPro}
+              />
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">
+                  {detectedUrls.length} URL{detectedUrls.length !== 1 ? "s" : ""} detected
+                </span>
+                <Button variant="hero" size="sm" onClick={handleBulk} disabled={bulkRunning}>
+                  {isPro ? (
+                    <>Analyze All ({detectedUrls.length}) <ArrowRight className="ml-1 h-3.5 w-3.5" /></>
+                  ) : (
+                    <>Upgrade to Pro <Crown className="ml-1 h-3.5 w-3.5" /></>
+                  )}
+                </Button>
+              </div>
+            </>
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
@@ -467,7 +565,7 @@ const Dashboard = () => {
         )}
       </div>
       <UpgradeModal open={showUpgrade} onClose={() => setShowUpgrade(false)} />
-      <BulkAnalyzeModal open={showBulk} onClose={() => setShowBulk(false)} isPro={isPro} onUpgrade={() => { setShowBulk(false); setShowUpgrade(true); }} />
+      <BulkAnalyzeModal open={showBulk} onClose={() => setShowBulk(false)} isPro={isPro} onUpgrade={() => { setShowBulk(false); setShowUpgrade(true); }} user={user} />
     </div>
   );
 };

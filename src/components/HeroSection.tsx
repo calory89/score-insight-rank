@@ -133,21 +133,6 @@ const HeroSection = () => {
               <ArrowRight className="h-3.5 w-3.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>
           </motion.div>
-
-          <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground/70">
-            <span>Zillow</span><span>·</span>
-            <span>Rightmove</span><span>·</span>
-            <span>Redfin</span><span>·</span>
-            <span>Zoopla</span><span>·</span>
-            <span>Funda</span><span>·</span>
-            <span>ImmobilienScout24</span><span>·</span>
-            <span>SeLoger</span><span>·</span>
-            <span>Hemnet</span><span>·</span>
-            <span>Airbnb</span><span>·</span>
-            <span>Realtor.com</span><span>·</span>
-            <span>Domain.com.au</span><span>·</span>
-            <span>+40 more</span>
-          </div>
         </motion.div>
 
         {/* Example Reports Carousel */}
