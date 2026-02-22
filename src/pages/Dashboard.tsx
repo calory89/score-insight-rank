@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
+import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -431,7 +432,7 @@ const Dashboard = () => {
   const displayAnalyses = showFavoritesOnly ? analyses.filter(a => favoriteIds.has(a.id)) : analyses;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-16 sm:pb-0">
       <Navbar />
       <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl">
         <div className="mb-8">
@@ -665,6 +666,7 @@ const Dashboard = () => {
       </div>
       <UpgradeModal open={showUpgrade} onClose={() => setShowUpgrade(false)} />
       <BulkAnalyzeModal open={showBulk} onClose={() => setShowBulk(false)} isPro={isPro} onUpgrade={() => { setShowBulk(false); setShowUpgrade(true); }} user={user} />
+      <BottomNav />
     </div>
   );
 };
