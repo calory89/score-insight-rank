@@ -198,7 +198,7 @@ const FomoLoader = ({ step }: { step: number }) => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.8 + idx * 0.1 }}
-                onClick={() => window.open(`/analysis/${report.id}`, '_blank')}
+                onClick={() => navigate(`/analysis/${report.id}`)}
                 className="rounded-xl border border-border bg-card hover:border-primary/30 hover:bg-primary/5 p-4 text-left transition-all group"
               >
                 <div className="flex items-start gap-3">
@@ -468,21 +468,26 @@ const Analysis = () => {
       if (result?.listing_type) setListingType(result.listing_type);
       if (result?.data?.id) navigate(`/analysis/${result.data.id}`, { replace: true });
     } catch (e: any) {
-      // CHECK DB FIRST: the analysis may have completed despite the client error
-      if (body.url && body.url !== "manual-entry") {
-        const normalizedUrl = body.url.split("#")[0].replace(/\/$/, "");
-        const { data: saved } = await supabase
-          .from("analyses")
-          .select("id")
-          .ilike("url", `${normalizedUrl}%`)
-          .not("global_score", "is", null)
-          .order("created_at", { ascending: false })
-          .limit(1);
-        if (saved && saved.length > 0) {
-          setAnalyzing(false);
-          navigate(`/analysis/${saved[0].id}`, { replace: true });
-          return;
+      console.error("Analysis error:", e);
+      try {
+        // CHECK DB FIRST: the analysis may have completed despite the client error
+        if (body.url && body.url !== "manual-entry") {
+          const normalizedUrl = body.url.split("#")[0].replace(/\/$/, "");
+          const { data: saved } = await supabase
+            .from("analyses")
+            .select("id")
+            .ilike("url", `${normalizedUrl}%`)
+            .not("global_score", "is", null)
+            .order("created_at", { ascending: false })
+            .limit(1);
+          if (saved && saved.length > 0) {
+            setAnalyzing(false);
+            navigate(`/analysis/${saved[0].id}`, { replace: true });
+            return;
+          }
         }
+      } catch (dbErr) {
+        console.error("DB fallback check failed:", dbErr);
       }
       setAnalyzeError(e.message || "Analysis failed");
       setAnalyzing(false);
@@ -693,7 +698,56 @@ const Analysis = () => {
           </Section>
         )}
 
-        <Section delay={0.05} className="mb-8">
+        {/* ===== GLOBAL SCORE + SUBSCORES (MOVED UP) ===== */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <Section delay={0.05} className="rounded-2xl border border-border bg-card p-6 flex flex-col items-center justify-center">
+            <div className="relative">
+              <svg className="w-40 h-40 -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--border))" strokeWidth="5" />
+                <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--primary))" strokeWidth="5" strokeLinecap="round"
+                  strokeDasharray="264" strokeDashoffset={264 - (264 * globalScore) / 100} />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className={`text-5xl font-bold font-mono leading-none ${scoreColor(globalScore)}`}>{globalScore}</span>
+                <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest mt-1">Global Score</span>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-4 text-center">
+              Better than <span className="font-mono font-semibold text-primary">{d.percentile}%</span> of comparable listings.
+            </p>
+            {d.market_rank && d.market_rank <= d.market_total && <p className="text-[11px] text-muted-foreground mt-1">Rank: <span className="font-mono text-foreground">#{d.market_rank}</span> of {d.market_total}</p>}
+          </Section>
+
+          <Section delay={0.08} className="lg:col-span-2 rounded-2xl border border-border bg-card p-6">
+            <h3 className="text-sm font-semibold text-foreground mb-4">Subscore Breakdown</h3>
+            <div className="space-y-1">
+              <SubscoreBar label="ROI Potential" value={d.roi_potential} explanation={explanations.roi_potential} />
+              <SubscoreBar label="Market Stability" value={d.market_stability} explanation={explanations.market_stability} />
+              <SubscoreBar label="Demand Strength" value={d.demand_strength} explanation={explanations.demand_strength} />
+              <SubscoreBar label="Risk Level" value={d.risk_level} explanation={explanations.risk_level} />
+              <SubscoreBar label="Liquidity Outlook" value={d.liquidity_outlook} explanation={explanations.liquidity_outlook} />
+            </div>
+            {d.why_not_90 && (d.why_not_90 as string[]).length > 0 && (
+              <div className="mt-4 pt-4 border-t border-border">
+                <button onClick={() => setShowWhyNot90(!showWhyNot90)} className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+                  Why not 90+? {showWhyNot90 ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                </button>
+                <AnimatePresence>
+                  {showWhyNot90 && (
+                    <motion.ul initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-2 space-y-1 overflow-hidden">
+                      {(d.why_not_90 as string[]).map((r: string, i: number) => (
+                        <li key={i} className="text-xs text-muted-foreground flex items-start gap-2"><span className="text-score-average mt-0.5">•</span> {r}</li>
+                      ))}
+                    </motion.ul>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+          </Section>
+        </div>
+
+        {/* ===== PROPERTY INFO ===== */}
+        <Section delay={0.1} className="mb-8">
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
             {(() => {
               const imgUrl = f.listing_image_url || d.image_url;
@@ -740,53 +794,7 @@ const Analysis = () => {
           </div>
         </Section>
 
-        {/* ===== 2. GLOBAL SCORE + SUBSCORES + RADAR ===== */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          <Section delay={0.1} className="rounded-2xl border border-border bg-card p-6 flex flex-col items-center justify-center">
-            <div className="relative">
-              <svg className="w-40 h-40 -rotate-90" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--border))" strokeWidth="5" />
-                <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--primary))" strokeWidth="5" strokeLinecap="round"
-                  strokeDasharray="264" strokeDashoffset={264 - (264 * globalScore) / 100} />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className={`text-5xl font-bold font-mono leading-none ${scoreColor(globalScore)}`}>{globalScore}</span>
-                <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest mt-1">Global Score</span>
-              </div>
-            </div>
-            <p className="text-xs text-muted-foreground mt-4 text-center">
-              Better than <span className="font-mono font-semibold text-primary">{d.percentile}%</span> of comparable listings.
-            </p>
-            {d.market_rank && d.market_rank <= d.market_total && <p className="text-[11px] text-muted-foreground mt-1">Rank: <span className="font-mono text-foreground">#{d.market_rank}</span> of {d.market_total}</p>}
-          </Section>
-
-          <Section delay={0.15} className="lg:col-span-2 rounded-2xl border border-border bg-card p-6">
-            <h3 className="text-sm font-semibold text-foreground mb-4">Subscore Breakdown</h3>
-            <div className="space-y-1">
-              <SubscoreBar label="ROI Potential" value={d.roi_potential} explanation={explanations.roi_potential} />
-              <SubscoreBar label="Market Stability" value={d.market_stability} explanation={explanations.market_stability} />
-              <SubscoreBar label="Demand Strength" value={d.demand_strength} explanation={explanations.demand_strength} />
-              <SubscoreBar label="Risk Level" value={d.risk_level} explanation={explanations.risk_level} />
-              <SubscoreBar label="Liquidity Outlook" value={d.liquidity_outlook} explanation={explanations.liquidity_outlook} />
-            </div>
-            {d.why_not_90 && (d.why_not_90 as string[]).length > 0 && (
-              <div className="mt-4 pt-4 border-t border-border">
-                <button onClick={() => setShowWhyNot90(!showWhyNot90)} className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-                  Why not 90+? {showWhyNot90 ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                </button>
-                <AnimatePresence>
-                  {showWhyNot90 && (
-                    <motion.ul initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="mt-2 space-y-1 overflow-hidden">
-                      {(d.why_not_90 as string[]).map((r: string, i: number) => (
-                        <li key={i} className="text-xs text-muted-foreground flex items-start gap-2"><span className="text-score-average mt-0.5">•</span> {r}</li>
-                      ))}
-                    </motion.ul>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
-          </Section>
-        </div>
+        {/* (Global Score + Subscores already rendered above) */}
 
         {/* ===== RADAR CHART ===== */}
         <Section delay={0.18} className="rounded-2xl border border-border bg-card p-6 mb-8">
