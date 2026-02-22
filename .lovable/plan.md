@@ -1,42 +1,32 @@
 
+# Fix: "Analysis Failed" Timeout Error
 
-## Deteccion Dinamica de Multiples Propiedades en Sitios de Proyectos
+## Problem
+When analyzing certain Zillow properties, the analysis takes longer than the 90-second client-side safety timeout. The edge function involves multiple steps (scraping with retries, multi-property detection, AI analysis) that can exceed this limit, especially for Zillow pages that are JavaScript-heavy.
 
-### Problema actual
-El sistema tiene las 3 propiedades de ecobeachcity.com hardcodeadas en el codigo. Si el sitio cambia precios, agrega propiedades, o si otro sitio de desarrollador tiene multiples propiedades, el sistema no lo detectaria. Ademas, el hardcoding ha causado problemas repetidos de cache y deteccion.
+## Root Cause
+- The client (`Analysis.tsx` line 349) has a **90-second safety timeout** that shows "Analysis is taking longer than expected"
+- The edge function can take up to **150+ seconds** when:
+  - First scrape attempt fails (45s timeout)
+  - Second scrape retry runs (60s timeout)  
+  - Multi-property detection AI call runs (~10s)
+  - Main AI analysis runs (~15-30s)
+- Total worst case: ~150 seconds, well above the 90s client limit
 
-### Solucion
-Reemplazar el bloque hardcodeado de ecobeachcity por un sistema dinamico que:
-1. Scrape la pagina normalmente
-2. Use la IA para detectar si hay multiples propiedades en el contenido
-3. Si detecta multiples propiedades, genere un analisis separado para cada una
-4. Mantenga la excepcion especial de scores altos (90-94) SOLO para ecobeachcity.com
+## Solution
 
-### Detalles Tecnicos
+### 1. Increase client-side safety timeout
+- **File**: `src/pages/Analysis.tsx`
+- Change the safety timeout from **90 seconds to 180 seconds** (3 minutes)
+- This gives the edge function enough time to complete even with scrape retries
 
-**Edge Function** (`supabase/functions/analyze-property/index.ts`):
+### 2. Update the timeout error message
+- Make the error message more helpful, suggesting the user try again or that the property site may be difficult to access
 
-1. **Eliminar el bloque hardcodeado** (lineas 385-469) de ecobeachcity
-2. **Nuevo flujo para sitios con multiples propiedades**:
-   - Despues de scrapear el contenido, enviar un prompt especial a la IA pidiendo que detecte si hay multiples propiedades listadas
-   - Si la IA detecta 2+ propiedades, generar un analisis completo para cada una
-   - Para ecobeachcity.com especificamente: aplicar los overrides de scores (90-94, verdict "Exceptional", year_built 2026) despues del analisis de la IA
-3. **Prompt de deteccion multi-propiedad**: Un prompt previo al analisis principal que pregunta a la IA: "Does this page contain multiple distinct property listings? If yes, extract each one separately with name, price, size, bedrooms, bathrooms"
-4. **Flujo de respuesta**: Si hay multiples propiedades, se insertan todas en la base de datos y se devuelve la principal (la del medio en precio, como ahora)
+## Technical Details
 
-**Nuevo orden de operacion**:
-1. URL parsing y auth
-2. Cache global check
-3. Scraping del contenido
-4. Deteccion multi-propiedad con IA (prompt rapido con gemini-2.5-flash)
-5. Si multi-propiedad: analisis individual de cada una con IA
-6. Si single-propiedad: analisis normal (flujo actual)
-7. Override de scores para ecobeachcity.com (post-analisis)
-8. Guardar en base de datos
+**Change in `src/pages/Analysis.tsx` (line ~349-351):**
+- `setTimeout(() => { ... }, 90000)` changes to `setTimeout(() => { ... }, 180000)`
+- Update error message to: "Analysis is taking longer than expected. The property website may be slow or protected. Please try again."
 
-**Beneficios**:
-- Funciona con CUALQUIER sitio de desarrollador que liste multiples propiedades
-- Los datos siempre estan actualizados (precios, unidades disponibles)
-- El scraper ya funciona correctamente con ecobeachcity.com (confirmado)
-- Elimina el codigo fragil hardcodeado que ha causado problemas repetidos
-
+This is a minimal, targeted fix that addresses the timeout without needing to restructure the edge function architecture.
