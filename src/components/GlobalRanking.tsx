@@ -174,7 +174,7 @@ const GlobalRanking = () => {
                 <div
                   key={prop.id}
                   onClick={() => navigate(`/analysis/${prop.id}`)}
-                  className="grid grid-cols-[1.5rem_1fr_auto_auto] sm:grid-cols-12 gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors items-center cursor-pointer group"
+                  className="grid grid-cols-[1.5rem_1fr_auto_auto_auto] sm:grid-cols-12 gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors items-center cursor-pointer group"
                 >
                   <div className="font-mono text-[11px] text-muted-foreground">{i + 1}</div>
                   <div className="flex items-center gap-1.5 min-w-0 sm:col-span-5">
@@ -190,7 +190,7 @@ const GlobalRanking = () => {
                       {prop.global_score}
                     </span>
                   </div>
-                  <div className="hidden sm:block sm:col-span-2 text-center font-mono text-xs text-foreground truncate">{prop.price || "—"}</div>
+                  <div className="sm:col-span-2 text-center font-mono text-[10px] sm:text-xs text-muted-foreground sm:text-foreground truncate max-w-[4.5rem] sm:max-w-none">{prop.price || "—"}</div>
                   <div className="sm:col-span-2 text-right flex items-center justify-end gap-1.5">
                     <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
                       prop.verdict === "Exceptional" ? "text-score-excellent bg-score-excellent/10" :
