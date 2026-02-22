@@ -310,8 +310,8 @@ const BulkAnalyzeModal = ({ open, onClose, isPro, onUpgrade, user }: { open: boo
               <Textarea
                 value={urls}
                 onChange={(e) => setUrls(e.target.value)}
-                placeholder={"https://www.zillow.com/homedetails/...\nhttps://www.rightmove.co.uk/properties/...\nhttps://www.redfin.com/..."}
-                className="min-h-[140px] text-sm font-mono mb-4"
+                placeholder={"https://www.zillow.com/homedetails/...\nhttps://www.rightmove.co.uk/properties/...\nhttps://www.redfin.com/...\nhttps://www.airbnb.com/rooms/...\n\nPaste as many URLs as you want — one per line, separated by spaces or commas."}
+                className={`text-sm font-mono mb-4 transition-all duration-300 ${detectedUrls.length > 0 ? "min-h-[220px]" : "min-h-[160px]"}`}
                 disabled={!isPro}
               />
               <div className="flex items-center justify-between">
