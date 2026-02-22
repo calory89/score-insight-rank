@@ -125,13 +125,34 @@ function detectListingType(content: string, url: string): "sale" | "rental" | "v
   // Airbnb, Booking, VRBO are always vacation rentals
   if (/airbnb\.|booking\.com|vrbo\.com/.test(lowerUrl)) return "vacation_rental";
   
+  // Major sale portals show mortgage estimates ("/mo", "per month", "amenities") even on for-sale listings
+  // which causes false rental/vacation signals. For these domains, only classify as rental with strong evidence.
+  const saleDomains = [
+    "zillow.com", "realtor.com", "redfin.com", "trulia.com", "homes.com",
+    "idealista.com", "idealista.pt", "fotocasa.es", "pisos.com", "habitaclia.com",
+    "rightmove.co.uk", "zoopla.co.uk", "onthemarket.com",
+    "immobilienscout24.de", "immowelt.de", "seloger.com",
+    "immobiliare.it", "casa.it", "funda.nl",
+    "hemnet.se", "boliga.dk", "finn.no",
+    "domain.com.au", "realestate.com.au",
+    "point2homes.com", "century21.com", "coldwellbanker.com", "sothebysrealty.com",
+  ];
+  const hostname = (() => { try { return new URL(url).hostname.toLowerCase().replace(/^www\./, ""); } catch { return ""; } })();
+  const isSaleDomain = saleDomains.some(d => hostname === d || hostname.endsWith("." + d));
+  
+  if (isSaleDomain) {
+    const hasRentInUrl = /\/rent|\/alquiler|\/location|\/miete|\/affitto/i.test(lowerUrl);
+    const hasExplicitForRent = /\bfor rent\b|\balquiler\b|\bà louer\b|\bzu vermieten\b|\baffitto\b/i.test(content);
+    const hasExplicitForSale = /\bfor sale\b|\ben venta\b|\bà vendre\b|\bzu verkaufen\b|\bin vendita\b/i.test(content);
+    if (hasRentInUrl || (hasExplicitForRent && !hasExplicitForSale)) return "rental";
+    return "sale";
+  }
+
   const lowerContent = content.toLowerCase();
   const rentalSignals = [
     /\bfor rent\b/i, /\balquiler\b/i, /\bà louer\b/i, /\bzu vermieten\b/i, /\baffitto\b/i,
-    /\bmonthly rent\b/i, /\bper month\b/i, /\b\/mes\b/i, /\b\/month\b/i, /\b\/mo\b/i,
-    /\brental price\b/i, /\bprecio alquiler\b/i, /\bhuur\b/i, /\bhyra\b/i,
+    /\bmonthly rent\b/i, /\brental price\b/i, /\bprecio alquiler\b/i, /\bhuur\b/i, /\bhyra\b/i,
     /\bleje\b/i, /\bleie\b/i, /\bvuokra\b/i,
-    /\bper night\b/i, /\bper notte\b/i, /\bpor noche\b/i, /\bpro nacht\b/i, /\bpar nuit\b/i,
   ];
   const saleSignals = [
     /\bfor sale\b/i, /\ben venta\b/i, /\bà vendre\b/i, /\bzu verkaufen\b/i, /\bin vendita\b/i,
@@ -140,8 +161,8 @@ function detectListingType(content: string, url: string): "sale" | "rental" | "v
   ];
   const vacationSignals = [
     /\bper night\b/i, /\bper notte\b/i, /\bpor noche\b/i, /\bpro nacht\b/i, /\bpar nuit\b/i,
-    /\bcheck-?in\b/i, /\bcheck-?out\b/i, /\bguests?\b/i, /\bsuperhost\b/i, /\bself check/i,
-    /\bamenities\b/i, /\bhouse rules\b/i,
+    /\bcheck-?in\b/i, /\bcheck-?out\b/i, /\bsuperhost\b/i, /\bself check/i,
+    /\bhouse rules\b/i,
   ];
 
   const rentalCount = rentalSignals.filter(r => r.test(lowerContent)).length;
