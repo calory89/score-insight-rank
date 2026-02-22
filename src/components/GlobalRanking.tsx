@@ -23,6 +23,13 @@ const scoreColor = (v: number) => {
   return "text-score-poor";
 };
 
+const scoreBg = (v: number) => {
+  if (v >= 80) return "bg-score-excellent/10";
+  if (v >= 65) return "bg-score-good/10";
+  if (v >= 50) return "bg-score-average/10";
+  return "bg-score-poor/10";
+};
+
 const RankingSearchBar = () => {
   const navigate = useNavigate();
   const [url, setUrl] = useState("");
@@ -201,7 +208,7 @@ const GlobalRanking = () => {
                     </div>
                   </div>
                   <div className="sm:col-span-2 text-center">
-                    <span className={`inline-flex items-center justify-center h-7 w-12 rounded-md bg-primary/10 font-mono text-sm font-semibold ${scoreColor(prop.global_score || 0)}`}>
+                    <span className={`inline-flex items-center justify-center h-7 w-12 rounded-md font-mono text-sm font-semibold ${scoreBg(prop.global_score || 0)} ${scoreColor(prop.global_score || 0)}`}>
                       {prop.global_score}
                     </span>
                   </div>

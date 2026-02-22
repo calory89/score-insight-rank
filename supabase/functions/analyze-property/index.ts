@@ -200,12 +200,13 @@ async function detectMultipleProperties(content: string, apiKey: string): Promis
                   items: {
                     type: "object",
                     properties: {
-                      name: { type: "string", description: "Property name/type" },
+                      name: { type: "string", description: "Property name/type e.g. 'Beachfront Founder Home', '3 Bed Pool Villa'" },
                       price: { type: "string", description: "Listed price with currency" },
                       size_sqm: { type: "number", nullable: true },
                       bedrooms: { type: "integer", nullable: true },
                       bathrooms: { type: "integer", nullable: true },
                       property_type: { type: "string" },
+                      image_url: { type: "string", nullable: true, description: "URL of the property image if found in the content" },
                     },
                     required: ["name", "price", "property_type"]
                   }
@@ -741,7 +742,8 @@ serve(async (req) => {
             analysis.verdict = "Exceptional";
             analysis.year_built = 2026;
             analysis.market_classification = "Emerging";
-            analysis.image_url = "https://score-insight-rank.lovable.app/images/ecobeachcity-hero.png";
+            // Use property-specific image from detection if available, otherwise use ecobeachcity hero
+            analysis.image_url = prop.image_url || "https://score-insight-rank.lovable.app/images/ecobeachcity-hero.png";
             if (analysis.ai_summary) analysis.ai_summary = analysis.ai_summary.replace(/\[PROJECT SITE — LIMITED DATA\]\s*/i, "");
             analysis.why_not_90 = [];
           }
@@ -758,7 +760,7 @@ serve(async (req) => {
             country: analysis.country,
             price: analysis.price,
             currency: analysis.currency,
-            image_url: analysis.image_url || "",
+            image_url: prop.image_url || analysis.image_url || "",
             property_type: analysis.property_type,
             size_sqm: analysis.size_sqm,
             year_built: analysis.year_built,
@@ -772,8 +774,8 @@ serve(async (req) => {
             liquidity_outlook: analysis.liquidity_outlook,
             market_classification: analysis.market_classification,
             verdict: analysis.verdict,
-            market_rank: analysis.market_rank || Math.floor(Math.random() * 30) + 5,
-            market_total: analysis.market_total || Math.floor(Math.random() * 150) + 100,
+            market_rank: null,
+            market_total: null,
             percentile: analysis.percentile,
             pros: analysis.pros,
             cons: analysis.cons,
@@ -796,7 +798,15 @@ serve(async (req) => {
           };
 
           const { data: inserted } = await supabase.from("analyses").insert(dbPayload).select().single();
-          if (inserted) savedAll.push(inserted);
+          if (inserted) {
+            // Compute actual rank from DB
+            const { count: totalCount } = await supabase.from("analyses").select("id", { count: "exact", head: true }).not("global_score", "is", null);
+            const { count: higherCount } = await supabase.from("analyses").select("id", { count: "exact", head: true }).not("global_score", "is", null).gt("global_score", inserted.global_score || 0);
+            const rank = (higherCount || 0) + 1;
+            const total = totalCount || rank;
+            await supabase.from("analyses").update({ market_rank: rank, market_total: total }).eq("id", inserted.id);
+            savedAll.push({ ...inserted, market_rank: rank, market_total: total });
+          }
         }
 
         if (savedAll.length > 0) {
@@ -1282,8 +1292,8 @@ serve(async (req) => {
       liquidity_outlook: analysis.liquidity_outlook,
       market_classification: analysis.market_classification,
       verdict: analysis.verdict,
-      market_rank: analysis.market_rank || Math.floor(Math.random() * 30) + 5,
-      market_total: analysis.market_total || Math.floor(Math.random() * 150) + 100,
+      market_rank: null,
+      market_total: null,
       percentile: analysis.percentile,
       pros: analysis.pros,
       cons: analysis.cons,
@@ -1336,6 +1346,16 @@ serve(async (req) => {
         throw new Error("Failed to save analysis");
       }
       saved = inserted;
+    }
+
+    // Compute actual rank from DB
+    if (saved) {
+      const { count: totalCount } = await supabase.from("analyses").select("id", { count: "exact", head: true }).not("global_score", "is", null);
+      const { count: higherCount } = await supabase.from("analyses").select("id", { count: "exact", head: true }).not("global_score", "is", null).gt("global_score", saved.global_score || 0);
+      const rank = (higherCount || 0) + 1;
+      const total = totalCount || rank;
+      await supabase.from("analyses").update({ market_rank: rank, market_total: total }).eq("id", saved.id);
+      saved = { ...saved, market_rank: rank, market_total: total };
     }
 
     return new Response(JSON.stringify({ success: true, data: saved, non_listing_warning: !isStandardListing, listing_type: listingType }), {
