@@ -15,6 +15,7 @@ type ExampleReport = {
   image_url: string | null;
   roi_potential: number | null;
   primary_insight: string | null;
+  url: string | null;
 };
 
 const scoreColor = (v: number) => {

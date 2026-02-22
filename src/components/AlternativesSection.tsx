@@ -109,7 +109,7 @@ const AlternativesSection = () => {
                         <span className="text-[11px] sm:text-xs text-muted-foreground">ROI {alt.roi_potential}%</span>
                       )}
                       <span className={`text-[11px] sm:text-xs ${
-                        alt.verdict === "Strong" ? "text-primary" : "text-score-average"
+                        alt.verdict === "Exceptional" ? "text-primary" : alt.verdict === "Strong" ? "text-score-excellent" : "text-score-average"
                       }`}>{alt.verdict}</span>
                     </div>
                   </div>
