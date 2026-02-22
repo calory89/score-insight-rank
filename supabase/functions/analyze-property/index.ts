@@ -79,48 +79,78 @@ function isBlockedContent(content: string): boolean {
   return false;
 }
 
+async function attemptScrape(url: string, apiKey: string, waitFor: number, timeoutMs: number): Promise<string | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ url, formats: ["markdown", "links"], onlyMainContent: true, waitFor }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    if (!response.ok) { console.error("Firecrawl error:", response.status); return null; }
+    const data = await response.json();
+    const markdown = data.data?.markdown || data.markdown || null;
+    if (!markdown || markdown.trim().length < 50) { console.log("Content too short"); return null; }
+    if (isBlockedContent(markdown)) { console.log("Blocked content detected"); return null; }
+    return markdown;
+  } catch (error) { console.error("Scrape attempt failed:", error); return null; }
+}
+
 async function scrapeListingPage(url: string): Promise<{ content: string | null; isEstimated: boolean }> {
   const apiKey = Deno.env.get("FIRECRAWL_API_KEY");
   if (!apiKey) return { content: null, isEstimated: true };
 
-  try {
-    console.log("Scraping listing page:", url);
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 45000);
+  console.log("Scraping listing page (attempt 1, waitFor=5000):", url);
+  let markdown = await attemptScrape(url, apiKey, 5000, 45000);
 
-      const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ url, formats: ["markdown", "links"], onlyMainContent: true, waitFor: 5000 }),
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      console.error("Firecrawl error:", response.status);
-      return { content: null, isEstimated: true };
-    }
-
-    const data = await response.json();
-    const markdown = data.data?.markdown || data.markdown || null;
-    if (!markdown || markdown.trim().length < 50) {
-      console.log("Content too short or empty");
-      return { content: null, isEstimated: true };
-    }
-
-    // CRITICAL: Validate content is actually a listing, not a CAPTCHA/cookie wall
-    if (isBlockedContent(markdown)) {
-      console.log("Blocked content detected (CAPTCHA/cookie wall), triggering fallback");
-      return { content: null, isEstimated: true };
-    }
-
-    console.log("Scrape successful, content length:", markdown.length);
-    const truncated = markdown.length > 12000 ? markdown.substring(0, 12000) + "\n\n[Content truncated...]" : markdown;
-    return { content: truncated, isEstimated: false };
-  } catch (error) {
-    console.error("Scrape failed:", error);
-    return { content: null, isEstimated: true };
+  // RETRY: If first attempt failed, try again with longer wait for JS-heavy/protected sites
+  if (!markdown) {
+    console.log("First scrape failed, retrying (attempt 2, waitFor=12000):", url);
+    markdown = await attemptScrape(url, apiKey, 12000, 60000);
   }
+
+  if (!markdown) return { content: null, isEstimated: true };
+
+  console.log("Scrape successful, content length:", markdown.length);
+  const truncated = markdown.length > 12000 ? markdown.substring(0, 12000) + "\n\n[Content truncated...]" : markdown;
+  return { content: truncated, isEstimated: false };
+}
+
+// Detect if listing is a rental/Airbnb (not for sale)
+function detectListingType(content: string, url: string): "sale" | "rental" | "vacation_rental" {
+  const lowerUrl = url.toLowerCase();
+  // Airbnb, Booking, VRBO are always vacation rentals
+  if (/airbnb\.|booking\.com|vrbo\.com/.test(lowerUrl)) return "vacation_rental";
+  
+  const lowerContent = content.toLowerCase();
+  const rentalSignals = [
+    /\bfor rent\b/i, /\balquiler\b/i, /\bà louer\b/i, /\bzu vermieten\b/i, /\baffitto\b/i,
+    /\bmonthly rent\b/i, /\bper month\b/i, /\b\/mes\b/i, /\b\/month\b/i, /\b\/mo\b/i,
+    /\brental price\b/i, /\bprecio alquiler\b/i, /\bhuur\b/i, /\bhyra\b/i,
+    /\bleje\b/i, /\bleie\b/i, /\bvuokra\b/i,
+    /\bper night\b/i, /\bper notte\b/i, /\bpor noche\b/i, /\bpro nacht\b/i, /\bpar nuit\b/i,
+  ];
+  const saleSignals = [
+    /\bfor sale\b/i, /\ben venta\b/i, /\bà vendre\b/i, /\bzu verkaufen\b/i, /\bin vendita\b/i,
+    /\basking price\b/i, /\bprecio venta\b/i, /\bpurchase price\b/i, /\bte koop\b/i,
+    /\btill salu\b/i, /\btil salg\b/i, /\bmyytävänä\b/i,
+  ];
+  const vacationSignals = [
+    /\bper night\b/i, /\bper notte\b/i, /\bpor noche\b/i, /\bpro nacht\b/i, /\bpar nuit\b/i,
+    /\bcheck-?in\b/i, /\bcheck-?out\b/i, /\bguests?\b/i, /\bsuperhost\b/i, /\bself check/i,
+    /\bamenities\b/i, /\bhouse rules\b/i,
+  ];
+
+  const rentalCount = rentalSignals.filter(r => r.test(lowerContent)).length;
+  const saleCount = saleSignals.filter(r => r.test(lowerContent)).length;
+  const vacationCount = vacationSignals.filter(r => r.test(lowerContent)).length;
+
+  if (vacationCount >= 2) return "vacation_rental";
+  if (rentalCount > saleCount && rentalCount >= 2) return "rental";
+  return "sale";
 }
 
 function buildManualEntryContent(manualFields: any): string {
@@ -144,7 +174,7 @@ function determineConfidence(dataSource: string, contentLength: number, isStanda
   return "low";
 }
 
-function buildPrompts(url: string, scrapedContent: string | null, isEstimated: boolean, dataSource: string, isStandardListing: boolean = true) {
+function buildPrompts(url: string, scrapedContent: string | null, isEstimated: boolean, dataSource: string, isStandardListing: boolean = true, listingType: string = "sale") {
   const forensicInstructions = `
 ANALYSIS FRAMEWORK — Apply in order of priority:
 
@@ -246,9 +276,19 @@ You MUST follow these strict rules:
 - Do NOT hallucinate comparable sales, rental comps, or neighborhood scores unless the location is explicitly confirmed in the content.
 ` : "";
 
+  const rentalWarning = listingType !== "sale" ? `
+IMPORTANT: This listing is a ${listingType === "vacation_rental" ? "VACATION RENTAL (e.g. Airbnb)" : "LONG-TERM RENTAL"}, NOT a property for sale.
+- The price shown is a RENTAL price (per night/month), NOT a purchase price.
+- You MUST ESTIMATE the property's MARKET VALUE (purchase price) based on location, size, comparable sales, and rental yield reverse-engineering.
+- Set the "price" field to the ESTIMATED MARKET VALUE with a clear label, e.g. "~€350,000 (estimated market value)"
+- In ai_summary, START with "[RENTAL LISTING — ESTIMATED MARKET VALUE]" and explain: the listing is for rent at X/month (or X/night), and you estimate the market value at Y based on comparable sales and typical yields in the area.
+- Include the rental price in primary_insight.
+- Calculate yields using the ACTUAL rental price from the listing.
+` : "";
+
   if (scrapedContent) {
     const systemPrompt = `You are a forensic real estate investment analyst producing institutional-grade reports. Extract EXACT data from the listing. Never invent details.
-${listingWarning}
+${listingWarning}${rentalWarning}
 CRITICAL RULES:
 - Use the REAL price, size, bedrooms, bathrooms, address FROM THE SCRAPED CONTENT
 - NEVER convert currencies. If the listing price is in £ (GBP), report it in £. If in DKK, report in DKK. If in €, report in €. The "currency" field must match.
@@ -272,6 +312,7 @@ ${forensicInstructions}`;
 URL: ${url}
 Data Source: ${dataSource === "scraped" ? "Direct page scrape" : dataSource === "pasted" ? "User-provided listing text" : "Manual entry by user"}
 ${!isStandardListing ? "⚠️ NOTE: This is a project/developer website, not a standard listing portal. Extract what you can." : ""}
+${listingType !== "sale" ? `⚠️ NOTE: This is a ${listingType === "vacation_rental" ? "vacation rental (Airbnb/Booking)" : "rental"} listing, NOT for sale. Estimate market value.` : ""}
 
 LISTING CONTENT:
 ---
@@ -451,8 +492,12 @@ serve(async (req) => {
       dataSource = isStandardListing ? "scraped" : "project_website";
     }
 
+    // Detect listing type (sale vs rental vs vacation rental)
+    const listingType = detectListingType(scrapedContent || "", url || "");
+    console.log("Detected listing type:", listingType);
+
     const confidenceLevel = determineConfidence(dataSource, scrapedContent?.length || 0, isStandardListing);
-    const { systemPrompt, userPrompt } = buildPrompts(url || manual_fields?.listingUrl || "", scrapedContent, isEstimated, dataSource, isStandardListing);
+    const { systemPrompt, userPrompt } = buildPrompts(url || manual_fields?.listingUrl || "", scrapedContent, isEstimated, dataSource, isStandardListing, listingType);
 
     // Call AI
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -944,7 +989,7 @@ serve(async (req) => {
       saved = inserted;
     }
 
-    return new Response(JSON.stringify({ success: true, data: saved, non_listing_warning: !isStandardListing }), {
+    return new Response(JSON.stringify({ success: true, data: saved, non_listing_warning: !isStandardListing, listing_type: listingType }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
