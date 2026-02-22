@@ -334,6 +334,8 @@ const Analysis = () => {
     return () => clearInterval(fomoTimerRef.current);
   }, [analyzing]);
 
+  const [listingType, setListingType] = useState<string>("sale");
+
   const runAnalysis = async (body: any) => {
     setAnalyzing(true);
     setAnalyzeError("");
@@ -344,6 +346,7 @@ const Analysis = () => {
       if (error) throw error;
       if (result?.scrape_failed) { setScrapeFailed(true); setAnalyzing(false); return; }
       if (result?.error) throw new Error(result.error);
+      if (result?.listing_type) setListingType(result.listing_type);
       if (result?.data?.id) navigate(`/analysis/${result.data.id}`, { replace: true });
     } catch (e: any) {
       setAnalyzeError(e.message || "Analysis failed");
@@ -508,7 +511,27 @@ const Analysis = () => {
           </Section>
         )}
 
-        {/* ===== 1. HERO WITH IMAGE ===== */}
+        {/* ===== RENTAL LISTING WARNING ===== */}
+        {(listingType === "rental" || listingType === "vacation_rental" || d.ai_summary?.includes("[RENTAL LISTING")) && (
+          <Section delay={0} className="mb-6">
+            <div className="rounded-xl border-2 border-primary/40 bg-primary/5 p-5">
+              <div className="flex items-start gap-3">
+                <Home className="h-6 w-6 text-primary flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-foreground text-sm mb-1">
+                    🏠 {listingType === "vacation_rental" ? "Vacation Rental" : "Rental"} Listing — Not For Sale
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    This property is listed as a <strong>{listingType === "vacation_rental" ? "short-term / vacation rental (Airbnb, Booking)" : "long-term rental"}</strong>, not for sale.
+                    The price shown below is our <strong>estimated market value</strong> based on comparable sales, location data, and rental yield analysis.
+                    All financial metrics are calculated using the actual rental price from the listing.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Section>
+        )}
+
         <Section delay={0.05} className="mb-8">
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
             {f.listing_image_url && typeof f.listing_image_url === 'string' && f.listing_image_url.startsWith('http') && (
