@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Globe, TrendingUp, MapPin, Filter, ArrowRight } from "lucide-react";
+import { Globe, TrendingUp, MapPin, Filter, ArrowRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,6 +21,40 @@ const scoreColor = (v: number) => {
   if (v >= 65) return "text-score-good";
   if (v >= 50) return "text-score-average";
   return "text-score-poor";
+};
+
+const RankingSearchBar = () => {
+  const navigate = useNavigate();
+  const [url, setUrl] = useState("");
+
+  const handleAnalyze = () => {
+    if (!url.trim()) return;
+    navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center bg-card rounded-xl border border-border p-2">
+        <div className="flex items-center flex-1 min-w-0">
+          <Search className="ml-3 h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <input
+            type="url"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
+            placeholder="Paste any property URL to get its score…"
+            className="flex-1 bg-transparent px-3 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0"
+          />
+        </div>
+        <Button variant="hero" size="sm" className="rounded-lg px-4 flex-shrink-0" onClick={handleAnalyze}>
+          Analyze <ArrowRight className="ml-1 h-3 w-3" />
+        </Button>
+      </div>
+      <p className="text-[10px] text-muted-foreground text-center">
+        No sponsors. No ads. Every ranking is created by real user searches. Paste any URL and contribute.
+      </p>
+    </div>
+  );
 };
 
 const GlobalRanking = () => {
@@ -68,26 +102,14 @@ const GlobalRanking = () => {
     <section id="rankings" className="py-24 md:py-32 relative">
       <div className="absolute inset-0 bg-gradient-hero opacity-30" />
       <div className="container relative mx-auto px-4">
-        {/* CTA Banner */}
+        {/* Search Bar */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="max-w-2xl mx-auto mb-10"
         >
-          <div
-            onClick={() => navigate("/dashboard")}
-            className="flex items-center justify-between gap-4 px-5 py-3.5 rounded-xl border border-border bg-card hover:bg-secondary/40 transition-colors cursor-pointer group"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <TrendingUp className="h-4 w-4 text-primary flex-shrink-0" />
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-foreground">Score any property in the world. Save time and money.</p>
-                <p className="text-[11px] text-muted-foreground">No sponsors. No ads. Every ranking is created by real user searches.</p>
-              </div>
-            </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
-          </div>
+          <RankingSearchBar />
         </motion.div>
 
         <motion.div

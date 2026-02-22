@@ -52,6 +52,7 @@ export type Database = {
           roi_potential: number | null
           score_explanations: Json | null
           size_sqm: number | null
+          slug: string | null
           upside_scenario: number | null
           url: string
           user_id: string
@@ -97,6 +98,7 @@ export type Database = {
           roi_potential?: number | null
           score_explanations?: Json | null
           size_sqm?: number | null
+          slug?: string | null
           upside_scenario?: number | null
           url: string
           user_id: string
@@ -142,6 +144,7 @@ export type Database = {
           roi_potential?: number | null
           score_explanations?: Json | null
           size_sqm?: number | null
+          slug?: string | null
           upside_scenario?: number | null
           url?: string
           user_id?: string
@@ -210,6 +213,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      property_reviews: {
+        Row: {
+          analysis_id: string
+          comment: string
+          created_at: string
+          id: string
+          is_verified_owner: boolean
+          rating: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analysis_id: string
+          comment: string
+          created_at?: string
+          id?: string
+          is_verified_owner?: boolean
+          rating?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analysis_id?: string
+          comment?: string
+          created_at?: string
+          id?: string
+          is_verified_owner?: boolean
+          rating?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_reviews_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {

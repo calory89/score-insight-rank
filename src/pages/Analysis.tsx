@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import PropertyReviews from "@/components/PropertyReviews";
 import { useToast } from "@/hooks/use-toast";
 import {
   LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, Area, AreaChart,
@@ -282,11 +283,14 @@ const Section = ({ children, delay = 0, className = "" }: { children: React.Reac
 
 // --- Main Component ---
 const Analysis = () => {
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id: string; slug: string }>();
   const [searchParams] = useSearchParams();
   const urlToAnalyze = searchParams.get("url");
   const fromBulk = searchParams.get("from") === "bulk";
-  const isLoadingMode = !id && !!urlToAnalyze;
+  const slug = params.slug;
+  const [resolvedId, setResolvedId] = useState<string | undefined>(params.id);
+  const id = resolvedId;
+  const isLoadingMode = !id && !slug && !!urlToAnalyze;
 
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -306,6 +310,15 @@ const Analysis = () => {
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const { toast } = useToast();
+
+  // Resolve slug to ID
+  useEffect(() => {
+    if (!slug) return;
+    (supabase as any).from("analyses").select("id").eq("slug", slug).single().then(({ data: row }: any) => {
+      if (row) setResolvedId(row.id);
+      else navigate("/");
+    });
+  }, [slug]);
 
   // Check if this analysis is favorited
   useEffect(() => {
@@ -1150,6 +1163,13 @@ const Analysis = () => {
                 </div>
               ))}
             </div>
+          </Section>
+        )}
+
+        {/* ===== COMMUNITY REVIEWS ===== */}
+        {id && (
+          <Section delay={0.7} className="mb-8">
+            <PropertyReviews analysisId={id} />
           </Section>
         )}
       </div>
