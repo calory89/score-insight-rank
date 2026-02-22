@@ -4,9 +4,7 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-md bg-gradient-cta flex items-center justify-center">
-              <span className="font-mono text-xs font-bold text-primary-foreground">R</span>
-            </div>
+            <img src="/images/logo.png" alt="RealHunt" className="h-7 w-7 rounded-md object-cover" />
             <span className="text-sm font-semibold text-foreground">RealHunt</span>
           </div>
 
