@@ -107,8 +107,13 @@ const HeroSection = () => {
             </div>
           </motion.div>
 
-          <p className="text-xs text-muted-foreground mb-8">
-            3 free analyses · No credit card · 50+ platforms supported
+          <p className="text-xs text-muted-foreground mb-4">
+            5 free analyses · No credit card · 50+ platforms supported
+          </p>
+
+          <p className="text-sm text-primary/80 font-medium mb-8 max-w-lg mx-auto">
+            We analyze millions of properties daily — giving you the most detailed AI report available.{" "}
+            <span className="text-muted-foreground font-normal">Save time & money on every decision.</span>
           </p>
 
           <motion.div
