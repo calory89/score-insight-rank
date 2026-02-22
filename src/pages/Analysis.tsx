@@ -95,12 +95,27 @@ const realEstateTips = [
 
 const FomoLoader = ({ step }: { step: number }) => {
   const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * realEstateTips.length));
+  const [recentReports, setRecentReports] = useState<any[]>([]);
+  const navigate = useNavigate();
   
   useEffect(() => {
     const interval = setInterval(() => {
       setTipIndex(prev => (prev + 1) % realEstateTips.length);
     }, 5000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Fetch recent reports for the feed
+  useEffect(() => {
+    supabase
+      .from("analyses")
+      .select("id, city, country, global_score, price, currency, image_url, address, verdict, property_type, created_at")
+      .not("global_score", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(6)
+      .then(({ data }) => {
+        if (data) setRecentReports(data);
+      });
   }, []);
 
   return (
@@ -175,10 +190,70 @@ const FomoLoader = ({ step }: { step: number }) => {
           </motion.p>
         </div>
       </motion.div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 opacity-30">
-        <Skeleton className="h-52 rounded-2xl" />
-        <div className="lg:col-span-2"><Skeleton className="h-52 rounded-2xl" /></div>
-      </div>
+
+      {/* Browse other reports while waiting */}
+      {recentReports.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.5, duration: 0.6 }}
+          className="mb-8"
+        >
+          <div className="text-center mb-5">
+            <p className="text-sm font-semibold text-foreground">
+              Explore other reports while we prepare yours
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              We'll notify you when your report is ready — feel free to browse
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {recentReports.map((report, idx) => (
+              <motion.button
+                key={report.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.8 + idx * 0.1 }}
+                onClick={() => window.open(`/analysis/${report.id}`, '_blank')}
+                className="rounded-xl border border-border bg-card hover:border-primary/30 hover:bg-primary/5 p-4 text-left transition-all group"
+              >
+                <div className="flex items-start gap-3">
+                  {report.image_url ? (
+                    <img src={report.image_url} alt="" className="h-12 w-12 rounded-lg object-cover flex-shrink-0" />
+                  ) : (
+                    <div className="h-12 w-12 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+                      <Home className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium text-foreground truncate">
+                      {report.address || `${report.city || "Property"}${report.country ? `, ${report.country}` : ""}`}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      {report.global_score != null && (
+                        <span className={`text-xs font-mono font-bold ${scoreColor(report.global_score)}`}>
+                          {report.global_score}/100
+                        </span>
+                      )}
+                      {report.price && (
+                        <span className="text-[10px] text-muted-foreground truncate">
+                          {report.currency || "€"}{report.price}
+                        </span>
+                      )}
+                    </div>
+                    {report.verdict && (
+                      <span className={`inline-block mt-1.5 text-[9px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded-full border ${verdictColor(report.verdict)}`}>
+                        {report.verdict}
+                      </span>
+                    )}
+                  </div>
+                  <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1" />
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
+      )}
     </div>
   </div>
   );
@@ -346,6 +421,10 @@ const Analysis = () => {
   };
   useEffect(() => {
     if (!analyzing) return;
+    // Request notification permission while user waits
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
     fomoTimerRef.current = setInterval(() => {
       setFomoStep((prev) => Math.min(prev + 1, fomoSteps.length - 1));
     }, 3500);
@@ -419,6 +498,15 @@ const Analysis = () => {
       else {
         setData(result);
         setAnalyzing(false);
+        // Send browser notification that report is ready
+        if ("Notification" in window && Notification.permission === "granted") {
+          try {
+            new Notification("Your report is ready! 🎉", {
+              body: `${result.address || result.city || "Property"} — Score: ${result.global_score}/100`,
+              icon: "/favicon.ico",
+            });
+          } catch (_) {}
+        }
         setTimeout(() => {
           setRevealed(true);
           confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ["#0faf6e", "#4ade80", "#facc15", "#ffffff"] });
