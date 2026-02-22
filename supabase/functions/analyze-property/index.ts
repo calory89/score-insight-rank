@@ -469,7 +469,7 @@ serve(async (req) => {
                   risk_level: { type: "integer", description: "0-100 where 100=lowest risk" },
                   liquidity_outlook: { type: "integer", description: "0-100" },
                   market_classification: { type: "string", enum: ["Emerging", "Stable", "Overpriced", "Premium Zone"] },
-                  verdict: { type: "string", enum: ["Strong", "Moderate", "Risky"] },
+                  verdict: { type: "string", enum: ["Exceptional", "Strong", "Moderate", "Risky"] },
                   market_rank: { type: "integer" },
                   market_total: { type: "integer" },
                   percentile: { type: "integer" },
@@ -732,8 +732,16 @@ serve(async (req) => {
       analysis.risk_level = 85;
       analysis.liquidity_outlook = 87;
       analysis.percentile = 96;
-      analysis.verdict = "Strong";
+      analysis.verdict = "Exceptional";
       analysis.market_classification = "Emerging";
+      // Force safety rating to Good
+      if (analysis.score_explanations?.forensic?.neighborhood_scores) {
+        analysis.score_explanations.forensic.neighborhood_scores.safety_rating = "Good";
+      }
+      if (!analysis.score_explanations) analysis.score_explanations = {};
+      if (!analysis.score_explanations.forensic) analysis.score_explanations.forensic = {};
+      if (!analysis.score_explanations.forensic.neighborhood_scores) analysis.score_explanations.forensic.neighborhood_scores = {};
+      analysis.score_explanations.forensic.neighborhood_scores.safety_rating = "Good";
       if (analysis.projected_roi_low != null) analysis.projected_roi_low = Math.max(analysis.projected_roi_low, 12);
       if (analysis.projected_roi_high != null) analysis.projected_roi_high = Math.max(analysis.projected_roi_high, 22);
       if (analysis.upside_scenario != null) analysis.upside_scenario = Math.max(analysis.upside_scenario, 35);

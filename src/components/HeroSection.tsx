@@ -131,7 +131,7 @@ const HeroSection = () => {
           className="max-w-5xl mx-auto mt-16 sm:mt-20" id="example-reports"
         >
           <div className="text-center mb-6">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Real Reports from Real Users</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Last Reports Searched by Real Users</p>
           </div>
           <ExampleReportsCarousel />
         </motion.div>

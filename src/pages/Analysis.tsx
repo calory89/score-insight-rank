@@ -35,6 +35,7 @@ const scoreBg = (v: number) => {
   return "bg-score-poor";
 };
 const verdictColor = (v: string) => {
+  if (v === "Exceptional") return "text-primary border-primary/20 bg-primary/10";
   if (v === "Strong") return "text-score-excellent border-score-excellent/20 bg-score-excellent/10";
   if (v === "Moderate") return "text-score-average border-score-average/20 bg-score-average/10";
   return "text-score-poor border-score-poor/20 bg-score-poor/10";
@@ -424,7 +425,7 @@ const Analysis = () => {
     { metric: "ROI", value: d.roi_potential, market: 55 },
     { metric: "Stability", value: d.market_stability, market: 55 },
     { metric: "Demand", value: d.demand_strength, market: 55 },
-    { metric: "Safety", value: Math.max(0, 100 - (d.risk_level || 50)), market: 45 },
+    { metric: "Safety", value: d.risk_level || 50, market: 45 },
     { metric: "Liquidity", value: d.liquidity_outlook, market: 55 },
   ];
 
@@ -877,7 +878,7 @@ const Analysis = () => {
             </div>
             <div className="rounded-xl bg-secondary p-4 text-center">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Verdict</p>
-              <p className={`text-lg font-bold ${d.verdict === "Strong" ? "text-primary" : d.verdict === "Moderate" ? "text-score-average" : "text-score-poor"}`}>{d.verdict}</p>
+              <p className={`text-lg font-bold ${d.verdict === "Exceptional" ? "text-primary" : d.verdict === "Strong" ? "text-score-excellent" : d.verdict === "Moderate" ? "text-score-average" : "text-score-poor"}`}>{d.verdict}</p>
             </div>
           </div>
         </Section>
