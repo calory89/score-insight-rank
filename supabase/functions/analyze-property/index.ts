@@ -338,29 +338,52 @@ serve(async (req) => {
 
     // --- Global cache: check if ANY user already analyzed this URL ---
     if (url && url !== "manual-entry") {
-      const normalizedUrl = url.split("#")[0].replace(/\/$/, "");
+      // Stronger URL normalization: strip hash, trailing slash, query params, www prefix, protocol
+      const urlObj = new URL(url);
+      const normalizedUrl = (urlObj.hostname.replace(/^www\./, "") + urlObj.pathname).replace(/\/$/, "").toLowerCase();
+      
       const { data: cachedGlobal } = await supabase
         .from("analyses")
         .select("*")
-        .ilike("url", `${normalizedUrl}%`)
         .not("global_score", "is", null)
         .order("created_at", { ascending: false })
-        .limit(1);
+        .limit(200);
       
-      if (cachedGlobal && cachedGlobal.length > 0) {
-        // Clone the cached result for this user
-        const cached = cachedGlobal[0];
-        const isOwnAnalysis = cached.user_id === user.id;
+      // Find a match using the same normalization
+      const matchedCache = cachedGlobal?.find((row: any) => {
+        try {
+          const rowUrl = new URL(row.url);
+          const normalizedRow = (rowUrl.hostname.replace(/^www\./, "") + rowUrl.pathname).replace(/\/$/, "").toLowerCase();
+          return normalizedRow === normalizedUrl;
+        } catch { return false; }
+      });
+      
+      if (matchedCache) {
+        const isOwnAnalysis = matchedCache.user_id === user.id;
         
         if (isOwnAnalysis) {
-          // User already has this analysis, just return it
-          console.log("Returning user's existing cached analysis:", cached.id);
-          return new Response(JSON.stringify({ success: true, data: cached }), {
+          console.log("Returning user's existing cached analysis:", matchedCache.id);
+          return new Response(JSON.stringify({ success: true, data: matchedCache }), {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         } else {
-          // Clone for this user
-          const { id, created_at, user_id, ...cloneData } = cached;
+          // Clone for this user — but first check if user already has one
+          const userMatch = cachedGlobal?.find((row: any) => {
+            if (row.user_id !== user.id) return false;
+            try {
+              const rowUrl = new URL(row.url);
+              const normalizedRow = (rowUrl.hostname.replace(/^www\./, "") + rowUrl.pathname).replace(/\/$/, "").toLowerCase();
+              return normalizedRow === normalizedUrl;
+            } catch { return false; }
+          });
+          if (userMatch) {
+            console.log("User already has this analysis:", userMatch.id);
+            return new Response(JSON.stringify({ success: true, data: userMatch }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+          
+          const { id: _id, created_at: _ca, user_id: _uid, ...cloneData } = matchedCache;
           const { data: cloned, error: cloneError } = await supabase
             .from("analyses")
             .insert({ ...cloneData, user_id: user.id })
@@ -379,17 +402,24 @@ serve(async (req) => {
     // --- Duplicate detection: check if same URL already analyzed by this user ---
     let existingAnalysisId: string | null = null;
     if (url && url !== "manual-entry") {
-      const normalizedUrl = url.split("#")[0].replace(/\/$/, "");
+      const urlObj2 = new URL(url);
+      const normalizedUrl2 = (urlObj2.hostname.replace(/^www\./, "") + urlObj2.pathname).replace(/\/$/, "").toLowerCase();
       const { data: existingByUrl } = await supabase
         .from("analyses")
-        .select("id")
+        .select("id, url")
         .eq("user_id", user.id)
-        .ilike("url", `${normalizedUrl}%`)
         .order("created_at", { ascending: false })
-        .limit(1);
+        .limit(100);
       
-      if (existingByUrl && existingByUrl.length > 0) {
-        existingAnalysisId = existingByUrl[0].id;
+      const match = existingByUrl?.find((row: any) => {
+        try {
+          const rowUrl = new URL(row.url);
+          const normalizedRow = (rowUrl.hostname.replace(/^www\./, "") + rowUrl.pathname).replace(/\/$/, "").toLowerCase();
+          return normalizedRow === normalizedUrl2;
+        } catch { return false; }
+      });
+      if (match) {
+        existingAnalysisId = match.id;
         console.log("Found existing analysis to update:", existingAnalysisId);
       }
     }
