@@ -173,12 +173,12 @@ const Tickets = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto px-4 pt-20 pb-16 max-w-6xl">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <TicketCheck className="h-6 w-6 text-primary" /> Support Tickets
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
+              <TicketCheck className="h-5 w-5 sm:h-6 sm:w-6 text-primary" /> Support Tickets
             </h1>
-            <p className="text-sm text-muted-foreground">Get help from our team.</p>
+            <p className="text-xs sm:text-sm text-muted-foreground">Get help from our team.</p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
@@ -190,7 +190,7 @@ const Tickets = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4 min-h-[600px]">
+        <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4 min-h-[400px] lg:min-h-[600px]">
           {/* Ticket list sidebar */}
           <div className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
             <div className="p-3 border-b border-border space-y-2">

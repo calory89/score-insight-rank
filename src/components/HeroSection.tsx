@@ -107,25 +107,9 @@ const HeroSection = () => {
             </div>
           </motion.div>
 
-          <p className="text-xs text-muted-foreground mb-4">
+          <p className="text-xs text-muted-foreground">
             5 free analyses · No credit card · 50+ platforms supported
           </p>
-
-          <p className="text-sm text-primary/80 font-medium mb-8 max-w-lg mx-auto">
-            We analyze millions of properties daily — giving you the most detailed AI report available.{" "}
-            <span className="text-muted-foreground font-normal">Save time & money on every decision.</span>
-          </p>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.5 }}
-            className="flex items-center justify-center gap-4"
-          >
-            <Button variant="hero-outline" size="sm" onClick={() => document.getElementById("example-reports")?.scrollIntoView({ behavior: "smooth" })}>
-              See Example Reports
-            </Button>
-          </motion.div>
         </motion.div>
 
         {/* Example Reports Carousel */}
