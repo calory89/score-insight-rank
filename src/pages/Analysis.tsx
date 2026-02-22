@@ -329,7 +329,11 @@ const Analysis = () => {
   }, [user, id]);
 
   const handleToggleFavorite = async () => {
-    if (!user || !id) return;
+    if (!user) {
+      navigate("/profile");
+      return;
+    }
+    if (!id) return;
     if (isFavorited) {
       await supabase.from("favorites").delete().eq("user_id", user.id).eq("analysis_id", id);
       setIsFavorited(false);
@@ -486,7 +490,7 @@ const Analysis = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
           <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => {
             if (fromBulk) {
               navigate("/dashboard?bulk=true&restore=true");
@@ -498,7 +502,7 @@ const Analysis = () => {
           }}>
             <ArrowLeft className="h-4 w-4 mr-1" /> {fromBulk ? "Back to Bulk Results" : "Back"}
           </Button>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 flex-wrap">
             {d?.url && d.url !== "manual-entry" && (
               <Button
                 variant="outline"
@@ -510,23 +514,23 @@ const Analysis = () => {
                   window.open(url, "_blank");
                 }}
               >
-                <Eye className="h-3.5 w-3.5 mr-1" /> <span className="hidden sm:inline">Visit Website</span><span className="sm:hidden">Visit</span>
+                <Eye className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Visit Website</span>
               </Button>
             )}
             <Button
               variant="outline"
               size="sm"
-              className={isFavorited ? "text-primary border-primary/30 bg-primary/10" : ""}
+              className={`text-xs ${isFavorited ? "text-primary border-primary/30 bg-primary/10" : ""}`}
               onClick={handleToggleFavorite}
             >
-              <Heart className={`h-3.5 w-3.5 mr-1 ${isFavorited ? "fill-current" : ""}`} />
-              {isFavorited ? "Saved" : "Favorite"}
+              <Heart className={`h-3.5 w-3.5 sm:mr-1 ${isFavorited ? "fill-current" : ""}`} />
+              <span className="hidden sm:inline">{isFavorited ? "Saved" : "Favorite"}</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate(`/compare?ids=${id}`)}>
-              <GitCompare className="h-3.5 w-3.5 mr-1" /> Compare
+            <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate(`/compare?ids=${id}`)}>
+              <GitCompare className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Compare</span>
             </Button>
-            <Button variant="outline" size="sm" className="text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setShowReportError(true)}>
-              <Flag className="h-3.5 w-3.5 mr-1" /> Report Error
+            <Button variant="outline" size="sm" className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setShowReportError(true)}>
+              <Flag className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Report Error</span>
             </Button>
           </div>
         </div>
