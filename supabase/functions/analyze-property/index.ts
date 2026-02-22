@@ -823,7 +823,7 @@ serve(async (req) => {
           const { data: existingDup } = await supabase
             .from("analyses")
             .select("id")
-            .eq("user_id", userId)
+            .eq("user_id", user.id)
             .ilike("url", `${normalizedUrl}%`)
             .not("global_score", "is", null)
             .gte("created_at", new Date(Date.now() - 5 * 60 * 1000).toISOString())
