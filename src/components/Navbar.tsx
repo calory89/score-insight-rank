@@ -21,7 +21,7 @@ const Navbar = () => {
         className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/90 backdrop-blur-xl"
       >
         <div className="container mx-auto flex h-14 sm:h-16 items-center justify-between px-4">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => { navigate("/"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
             <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg bg-gradient-cta flex items-center justify-center">
               <span className="font-mono text-xs sm:text-sm font-bold text-primary-foreground">R</span>
             </div>

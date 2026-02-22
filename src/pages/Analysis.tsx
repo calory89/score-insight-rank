@@ -35,8 +35,8 @@ const scoreBg = (v: number) => {
   return "bg-score-poor";
 };
 const verdictColor = (v: string) => {
-  if (v === "Exceptional") return "text-primary border-primary/20 bg-primary/10";
-  if (v === "Strong") return "text-score-excellent border-score-excellent/20 bg-score-excellent/10";
+  if (v === "Exceptional") return "text-score-excellent border-score-excellent/20 bg-score-excellent/10";
+  if (v === "Strong") return "text-score-good border-score-good/20 bg-score-good/10";
   if (v === "Moderate") return "text-score-average border-score-average/20 bg-score-average/10";
   return "text-score-poor border-score-poor/20 bg-score-poor/10";
 };

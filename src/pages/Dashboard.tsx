@@ -12,7 +12,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 
 const verdictColor = (v: string) => {
-  if (v === "Strong") return "text-score-excellent bg-score-excellent/10";
+  if (v === "Exceptional") return "text-score-excellent bg-score-excellent/10";
+  if (v === "Strong") return "text-score-good bg-score-good/10";
   if (v === "Moderate") return "text-score-average bg-score-average/10";
   return "text-score-poor bg-score-poor/10";
 };
