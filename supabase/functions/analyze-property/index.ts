@@ -361,7 +361,12 @@ serve(async (req) => {
       });
     }
 
-    const { url, manual_content, manual_fields } = await req.json();
+    let { url, manual_content, manual_fields } = await req.json();
+
+    // Auto-prepend https:// if the URL is missing a protocol
+    if (url && url !== "manual-entry" && !/^https?:\/\//i.test(url)) {
+      url = "https://" + url;
+    }
 
     // URL classification - accept all URLs but flag non-listing sites
     let isStandardListing = true;
