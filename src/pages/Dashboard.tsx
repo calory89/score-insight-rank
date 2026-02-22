@@ -157,7 +157,9 @@ const BulkAnalyzeModal = ({ open, onClose, isPro, onUpgrade, user }: { open: boo
     toast({ title: `✅ ${results.filter(r => !r.error).length} of ${detectedUrls.length} analyzed successfully` });
   };
 
-  const overallPercent = bulkTotal > 0 ? Math.round(((bulkProgress - 1 + (currentStep + 1) / bulkSteps.length) / bulkTotal) * 100) : 0;
+    // Only show 100% when bulk is truly finished
+    const rawPercent = bulkTotal > 0 ? Math.round(((bulkProgress - 1 + (currentStep + 1) / bulkSteps.length) / bulkTotal) * 100) : 0;
+    const overallPercent = bulkRunning ? Math.min(rawPercent, 99) : (bulkResults.length > 0 ? 100 : 0);
 
   return (
     <AnimatePresence>
@@ -351,6 +353,7 @@ const Dashboard = () => {
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showBulk, setShowBulk] = useState(false);
   const [isPro, setIsPro] = useState(false);
+  const [sortBy, setSortBy] = useState<"date" | "score">("date");
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/");
@@ -429,7 +432,12 @@ const Dashboard = () => {
   const avgScore = analyses.length > 0 ? Math.round(analyses.reduce((s, a) => s + (a.global_score || 0), 0) / analyses.length) : 0;
   const countriesAnalyzed = [...new Set(analyses.map(a => a.country).filter(Boolean))].length;
 
-  const displayAnalyses = showFavoritesOnly ? analyses.filter(a => favoriteIds.has(a.id)) : analyses;
+    const sortedAnalyses = [...analyses].sort((a, b) => {
+      if (sortBy === "score") return (b.global_score || 0) - (a.global_score || 0);
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+
+    const displayAnalyses = showFavoritesOnly ? sortedAnalyses.filter(a => favoriteIds.has(a.id)) : sortedAnalyses;
 
   return (
     <div className="min-h-screen bg-background pb-16 sm:pb-0">
@@ -506,6 +514,14 @@ const Dashboard = () => {
               >
                 <Star className="h-3 w-3" /> Favorites{showFavoritesOnly ? ` (${displayAnalyses.length})` : ""}
               </button>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as "date" | "score")}
+                className="text-xs px-3 py-1.5 rounded-lg border border-border bg-card text-muted-foreground focus:outline-none focus:border-primary/40"
+              >
+                <option value="date">Newest First</option>
+                <option value="score">Best Score</option>
+              </select>
             </div>
             <AnimatePresence>
               {compareIds.size >= 2 && (
@@ -550,8 +566,8 @@ const Dashboard = () => {
                   <div className="flex flex-col sm:flex-row">
                     {/* Image */}
                     {a.image_url ? (
-                      <div className="sm:w-40 h-32 sm:h-auto bg-secondary overflow-hidden flex-shrink-0">
-                        <img src={a.image_url} alt={a.address || "Property"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      <div className="sm:w-40 h-32 sm:h-auto bg-secondary overflow-hidden flex-shrink-0 relative">
+                        <img src={a.image_url} alt={a.address || "Property"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 absolute inset-0" />
                       </div>
                     ) : (
                       <div className="sm:w-40 h-20 sm:h-auto bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center flex-shrink-0">
