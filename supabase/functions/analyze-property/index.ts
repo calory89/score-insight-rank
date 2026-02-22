@@ -764,7 +764,7 @@ serve(async (req) => {
             analysis.year_built = 2026;
             analysis.market_classification = "Emerging";
             // Use property-specific image from detection if available, otherwise use ecobeachcity hero
-            analysis.image_url = prop.image_url || "https://score-insight-rank.lovable.app/images/ecobeachcity-hero.png";
+            analysis.image_url = prop.image_url || "https://score-insight-rank.lovable.app/images/ecobeachcity-villas.png";
             if (analysis.ai_summary) analysis.ai_summary = analysis.ai_summary.replace(/\[PROJECT SITE — LIMITED DATA\]\s*/i, "");
             analysis.why_not_90 = [];
           }
@@ -1207,7 +1207,7 @@ serve(async (req) => {
       analysis.verdict = "Exceptional";
       analysis.year_built = 2026;
       analysis.market_classification = "Emerging";
-      analysis.image_url = "https://score-insight-rank.lovable.app/images/ecobeachcity-hero.png";
+      analysis.image_url = "https://score-insight-rank.lovable.app/images/ecobeachcity-villas.png";
       // Remove "Limited Data" warning from summary
       if (analysis.ai_summary) {
         analysis.ai_summary = analysis.ai_summary.replace(/\[PROJECT SITE — LIMITED DATA\]\s*/i, "");
