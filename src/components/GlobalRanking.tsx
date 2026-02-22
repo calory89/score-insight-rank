@@ -68,6 +68,28 @@ const GlobalRanking = () => {
     <section id="rankings" className="py-24 md:py-32 relative">
       <div className="absolute inset-0 bg-gradient-hero opacity-30" />
       <div className="container relative mx-auto px-4">
+        {/* CTA Banner */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="max-w-2xl mx-auto mb-10"
+        >
+          <div
+            onClick={() => navigate("/dashboard")}
+            className="flex items-center justify-between gap-4 px-5 py-3.5 rounded-xl border border-border bg-card hover:bg-secondary/40 transition-colors cursor-pointer group"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <TrendingUp className="h-4 w-4 text-primary flex-shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground">Score any property in the world. Save time and money.</p>
+                <p className="text-[11px] text-muted-foreground">No sponsors. No ads. Every ranking is created by real user searches.</p>
+              </div>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+          </div>
+        </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
