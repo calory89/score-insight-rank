@@ -470,8 +470,16 @@ const Analysis = () => {
           </Button>
           <div className="flex items-center gap-2">
             {d?.url && d.url !== "manual-entry" && (
-              <Button variant="outline" size="sm" onClick={() => window.open(d.url, "_blank")}>
-                <Eye className="h-3.5 w-3.5 mr-1" /> See Property
+              <Button
+                variant={d.url?.toLowerCase().includes("ecobeachcity") ? "hero" : "outline"}
+                size={d.url?.toLowerCase().includes("ecobeachcity") ? "lg" : "sm"}
+                onClick={() => {
+                  let url = d.url;
+                  if (url && !url.startsWith("http")) url = "https://" + url;
+                  window.open(url, "_blank");
+                }}
+              >
+                <Eye className="h-3.5 w-3.5 mr-1" /> {d.url?.toLowerCase().includes("ecobeachcity") ? "Visit Project Website →" : "See Property"}
               </Button>
             )}
             <Button

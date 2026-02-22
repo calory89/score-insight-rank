@@ -144,11 +144,10 @@ const GlobalRanking = () => {
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.05 }}
                   onClick={() => navigate(`/analysis/${prop.id}`)}
-                  className="flex sm:grid sm:grid-cols-12 gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors items-center cursor-pointer group"
+                  className="grid grid-cols-[2rem_1fr_auto_auto] sm:grid-cols-12 gap-2 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors items-center cursor-pointer group"
                 >
-                  <div className="hidden sm:block sm:col-span-1 font-mono text-sm text-muted-foreground">{i + 1}</div>
-                  <div className="flex-1 sm:col-span-5 flex items-center gap-2 min-w-0 overflow-hidden">
-                    <span className="sm:hidden font-mono text-xs text-muted-foreground flex-shrink-0">{i + 1}.</span>
+                  <div className="font-mono text-xs sm:text-sm text-muted-foreground">{i + 1}</div>
+                  <div className="flex items-center gap-2 min-w-0 sm:col-span-5">
                     <MapPin className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 hidden sm:block" />
                     <div className="min-w-0 flex-1">
                       <span className="text-xs sm:text-sm font-medium text-foreground truncate block">
@@ -172,7 +171,7 @@ const GlobalRanking = () => {
                     }`}>
                       {prop.verdict || "—"}
                     </span>
-                    <ArrowRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ArrowRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
                   </div>
                 </motion.div>
               ))
