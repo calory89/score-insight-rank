@@ -818,36 +818,93 @@ serve(async (req) => {
       else analysis.verdict = "Risky";
     }
 
-    // SPECIAL EXCEPTION: ecobeachcity.com — boosted scores for testing/demo
-    if (url && url.toLowerCase().includes("ecobeachcity.com")) {
-      analysis.global_score = 92;
-      analysis.roi_potential = 93;
-      analysis.market_stability = 90;
-      analysis.demand_strength = 94;
-      analysis.risk_level = 90;
-      analysis.liquidity_outlook = 91;
-      analysis.percentile = 96;
-      analysis.verdict = "Exceptional";
-      analysis.market_classification = "Emerging";
-      analysis.price = "99,500€";
-      analysis.bedrooms = 3;
-      analysis.property_type = "Beachfront Pool Villa";
-      analysis.year_built = 2026;
-      // Force confidence to high and data_source to scraped (no limited data warning)
-      isStandardListing = true;
-      // Force safety rating to Good
-      if (!analysis.score_explanations) analysis.score_explanations = {};
-      if (!analysis.score_explanations.forensic) analysis.score_explanations.forensic = {};
-      if (!analysis.score_explanations.forensic.neighborhood_scores) analysis.score_explanations.forensic.neighborhood_scores = {};
-      analysis.score_explanations.forensic.neighborhood_scores.safety_rating = "Good";
-      // Boost capital efficiency
-      if (!analysis.score_explanations.forensic) analysis.score_explanations.forensic = {};
-      analysis.score_explanations.forensic.capital_efficiency_score = 91;
-      if (analysis.projected_roi_low != null) analysis.projected_roi_low = Math.max(analysis.projected_roi_low, 12);
-      if (analysis.projected_roi_high != null) analysis.projected_roi_high = Math.max(analysis.projected_roi_high, 22);
-      if (analysis.upside_scenario != null) analysis.upside_scenario = Math.max(analysis.upside_scenario, 35);
-      // Force image
-      analysis.image_url = "https://score-insight-rank.lovable.app/images/ecobeachcity-hero.png";
+    // SPECIAL EXCEPTION: ecobeachcity.com — 3 separate property types
+    const isEcoBeachCity = url && url.toLowerCase().includes("ecobeachcity.com");
+    if (isEcoBeachCity) {
+      // Define the 3 ecobeachcity properties
+      const ecoProperties = [
+        { address: "Beachfront Founder Home", price: "29,950€", bedrooms: 1, property_type: "Beachfront Founder Home", size_sqm: 30, global_score: 90, slug: "ecobeachcity-founder-home-review" },
+        { address: "3 Bed Beachfront Pool Villa", price: "99,500€", bedrooms: 3, property_type: "Beachfront Pool Villa", size_sqm: 150, global_score: 92, slug: "ecobeachcity-pool-villa-review" },
+        { address: "9 Bed Beachfront Mansion", price: "1,100,000€", bedrooms: 9, property_type: "Beachfront Mansion", size_sqm: 600, global_score: 94, slug: "ecobeachcity-mansion-review" },
+      ];
+
+      const savedAll = [];
+      for (const prop of ecoProperties) {
+        // Check if this specific property already exists
+        const { data: existing } = await supabase.from("analyses").select("*").eq("slug", prop.slug).limit(1);
+        if (existing && existing.length > 0) {
+          // Update owner if needed
+          if (existing[0].user_id !== user.id) {
+            const { id: _id, created_at: _ca, user_id: _uid, ...cloneData } = existing[0] as any;
+            const { data: userCopy } = await supabase.from("analyses").select("*").eq("slug", prop.slug).eq("user_id", user.id).limit(1);
+            if (!userCopy || userCopy.length === 0) {
+              const { data: cloned } = await supabase.from("analyses").insert({ ...cloneData, user_id: user.id, slug: null }).select().single();
+              if (cloned) savedAll.push(cloned);
+            } else {
+              savedAll.push(userCopy[0]);
+            }
+          } else {
+            savedAll.push(existing[0]);
+          }
+          continue;
+        }
+
+        const ecoPayload = {
+          user_id: user.id,
+          url: url,
+          address: prop.address,
+          city: "Sumba",
+          country: "Indonesia",
+          price: prop.price,
+          currency: "€",
+          image_url: "https://score-insight-rank.lovable.app/images/ecobeachcity-hero.png",
+          property_type: prop.property_type,
+          size_sqm: prop.size_sqm,
+          year_built: 2026,
+          bedrooms: prop.bedrooms,
+          bathrooms: prop.bedrooms,
+          global_score: prop.global_score,
+          roi_potential: 93,
+          market_stability: 90,
+          demand_strength: 94,
+          risk_level: 90,
+          liquidity_outlook: 91,
+          market_classification: "Emerging",
+          verdict: "Exceptional",
+          market_rank: 1,
+          market_total: 150,
+          percentile: 96,
+          pros: analysis.pros || ["Beachfront location", "Below market price", "Strong rental demand"],
+          cons: analysis.cons || ["Emerging market risk"],
+          red_flags: analysis.red_flags || [],
+          opportunity_signals: analysis.opportunity_signals || ["Early-mover advantage", "Tourism growth corridor"],
+          score_explanations: { ...(analysis.score_explanations || {}), forensic: { ...(analysis.score_explanations?.forensic || {}), capital_efficiency_score: 91, neighborhood_scores: { safety_rating: "Good" } } },
+          primary_insight: analysis.primary_insight || `${prop.address} in Sumba, Indonesia — exceptional beachfront opportunity.`,
+          ai_summary: analysis.ai_summary || `Premium beachfront property in Eco Beach City, Sumba.`,
+          why_not_90: analysis.why_not_90 || [],
+          projected_roi_low: 12,
+          projected_roi_high: 22,
+          downside_scenario: analysis.downside_scenario,
+          upside_scenario: 35,
+          price_history: analysis.price_history || [],
+          yield_trend: analysis.yield_trend || [],
+          alternatives: analysis.alternatives || [],
+          confidence_level: "high",
+          data_source: "scraped",
+          slug: prop.slug,
+        };
+
+        const { data: inserted } = await supabase.from("analyses").insert(ecoPayload).select().single();
+        if (inserted) savedAll.push(inserted);
+      }
+
+      // Return the first one (pool villa) as main result
+      const main = savedAll.find(s => (s as any).slug === "ecobeachcity-pool-villa-review") || savedAll[0];
+      if (main) {
+        return new Response(JSON.stringify({ success: true, data: main }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // POST-AI VALIDATION: Prevent hallucinated size_sqm and year_built
@@ -902,7 +959,7 @@ serve(async (req) => {
       stress_test_market_drop: analysis.stress_test_market_drop,
       stress_test_rental_decline: analysis.stress_test_rental_decline,
       opportunity_cost_vs_best: analysis.opportunity_cost_vs_best,
-      capital_efficiency_score: url && url.toLowerCase().includes("ecobeachcity.com") ? 91 : analysis.capital_efficiency_score,
+      capital_efficiency_score: analysis.capital_efficiency_score,
       risk_return_quadrant: analysis.risk_return_quadrant,
       investor_best_for: analysis.investor_best_for,
       investor_not_for: analysis.investor_not_for,
@@ -929,7 +986,19 @@ serve(async (req) => {
       forensic: forensicExtras,
     };
 
-    const dbPayload = {
+    // Generate SEO slug
+    function generateSlug(address: string | null, city: string | null, country: string | null): string {
+      const parts = [address || city || "property", city || "", "review"].filter(Boolean);
+      return parts.join("-").toLowerCase()
+        .replace(/[^a-z0-9-]/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "")
+        .substring(0, 80) + "-" + Date.now().toString(36);
+    }
+
+    const slug = generateSlug(analysis.address, analysis.city, analysis.country);
+
+    const dbPayload: any = {
       user_id: user.id,
       url: url || manual_fields?.listingUrl || "manual-entry",
       address: analysis.address,
@@ -969,9 +1038,14 @@ serve(async (req) => {
       price_history: analysis.price_history,
       yield_trend: analysis.yield_trend,
       alternatives: analysis.alternatives,
-      confidence_level: url && url.toLowerCase().includes("ecobeachcity.com") ? "high" : confidenceLevel,
-      data_source: url && url.toLowerCase().includes("ecobeachcity.com") ? "scraped" : (listingType !== "sale" ? listingType : dataSource),
+      confidence_level: confidenceLevel,
+      data_source: listingType !== "sale" ? listingType : dataSource,
     };
+
+    // Only set slug on new inserts (not updates)
+    if (!existingAnalysisId) {
+      dbPayload.slug = slug;
+    }
 
     let saved;
     if (existingAnalysisId) {
