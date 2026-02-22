@@ -231,7 +231,13 @@ const FomoLoader = ({ step, readyReportId, onViewReady }: { step: number; readyR
   const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * realEstateTips.length));
   const [recentReports, setRecentReports] = useState<any[]>([]);
   const [previewId, setPreviewId] = useState<string | null>(null);
-  
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (previewId && previewRef.current) {
+      previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [previewId]);
   useEffect(() => {
     const interval = setInterval(() => {
       setTipIndex(prev => (prev + 1) % realEstateTips.length);
@@ -417,6 +423,7 @@ const FomoLoader = ({ step, readyReportId, onViewReady }: { step: number; readyR
       <AnimatePresence>
         {previewId && (
           <motion.div
+            ref={previewRef}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -424,9 +431,14 @@ const FomoLoader = ({ step, readyReportId, onViewReady }: { step: number; readyR
           >
             <div className="flex items-center justify-between mb-3">
               <p className="text-xs font-medium text-muted-foreground">Previewing report</p>
-              <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground" onClick={() => setPreviewId(null)}>
-                <X className="h-3 w-3 mr-1" /> Close
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => window.location.href = `/analysis/${previewId}`}>
+                  <Eye className="h-3 w-3 mr-1" /> View full report
+                </Button>
+                <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground" onClick={() => setPreviewId(null)}>
+                  <X className="h-3 w-3 mr-1" /> Close
+                </Button>
+              </div>
             </div>
             <InlineReportPreview reportId={previewId} />
           </motion.div>
@@ -776,9 +788,7 @@ const Analysis = () => {
       readyReportId={readyReportId || undefined}
       onViewReady={() => {
         if (readyReportId) {
-          setAnalyzing(false);
-          setReadyReportId(null);
-          navigate(`/analysis/${readyReportId}`, { replace: true });
+          window.location.href = `/analysis/${readyReportId}`;
         }
       }}
     />
@@ -849,8 +859,6 @@ const Analysis = () => {
           <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => {
             if (fromBulk) {
               navigate("/dashboard?bulk=true&restore=true");
-            } else if (window.history.length > 1) {
-              window.history.back();
             } else {
               navigate("/dashboard");
             }
