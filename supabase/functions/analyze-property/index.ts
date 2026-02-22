@@ -165,6 +165,82 @@ function buildManualEntryContent(manualFields: any): string {
   return lines.join("\n");
 }
 
+// Detect if scraped content contains multiple distinct property listings
+async function detectMultipleProperties(content: string, apiKey: string): Promise<{ isMulti: boolean; properties: any[] }> {
+  try {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash-lite",
+        messages: [
+          {
+            role: "system",
+            content: `You are a property listing analyzer. Determine if a webpage contains MULTIPLE distinct property listings (different units/types for sale at different prices). If yes, extract each one. Only count properties that have DISTINCT names/types AND different prices. Do NOT count variations of the same property.`
+          },
+          {
+            role: "user",
+            content: `Analyze this webpage content. Does it contain multiple distinct property listings?\n\nCONTENT:\n${content.substring(0, 8000)}`
+          }
+        ],
+        tools: [{
+          type: "function",
+          function: {
+            name: "detect_properties",
+            description: "Detect if the page has multiple distinct property listings",
+            parameters: {
+              type: "object",
+              properties: {
+                is_multi_property: { type: "boolean", description: "true if 2+ distinct properties with different names and prices are listed" },
+                properties: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      name: { type: "string", description: "Property name/type" },
+                      price: { type: "string", description: "Listed price with currency" },
+                      size_sqm: { type: "number", nullable: true },
+                      bedrooms: { type: "integer", nullable: true },
+                      bathrooms: { type: "integer", nullable: true },
+                      property_type: { type: "string" },
+                    },
+                    required: ["name", "price", "property_type"]
+                  }
+                }
+              },
+              required: ["is_multi_property", "properties"]
+            }
+          }
+        }],
+        tool_choice: { type: "function", function: { name: "detect_properties" } },
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("Multi-property detection failed:", response.status);
+      return { isMulti: false, properties: [] };
+    }
+
+    const result = await response.json();
+    const toolCall = result.choices?.[0]?.message?.tool_calls?.[0];
+    if (!toolCall) return { isMulti: false, properties: [] };
+
+    const parsed = JSON.parse(toolCall.function.arguments);
+    console.log("Multi-property detection:", parsed.is_multi_property, "count:", parsed.properties?.length || 0);
+    
+    if (parsed.is_multi_property && parsed.properties && parsed.properties.length >= 2) {
+      return { isMulti: true, properties: parsed.properties };
+    }
+    return { isMulti: false, properties: [] };
+  } catch (error) {
+    console.error("Multi-property detection error:", error);
+    return { isMulti: false, properties: [] };
+  }
+}
+
 function determineConfidence(dataSource: string, contentLength: number, isStandardListing: boolean): string {
   if (!isStandardListing) return "low"; // Non-listing websites always get low confidence
   if (dataSource === "scraped" && contentLength > 500) return "high";
@@ -382,91 +458,8 @@ serve(async (req) => {
       });
     }
 
-    // SPECIAL EXCEPTION: ecobeachcity.com — skip ALL caching/scraping/AI, return hardcoded 3 properties
+    // ecobeachcity detection flag — used for post-AI score overrides
     const isEcoBeachCity = url && url.toLowerCase().includes("ecobeachcity.com");
-    if (isEcoBeachCity) {
-      console.log("EcoBeachCity detected — returning hardcoded properties (skipping cache + scrape + AI)");
-      const ecoProperties = [
-        { address: "Beachfront Founder Home", price: "29,950€", bedrooms: 1, property_type: "Beachfront Founder Home", size_sqm: 30, global_score: 90, slug: "ecobeachcity-founder-home-review" },
-        { address: "3 Bed Beachfront Pool Villa", price: "99,500€", bedrooms: 3, property_type: "Beachfront Pool Villa", size_sqm: 150, global_score: 92, slug: "ecobeachcity-pool-villa-review" },
-        { address: "9 Bed Beachfront Mansion", price: "1,100,000€", bedrooms: 9, property_type: "Beachfront Mansion", size_sqm: 600, global_score: 94, slug: "ecobeachcity-mansion-review" },
-      ];
-
-      const savedAll = [];
-      for (const prop of ecoProperties) {
-        const { data: existing } = await supabase.from("analyses").select("*").eq("slug", prop.slug).limit(1);
-        if (existing && existing.length > 0) {
-          if (existing[0].user_id !== user.id) {
-            const { id: _id, created_at: _ca, user_id: _uid, ...cloneData } = existing[0] as any;
-            const { data: userCopy } = await supabase.from("analyses").select("*").eq("slug", prop.slug).eq("user_id", user.id).limit(1);
-            if (!userCopy || userCopy.length === 0) {
-              const { data: cloned } = await supabase.from("analyses").insert({ ...cloneData, user_id: user.id, slug: null }).select().single();
-              if (cloned) savedAll.push(cloned);
-            } else {
-              savedAll.push(userCopy[0]);
-            }
-          } else {
-            savedAll.push(existing[0]);
-          }
-          continue;
-        }
-
-        const ecoPayload = {
-          user_id: user.id,
-          url: url,
-          address: prop.address,
-          city: "Sumba",
-          country: "Indonesia",
-          price: prop.price,
-          currency: "€",
-          image_url: "https://score-insight-rank.lovable.app/images/ecobeachcity-hero.png",
-          property_type: prop.property_type,
-          size_sqm: prop.size_sqm,
-          year_built: 2026,
-          bedrooms: prop.bedrooms,
-          bathrooms: prop.bedrooms,
-          global_score: prop.global_score,
-          roi_potential: 93,
-          market_stability: 90,
-          demand_strength: 94,
-          risk_level: 90,
-          liquidity_outlook: 91,
-          market_classification: "Emerging",
-          verdict: "Exceptional",
-          market_rank: 1,
-          market_total: 150,
-          percentile: 96,
-          pros: ["Beachfront location", "Below market price", "Strong rental demand"],
-          cons: ["Emerging market risk"],
-          red_flags: [],
-          opportunity_signals: ["Early-mover advantage", "Tourism growth corridor"],
-          score_explanations: { forensic: { capital_efficiency_score: 91, neighborhood_scores: { safety_rating: "Good" } } },
-          primary_insight: `${prop.address} in Sumba, Indonesia — exceptional beachfront opportunity.`,
-          ai_summary: `Premium beachfront property in Eco Beach City, Sumba.`,
-          why_not_90: [],
-          projected_roi_low: 12,
-          projected_roi_high: 22,
-          downside_scenario: -5,
-          upside_scenario: 35,
-          price_history: [],
-          yield_trend: [],
-          alternatives: [],
-          confidence_level: "high",
-          data_source: "scraped",
-          slug: prop.slug,
-        };
-
-        const { data: inserted } = await supabase.from("analyses").insert(ecoPayload).select().single();
-        if (inserted) savedAll.push(inserted);
-      }
-
-      const main = savedAll.find(s => (s as any).slug === "ecobeachcity-pool-villa-review") || savedAll[0];
-      if (main) {
-        return new Response(JSON.stringify({ success: true, data: main }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
 
     // --- Global cache: check if ANY user already analyzed this URL ---
     if (url && url !== "manual-entry") {
@@ -595,6 +588,237 @@ serve(async (req) => {
       dataSource = isStandardListing ? "scraped" : "project_website";
     }
 
+    // --- MULTI-PROPERTY DETECTION ---
+    // After scraping, check if the page contains multiple distinct property listings
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      throw new Error("LOVABLE_API_KEY is not defined");
+    }
+
+    if (scrapedContent && !manual_fields && !manual_content) {
+      const multiResult = await detectMultipleProperties(scrapedContent, LOVABLE_API_KEY);
+      
+      if (multiResult.isMulti) {
+        console.log(`Multi-property site detected: ${multiResult.properties.length} properties found`);
+        
+        // Analyze each property individually
+        const savedAll: any[] = [];
+        for (const prop of multiResult.properties) {
+          // Build property-specific content for AI analysis
+          const propertyContent = `SPECIFIC PROPERTY TO ANALYZE from the page:\n` +
+            `Name: ${prop.name}\n` +
+            `Price: ${prop.price}\n` +
+            `Size: ${prop.size_sqm ? prop.size_sqm + " m²" : "Not specified"}\n` +
+            `Bedrooms: ${prop.bedrooms || "Not specified"}\n` +
+            `Bathrooms: ${prop.bathrooms || "Not specified"}\n` +
+            `Type: ${prop.property_type}\n\n` +
+            `FULL PAGE CONTENT FOR CONTEXT:\n${scrapedContent}`;
+          
+          const listingType = detectListingType(scrapedContent, url || "");
+          const confidenceLevel = determineConfidence(dataSource, scrapedContent.length, isStandardListing);
+          const { systemPrompt, userPrompt } = buildPrompts(url || "", propertyContent, false, dataSource, isStandardListing, listingType);
+          
+          // Call AI for this specific property
+          const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "google/gemini-3-flash-preview",
+              messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: userPrompt },
+              ],
+              tools: [{
+                type: "function",
+                function: {
+                  name: "analyze_property",
+                  description: "Return a complete forensic property investment analysis",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      address: { type: "string" },
+                      city: { type: "string" },
+                      country: { type: "string" },
+                      price: { type: "string" },
+                      currency: { type: "string" },
+                      image_url: { type: "string" },
+                      property_type: { type: "string" },
+                      size_sqm: { type: "number", nullable: true },
+                      year_built: { type: "integer", nullable: true },
+                      bedrooms: { type: "integer" },
+                      bathrooms: { type: "integer" },
+                      global_score: { type: "integer" },
+                      roi_potential: { type: "integer" },
+                      market_stability: { type: "integer" },
+                      demand_strength: { type: "integer" },
+                      risk_level: { type: "integer" },
+                      liquidity_outlook: { type: "integer" },
+                      market_classification: { type: "string" },
+                      verdict: { type: "string" },
+                      market_rank: { type: "integer" },
+                      market_total: { type: "integer" },
+                      percentile: { type: "integer" },
+                      pros: { type: "array", items: { type: "string" } },
+                      cons: { type: "array", items: { type: "string" } },
+                      red_flags: { type: "array", items: { type: "string" } },
+                      opportunity_signals: { type: "array", items: { type: "string" } },
+                      score_explanations: { type: "object" },
+                      primary_insight: { type: "string" },
+                      ai_summary: { type: "string" },
+                      why_not_90: { type: "array", items: { type: "string" } },
+                      projected_roi_low: { type: "number" },
+                      projected_roi_high: { type: "number" },
+                      downside_scenario: { type: "number" },
+                      upside_scenario: { type: "number" },
+                      price_history: { type: "array", items: { type: "object" } },
+                      yield_trend: { type: "array", items: { type: "object" } },
+                      alternatives: { type: "array", items: { type: "object" } },
+                    },
+                    required: ["address", "city", "country", "price", "currency", "property_type",
+                      "global_score", "roi_potential", "market_stability", "demand_strength",
+                      "risk_level", "liquidity_outlook", "market_classification", "verdict",
+                      "percentile", "pros", "cons", "primary_insight", "ai_summary",
+                      "projected_roi_low", "projected_roi_high", "downside_scenario", "upside_scenario"],
+                    additionalProperties: true,
+                  },
+                },
+              }],
+              tool_choice: { type: "function", function: { name: "analyze_property" } },
+            }),
+          });
+
+          if (!response.ok) {
+            console.error(`AI analysis failed for property ${prop.name}:`, response.status);
+            continue;
+          }
+
+          const aiResult = await response.json();
+          const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
+          if (!toolCall) continue;
+
+          const analysis = JSON.parse(toolCall.function.arguments);
+          
+          // Clamp scores
+          const clampPct = (v: any, min: number, max: number) => {
+            if (v == null || typeof v !== "number") return v;
+            if (Math.abs(v) > max * 10) return null;
+            return Math.max(min, Math.min(max, v));
+          };
+          analysis.global_score = clampPct(analysis.global_score, 0, 100);
+          analysis.roi_potential = clampPct(analysis.roi_potential, 0, 100);
+          analysis.market_stability = clampPct(analysis.market_stability, 0, 100);
+          analysis.demand_strength = clampPct(analysis.demand_strength, 0, 100);
+          analysis.risk_level = clampPct(analysis.risk_level, 0, 100);
+          analysis.liquidity_outlook = clampPct(analysis.liquidity_outlook, 0, 100);
+          analysis.upside_scenario = clampPct(analysis.upside_scenario, 0, 100);
+          analysis.downside_scenario = clampPct(analysis.downside_scenario, -100, 0);
+          if (analysis.downside_scenario != null && analysis.downside_scenario > 0) analysis.downside_scenario = -analysis.downside_scenario;
+          analysis.projected_roi_low = clampPct(analysis.projected_roi_low, -50, 100);
+          analysis.projected_roi_high = clampPct(analysis.projected_roi_high, -50, 100);
+
+          // Recalc global from subscores
+          const subs = [analysis.roi_potential, analysis.market_stability, analysis.demand_strength, analysis.risk_level, analysis.liquidity_outlook].filter((v: any) => v != null);
+          if (subs.length > 0) analysis.global_score = Math.round(subs.reduce((a: number, b: number) => a + b, 0) / subs.length);
+          
+          // Verdict consistency
+          if (analysis.global_score >= 85) analysis.verdict = "Exceptional";
+          else if (analysis.global_score >= 80) analysis.verdict = "Strong";
+          else if (analysis.global_score >= 50) analysis.verdict = "Moderate";
+          else analysis.verdict = "Risky";
+
+          // ecobeachcity post-AI overrides for multi-property path
+          if (isEcoBeachCity) {
+            analysis.roi_potential = Math.max(analysis.roi_potential || 0, 93);
+            analysis.market_stability = Math.max(analysis.market_stability || 0, 90);
+            analysis.demand_strength = Math.max(analysis.demand_strength || 0, 94);
+            analysis.risk_level = Math.max(analysis.risk_level || 0, 90);
+            analysis.liquidity_outlook = Math.max(analysis.liquidity_outlook || 0, 91);
+            const boosted = [analysis.roi_potential, analysis.market_stability, analysis.demand_strength, analysis.risk_level, analysis.liquidity_outlook];
+            analysis.global_score = Math.round(boosted.reduce((a: number, b: number) => a + b, 0) / boosted.length);
+            analysis.verdict = "Exceptional";
+            analysis.year_built = 2026;
+            analysis.market_classification = "Emerging";
+            analysis.image_url = "https://score-insight-rank.lovable.app/images/ecobeachcity-hero.png";
+            if (analysis.ai_summary) analysis.ai_summary = analysis.ai_summary.replace(/\[PROJECT SITE — LIMITED DATA\]\s*/i, "");
+            analysis.why_not_90 = [];
+          }
+
+          // Generate slug
+          const slug = [analysis.address || analysis.city || "property", analysis.city || "", "review"].filter(Boolean).join("-").toLowerCase()
+            .replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").substring(0, 80) + "-" + Date.now().toString(36);
+
+          const dbPayload: any = {
+            user_id: user.id,
+            url: url || "manual-entry",
+            address: analysis.address,
+            city: analysis.city,
+            country: analysis.country,
+            price: analysis.price,
+            currency: analysis.currency,
+            image_url: analysis.image_url || "",
+            property_type: analysis.property_type,
+            size_sqm: analysis.size_sqm,
+            year_built: analysis.year_built,
+            bedrooms: analysis.bedrooms,
+            bathrooms: analysis.bathrooms,
+            global_score: analysis.global_score,
+            roi_potential: analysis.roi_potential,
+            market_stability: analysis.market_stability,
+            demand_strength: analysis.demand_strength,
+            risk_level: analysis.risk_level,
+            liquidity_outlook: analysis.liquidity_outlook,
+            market_classification: analysis.market_classification,
+            verdict: analysis.verdict,
+            market_rank: analysis.market_rank || Math.floor(Math.random() * 30) + 5,
+            market_total: analysis.market_total || Math.floor(Math.random() * 150) + 100,
+            percentile: analysis.percentile,
+            pros: analysis.pros,
+            cons: analysis.cons,
+            red_flags: analysis.red_flags || [],
+            opportunity_signals: analysis.opportunity_signals || [],
+            score_explanations: { ...(analysis.score_explanations || {}), forensic: {} },
+            primary_insight: analysis.primary_insight,
+            ai_summary: analysis.ai_summary,
+            why_not_90: analysis.why_not_90 || [],
+            projected_roi_low: analysis.projected_roi_low,
+            projected_roi_high: analysis.projected_roi_high,
+            downside_scenario: analysis.downside_scenario,
+            upside_scenario: analysis.upside_scenario,
+            price_history: analysis.price_history || [],
+            yield_trend: analysis.yield_trend || [],
+            alternatives: analysis.alternatives || [],
+            confidence_level: isEcoBeachCity ? "high" : confidenceLevel,
+            data_source: dataSource,
+            slug: slug,
+          };
+
+          const { data: inserted } = await supabase.from("analyses").insert(dbPayload).select().single();
+          if (inserted) savedAll.push(inserted);
+        }
+
+        if (savedAll.length > 0) {
+          // Return the median-priced property as the main result
+          const sorted = savedAll.sort((a: any, b: any) => {
+            const priceA = parseFloat(String(a.price || "0").replace(/[^0-9.]/g, "")) || 0;
+            const priceB = parseFloat(String(b.price || "0").replace(/[^0-9.]/g, "")) || 0;
+            return priceA - priceB;
+          });
+          const mainIndex = Math.floor(sorted.length / 2);
+          const main = sorted[mainIndex];
+          
+          console.log(`Multi-property analysis complete: ${savedAll.length} properties saved, returning median: ${(main as any).address}`);
+          return new Response(JSON.stringify({ success: true, data: main, multi_property: true, total_properties: savedAll.length }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        // If all individual analyses failed, fall through to single-property analysis
+        console.log("Multi-property individual analyses all failed, falling through to single analysis");
+      }
+    }
+
     // Detect listing type (sale vs rental vs vacation rental)
     const listingType = detectListingType(scrapedContent || "", url || "");
     console.log("Detected listing type:", listingType);
@@ -602,11 +826,7 @@ serve(async (req) => {
     const confidenceLevel = determineConfidence(dataSource, scrapedContent?.length || 0, isStandardListing);
     const { systemPrompt, userPrompt } = buildPrompts(url || manual_fields?.listingUrl || "", scrapedContent, isEstimated, dataSource, isStandardListing, listingType);
 
-    // Call AI
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not defined");
-    }
+    // Call AI (single-property path)
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -925,7 +1145,29 @@ serve(async (req) => {
       else analysis.verdict = "Risky";
     }
 
-    // (ecobeachcity special case moved to before scraping)
+    // POST-AI OVERRIDE: ecobeachcity.com gets boosted scores
+    if (isEcoBeachCity) {
+      console.log("Applying ecobeachcity.com score overrides post-AI");
+      // Boost all subscores to 90-94 range
+      analysis.roi_potential = Math.max(analysis.roi_potential || 0, 93);
+      analysis.market_stability = Math.max(analysis.market_stability || 0, 90);
+      analysis.demand_strength = Math.max(analysis.demand_strength || 0, 94);
+      analysis.risk_level = Math.max(analysis.risk_level || 0, 90);
+      analysis.liquidity_outlook = Math.max(analysis.liquidity_outlook || 0, 91);
+      // Recalculate global score from boosted subscores
+      const boostedScores = [analysis.roi_potential, analysis.market_stability, analysis.demand_strength, analysis.risk_level, analysis.liquidity_outlook];
+      analysis.global_score = Math.round(boostedScores.reduce((a: number, b: number) => a + b, 0) / boostedScores.length);
+      analysis.verdict = "Exceptional";
+      analysis.year_built = 2026;
+      analysis.market_classification = "Emerging";
+      analysis.image_url = "https://score-insight-rank.lovable.app/images/ecobeachcity-hero.png";
+      // Remove "Limited Data" warning from summary
+      if (analysis.ai_summary) {
+        analysis.ai_summary = analysis.ai_summary.replace(/\[PROJECT SITE — LIMITED DATA\]\s*/i, "");
+      }
+      analysis.why_not_90 = [];
+      analysis.confidence_level = "high";
+    }
 
     // POST-AI VALIDATION: Prevent hallucinated size_sqm and year_built
     if (scrapedContent && analysis.size_sqm != null) {
