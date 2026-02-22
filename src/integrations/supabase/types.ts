@@ -181,12 +181,42 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string
+          detected_country: string | null
+          email: string | null
+          id: string
+          last_login_at: string | null
+          login_count: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          detected_country?: string | null
+          email?: string | null
+          id?: string
+          last_login_at?: string | null
+          login_count?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          detected_country?: string | null
+          email?: string | null
+          id?: string
+          last_login_at?: string | null
+          login_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
