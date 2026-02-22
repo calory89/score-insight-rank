@@ -10,6 +10,7 @@ import Analysis from "./pages/Analysis";
 import Compare from "./pages/Compare";
 import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
+import Rankings from "./pages/Rankings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
