@@ -957,7 +957,7 @@ serve(async (req) => {
       yield_trend: analysis.yield_trend,
       alternatives: analysis.alternatives,
       confidence_level: confidenceLevel,
-      data_source: dataSource,
+      data_source: listingType !== "sale" ? listingType : dataSource,
     };
 
     let saved;

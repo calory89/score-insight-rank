@@ -512,17 +512,17 @@ const Analysis = () => {
         )}
 
         {/* ===== RENTAL LISTING WARNING ===== */}
-        {(listingType === "rental" || listingType === "vacation_rental" || d.ai_summary?.includes("[RENTAL LISTING")) && (
+        {(listingType === "rental" || listingType === "vacation_rental" || d.data_source === "rental" || d.data_source === "vacation_rental" || d.ai_summary?.includes("[RENTAL LISTING")) && (
           <Section delay={0} className="mb-6">
             <div className="rounded-xl border-2 border-primary/40 bg-primary/5 p-5">
               <div className="flex items-start gap-3">
                 <Home className="h-6 w-6 text-primary flex-shrink-0 mt-0.5" />
                 <div>
                   <h3 className="font-semibold text-foreground text-sm mb-1">
-                    🏠 {listingType === "vacation_rental" ? "Vacation Rental" : "Rental"} Listing — Not For Sale
+                    🏠 {(listingType === "vacation_rental" || d.data_source === "vacation_rental") ? "Vacation Rental" : "Rental"} Listing — Not For Sale
                   </h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    This property is listed as a <strong>{listingType === "vacation_rental" ? "short-term / vacation rental (Airbnb, Booking)" : "long-term rental"}</strong>, not for sale.
+                    This property is listed as a <strong>{(listingType === "vacation_rental" || d.data_source === "vacation_rental") ? "short-term / vacation rental (Airbnb, Booking)" : "long-term rental"}</strong>, not for sale.
                     The price shown below is our <strong>estimated market value</strong> based on comparable sales, location data, and rental yield analysis.
                     All financial metrics are calculated using the actual rental price from the listing.
                   </p>

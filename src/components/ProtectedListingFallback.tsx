@@ -94,9 +94,6 @@ const ProtectedListingFallback = ({
                 <h3 className="text-sm font-semibold text-foreground">Enter Property Details</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">Quick form — takes about 30 seconds</p>
               </div>
-              <span className="text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                Recommended
-              </span>
             </div>
           </button>
 
@@ -219,6 +216,9 @@ const ProtectedListingFallback = ({
                 <h3 className="text-sm font-semibold text-foreground">Paste Listing Content</h3>
                 <p className="text-xs text-muted-foreground mt-0.5">Copy all text from the listing page and paste it here</p>
               </div>
+              <span className="text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
+                Recommended
+              </span>
             </div>
           </button>
 
