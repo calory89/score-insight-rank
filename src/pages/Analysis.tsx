@@ -629,7 +629,7 @@ const Analysis = () => {
             <p className="text-xs text-muted-foreground mt-4 text-center">
               Better than <span className="font-mono font-semibold text-primary">{d.percentile}%</span> of comparable listings.
             </p>
-            {d.market_rank && <p className="text-[11px] text-muted-foreground mt-1">Rank: <span className="font-mono text-foreground">#{d.market_rank}</span> of {d.market_total}</p>}
+            {d.market_rank && d.market_rank <= d.market_total && <p className="text-[11px] text-muted-foreground mt-1">Rank: <span className="font-mono text-foreground">#{d.market_rank}</span> of {d.market_total}</p>}
           </Section>
 
           <Section delay={0.15} className="lg:col-span-2 rounded-2xl border border-border bg-card p-6">
