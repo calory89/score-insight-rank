@@ -626,6 +626,8 @@ const Analysis = () => {
       if (saved && saved.length > 0) {
         // Don't auto-redirect — show banner instead so user isn't interrupted
         setReadyReportId(saved[0].id);
+        // Clear any existing error since report is ready
+        setAnalyzeError("");
         // Send browser notification
         if ("Notification" in window && Notification.permission === "granted") {
           new Notification("Your report is ready! 🏠", {
@@ -635,8 +637,26 @@ const Analysis = () => {
       }
     }, 15000);
 
-    // Safety timeout: prevent infinite loading
-    const safetyTimeout = setTimeout(() => {
+    // Safety timeout: prevent infinite loading — smart check before showing error
+    const safetyTimeout = setTimeout(async () => {
+      // Final DB check before showing error
+      const pollUrl = analyzingUrlRef.current;
+      if (pollUrl && pollUrl !== "manual-entry") {
+        const normalizedUrl = pollUrl.split("#")[0].replace(/\/$/, "");
+        const { data: saved } = await supabase
+          .from("analyses")
+          .select("id")
+          .ilike("url", `${normalizedUrl}%`)
+          .not("global_score", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(1);
+        if (saved && saved.length > 0) {
+          setAnalyzing(false);
+          navigate(`/analysis/${saved[0].id}`, { replace: true });
+          return;
+        }
+      }
+      // Only show error if nothing found
       setAnalyzeError("Analysis is taking longer than expected. The property website may be slow or protected. Please try again.");
       setAnalyzing(false);
     }, 180000);
@@ -780,6 +800,11 @@ const Analysis = () => {
   }
 
   if (analyzeError) {
+    // If the report actually completed (polling found it), redirect instead of showing error
+    if (readyReportId) {
+      navigate(`/analysis/${readyReportId}`, { replace: true });
+      return null;
+    }
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
