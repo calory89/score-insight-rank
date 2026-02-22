@@ -345,7 +345,15 @@ const Analysis = () => {
     fomoTimerRef.current = setInterval(() => {
       setFomoStep((prev) => Math.min(prev + 1, fomoSteps.length - 1));
     }, 3500);
-    return () => clearInterval(fomoTimerRef.current);
+    // Safety timeout: prevent infinite loading
+    const safetyTimeout = setTimeout(() => {
+      setAnalyzeError("Analysis is taking longer than expected. Please try again.");
+      setAnalyzing(false);
+    }, 90000);
+    return () => {
+      clearInterval(fomoTimerRef.current);
+      clearTimeout(safetyTimeout);
+    };
   }, [analyzing]);
 
   const [listingType, setListingType] = useState<string>("sale");
