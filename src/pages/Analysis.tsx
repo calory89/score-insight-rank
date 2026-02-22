@@ -285,6 +285,7 @@ const Analysis = () => {
   const { id } = useParams<{ id: string }>();
   const [searchParams] = useSearchParams();
   const urlToAnalyze = searchParams.get("url");
+  const fromBulk = searchParams.get("from") === "bulk";
   const isLoadingMode = !id && !!urlToAnalyze;
 
   const { user } = useAuth();
@@ -465,8 +466,14 @@ const Analysis = () => {
       <Navbar />
       <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl">
         <div className="flex items-center justify-between mb-6">
-          <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="h-4 w-4 mr-1" /> Back to Dashboard
+          <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => {
+            if (fromBulk) {
+              navigate("/dashboard?bulk=true&restore=true");
+            } else {
+              navigate("/dashboard");
+            }
+          }}>
+            <ArrowLeft className="h-4 w-4 mr-1" /> {fromBulk ? "Back to Bulk Results" : "Back to Dashboard"}
           </Button>
           <div className="flex items-center gap-2">
             {d?.url && d.url !== "manual-entry" && (

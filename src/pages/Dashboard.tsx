@@ -69,19 +69,41 @@ const UpgradeModal = ({ open, onClose }: { open: boolean; onClose: () => void })
 };
 
 // Bulk Analyze Modal
+// Bulk analyze loading steps (similar to single analysis FOMO loader)
+const bulkSteps = [
+  { text: "Accessing listing page…", sub: "Extracting real property data" },
+  { text: "Reading price, size & features…", sub: "Parsing listing content" },
+  { text: "Analyzing market signals…", sub: "Comparing 450+ listings in the area" },
+  { text: "Running neighborhood intelligence…", sub: "Walk score, transit, safety analysis" },
+  { text: "Computing financial models…", sub: "Mortgage scenarios, IRR, break-even" },
+  { text: "Building comparable database…", sub: "Finding similar sales & rentals" },
+  { text: "Calculating risk exposure…", sub: "Stress tests & exit strategy" },
+  { text: "Generating forensic report…", sub: "Final score calibration" },
+];
+
 const BulkAnalyzeModal = ({ open, onClose, isPro, onUpgrade, user }: { open: boolean; onClose: () => void; isPro: boolean; onUpgrade: () => void; user: any }) => {
   const navigate = useNavigate();
   const [urls, setUrls] = useState("");
-  const [bulkResults, setBulkResults] = useState<any[]>([]);
+  const [bulkResults, setBulkResults] = useState<any[]>(() => {
+    try {
+      const stored = sessionStorage.getItem("bulkResults");
+      if (stored) {
+        sessionStorage.removeItem("bulkResults");
+        return JSON.parse(stored);
+      }
+    } catch {}
+    return [];
+  });
   const [bulkRunning, setBulkRunning] = useState(false);
   const [bulkProgress, setBulkProgress] = useState(0);
   const [bulkTotal, setBulkTotal] = useState(0);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [currentUrl, setCurrentUrl] = useState("");
   const { toast } = useToast();
 
   if (!open) return null;
 
   const parseUrls = (text: string): string[] => {
-    // Split by newlines, spaces, commas, tabs — then filter valid-looking URLs
     return text
       .split(/[\n\r,\t ]+/)
       .map(l => l.trim())
@@ -101,23 +123,30 @@ const BulkAnalyzeModal = ({ open, onClose, isPro, onUpgrade, user }: { open: boo
     setBulkResults([]);
     setBulkProgress(0);
     setBulkTotal(detectedUrls.length);
+    setCurrentStep(0);
 
     const results: any[] = [];
     for (let i = 0; i < detectedUrls.length; i++) {
       setBulkProgress(i + 1);
+      setCurrentUrl(detectedUrls[i]);
+      setCurrentStep(0);
+
+      // Simulate step progression for each URL
+      const stepInterval = setInterval(() => {
+        setCurrentStep(prev => Math.min(prev + 1, bulkSteps.length - 1));
+      }, 3000);
+
       try {
         const { data: result, error } = await supabase.functions.invoke("analyze-property", {
           body: { url: detectedUrls[i] },
         });
+        clearInterval(stepInterval);
         if (error) throw error;
         if (result?.data) {
           results.push(result.data);
-        } else if (result?.data?.id) {
-          // Fetch full data
-          const { data: full } = await supabase.from("analyses").select("*").eq("id", result.data.id).single();
-          if (full) results.push(full);
         }
       } catch (e: any) {
+        clearInterval(stepInterval);
         results.push({ url: detectedUrls[i], error: true, address: detectedUrls[i] });
       }
       setBulkResults([...results]);
@@ -127,10 +156,12 @@ const BulkAnalyzeModal = ({ open, onClose, isPro, onUpgrade, user }: { open: boo
     toast({ title: `✅ ${results.filter(r => !r.error).length} of ${detectedUrls.length} analyzed successfully` });
   };
 
+  const overallPercent = bulkTotal > 0 ? Math.round(((bulkProgress - 1 + (currentStep + 1) / bulkSteps.length) / bulkTotal) * 100) : 0;
+
   return (
     <AnimatePresence>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4" onClick={onClose}>
+        className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4" onClick={bulkRunning ? undefined : onClose}>
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
           onClick={(e) => e.stopPropagation()}
           className="w-full max-w-lg rounded-2xl border border-primary/30 bg-card p-6 shadow-xl max-h-[85vh] overflow-y-auto">
@@ -139,25 +170,95 @@ const BulkAnalyzeModal = ({ open, onClose, isPro, onUpgrade, user }: { open: boo
               <Layers className="h-5 w-5 text-primary" />
               <h3 className="text-lg font-bold text-foreground">Bulk Analyze</h3>
             </div>
-            <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>
+            {!bulkRunning && <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>}
           </div>
 
-          {bulkResults.length > 0 ? (
-            /* Results view */
-            <div className="space-y-3">
-              {bulkRunning && (
-                <div className="text-center mb-4">
-                  <div className="h-4 w-4 rounded-full border-2 border-t-primary border-border animate-spin mx-auto mb-2" />
-                  <p className="text-xs text-muted-foreground">Analyzing {bulkProgress} of {bulkTotal}…</p>
+          {bulkRunning ? (
+            /* FOMO-style loading view */
+            <div className="space-y-6">
+              {/* Overall progress */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-muted-foreground">Overall Progress</span>
+                  <span className="text-sm font-mono font-bold text-primary">{overallPercent}%</span>
+                </div>
+                <div className="h-2.5 rounded-full bg-secondary overflow-hidden">
+                  <motion.div
+                    className="h-full rounded-full bg-gradient-cta"
+                    animate={{ width: `${overallPercent}%` }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-1.5">
+                  Property {bulkProgress} of {bulkTotal}
+                </p>
+              </div>
+
+              {/* Current analysis loader */}
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
+                <div className="flex flex-col items-center text-center">
+                  <div className="relative mx-auto mb-4 h-12 w-12">
+                    <div className="absolute inset-0 rounded-full border-2 border-border" />
+                    <div className="absolute inset-0 rounded-full border-2 border-t-primary animate-spin" style={{ animationDuration: "1.5s" }} />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+                    </div>
+                  </div>
+                  <AnimatePresence mode="wait">
+                    <motion.div key={currentStep} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.3 }}>
+                      <p className="text-sm font-semibold text-foreground mb-0.5">{bulkSteps[currentStep]?.text}</p>
+                      <p className="text-[10px] text-muted-foreground">{bulkSteps[currentStep]?.sub}</p>
+                    </motion.div>
+                  </AnimatePresence>
+                  <p className="text-[10px] text-muted-foreground mt-3 truncate max-w-[280px]">{currentUrl}</p>
+                  {/* Step dots */}
+                  <div className="flex items-center gap-1 mt-3">
+                    {bulkSteps.map((_, idx) => (
+                      <div key={idx} className={`h-1 rounded-full transition-all duration-500 ${idx <= currentStep ? "w-4 bg-primary" : "w-2 bg-border"}`} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Already completed results */}
+              {bulkResults.length > 0 && (
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2">✅ Completed ({bulkResults.length})</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {bulkResults.map((r, i) => (
+                      <div key={i} className={`rounded-lg border p-2.5 text-xs ${r.error ? "border-destructive/20 bg-destructive/5" : "border-border bg-secondary/30"}`}>
+                        {r.error ? (
+                          <span className="text-destructive">Failed</span>
+                        ) : (
+                          <div className="flex items-center gap-2">
+                            <span className={`font-mono font-bold ${scoreColor(r.global_score || 0)}`}>{r.global_score}</span>
+                            <span className="text-muted-foreground truncate">{r.address || r.city || "Property"}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
+            </div>
+          ) : bulkResults.length > 0 ? (
+            /* Results view */
+            <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {bulkResults.map((r, i) => (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    onClick={() => { if (r.id && !r.error) { onClose(); navigate(`/analysis/${r.id}`); } }}
+                    onClick={() => {
+                      if (r.id && !r.error) {
+                        // Store bulk results in sessionStorage so we can return here
+                        sessionStorage.setItem("bulkResults", JSON.stringify(bulkResults));
+                        onClose();
+                        navigate(`/analysis/${r.id}?from=bulk`);
+                      }
+                    }}
                     className={`rounded-xl border p-4 transition-all ${
                       r.error
                         ? "border-destructive/30 bg-destructive/5 cursor-default"
@@ -190,11 +291,9 @@ const BulkAnalyzeModal = ({ open, onClose, isPro, onUpgrade, user }: { open: boo
                   </motion.div>
                 ))}
               </div>
-              {!bulkRunning && (
-                <Button variant="ghost" size="sm" className="w-full mt-2" onClick={() => { setBulkResults([]); setUrls(""); }}>
-                  Analyze More
-                </Button>
-              )}
+              <Button variant="ghost" size="sm" className="w-full mt-2" onClick={() => { setBulkResults([]); setUrls(""); }}>
+                Analyze More
+              </Button>
             </div>
           ) : (
             /* Input view */
@@ -281,7 +380,7 @@ const Dashboard = () => {
       setIsPro(subData?.plan === "pro" || subData?.plan === "super_pro" || subData?.plan === "enterprise" || user?.email === "rrppspain@gmail.com");
       setLoading(false);
     });
-    // Open bulk modal if came from hero CTA
+    // Open bulk modal if came from hero CTA or returning from bulk analysis
     if (searchParams.get("bulk") === "true") {
       setShowBulk(true);
       window.history.replaceState({}, "", "/dashboard");
@@ -336,8 +435,8 @@ const Dashboard = () => {
       <Navbar />
       <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-foreground mb-1">My Analyses</h1>
-          <p className="text-sm text-muted-foreground">Your property intelligence history.</p>
+          <h1 className="text-2xl font-bold text-foreground mb-1">Dashboard</h1>
+          <p className="text-sm text-muted-foreground">Your property intelligence hub.</p>
         </div>
 
         {/* Stats bar */}
