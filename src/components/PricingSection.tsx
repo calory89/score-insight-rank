@@ -4,6 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Check, Zap, Crown, Building2, Mail, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import LoginGateModal from "@/components/LoginGateModal";
+import { toast } from "@/hooks/use-toast";
+
+// Stripe price IDs
+const STRIPE_PRICES = {
+  pro_monthly: "price_1T3QtAJ3dZ2FxAKF5EGqk2Tq",
+  pro_annual: "price_1T3Qu9J3dZ2FxAKFXa9HspP2",
+  super_pro_monthly: "price_1T3QvdJ3dZ2FxAKF0KoqJvE9",
+  super_pro_annual: "price_1T3Qw6J3dZ2FxAKF13fECSUq",
+};
 
 const plans = [
   {
@@ -21,6 +33,8 @@ const plans = [
     cta: "Get Started Free",
     highlighted: false,
     ctaVariant: "hero-outline" as const,
+    stripePriceMonthly: null as string | null,
+    stripePriceAnnual: null as string | null,
   },
   {
     name: "Pro",
@@ -41,6 +55,8 @@ const plans = [
     cta: "Get Pro",
     highlighted: true,
     ctaVariant: "hero" as const,
+    stripePriceMonthly: STRIPE_PRICES.pro_monthly,
+    stripePriceAnnual: STRIPE_PRICES.pro_annual,
   },
   {
     name: "Super Pro",
@@ -59,6 +75,8 @@ const plans = [
     cta: "Get Super Pro",
     highlighted: false,
     ctaVariant: "hero" as const,
+    stripePriceMonthly: STRIPE_PRICES.super_pro_monthly,
+    stripePriceAnnual: STRIPE_PRICES.super_pro_annual,
   },
   {
     name: "Enterprise",
@@ -78,29 +96,18 @@ const plans = [
     highlighted: false,
     ctaVariant: "hero-outline" as const,
     isContact: true,
+    stripePriceMonthly: null as string | null,
+    stripePriceAnnual: null as string | null,
   },
 ];
 
 const COUNTRY_CODES = [
-  { code: "+1", flag: "🇺🇸", name: "US" },
-  { code: "+44", flag: "🇬🇧", name: "UK" },
-  { code: "+34", flag: "🇪🇸", name: "ES" },
-  { code: "+33", flag: "🇫🇷", name: "FR" },
-  { code: "+49", flag: "🇩🇪", name: "DE" },
-  { code: "+39", flag: "🇮🇹", name: "IT" },
-  { code: "+351", flag: "🇵🇹", name: "PT" },
-  { code: "+31", flag: "🇳🇱", name: "NL" },
-  { code: "+46", flag: "🇸🇪", name: "SE" },
-  { code: "+45", flag: "🇩🇰", name: "DK" },
-  { code: "+47", flag: "🇳🇴", name: "NO" },
-  { code: "+62", flag: "🇮🇩", name: "ID" },
-  { code: "+971", flag: "🇦🇪", name: "AE" },
-  { code: "+61", flag: "🇦🇺", name: "AU" },
-  { code: "+81", flag: "🇯🇵", name: "JP" },
-  { code: "+86", flag: "🇨🇳", name: "CN" },
-  { code: "+91", flag: "🇮🇳", name: "IN" },
-  { code: "+55", flag: "🇧🇷", name: "BR" },
-  { code: "+52", flag: "🇲🇽", name: "MX" },
+  { code: "+1", flag: "🇺🇸" }, { code: "+44", flag: "🇬🇧" }, { code: "+34", flag: "🇪🇸" },
+  { code: "+33", flag: "🇫🇷" }, { code: "+49", flag: "🇩🇪" }, { code: "+39", flag: "🇮🇹" },
+  { code: "+351", flag: "🇵🇹" }, { code: "+31", flag: "🇳🇱" }, { code: "+46", flag: "🇸🇪" },
+  { code: "+45", flag: "🇩🇰" }, { code: "+47", flag: "🇳🇴" }, { code: "+62", flag: "🇮🇩" },
+  { code: "+971", flag: "🇦🇪" }, { code: "+61", flag: "🇦🇺" }, { code: "+81", flag: "🇯🇵" },
+  { code: "+91", flag: "🇮🇳" }, { code: "+55", flag: "🇧🇷" }, { code: "+52", flag: "🇲🇽" },
 ];
 
 const ContactModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
@@ -112,16 +119,12 @@ const ContactModal = ({ open, onClose }: { open: boolean; onClose: () => void })
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
         onClick={onClose}
       >
         <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
+          initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
           className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl"
         >
@@ -149,11 +152,8 @@ const ContactModal = ({ open, onClose }: { open: boolean; onClose: () => void })
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Phone</label>
                 <div className="flex gap-2">
-                  <select
-                    value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                    className="h-10 rounded-md border border-border bg-secondary/50 px-2 text-sm text-foreground w-24"
-                  >
+                  <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)}
+                    className="h-10 rounded-md border border-border bg-secondary/50 px-2 text-sm text-foreground w-24">
                     {COUNTRY_CODES.map((c) => (
                       <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
                     ))}
@@ -190,14 +190,49 @@ const ContactModal = ({ open, onClose }: { open: boolean; onClose: () => void })
 const PricingSection = () => {
   const [annual, setAnnual] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
+  const [loginGateOpen, setLoginGateOpen] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const { user } = useAuth();
+
+  const handleCheckout = async (plan: typeof plans[0]) => {
+    if (plan.isContact) {
+      setContactOpen(true);
+      return;
+    }
+    if (!plan.stripePriceMonthly && !plan.stripePriceAnnual) {
+      // Free plan — just scroll to hero
+      document.querySelector("input[type='url']")?.scrollIntoView({ behavior: "smooth" });
+      return;
+    }
+    if (!user) {
+      setLoginGateOpen(true);
+      return;
+    }
+
+    const priceId = annual ? plan.stripePriceAnnual : plan.stripePriceMonthly;
+    if (!priceId) return;
+
+    setLoadingPlan(plan.name);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: { priceId },
+      });
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, "_blank");
+      }
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message || "Could not start checkout", variant: "destructive" });
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
 
   return (
     <section id="pricing" className="py-24 md:py-32 relative">
       <div className="container mx-auto px-4">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
           className="text-center mb-10"
         >
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
@@ -206,13 +241,10 @@ const PricingSection = () => {
           <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
             If one bad decision costs €20,000… this pays for itself on the first search.
           </p>
-
           <div className="inline-flex items-center gap-3 rounded-full border border-border bg-card px-4 py-2">
             <span className={`text-xs font-medium transition-colors ${!annual ? "text-foreground" : "text-muted-foreground"}`}>Monthly</span>
-            <button
-              onClick={() => setAnnual(!annual)}
-              className={`relative h-6 w-11 rounded-full transition-colors ${annual ? "bg-primary" : "bg-border"}`}
-            >
+            <button onClick={() => setAnnual(!annual)}
+              className={`relative h-6 w-11 rounded-full transition-colors ${annual ? "bg-primary" : "bg-border"}`}>
               <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-card shadow transition-transform ${annual ? "translate-x-5" : ""}`} />
             </button>
             <span className={`text-xs font-medium transition-colors ${annual ? "text-foreground" : "text-muted-foreground"}`}>
@@ -221,21 +253,16 @@ const PricingSection = () => {
           </div>
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl mx-auto items-start">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl mx-auto items-stretch">
           {plans.map((plan, i) => {
             const Icon = plan.icon;
             const price = annual ? plan.yearlyPrice : plan.monthlyPrice;
             return (
-              <motion.div
-                key={plan.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+              <motion.div key={plan.name}
+                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
-                className={`rounded-2xl border p-6 flex flex-col h-full ${
-                  plan.highlighted
-                    ? "border-primary/30 bg-card glow-primary relative"
-                    : "border-border bg-card"
+                className={`rounded-2xl border p-6 flex flex-col ${
+                  plan.highlighted ? "border-primary/30 bg-card glow-primary relative" : "border-border bg-card"
                 }`}
               >
                 {plan.highlighted && (
@@ -248,7 +275,6 @@ const PricingSection = () => {
                   <h3 className="text-base font-semibold text-foreground">{plan.name}</h3>
                 </div>
                 <p className="text-xs text-muted-foreground mb-5">{plan.description}</p>
-
                 <div className="flex items-baseline gap-1 mb-6">
                   {price !== null ? (
                     <>
@@ -262,24 +288,17 @@ const PricingSection = () => {
                     <span className="text-3xl font-bold text-foreground">Custom</span>
                   )}
                 </div>
-
                 <ul className="space-y-2.5 mb-6 flex-1">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-xs text-muted-foreground">
-                      <Check className="h-3.5 w-3.5 text-primary flex-shrink-0 mt-0.5" />
-                      {f}
+                      <Check className="h-3.5 w-3.5 text-primary flex-shrink-0 mt-0.5" />{f}
                     </li>
                   ))}
                 </ul>
-
-                <Button
-                  variant={plan.ctaVariant}
-                  className="w-full mt-auto"
-                  onClick={() => {
-                    if (plan.isContact) setContactOpen(true);
-                  }}
-                >
-                  {plan.cta}
+                <Button variant={plan.ctaVariant} className="w-full mt-auto"
+                  disabled={loadingPlan === plan.name}
+                  onClick={() => handleCheckout(plan)}>
+                  {loadingPlan === plan.name ? "Loading…" : plan.cta}
                 </Button>
               </motion.div>
             );
@@ -292,6 +311,7 @@ const PricingSection = () => {
       </div>
 
       <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
+      <LoginGateModal open={loginGateOpen} onClose={() => setLoginGateOpen(false)} onSuccess={() => setLoginGateOpen(false)} />
     </section>
   );
 };
