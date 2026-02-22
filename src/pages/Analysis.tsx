@@ -125,22 +125,6 @@ const FomoLoader = ({ step }: { step: number }) => {
       <Button variant="ghost" size="sm" className="mb-6 text-muted-foreground" onClick={() => window.history.back()}>
         <ArrowLeft className="h-4 w-4 mr-1" /> Cancel
       </Button>
-      <div className="rounded-2xl border border-border bg-card overflow-hidden mb-8">
-        <div className="p-6 md:p-8 space-y-4">
-          <div className="flex gap-2">
-            <Skeleton className="h-5 w-24 rounded-full" />
-            <Skeleton className="h-5 w-20 rounded-full" />
-          </div>
-          <Skeleton className="h-7 w-3/4" />
-          <Skeleton className="h-4 w-48" />
-          <Skeleton className="h-9 w-40" />
-          <div className="flex gap-4">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-4 w-16" />
-          </div>
-        </div>
-      </div>
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
         className="rounded-2xl border border-primary/20 bg-card p-8 md:p-12 mb-8">
         <div className="flex flex-col items-center text-center">
@@ -419,6 +403,9 @@ const Analysis = () => {
       toast({ title: "Added to favorites", description: "Property saved to your collection." });
     }
   };
+  // Store the URL being analyzed for polling
+  const analyzingUrlRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (!analyzing) return;
     // Request notification permission while user waits
@@ -428,6 +415,31 @@ const Analysis = () => {
     fomoTimerRef.current = setInterval(() => {
       setFomoStep((prev) => Math.min(prev + 1, fomoSteps.length - 1));
     }, 3500);
+
+    // Polling: check DB every 15s for completed analysis
+    const pollInterval = setInterval(async () => {
+      const pollUrl = analyzingUrlRef.current;
+      if (!pollUrl || pollUrl === "manual-entry") return;
+      const normalizedUrl = pollUrl.split("#")[0].replace(/\/$/, "");
+      const { data: saved } = await supabase
+        .from("analyses")
+        .select("id, address, city, global_score")
+        .ilike("url", `${normalizedUrl}%`)
+        .not("global_score", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (saved && saved.length > 0) {
+        setAnalyzing(false);
+        // Send browser notification
+        if ("Notification" in window && Notification.permission === "granted") {
+          new Notification("Your report is ready! 🏠", {
+            body: `${saved[0].address || saved[0].city || "Property"} — Score: ${saved[0].global_score}/100`,
+          });
+        }
+        navigate(`/analysis/${saved[0].id}`, { replace: true });
+      }
+    }, 15000);
+
     // Safety timeout: prevent infinite loading
     const safetyTimeout = setTimeout(() => {
       setAnalyzeError("Analysis is taking longer than expected. The property website may be slow or protected. Please try again.");
@@ -435,6 +447,7 @@ const Analysis = () => {
     }, 180000);
     return () => {
       clearInterval(fomoTimerRef.current);
+      clearInterval(pollInterval);
       clearTimeout(safetyTimeout);
     };
   }, [analyzing]);
@@ -442,6 +455,7 @@ const Analysis = () => {
   const [listingType, setListingType] = useState<string>("sale");
 
   const runAnalysis = async (body: any) => {
+    analyzingUrlRef.current = body.url || null;
     setAnalyzing(true);
     setAnalyzeError("");
     setScrapeFailed(false);
