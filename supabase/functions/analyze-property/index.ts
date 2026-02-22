@@ -819,7 +819,7 @@ serve(async (req) => {
           };
 
           // Duplicate protection: check if this URL was already analyzed by this user recently (within 5 min)
-          const normalizedUrl = cleanUrl.split("#")[0].replace(/\/$/, "");
+          const normalizedUrl = (url || "").split("#")[0].replace(/\/$/, "");
           const { data: existingDup } = await supabase
             .from("analyses")
             .select("id")
