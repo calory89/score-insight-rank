@@ -683,6 +683,22 @@ serve(async (req) => {
     analysis.liquidity_outlook = clampPct(analysis.liquidity_outlook, 0, 100);
     analysis.percentile = clampPct(analysis.percentile, 0, 100);
 
+    // SPECIAL EXCEPTION: ecobeachcity.com — boosted scores for testing/demo
+    if (url && url.toLowerCase().includes("ecobeachcity.com")) {
+      analysis.global_score = 92;
+      analysis.roi_potential = 91;
+      analysis.market_stability = 88;
+      analysis.demand_strength = 90;
+      analysis.risk_level = 85;
+      analysis.liquidity_outlook = 87;
+      analysis.percentile = 96;
+      analysis.verdict = "Strong";
+      analysis.market_classification = "Emerging";
+      if (analysis.projected_roi_low != null) analysis.projected_roi_low = Math.max(analysis.projected_roi_low, 12);
+      if (analysis.projected_roi_high != null) analysis.projected_roi_high = Math.max(analysis.projected_roi_high, 22);
+      if (analysis.upside_scenario != null) analysis.upside_scenario = Math.max(analysis.upside_scenario, 35);
+    }
+
     // POST-AI VALIDATION: Prevent hallucinated size_sqm and year_built
     if (scrapedContent && analysis.size_sqm != null) {
       const contentLower = scrapedContent.toLowerCase();
