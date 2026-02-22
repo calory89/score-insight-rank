@@ -217,6 +217,54 @@ export type Database = {
           },
         ]
       }
+      page_visits: {
+        Row: {
+          created_at: string
+          id: string
+          ip_country: string | null
+          ip_country_code: string | null
+          is_bounce: boolean | null
+          page_load_time_ms: number | null
+          path: string
+          referrer: string | null
+          session_id: string
+          time_on_page_ms: number | null
+          updated_at: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_country?: string | null
+          ip_country_code?: string | null
+          is_bounce?: boolean | null
+          page_load_time_ms?: number | null
+          path: string
+          referrer?: string | null
+          session_id: string
+          time_on_page_ms?: number | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_country?: string | null
+          ip_country_code?: string | null
+          is_bounce?: boolean | null
+          page_load_time_ms?: number | null
+          path?: string
+          referrer?: string | null
+          session_id?: string
+          time_on_page_ms?: number | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
