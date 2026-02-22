@@ -67,7 +67,39 @@ const fomoSteps = [
   { text: "Generating forensic report…", sub: "Final score calibration" },
 ];
 
-const FomoLoader = ({ step }: { step: number }) => (
+// --- Educational Real Estate Tips ---
+const realEstateTips = [
+  "💡 The 1% rule: Monthly rent should be ≥1% of purchase price for positive cash flow.",
+  "📊 Cap rate = Net Operating Income ÷ Property Value. Above 6% is generally strong.",
+  "🏠 Location accounts for 80% of a property's long-term appreciation potential.",
+  "💰 The average real estate investor holds a property for 7.5 years before selling.",
+  "📈 Historically, real estate appreciates ~3-5% per year, outpacing inflation.",
+  "🔑 Leverage is real estate's superpower: 20% down controls 100% of the asset.",
+  "🌍 Currency risk can eat 10-20% of your returns on international investments.",
+  "⚡ Properties within 500m of public transit appreciate 15-25% faster.",
+  "🏗️ New construction depreciates ~1.5% per year — factor this into yield calculations.",
+  "📉 The best deals are found in markets where supply exceeds demand by 8%+.",
+  "🔍 Always verify the price per m² against the micro-market median before buying.",
+  "💼 Rental yield above 7% net is considered excellent in most European markets.",
+  "🏖️ Tourist areas offer high gross yields but seasonal vacancy can cut net returns by 30%.",
+  "📋 Closing costs in Europe range from 5% to 15% depending on the country.",
+  "🔒 Markets with strong tenant protection laws tend to have lower vacancy rates.",
+  "🌐 Cross-border property investors save 12-18% by timing currency exchanges.",
+  "🏢 Mixed-use properties typically outperform single-use by 2-3% annually.",
+  "📊 A property's IRR should exceed 8% to justify the illiquidity premium vs stocks.",
+];
+
+const FomoLoader = ({ step }: { step: number }) => {
+  const [tipIndex, setTipIndex] = useState(() => Math.floor(Math.random() * realEstateTips.length));
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTipIndex(prev => (prev + 1) % realEstateTips.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
   <div className="min-h-screen bg-background">
     <Navbar />
     <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl">
@@ -116,8 +148,25 @@ const FomoLoader = ({ step }: { step: number }) => (
             </div>
             <p className="text-[10px] text-muted-foreground">Step {step + 1} of {fomoSteps.length}</p>
           </div>
+          
+          {/* Educational Real Estate Tip */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={tipIndex}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.5 }}
+              className="mt-6 border-t border-border pt-4 max-w-sm"
+            >
+              <p className="text-[11px] text-muted-foreground leading-relaxed italic">
+                {realEstateTips[tipIndex]}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+
           <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2 }}
-            className="text-[11px] text-muted-foreground mt-6 border-t border-border pt-4">
+            className="text-[10px] text-muted-foreground mt-4">
             🔥 <span className="text-foreground font-medium">{Math.floor(Math.random() * 30) + 12} investors</span> analyzed properties in this area today
           </motion.p>
         </div>
@@ -128,7 +177,8 @@ const FomoLoader = ({ step }: { step: number }) => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 // --- Subscore Bar ---
 const SubscoreBar = ({ label, value, explanation }: { label: string; value: number; explanation?: { positive: string; negative: string } }) => {
