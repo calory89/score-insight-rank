@@ -1,64 +1,72 @@
 
 
-# Fix: "Analysis Failed" cuando el reporte ya existe en la base de datos
+# Fix: Navegacion rota en la pagina de analisis
 
-## Problema
+## Problemas identificados
 
-Cuando la busqueda tarda mas de 180 segundos, el "safety timeout" se activa y muestra "Analysis Failed", incluso si el analisis ya se completo en el servidor y los datos estan en la base de datos. Esto pasa porque:
+### 1. Boton "Back" no funciona desde la pagina del reporte
+El boton usa `window.history.back()` que puede llevar al usuario de vuelta a `/analysis/loading`, re-activando el loader en un bucle. Necesita detectar si la pagina anterior es una ruta de carga y saltar al dashboard en su lugar.
 
-1. El timeout de seguridad (linea 639-642) fuerza `setAnalyzing(false)` y `setAnalyzeError(...)` sin comprobar si el reporte ya esta listo
-2. La pantalla de error se muestra antes de verificar si hay datos disponibles
-3. El polling cada 15s puede haber encontrado el resultado (`readyReportId`), pero el error screen tiene prioridad en el render
+### 2. Click en reportes del feed no muestra nada visible
+Al clickar un reporte en "Top rated properties", se ejecuta `setPreviewId(report.id)` que renderiza un preview inline al final de la pagina, fuera de la vista del usuario. El usuario no ve nada porque no se hace scroll automatico hacia el preview.
 
-## Solucion
+**Solucion**: Hacer scroll automatico hacia el preview cuando se selecciona un reporte y tambien ofrecer un boton para abrir el reporte completo.
 
-### Cambio 1: Safety timeout inteligente (linea 639-642)
+### 3. "See above" / "Click to view" lleva a pagina en blanco
+Cuando el usuario clicka el banner "Your report is ready! Click to view", el codigo hace:
+- `setAnalyzing(false)` y `setReadyReportId(null)` -- limpia el estado del FomoLoader
+- `navigate(/analysis/ID, { replace: true })` -- cambia la URL
 
-Antes de mostrar el error, el timeout hara una consulta final a la base de datos. Si el analisis ya existe, redirige al usuario en lugar de mostrar el error.
+Pero el componente se re-renderiza y como `data` es null (no se ha cargado aun), cae en `if (!data) return null` (linea 824) y muestra una pagina en blanco hasta que el `useEffect` de fetch se ejecuta. El problema es una condicion de carrera entre la navegacion y la carga de datos.
+
+**Solucion**: Usar `window.location.href` para forzar un reload completo de la pagina, o mejor, no limpiar el estado hasta que los datos esten cargados.
+
+## Cambios tecnicos
+
+### Archivo: `src/pages/Analysis.tsx`
+
+**Cambio 1 - Back button inteligente (linea 849-857)**
+
+Reemplazar la logica de `window.history.back()` para detectar si la pagina anterior es una ruta de carga:
 
 ```typescript
-// Safety timeout: prevent infinite loading
-const safetyTimeout = setTimeout(async () => {
-  // Final DB check before showing error
-  const pollUrl = analyzingUrlRef.current;
-  if (pollUrl && pollUrl !== "manual-entry") {
-    const normalizedUrl = pollUrl.split("#")[0].replace(/\/$/, "");
-    const { data: saved } = await supabase
-      .from("analyses")
-      .select("id")
-      .ilike("url", `${normalizedUrl}%`)
-      .not("global_score", "is", null)
-      .order("created_at", { ascending: false })
-      .limit(1);
-    if (saved && saved.length > 0) {
-      setAnalyzing(false);
-      navigate(`/analysis/${saved[0].id}`, { replace: true });
-      return;
-    }
+onClick={() => {
+  if (fromBulk) {
+    navigate("/dashboard?bulk=true&restore=true");
+  } else {
+    // Always go to dashboard — history.back() often goes to the loading page
+    navigate("/dashboard");
   }
-  // Only show error if nothing found
-  setAnalyzeError("Analysis is taking longer than expected...");
-  setAnalyzing(false);
-}, 180000);
+}}
 ```
 
-### Cambio 2: Error screen verifica readyReportId
+**Cambio 2 - Scroll automatico al preview (linea 416-434)**
 
-Si `readyReportId` ya existe cuando se muestra la pantalla de error, redirigir automaticamente en lugar de mostrar el error.
+Agregar un `ref` al contenedor del preview y hacer `scrollIntoView` cuando se selecciona un reporte:
 
 ```typescript
-// Before showing error screen, check if report is actually ready
-if (analyzeError && !analyzing && readyReportId) {
-  navigate(`/analysis/${readyReportId}`, { replace: true });
-  return null;
-}
+const previewRef = useRef<HTMLDivElement>(null);
+
+// On setPreviewId, scroll to preview
+useEffect(() => {
+  if (previewId && previewRef.current) {
+    previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}, [previewId]);
 ```
 
-### Cambio 3: Polling detecta resultado y limpia el error
+Ademas, agregar un boton "View full report" dentro del InlineReportPreview que navega al reporte completo con `window.location.href`.
 
-Cuando el polling encuentra el resultado, si ya hay un error mostrandose, limpiarlo y navegar al reporte.
+**Cambio 3 - Fix pagina en blanco en "Click to view" (linea 777-782)**
 
-## Archivos a modificar
+Cambiar `navigate()` por `window.location.href` para forzar una carga completa de la pagina, evitando la condicion de carrera:
 
-- `src/pages/Analysis.tsx` -- 3 cambios puntuales en la logica de timeout, error screen y polling
+```typescript
+onViewReady={() => {
+  if (readyReportId) {
+    window.location.href = `/analysis/${readyReportId}`;
+  }
+}}
+```
 
+Esto garantiza que la pagina se recarga completamente con el ID correcto en la URL, activando el fetch de datos desde cero.
