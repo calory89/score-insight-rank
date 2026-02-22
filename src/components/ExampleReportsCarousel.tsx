@@ -48,12 +48,19 @@ const ExampleReportsCarousel = () => {
     const load = async () => {
       const { data } = await supabase
         .from("analyses")
-        .select("id, address, city, country, global_score, price, verdict, image_url, roi_potential, primary_insight")
+        .select("id, address, city, country, global_score, price, verdict, image_url, roi_potential, primary_insight, url")
         .not("global_score", "is", null)
         .not("city", "is", null)
-        .order("global_score", { ascending: false })
-        .limit(8);
-      if (data) setReports(data);
+        .order("created_at", { ascending: false })
+        .limit(20);
+      if (data) {
+        // Pin ecobeachcity first, then show latest
+        const ecoIdx = data.findIndex(r => r.url?.toLowerCase().includes("ecobeachcity"));
+        const sorted = ecoIdx >= 0
+          ? [data[ecoIdx], ...data.filter((_, i) => i !== ecoIdx)]
+          : data;
+        setReports(sorted.slice(0, 10));
+      }
     };
     load();
   }, []);
@@ -118,7 +125,8 @@ const ExampleReportsCarousel = () => {
               </div>
               {/* Verdict Badge */}
               <div className="absolute top-3 left-3">
-                <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm ${
+              <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm ${
+                  report.verdict === "Exceptional" ? "bg-primary/20 text-primary" :
                   report.verdict === "Strong" ? "bg-score-excellent/20 text-score-excellent" :
                   report.verdict === "Moderate" ? "bg-score-average/20 text-score-average" :
                   "bg-score-poor/20 text-score-poor"
