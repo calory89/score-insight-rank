@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { GitCompare } from "lucide-react";
 import {
   Users, BarChart3, Globe, Search, ChevronDown, ChevronUp,
   Calendar, MapPin, TrendingUp, Shield, ArrowLeft, Activity,
@@ -155,6 +156,17 @@ const BatchAnalysisPanel = () => {
               {job.status === "error" && <span className="text-destructive truncate max-w-[120px]">{job.error}</span>}
             </div>
           ))}
+          {/* Compare suggestion */}
+          {!running && doneCount >= 2 && (
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-3">
+              <Button variant="hero" size="sm" onClick={() => {
+                const ids = jobs.filter(j => j.status === "done" && j.analysisId).map(j => j.analysisId).join(",");
+                navigate(`/compare?ids=${ids}`);
+              }}>
+                <GitCompare className="h-3.5 w-3.5 mr-1" /> Compare {doneCount} Properties
+              </Button>
+            </motion.div>
+          )}
         </div>
       )}
     </div>

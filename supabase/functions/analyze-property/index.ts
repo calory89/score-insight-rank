@@ -723,6 +723,12 @@ serve(async (req) => {
     analysis.liquidity_outlook = clampPct(analysis.liquidity_outlook, 0, 100);
     analysis.percentile = clampPct(analysis.percentile, 0, 100);
 
+    // ENFORCE: Global score = average of 5 subscores
+    const subscores = [analysis.roi_potential, analysis.market_stability, analysis.demand_strength, analysis.risk_level, analysis.liquidity_outlook].filter(v => v != null && typeof v === "number");
+    if (subscores.length > 0) {
+      analysis.global_score = Math.round(subscores.reduce((a: number, b: number) => a + b, 0) / subscores.length);
+    }
+
     // ENFORCE VERDICT CONSISTENCY: verdict MUST match global_score to avoid confusion
     const gs = analysis.global_score;
     if (gs != null) {
