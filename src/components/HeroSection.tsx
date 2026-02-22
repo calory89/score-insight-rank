@@ -96,7 +96,7 @@ const HeroSection = () => {
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
-                    placeholder="Paste any Zillow, Idealista, Rightmove, or Airbnb URL…"
+                    placeholder="Paste any Zillow, Rightmove, Redfin, or Airbnb URL…"
                     className="flex-1 bg-transparent px-3 sm:px-4 py-4 sm:py-5 text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0"
                   />
                 </div>
@@ -112,7 +112,6 @@ const HeroSection = () => {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground/70">
             <span>Zillow</span><span>·</span>
-            <span>Idealista</span><span>·</span>
             <span>Rightmove</span><span>·</span>
             <span>Redfin</span><span>·</span>
             <span>Zoopla</span><span>·</span>

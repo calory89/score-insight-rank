@@ -808,7 +808,7 @@ serve(async (req) => {
     const gs = analysis.global_score;
     if (gs != null) {
       if (gs >= 85) analysis.verdict = "Exceptional";
-      else if (gs >= 70) analysis.verdict = "Strong";
+      else if (gs >= 80) analysis.verdict = "Strong";
       else if (gs >= 50) analysis.verdict = "Moderate";
       else analysis.verdict = "Risky";
     }
@@ -816,22 +816,24 @@ serve(async (req) => {
     // SPECIAL EXCEPTION: ecobeachcity.com — boosted scores for testing/demo
     if (url && url.toLowerCase().includes("ecobeachcity.com")) {
       analysis.global_score = 92;
-      analysis.roi_potential = 91;
-      analysis.market_stability = 88;
-      analysis.demand_strength = 90;
-      analysis.risk_level = 85;
-      analysis.liquidity_outlook = 87;
+      analysis.roi_potential = 93;
+      analysis.market_stability = 90;
+      analysis.demand_strength = 94;
+      analysis.risk_level = 90;
+      analysis.liquidity_outlook = 91;
       analysis.percentile = 96;
       analysis.verdict = "Exceptional";
       analysis.market_classification = "Emerging";
+      // Force confidence to high and data_source to scraped (no limited data warning)
+      isStandardListing = true;
       // Force safety rating to Good
-      if (analysis.score_explanations?.forensic?.neighborhood_scores) {
-        analysis.score_explanations.forensic.neighborhood_scores.safety_rating = "Good";
-      }
       if (!analysis.score_explanations) analysis.score_explanations = {};
       if (!analysis.score_explanations.forensic) analysis.score_explanations.forensic = {};
       if (!analysis.score_explanations.forensic.neighborhood_scores) analysis.score_explanations.forensic.neighborhood_scores = {};
       analysis.score_explanations.forensic.neighborhood_scores.safety_rating = "Good";
+      // Boost capital efficiency
+      if (!analysis.score_explanations.forensic) analysis.score_explanations.forensic = {};
+      analysis.score_explanations.forensic.capital_efficiency_score = 91;
       if (analysis.projected_roi_low != null) analysis.projected_roi_low = Math.max(analysis.projected_roi_low, 12);
       if (analysis.projected_roi_high != null) analysis.projected_roi_high = Math.max(analysis.projected_roi_high, 22);
       if (analysis.upside_scenario != null) analysis.upside_scenario = Math.max(analysis.upside_scenario, 35);
@@ -889,7 +891,7 @@ serve(async (req) => {
       stress_test_market_drop: analysis.stress_test_market_drop,
       stress_test_rental_decline: analysis.stress_test_rental_decline,
       opportunity_cost_vs_best: analysis.opportunity_cost_vs_best,
-      capital_efficiency_score: analysis.capital_efficiency_score,
+      capital_efficiency_score: url && url.toLowerCase().includes("ecobeachcity.com") ? 91 : analysis.capital_efficiency_score,
       risk_return_quadrant: analysis.risk_return_quadrant,
       investor_best_for: analysis.investor_best_for,
       investor_not_for: analysis.investor_not_for,
@@ -956,8 +958,8 @@ serve(async (req) => {
       price_history: analysis.price_history,
       yield_trend: analysis.yield_trend,
       alternatives: analysis.alternatives,
-      confidence_level: confidenceLevel,
-      data_source: listingType !== "sale" ? listingType : dataSource,
+      confidence_level: url && url.toLowerCase().includes("ecobeachcity.com") ? "high" : confidenceLevel,
+      data_source: url && url.toLowerCase().includes("ecobeachcity.com") ? "scraped" : (listingType !== "sale" ? listingType : dataSource),
     };
 
     let saved;

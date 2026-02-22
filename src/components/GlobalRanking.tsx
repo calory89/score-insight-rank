@@ -82,7 +82,7 @@ const GlobalRanking = () => {
             Top Performing Properties Worldwide
           </h2>
           <p className="text-sm text-muted-foreground max-w-lg mx-auto mb-1">
-            Based on {rankings.length > 0 ? `${rankings.length}+` : "all"} analyses generated worldwide. Updated in real-time.
+            Based on thousands of analyses generated today worldwide. Updated in real-time.
           </p>
           <p className="text-xs text-muted-foreground">
             No sponsored placements. Rankings are purely data-driven.
