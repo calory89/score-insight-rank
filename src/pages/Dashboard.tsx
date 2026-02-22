@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,9 +7,10 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import {
   Search, ArrowRight, Calendar, Building2, TrendingUp, MapPin, Globe,
-  Shield, BarChart3, Heart, GitCompare, Filter, Star,
+  Shield, BarChart3, Heart, GitCompare, Filter, Star, Crown, Zap,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import confetti from "canvas-confetti";
 
 const verdictColor = (v: string) => {
   if (v === "Exceptional") return "text-score-excellent bg-score-excellent/10";
@@ -31,9 +32,45 @@ const riskLabel = (v: number) => {
   return { label: "High Risk", color: "text-score-poor" };
 };
 
+const FREE_LIMIT = 5;
+
+const UpgradeModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
+  const navigate = useNavigate();
+  if (!open) return null;
+  return (
+    <AnimatePresence>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4" onClick={onClose}>
+        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-md rounded-2xl border border-primary/30 bg-card p-8 shadow-xl text-center">
+          <div className="h-14 w-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Crown className="h-7 w-7 text-primary" />
+          </div>
+          <h3 className="text-xl font-bold text-foreground mb-2">You've hit your free limit</h3>
+          <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+            You've used all <strong>{FREE_LIMIT} free analyses</strong> this month. Upgrade to Pro to unlock <strong>300 analyses/month</strong>, advanced ROI breakdowns, risk classification, PDF exports, and more.
+          </p>
+          <div className="space-y-3 text-left mb-6">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground"><Zap className="h-3.5 w-3.5 text-primary" /> Save time — analyze 300 properties/month</div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground"><Shield className="h-3.5 w-3.5 text-primary" /> Never miss a deal — risk classification & red flags</div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground"><TrendingUp className="h-3.5 w-3.5 text-primary" /> Make money — advanced ROI & financial breakdowns</div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground"><GitCompare className="h-3.5 w-3.5 text-primary" /> Compare up to 4 properties side-by-side</div>
+          </div>
+          <Button variant="hero" className="w-full mb-3" onClick={() => { onClose(); navigate("/#pricing"); }}>
+            Upgrade to Pro — $29/mo
+          </Button>
+          <button onClick={onClose} className="text-xs text-muted-foreground hover:text-foreground transition-colors">Maybe later</button>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [analyses, setAnalyses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,10 +80,23 @@ const Dashboard = () => {
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [compareIds, setCompareIds] = useState<Set<string>>(new Set());
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/");
   }, [user, authLoading, navigate]);
+
+  // Subscription success celebration
+  useEffect(() => {
+    if (searchParams.get("subscription") === "success") {
+      setTimeout(() => {
+        confetti({ particleCount: 200, spread: 100, origin: { y: 0.5 }, colors: ["#0faf6e", "#4ade80", "#facc15", "#ffffff"] });
+        toast({ title: "🎉 Welcome to Pro!", description: "Your subscription is active. Start analyzing unlimited properties!" });
+      }, 500);
+      // Clean URL
+      window.history.replaceState({}, "", "/dashboard");
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (!user) return;
@@ -88,6 +138,12 @@ const Dashboard = () => {
 
   const handleAnalyze = () => {
     if (!url.trim() || analyzing) return;
+    // Check free limit (admin bypasses)
+    const isAdmin = user?.email === "rrppspain@gmail.com";
+    if (!isAdmin && analyses.length >= FREE_LIMIT) {
+      setShowUpgrade(true);
+      return;
+    }
     navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
   };
 
@@ -303,9 +359,17 @@ const Dashboard = () => {
                             <Calendar className="h-3 w-3" /> {new Date(a.created_at).toLocaleDateString()}
                           </span>
                         </div>
-                        <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">
-                          View Full Report →
-                        </span>
+                        <div className="flex items-center gap-2">
+                          {a.url && a.url !== "manual-entry" && (
+                            <button onClick={(e) => { e.stopPropagation(); window.open(a.url, "_blank"); }}
+                              className="text-[10px] text-primary hover:underline flex items-center gap-1">
+                              See Property ↗
+                            </button>
+                          )}
+                          <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">
+                            View Report →
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -315,6 +379,7 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+      <UpgradeModal open={showUpgrade} onClose={() => setShowUpgrade(false)} />
     </div>
   );
 };

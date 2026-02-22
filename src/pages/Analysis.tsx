@@ -437,9 +437,16 @@ const Analysis = () => {
           <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-4 w-4 mr-1" /> Back to Dashboard
           </Button>
-          <Button variant="outline" size="sm" onClick={() => navigate(`/compare?ids=${id}`)}>
-            <GitCompare className="h-3.5 w-3.5 mr-1" /> Compare
-          </Button>
+          <div className="flex items-center gap-2">
+            {d?.url && d.url !== "manual-entry" && (
+              <Button variant="outline" size="sm" onClick={() => window.open(d.url, "_blank")}>
+                <Eye className="h-3.5 w-3.5 mr-1" /> See Property
+              </Button>
+            )}
+            <Button variant="outline" size="sm" onClick={() => navigate(`/compare?ids=${id}`)}>
+              <GitCompare className="h-3.5 w-3.5 mr-1" /> Compare
+            </Button>
+          </div>
         </div>
 
         {/* ===== PROJECT SITE WARNING ===== */}

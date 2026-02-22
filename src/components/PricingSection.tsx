@@ -12,9 +12,9 @@ import { toast } from "@/hooks/use-toast";
 // Stripe price IDs
 const STRIPE_PRICES = {
   pro_monthly: "price_1T3QtAJ3dZ2FxAKF5EGqk2Tq",
-  pro_annual: "price_1T3Qu9J3dZ2FxAKFXa9HspP2",
+  pro_annual: "price_1T3R8zJ3dZ2FxAKFJFdeBD4U",
   super_pro_monthly: "price_1T3QvdJ3dZ2FxAKF0KoqJvE9",
-  super_pro_annual: "price_1T3Qw6J3dZ2FxAKF13fECSUq",
+  super_pro_annual: "price_1T3RAJJ3dZ2FxAKFxTYmp2fX",
 };
 
 const plans = [
@@ -101,18 +101,53 @@ const plans = [
   },
 ];
 
-const COUNTRY_CODES = [
-  { code: "+1", flag: "🇺🇸" }, { code: "+44", flag: "🇬🇧" }, { code: "+34", flag: "🇪🇸" },
-  { code: "+33", flag: "🇫🇷" }, { code: "+49", flag: "🇩🇪" }, { code: "+39", flag: "🇮🇹" },
-  { code: "+351", flag: "🇵🇹" }, { code: "+31", flag: "🇳🇱" }, { code: "+46", flag: "🇸🇪" },
-  { code: "+45", flag: "🇩🇰" }, { code: "+47", flag: "🇳🇴" }, { code: "+62", flag: "🇮🇩" },
-  { code: "+971", flag: "🇦🇪" }, { code: "+61", flag: "🇦🇺" }, { code: "+81", flag: "🇯🇵" },
-  { code: "+91", flag: "🇮🇳" }, { code: "+55", flag: "🇧🇷" }, { code: "+52", flag: "🇲🇽" },
+const ALL_COUNTRIES = [
+  { code: "+1", flag: "🇺🇸", name: "United States" }, { code: "+1", flag: "🇨🇦", name: "Canada" },
+  { code: "+44", flag: "🇬🇧", name: "United Kingdom" }, { code: "+353", flag: "🇮🇪", name: "Ireland" },
+  { code: "+34", flag: "🇪🇸", name: "Spain" }, { code: "+33", flag: "🇫🇷", name: "France" },
+  { code: "+49", flag: "🇩🇪", name: "Germany" }, { code: "+39", flag: "🇮🇹", name: "Italy" },
+  { code: "+351", flag: "🇵🇹", name: "Portugal" }, { code: "+31", flag: "🇳🇱", name: "Netherlands" },
+  { code: "+32", flag: "🇧🇪", name: "Belgium" }, { code: "+41", flag: "🇨🇭", name: "Switzerland" },
+  { code: "+43", flag: "🇦🇹", name: "Austria" }, { code: "+46", flag: "🇸🇪", name: "Sweden" },
+  { code: "+45", flag: "🇩🇰", name: "Denmark" }, { code: "+47", flag: "🇳🇴", name: "Norway" },
+  { code: "+358", flag: "🇫🇮", name: "Finland" }, { code: "+48", flag: "🇵🇱", name: "Poland" },
+  { code: "+420", flag: "🇨🇿", name: "Czech Republic" }, { code: "+36", flag: "🇭🇺", name: "Hungary" },
+  { code: "+30", flag: "🇬🇷", name: "Greece" }, { code: "+40", flag: "🇷🇴", name: "Romania" },
+  { code: "+359", flag: "🇧🇬", name: "Bulgaria" }, { code: "+385", flag: "🇭🇷", name: "Croatia" },
+  { code: "+386", flag: "🇸🇮", name: "Slovenia" }, { code: "+421", flag: "🇸🇰", name: "Slovakia" },
+  { code: "+370", flag: "🇱🇹", name: "Lithuania" }, { code: "+371", flag: "🇱🇻", name: "Latvia" },
+  { code: "+372", flag: "🇪🇪", name: "Estonia" },
+  { code: "+90", flag: "🇹🇷", name: "Turkey" }, { code: "+7", flag: "🇷🇺", name: "Russia" },
+  { code: "+380", flag: "🇺🇦", name: "Ukraine" },
+  { code: "+971", flag: "🇦🇪", name: "UAE" }, { code: "+966", flag: "🇸🇦", name: "Saudi Arabia" },
+  { code: "+974", flag: "🇶🇦", name: "Qatar" }, { code: "+972", flag: "🇮🇱", name: "Israel" },
+  { code: "+61", flag: "🇦🇺", name: "Australia" }, { code: "+64", flag: "🇳🇿", name: "New Zealand" },
+  { code: "+81", flag: "🇯🇵", name: "Japan" }, { code: "+82", flag: "🇰🇷", name: "South Korea" },
+  { code: "+86", flag: "🇨🇳", name: "China" }, { code: "+852", flag: "🇭🇰", name: "Hong Kong" },
+  { code: "+65", flag: "🇸🇬", name: "Singapore" }, { code: "+60", flag: "🇲🇾", name: "Malaysia" },
+  { code: "+66", flag: "🇹🇭", name: "Thailand" }, { code: "+62", flag: "🇮🇩", name: "Indonesia" },
+  { code: "+63", flag: "🇵🇭", name: "Philippines" }, { code: "+84", flag: "🇻🇳", name: "Vietnam" },
+  { code: "+91", flag: "🇮🇳", name: "India" }, { code: "+92", flag: "🇵🇰", name: "Pakistan" },
+  { code: "+880", flag: "🇧🇩", name: "Bangladesh" },
+  { code: "+55", flag: "🇧🇷", name: "Brazil" }, { code: "+52", flag: "🇲🇽", name: "Mexico" },
+  { code: "+54", flag: "🇦🇷", name: "Argentina" }, { code: "+56", flag: "🇨🇱", name: "Chile" },
+  { code: "+57", flag: "🇨🇴", name: "Colombia" }, { code: "+51", flag: "🇵🇪", name: "Peru" },
+  { code: "+58", flag: "🇻🇪", name: "Venezuela" }, { code: "+593", flag: "🇪🇨", name: "Ecuador" },
+  { code: "+27", flag: "🇿🇦", name: "South Africa" }, { code: "+234", flag: "🇳🇬", name: "Nigeria" },
+  { code: "+254", flag: "🇰🇪", name: "Kenya" }, { code: "+20", flag: "🇪🇬", name: "Egypt" },
+  { code: "+212", flag: "🇲🇦", name: "Morocco" }, { code: "+216", flag: "🇹🇳", name: "Tunisia" },
 ];
 
 const ContactModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
   const [countryCode, setCountryCode] = useState("+1");
   const [submitted, setSubmitted] = useState(false);
+  const [countrySearch, setCountrySearch] = useState("");
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+
+  const selectedCountry = ALL_COUNTRIES.find(c => c.code === countryCode) || ALL_COUNTRIES[0];
+  const filteredCountries = countrySearch
+    ? ALL_COUNTRIES.filter(c => c.name.toLowerCase().includes(countrySearch.toLowerCase()) || c.code.includes(countrySearch))
+    : ALL_COUNTRIES;
 
   if (!open) return null;
 
@@ -152,12 +187,42 @@ const ContactModal = ({ open, onClose }: { open: boolean; onClose: () => void })
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Phone</label>
                 <div className="flex gap-2">
-                  <select value={countryCode} onChange={(e) => setCountryCode(e.target.value)}
-                    className="h-10 rounded-md border border-border bg-secondary/50 px-2 text-sm text-foreground w-24">
-                    {COUNTRY_CODES.map((c) => (
-                      <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                      className="h-10 rounded-md border border-border bg-secondary/50 px-2 text-sm text-foreground w-24 flex items-center gap-1 justify-center"
+                    >
+                      <span>{selectedCountry.flag}</span>
+                      <span className="text-xs">{selectedCountry.code}</span>
+                    </button>
+                    {showCountryDropdown && (
+                      <div className="absolute top-full left-0 mt-1 w-64 max-h-60 overflow-y-auto rounded-lg border border-border bg-card shadow-xl z-50">
+                        <div className="sticky top-0 bg-card p-2 border-b border-border">
+                          <input
+                            type="text"
+                            value={countrySearch}
+                            onChange={(e) => setCountrySearch(e.target.value)}
+                            placeholder="Search country…"
+                            className="w-full rounded-md border border-border bg-secondary/50 px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                            autoFocus
+                          />
+                        </div>
+                        {filteredCountries.map((c, i) => (
+                          <button
+                            key={`${c.code}-${c.name}-${i}`}
+                            type="button"
+                            onClick={() => { setCountryCode(c.code); setShowCountryDropdown(false); setCountrySearch(""); }}
+                            className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-secondary/50 flex items-center gap-2 transition-colors"
+                          >
+                            <span>{c.flag}</span>
+                            <span className="flex-1">{c.name}</span>
+                            <span className="text-muted-foreground text-xs">{c.code}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <Input type="tel" placeholder="Phone number" className="bg-secondary/50 flex-1" />
                 </div>
               </div>
@@ -275,7 +340,7 @@ const PricingSection = () => {
                   <h3 className="text-base font-semibold text-foreground">{plan.name}</h3>
                 </div>
                 <p className="text-xs text-muted-foreground mb-5">{plan.description}</p>
-                <div className="flex items-baseline gap-1 mb-6">
+                <div className="flex items-baseline gap-1 mb-1">
                   {price !== null ? (
                     <>
                       <span className="text-4xl font-bold text-foreground">${price}</span>
@@ -288,6 +353,13 @@ const PricingSection = () => {
                     <span className="text-3xl font-bold text-foreground">Custom</span>
                   )}
                 </div>
+                {annual && price !== null && price > 0 && (
+                  <p className="text-[10px] text-muted-foreground mb-5">${price * 12}/year billed annually</p>
+                )}
+                {!annual && price !== null && price > 0 && (
+                  <p className="text-[10px] text-muted-foreground mb-5">billed monthly</p>
+                )}
+                {(price === null || price === 0) && <div className="mb-5" />}
                 <ul className="space-y-2.5 mb-6 flex-1">
                   {plan.features.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-xs text-muted-foreground">
