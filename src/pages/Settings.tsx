@@ -5,8 +5,23 @@ import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, User, Shield, Trash2, LogOut, Mail, Key } from "lucide-react";
+import { ArrowLeft, User, Shield, Trash2, LogOut, Mail, Key, Zap, Crown, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Progress } from "@/components/ui/progress";
+
+const planLabels: Record<string, string> = {
+  free: "Free",
+  pro: "Pro",
+  super_pro: "Super Pro",
+  enterprise: "Enterprise",
+};
+
+const planColors: Record<string, string> = {
+  free: "text-muted-foreground",
+  pro: "text-primary",
+  super_pro: "text-score-excellent",
+  enterprise: "text-score-excellent",
+};
 
 const Settings = () => {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -18,6 +33,7 @@ const Settings = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [subscription, setSubscription] = useState<any>(null);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/");
@@ -30,6 +46,16 @@ const Settings = () => {
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .then(({ count }) => setTotalAnalyses(count || 0));
+    
+    // Load subscription
+    supabase
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setSubscription(data);
+      });
   }, [user]);
 
   const handlePasswordUpdate = async () => {
@@ -68,6 +94,12 @@ const Settings = () => {
   const isOAuthUser = user.app_metadata?.provider === "google" || user.app_metadata?.providers?.includes("google");
   const createdAt = new Date(user.created_at).toLocaleDateString();
 
+  const plan = subscription?.plan || "free";
+  const creditsTotal = subscription?.credits_total || 5;
+  const creditsUsed = subscription?.credits_used || totalAnalyses;
+  const creditsRemaining = Math.max(0, creditsTotal - creditsUsed);
+  const creditsPercent = creditsTotal > 0 ? Math.min(100, (creditsUsed / creditsTotal) * 100) : 0;
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -78,6 +110,47 @@ const Settings = () => {
 
         <h1 className="text-2xl font-bold text-foreground mb-1">Settings</h1>
         <p className="text-sm text-muted-foreground mb-8">Manage your account and preferences.</p>
+
+        {/* Plan & Credits */}
+        <div className="rounded-xl border border-border bg-card p-6 mb-4">
+          <div className="flex items-center gap-2 mb-4">
+            <Crown className="h-4 w-4 text-primary" />
+            <h2 className="text-sm font-semibold text-foreground">Plan & Credits</h2>
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">Current Plan</span>
+              <span className={`text-sm font-semibold ${planColors[plan]}`}>
+                {plan !== "free" && <Zap className="h-3.5 w-3.5 inline mr-1" />}
+                {planLabels[plan] || plan}
+              </span>
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-muted-foreground">Credits Used</span>
+                <span className="text-sm font-mono text-foreground">
+                  {creditsUsed} / {creditsTotal === 999 ? "∞" : creditsTotal}
+                </span>
+              </div>
+              <Progress value={creditsTotal === 999 ? 5 : creditsPercent} className="h-2" />
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-xs text-muted-foreground">
+                  {creditsTotal === 999 ? "Unlimited" : `${creditsRemaining} remaining`}
+                </span>
+                {subscription?.billing_period_end && (
+                  <span className="text-xs text-muted-foreground">
+                    Renews {new Date(subscription.billing_period_end).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+            </div>
+            {plan === "free" && (
+              <Button variant="hero" size="sm" className="w-full" onClick={() => navigate("/#pricing")}>
+                <CreditCard className="h-3.5 w-3.5 mr-1" /> Upgrade to Pro
+              </Button>
+            )}
+          </div>
+        </div>
 
         {/* Account Info */}
         <div className="rounded-xl border border-border bg-card p-6 mb-4">
@@ -121,25 +194,13 @@ const Settings = () => {
                 </Button>
               ) : (
                 <div className="space-y-3 max-w-sm">
-                  <Input
-                    type="password"
-                    placeholder="New password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                  />
-                  <Input
-                    type="password"
-                    placeholder="Confirm new password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                  />
+                  <Input type="password" placeholder="New password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+                  <Input type="password" placeholder="Confirm new password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
                   <div className="flex gap-2">
                     <Button variant="hero" size="sm" onClick={handlePasswordUpdate} disabled={updatingPassword}>
                       {updatingPassword ? "Updating…" : "Update Password"}
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => { setChangingPassword(false); setNewPassword(""); setConfirmPassword(""); }}>
-                      Cancel
-                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => { setChangingPassword(false); setNewPassword(""); setConfirmPassword(""); }}>Cancel</Button>
                   </div>
                 </div>
               )}
@@ -166,9 +227,7 @@ const Settings = () => {
                 Are you sure? This will permanently delete <strong>{totalAnalyses} analyses</strong> and all favorites.
               </p>
               <div className="flex gap-2">
-                <Button variant="destructive" size="sm" onClick={handleDeleteAllAnalyses}>
-                  Yes, Delete Everything
-                </Button>
+                <Button variant="destructive" size="sm" onClick={handleDeleteAllAnalyses}>Yes, Delete Everything</Button>
                 <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
               </div>
             </div>

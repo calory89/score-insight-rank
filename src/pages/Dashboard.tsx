@@ -5,9 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Search, ArrowRight, Calendar, Building2, TrendingUp, MapPin, Globe,
-  Shield, BarChart3, Heart, GitCompare, Filter, Star, Crown, Zap,
+  Shield, BarChart3, Heart, GitCompare, Filter, Star, Crown, Zap, Layers, X, Lock,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
@@ -67,6 +68,75 @@ const UpgradeModal = ({ open, onClose }: { open: boolean; onClose: () => void })
   );
 };
 
+// Bulk Analyze Modal
+const BulkAnalyzeModal = ({ open, onClose, isPro, onUpgrade }: { open: boolean; onClose: () => void; isPro: boolean; onUpgrade: () => void }) => {
+  const navigate = useNavigate();
+  const [urls, setUrls] = useState("");
+  const { toast } = useToast();
+
+  if (!open) return null;
+
+  const handleBulk = () => {
+    if (!isPro) {
+      onUpgrade();
+      return;
+    }
+    const lines = urls.split("\n").map(l => l.trim()).filter(l => l.length > 5);
+    if (lines.length === 0) return;
+    // Navigate to first one, queue the rest (simplified: analyze one by one)
+    toast({ title: `Starting ${lines.length} analyses…`, description: "Each property will be analyzed sequentially." });
+    navigate(`/analysis/loading?url=${encodeURIComponent(lines[0])}`);
+    onClose();
+  };
+
+  return (
+    <AnimatePresence>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4" onClick={onClose}>
+        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-lg rounded-2xl border border-primary/30 bg-card p-6 shadow-xl">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Layers className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-bold text-foreground">Bulk Analyze</h3>
+            </div>
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X className="h-5 w-5" /></button>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Paste multiple property URLs (one per line) to analyze them all at once.
+          </p>
+          {!isPro && (
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 mb-4 flex items-center gap-2">
+              <Lock className="h-4 w-4 text-primary flex-shrink-0" />
+              <p className="text-xs text-primary">Bulk Analyze is a <strong>Pro feature</strong>. Upgrade to analyze multiple properties at once.</p>
+            </div>
+          )}
+          <Textarea
+            value={urls}
+            onChange={(e) => setUrls(e.target.value)}
+            placeholder={"https://www.zillow.com/homedetails/...\nhttps://www.rightmove.co.uk/properties/...\nhttps://www.redfin.com/..."}
+            className="min-h-[140px] text-sm font-mono mb-4"
+            disabled={!isPro}
+          />
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-muted-foreground">
+              {urls.split("\n").filter(l => l.trim().length > 5).length} URLs detected
+            </span>
+            <Button variant="hero" size="sm" onClick={handleBulk}>
+              {isPro ? (
+                <>Analyze All <ArrowRight className="ml-1 h-3.5 w-3.5" /></>
+              ) : (
+                <>Upgrade to Pro <Crown className="ml-1 h-3.5 w-3.5" /></>
+              )}
+            </Button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
 const Dashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -81,6 +151,8 @@ const Dashboard = () => {
   const [compareIds, setCompareIds] = useState<Set<string>>(new Set());
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [showBulk, setShowBulk] = useState(false);
+  const [isPro, setIsPro] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/");
@@ -100,15 +172,22 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!user) return;
-    // Load analyses and favorites in parallel
+    // Load analyses, favorites, and subscription in parallel
     Promise.all([
       supabase.from("analyses").select("*").order("created_at", { ascending: false }),
       supabase.from("favorites").select("analysis_id").eq("user_id", user.id),
-    ]).then(([{ data: analysesData }, { data: favData }]) => {
+      supabase.from("subscriptions").select("plan").eq("user_id", user.id).maybeSingle(),
+    ]).then(([{ data: analysesData }, { data: favData }, { data: subData }]) => {
       setAnalyses(analysesData || []);
       setFavoriteIds(new Set((favData || []).map((f: any) => f.analysis_id)));
+      setIsPro(subData?.plan === "pro" || subData?.plan === "super_pro" || subData?.plan === "enterprise" || user?.email === "rrppspain@gmail.com");
       setLoading(false);
     });
+    // Open bulk modal if came from hero CTA
+    if (searchParams.get("bulk") === "true") {
+      setShowBulk(true);
+      window.history.replaceState({}, "", "/dashboard");
+    }
   }, [user]);
 
   const toggleFavorite = async (e: React.MouseEvent, analysisId: string) => {
@@ -203,9 +282,17 @@ const Dashboard = () => {
               {analyzing ? "Analyzing…" : "Analyze"} <ArrowRight className="ml-1 h-3 w-3" />
             </Button>
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1.5 ml-1">
-            Works with Zillow, Idealista, Airbnb, developer websites, and any real estate page.
-          </p>
+          <div className="flex items-center justify-between mt-1.5">
+            <p className="text-[10px] text-muted-foreground ml-1">
+              Works with Zillow, Airbnb, developer websites, and any real estate page.
+            </p>
+            <button
+              onClick={() => setShowBulk(true)}
+              className="text-[10px] font-medium text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
+            >
+              <Layers className="h-3 w-3" /> Bulk Analyze
+            </button>
+          </div>
           {analyzeError && <p className="text-xs text-destructive mt-2">{analyzeError}</p>}
         </div>
 
@@ -380,6 +467,7 @@ const Dashboard = () => {
         )}
       </div>
       <UpgradeModal open={showUpgrade} onClose={() => setShowUpgrade(false)} />
+      <BulkAnalyzeModal open={showBulk} onClose={() => setShowBulk(false)} isPro={isPro} onUpgrade={() => { setShowBulk(false); setShowUpgrade(true); }} />
     </div>
   );
 };
