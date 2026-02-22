@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import AdminVisitsPanel from "@/components/AdminVisitsPanel";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -499,6 +500,9 @@ const Admin = () => {
           </div>
         ) : (
           <>
+            {/* Visits Analytics Panel */}
+            <AdminVisitsPanel />
+
             {/* Batch Analysis Panel */}
             <BatchAnalysisPanel />
 
