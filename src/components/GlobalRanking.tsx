@@ -54,11 +54,11 @@ const RankingSearchBar = () => {
           />
         </div>
         <Button variant="hero" size="sm" className="rounded-lg px-4 flex-shrink-0" onClick={handleAnalyze}>
-          Analyze <ArrowRight className="ml-1 h-3 w-3" />
+          Analyze any listing <ArrowRight className="ml-1 h-3 w-3" />
         </Button>
       </div>
       <p className="text-[10px] text-muted-foreground text-center">
-        No sponsors. No ads. Every ranking is created by real user searches. Paste any URL and contribute.
+        Save time and money. Get a score of any real estate listing.
       </p>
     </div>
   );
@@ -174,9 +174,11 @@ const GlobalRanking = () => {
                 <div
                   key={prop.id}
                   onClick={() => navigate(`/analysis/${prop.id}`)}
-                  className="grid grid-cols-[1.5rem_1fr_auto_auto_auto] sm:grid-cols-12 gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors items-center cursor-pointer group"
+                  className="grid grid-cols-[1.5rem_1fr] sm:grid-cols-12 gap-x-2 sm:gap-2 px-3 sm:px-4 py-2.5 border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors items-center cursor-pointer group"
                 >
-                  <div className="font-mono text-[11px] text-muted-foreground">{i + 1}</div>
+                  {/* Rank */}
+                  <div className="font-mono text-[11px] text-muted-foreground row-span-2 sm:row-span-1 self-center">{i + 1}</div>
+                  {/* Location - top row on mobile */}
                   <div className="flex items-center gap-1.5 min-w-0 sm:col-span-5">
                     <div className="min-w-0 flex-1">
                       <span className="text-xs font-medium text-foreground truncate block">
@@ -185,14 +187,13 @@ const GlobalRanking = () => {
                       <span className="text-[10px] text-muted-foreground">{prop.city}, {prop.country}</span>
                     </div>
                   </div>
-                  <div className="sm:col-span-2 text-center">
-                    <span className={`inline-flex items-center justify-center h-6 w-10 rounded font-mono text-xs font-semibold ${scoreBg(prop.global_score || 0)} ${scoreColor(prop.global_score || 0)}`}>
+                  {/* Score + Price + Verdict - bottom row on mobile, inline on desktop */}
+                  <div className="col-start-2 sm:col-span-6 sm:contents flex items-center gap-2 mt-0.5 sm:mt-0">
+                    <span className={`inline-flex items-center justify-center h-6 w-10 rounded font-mono text-xs font-semibold ${scoreBg(prop.global_score || 0)} ${scoreColor(prop.global_score || 0)} sm:col-span-2 sm:mx-auto`}>
                       {prop.global_score}
                     </span>
-                  </div>
-                  <div className="sm:col-span-2 text-center font-mono text-[10px] sm:text-xs text-muted-foreground sm:text-foreground truncate max-w-[4.5rem] sm:max-w-none">{prop.price || "—"}</div>
-                  <div className="sm:col-span-2 text-right flex items-center justify-end gap-1.5">
-                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                    <span className="font-mono text-[11px] sm:text-xs text-muted-foreground sm:text-foreground truncate sm:col-span-2 sm:text-center">{prop.price || "—"}</span>
+                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full sm:col-span-2 sm:text-right ${
                       prop.verdict === "Exceptional" ? "text-score-excellent bg-score-excellent/10" :
                       prop.verdict === "Strong" ? "text-score-good bg-score-good/10" :
                       prop.verdict === "Moderate" ? "text-score-average bg-score-average/10" :
@@ -200,7 +201,7 @@ const GlobalRanking = () => {
                     }`}>
                       {prop.verdict || "—"}
                     </span>
-                    <ArrowRight className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
+                    <ArrowRight className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block sm:col-span-0" />
                   </div>
                 </div>
               ))
