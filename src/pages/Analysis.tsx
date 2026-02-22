@@ -490,11 +490,13 @@ const Analysis = () => {
           <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => {
             if (fromBulk) {
               navigate("/dashboard?bulk=true&restore=true");
+            } else if (window.history.length > 1) {
+              window.history.back();
             } else {
               navigate("/dashboard");
             }
           }}>
-            <ArrowLeft className="h-4 w-4 mr-1" /> {fromBulk ? "Back to Bulk Results" : "Back to Dashboard"}
+            <ArrowLeft className="h-4 w-4 mr-1" /> {fromBulk ? "Back to Bulk Results" : "Back"}
           </Button>
           <div className="flex items-center gap-2">
             {d?.url && d.url !== "manual-entry" && (
@@ -1277,6 +1279,23 @@ const Analysis = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Floating Visit Property CTA */}
+      {d?.url && d.url !== "manual-entry" && (
+        <motion.button
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 1 }}
+          onClick={() => {
+            let url = d.url;
+            if (url && !url.startsWith("http")) url = "https://" + url;
+            window.open(url, "_blank");
+          }}
+          className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 bg-gradient-cta text-primary-foreground px-5 py-3 rounded-full shadow-xl hover:shadow-2xl hover:brightness-110 transition-all flex items-center gap-2 text-sm font-semibold"
+        >
+          <Eye className="h-4 w-4" /> Visit Property
+        </motion.button>
+      )}
     </div>
   );
 };

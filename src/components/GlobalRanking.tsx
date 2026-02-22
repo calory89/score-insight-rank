@@ -106,42 +106,25 @@ const GlobalRanking = () => {
     : [...new Set(rankings.filter((r) => r.country === selectedCountry).map((r) => r.city).filter(Boolean))] as string[];
 
   return (
-    <section id="rankings" className="py-24 md:py-32 relative">
+    <section id="rankings" className="py-10 md:py-16 relative">
       <div className="absolute inset-0 bg-gradient-hero opacity-30" />
       <div className="container relative mx-auto px-4">
         {/* Search Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="max-w-2xl mx-auto mb-10"
-        >
+        <div className="max-w-2xl mx-auto mb-6">
           <RankingSearchBar />
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-6"
-        >
-          <div className="inline-flex items-center gap-2 mb-4">
-            <Globe className="h-4 w-4 text-muted-foreground" />
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Live Global Rankings</span>
-          </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-            Top Performing Properties Worldwide
+        <div className="text-center mb-4">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1">
+            Top Properties Worldwide
           </h2>
-          <p className="text-sm text-muted-foreground max-w-lg mx-auto mb-1">
-            Based on thousands of analyses generated today worldwide. Updated in real-time.
+          <p className="text-[11px] text-muted-foreground">
+            Real-time rankings. No sponsors. Data-driven.
           </p>
-          <p className="text-xs text-muted-foreground">
-            No sponsored placements. Rankings are purely data-driven.
-          </p>
-        </motion.div>
+        </div>
 
         {/* Filters */}
-        <div className="flex items-center justify-center gap-2 mb-10 flex-wrap">
+        <div className="flex items-center justify-center gap-2 mb-4 flex-wrap">
           <select
             value={selectedCountry}
             onChange={(e) => {
@@ -170,7 +153,7 @@ const GlobalRanking = () => {
         {/* Rankings Table */}
         <div className="max-w-3xl mx-auto">
           <div className="rounded-xl border border-border bg-card overflow-hidden">
-            <div className="hidden sm:grid grid-cols-12 gap-4 px-5 py-3 border-b border-border text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2 border-b border-border text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
               <div className="col-span-1">#</div>
               <div className="col-span-5">Location</div>
               <div className="col-span-2 text-center">Score</div>
@@ -187,34 +170,29 @@ const GlobalRanking = () => {
                 No analyses found{selectedCountry !== "All" ? ` in ${selectedCountry}` : ""}. Be the first!
               </div>
             ) : (
-              filtered.slice(0, 20).map((prop, i) => (
-                <motion.div
+              filtered.slice(0, 30).map((prop, i) => (
+                <div
                   key={prop.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.05 }}
                   onClick={() => navigate(`/analysis/${prop.id}`)}
-                  className="grid grid-cols-[2rem_1fr_auto_auto] sm:grid-cols-12 gap-2 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors items-center cursor-pointer group"
+                  className="grid grid-cols-[1.5rem_1fr_auto_auto] sm:grid-cols-12 gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors items-center cursor-pointer group"
                 >
-                  <div className="font-mono text-xs sm:text-sm text-muted-foreground">{i + 1}</div>
-                  <div className="flex items-center gap-2 min-w-0 sm:col-span-5">
-                    <MapPin className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 hidden sm:block" />
+                  <div className="font-mono text-[11px] text-muted-foreground">{i + 1}</div>
+                  <div className="flex items-center gap-1.5 min-w-0 sm:col-span-5">
                     <div className="min-w-0 flex-1">
-                      <span className="text-xs sm:text-sm font-medium text-foreground truncate block">
+                      <span className="text-xs font-medium text-foreground truncate block">
                         {prop.address || `${prop.city}, ${prop.country}`}
                       </span>
-                      <span className="text-[10px] sm:text-[11px] text-muted-foreground">{prop.city}, {prop.country}</span>
+                      <span className="text-[10px] text-muted-foreground">{prop.city}, {prop.country}</span>
                     </div>
                   </div>
                   <div className="sm:col-span-2 text-center">
-                    <span className={`inline-flex items-center justify-center h-7 w-12 rounded-md font-mono text-sm font-semibold ${scoreBg(prop.global_score || 0)} ${scoreColor(prop.global_score || 0)}`}>
+                    <span className={`inline-flex items-center justify-center h-6 w-10 rounded font-mono text-xs font-semibold ${scoreBg(prop.global_score || 0)} ${scoreColor(prop.global_score || 0)}`}>
                       {prop.global_score}
                     </span>
                   </div>
-                  <div className="hidden sm:block sm:col-span-2 text-center font-mono text-sm text-foreground truncate">{prop.price || "—"}</div>
-                  <div className="sm:col-span-2 text-right flex items-center justify-end gap-2">
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                  <div className="hidden sm:block sm:col-span-2 text-center font-mono text-xs text-foreground truncate">{prop.price || "—"}</div>
+                  <div className="sm:col-span-2 text-right flex items-center justify-end gap-1.5">
+                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
                       prop.verdict === "Exceptional" ? "text-score-excellent bg-score-excellent/10" :
                       prop.verdict === "Strong" ? "text-score-good bg-score-good/10" :
                       prop.verdict === "Moderate" ? "text-score-average bg-score-average/10" :
@@ -222,9 +200,9 @@ const GlobalRanking = () => {
                     }`}>
                       {prop.verdict || "—"}
                     </span>
-                    <ArrowRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
+                    <ArrowRight className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block" />
                   </div>
-                </motion.div>
+                </div>
               ))
             )}
           </div>
