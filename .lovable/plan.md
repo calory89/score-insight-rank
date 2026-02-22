@@ -1,32 +1,67 @@
 
-# Fix: "Analysis Failed" Timeout Error
+
+# Fix: Show completed analysis instead of error when backend succeeds but client times out
 
 ## Problem
-When analyzing certain Zillow properties, the analysis takes longer than the 90-second client-side safety timeout. The edge function involves multiple steps (scraping with retries, multi-property detection, AI analysis) that can exceed this limit, especially for Zillow pages that are JavaScript-heavy.
+The edge function successfully completes the property analysis and saves it to the database, but the client-side HTTP connection times out before receiving the response. The user sees "Analysis Failed" even though their report is ready in the dashboard.
 
-## Root Cause
-- The client (`Analysis.tsx` line 349) has a **90-second safety timeout** that shows "Analysis is taking longer than expected"
-- The edge function can take up to **150+ seconds** when:
-  - First scrape attempt fails (45s timeout)
-  - Second scrape retry runs (60s timeout)  
-  - Multi-property detection AI call runs (~10s)
-  - Main AI analysis runs (~15-30s)
-- Total worst case: ~150 seconds, well above the 90s client limit
+This happens because:
+1. The edge function takes 30-90+ seconds to complete
+2. The Supabase client or browser drops the connection before getting the response
+3. The `catch` block sets `analyzeError` and shows the error screen
+4. The analysis is actually saved in the database
 
 ## Solution
 
-### 1. Increase client-side safety timeout
-- **File**: `src/pages/Analysis.tsx`
-- Change the safety timeout from **90 seconds to 180 seconds** (3 minutes)
-- This gives the edge function enough time to complete even with scrape retries
+### Modify the error handler in `src/pages/Analysis.tsx`
 
-### 2. Update the timeout error message
-- Make the error message more helpful, suggesting the user try again or that the property site may be difficult to access
+When `runAnalysis` catches an error, **before showing the error screen**, check the database for a completed analysis matching the URL. If found, navigate to it instead of showing the error.
 
-## Technical Details
+**Changes to `runAnalysis` function (around line 444-461):**
 
-**Change in `src/pages/Analysis.tsx` (line ~349-351):**
-- `setTimeout(() => { ... }, 90000)` changes to `setTimeout(() => { ... }, 180000)`
-- Update error message to: "Analysis is taking longer than expected. The property website may be slow or protected. Please try again."
+```typescript
+const runAnalysis = async (body: any) => {
+  setAnalyzing(true);
+  setAnalyzeError("");
+  setScrapeFailed(false);
+  setFomoStep(0);
+  try {
+    const { data: result, error } = await supabase.functions.invoke("analyze-property", { body });
+    if (error) throw error;
+    if (result?.scrape_failed) { setScrapeFailed(true); setAnalyzing(false); return; }
+    if (result?.error) throw new Error(result.error);
+    if (result?.listing_type) setListingType(result.listing_type);
+    if (result?.data?.id) navigate(`/analysis/${result.data.id}`, { replace: true });
+  } catch (e: any) {
+    // CHECK DB FIRST: the analysis may have completed despite the client error
+    if (body.url && body.url !== "manual-entry") {
+      const normalizedUrl = body.url.split("#")[0].replace(/\/$/, "");
+      const { data: saved } = await supabase
+        .from("analyses")
+        .select("id")
+        .ilike("url", `${normalizedUrl}%`)
+        .not("global_score", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (saved && saved.length > 0) {
+        // Analysis completed! Navigate to it
+        setAnalyzing(false);
+        navigate(`/analysis/${saved[0].id}`, { replace: true });
+        return;
+      }
+    }
+    // Only show error if no saved result was found
+    setAnalyzeError(e.message || "Analysis failed");
+    setAnalyzing(false);
+    setSubmittingFallback(false);
+  }
+};
+```
 
-This is a minimal, targeted fix that addresses the timeout without needing to restructure the edge function architecture.
+This is a minimal, targeted fix. When the client connection fails, it queries the database for a matching completed analysis. If found, the user is redirected to their report. If not found, the error is shown as before.
+
+## Why this works
+- The edge function saves the analysis to the database before returning the HTTP response
+- Even if the HTTP response is lost, the data is already persisted
+- A quick database query (milliseconds) confirms whether the work was done
+
