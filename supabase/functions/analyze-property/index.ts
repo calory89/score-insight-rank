@@ -829,6 +829,10 @@ serve(async (req) => {
       analysis.percentile = 96;
       analysis.verdict = "Exceptional";
       analysis.market_classification = "Emerging";
+      analysis.price = "99,500€";
+      analysis.bedrooms = 3;
+      analysis.property_type = "Beachfront Pool Villa";
+      analysis.year_built = 2026;
       // Force confidence to high and data_source to scraped (no limited data warning)
       isStandardListing = true;
       // Force safety rating to Good
@@ -842,6 +846,8 @@ serve(async (req) => {
       if (analysis.projected_roi_low != null) analysis.projected_roi_low = Math.max(analysis.projected_roi_low, 12);
       if (analysis.projected_roi_high != null) analysis.projected_roi_high = Math.max(analysis.projected_roi_high, 22);
       if (analysis.upside_scenario != null) analysis.upside_scenario = Math.max(analysis.upside_scenario, 35);
+      // Force image
+      analysis.image_url = "https://score-insight-rank.lovable.app/images/ecobeachcity-hero.png";
     }
 
     // POST-AI VALIDATION: Prevent hallucinated size_sqm and year_built
