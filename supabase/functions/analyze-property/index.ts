@@ -577,6 +577,16 @@ serve(async (req) => {
       isEstimated = result.isEstimated;
 
       if (result.isEstimated) {
+        // Log scrape failure
+        try {
+          await supabase.from("error_logs").insert({
+            user_id: user.id,
+            user_email: user.email,
+            url: url,
+            error_type: "scrape_failed",
+            error_message: "Could not access listing page. The site may be protected or temporarily unavailable.",
+          });
+        } catch {}
         // Trigger fallback for ALL sites when scrape fails - don't hallucinate data
         return new Response(JSON.stringify({ success: false, scrape_failed: true, error: "Could not access listing page. The site may be protected or temporarily unavailable." }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -847,14 +857,23 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again shortly." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      const errorMsg = response.status === 429 ? "Rate limit exceeded. Please try again shortly."
+        : response.status === 402 ? "AI credits depleted."
+        : "AI analysis failed";
+      
+      // Log AI errors
+      try {
+        await supabase.from("error_logs").insert({
+          user_id: user.id, user_email: user.email, url,
+          error_type: response.status === 429 ? "rate_limit" : response.status === 402 ? "credits_depleted" : "ai_error",
+          error_message: errorMsg,
+          metadata: { status: response.status },
         });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits depleted." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      } catch {}
+
+      if (response.status === 429 || response.status === 402) {
+        return new Response(JSON.stringify({ error: errorMsg }), {
+          status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const t = await response.text();
@@ -1082,8 +1101,43 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("Error:", e);
+    const errorMessage = e instanceof Error ? e.message : "Unknown error";
+    
+    // Log error to error_logs table
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const logClient = createClient(supabaseUrl, supabaseKey);
+      
+      // Try to extract user info and URL from the request context
+      let userId: string | null = null;
+      let userEmail: string | null = null;
+      let requestUrl: string | null = null;
+      try {
+        const authHeader = req.headers.get("Authorization");
+        if (authHeader) {
+          const authClient = createClient(supabaseUrl, supabaseKey, {
+            global: { headers: { Authorization: authHeader } },
+          });
+          const { data: { user } } = await authClient.auth.getUser();
+          if (user) { userId = user.id; userEmail = user.email || null; }
+        }
+      } catch {}
+      
+      await logClient.from("error_logs").insert({
+        user_id: userId,
+        user_email: userEmail,
+        url: undefined, // url may not be in scope in outer catch
+        error_type: "analysis_error",
+        error_message: errorMessage,
+        metadata: { stack: e instanceof Error ? e.stack : undefined },
+      });
+    } catch (logErr) {
+      console.error("Failed to log error:", logErr);
+    }
+    
     return new Response(
-      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      JSON.stringify({ error: errorMessage }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
