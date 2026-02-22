@@ -147,14 +147,14 @@ const GlobalRanking = () => {
                   className="flex sm:grid sm:grid-cols-12 gap-3 sm:gap-4 px-4 sm:px-5 py-3 sm:py-4 border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors items-center cursor-pointer group"
                 >
                   <div className="hidden sm:block sm:col-span-1 font-mono text-sm text-muted-foreground">{i + 1}</div>
-                  <div className="flex-1 sm:col-span-5 flex items-center gap-2 min-w-0">
-                    <span className="sm:hidden font-mono text-xs text-muted-foreground">{i + 1}.</span>
+                  <div className="flex-1 sm:col-span-5 flex items-center gap-2 min-w-0 overflow-hidden">
+                    <span className="sm:hidden font-mono text-xs text-muted-foreground flex-shrink-0">{i + 1}.</span>
                     <MapPin className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0 hidden sm:block" />
-                    <div className="min-w-0">
-                      <span className="text-sm font-medium text-foreground truncate block">
+                    <div className="min-w-0 flex-1">
+                      <span className="text-xs sm:text-sm font-medium text-foreground truncate block">
                         {prop.address || `${prop.city}, ${prop.country}`}
                       </span>
-                      <span className="text-[11px] text-muted-foreground">{prop.city}, {prop.country}</span>
+                      <span className="text-[10px] sm:text-[11px] text-muted-foreground">{prop.city}, {prop.country}</span>
                     </div>
                   </div>
                   <div className="sm:col-span-2 text-center">

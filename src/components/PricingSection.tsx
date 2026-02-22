@@ -4,10 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Check, Zap, Crown, Building2, Mail, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginGateModal from "@/components/LoginGateModal";
-import { toast } from "@/hooks/use-toast";
+import StripeCheckoutOverlay from "@/components/StripeCheckoutOverlay";
 
 // Stripe price IDs
 const STRIPE_PRICES = {
@@ -257,16 +256,15 @@ const PricingSection = () => {
   const [annual, setAnnual] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
   const [loginGateOpen, setLoginGateOpen] = useState(false);
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [checkoutPlan, setCheckoutPlan] = useState<typeof plans[0] | null>(null);
   const { user } = useAuth();
 
-  const handleCheckout = async (plan: typeof plans[0]) => {
+  const handleCheckout = (plan: typeof plans[0]) => {
     if (plan.isContact) {
       setContactOpen(true);
       return;
     }
     if (!plan.stripePriceMonthly && !plan.stripePriceAnnual) {
-      // Free plan — just scroll to hero
       document.querySelector("input[type='url']")?.scrollIntoView({ behavior: "smooth" });
       return;
     }
@@ -274,29 +272,12 @@ const PricingSection = () => {
       setLoginGateOpen(true);
       return;
     }
-
-    const priceId = annual ? plan.stripePriceAnnual : plan.stripePriceMonthly;
-    if (!priceId) return;
-
-    setLoadingPlan(plan.name);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: { priceId },
-      });
-      if (error) throw error;
-      if (data?.url) {
-        // Open in centered popup window for less friction
-        const w = 500, h = 700;
-        const left = (window.innerWidth - w) / 2 + window.screenX;
-        const top = (window.innerHeight - h) / 2 + window.screenY;
-        window.open(data.url, "stripe-checkout", `width=${w},height=${h},left=${left},top=${top},scrollbars=yes`);
-      }
-    } catch (e: any) {
-      toast({ title: "Error", description: e.message || "Could not start checkout", variant: "destructive" });
-    } finally {
-      setLoadingPlan(null);
-    }
+    setCheckoutPlan(plan);
   };
+
+  const checkoutPriceId = checkoutPlan
+    ? (annual ? checkoutPlan.stripePriceAnnual : checkoutPlan.stripePriceMonthly)
+    : null;
 
   return (
     <section id="pricing" className="py-24 md:py-32 relative">
@@ -373,9 +354,8 @@ const PricingSection = () => {
                   ))}
                 </ul>
                 <Button variant={plan.ctaVariant} className="w-full mt-auto"
-                  disabled={loadingPlan === plan.name}
                   onClick={() => handleCheckout(plan)}>
-                  {loadingPlan === plan.name ? "Loading…" : plan.cta}
+                  {plan.cta}
                 </Button>
               </motion.div>
             );
@@ -389,6 +369,15 @@ const PricingSection = () => {
 
       <ContactModal open={contactOpen} onClose={() => setContactOpen(false)} />
       <LoginGateModal open={loginGateOpen} onClose={() => setLoginGateOpen(false)} onSuccess={() => setLoginGateOpen(false)} />
+      {checkoutPriceId && checkoutPlan && (
+        <StripeCheckoutOverlay
+          open={!!checkoutPriceId}
+          onClose={() => setCheckoutPlan(null)}
+          priceId={checkoutPriceId}
+          planName={checkoutPlan.name}
+          features={checkoutPlan.features}
+        />
+      )}
     </section>
   );
 };
