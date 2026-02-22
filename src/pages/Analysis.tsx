@@ -454,6 +454,22 @@ const Analysis = () => {
       if (result?.listing_type) setListingType(result.listing_type);
       if (result?.data?.id) navigate(`/analysis/${result.data.id}`, { replace: true });
     } catch (e: any) {
+      // CHECK DB FIRST: the analysis may have completed despite the client error
+      if (body.url && body.url !== "manual-entry") {
+        const normalizedUrl = body.url.split("#")[0].replace(/\/$/, "");
+        const { data: saved } = await supabase
+          .from("analyses")
+          .select("id")
+          .ilike("url", `${normalizedUrl}%`)
+          .not("global_score", "is", null)
+          .order("created_at", { ascending: false })
+          .limit(1);
+        if (saved && saved.length > 0) {
+          setAnalyzing(false);
+          navigate(`/analysis/${saved[0].id}`, { replace: true });
+          return;
+        }
+      }
       setAnalyzeError(e.message || "Analysis failed");
       setAnalyzing(false);
       setSubmittingFallback(false);
