@@ -28,7 +28,8 @@ const scoreBg = (v: number) => {
   return "bg-score-poor";
 };
 const verdictColor = (v: string) => {
-  if (v === "Strong") return "text-score-excellent";
+  if (v === "Exceptional") return "text-score-excellent";
+  if (v === "Strong") return "text-score-good";
   if (v === "Moderate") return "text-score-average";
   return "text-score-poor";
 };

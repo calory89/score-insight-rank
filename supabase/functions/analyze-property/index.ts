@@ -723,6 +723,15 @@ serve(async (req) => {
     analysis.liquidity_outlook = clampPct(analysis.liquidity_outlook, 0, 100);
     analysis.percentile = clampPct(analysis.percentile, 0, 100);
 
+    // ENFORCE VERDICT CONSISTENCY: verdict MUST match global_score to avoid confusion
+    const gs = analysis.global_score;
+    if (gs != null) {
+      if (gs >= 85) analysis.verdict = "Exceptional";
+      else if (gs >= 70) analysis.verdict = "Strong";
+      else if (gs >= 50) analysis.verdict = "Moderate";
+      else analysis.verdict = "Risky";
+    }
+
     // SPECIAL EXCEPTION: ecobeachcity.com — boosted scores for testing/demo
     if (url && url.toLowerCase().includes("ecobeachcity.com")) {
       analysis.global_score = 92;

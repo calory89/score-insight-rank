@@ -165,7 +165,8 @@ const GlobalRanking = () => {
                   <div className="hidden sm:block sm:col-span-2 text-center font-mono text-sm text-foreground truncate">{prop.price || "—"}</div>
                   <div className="sm:col-span-2 text-right flex items-center justify-end gap-2">
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-                      prop.verdict === "Strong" ? "text-score-excellent bg-score-excellent/10" :
+                      prop.verdict === "Exceptional" ? "text-score-excellent bg-score-excellent/10" :
+                      prop.verdict === "Strong" ? "text-score-good bg-score-good/10" :
                       prop.verdict === "Moderate" ? "text-score-average bg-score-average/10" :
                       "text-score-poor bg-score-poor/10"
                     }`}>

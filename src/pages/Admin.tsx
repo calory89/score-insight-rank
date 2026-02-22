@@ -5,11 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Users, BarChart3, Globe, Search, ChevronDown, ChevronUp,
   Calendar, MapPin, TrendingUp, Shield, ArrowLeft, Activity,
-  Mail, Clock, Hash, Eye,
+  Mail, Clock, Hash, Eye, Zap, Loader2, CheckCircle2, XCircle,
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 const ADMIN_EMAIL = "rrppspain@gmail.com";
 
@@ -41,6 +43,124 @@ const scoreColor = (v: number) => {
   return "text-score-poor";
 };
 
+interface BatchJob {
+  url: string;
+  status: "pending" | "running" | "done" | "error";
+  analysisId?: string;
+  error?: string;
+  score?: number;
+}
+
+const BatchAnalysisPanel = () => {
+  const [urlText, setUrlText] = useState("");
+  const [jobs, setJobs] = useState<BatchJob[]>([]);
+  const [running, setRunning] = useState(false);
+  const navigate = useNavigate();
+
+  const startBatch = async () => {
+    const urls = urlText
+      .split(/[\n,]+/)
+      .map(u => u.trim())
+      .filter(u => u.length > 5 && (u.startsWith("http://") || u.startsWith("https://")));
+
+    if (urls.length === 0) {
+      toast({ title: "No valid URLs", description: "Paste URLs (one per line or comma-separated)", variant: "destructive" });
+      return;
+    }
+
+    const initialJobs: BatchJob[] = urls.map(url => ({ url, status: "pending" }));
+    setJobs(initialJobs);
+    setRunning(true);
+
+    // Run sequentially to avoid rate limits
+    for (let i = 0; i < initialJobs.length; i++) {
+      setJobs(prev => prev.map((j, idx) => idx === i ? { ...j, status: "running" } : j));
+
+      try {
+        const { data, error } = await supabase.functions.invoke("analyze-property", {
+          body: { url: initialJobs[i].url },
+        });
+
+        if (error) throw error;
+        if (data?.scrape_failed) throw new Error("Scrape failed");
+        if (data?.error) throw new Error(data.error);
+
+        setJobs(prev => prev.map((j, idx) =>
+          idx === i ? { ...j, status: "done", analysisId: data.data?.id, score: data.data?.global_score } : j
+        ));
+      } catch (e: any) {
+        setJobs(prev => prev.map((j, idx) =>
+          idx === i ? { ...j, status: "error", error: e.message || "Failed" } : j
+        ));
+      }
+    }
+    setRunning(false);
+    toast({ title: "Batch complete", description: `${initialJobs.length} URLs processed` });
+  };
+
+  const doneCount = jobs.filter(j => j.status === "done").length;
+  const errorCount = jobs.filter(j => j.status === "error").length;
+
+  return (
+    <div className="rounded-2xl border border-primary/20 bg-card p-6 mb-8">
+      <div className="flex items-center gap-2 mb-4">
+        <Zap className="h-5 w-5 text-primary" />
+        <h2 className="text-base font-semibold text-foreground">Batch Analysis</h2>
+        <span className="text-[10px] text-primary bg-primary/10 px-2 py-0.5 rounded-full font-medium uppercase tracking-wider">Pro</span>
+      </div>
+      <p className="text-xs text-muted-foreground mb-3">
+        Paste multiple listing URLs below (one per line or comma-separated). All will be analyzed automatically.
+      </p>
+      <Textarea
+        value={urlText}
+        onChange={(e) => setUrlText(e.target.value)}
+        placeholder={"https://idealista.com/property/12345\nhttps://zillow.com/homedetails/67890\nhttps://rightmove.co.uk/property/11111"}
+        rows={5}
+        className="bg-secondary/50 text-sm font-mono mb-3"
+        disabled={running}
+      />
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-xs text-muted-foreground">
+          {urlText.split(/[\n,]+/).filter(u => u.trim().startsWith("http")).length} URLs detected
+        </span>
+        <Button variant="hero" size="sm" onClick={startBatch} disabled={running}>
+          {running ? <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> Analyzing…</> : <><Zap className="h-3.5 w-3.5 mr-1" /> Analyze All</>}
+        </Button>
+      </div>
+
+      {/* Results */}
+      {jobs.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
+            <span>✅ {doneCount} done</span>
+            {errorCount > 0 && <span>❌ {errorCount} failed</span>}
+            {running && <span className="text-primary">⏳ Processing…</span>}
+          </div>
+          {jobs.map((job, i) => (
+            <div key={i} className={`flex items-center gap-3 rounded-lg border px-3 py-2 text-xs ${
+              job.status === "done" ? "border-score-excellent/20 bg-score-excellent/5" :
+              job.status === "error" ? "border-destructive/20 bg-destructive/5" :
+              job.status === "running" ? "border-primary/20 bg-primary/5" :
+              "border-border bg-card"
+            }`}>
+              {job.status === "running" && <Loader2 className="h-3.5 w-3.5 text-primary animate-spin flex-shrink-0" />}
+              {job.status === "done" && <CheckCircle2 className="h-3.5 w-3.5 text-score-excellent flex-shrink-0" />}
+              {job.status === "error" && <XCircle className="h-3.5 w-3.5 text-destructive flex-shrink-0" />}
+              {job.status === "pending" && <Clock className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />}
+              <span className="text-foreground truncate flex-1 font-mono">{job.url}</span>
+              {job.score != null && <span className={`font-mono font-bold ${scoreColor(job.score)}`}>{job.score}</span>}
+              {job.status === "done" && job.analysisId && (
+                <button onClick={() => navigate(`/analysis/${job.analysisId}`)} className="text-primary hover:underline flex-shrink-0">View →</button>
+              )}
+              {job.status === "error" && <span className="text-destructive truncate max-w-[120px]">{job.error}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const Admin = () => {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -50,6 +170,7 @@ const Admin = () => {
   const [error, setError] = useState("");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [myAnalysesCount, setMyAnalysesCount] = useState(0);
 
   useEffect(() => {
     if (authLoading) return;
@@ -60,11 +181,15 @@ const Admin = () => {
 
     const fetchAdminData = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke("admin-data");
-        if (error) throw error;
-        if (data?.error) throw new Error(data.error);
-        setUsers(data.users || []);
-        setStats(data.stats || null);
+        const [adminResult, countResult] = await Promise.all([
+          supabase.functions.invoke("admin-data"),
+          supabase.from("analyses").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+        ]);
+        if (adminResult.error) throw adminResult.error;
+        if (adminResult.data?.error) throw new Error(adminResult.data.error);
+        setUsers(adminResult.data.users || []);
+        setStats(adminResult.data.stats || null);
+        setMyAnalysesCount(countResult.count || 0);
       } catch (e: any) {
         setError(e.message || "Failed to load admin data");
       } finally {
@@ -92,9 +217,15 @@ const Admin = () => {
             <h1 className="text-2xl font-bold text-foreground">Admin CRM</h1>
             <p className="text-sm text-muted-foreground">User management & analytics</p>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
-            <ArrowLeft className="h-4 w-4 mr-1" /> Dashboard
-          </Button>
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Your Searches</p>
+              <p className="text-lg font-bold font-mono text-primary">{myAnalysesCount} <span className="text-xs text-muted-foreground font-normal">/ ∞</span></p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")}>
+              <ArrowLeft className="h-4 w-4 mr-1" /> Dashboard
+            </Button>
+          </div>
         </div>
 
         {error && (
@@ -109,6 +240,9 @@ const Admin = () => {
           </div>
         ) : (
           <>
+            {/* Batch Analysis Panel */}
+            <BatchAnalysisPanel />
+
             {/* Stats Cards */}
             {stats && (
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
@@ -166,7 +300,7 @@ const Admin = () => {
               {filteredUsers.length === 0 ? (
                 <div className="px-5 py-8 text-center text-sm text-muted-foreground">No users found.</div>
               ) : (
-                filteredUsers.map((u, i) => (
+                filteredUsers.map((u) => (
                   <div key={u.id} className="border-b border-border last:border-b-0">
                     <div
                       className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_80px] gap-2 px-5 py-3.5 items-center hover:bg-secondary/20 cursor-pointer transition-colors"
@@ -185,8 +319,9 @@ const Admin = () => {
                       </span>
                       <span className="text-xs font-mono text-foreground">{u.analyses_count}</span>
                       <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full w-fit ${
+                        u.email === ADMIN_EMAIL ? "bg-primary/10 text-primary" :
                         u.plan === "free" ? "bg-secondary text-muted-foreground" : "bg-primary/10 text-primary"
-                      }`}>{u.plan}</span>
+                      }`}>{u.email === ADMIN_EMAIL ? "pro" : u.plan}</span>
                       <div className="flex justify-end">
                         {expandedUser === u.id ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                       </div>
