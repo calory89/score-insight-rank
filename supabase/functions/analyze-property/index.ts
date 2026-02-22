@@ -797,6 +797,22 @@ serve(async (req) => {
             slug: slug,
           };
 
+          // Duplicate protection: check if this URL was already analyzed by this user recently (within 5 min)
+          const normalizedUrl = cleanUrl.split("#")[0].replace(/\/$/, "");
+          const { data: existingDup } = await supabase
+            .from("analyses")
+            .select("id")
+            .eq("user_id", userId)
+            .ilike("url", `${normalizedUrl}%`)
+            .not("global_score", "is", null)
+            .gte("created_at", new Date(Date.now() - 5 * 60 * 1000).toISOString())
+            .limit(1);
+          if (existingDup && existingDup.length > 0) {
+            console.log(`Duplicate detected for ${normalizedUrl}, returning existing analysis ${existingDup[0].id}`);
+            savedAll.push({ id: existingDup[0].id });
+            continue;
+          }
+
           const { data: inserted } = await supabase.from("analyses").insert(dbPayload).select().single();
           if (inserted) {
             // Compute actual rank from DB
@@ -1335,17 +1351,32 @@ serve(async (req) => {
       saved = updated;
       console.log("Updated existing analysis:", existingAnalysisId);
     } else {
-      // Insert new
-      const { data: inserted, error: dbError } = await supabase
+      // Duplicate protection: check if this URL was already analyzed by this user recently
+      const normalizedUrlSingle = (url || "manual-entry").split("#")[0].replace(/\/$/, "");
+      const { data: existingDupSingle } = await supabase
         .from("analyses")
-        .insert(dbPayload)
-        .select()
-        .single();
-      if (dbError) {
-        console.error("DB insert error:", dbError);
-        throw new Error("Failed to save analysis");
+        .select("id, global_score, market_rank, market_total, address, city, country, price, currency, image_url, property_type, verdict, market_classification, percentile, roi_potential, market_stability, demand_strength, risk_level, liquidity_outlook, confidence_level, data_source, slug")
+        .eq("user_id", user.id)
+        .ilike("url", `${normalizedUrlSingle}%`)
+        .not("global_score", "is", null)
+        .gte("created_at", new Date(Date.now() - 5 * 60 * 1000).toISOString())
+        .limit(1);
+      if (existingDupSingle && existingDupSingle.length > 0) {
+        console.log(`Duplicate detected for single analysis ${normalizedUrlSingle}, returning existing ${existingDupSingle[0].id}`);
+        saved = existingDupSingle[0];
+      } else {
+        // Insert new
+        const { data: inserted, error: dbError } = await supabase
+          .from("analyses")
+          .insert(dbPayload)
+          .select()
+          .single();
+        if (dbError) {
+          console.error("DB insert error:", dbError);
+          throw new Error("Failed to save analysis");
+        }
+        saved = inserted;
       }
-      saved = inserted;
     }
 
     // Compute actual rank from DB
