@@ -336,6 +336,46 @@ serve(async (req) => {
       });
     }
 
+    // --- Global cache: check if ANY user already analyzed this URL ---
+    if (url && url !== "manual-entry") {
+      const normalizedUrl = url.split("#")[0].replace(/\/$/, "");
+      const { data: cachedGlobal } = await supabase
+        .from("analyses")
+        .select("*")
+        .ilike("url", `${normalizedUrl}%`)
+        .not("global_score", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      
+      if (cachedGlobal && cachedGlobal.length > 0) {
+        // Clone the cached result for this user
+        const cached = cachedGlobal[0];
+        const isOwnAnalysis = cached.user_id === user.id;
+        
+        if (isOwnAnalysis) {
+          // User already has this analysis, just return it
+          console.log("Returning user's existing cached analysis:", cached.id);
+          return new Response(JSON.stringify({ success: true, data: cached }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        } else {
+          // Clone for this user
+          const { id, created_at, user_id, ...cloneData } = cached;
+          const { data: cloned, error: cloneError } = await supabase
+            .from("analyses")
+            .insert({ ...cloneData, user_id: user.id })
+            .select()
+            .single();
+          if (cloned && !cloneError) {
+            console.log("Cloned cached analysis for user:", cloned.id);
+            return new Response(JSON.stringify({ success: true, data: cloned }), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          }
+        }
+      }
+    }
+
     // --- Duplicate detection: check if same URL already analyzed by this user ---
     let existingAnalysisId: string | null = null;
     if (url && url !== "manual-entry") {
