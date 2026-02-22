@@ -67,6 +67,7 @@ const plans = [
     features: [
       "1,000 analyses per month",
       "Everything in Pro",
+      "Weekly digest: top-rated properties in your country via email",
       "Priority support",
       "Dedicated account manager",
       "Custom reports",
@@ -284,7 +285,11 @@ const PricingSection = () => {
       });
       if (error) throw error;
       if (data?.url) {
-        window.open(data.url, "_blank");
+        // Open in centered popup window for less friction
+        const w = 500, h = 700;
+        const left = (window.innerWidth - w) / 2 + window.screenX;
+        const top = (window.innerHeight - h) / 2 + window.screenY;
+        window.open(data.url, "stripe-checkout", `width=${w},height=${h},left=${left},top=${top},scrollbars=yes`);
       }
     } catch (e: any) {
       toast({ title: "Error", description: e.message || "Could not start checkout", variant: "destructive" });
