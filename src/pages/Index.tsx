@@ -1,31 +1,35 @@
+import { lazy, Suspense } from "react";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
-import HowItWorks from "@/components/HowItWorks";
-import AlternativesSection from "@/components/AlternativesSection";
-import GlobalRanking from "@/components/GlobalRanking";
-import DiscoverPromo from "@/components/DiscoverPromo";
-import ValueProposition from "@/components/ValueProposition";
-import PricingSection from "@/components/PricingSection";
-import TrustSection from "@/components/TrustSection";
-import APISection from "@/components/APISection";
-import FinalCTA from "@/components/FinalCTA";
-import Footer from "@/components/Footer";
+
+const HowItWorks = lazy(() => import("@/components/HowItWorks"));
+const AlternativesSection = lazy(() => import("@/components/AlternativesSection"));
+const GlobalRanking = lazy(() => import("@/components/GlobalRanking"));
+const DiscoverPromo = lazy(() => import("@/components/DiscoverPromo"));
+const ValueProposition = lazy(() => import("@/components/ValueProposition"));
+const PricingSection = lazy(() => import("@/components/PricingSection"));
+const TrustSection = lazy(() => import("@/components/TrustSection"));
+const APISection = lazy(() => import("@/components/APISection"));
+const FinalCTA = lazy(() => import("@/components/FinalCTA"));
+const Footer = lazy(() => import("@/components/Footer"));
 
 const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <HeroSection />
-      <HowItWorks />
-      <AlternativesSection />
-      <GlobalRanking />
-      <DiscoverPromo />
-      <ValueProposition />
-      <PricingSection />
-      <TrustSection />
-      <APISection />
-      <FinalCTA />
-      <Footer />
+      <Suspense fallback={null}>
+        <HowItWorks />
+        <AlternativesSection />
+        <GlobalRanking />
+        <DiscoverPromo />
+        <ValueProposition />
+        <PricingSection />
+        <TrustSection />
+        <APISection />
+        <FinalCTA />
+        <Footer />
+      </Suspense>
     </div>
   );
 };
