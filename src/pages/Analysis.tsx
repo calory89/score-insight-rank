@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import ProtectedListingFallback from "@/components/ProtectedListingFallback";
+import FreeLimitPricingModal from "@/components/FreeLimitPricingModal";
 import {
   ArrowLeft, MapPin, Building2, Calendar, Ruler, BedDouble, Bath,
   TrendingUp, TrendingDown, AlertTriangle, Sparkles, ChevronDown, ChevronUp,
@@ -686,6 +687,8 @@ const Analysis = () => {
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const [readyReportId, setReadyReportId] = useState<string | null>(null);
+  const [showFreeLimitModal, setShowFreeLimitModal] = useState(false);
+  const [userAnalysesCount, setUserAnalysesCount] = useState(0);
   const { toast } = useToast();
 
   // Resolve slug to ID
@@ -833,6 +836,7 @@ const Analysis = () => {
     }
   };
 
+  const FREE_LIMIT = 5;
   const analysisTriggered = useRef(false);
   useEffect(() => {
     if (!isLoadingMode) return;
@@ -859,9 +863,37 @@ const Analysis = () => {
       return false;
     };
 
-    checkCache().then((found) => {
-      if (!found) runAnalysis({ url: urlToAnalyze });
-    });
+    const checkLimitAndRun = async () => {
+      const found = await checkCache();
+      if (found) return;
+
+      // Check free limit
+      const isAdmin = user?.email === "rrppspain@gmail.com";
+      if (!isAdmin) {
+        const { count } = await supabase
+          .from("analyses")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id);
+        const used = count || 0;
+        setUserAnalysesCount(used);
+        if (used >= FREE_LIMIT) {
+          // Check if user has an active subscription
+          try {
+            const { data: subData } = await supabase.functions.invoke("check-subscription");
+            if (!subData?.subscribed) {
+              setShowFreeLimitModal(true);
+              return;
+            }
+          } catch {
+            setShowFreeLimitModal(true);
+            return;
+          }
+        }
+      }
+      runAnalysis({ url: urlToAnalyze });
+    };
+
+    checkLimitAndRun();
   }, [isLoadingMode, user, urlToAnalyze]);
 
   useEffect(() => {
@@ -876,7 +908,7 @@ const Analysis = () => {
           try {
             new Notification("Your report is ready! 🎉", {
               body: `${result.address || result.city || "Property"} — Score: ${result.global_score}/100`,
-              icon: "/favicon.ico",
+              icon: "/favicon.png",
             });
           } catch (_) {}
         }
@@ -892,6 +924,17 @@ const Analysis = () => {
   const handleManualEntry = (data: any) => { setSubmittingFallback(true); runAnalysis({ url: urlToAnalyze || "manual-entry", manual_fields: data }); };
   const handlePasteContent = (content: string) => { setSubmittingFallback(true); runAnalysis({ url: urlToAnalyze || "manual-entry", manual_content: content }); };
   const handleUploadFiles = (files: File[]) => {};
+
+  if (showFreeLimitModal) return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <FreeLimitPricingModal
+        open={showFreeLimitModal}
+        onClose={() => { setShowFreeLimitModal(false); navigate("/dashboard"); }}
+        usedCount={userAnalysesCount}
+      />
+    </div>
+  );
 
   if ((analyzing || readyReportId) && !data) return (
     <FomoLoader
