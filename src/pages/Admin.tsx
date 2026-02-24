@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import AdminVisitsPanel from "@/components/AdminVisitsPanel";
+import AdminVisitorLog from "@/components/AdminVisitorLog";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -329,22 +330,60 @@ const AdminTicketsPanel = () => {
 };
 
 const ErrorLogsPanel = () => {
+  const navigate = useNavigate();
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState("all");
+  const [retrying, setRetrying] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchLogs = async () => {
-      let query = (supabase.from("error_logs" as any).select("*").order("created_at", { ascending: false }).limit(100) as any);
-      if (filterType !== "all") {
-        query = query.eq("error_type", filterType);
-      }
-      const { data } = await query;
-      setLogs(data || []);
-      setLoading(false);
-    };
-    fetchLogs();
-  }, [filterType]);
+  const fetchLogs = async () => {
+    setLoading(true);
+    let query = (supabase.from("error_logs" as any).select("*").order("created_at", { ascending: false }).limit(100) as any);
+    if (filterType !== "all") {
+      query = query.eq("error_type", filterType);
+    }
+    const { data } = await query;
+    setLogs(data || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchLogs(); }, [filterType]);
+
+  const deleteLog = async (id: string) => {
+    await (supabase.from("error_logs" as any).delete().eq("id", id) as any);
+    setLogs(prev => prev.filter(l => l.id !== id));
+    toast({ title: "Error log deleted" });
+  };
+
+  const deleteAll = async () => {
+    if (!confirm("Delete all visible error logs?")) return;
+    const ids = logs.map(l => l.id);
+    for (const id of ids) {
+      await (supabase.from("error_logs" as any).delete().eq("id", id) as any);
+    }
+    setLogs([]);
+    toast({ title: "All error logs cleared" });
+  };
+
+  const retryAnalysis = async (log: any) => {
+    if (!log.url) return;
+    setRetrying(log.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-property", {
+        body: { url: log.url },
+      });
+      if (error) throw error;
+      if (data?.scrape_failed || data?.error) throw new Error(data?.error || "Scrape failed");
+      // Delete error log on success
+      await (supabase.from("error_logs" as any).delete().eq("id", log.id) as any);
+      setLogs(prev => prev.filter(l => l.id !== log.id));
+      toast({ title: "Retry successful!", description: `Score: ${data.data?.global_score || "N/A"}` });
+      if (data.data?.id) navigate(`/analysis/${data.data.id}`);
+    } catch (e: any) {
+      toast({ title: "Retry failed", description: e.message, variant: "destructive" });
+    }
+    setRetrying(null);
+  };
 
   const errorTypeIcon = (type: string) => {
     switch (type) {
@@ -373,16 +412,21 @@ const ErrorLogsPanel = () => {
 
   return (
     <div className="rounded-2xl border border-destructive/20 bg-card p-6 mb-8">
-      <div className="flex items-center gap-2 mb-4">
-        <AlertCircle className="h-5 w-5 text-destructive" />
-        <h2 className="text-base font-semibold text-foreground">Error Logs</h2>
-        <span className="text-[10px] text-muted-foreground ml-2">{logs.length} errors</span>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <AlertCircle className="h-5 w-5 text-destructive" />
+          <h2 className="text-base font-semibold text-foreground">Error Logs</h2>
+          <span className="text-[10px] text-muted-foreground ml-2">{logs.length} errors</span>
+        </div>
+        {logs.length > 0 && (
+          <button onClick={deleteAll} className="text-[10px] text-destructive hover:underline">Clear All</button>
+        )}
       </div>
 
       {/* Filter */}
       <div className="flex flex-wrap gap-2 mb-4">
         {["all", "analysis_error", "scrape_failed", "rate_limit", "ai_error", "credits_depleted"].map((type) => (
-          <button key={type} onClick={() => { setFilterType(type); setLoading(true); }}
+          <button key={type} onClick={() => { setFilterType(type); }}
             className={`text-[10px] font-medium uppercase tracking-wider px-2.5 py-1 rounded-full border transition-colors ${
               filterType === type ? "border-primary bg-primary/10 text-primary" : "border-border bg-secondary/50 text-muted-foreground hover:border-primary/30"
             }`}>
@@ -412,6 +456,21 @@ const ErrorLogsPanel = () => {
                 <p className="text-muted-foreground truncate">{log.error_message}</p>
                 {log.url && <p className="text-primary/70 font-mono truncate mt-0.5">{log.url}</p>}
                 {log.user_email && <p className="text-muted-foreground mt-0.5">👤 {log.user_email}</p>}
+              </div>
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                {log.url && (
+                  <button
+                    onClick={() => retryAnalysis(log)}
+                    disabled={retrying === log.id}
+                    className="text-[10px] text-primary hover:underline disabled:opacity-50 flex items-center gap-0.5"
+                  >
+                    {retrying === log.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Zap className="h-3 w-3" />}
+                    Retry
+                  </button>
+                )}
+                <button onClick={() => deleteLog(log.id)} className="text-[10px] text-destructive hover:underline flex items-center gap-0.5">
+                  <XCircle className="h-3 w-3" /> Delete
+                </button>
               </div>
             </div>
           ))}
@@ -502,6 +561,9 @@ const Admin = () => {
           <>
             {/* Visits Analytics Panel */}
             <AdminVisitsPanel />
+
+            {/* Visitor Activity Log */}
+            <AdminVisitorLog />
 
             {/* Batch Analysis Panel */}
             <BatchAnalysisPanel />
