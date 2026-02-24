@@ -903,15 +903,6 @@ const Analysis = () => {
       else {
         setData(result);
         setAnalyzing(false);
-        // Send browser notification that report is ready
-        if ("Notification" in window && Notification.permission === "granted") {
-          try {
-            new Notification("Your report is ready! 🎉", {
-              body: `${result.address || result.city || "Property"} — Score: ${result.global_score}/100`,
-              icon: "/favicon.png",
-            });
-          } catch (_) {}
-        }
         setTimeout(() => {
           setRevealed(true);
           confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ["#0faf6e", "#4ade80", "#facc15", "#ffffff"] });

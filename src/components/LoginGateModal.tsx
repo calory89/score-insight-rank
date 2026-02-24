@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
-import { Mail, Lock } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 interface LoginGateModalProps {
   open: boolean;
@@ -17,6 +17,7 @@ const LoginGateModal = ({ open, onClose, onSuccess }: LoginGateModalProps) => {
   const [isSignUp, setIsSignUp] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -52,7 +53,12 @@ const LoginGateModal = ({ open, onClose, onSuccess }: LoginGateModalProps) => {
       onClose();
       onSuccess?.();
     } catch (err: any) {
-      setError(err.message || "Authentication failed.");
+      const msg = err.message || "Authentication failed.";
+      if (msg.toLowerCase().includes("invalid login credentials")) {
+        setError("Invalid credentials. If you signed up with Google, use 'Continue with Google' instead.");
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -112,7 +118,10 @@ const LoginGateModal = ({ open, onClose, onSuccess }: LoginGateModalProps) => {
                 </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10 h-12 bg-secondary border-border" />
+                  <Input type={showPassword ? "text" : "password"} placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} className="pl-10 pr-10 h-12 bg-secondary border-border" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
                 <Button variant="hero" className="w-full h-12" onClick={handleEmail} disabled={loading || !email || !password}>
                   {isSignUp ? "Create Account" : "Sign In"}
