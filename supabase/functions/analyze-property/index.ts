@@ -757,10 +757,9 @@ serve(async (req) => {
             analysis.roi_potential = Math.max(analysis.roi_potential || 0, 93);
             analysis.market_stability = Math.max(analysis.market_stability || 0, 90);
             analysis.demand_strength = Math.max(analysis.demand_strength || 0, 94);
-            analysis.risk_level = Math.max(analysis.risk_level || 0, 82);
+            analysis.risk_level = 25;
             analysis.liquidity_outlook = Math.max(analysis.liquidity_outlook || 0, 91);
-            const boosted = [analysis.roi_potential, analysis.market_stability, analysis.demand_strength, analysis.risk_level, analysis.liquidity_outlook];
-            analysis.global_score = Math.round(boosted.reduce((a: number, b: number) => a + b, 0) / boosted.length);
+            analysis.global_score = 90;
             analysis.verdict = "Exceptional";
             analysis.year_built = 2026;
             analysis.market_classification = "Emerging";
@@ -1204,10 +1203,9 @@ serve(async (req) => {
       analysis.roi_potential = Math.max(analysis.roi_potential || 0, 93);
       analysis.market_stability = Math.max(analysis.market_stability || 0, 90);
       analysis.demand_strength = Math.max(analysis.demand_strength || 0, 94);
-      analysis.risk_level = Math.max(analysis.risk_level || 0, 82);
+      analysis.risk_level = 25;
       analysis.liquidity_outlook = Math.max(analysis.liquidity_outlook || 0, 91);
-      const boostedScores = [analysis.roi_potential, analysis.market_stability, analysis.demand_strength, analysis.risk_level, analysis.liquidity_outlook];
-      analysis.global_score = Math.round(boostedScores.reduce((a: number, b: number) => a + b, 0) / boostedScores.length);
+      analysis.global_score = 90;
       analysis.verdict = "Exceptional";
       analysis.year_built = 2026;
       analysis.market_classification = "Emerging";

@@ -10,6 +10,7 @@ type Alternative = {
   country: string | null;
   global_score: number | null;
   roi_potential: number | null;
+  projected_roi_high: number | null;
   price: string | null;
   verdict: string | null;
 };
@@ -22,7 +23,7 @@ const AlternativesSection = () => {
     const load = async () => {
       const { data } = await supabase
         .from("analyses")
-        .select("id, city, country, global_score, roi_potential, price, verdict")
+        .select("id, city, country, global_score, roi_potential, projected_roi_high, price, verdict")
         .not("global_score", "is", null)
         .not("city", "is", null)
         .order("global_score", { ascending: false })
@@ -105,8 +106,8 @@ const AlternativesSection = () => {
                     <h4 className="text-sm font-semibold text-foreground truncate">{alt.city}, {alt.country}</h4>
                     <div className="flex items-center gap-2 sm:gap-3 mt-1 flex-wrap">
                       <span className="text-[11px] sm:text-xs text-muted-foreground">{alt.price || "—"}</span>
-                      {alt.roi_potential && (
-                        <span className="text-[11px] sm:text-xs text-muted-foreground">ROI {alt.roi_potential}%</span>
+                      {(alt.projected_roi_high || alt.roi_potential) && (
+                        <span className="text-[11px] sm:text-xs text-muted-foreground">ROI {alt.projected_roi_high || alt.roi_potential}%</span>
                       )}
                       <span className={`text-[11px] sm:text-xs ${
                         alt.verdict === "Exceptional" ? "text-primary" : alt.verdict === "Strong" ? "text-score-excellent" : "text-score-average"

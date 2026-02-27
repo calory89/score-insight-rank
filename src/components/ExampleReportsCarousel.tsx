@@ -16,6 +16,7 @@ type ExampleReport = {
   roi_potential: number | null;
   primary_insight: string | null;
   url: string | null;
+  projected_roi_high: number | null;
 };
 
 const scoreColor = (v: number) => {
@@ -49,7 +50,7 @@ const ExampleReportsCarousel = () => {
     const load = async () => {
       const { data } = await supabase
         .from("analyses")
-        .select("id, address, city, country, global_score, price, verdict, image_url, roi_potential, primary_insight, url")
+        .select("id, address, city, country, global_score, price, verdict, image_url, roi_potential, primary_insight, url, projected_roi_high")
         .not("global_score", "is", null)
         .not("city", "is", null)
         .order("created_at", { ascending: false })
@@ -149,10 +150,10 @@ const ExampleReportsCarousel = () => {
 
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-mono font-bold text-foreground">{report.price || "—"}</span>
-                {report.roi_potential && (
+                {(report.projected_roi_high || report.roi_potential) && (
                   <div className="flex items-center gap-1 text-primary">
                     <TrendingUp className="h-3 w-3" />
-                    <span className="text-xs font-mono font-medium">ROI {report.roi_potential}%</span>
+                    <span className="text-xs font-mono font-medium">ROI {report.projected_roi_high || report.roi_potential}%</span>
                   </div>
                 )}
               </div>
