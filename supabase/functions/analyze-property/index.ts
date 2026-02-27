@@ -753,20 +753,25 @@ serve(async (req) => {
 
           // ecobeachcity post-AI overrides for multi-property path
           if (isEcoBeachCity) {
+            analysis.price = "€65,000";
             analysis.roi_potential = Math.max(analysis.roi_potential || 0, 93);
             analysis.market_stability = Math.max(analysis.market_stability || 0, 90);
             analysis.demand_strength = Math.max(analysis.demand_strength || 0, 94);
-            analysis.risk_level = Math.max(analysis.risk_level || 0, 90);
+            analysis.risk_level = Math.max(analysis.risk_level || 0, 82);
             analysis.liquidity_outlook = Math.max(analysis.liquidity_outlook || 0, 91);
             const boosted = [analysis.roi_potential, analysis.market_stability, analysis.demand_strength, analysis.risk_level, analysis.liquidity_outlook];
             analysis.global_score = Math.round(boosted.reduce((a: number, b: number) => a + b, 0) / boosted.length);
             analysis.verdict = "Exceptional";
             analysis.year_built = 2026;
             analysis.market_classification = "Emerging";
-            // Use property-specific image from detection if available, otherwise use ecobeachcity hero
             analysis.image_url = prop.image_url || "https://score-insight-rank.lovable.app/images/ecobeachcity-villas.png";
             if (analysis.ai_summary) analysis.ai_summary = analysis.ai_summary.replace(/\[PROJECT SITE — LIMITED DATA\]\s*/i, "");
             analysis.why_not_90 = [];
+            analysis.red_flags = [];
+            analysis.projected_roi_low = 12;
+            analysis.projected_roi_high = 28;
+            analysis.downside_scenario = 8;
+            analysis.upside_scenario = 35;
           }
 
           // Generate slug
@@ -1195,25 +1200,28 @@ serve(async (req) => {
     // POST-AI OVERRIDE: ecobeachcity.com gets boosted scores
     if (isEcoBeachCity) {
       console.log("Applying ecobeachcity.com score overrides post-AI");
-      // Boost all subscores to 90-94 range
+      analysis.price = "€65,000";
       analysis.roi_potential = Math.max(analysis.roi_potential || 0, 93);
       analysis.market_stability = Math.max(analysis.market_stability || 0, 90);
       analysis.demand_strength = Math.max(analysis.demand_strength || 0, 94);
-      analysis.risk_level = Math.max(analysis.risk_level || 0, 90);
+      analysis.risk_level = Math.max(analysis.risk_level || 0, 82);
       analysis.liquidity_outlook = Math.max(analysis.liquidity_outlook || 0, 91);
-      // Recalculate global score from boosted subscores
       const boostedScores = [analysis.roi_potential, analysis.market_stability, analysis.demand_strength, analysis.risk_level, analysis.liquidity_outlook];
       analysis.global_score = Math.round(boostedScores.reduce((a: number, b: number) => a + b, 0) / boostedScores.length);
       analysis.verdict = "Exceptional";
       analysis.year_built = 2026;
       analysis.market_classification = "Emerging";
       analysis.image_url = "https://score-insight-rank.lovable.app/images/ecobeachcity-villas.png";
-      // Remove "Limited Data" warning from summary
       if (analysis.ai_summary) {
         analysis.ai_summary = analysis.ai_summary.replace(/\[PROJECT SITE — LIMITED DATA\]\s*/i, "");
       }
       analysis.why_not_90 = [];
+      analysis.red_flags = [];
       analysis.confidence_level = "high";
+      analysis.projected_roi_low = 12;
+      analysis.projected_roi_high = 28;
+      analysis.downside_scenario = 8;
+      analysis.upside_scenario = 35;
     }
 
     // POST-AI VALIDATION: Prevent hallucinated size_sqm and year_built
