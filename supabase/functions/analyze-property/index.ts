@@ -915,7 +915,7 @@ serve(async (req) => {
                   roi_potential: { type: "integer", description: "0-100" },
                   market_stability: { type: "integer", description: "0-100" },
                   demand_strength: { type: "integer", description: "0-100" },
-                  risk_level: { type: "integer", description: "0-100 where 100=lowest risk" },
+                  risk_level: { type: "integer", description: "Safety score 0-100 where 100=safest investment" },
                   liquidity_outlook: { type: "integer", description: "0-100" },
                   market_classification: { type: "string", enum: ["Emerging", "Stable", "Overpriced", "Premium Zone"] },
                   verdict: { type: "string", enum: ["Exceptional", "Strong", "Moderate", "Risky"] },

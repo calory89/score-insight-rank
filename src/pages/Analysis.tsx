@@ -1172,7 +1172,7 @@ const Analysis = () => {
                     <SubscoreBar label="ROI Potential" value={d.roi_potential} explanation={explanations.roi_potential} />
                     <SubscoreBar label="Market Stability" value={d.market_stability} explanation={explanations.market_stability} />
                     <SubscoreBar label="Demand Strength" value={d.demand_strength} explanation={explanations.demand_strength} />
-                    <SubscoreBar label="Risk Level" value={d.risk_level} explanation={explanations.risk_level} />
+                    <SubscoreBar label="Safety Score" value={d.risk_level} explanation={explanations.risk_level} />
                     <SubscoreBar label="Liquidity Outlook" value={d.liquidity_outlook} explanation={explanations.liquidity_outlook} />
                   </div>
                   <p className="text-xs text-muted-foreground mt-3">
