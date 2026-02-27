@@ -24,7 +24,7 @@ const subscores = [
     negative: "Increased competition among investors may drive up prices further.",
   },
   {
-    label: "Risk Level",
+    label: "Safety Score",
     value: 68,
     color: "bg-score-average",
     positive: "Diversified local economy reduces single-sector dependency.",

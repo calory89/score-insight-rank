@@ -25,9 +25,9 @@ const scoreBg = (v: number) => {
 };
 
 const riskLabel = (v: number) => {
-  if (v >= 80) return "Low Risk";
-  if (v >= 60) return "Medium Risk";
-  return "High Risk";
+  if (v >= 80) return "Very Safe";
+  if (v >= 60) return "Safe";
+  return "Caution";
 };
 
 type DiscoveryCard = {

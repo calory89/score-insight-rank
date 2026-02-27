@@ -91,7 +91,7 @@ const Compare = () => {
       if (metric === "ROI") point[key] = p.roi_potential;
       if (metric === "Stability") point[key] = p.market_stability;
       if (metric === "Demand") point[key] = p.demand_strength;
-      if (metric === "Safety") point[key] = Math.max(0, 100 - (p.risk_level || 50));
+      if (metric === "Safety") point[key] = p.risk_level || 50;
       if (metric === "Liquidity") point[key] = p.liquidity_outlook;
     });
     return point;
@@ -111,7 +111,7 @@ const Compare = () => {
     { label: "ROI Potential", key: "roi_potential", format: (v: any) => v, highlight: true },
     { label: "Market Stability", key: "market_stability", format: (v: any) => v, highlight: true },
     { label: "Demand Strength", key: "demand_strength", format: (v: any) => v, highlight: true },
-    { label: "Risk Level", key: "risk_level", format: (v: any) => v, highlight: true },
+    { label: "Safety Score", key: "risk_level", format: (v: any) => v, highlight: true },
     { label: "Liquidity", key: "liquidity_outlook", format: (v: any) => v, highlight: true },
     { label: "Verdict", key: "verdict", format: (v: any) => v },
     { label: "Classification", key: "market_classification", format: (v: any) => v },
@@ -337,7 +337,7 @@ const Compare = () => {
                   <p className="text-[11px] text-muted-foreground mt-3 max-w-md mx-auto">
                     Scores {winner.global_score - sorted[1].global_score} points higher overall.
                     {winner.roi_potential > sorted[1].roi_potential ? " Better ROI potential." : ""}
-                    {winner.risk_level > sorted[1].risk_level ? " Lower risk profile." : ""}
+                    {winner.risk_level > sorted[1].risk_level ? " Better safety profile." : ""}
                   </p>
                 </motion.div>
               );

@@ -132,7 +132,7 @@ const InlineReportPreview = ({ reportId }: { reportId: string }) => {
     { label: "ROI Potential", value: report.roi_potential },
     { label: "Market Stability", value: report.market_stability },
     { label: "Demand Strength", value: report.demand_strength },
-    { label: "Risk Level", value: report.risk_level },
+    { label: "Safety Score", value: report.risk_level },
     { label: "Liquidity Outlook", value: report.liquidity_outlook },
   ].filter(s => s.value != null);
 
@@ -259,7 +259,7 @@ const ReadyReportCard = ({ reportId, onViewFull }: { reportId: string; onViewFul
     { label: "ROI Potential", value: report.roi_potential },
     { label: "Market Stability", value: report.market_stability },
     { label: "Demand Strength", value: report.demand_strength },
-    { label: "Risk Level", value: report.risk_level },
+    { label: "Safety Score", value: report.risk_level },
     { label: "Liquidity Outlook", value: report.liquidity_outlook },
   ].filter(s => s.value != null);
 
