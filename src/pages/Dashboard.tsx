@@ -29,9 +29,9 @@ const scoreColor = (v: number) => {
 };
 
 const riskLabel = (v: number) => {
-  if (v >= 80) return { label: "Low Risk", color: "text-score-excellent" };
-  if (v >= 60) return { label: "Medium Risk", color: "text-score-average" };
-  return { label: "High Risk", color: "text-score-poor" };
+  if (v >= 80) return { label: "Very Safe", color: "text-score-excellent" };
+  if (v >= 60) return { label: "Safe", color: "text-score-average" };
+  return { label: "Caution", color: "text-score-poor" };
 };
 
 const FREE_LIMIT = 5;
