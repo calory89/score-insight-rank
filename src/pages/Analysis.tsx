@@ -4,8 +4,12 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import Navbar from "@/components/Navbar";
 import ProtectedListingFallback from "@/components/ProtectedListingFallback";
+import ProGateOverlay from "@/components/ProGateOverlay";
+import ReportExpiryBanner from "@/components/ReportExpiryBanner";
+import BadDealAlert from "@/components/BadDealAlert";
 import FreeLimitPricingModal from "@/components/FreeLimitPricingModal";
 import {
   ArrowLeft, MapPin, Building2, Calendar, Ruler, BedDouble, Bath,
@@ -995,6 +999,7 @@ const Analysis = () => {
   if (!data) return null;
 
   const d = data;
+  const { isPro } = useSubscription();
   const explanations = (d.score_explanations || {}) as Record<string, any>;
   const f = (explanations.forensic || {}) as any;
   const globalScore = d.global_score;
