@@ -1455,7 +1455,8 @@ const Analysis = () => {
           </Section>
         )}
 
-        {/* ===== 8. COMPARABLE SALES ===== */}
+        {/* ===== 8. COMPARABLE SALES (Pro-gated) ===== */}
+        <ProGateOverlay isPro={isPro} label="Unlock Comparable Sales">
         {f.comparable_sales?.length > 0 && (
           <Section delay={0.4} className="rounded-2xl border border-border bg-card p-6 mb-8">
             <SectionHeader icon={BarChart3} title="Comparable Sales" subtitle="Recent transactions in the area" />
