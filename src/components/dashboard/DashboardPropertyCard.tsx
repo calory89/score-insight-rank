@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
-  Heart, GitCompare, MapPin, Calendar, TrendingUp, Shield, BarChart3, Building2, ArrowRight,
+  Heart, GitCompare, MapPin, Calendar, TrendingUp, Shield, BarChart3, Building2,
 } from "lucide-react";
 import { scoreColor, verdictColorSimple as verdictColor, riskLabel } from "@/lib/score-utils";
 import { RedFlagBadgeList } from "@/components/RedFlagBadges";
+import LazyImage from "@/components/LazyImage";
 
 interface DashboardPropertyCardProps {
   analysis: any;
@@ -41,7 +42,7 @@ const DashboardPropertyCard = ({
       <div className="flex flex-col sm:flex-row">
         {a.image_url ? (
           <div className="sm:w-40 h-32 sm:h-auto bg-secondary overflow-hidden flex-shrink-0 relative">
-            <img src={a.image_url} alt={a.address || "Property"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 absolute inset-0" />
+            <LazyImage src={a.image_url} alt={a.address || "Property"} className="w-full h-full absolute inset-0 group-hover:scale-105 transition-transform duration-300" />
           </div>
         ) : (
           <div className="sm:w-40 h-20 sm:h-auto bg-gradient-to-br from-secondary to-secondary/50 flex items-center justify-center flex-shrink-0">
