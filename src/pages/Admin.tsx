@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import AdminVisitsPanel from "@/components/AdminVisitsPanel";
 import AdminAnalyticsTab from "@/components/admin/AdminAnalyticsTab";
+import AdminUserDetail from "@/components/admin/AdminUserDetail";
 import AdminVisitorLog from "@/components/AdminVisitorLog";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -734,6 +735,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [myAnalysesCount, setMyAnalysesCount] = useState(0);
 
