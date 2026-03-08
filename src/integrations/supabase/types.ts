@@ -318,31 +318,43 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
+          bio: string | null
           created_at: string
           detected_country: string | null
           email: string | null
           id: string
           last_login_at: string | null
           login_count: number | null
+          referral_code: string | null
           user_id: string
+          username: string | null
         }
         Insert: {
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           detected_country?: string | null
           email?: string | null
           id?: string
           last_login_at?: string | null
           login_count?: number | null
+          referral_code?: string | null
           user_id: string
+          username?: string | null
         }
         Update: {
+          avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           detected_country?: string | null
           email?: string | null
           id?: string
           last_login_at?: string | null
           login_count?: number | null
+          referral_code?: string | null
           user_id?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -386,6 +398,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      referrals: {
+        Row: {
+          bonus_granted: boolean
+          created_at: string
+          id: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+        }
+        Insert: {
+          bonus_granted?: boolean
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_id: string
+          referrer_id: string
+        }
+        Update: {
+          bonus_granted?: boolean
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_id?: string
+          referrer_id?: string
+        }
+        Relationships: []
       }
       subscriptions: {
         Row: {
@@ -495,6 +534,33 @@ export type Database = {
           status?: string
           subject?: string
           ticket_number?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_streaks: {
+        Row: {
+          current_streak: number
+          id: string
+          last_active_date: string
+          longest_streak: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          current_streak?: number
+          id?: string
+          last_active_date?: string
+          longest_streak?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          current_streak?: number
+          id?: string
+          last_active_date?: string
+          longest_streak?: number
           updated_at?: string
           user_id?: string
         }
