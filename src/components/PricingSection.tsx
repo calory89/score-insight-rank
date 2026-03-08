@@ -329,7 +329,7 @@ const PricingSection = () => {
               <motion.div key={plan.name}
                 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
-                className={`rounded-2xl border p-6 flex flex-col ${
+                className={`rounded-2xl border p-6 flex flex-col hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 ${
                   plan.highlighted ? "border-primary/30 bg-card glow-primary relative" : "border-border bg-card"
                 }`}
               >
