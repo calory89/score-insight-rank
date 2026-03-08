@@ -121,9 +121,10 @@ const HeroSection = () => {
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
-                    placeholder="Paste any property listing URL…  (⌘K)"
+                    placeholder="Paste any property listing URL…"
                     className="flex-1 bg-transparent px-3 sm:px-4 py-4 sm:py-5 text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0"
                   />
+                  <kbd className="hidden md:inline-flex items-center gap-0.5 rounded-md border border-border bg-secondary px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground mr-2">⌘K</kbd>
                 </div>
                 <Button variant="hero" size="lg" className="rounded-lg h-12 sm:h-14 px-4 sm:px-6 text-sm sm:text-base flex-shrink-0" onClick={handleAnalyze}>
                   Analyze Property — Free <ArrowRight className="ml-1 h-4 w-4 hidden sm:inline" />

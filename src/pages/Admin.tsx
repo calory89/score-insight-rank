@@ -683,16 +683,30 @@ const Admin = () => {
               </TabsContent>
 
               <TabsContent value="users">
-                {/* Search */}
-                <div className="relative mb-6">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by email or country…"
-                    className="w-full rounded-xl border border-border bg-card pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30"
-                  />
+                {/* Search + Export */}
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search by email or country…"
+                      className="w-full rounded-xl border border-border bg-card pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30"
+                    />
+                  </div>
+                  <button
+                    onClick={() => {
+                      const csv = "email,created_at,last_sign_in,login_count,country,provider,analyses_count,plan\n" +
+                        filteredUsers.map(u => `"${u.email}",${u.created_at},${u.last_sign_in_at || ""},${u.login_count},"${u.detected_country || ""}",${u.provider},${u.analyses_count},${u.plan}`).join("\n");
+                      const blob = new Blob([csv], { type: "text/csv" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a"); a.href = url; a.download = `users-${new Date().toISOString().slice(0,10)}.csv`; a.click(); URL.revokeObjectURL(url);
+                    }}
+                    className="flex items-center gap-1 text-xs text-primary hover:underline whitespace-nowrap"
+                  >
+                    <Download className="h-3.5 w-3.5" /> Export CSV
+                  </button>
                 </div>
 
                 {/* Users Table */}
