@@ -16,25 +16,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 
-const verdictColor = (v: string) => {
-  if (v === "Exceptional") return "text-score-excellent bg-score-excellent/10";
-  if (v === "Strong") return "text-score-good bg-score-good/10";
-  if (v === "Moderate") return "text-score-average bg-score-average/10";
-  return "text-score-poor bg-score-poor/10";
-};
-
-const scoreColor = (v: number) => {
-  if (v >= 80) return "text-score-excellent";
-  if (v >= 65) return "text-score-good";
-  if (v >= 50) return "text-score-average";
-  return "text-score-poor";
-};
-
-const riskLabel = (v: number) => {
-  if (v >= 80) return { label: "Very Safe", color: "text-score-excellent" };
-  if (v >= 60) return { label: "Safe", color: "text-score-average" };
-  return { label: "Caution", color: "text-score-poor" };
-};
+import { scoreColor, verdictColorSimple as verdictColor, riskLabel } from "@/lib/score-utils";
 
 const FREE_LIMIT = 5;
 

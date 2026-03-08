@@ -19,19 +19,7 @@ type ExampleReport = {
   projected_roi_high: number | null;
 };
 
-const scoreColor = (v: number) => {
-  if (v >= 80) return "text-score-excellent";
-  if (v >= 65) return "text-score-good";
-  if (v >= 50) return "text-score-average";
-  return "text-score-poor";
-};
-
-const scoreBorder = (v: number) => {
-  if (v >= 80) return "border-score-excellent/30";
-  if (v >= 65) return "border-score-good/30";
-  if (v >= 50) return "border-score-average/30";
-  return "border-score-poor/30";
-};
+import { scoreColor, scoreBorder } from "@/lib/score-utils";
 
 const PLACEHOLDER_IMAGES = [
   "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",

@@ -40,12 +40,7 @@ interface AdminStats {
   active_today: number;
 }
 
-const scoreColor = (v: number) => {
-  if (v >= 80) return "text-score-excellent";
-  if (v >= 65) return "text-score-good";
-  if (v >= 50) return "text-score-average";
-  return "text-score-poor";
-};
+import { scoreColor } from "@/lib/score-utils";
 
 interface BatchJob {
   url: string;

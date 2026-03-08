@@ -11,25 +11,7 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
-const scoreColor = (v: number) => {
-  if (v >= 80) return "text-score-excellent";
-  if (v >= 65) return "text-score-good";
-  if (v >= 50) return "text-score-average";
-  return "text-score-poor";
-};
-
-const scoreBg = (v: number) => {
-  if (v >= 80) return "bg-score-excellent/10 text-score-excellent";
-  if (v >= 65) return "bg-score-good/10 text-score-good";
-  if (v >= 50) return "bg-score-average/10 text-score-average";
-  return "bg-score-poor/10 text-score-poor";
-};
-
-const riskLabel = (v: number) => {
-  if (v >= 80) return "Very Safe";
-  if (v >= 60) return "Safe";
-  return "Caution";
-};
+import { scoreColor, scoreBgLight as scoreBg, riskLabelSimple as riskLabel } from "@/lib/score-utils";
 
 type DiscoveryCard = {
   id: string;
