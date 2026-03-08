@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { motion } from "framer-motion";
+import { motion, LayoutGroup } from "framer-motion";
 import { Menu, X, LogOut, LayoutDashboard, Settings, Sun, Moon, TicketCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -48,12 +48,30 @@ const Navbar = () => {
           </div>
 
           <div className="hidden md:flex items-center gap-8">
-            <a href="/#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How It Works</a>
-            <a href="/game" className={`text-sm transition-colors ${isActive("/game") ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`} onClick={(e) => { e.preventDefault(); navigate("/game"); }}>Game</a>
-            <a href="/rankings" className={`text-sm transition-colors ${isActive("/rankings") ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`} onClick={(e) => { e.preventDefault(); navigate("/rankings"); }}>Rankings</a>
-            {user?.email === "rrppspain@gmail.com" && <a href="/leads" className={`text-sm transition-colors ${isActive("/leads") ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`} onClick={(e) => { e.preventDefault(); navigate("/leads"); }}>Leads</a>}
-            <a href="/search" className={`text-sm transition-colors ${isActive("/search") ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`} onClick={(e) => { e.preventDefault(); navigate("/search"); }}>Search</a>
-            <a href="/#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
+            {[
+              { href: "/#how-it-works", label: "How It Works", path: null },
+              { href: "/game", label: "Game", path: "/game" },
+              { href: "/rankings", label: "Rankings", path: "/rankings" },
+              ...(user?.email === "rrppspain@gmail.com" ? [{ href: "/leads", label: "Leads", path: "/leads" }] : []),
+              { href: "/search", label: "Search", path: "/search" },
+              { href: "/#pricing", label: "Pricing", path: null },
+            ].map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className={`relative text-sm transition-colors py-1 ${link.path && isActive(link.path) ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
+                onClick={link.path ? (e) => { e.preventDefault(); navigate(link.path!); } : undefined}
+              >
+                {link.label}
+                {link.path && isActive(link.path) && (
+                  <motion.span
+                    layoutId="nav-indicator"
+                    className="absolute -bottom-[17px] left-0 right-0 h-[2px] bg-primary rounded-full"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                  />
+                )}
+              </a>
+            ))}
           </div>
 
           <div className="hidden md:flex items-center gap-3">

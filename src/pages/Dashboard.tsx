@@ -459,22 +459,18 @@ const Dashboard = () => {
         {/* Stats bar */}
         {analyses.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-            <div className="rounded-xl border border-border bg-card p-4 text-center">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Total Analyses</p>
-              <p className="text-2xl font-bold font-mono text-foreground">{analyses.length}</p>
-            </div>
-            <div className="rounded-xl border border-border bg-card p-4 text-center">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Avg. Score</p>
-              <p className={`text-2xl font-bold font-mono ${scoreColor(avgScore)}`}>{avgScore}</p>
-            </div>
-            <div className="rounded-xl border border-border bg-card p-4 text-center">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Countries</p>
-              <p className="text-2xl font-bold font-mono text-foreground">{countriesAnalyzed}</p>
-            </div>
-            <div className="rounded-xl border border-border bg-card p-4 text-center">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Favorites</p>
-              <p className="text-2xl font-bold font-mono text-primary">{favoriteIds.size}</p>
-            </div>
+            {[
+              { icon: BarChart3, label: "Total Analyses", value: analyses.length, color: "text-foreground" },
+              { icon: TrendingUp, label: "Avg. Score", value: avgScore, color: scoreColor(avgScore) },
+              { icon: Globe, label: "Countries", value: countriesAnalyzed, color: "text-foreground" },
+              { icon: Heart, label: "Favorites", value: favoriteIds.size, color: "text-primary" },
+            ].map((stat) => (
+              <div key={stat.label} className="rounded-xl border border-border bg-card p-4 text-center hover:shadow-md transition-shadow">
+                <stat.icon className="h-4 w-4 text-primary mx-auto mb-2" />
+                <p className={`text-2xl font-bold font-mono ${stat.color}`}>{stat.value}</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">{stat.label}</p>
+              </div>
+            ))}
           </div>
         )}
 

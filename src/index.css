@@ -119,6 +119,7 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    scroll-padding-top: 4.5rem;
   }
 
   * {
@@ -127,6 +128,7 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    transition: background-color 0.3s ease;
   }
 
   h1, h2, h3, h4, h5, h6 {
