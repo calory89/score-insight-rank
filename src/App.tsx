@@ -44,30 +44,38 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => (
   </motion.div>
 );
 
+const SuspenseFallback = () => (
+  <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
+
 const AnimatedRoutes = () => {
   const location = useLocation();
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<PageTransition><Index /></PageTransition>} />
-        <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
-        <Route path="/analysis/loading" element={<PageTransition><Analysis /></PageTransition>} />
-        <Route path="/analysis/:id" element={<PageTransition><Analysis /></PageTransition>} />
-        <Route path="/r/:slug" element={<PageTransition><Analysis /></PageTransition>} />
-        <Route path="/compare" element={<PageTransition><Compare /></PageTransition>} />
-        <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
-        <Route path="/admin" element={<PageTransition><Admin /></PageTransition>} />
-        <Route path="/rankings" element={<PageTransition><Rankings /></PageTransition>} />
-        <Route path="/tickets" element={<PageTransition><Tickets /></PageTransition>} />
-        <Route path="/discover" element={<PageTransition><Discover /></PageTransition>} />
-        <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
-        <Route path="/profile/:userId" element={<PageTransition><Profile /></PageTransition>} />
-        <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
-        <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
-        <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
-        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
-      </Routes>
-    </AnimatePresence>
+    <Suspense fallback={<SuspenseFallback />}>
+      <AnimatePresence mode="wait">
+        <Routes location={location} key={location.pathname}>
+          <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+          <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
+          <Route path="/analysis/loading" element={<PageTransition><Analysis /></PageTransition>} />
+          <Route path="/analysis/:id" element={<PageTransition><Analysis /></PageTransition>} />
+          <Route path="/r/:slug" element={<PageTransition><Analysis /></PageTransition>} />
+          <Route path="/compare" element={<PageTransition><Compare /></PageTransition>} />
+          <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
+          <Route path="/admin" element={<PageTransition><Admin /></PageTransition>} />
+          <Route path="/rankings" element={<PageTransition><Rankings /></PageTransition>} />
+          <Route path="/tickets" element={<PageTransition><Tickets /></PageTransition>} />
+          <Route path="/discover" element={<PageTransition><Discover /></PageTransition>} />
+          <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
+          <Route path="/profile/:userId" element={<PageTransition><Profile /></PageTransition>} />
+          <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
+          <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
+          <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
+          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+        </Routes>
+      </AnimatePresence>
+    </Suspense>
   );
 };
 
