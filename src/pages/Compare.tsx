@@ -120,6 +120,7 @@ const Compare = () => {
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="h-8 w-8 rounded-full border-2 border-t-primary border-border animate-spin" /></div>;
 
   return (
+    <>
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto px-4 pt-20 pb-16 max-w-6xl">
