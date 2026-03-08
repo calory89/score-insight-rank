@@ -1870,7 +1870,7 @@ const Analysis = () => {
             if (url && !url.startsWith("http")) url = "https://" + url;
             window.open(url, "_blank");
           }}
-          className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 bg-gradient-cta text-primary-foreground px-5 py-3 rounded-full shadow-xl hover:shadow-2xl hover:brightness-110 transition-all flex items-center gap-2 text-sm font-semibold"
+          className="fixed bottom-20 sm:bottom-6 left-4 sm:left-6 z-40 bg-gradient-cta text-primary-foreground px-5 py-3 rounded-full shadow-xl hover:shadow-2xl hover:brightness-110 transition-all flex items-center gap-2 text-sm font-semibold"
         >
           <Eye className="h-4 w-4" /> Visit Property
         </motion.button>
