@@ -27,6 +27,7 @@ import {
 import confetti from "canvas-confetti";
 
 import { scoreColor, scoreBg, verdictColor, classificationColor, confidenceColor } from "@/lib/score-utils";
+import AnimatedScoreRing from "@/components/AnimatedScoreRing";
 const sqmToAcres = (sqm: number) => (sqm * 0.000247105).toFixed(3);
 const sqmToSqft = (sqm: number) => Math.round(sqm * 10.7639);
 
@@ -1179,17 +1180,7 @@ const Analysis = () => {
             <div className="p-5 md:p-6">
               <div className="flex flex-col md:flex-row gap-6 items-center">
                 {/* Score Circle */}
-                <div className="relative flex-shrink-0">
-                  <svg className="w-36 h-36 md:w-40 md:h-40 -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--border))" strokeWidth="5" />
-                    <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--primary))" strokeWidth="5" strokeLinecap="round"
-                      strokeDasharray="264" strokeDashoffset={264 - (264 * globalScore) / 100} />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className={`text-5xl font-bold font-mono leading-none ${scoreColor(globalScore)}`}>{globalScore}</span>
-                    <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest mt-1">Global Score</span>
-                  </div>
-                </div>
+                <AnimatedScoreRing score={globalScore} size={160} />
 
                 {/* Subscores */}
                 <div className="flex-1 w-full">
