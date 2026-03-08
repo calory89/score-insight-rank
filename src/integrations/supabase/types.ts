@@ -683,6 +683,59 @@ export type Database = {
         }
         Relationships: []
       }
+      watchlist: {
+        Row: {
+          analysis_id: string
+          created_at: string
+          id: string
+          initial_price: string | null
+          initial_score: number | null
+          last_checked_at: string | null
+          latest_price: string | null
+          latest_score: number | null
+          price_delta: string | null
+          score_delta: number | null
+          url: string
+          user_id: string
+        }
+        Insert: {
+          analysis_id: string
+          created_at?: string
+          id?: string
+          initial_price?: string | null
+          initial_score?: number | null
+          last_checked_at?: string | null
+          latest_price?: string | null
+          latest_score?: number | null
+          price_delta?: string | null
+          score_delta?: number | null
+          url: string
+          user_id: string
+        }
+        Update: {
+          analysis_id?: string
+          created_at?: string
+          id?: string
+          initial_price?: string | null
+          initial_score?: number | null
+          last_checked_at?: string | null
+          latest_price?: string | null
+          latest_score?: number | null
+          price_delta?: string | null
+          score_delta?: number | null
+          url?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watchlist_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

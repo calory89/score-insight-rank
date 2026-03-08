@@ -34,6 +34,8 @@ import { scoreColor, scoreBg, verdictColor, classificationColor, confidenceColor
 import AnimatedScoreRing from "@/components/AnimatedScoreRing";
 import AIChatBubble from "@/components/AIChatBubble";
 import SharePanel from "@/components/SharePanel";
+import InvestmentCalculator from "@/components/InvestmentCalculator";
+import { WatchButton } from "@/components/Watchlist";
 const sqmToAcres = (sqm: number) => (sqm * 0.000247105).toFixed(3);
 const sqmToSqft = (sqm: number) => Math.round(sqm * 10.7639);
 
@@ -1063,6 +1065,7 @@ const Analysis = () => {
               <Heart className={`h-3.5 w-3.5 sm:mr-1 ${isFavorited ? "fill-current" : ""}`} />
               <span className="hidden sm:inline">{isFavorited ? "Saved" : "Favorite"}</span>
             </Button>
+            <WatchButton analysisId={id!} url={d.url} price={d.price} score={d.global_score} />
             <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate(`/compare?ids=${id}`)}>
               <GitCompare className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Compare</span>
             </Button>
@@ -1552,6 +1555,19 @@ const Analysis = () => {
         )}
 
 
+
+        {/* ===== INVESTMENT CALCULATOR ===== */}
+        {d.price && (
+          <Section delay={0.49} className="mb-8">
+            <InvestmentCalculator
+              price={parseFloat(String(d.price).replace(/[^0-9.]/g, "")) || 0}
+              currency={d.currency || "EUR"}
+              roiLow={d.projected_roi_low}
+              roiHigh={d.projected_roi_high}
+              grossYield={f.gross_yield}
+            />
+          </Section>
+        )}
 
         {/* ===== 5-YEAR SCENARIO SIMULATION ===== */}
         <Section delay={0.5} className="rounded-2xl border border-border bg-card p-6 mb-8">
