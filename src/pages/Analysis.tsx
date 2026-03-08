@@ -1075,6 +1075,14 @@ const Analysis = () => {
           </div>
         </div>
 
+        {/* Report Expiry Banner for free users */}
+        {!isPro && d.created_at && <ReportExpiryBanner createdAt={d.created_at} />}
+
+        {/* Bad Deal Alert for free users */}
+        {!isPro && d.global_score != null && (
+          <BadDealAlert score={d.global_score} redFlagCount={(d.red_flags as string[])?.length || 0} />
+        )}
+
         {/* ===== PROJECT SITE WARNING (excluded for ecobeachcity) ===== */}
         {(d.data_source === "project_website" || confidenceLevel === "low") && !d.url?.toLowerCase().includes("ecobeachcity") && (
           <Section delay={0} className="mb-6">
