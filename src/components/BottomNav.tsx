@@ -1,9 +1,10 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Search, Compass, Trophy, User } from "lucide-react";
+import { Search, Compass, Trophy, User, Flame } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
 const tabs = [
   { id: "score", label: "Score", icon: Search, path: "/dashboard" },
+  { id: "game", label: "Game", icon: Flame, path: "/game" },
   { id: "discover", label: "Discover", icon: Compass, path: "/discover" },
   { id: "rankings", label: "Rankings", icon: Trophy, path: "/rankings" },
   { id: "profile", label: "Profile", icon: User, path: "/profile" },
