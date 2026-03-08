@@ -17,6 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 import PropertyOfTheDay from "@/components/PropertyOfTheDay";
 import SavingsCalculator from "@/components/SavingsCalculator";
+import { WatchlistSection } from "@/components/Watchlist";
+import { RedFlagBadgeList } from "@/components/RedFlagBadges";
 import { DashboardCardSkeleton } from "@/components/SkeletonCards";
 
 import { scoreColor, verdictColorSimple as verdictColor, riskLabel } from "@/lib/score-utils";
@@ -450,6 +452,7 @@ const Dashboard = () => {
       <Navbar />
       <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl">
         <PropertyOfTheDay />
+        <WatchlistSection />
         {!isPro && analyses.length > 0 && <SavingsCalculator analyses={analyses} />}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground mb-1">Dashboard</h1>
@@ -680,6 +683,11 @@ const Dashboard = () => {
                       {a.ai_summary && (
                         <p className="text-[11px] text-muted-foreground line-clamp-2 mb-3 leading-relaxed">{a.ai_summary}</p>
                       )}
+
+                      {/* Red Flag Badges */}
+                      <div className="mb-3">
+                        <RedFlagBadgeList analysis={a} />
+                      </div>
 
                       {/* Bottom row */}
                       <div className="flex items-center justify-between">
