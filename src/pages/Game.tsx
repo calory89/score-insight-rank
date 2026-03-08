@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, ThumbsDown, Share2, RotateCcw, Trophy, MapPin, ArrowLeft, Flame } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 
 interface GameProperty {
@@ -29,6 +31,10 @@ const GOOD_THRESHOLD = 70;
 const Game = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  useDocumentMeta({
+    title: "Deal or No Deal — RealHunt Property Game",
+    description: "Can you spot a good real estate deal? Swipe through properties and test your instincts in this addictive property game.",
+  });
   const [properties, setProperties] = useState<GameProperty[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [results, setResults] = useState<{ correct: boolean; score: number; guessed: string }[]>([]);
@@ -112,6 +118,7 @@ const Game = () => {
       } catch {}
     } else {
       await navigator.clipboard.writeText(`${text} ${url}`);
+      toast({ title: "Copied!", description: "Score link copied to clipboard." });
     }
   };
 

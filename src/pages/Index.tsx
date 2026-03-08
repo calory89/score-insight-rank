@@ -39,6 +39,18 @@ const Index = () => {
         <MediaLogos />
         <HowItWorks />
 
+        {/* Game CTA Promo */}
+        <section className="py-12 md:py-16 border-t border-border/50">
+          <div className="container mx-auto px-4 text-center max-w-2xl">
+            <span className="text-3xl mb-3 block">🔥</span>
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">Think You Can Spot a Good Deal?</h2>
+            <p className="text-sm text-muted-foreground mb-6">Swipe through real properties and guess: good deal or bad deal? Test your instincts and share your score.</p>
+            <Button variant="hero" size="lg" onClick={() => window.location.href = "/game"}>
+              Play Deal or No Deal <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </div>
+        </section>
+
         {/* Score Preview with CTA */}
         <section id="score-preview" className="py-16 md:py-20">
           <div className="container mx-auto px-4">

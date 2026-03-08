@@ -200,28 +200,37 @@ const Profile = () => {
           </motion.div>
         )}
 
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <div className="rounded-xl border border-border bg-card p-4 text-center">
-            <BarChart3 className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
-            <p className="text-xl font-bold font-mono text-foreground">{stats.total}</p>
-            <p className="text-[10px] text-muted-foreground">Analyzed</p>
+        {stats.total === 0 && isOwnProfile ? (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-2xl border border-dashed border-border bg-card p-8 text-center mb-6">
+            <BarChart3 className="h-10 w-10 text-muted-foreground/40 mx-auto mb-3" />
+            <h3 className="text-lg font-semibold text-foreground mb-1">No analyses yet</h3>
+            <p className="text-sm text-muted-foreground mb-4">Paste any property listing URL to get your first AI-powered forensic report.</p>
+            <Button variant="hero" size="sm" onClick={() => navigate("/dashboard")}>Analyze Your First Property <ArrowRight className="ml-1 h-3.5 w-3.5" /></Button>
+          </motion.div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="rounded-xl border border-border bg-card p-4 text-center">
+              <BarChart3 className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
+              <p className="text-xl font-bold font-mono text-foreground">{stats.total}</p>
+              <p className="text-[10px] text-muted-foreground">Analyzed</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4 text-center">
+              <Star className="h-4 w-4 text-score-excellent mx-auto mb-1" />
+              <p className="text-xl font-bold font-mono text-score-excellent">{stats.high85}</p>
+              <p className="text-[10px] text-muted-foreground">Score 85+</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4 text-center">
+              <TrendingUp className="h-4 w-4 text-primary mx-auto mb-1" />
+              <p className="text-xl font-bold font-mono text-foreground">{stats.avgScore}</p>
+              <p className="text-[10px] text-muted-foreground">Avg Score</p>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4 text-center">
+              <Globe className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
+              <p className="text-xl font-bold font-mono text-foreground">{stats.countries}</p>
+              <p className="text-[10px] text-muted-foreground">Countries</p>
+            </div>
           </div>
-          <div className="rounded-xl border border-border bg-card p-4 text-center">
-            <Star className="h-4 w-4 text-score-excellent mx-auto mb-1" />
-            <p className="text-xl font-bold font-mono text-score-excellent">{stats.high85}</p>
-            <p className="text-[10px] text-muted-foreground">Score 85+</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4 text-center">
-            <TrendingUp className="h-4 w-4 text-primary mx-auto mb-1" />
-            <p className="text-xl font-bold font-mono text-foreground">{stats.avgScore}</p>
-            <p className="text-[10px] text-muted-foreground">Avg Score</p>
-          </div>
-          <div className="rounded-xl border border-border bg-card p-4 text-center">
-            <Globe className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
-            <p className="text-xl font-bold font-mono text-foreground">{stats.countries}</p>
-            <p className="text-[10px] text-muted-foreground">Countries</p>
-          </div>
-        </div>
+        )}
 
         <div className="rounded-xl border border-border bg-card p-4 mb-6">
           <div className="flex items-center justify-between mb-2">
