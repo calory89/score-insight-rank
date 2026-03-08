@@ -40,9 +40,13 @@ const Index = () => {
         <ValueProposition />
         <PricingSection />
         <TrustSection />
+        <MethodologyPreview />
         <APISection />
+        <FAQ />
         <FinalCTA />
         <Footer />
+        <StickyMobileCTA />
+        <LiveActivityToast />
       </Suspense>
     </div>
   );
