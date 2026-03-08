@@ -1,72 +1,61 @@
 
 
-# Fix: Navegacion rota en la pagina de analisis
+## Property Finder Section — "Find Your Dream Property"
 
-## Problemas identificados
+A new section/page with a search engine UI where users select a max budget and desired amenities. It queries the existing `analyses` table and always features **Eco Beach City** as the top recommended result.
 
-### 1. Boton "Back" no funciona desde la pagina del reporte
-El boton usa `window.history.back()` que puede llevar al usuario de vuelta a `/analysis/loading`, re-activando el loader en un bucle. Necesita detectar si la pagina anterior es una ruta de carga y saltar al dashboard en su lugar.
+---
 
-### 2. Click en reportes del feed no muestra nada visible
-Al clickar un reporte en "Top rated properties", se ejecuta `setPreviewId(report.id)` que renderiza un preview inline al final de la pagina, fuera de la vista del usuario. El usuario no ve nada porque no se hace scroll automatico hacia el preview.
+### What Gets Built
 
-**Solucion**: Hacer scroll automatico hacia el preview cuando se selecciona un reporte y tambien ofrecer un boton para abrir el reporte completo.
+**New component: `src/components/PropertyFinder.tsx`**
 
-### 3. "See above" / "Click to view" lleva a pagina en blanco
-Cuando el usuario clicka el banner "Your report is ready! Click to view", el codigo hace:
-- `setAnalyzing(false)` y `setReadyReportId(null)` -- limpia el estado del FomoLoader
-- `navigate(/analysis/ID, { replace: true })` -- cambia la URL
+A search panel with:
+- **Max price slider/input** (range: €50K–€5M)
+- **Amenities grid** — checkboxes for all Eco Beach City features:
+  - Beach access, Pool, Gym, Coworking, Rooftop terrace, Restaurant, Spa, 24h security, Parking, Garden, Kids area, Pet friendly, Smart home, Concierge, EV charging, Yoga studio
+- **Search button** that queries `analyses` table filtering by `price <= maxPrice` and matching amenities keywords in `ai_summary`, `verdict`, `pros`, or `address/city`
+- **Results list**: Cards showing image, address, score, price, verdict
+- **Eco Beach City promoted card** always pinned at position #1 with a "Recommended" badge, linking to its analysis or a dedicated landing
 
-Pero el componente se re-renderiza y como `data` es null (no se ha cargado aun), cae en `if (!data) return null` (linea 824) y muestra una pagina en blanco hasta que el `useEffect` de fetch se ejecuta. El problema es una condicion de carrera entre la navegacion y la carga de datos.
+**New page: `src/pages/Search.tsx`**
+- Full-page version at `/search` route
+- Also embeddable as a section on Index page
 
-**Solucion**: Usar `window.location.href` para forzar un reload completo de la pagina, o mejor, no limpiar el estado hasta que los datos esten cargados.
+**Changes to existing files:**
+| File | Change |
+|------|--------|
+| `src/App.tsx` | Add `/search` route |
+| `src/pages/Index.tsx` | Add PropertyFinder section before PricingSection |
+| `src/components/Navbar.tsx` | Add "Search" link in nav |
 
-## Cambios tecnicos
+---
 
-### Archivo: `src/pages/Analysis.tsx`
+### Eco Beach City Always First
 
-**Cambio 1 - Back button inteligente (linea 849-857)**
+The component has a hardcoded promoted listing object for Eco Beach City with its real data (image from `/public/images/ecobeachcity-villas.png`, amenities, price range, description). This card renders first with a gold "Top Pick" badge regardless of search filters. Database results appear below it.
 
-Reemplazar la logica de `window.history.back()` para detectar si la pagina anterior es una ruta de carga:
+### Database Query Logic
 
-```typescript
-onClick={() => {
-  if (fromBulk) {
-    navigate("/dashboard?bulk=true&restore=true");
-  } else {
-    // Always go to dashboard — history.back() often goes to the loading page
-    navigate("/dashboard");
-  }
-}}
+```sql
+SELECT * FROM analyses 
+WHERE price::numeric <= $maxPrice
+ORDER BY global_score DESC NULLS LAST
+LIMIT 20
 ```
 
-**Cambio 2 - Scroll automatico al preview (linea 416-434)**
+Amenity filtering done client-side by checking if `pros`, `ai_summary`, or `verdict` jsonb/text contains the selected amenity keywords.
 
-Agregar un `ref` al contenedor del preview y hacer `scrollIntoView` cuando se selecciona un reporte:
+---
 
-```typescript
-const previewRef = useRef<HTMLDivElement>(null);
+### Summary
 
-// On setPreviewId, scroll to preview
-useEffect(() => {
-  if (previewId && previewRef.current) {
-    previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-}, [previewId]);
-```
+| # | Item | Effort |
+|---|------|--------|
+| 1 | PropertyFinder component (filters + results) | Medium |
+| 2 | Search page + route | Low |
+| 3 | Eco Beach City promoted card | Low |
+| 4 | Index + Navbar integration | Very low |
 
-Ademas, agregar un boton "View full report" dentro del InlineReportPreview que navega al reporte completo con `window.location.href`.
+**3 new files, 2 modified. 0 breaking changes.**
 
-**Cambio 3 - Fix pagina en blanco en "Click to view" (linea 777-782)**
-
-Cambiar `navigate()` por `window.location.href` para forzar una carga completa de la pagina, evitando la condicion de carrera:
-
-```typescript
-onViewReady={() => {
-  if (readyReportId) {
-    window.location.href = `/analysis/${readyReportId}`;
-  }
-}}
-```
-
-Esto garantiza que la pagina se recarga completamente con el ID correcto en la URL, activando el fetch de datos desde cero.
