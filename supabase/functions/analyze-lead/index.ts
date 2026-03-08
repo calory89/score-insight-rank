@@ -7,6 +7,57 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+async function fetchWebsiteContent(url: string): Promise<string> {
+  try {
+    let formattedUrl = url.trim();
+    if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
+      formattedUrl = `https://${formattedUrl}`;
+    }
+    const res = await fetch(formattedUrl, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; RealHuntBot/1.0)" },
+      redirect: "follow",
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return `[Could not fetch: HTTP ${res.status}]`;
+    const html = await res.text();
+
+    // Extract title
+    const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+    const title = titleMatch?.[1]?.trim() || "";
+
+    // Extract meta description
+    const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["']/i)
+      || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']description["']/i);
+    const description = descMatch?.[1]?.trim() || "";
+
+    // Extract OG tags
+    const ogTitleMatch = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["']/i);
+    const ogDescMatch = html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["']/i);
+
+    // Strip HTML tags and get body text
+    const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+    const bodyHtml = bodyMatch?.[1] || html;
+    const bodyText = bodyHtml
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 3000);
+
+    return [
+      `Page Title: ${title}`,
+      description ? `Meta Description: ${description}` : "",
+      ogTitleMatch ? `OG Title: ${ogTitleMatch[1]}` : "",
+      ogDescMatch ? `OG Description: ${ogDescMatch[1]}` : "",
+      `Page Content (first 3000 chars): ${bodyText}`,
+    ].filter(Boolean).join("\n");
+  } catch (e) {
+    console.error("Website fetch error:", e);
+    return `[Could not fetch website: ${e instanceof Error ? e.message : "timeout or error"}]`;
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -21,8 +72,7 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -30,31 +80,52 @@ serve(async (req) => {
 
     if (!company_name && !website && !contact_name) {
       return new Response(JSON.stringify({ error: "Provide at least a company name, website, or contact name" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       return new Response(JSON.stringify({ error: "AI service not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Use AI to analyze the lead
-    const prompt = `You are a world-class B2B sales intelligence analyst. Analyze this potential lead and provide a comprehensive assessment.
+    // Fetch real website content if URL provided
+    let websiteContent = "";
+    if (website) {
+      console.log("Fetching website content from:", website);
+      websiteContent = await fetchWebsiteContent(website);
+      console.log("Website content length:", websiteContent.length);
+    }
+
+    const prompt = `You are a world-class B2B sales intelligence analyst. Analyze this potential lead using ALL available data, especially the REAL website content scraped below.
 
 Lead information:
 - Company: ${company_name || "Unknown"}
-- Website: ${website || "Not provided"}
+- Website URL: ${website || "Not provided"}
 - Contact: ${contact_name || "Unknown"}
 - Email: ${contact_email || "Not provided"}
-- Industry: ${industry || "Unknown"}
+- Industry (user-provided): ${industry || "Unknown"}
 - Notes: ${notes || "None"}
 
-Respond using the suggest_lead_analysis tool with your analysis.`;
+${websiteContent ? `=== REAL WEBSITE CONTENT (scraped from ${website}) ===
+${websiteContent}
+=== END WEBSITE CONTENT ===` : "No website content available — score conservatively."}
+
+SCORING RUBRIC — Use this point system strictly:
+- Website exists and is accessible: +15 points
+- Industry/niche match (real estate, property, investment, construction, architecture): +20 points
+- Company size signals (team pages, multiple offices, hiring): +15 points
+- Corporate email domain (not gmail/hotmail/yahoo): +10 points
+- Pain points detected on website (manual processes, scaling challenges, mentions of growth): +15 points
+- Technology sophistication (modern website, SaaS tools, integrations): +10 points
+- Base score: +15 points
+
+If the website could NOT be fetched, cap the score at 50 max unless other strong signals exist.
+If the website content is clearly a property listing (Zillow, Realtor, etc.), analyze it as a PROPERTY lead — extract neighborhood quality, price analysis, property condition, and market signals from the listing content.
+
+Respond using the suggest_lead_analysis tool with your analysis. Ground ALL insights in the actual scraped content — do NOT hallucinate details.`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -65,7 +136,7 @@ Respond using the suggest_lead_analysis tool with your analysis.`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "You are a B2B sales intelligence AI. Always use the provided tool to structure your response." },
+          { role: "system", content: "You are a B2B sales intelligence AI. Always use the provided tool to structure your response. Base your analysis on REAL scraped website content when available." },
           { role: "user", content: prompt },
         ],
         tools: [
@@ -73,43 +144,43 @@ Respond using the suggest_lead_analysis tool with your analysis.`;
             type: "function",
             function: {
               name: "suggest_lead_analysis",
-              description: "Provide structured lead analysis",
+              description: "Provide structured lead analysis based on real website data",
               parameters: {
                 type: "object",
                 properties: {
                   lead_score: {
                     type: "integer",
-                    description: "Score from 0-100 based on likelihood to convert. Consider company size, industry fit, and engagement signals.",
+                    description: "Score 0-100 using the rubric. Sum the applicable points. Be strict and data-driven.",
                   },
                   summary: {
                     type: "string",
-                    description: "2-3 sentence summary of the lead's potential value and relevance.",
+                    description: "2-3 sentence summary grounded in actual website content. Mention specific things found on the page.",
                   },
                   pain_points: {
                     type: "array",
                     items: { type: "string" },
-                    description: "3-5 likely pain points this lead might have based on their industry and profile.",
+                    description: "3-5 pain points inferred from REAL website content (services offered, team size, tech stack, market positioning).",
                   },
                   recommended_approach: {
                     type: "string",
-                    description: "Best strategy to approach this lead. Include tone, channel, and timing.",
+                    description: "Strategy based on what was found on their website. Reference specific content.",
                   },
                   ideal_message: {
                     type: "string",
-                    description: "A personalized outreach message draft for this lead. Make it feel human and relevant.",
+                    description: "Personalized outreach message referencing specific details from their website.",
                   },
                   estimated_company_size: {
                     type: "string",
-                    description: "Estimated company size category: 'solo', '2-10', '11-50', '51-200', '201-500', '500+'",
+                    description: "Estimated from website signals: 'solo', '2-10', '11-50', '51-200', '201-500', '500+'",
                   },
                   estimated_industry: {
                     type: "string",
-                    description: "Best guess of the company's industry if not provided.",
+                    description: "Industry determined from actual website content, not guessed.",
                   },
                   tags: {
                     type: "array",
                     items: { type: "string" },
-                    description: "2-4 relevant tags for this lead (e.g., 'real-estate', 'high-value', 'tech-savvy').",
+                    description: "2-4 tags based on real content found on the website.",
                   },
                 },
                 required: ["lead_score", "summary", "pain_points", "recommended_approach", "ideal_message", "tags"],
@@ -125,21 +196,18 @@ Respond using the suggest_lead_analysis tool with your analysis.`;
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {
         return new Response(JSON.stringify({ error: "AI rate limit exceeded, please try again later." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (aiResponse.status === 402) {
         return new Response(JSON.stringify({ error: "AI credits exhausted. Please add credits." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const errText = await aiResponse.text();
       console.error("AI error:", aiResponse.status, errText);
       return new Response(JSON.stringify({ error: "AI analysis failed" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -164,7 +232,6 @@ Respond using the suggest_lead_analysis tool with your analysis.`;
       }
     }
 
-    // Insert lead into database
     const { data: lead, error: insertError } = await supabase
       .from("leads")
       .insert({
@@ -176,6 +243,7 @@ Respond using the suggest_lead_analysis tool with your analysis.`;
         industry: analysis.estimated_industry || industry || null,
         company_size: analysis.estimated_company_size || null,
         source: "ai_analyzed",
+        source_url: website || null,
         lead_score: analysis.lead_score,
         ai_summary: analysis.summary,
         ai_pain_points: analysis.pain_points,
@@ -191,8 +259,7 @@ Respond using the suggest_lead_analysis tool with your analysis.`;
     if (insertError) {
       console.error("Insert error:", insertError);
       return new Response(JSON.stringify({ error: "Failed to save lead" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 

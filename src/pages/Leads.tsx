@@ -127,10 +127,21 @@ const AddLeadModal = ({ open, onClose, onAdded }: { open: boolean; onClose: () =
           </div>
 
           <div className="space-y-4">
+            {/* URL — Primary input */}
+            <div className="rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4">
+              <label className="text-xs font-semibold text-primary mb-1.5 block flex items-center gap-1.5">
+                <Globe className="h-3.5 w-3.5" /> Paste any URL (primary)
+              </label>
+              <Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })}
+                placeholder="https://zillow.com/homedetails/... or any company website"
+                className="border-primary/20 bg-background text-base" />
+              <p className="text-[10px] text-muted-foreground mt-1.5">AI will scrape this page and base the score on real content: neighborhood, price, condition, industry, etc.</p>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Company Name</label>
-                <Input value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} placeholder="Acme Corp" />
+                <label className="text-xs text-muted-foreground mb-1 block">Company / Property Name</label>
+                <Input value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} placeholder="Acme Corp or 123 Main St" />
               </div>
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Contact Name</label>
@@ -143,18 +154,14 @@ const AddLeadModal = ({ open, onClose, onAdded }: { open: boolean; onClose: () =
                 <Input type="email" value={form.contact_email} onChange={(e) => setForm({ ...form, contact_email: e.target.value })} placeholder="john@acme.com" />
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block">Website</label>
-                <Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} placeholder="https://acme.com" />
+                <label className="text-xs text-muted-foreground mb-1 block">Industry / Category</label>
+                <Input value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} placeholder="Real Estate, SaaS, E-commerce..." />
               </div>
             </div>
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Industry</label>
-              <Input value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} placeholder="Real Estate, SaaS, E-commerce..." />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Notes (context for AI)</label>
+              <label className="text-xs text-muted-foreground mb-1 block">Notes (extra context for AI)</label>
               <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                placeholder="Any context that helps AI score better: how you found them, what they need, etc."
+                placeholder="Any context: how you found them, what they need, neighborhood quality, etc."
                 className="min-h-[80px]" />
             </div>
           </div>
