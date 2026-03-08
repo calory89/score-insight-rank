@@ -41,6 +41,7 @@ const Navbar = () => {
         transition={{ duration: 0.5 }}
         className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/90 backdrop-blur-xl"
       >
+        <LayoutGroup>
         <div className="container mx-auto flex h-14 sm:h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => { navigate("/"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>
             <img src="/images/logo.png" alt="RealHunt" className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg object-cover" />
