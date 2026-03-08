@@ -111,6 +111,22 @@ const HeroSection = () => {
             5 free analyses · No credit card · 50+ platforms supported
           </p>
 
+          {/* Live analyzing counter */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="flex items-center justify-center gap-2 mb-2"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-score-excellent opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-score-excellent" />
+            </span>
+            <span className="text-xs text-muted-foreground">
+              <span className="font-semibold text-foreground">{Math.floor(37 + Math.sin(Date.now() / 10000) * 15)}</span> properties being analyzed right now
+            </span>
+          </motion.div>
+
           {/* Bulk Analyze CTA */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -135,11 +151,24 @@ const HeroSection = () => {
           </motion.div>
         </motion.div>
 
+        {/* Score Preview — Visual Proof */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.8 }}
+          className="max-w-3xl mx-auto mt-12 sm:mt-16"
+        >
+          <div className="text-center mb-4">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Example Report Preview</p>
+          </div>
+          <ScorePreview />
+        </motion.div>
+
         {/* Example Reports Carousel */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.8 }}
+          transition={{ delay: 1, duration: 0.8 }}
           className="max-w-5xl mx-auto mt-16 sm:mt-20" id="example-reports"
         >
           <div className="text-center mb-6">

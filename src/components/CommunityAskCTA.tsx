@@ -1,18 +1,29 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { HelpCircle, ArrowRight, MessageCircle, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import LoginGateModal from "@/components/LoginGateModal";
 
 const CommunityAskCTA = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [showLoginGate, setShowLoginGate] = useState(false);
 
   const questions = [
     "Is Bali still a good investment in 2026?",
     "Best areas for rental yield in Portugal?",
     "Red flags in off-plan projects?",
   ];
+
+  const handleClick = () => {
+    if (user) {
+      navigate("/discover");
+    } else {
+      setShowLoginGate(true);
+    }
+  };
 
   return (
     <section className="py-20 md:py-28 relative">
@@ -34,10 +45,7 @@ const CommunityAskCTA = () => {
             <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
               Ask thousands of active investors who've already done the research. Get real answers from people who bought, lived it, and can tell you what the data can't.
             </p>
-            <Button
-              variant="hero"
-              onClick={() => navigate(user ? "/discover" : "/#pricing")}
-            >
+            <Button variant="hero" onClick={handleClick}>
               {user ? "Ask the Community" : "Join Free"} <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </motion.div>
@@ -65,6 +73,8 @@ const CommunityAskCTA = () => {
           </motion.div>
         </div>
       </div>
+
+      <LoginGateModal open={showLoginGate} onClose={() => setShowLoginGate(false)} />
     </section>
   );
 };
