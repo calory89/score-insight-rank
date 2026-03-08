@@ -9,7 +9,7 @@ import LoginGateModal from "@/components/LoginGateModal";
 const HeroSection = () => {
   const [url, setUrl] = useState("");
   const [showLoginGate, setShowLoginGate] = useState(false);
-  const [liveCount, setLiveCount] = useState(42);
+  const [totalAnalyses, setTotalAnalyses] = useState<number | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
   const pendingUrlRef = useRef<string | null>(null);
@@ -27,12 +27,15 @@ const HeroSection = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Live animated counter
+  // Fetch real total analyses count
   useEffect(() => {
-    const interval = setInterval(() => {
-      setLiveCount(Math.floor(30 + Math.random() * 25));
-    }, 4000);
-    return () => clearInterval(interval);
+    const cached = sessionStorage.getItem("rh_total_analyses");
+    if (cached) { setTotalAnalyses(parseInt(cached, 10)); return; }
+    supabase.from("analyses").select("id", { count: "exact", head: true }).then(({ count }) => {
+      const total = count || 0;
+      setTotalAnalyses(total);
+      sessionStorage.setItem("rh_total_analyses", String(total));
+    });
   }, []);
 
   const handleAnalyze = () => {
