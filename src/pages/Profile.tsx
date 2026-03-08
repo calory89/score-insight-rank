@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
-import { User, BarChart3, TrendingUp, Star, Globe, ArrowLeft, ArrowRight, Zap } from "lucide-react";
+import { User, BarChart3, TrendingUp, Star, Globe, ArrowLeft, ArrowRight, Zap, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { ProfileSkeleton } from "@/components/SkeletonCards";
+import { useAchievements, AchievementGrid, AchievementToast } from "@/components/AchievementSystem";
 
 const levelConfig = [
   { name: "Explorer", min: 0, color: "text-muted-foreground" },
@@ -59,6 +60,7 @@ const Profile = () => {
   const [editing, setEditing] = useState(false);
   const [editUsername, setEditUsername] = useState("");
   const [editBio, setEditBio] = useState("");
+  const { unlocked, checkAndUnlock, newlyUnlocked, dismissNew } = useAchievements();
 
   useEffect(() => {
     if (!authLoading && !user) { navigate("/"); return; }
@@ -90,6 +92,26 @@ const Profile = () => {
     const avgScore = scores.length > 0 ? Math.round(scores.reduce((s: number, v: number) => s + v, 0) / scores.length) : 0;
     const countries = [...new Set(analyses.map((a: any) => a.country).filter(Boolean))].length;
     setStats({ total: analyses.length, high85: scores.filter((s: number) => s >= 85).length, avgScore, countries });
+
+    // Check achievements
+    if (isOwnProfile) {
+      const [favsRes, reviewsRes, streakRes, watchRes, portfolioRes] = await Promise.all([
+        supabase.from("favorites").select("id").eq("user_id", targetUserId),
+        supabase.from("property_reviews").select("id").eq("user_id", targetUserId),
+        supabase.from("user_streaks").select("current_streak").eq("user_id", targetUserId).maybeSingle(),
+        supabase.from("watchlist").select("id").eq("user_id", targetUserId),
+        supabase.from("portfolio_properties" as any).select("id").eq("user_id", targetUserId),
+      ]);
+      checkAndUnlock({
+        analysisCount: analyses.length,
+        favoriteCount: favsRes.data?.length || 0,
+        reviewCount: reviewsRes.data?.length || 0,
+        streakDays: (streakRes.data as any)?.current_streak || 0,
+        watchlistCount: watchRes.data?.length || 0,
+        portfolioCount: portfolioRes.data?.length || 0,
+        compareCount: 0,
+      });
+    }
 
     if (user && !isOwnProfile) {
       const { data: followCheck } = await (supabase as any)
@@ -254,34 +276,12 @@ const Profile = () => {
           <p className="text-[10px] text-muted-foreground mt-1.5">{stats.total} / {nextLevel?.min || stats.total} analyses</p>
         </div>
 
-        {/* Milestones */}
+        {/* Achievements */}
         <div className="mb-6">
           <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-            <Zap className="h-4 w-4 text-primary" /> Milestones
+            <Trophy className="h-4 w-4 text-primary" /> Achievements
           </h3>
-          <div className="grid grid-cols-2 gap-2">
-            {[
-              { label: "First Analysis", icon: "🎯", unlocked: stats.total >= 1 },
-              { label: "10 Properties", icon: "🏠", unlocked: stats.total >= 10 },
-              { label: "5 Countries", icon: "🌍", unlocked: stats.countries >= 5 },
-              { label: "Score 85+", icon: "⭐", unlocked: stats.high85 >= 1 },
-            ].map((m) => (
-              <div
-                key={m.label}
-                className={`rounded-xl border p-3 text-center transition-all ${
-                  m.unlocked
-                    ? "border-primary/30 bg-primary/5"
-                    : "border-border bg-card opacity-50"
-                }`}
-              >
-                <span className="text-lg block mb-1">{m.icon}</span>
-                <p className={`text-[10px] font-medium ${m.unlocked ? "text-primary" : "text-muted-foreground"}`}>
-                  {m.label}
-                </p>
-                {m.unlocked && <span className="text-[9px] text-primary">✓ Unlocked</span>}
-              </div>
-            ))}
-          </div>
+          <AchievementGrid unlocked={unlocked} />
         </div>
 
         {isOwnProfile && (

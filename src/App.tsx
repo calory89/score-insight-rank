@@ -31,6 +31,7 @@ const Privacy = React.lazy(() => import("./pages/Privacy"));
 const Terms = React.lazy(() => import("./pages/Terms"));
 const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
 const InvestorQuiz = React.lazy(() => import("./pages/InvestorQuiz"));
+const Portfolio = React.lazy(() => import("./pages/Portfolio"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -83,6 +84,7 @@ const AnimatedRoutes = () => {
           <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
           <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
           <Route path="/quiz" element={<PageTransition><InvestorQuiz /></PageTransition>} />
+          <Route path="/portfolio" element={<PageTransition><Portfolio /></PageTransition>} />
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
       </AnimatePresence>
