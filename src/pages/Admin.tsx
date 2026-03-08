@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import AdminVisitsPanel from "@/components/AdminVisitsPanel";
 import AdminAnalyticsTab from "@/components/admin/AdminAnalyticsTab";
+import AdminUserDetail from "@/components/admin/AdminUserDetail";
 import AdminVisitorLog from "@/components/AdminVisitorLog";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -734,6 +735,7 @@ const Admin = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [myAnalysesCount, setMyAnalysesCount] = useState(0);
 
@@ -899,6 +901,7 @@ const Admin = () => {
                     <div
                       className="grid grid-cols-[2fr_1fr_80px] sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_80px] gap-2 px-5 py-3.5 items-center hover:bg-secondary/20 cursor-pointer transition-colors"
                       onClick={() => setExpandedUser(expandedUser === u.id ? null : u.id)}
+                      onDoubleClick={() => setSelectedUser(u)}
                     >
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{u.email}</p>
@@ -988,6 +991,8 @@ const Admin = () => {
                 ))
               )}
                 </div>
+
+                <AdminUserDetail user={selectedUser} onClose={() => setSelectedUser(null)} />
               </TabsContent>
 
               <TabsContent value="tickets">
