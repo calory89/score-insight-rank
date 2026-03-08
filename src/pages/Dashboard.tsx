@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -437,15 +437,15 @@ const Dashboard = () => {
 
   if (authLoading || !user) return null;
 
-  const avgScore = analyses.length > 0 ? Math.round(analyses.reduce((s, a) => s + (a.global_score || 0), 0) / analyses.length) : 0;
-  const countriesAnalyzed = [...new Set(analyses.map(a => a.country).filter(Boolean))].length;
+  const avgScore = useMemo(() => analyses.length > 0 ? Math.round(analyses.reduce((s, a) => s + (a.global_score || 0), 0) / analyses.length) : 0, [analyses]);
+  const countriesAnalyzed = useMemo(() => [...new Set(analyses.map(a => a.country).filter(Boolean))].length, [analyses]);
 
-    const sortedAnalyses = [...analyses].sort((a, b) => {
-      if (sortBy === "score") return (b.global_score || 0) - (a.global_score || 0);
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-    });
+  const sortedAnalyses = useMemo(() => [...analyses].sort((a, b) => {
+    if (sortBy === "score") return (b.global_score || 0) - (a.global_score || 0);
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  }), [analyses, sortBy]);
 
-    const displayAnalyses = showFavoritesOnly ? sortedAnalyses.filter(a => favoriteIds.has(a.id)) : sortedAnalyses;
+  const displayAnalyses = useMemo(() => showFavoritesOnly ? sortedAnalyses.filter(a => favoriteIds.has(a.id)) : sortedAnalyses, [sortedAnalyses, showFavoritesOnly, favoriteIds]);
 
   return (
     <div className="min-h-screen bg-background pb-16 sm:pb-0">
