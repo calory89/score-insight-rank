@@ -1402,6 +1402,7 @@ const Analysis = () => {
             )}
           </Section>
         )}
+        </ProGateOverlay>
 
         {/* ===== 7. NEIGHBORHOOD INTELLIGENCE ===== */}
         {f.neighborhood_scores && (
