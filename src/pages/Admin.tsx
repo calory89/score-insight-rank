@@ -698,12 +698,12 @@ const Admin = () => {
 
             {/* Users Table */}
             <div className="rounded-2xl border border-border bg-card overflow-hidden">
-              <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_80px] gap-2 px-5 py-3 border-b border-border bg-secondary/30 text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+              <div className="grid grid-cols-[2fr_1fr_80px] sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_80px] gap-2 px-5 py-3 border-b border-border bg-secondary/30 text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
                 <span>User</span>
-                <span>Signed Up</span>
-                <span>Last Login</span>
+                <span className="hidden sm:block">Signed Up</span>
+                <span className="hidden sm:block">Last Login</span>
                 <span>Searches</span>
-                <span>Plan</span>
+                <span className="hidden sm:block">Plan</span>
                 <span></span>
               </div>
 
@@ -713,7 +713,7 @@ const Admin = () => {
                 filteredUsers.map((u) => (
                   <div key={u.id} className="border-b border-border last:border-b-0">
                     <div
-                      className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_80px] gap-2 px-5 py-3.5 items-center hover:bg-secondary/20 cursor-pointer transition-colors"
+                      className="grid grid-cols-[2fr_1fr_80px] sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_80px] gap-2 px-5 py-3.5 items-center hover:bg-secondary/20 cursor-pointer transition-colors"
                       onClick={() => setExpandedUser(expandedUser === u.id ? null : u.id)}
                     >
                       <div className="min-w-0">
@@ -722,13 +722,16 @@ const Admin = () => {
                           <Shield className="h-3 w-3" /> {u.provider}
                           {u.detected_country && <><MapPin className="h-3 w-3 ml-1" /> {u.detected_country}</>}
                         </p>
+                        <p className="sm:hidden text-[10px] text-muted-foreground mt-0.5">
+                          {new Date(u.created_at).toLocaleDateString()} · <span className={`font-medium uppercase ${u.email === ADMIN_EMAIL || u.plan !== "free" ? "text-primary" : ""}`}>{u.email === ADMIN_EMAIL ? "pro" : u.plan}</span>
+                        </p>
                       </div>
-                      <span className="text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground hidden sm:block">{new Date(u.created_at).toLocaleDateString()}</span>
+                      <span className="text-xs text-muted-foreground hidden sm:block">
                         {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString() : "Never"}
                       </span>
                       <span className="text-xs font-mono text-foreground">{u.analyses_count}</span>
-                      <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full w-fit ${
+                      <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full w-fit hidden sm:block ${
                         u.email === ADMIN_EMAIL ? "bg-primary/10 text-primary" :
                         u.plan === "free" ? "bg-secondary text-muted-foreground" : "bg-primary/10 text-primary"
                       }`}>{u.email === ADMIN_EMAIL ? "pro" : u.plan}</span>

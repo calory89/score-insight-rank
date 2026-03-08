@@ -5,7 +5,7 @@ import { Check, Zap, Crown, Building2, Mail, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
-import LoginGateModal from "@/components/LoginGateModal";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import StripeCheckoutOverlay from "@/components/StripeCheckoutOverlay";
 import { supabase } from "@/integrations/supabase/client";
 
