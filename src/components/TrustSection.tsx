@@ -48,7 +48,7 @@ const TrustSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.08 }}
-              className="rounded-xl border border-border bg-card p-4 sm:p-5 text-center hover:border-primary/15 transition-colors"
+              className="rounded-xl border border-border bg-card p-4 sm:p-5 text-center hover:border-primary/20 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
             >
               <point.icon className="h-5 w-5 text-muted-foreground mx-auto mb-3" />
               <h3 className="text-xs font-semibold text-foreground mb-1">{point.title}</h3>

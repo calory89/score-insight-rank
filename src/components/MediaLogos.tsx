@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
+import { Building2, Briefcase, Globe, Landmark, TrendingUp } from "lucide-react";
 
-const logos = [
-  { name: "TechCrunch", style: "font-bold italic text-lg md:text-xl tracking-tight" },
-  { name: "Bloomberg", style: "font-black text-lg md:text-xl tracking-[-0.03em] uppercase" },
-  { name: "Forbes", style: "font-bold italic text-lg md:text-xl tracking-[0.08em] uppercase" },
-  { name: "Business Insider", style: "font-extrabold text-base md:text-lg tracking-tight" },
-  { name: "The Guardian", style: "font-serif font-bold text-lg md:text-xl tracking-wide" },
+const segments = [
+  { label: "Real Estate Funds", icon: Landmark },
+  { label: "Family Offices", icon: Briefcase },
+  { label: "Digital Nomads", icon: Globe },
+  { label: "Property Developers", icon: Building2 },
+  { label: "Private Investors", icon: TrendingUp },
 ];
 
 const MediaLogos = () => (
@@ -18,16 +19,17 @@ const MediaLogos = () => (
         className="flex flex-col items-center"
       >
         <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-5">
-          Trusted by investors worldwide
+          Trusted by investors from
         </p>
         <div className="flex flex-wrap items-center justify-center gap-8 md:gap-14">
-          {logos.map((logo) => (
-            <span
-              key={logo.name}
-              className={`text-muted-foreground/30 select-none transition-opacity hover:text-muted-foreground/50 ${logo.style}`}
+          {segments.map((seg) => (
+            <div
+              key={seg.label}
+              className="flex items-center gap-2 text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors select-none"
             >
-              {logo.name}
-            </span>
+              <seg.icon className="h-4 w-4" />
+              <span className="text-xs font-semibold tracking-wide">{seg.label}</span>
+            </div>
           ))}
         </div>
       </motion.div>

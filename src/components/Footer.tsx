@@ -1,16 +1,36 @@
 import { useState } from "react";
 import { Mail, ExternalLink, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Footer = () => {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
-    setSubscribed(true);
-    setEmail("");
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from("newsletter_subscribers" as any)
+        .insert({ email: email.trim().toLowerCase() } as any);
+      if (error) {
+        if (error.code === "23505") {
+          toast.info("You're already subscribed!");
+        } else {
+          throw error;
+        }
+      }
+      setSubscribed(true);
+      setEmail("");
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -39,8 +59,8 @@ const Footer = () => {
                   required
                   className="flex-1 h-9 rounded-lg border border-border bg-secondary/50 px-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
                 />
-                <Button type="submit" variant="hero" size="sm" className="h-9 px-3 text-xs">
-                  Subscribe <ArrowRight className="ml-1 h-3 w-3" />
+                <Button type="submit" variant="hero" size="sm" className="h-9 px-3 text-xs" disabled={loading}>
+                  {loading ? "..." : "Subscribe"} <ArrowRight className="ml-1 h-3 w-3" />
                 </Button>
               </form>
             )}

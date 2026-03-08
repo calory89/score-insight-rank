@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Accordion,
@@ -38,6 +39,28 @@ const faqs = [
 ];
 
 const FAQ = () => {
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = "faq-schema";
+    script.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqs.map((faq) => ({
+        "@type": "Question",
+        name: faq.q,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: faq.a,
+        },
+      })),
+    });
+    document.head.appendChild(script);
+    return () => {
+      document.getElementById("faq-schema")?.remove();
+    };
+  }, []);
+
   return (
     <section id="faq" className="py-20 bg-background">
       <div className="container mx-auto px-4 max-w-3xl">

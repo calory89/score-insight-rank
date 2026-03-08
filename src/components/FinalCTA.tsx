@@ -1,8 +1,18 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Star, Quote } from "lucide-react";
 
 const FinalCTA = () => {
+  const [count, setCount] = useState(37);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCount(Math.floor(30 + Math.random() * 25));
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
   const scrollToHero = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -44,7 +54,7 @@ const FinalCTA = () => {
               <span className="relative inline-flex rounded-full h-2 w-2 bg-score-excellent" />
             </span>
             <span className="text-xs text-muted-foreground">
-              <span className="font-semibold text-foreground">{Math.floor(37 + Math.sin(Date.now() / 10000) * 15)}</span> properties being analyzed right now
+              <span className="font-semibold text-foreground transition-all duration-700">{count}</span> properties being analyzed right now
             </span>
           </div>
 
