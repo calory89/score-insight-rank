@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { AnimatePresence } from "framer-motion";
 import { ADMIN_EMAIL } from "@/lib/constants";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -172,58 +173,78 @@ const Navbar = () => {
         </div>
         </LayoutGroup>
 
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            className="md:hidden border-t border-border bg-background px-4 py-4 space-y-3"
-          >
-            <a href="/#how-it-works" className="block text-sm text-muted-foreground py-2" onClick={() => setIsOpen(false)}>How It Works</a>
-            <a href="/game" className="block text-sm text-muted-foreground py-2" onClick={(e) => { e.preventDefault(); navigate("/game"); setIsOpen(false); }}>Game</a>
-            <a href="/rankings" className="block text-sm text-muted-foreground py-2" onClick={(e) => { e.preventDefault(); navigate("/rankings"); setIsOpen(false); }}>Rankings</a>
-            {user?.email === ADMIN_EMAIL && <a href="/leads" className="block text-sm text-muted-foreground py-2" onClick={(e) => { e.preventDefault(); navigate("/leads"); setIsOpen(false); }}>Leads</a>}
-            <a href="/search" className="block text-sm text-muted-foreground py-2" onClick={(e) => { e.preventDefault(); navigate("/search"); setIsOpen(false); }}>Search</a>
-            <a href="/#pricing" className="block text-sm text-muted-foreground py-2" onClick={() => setIsOpen(false)}>Pricing</a>
-            <div className="border-t border-border my-2" />
-            {user ? (
-              <div className="space-y-1">
-                {plan && (
-                  <div className="flex items-center justify-between px-1 py-2">
-                    <span className="text-xs text-muted-foreground">Credits</span>
-                    <Badge
-                      variant="secondary"
-                      className={`text-[10px] ${
-                        plan === "free" && creditsTotal - creditsUsed <= 2
-                          ? "animate-pulse border-destructive/50 bg-destructive/10 text-destructive"
-                          : ""
-                      }`}
-                    >
-                      {creditsTotal - creditsUsed}/{creditsTotal} {plan}
-                    </Badge>
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+              className="md:hidden border-t border-border bg-background overflow-hidden"
+            >
+              <div className="px-4 py-4 space-y-1">
+                {[
+                  { href: "/#how-it-works", label: "How It Works", path: null },
+                  { href: "/game", label: "Game", path: "/game" },
+                  { href: "/rankings", label: "Rankings", path: "/rankings" },
+                  ...(user?.email === ADMIN_EMAIL ? [{ href: "/leads", label: "Leads", path: "/leads" }] : []),
+                  { href: "/search", label: "Search", path: "/search" },
+                  { href: "/#pricing", label: "Pricing", path: null },
+                ].map((link, i) => (
+                  <motion.a
+                    key={link.href}
+                    href={link.href}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    className="block text-sm text-muted-foreground hover:text-foreground py-2.5 px-2 rounded-lg hover:bg-secondary/50 transition-colors"
+                    onClick={link.path ? (e) => { e.preventDefault(); navigate(link.path!); setIsOpen(false); } : () => setIsOpen(false)}
+                  >
+                    {link.label}
+                  </motion.a>
+                ))}
+                <div className="border-t border-border my-2" />
+                {user ? (
+                  <div className="space-y-1">
+                    {plan && (
+                      <div className="flex items-center justify-between px-2 py-2">
+                        <span className="text-xs text-muted-foreground">Credits</span>
+                        <Badge
+                          variant="secondary"
+                          className={`text-[10px] ${
+                            plan === "free" && creditsTotal - creditsUsed <= 2
+                              ? "animate-pulse border-destructive/50 bg-destructive/10 text-destructive"
+                              : ""
+                          }`}
+                        >
+                          {creditsTotal - creditsUsed}/{creditsTotal} {plan}
+                        </Badge>
+                      </div>
+                    )}
+                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => { navigate("/dashboard"); setIsOpen(false); }}>
+                      <LayoutDashboard className="h-4 w-4" /> Dashboard
+                    </Button>
+                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => { navigate("/profile"); setIsOpen(false); }}>
+                      <User className="h-4 w-4" /> Profile
+                    </Button>
+                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => { navigate("/tickets"); setIsOpen(false); }}>
+                      <TicketCheck className="h-4 w-4" /> Support
+                    </Button>
+                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => { navigate("/settings"); setIsOpen(false); }}>
+                      <Settings className="h-4 w-4" /> Settings
+                    </Button>
+                    <div className="border-t border-border my-1" />
+                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground" onClick={signOut}>
+                      <LogOut className="h-4 w-4" /> Sign Out
+                    </Button>
                   </div>
+                ) : (
+                  <Button variant="hero" size="sm" className="w-full mt-2" onClick={() => { setShowLogin(true); setIsOpen(false); }}>Get Started</Button>
                 )}
-                <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => { navigate("/dashboard"); setIsOpen(false); }}>
-                  <LayoutDashboard className="h-4 w-4" /> Dashboard
-                </Button>
-                <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => { navigate("/profile"); setIsOpen(false); }}>
-                  <User className="h-4 w-4" /> Profile
-                </Button>
-                <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => { navigate("/tickets"); setIsOpen(false); }}>
-                  <TicketCheck className="h-4 w-4" /> Support
-                </Button>
-                <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => { navigate("/settings"); setIsOpen(false); }}>
-                  <Settings className="h-4 w-4" /> Settings
-                </Button>
-                <div className="border-t border-border my-1" />
-                <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground" onClick={signOut}>
-                  <LogOut className="h-4 w-4" /> Sign Out
-                </Button>
               </div>
-            ) : (
-              <Button variant="hero" size="sm" className="w-full mt-2" onClick={() => { setShowLogin(true); setIsOpen(false); }}>Get Started</Button>
-            )}
-          </motion.div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.nav>
       <LoginGateModal open={showLogin} onClose={() => setShowLogin(false)} />
     </>
