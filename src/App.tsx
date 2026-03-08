@@ -72,6 +72,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} storageKey="realhunt-theme">
       <AuthProvider>
+        <SubscriptionProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -81,6 +82,7 @@ const App = () => (
             </PageTracker>
           </BrowserRouter>
         </TooltipProvider>
+        </SubscriptionProvider>
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
