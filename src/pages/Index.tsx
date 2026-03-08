@@ -42,9 +42,10 @@ const Index = () => {
         <HowItWorks />
 
         {/* Score Preview with CTA */}
-        <section className="py-16 md:py-20">
+        <section id="score-preview" className="py-16 md:py-20">
           <div className="container mx-auto px-4">
             <div className="text-center mb-6">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">See What a Report Looks Like</h2>
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Example Report Preview</p>
             </div>
             <div className="max-w-3xl mx-auto">
@@ -76,7 +77,6 @@ const Index = () => {
         <AlternativesSection />
         <PricingSection />
         <DiscoverPromo />
-        <TrustSection />
         <MethodologyPreview />
         <APISection />
         <FAQ />

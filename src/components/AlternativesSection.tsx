@@ -95,7 +95,7 @@ const AlternativesSection = () => {
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
               onClick={() => navigate(`/analysis/${alt.id}`)}
-              className="group rounded-xl border border-border bg-card p-4 md:p-5 hover:border-primary/20 transition-all duration-300 cursor-pointer"
+              className="group rounded-xl border border-border bg-card p-4 md:p-5 hover:border-primary/20 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
             >
               <div className="flex items-center justify-between gap-3 sm:gap-4">
                 <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">

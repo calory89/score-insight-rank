@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Code2, Building2, Users, Landmark, ArrowRight, Mail, CheckCircle2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -16,9 +17,9 @@ const APISection = () => {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!email.trim()) return;
-    // Fire and forget — no backend needed for waitlist capture
+    await supabase.from("newsletter_subscribers").insert({ email: email.trim() });
     setSubmitted(true);
     setTimeout(() => {
       setShowForm(false);
