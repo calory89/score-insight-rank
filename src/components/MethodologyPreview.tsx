@@ -5,7 +5,7 @@ const pillars = [
   { label: "ROI Potential", value: 85, icon: TrendingUp, description: "Projected returns vs. market average" },
   { label: "Market Stability", value: 72, icon: Shield, description: "Price volatility & economic resilience" },
   { label: "Demand Strength", value: 90, icon: Users, description: "Buyer/renter demand indicators" },
-  { label: "Risk Level", value: 68, icon: Target, description: "Regulatory, environmental & market risks" },
+  { label: "Safety Score", value: 68, icon: Target, description: "Regulatory, environmental & market risks" },
   { label: "Liquidity Outlook", value: 78, icon: Droplets, description: "How quickly you can sell if needed" },
   { label: "Overall Value", value: 82, icon: BarChart3, description: "Price vs. comparable properties" },
 ];

@@ -29,7 +29,7 @@ const faqs = [
   },
   {
     q: "What does the Global Score mean?",
-    a: "The Global Score (0-100) is a composite of 6 dimensions: ROI Potential, Market Stability, Demand Strength, Risk Level, Liquidity Outlook, and overall value. A score above 75 indicates a strong investment opportunity. Above 85 is exceptional.",
+    a: "The Global Score (0-100) is a composite of 6 dimensions: ROI Potential, Market Stability, Demand Strength, Safety Score, Liquidity Outlook, and overall value. A score above 75 indicates a strong investment opportunity. Above 85 is exceptional.",
   },
   {
     q: "Can I compare properties from different countries?",
@@ -39,7 +39,7 @@ const faqs = [
 
 const FAQ = () => {
   return (
-    <section className="py-20 bg-background">
+    <section id="faq" className="py-20 bg-background">
       <div className="container mx-auto px-4 max-w-3xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -67,7 +67,7 @@ const FAQ = () => {
           <Accordion type="single" collapsible className="space-y-3">
             {faqs.map((faq, i) => (
               <AccordionItem
-                key={i}
+                key={`faq-${i}`}
                 value={`faq-${i}`}
                 className="border border-border rounded-xl px-5 bg-card data-[state=open]:shadow-sm transition-shadow"
               >

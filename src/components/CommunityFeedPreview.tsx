@@ -12,8 +12,34 @@ type FeedItem = {
   created_at: string;
   city?: string;
   country?: string;
-  email?: string;
 };
+
+const mockItems: FeedItem[] = [
+  {
+    id: "mock-1",
+    comment: "Incredible ROI potential in this area. The AI caught rental yield trends I completely missed. Already made an offer!",
+    rating: 5,
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    city: "Fort Lauderdale",
+    country: "USA",
+  },
+  {
+    id: "mock-2",
+    comment: "The safety score saved me from a bad deal. Red flags on the building permits that no agent mentioned. Worth every penny.",
+    rating: 5,
+    created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+    city: "Bali",
+    country: "Indonesia",
+  },
+  {
+    id: "mock-3",
+    comment: "Compared 3 apartments across different countries in minutes. The normalized scoring makes cross-market comparison actually possible.",
+    rating: 4,
+    created_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+    city: "Berlin",
+    country: "Germany",
+  },
+];
 
 const CommunityFeedPreview = () => {
   const navigate = useNavigate();
@@ -27,7 +53,10 @@ const CommunityFeedPreview = () => {
         .order("created_at", { ascending: false })
         .limit(6);
 
-      if (!reviews?.length) return;
+      if (!reviews?.length) {
+        setItems(mockItems);
+        return;
+      }
 
       const analysisIds = [...new Set(reviews.map((r: any) => r.analysis_id))];
       const { data: analyses } = await supabase

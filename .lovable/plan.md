@@ -1,63 +1,72 @@
 
 
-## App Review: Bugs, Inconsistencies & Improvements
+# Fix: Navegacion rota en la pagina de analisis
 
-After reviewing every component, here are the issues found and what needs fixing:
+## Problemas identificados
 
----
+### 1. Boton "Back" no funciona desde la pagina del reporte
+El boton usa `window.history.back()` que puede llevar al usuario de vuelta a `/analysis/loading`, re-activando el loader en un bucle. Necesita detectar si la pagina anterior es una ruta de carga y saltar al dashboard en su lugar.
 
-### Bugs (Breaking)
+### 2. Click en reportes del feed no muestra nada visible
+Al clickar un reporte en "Top rated properties", se ejecuta `setPreviewId(report.id)` que renderiza un preview inline al final de la pagina, fuera de la vista del usuario. El usuario no ve nada porque no se hace scroll automatico hacia el preview.
 
-1. **Runtime crash: `Cannot read properties of null (reading 'useRef')`** -- The Radix Accordion in `FAQ.tsx` is crashing due to a React 18 compatibility issue. This is the `CollectionProvider` error in the console. Fix: wrap the Accordion rendering to ensure proper mounting.
+**Solucion**: Hacer scroll automatico hacia el preview cuando se selecciona un reporte y tambien ofrecer un boton para abrir el reporte completo.
 
-2. **Framer Motion `ref` warning in `LiveActivityToast.tsx`** -- `AnimatePresence` + `motion.div` triggers a React 18 ref warning. Fix: use `forwardRef` or wrap the animated element properly.
+### 3. "See above" / "Click to view" lleva a pagina en blanco
+Cuando el usuario clicka el banner "Your report is ready! Click to view", el codigo hace:
+- `setAnalyzing(false)` y `setReadyReportId(null)` -- limpia el estado del FomoLoader
+- `navigate(/analysis/ID, { replace: true })` -- cambia la URL
 
-3. **Footer links to `/privacy` and `/terms` are 404** -- No routes exist for these pages. Users clicking them get the NotFound page.
+Pero el componente se re-renderiza y como `data` es null (no se ha cargado aun), cae en `if (!data) return null` (linea 824) y muestra una pagina en blanco hasta que el `useEffect` de fetch se ejecuta. El problema es una condicion de carrera entre la navegacion y la carga de datos.
 
-4. **StickyMobileCTA overlaps BottomNav** -- For authenticated users on mobile, both the sticky CTA bar AND the bottom navigation bar are fixed at `bottom: 0`, stacking on top of each other.
+**Solucion**: Usar `window.location.href` para forzar un reload completo de la pagina, o mejor, no limpiar el estado hasta que los datos esten cargados.
 
----
+## Cambios tecnicos
 
-### Inconsistencies
+### Archivo: `src/pages/Analysis.tsx`
 
-5. **"Risk Level" still appears in two places** -- `MethodologyPreview.tsx` line 8 and `FAQ.tsx` line 32 still say "Risk Level" instead of "Safety Score" (the rename was done everywhere else).
+**Cambio 1 - Back button inteligente (linea 849-857)**
 
-6. **CommunityFeedPreview shows nothing** -- The `property_reviews` table is empty (confirmed by network requests returning `[]`), so the entire section renders `null`. The landing page has a gap where this section should be. Fix: show mock/placeholder data when no real reviews exist.
+Reemplazar la logica de `window.history.back()` para detectar si la pagina anterior es una ruta de carga:
 
----
+```typescript
+onClick={() => {
+  if (fromBulk) {
+    navigate("/dashboard?bulk=true&restore=true");
+  } else {
+    // Always go to dashboard — history.back() often goes to the loading page
+    navigate("/dashboard");
+  }
+}}
+```
 
-### Performance Issues
+**Cambio 2 - Scroll automatico al preview (linea 416-434)**
 
-7. **LiveActivityToast queries the database every 25 seconds** -- This is excessive for a cosmetic FOMO feature. Should fetch once and rotate through cached results.
+Agregar un `ref` al contenedor del preview y hacer `scrollIntoView` cuando se selecciona un reporte:
 
-8. **GlobalRanking and AlternativesSection both query the same data** -- Two separate sections on the landing page both fetch top-scored analyses independently. Redundant network calls.
+```typescript
+const previewRef = useRef<HTMLDivElement>(null);
 
----
+// On setPreviewId, scroll to preview
+useEffect(() => {
+  if (previewId && previewRef.current) {
+    previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}, [previewId]);
+```
 
-### UX Improvements
+Ademas, agregar un boton "View full report" dentro del InlineReportPreview que navega al reporte completo con `window.location.href`.
 
-9. **MediaLogos looks like placeholder text** -- Just grey text names ("TechCrunch", "Bloomberg") with no styling. Looks unfinished and hurts credibility. Fix: style them as proper logo-like text with better typography, or use SVG/icon representations.
+**Cambio 3 - Fix pagina en blanco en "Click to view" (linea 777-782)**
 
-10. **GlobalRanking search bar has no auth gate** -- Unauthenticated users can paste URLs but won't be able to complete the analysis flow properly (no login gate like the hero has).
+Cambiar `navigate()` por `window.location.href` para forzar una carga completa de la pagina, evitando la condicion de carrera:
 
----
+```typescript
+onViewReady={() => {
+  if (readyReportId) {
+    window.location.href = `/analysis/${readyReportId}`;
+  }
+}}
+```
 
-### Implementation Plan
-
-**Files to modify:**
-- `src/components/MethodologyPreview.tsx` -- Rename "Risk Level" to "Safety Score"
-- `src/components/FAQ.tsx` -- Rename "Risk Level" to "Safety Score" in FAQ answer
-- `src/components/LiveActivityToast.tsx` -- Fix ref warning, fetch data once and rotate from cache
-- `src/components/StickyMobileCTA.tsx` -- Hide when user is authenticated (BottomNav takes over)
-- `src/components/CommunityFeedPreview.tsx` -- Add fallback mock reviews when DB is empty
-- `src/components/MediaLogos.tsx` -- Better visual styling for the trust bar
-- `src/components/GlobalRanking.tsx` -- Add auth gate to the search bar
-- `src/components/Footer.tsx` -- Change /privacy and /terms to anchor links or simple modal pages
-
-**New files:**
-- `src/pages/Privacy.tsx` -- Basic privacy policy page
-- `src/pages/Terms.tsx` -- Basic terms of service page
-- Update `src/App.tsx` -- Add routes for /privacy and /terms
-
-**No database changes required.**
-
+Esto garantiza que la pagina se recarga completamente con el ID correcto en la URL, activando el fetch de datos desde cero.
