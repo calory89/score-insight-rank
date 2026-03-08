@@ -475,6 +475,44 @@ export type Database = {
         }
         Relationships: []
       }
+      property_notes: {
+        Row: {
+          analysis_id: string
+          created_at: string
+          id: string
+          note: string
+          tags: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analysis_id: string
+          created_at?: string
+          id?: string
+          note?: string
+          tags?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analysis_id?: string
+          created_at?: string
+          id?: string
+          note?: string
+          tags?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_notes_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_reviews: {
         Row: {
           analysis_id: string
