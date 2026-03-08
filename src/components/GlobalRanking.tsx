@@ -18,19 +18,7 @@ type RankedProperty = {
   price: string | null;
 };
 
-const scoreColor = (v: number) => {
-  if (v >= 80) return "text-score-excellent";
-  if (v >= 65) return "text-score-good";
-  if (v >= 50) return "text-score-average";
-  return "text-score-poor";
-};
-
-const scoreBg = (v: number) => {
-  if (v >= 80) return "bg-score-excellent/10";
-  if (v >= 65) return "bg-score-good/10";
-  if (v >= 50) return "bg-score-average/10";
-  return "bg-score-poor/10";
-};
+import { scoreColor, scoreBgForRanking as scoreBg } from "@/lib/score-utils";
 
 const RankingSearchBar = () => {
   const navigate = useNavigate();

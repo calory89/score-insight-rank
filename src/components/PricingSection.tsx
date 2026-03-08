@@ -5,6 +5,7 @@ import { Check, Zap, Crown, Building2, Mail, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import LoginGateModal from "@/components/LoginGateModal";
 import StripeCheckoutOverlay from "@/components/StripeCheckoutOverlay";
 import { supabase } from "@/integrations/supabase/client";
@@ -272,6 +273,14 @@ const PricingSection = () => {
   const [loginGateOpen, setLoginGateOpen] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState<typeof plans[0] | null>(null);
   const { user } = useAuth();
+  const { plan: currentPlan } = useSubscription();
+
+  const planNameToKey: Record<string, string> = {
+    "Free": "free",
+    "Pro": "pro",
+    "Super Pro": "super_pro",
+    "Enterprise": "enterprise",
+  };
 
   const handleCheckout = (plan: typeof plans[0]) => {
     if (plan.isContact) {
@@ -325,15 +334,22 @@ const PricingSection = () => {
           {plans.map((plan, i) => {
             const Icon = plan.icon;
             const price = annual ? plan.yearlyPrice : plan.monthlyPrice;
+            const isCurrentPlan = user && planNameToKey[plan.name] === currentPlan;
             return (
               <motion.div key={plan.name}
                 initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
                 className={`rounded-2xl border p-6 flex flex-col hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 ${
+                  isCurrentPlan ? "border-primary/50 bg-card ring-1 ring-primary/20 relative" :
                   plan.highlighted ? "border-primary/30 bg-card glow-primary relative" : "border-border bg-card"
                 }`}
               >
-                {plan.highlighted && (
+                {isCurrentPlan && (
+                  <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-primary-foreground bg-primary px-3 py-1 rounded-full mb-3 w-fit">
+                    Current Plan
+                  </span>
+                )}
+                {!isCurrentPlan && plan.highlighted && (
                   <span className="inline-block text-[10px] font-semibold uppercase tracking-wider text-primary bg-primary/10 px-3 py-1 rounded-full mb-3 w-fit">
                     Most Popular
                   </span>

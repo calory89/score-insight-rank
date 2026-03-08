@@ -15,24 +15,7 @@ import {
   ResponsiveContainer, Tooltip,
 } from "recharts";
 
-const scoreColor = (v: number) => {
-  if (v >= 80) return "text-score-excellent";
-  if (v >= 65) return "text-score-good";
-  if (v >= 50) return "text-score-average";
-  return "text-score-poor";
-};
-const scoreBg = (v: number) => {
-  if (v >= 80) return "bg-score-excellent";
-  if (v >= 65) return "bg-score-good";
-  if (v >= 50) return "bg-score-average";
-  return "bg-score-poor";
-};
-const verdictColor = (v: string) => {
-  if (v === "Exceptional") return "text-score-excellent";
-  if (v === "Strong") return "text-score-good";
-  if (v === "Moderate") return "text-score-average";
-  return "text-score-poor";
-};
+import { scoreColor, scoreBg, verdictColorSimple as verdictColor } from "@/lib/score-utils";
 
 const RADAR_COLORS = [
   "hsl(160, 84%, 39%)",

@@ -16,25 +16,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 
-const verdictColor = (v: string) => {
-  if (v === "Exceptional") return "text-score-excellent bg-score-excellent/10";
-  if (v === "Strong") return "text-score-good bg-score-good/10";
-  if (v === "Moderate") return "text-score-average bg-score-average/10";
-  return "text-score-poor bg-score-poor/10";
-};
-
-const scoreColor = (v: number) => {
-  if (v >= 80) return "text-score-excellent";
-  if (v >= 65) return "text-score-good";
-  if (v >= 50) return "text-score-average";
-  return "text-score-poor";
-};
-
-const riskLabel = (v: number) => {
-  if (v >= 80) return { label: "Very Safe", color: "text-score-excellent" };
-  if (v >= 60) return { label: "Safe", color: "text-score-average" };
-  return { label: "Caution", color: "text-score-poor" };
-};
+import { scoreColor, verdictColorSimple as verdictColor, riskLabel } from "@/lib/score-utils";
 
 const FREE_LIMIT = 5;
 
@@ -390,7 +372,7 @@ const Dashboard = () => {
     if (!user) return;
     // Load analyses and favorites in parallel (subscription comes from context)
     Promise.all([
-      supabase.from("analyses").select("*").order("created_at", { ascending: false }),
+      supabase.from("analyses").select("id, url, address, city, country, price, global_score, verdict, risk_level, projected_roi_low, projected_roi_high, market_classification, property_type, image_url, ai_summary, confidence_level, data_source, created_at, currency, slug").order("created_at", { ascending: false }),
       supabase.from("favorites").select("analysis_id").eq("user_id", user.id),
     ]).then(([{ data: analysesData }, { data: favData }]) => {
       setAnalyses(analysesData || []);

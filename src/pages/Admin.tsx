@@ -7,6 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { GitCompare } from "lucide-react";
 import {
@@ -40,12 +45,7 @@ interface AdminStats {
   active_today: number;
 }
 
-const scoreColor = (v: number) => {
-  if (v >= 80) return "text-score-excellent";
-  if (v >= 65) return "text-score-good";
-  if (v >= 50) return "text-score-average";
-  return "text-score-poor";
-};
+import { scoreColor } from "@/lib/score-utils";
 
 interface BatchJob {
   url: string;
@@ -355,13 +355,15 @@ const ErrorLogsPanel = () => {
     toast({ title: "Error log deleted" });
   };
 
+  const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
+
   const deleteAll = async () => {
-    if (!confirm("Delete all visible error logs?")) return;
     const ids = logs.map(l => l.id);
     for (const id of ids) {
       await (supabase.from("error_logs" as any).delete().eq("id", id) as any);
     }
     setLogs([]);
+    setShowDeleteAllDialog(false);
     toast({ title: "All error logs cleared" });
   };
 
@@ -419,7 +421,25 @@ const ErrorLogsPanel = () => {
           <span className="text-[10px] text-muted-foreground ml-2">{logs.length} errors</span>
         </div>
         {logs.length > 0 && (
-          <button onClick={deleteAll} className="text-[10px] text-destructive hover:underline">Clear All</button>
+          <AlertDialog open={showDeleteAllDialog} onOpenChange={setShowDeleteAllDialog}>
+            <AlertDialogTrigger asChild>
+              <button className="text-[10px] text-destructive hover:underline">Clear All</button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete all error logs?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently delete all {logs.length} visible error logs. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={deleteAll} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                  Delete All
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         )}
       </div>
 
@@ -678,12 +698,12 @@ const Admin = () => {
 
             {/* Users Table */}
             <div className="rounded-2xl border border-border bg-card overflow-hidden">
-              <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_80px] gap-2 px-5 py-3 border-b border-border bg-secondary/30 text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+              <div className="grid grid-cols-[2fr_1fr_80px] sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_80px] gap-2 px-5 py-3 border-b border-border bg-secondary/30 text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
                 <span>User</span>
-                <span>Signed Up</span>
-                <span>Last Login</span>
+                <span className="hidden sm:block">Signed Up</span>
+                <span className="hidden sm:block">Last Login</span>
                 <span>Searches</span>
-                <span>Plan</span>
+                <span className="hidden sm:block">Plan</span>
                 <span></span>
               </div>
 
@@ -693,7 +713,7 @@ const Admin = () => {
                 filteredUsers.map((u) => (
                   <div key={u.id} className="border-b border-border last:border-b-0">
                     <div
-                      className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_80px] gap-2 px-5 py-3.5 items-center hover:bg-secondary/20 cursor-pointer transition-colors"
+                      className="grid grid-cols-[2fr_1fr_80px] sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_80px] gap-2 px-5 py-3.5 items-center hover:bg-secondary/20 cursor-pointer transition-colors"
                       onClick={() => setExpandedUser(expandedUser === u.id ? null : u.id)}
                     >
                       <div className="min-w-0">
@@ -702,13 +722,16 @@ const Admin = () => {
                           <Shield className="h-3 w-3" /> {u.provider}
                           {u.detected_country && <><MapPin className="h-3 w-3 ml-1" /> {u.detected_country}</>}
                         </p>
+                        <p className="sm:hidden text-[10px] text-muted-foreground mt-0.5">
+                          {new Date(u.created_at).toLocaleDateString()} · <span className={`font-medium uppercase ${u.email === ADMIN_EMAIL || u.plan !== "free" ? "text-primary" : ""}`}>{u.email === ADMIN_EMAIL ? "pro" : u.plan}</span>
+                        </p>
                       </div>
-                      <span className="text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground hidden sm:block">{new Date(u.created_at).toLocaleDateString()}</span>
+                      <span className="text-xs text-muted-foreground hidden sm:block">
                         {u.last_sign_in_at ? new Date(u.last_sign_in_at).toLocaleDateString() : "Never"}
                       </span>
                       <span className="text-xs font-mono text-foreground">{u.analyses_count}</span>
-                      <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full w-fit ${
+                      <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full w-fit hidden sm:block ${
                         u.email === ADMIN_EMAIL ? "bg-primary/10 text-primary" :
                         u.plan === "free" ? "bg-secondary text-muted-foreground" : "bg-primary/10 text-primary"
                       }`}>{u.email === ADMIN_EMAIL ? "pro" : u.plan}</span>
