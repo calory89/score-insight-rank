@@ -10,6 +10,7 @@ import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { DiscoverCardSkeleton } from "@/components/SkeletonCards";
 
 import { scoreColor, scoreBgLight as scoreBg, riskLabelSimple as riskLabel } from "@/lib/score-utils";
 
@@ -149,8 +150,8 @@ const Discover = () => {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-16">
-            <div className="h-6 w-6 rounded-full border-2 border-t-primary border-border animate-spin" />
+          <div className="space-y-4">
+            {[...Array(3)].map((_, i) => <DiscoverCardSkeleton key={i} />)}
           </div>
         ) : discoveries.length === 0 ? (
           <div className="text-center py-16">

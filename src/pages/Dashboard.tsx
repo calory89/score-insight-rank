@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 import PropertyOfTheDay from "@/components/PropertyOfTheDay";
 import SavingsCalculator from "@/components/SavingsCalculator";
+import { DashboardCardSkeleton } from "@/components/SkeletonCards";
 
 import { scoreColor, verdictColorSimple as verdictColor, riskLabel } from "@/lib/score-utils";
 
@@ -545,8 +546,8 @@ const Dashboard = () => {
 
         {/* Analyses list */}
         {loading ? (
-          <div className="flex justify-center py-16">
-            <div className="h-6 w-6 rounded-full border-2 border-t-primary border-border animate-spin" />
+          <div className="grid grid-cols-1 gap-4">
+            {[...Array(3)].map((_, i) => <DashboardCardSkeleton key={i} />)}
           </div>
         ) : displayAnalyses.length === 0 ? (
           <motion.div

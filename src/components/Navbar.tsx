@@ -116,18 +116,43 @@ const Navbar = () => {
             animate={{ opacity: 1, height: "auto" }}
             className="md:hidden border-t border-border bg-background px-4 py-4 space-y-3"
           >
-            <a href="/#how-it-works" className="block text-sm text-muted-foreground py-1" onClick={() => setIsOpen(false)}>How It Works</a>
-            <a href="/game" className="block text-sm text-muted-foreground py-1" onClick={(e) => { e.preventDefault(); navigate("/game"); setIsOpen(false); }}>Game</a>
-            <a href="/rankings" className="block text-sm text-muted-foreground py-1" onClick={(e) => { e.preventDefault(); navigate("/rankings"); setIsOpen(false); }}>Rankings</a>
-            <a href="/#pricing" className="block text-sm text-muted-foreground py-1" onClick={() => setIsOpen(false)}>Pricing</a>
-            <a href="/#trust" className="block text-sm text-muted-foreground py-1" onClick={() => setIsOpen(false)}>Methodology</a>
+            <a href="/#how-it-works" className="block text-sm text-muted-foreground py-2" onClick={() => setIsOpen(false)}>How It Works</a>
+            <a href="/game" className="block text-sm text-muted-foreground py-2" onClick={(e) => { e.preventDefault(); navigate("/game"); setIsOpen(false); }}>Game</a>
+            <a href="/rankings" className="block text-sm text-muted-foreground py-2" onClick={(e) => { e.preventDefault(); navigate("/rankings"); setIsOpen(false); }}>Rankings</a>
+            <a href="/#pricing" className="block text-sm text-muted-foreground py-2" onClick={() => setIsOpen(false)}>Pricing</a>
+            <a href="/#trust" className="block text-sm text-muted-foreground py-2" onClick={() => setIsOpen(false)}>Methodology</a>
+            <div className="border-t border-border my-2" />
             {user ? (
-              <>
-                <Button variant="ghost" size="sm" className="w-full" onClick={() => { navigate("/dashboard"); setIsOpen(false); }}>Dashboard</Button>
-                <Button variant="ghost" size="sm" className="w-full" onClick={() => { navigate("/tickets"); setIsOpen(false); }}>Support Tickets</Button>
-                <Button variant="ghost" size="sm" className="w-full" onClick={() => { navigate("/settings"); setIsOpen(false); }}>Settings</Button>
-                <Button variant="ghost" size="sm" className="w-full" onClick={signOut}>Sign Out</Button>
-              </>
+              <div className="space-y-1">
+                {plan && (
+                  <div className="flex items-center justify-between px-1 py-2">
+                    <span className="text-xs text-muted-foreground">Credits</span>
+                    <Badge
+                      variant="secondary"
+                      className={`text-[10px] ${
+                        plan === "free" && creditsTotal - creditsUsed <= 2
+                          ? "animate-pulse border-destructive/50 bg-destructive/10 text-destructive"
+                          : ""
+                      }`}
+                    >
+                      {creditsTotal - creditsUsed}/{creditsTotal} {plan}
+                    </Badge>
+                  </div>
+                )}
+                <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => { navigate("/dashboard"); setIsOpen(false); }}>
+                  <LayoutDashboard className="h-4 w-4" /> Dashboard
+                </Button>
+                <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => { navigate("/tickets"); setIsOpen(false); }}>
+                  <TicketCheck className="h-4 w-4" /> Support
+                </Button>
+                <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => { navigate("/settings"); setIsOpen(false); }}>
+                  <Settings className="h-4 w-4" /> Settings
+                </Button>
+                <div className="border-t border-border my-1" />
+                <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-muted-foreground" onClick={signOut}>
+                  <LogOut className="h-4 w-4" /> Sign Out
+                </Button>
+              </div>
             ) : (
               <Button variant="hero" size="sm" className="w-full mt-2" onClick={() => { setShowLogin(true); setIsOpen(false); }}>Get Started</Button>
             )}
