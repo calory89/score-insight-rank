@@ -68,7 +68,15 @@ const Navbar = () => {
                   <Settings className="h-3.5 w-3.5" /> Settings
                 </Button>
                 {user && (
-                  <Badge variant="secondary" className="text-[10px] cursor-pointer" onClick={() => { if (plan === "free") { const el = document.getElementById("pricing"); if (el) el.scrollIntoView({ behavior: "smooth" }); } }}>
+                  <Badge
+                    variant="secondary"
+                    className={`text-[10px] cursor-pointer transition-all ${
+                      plan === "free" && creditsTotal - creditsUsed <= 2
+                        ? "animate-pulse border-destructive/50 bg-destructive/10 text-destructive"
+                        : ""
+                    }`}
+                    onClick={() => { if (plan === "free") { const el = document.getElementById("pricing"); if (el) el.scrollIntoView({ behavior: "smooth" }); } }}
+                  >
                     {creditsTotal - creditsUsed}/{creditsTotal} {plan}
                   </Badge>
                 )}

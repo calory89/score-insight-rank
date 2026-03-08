@@ -19,6 +19,8 @@ export const GameLeaderboard = ({ currentUserId, currentScore }: { currentUserId
     loadLeaderboard();
   }, []);
 
+  const [proUserIds, setProUserIds] = useState<Set<string>>(new Set());
+
   const loadLeaderboard = async () => {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
@@ -33,12 +35,17 @@ export const GameLeaderboard = ({ currentUserId, currentScore }: { currentUserId
 
     if (!scores || scores.length === 0) return;
 
-    // Get usernames for the top players
+    // Get usernames and subscription info for the top players
     const userIds = [...new Set(scores.map(s => s.user_id))];
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, username")
-      .in("user_id", userIds);
+    const [{ data: profiles }, { data: subs }] = await Promise.all([
+      supabase.from("profiles").select("user_id, username").in("user_id", userIds),
+      supabase.from("subscriptions").select("user_id, plan").in("user_id", userIds),
+    ]);
+
+    const proSet = new Set(
+      (subs || []).filter(s => s.plan !== "free").map(s => s.user_id)
+    );
+    setProUserIds(proSet);
 
     const profileMap = new Map((profiles || []).map(p => [p.user_id, p.username]));
 
@@ -98,8 +105,9 @@ export const GameLeaderboard = ({ currentUserId, currentScore }: { currentUserId
             <span className="w-5 text-center font-mono font-bold text-muted-foreground">
               {i === 0 ? <Crown className="h-3.5 w-3.5 text-yellow-500 inline" /> : `#${i + 1}`}
             </span>
-            <span className="flex-1 text-foreground truncate">
+            <span className="flex-1 text-foreground truncate flex items-center gap-1">
               {entry.username || `Player ${entry.user_id.slice(0, 4)}`}
+              {proUserIds.has(entry.user_id) && <Crown className="h-3 w-3 text-yellow-500 inline flex-shrink-0" />}
               {entry.user_id === currentUserId && <span className="text-primary ml-1">(you)</span>}
             </span>
             <span className="font-mono font-bold text-foreground">{entry.score}/{10}</span>
