@@ -16,6 +16,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 import PropertyOfTheDay from "@/components/PropertyOfTheDay";
+import SavingsCalculator from "@/components/SavingsCalculator";
 
 import { scoreColor, verdictColorSimple as verdictColor, riskLabel } from "@/lib/score-utils";
 
