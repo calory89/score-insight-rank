@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, BarChart3, TrendingUp, Star, Globe, ArrowLeft, ArrowRight } from "lucide-react";
+import { User, BarChart3, TrendingUp, Star, Globe, ArrowLeft, ArrowRight, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
