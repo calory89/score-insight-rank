@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { usePageTracking } from "@/hooks/usePageTracking";
 import { AnimatePresence, motion } from "framer-motion";
 import Index from "./pages/Index";
@@ -71,6 +72,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} storageKey="realhunt-theme">
       <AuthProvider>
+        <SubscriptionProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
@@ -80,6 +82,7 @@ const App = () => (
             </PageTracker>
           </BrowserRouter>
         </TooltipProvider>
+        </SubscriptionProvider>
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>

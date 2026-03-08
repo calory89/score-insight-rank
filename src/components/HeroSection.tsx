@@ -13,6 +13,19 @@ const HeroSection = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const pendingUrlRef = useRef<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Cmd/Ctrl+K shortcut to focus input
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Live animated counter
   useEffect(() => {
@@ -97,11 +110,12 @@ const HeroSection = () => {
                 <div className="flex items-center flex-1 min-w-0">
                   <Search className="ml-2 sm:ml-3 h-5 w-5 text-muted-foreground flex-shrink-0" />
                   <input
+                    ref={inputRef}
                     type="url"
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
-                    placeholder="Paste any property listing URL…"
+                    placeholder="Paste any property listing URL…  (⌘K)"
                     className="flex-1 bg-transparent px-3 sm:px-4 py-4 sm:py-5 text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0"
                   />
                 </div>

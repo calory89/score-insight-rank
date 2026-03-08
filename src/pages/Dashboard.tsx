@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
@@ -341,6 +342,7 @@ const BulkAnalyzeModal = ({ open, onClose, isPro, onUpgrade, user }: { open: boo
 const Dashboard = () => {
   useDocumentMeta({ title: "My Dashboard | RealHunt", description: "View and manage your property analyses, favorites, and investment insights." });
   const { user, loading: authLoading } = useAuth();
+  const { isPro, creditsUsed, creditsTotal } = useSubscription();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
@@ -354,12 +356,23 @@ const Dashboard = () => {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
   const [showBulk, setShowBulk] = useState(false);
-  const [isPro, setIsPro] = useState(false);
   const [sortBy, setSortBy] = useState<"date" | "score">("date");
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/");
   }, [user, authLoading, navigate]);
+
+  // Cmd/Ctrl+K shortcut to focus URL input
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        document.getElementById("dashboard-url-input")?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Subscription success celebration
   useEffect(() => {
@@ -375,15 +388,13 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (!user) return;
-    // Load analyses, favorites, and subscription in parallel
+    // Load analyses and favorites in parallel (subscription comes from context)
     Promise.all([
       supabase.from("analyses").select("*").order("created_at", { ascending: false }),
       supabase.from("favorites").select("analysis_id").eq("user_id", user.id),
-      supabase.from("subscriptions").select("plan").eq("user_id", user.id).maybeSingle(),
-    ]).then(([{ data: analysesData }, { data: favData }, { data: subData }]) => {
+    ]).then(([{ data: analysesData }, { data: favData }]) => {
       setAnalyses(analysesData || []);
       setFavoriteIds(new Set((favData || []).map((f: any) => f.analysis_id)));
-      setIsPro(subData?.plan === "pro" || subData?.plan === "super_pro" || subData?.plan === "enterprise" || user?.email === "rrppspain@gmail.com");
       setLoading(false);
     });
     // Open bulk modal if came from hero CTA or returning from bulk analysis
@@ -430,7 +441,7 @@ const Dashboard = () => {
     }
     // Check free limit using subscription credits (admin bypasses)
     const isAdmin = user?.email === "rrppspain@gmail.com";
-    if (!isAdmin && !isPro && analyses.length >= FREE_LIMIT) {
+    if (!isAdmin && !isPro && creditsUsed >= creditsTotal) {
       setShowUpgrade(true);
       return;
     }
@@ -486,11 +497,12 @@ const Dashboard = () => {
             <div className="flex items-center flex-1 min-w-0">
               <Search className="ml-3 h-4 w-4 text-muted-foreground flex-shrink-0" />
               <input
+                id="dashboard-url-input"
                 type="url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
-                placeholder="Paste any real estate URL to analyze…"
+                placeholder="Paste any real estate URL to analyze… (⌘K)"
                 className="flex-1 bg-transparent px-3 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0"
               />
             </div>
