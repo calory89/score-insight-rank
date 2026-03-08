@@ -1,72 +1,68 @@
 
 
-# Fix: Navegacion rota en la pagina de analisis
+## Audit: Remaining Bugs, Conversion Gaps, and Design Issues
 
-## Problemas identificados
+After reviewing every component, route, CSS config, and the live preview, here's what still needs fixing:
 
-### 1. Boton "Back" no funciona desde la pagina del reporte
-El boton usa `window.history.back()` que puede llevar al usuario de vuelta a `/analysis/loading`, re-activando el loader en un bucle. Necesita detectar si la pagina anterior es una ruta de carga y saltar al dashboard en su lugar.
+---
 
-### 2. Click en reportes del feed no muestra nada visible
-Al clickar un reporte en "Top rated properties", se ejecuta `setPreviewId(report.id)` que renderiza un preview inline al final de la pagina, fuera de la vista del usuario. El usuario no ve nada porque no se hace scroll automatico hacia el preview.
+### Bugs (Must Fix)
 
-**Solucion**: Hacer scroll automatico hacia el preview cuando se selecciona un reporte y tambien ofrecer un boton para abrir el reporte completo.
+**1. FinalCTA counter is static -- never updates**
+Line 47 in `FinalCTA.tsx`: `{Math.floor(37 + Math.sin(Date.now() / 10000) * 15)}` evaluates ONCE on render. Unlike the Hero which has a proper `useEffect`/`setInterval`, this counter is dead. Needs the same interval pattern.
 
-### 3. "See above" / "Click to view" lleva a pagina en blanco
-Cuando el usuario clicka el banner "Your report is ready! Click to view", el codigo hace:
-- `setAnalyzing(false)` y `setReadyReportId(null)` -- limpia el estado del FomoLoader
-- `navigate(/analysis/ID, { replace: true })` -- cambia la URL
+**2. Newsletter form in Footer doesn't persist data**
+The "Subscribe" form in `Footer.tsx` sets local state `subscribed=true` but never sends the email anywhere. It's a dead form -- users think they subscribed but nothing happens. Should save to a `newsletter_subscribers` table or at minimum use the API waitlist pattern.
 
-Pero el componente se re-renderiza y como `data` es null (no se ha cargado aun), cae en `if (!data) return null` (linea 824) y muestra una pagina en blanco hasta que el `useEffect` de fetch se ejecuta. El problema es una condicion de carrera entre la navegacion y la carga de datos.
+**3. CommunityFeedPreview "Join the conversation" button has no auth gate**
+Line 147: clicking navigates directly to `/discover` without checking auth. Non-logged-in users land on Discover which may require auth. Should follow the same `LoginGateModal` pattern used elsewhere.
 
-**Solucion**: Usar `window.location.href` para forzar un reload completo de la pagina, o mejor, no limpiar el estado hasta que los datos esten cargados.
+**4. Landing page has too many similar sections competing**
+`CommunityFeedPreview` and `Testimonials` show nearly identical content (star ratings + quotes from users). `DiscoverPromo` and `CommunityAskCTA` both promote the same Discover feature. This dilutes conversion by repeating the same message 4 times. Remove `CommunityFeedPreview` entirely -- Testimonials already covers social proof. Merge `CommunityAskCTA` into `DiscoverPromo`.
 
-## Cambios tecnicos
+---
 
-### Archivo: `src/pages/Analysis.tsx`
+### Conversion Improvements
 
-**Cambio 1 - Back button inteligente (linea 849-857)**
+**5. No "How many analyses left" indicator for logged-in users**
+Once users sign up, there's no visible indicator of their remaining free analyses. Adding a small badge in the Navbar ("3/5 free left") creates urgency to upgrade.
 
-Reemplazar la logica de `window.history.back()` para detectar si la pagina anterior es una ruta de carga:
+**6. ScorePreview section lacks a CTA**
+The ScorePreview is the most visual, compelling section on the page but has zero call-to-action beneath it. Add "Try it with your property" button.
 
-```typescript
-onClick={() => {
-  if (fromBulk) {
-    navigate("/dashboard?bulk=true&restore=true");
-  } else {
-    // Always go to dashboard — history.back() often goes to the loading page
-    navigate("/dashboard");
-  }
-}}
-```
+**7. ExampleReportsCarousel section lacks heading context**
+The label says "Last Reports Searched by Real Users" but there's no h2 heading. This section needs a proper heading for both SEO and visual hierarchy: "Real Reports from Real Properties".
 
-**Cambio 2 - Scroll automatico al preview (linea 416-434)**
+---
 
-Agregar un `ref` al contenedor del preview y hacer `scrollIntoView` cuando se selecciona un reporte:
+### Design Polish
 
-```typescript
-const previewRef = useRef<HTMLDivElement>(null);
+**8. MediaLogos section looks fake**
+Text-only logos with 30% opacity look placeholder-ish. Either commit to proper typographic treatment (different weights, sizes, clear visual distinctness) or replace with "As used by teams at..." with company type icons instead.
 
-// On setPreviewId, scroll to preview
-useEffect(() => {
-  if (previewId && previewRef.current) {
-    previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-}, [previewId]);
-```
+**9. No hover card effects on interactive cards**
+`HowItWorks`, `TrustSection`, `MethodologyPreview` cards have `hover:border-primary/15` but no shadow elevation or scale. Add `hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300` for premium feel.
 
-Ademas, agregar un boton "View full report" dentro del InlineReportPreview que navega al reporte completo con `window.location.href`.
+**10. FAQ section has no schema markup**
+FAQPage JSON-LD structured data would make FAQs appear in Google search results as rich snippets, driving organic traffic.
 
-**Cambio 3 - Fix pagina en blanco en "Click to view" (linea 777-782)**
+---
 
-Cambiar `navigate()` por `window.location.href` para forzar una carga completa de la pagina, evitando la condicion de carrera:
+### Implementation Plan
 
-```typescript
-onViewReady={() => {
-  if (readyReportId) {
-    window.location.href = `/analysis/${readyReportId}`;
-  }
-}}
-```
+**Files to modify:**
+- `src/components/FinalCTA.tsx` -- Add `useState`/`useEffect` interval for live counter (same pattern as Hero)
+- `src/pages/Index.tsx` -- Remove `CommunityFeedPreview`, merge CommunityAskCTA content into DiscoverPromo section. Add CTA button below ScorePreview. Add proper h2 heading to ExampleReports section
+- `src/components/DiscoverPromo.tsx` -- Add "Ask the Hunters" content block (from CommunityAskCTA) into this section
+- `src/components/CommunityFeedPreview.tsx` -- Remove from landing (keep component for /discover page)
+- `src/components/HowItWorks.tsx` -- Add hover elevation effect to cards
+- `src/components/TrustSection.tsx` -- Add hover elevation effect
+- `src/components/MethodologyPreview.tsx` -- Add hover elevation effect
+- `src/components/MediaLogos.tsx` -- Restyle as "Trusted by investors from" with company-type icons instead of fake news logos
+- `src/components/FAQ.tsx` -- Add FAQPage JSON-LD structured data via `useEffect`
+- `src/components/Navbar.tsx` -- Add remaining analyses badge for logged-in free users
 
-Esto garantiza que la pagina se recarga completamente con el ID correcto en la URL, activando el fetch de datos desde cero.
+**Database migration needed:** Create `newsletter_subscribers` table to persist Footer email signups, then update `Footer.tsx` to insert emails.
+
+**No changes to:** Hero, Pricing, Auth, Analysis pages -- these are already solid.
+
