@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Search, Layers, Brain, Database, Clock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginGateModal from "@/components/LoginGateModal";
+import { supabase } from "@/integrations/supabase/client";
 
 const HeroSection = () => {
   const [url, setUrl] = useState("");
@@ -151,30 +152,24 @@ const HeroSection = () => {
             </span>
           </motion.div>
 
-          {/* Live analyzing counter */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.5 }}
-            className="flex items-center justify-center gap-2 mb-4"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-score-excellent opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-score-excellent" />
-            </span>
-            <span className="text-xs text-muted-foreground">
-              <motion.span
-                key={liveCount}
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                className="font-semibold text-foreground inline-block"
-              >
-                {liveCount}
-              </motion.span>{" "}
-              properties being analyzed right now
-            </span>
-          </motion.div>
+          {/* Real social proof counter */}
+          {totalAnalyses !== null && totalAnalyses > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+              className="flex items-center justify-center gap-2 mb-4"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-score-excellent opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-score-excellent" />
+              </span>
+              <span className="text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">{totalAnalyses.toLocaleString()}</span>{" "}
+                properties analyzed worldwide
+              </span>
+            </motion.div>
+          )}
 
           {/* Bulk Analyze CTA */}
           <motion.div
