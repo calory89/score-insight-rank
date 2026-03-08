@@ -627,6 +627,9 @@ const Admin = () => {
             {/* Error Logs Panel */}
             <ErrorLogsPanel />
 
+            {/* Newsletter Subscribers Panel */}
+            <NewsletterPanel />
+
             {/* Admin Tickets Panel */}
             <AdminTicketsPanel />
 
