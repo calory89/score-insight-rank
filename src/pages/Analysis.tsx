@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";

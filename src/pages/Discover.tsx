@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Compass, TrendingUp, Shield, Bookmark, ArrowRight, MapPin } from "lucide-react";

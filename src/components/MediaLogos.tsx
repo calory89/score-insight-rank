@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 
 const logos = [
-  { name: "TechCrunch", font: "font-bold italic" },
-  { name: "Bloomberg", font: "font-black tracking-tight" },
-  { name: "Forbes", font: "font-bold italic tracking-wide" },
-  { name: "Business Insider", font: "font-extrabold" },
-  { name: "The Guardian", font: "font-serif font-bold" },
+  { name: "TechCrunch", style: "font-bold italic text-lg md:text-xl tracking-tight" },
+  { name: "Bloomberg", style: "font-black text-lg md:text-xl tracking-[-0.03em] uppercase" },
+  { name: "Forbes", style: "font-bold italic text-lg md:text-xl tracking-[0.08em] uppercase" },
+  { name: "Business Insider", style: "font-extrabold text-base md:text-lg tracking-tight" },
+  { name: "The Guardian", style: "font-serif font-bold text-lg md:text-xl tracking-wide" },
 ];
 
 const MediaLogos = () => (
@@ -17,14 +17,14 @@ const MediaLogos = () => (
         viewport={{ once: true }}
         className="flex flex-col items-center"
       >
-        <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-4">
+        <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-5">
           Trusted by investors worldwide
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
+        <div className="flex flex-wrap items-center justify-center gap-8 md:gap-14">
           {logos.map((logo) => (
             <span
               key={logo.name}
-              className={`text-base md:text-lg text-muted-foreground/40 select-none ${logo.font}`}
+              className={`text-muted-foreground/30 select-none transition-opacity hover:text-muted-foreground/50 ${logo.style}`}
             >
               {logo.name}
             </span>
