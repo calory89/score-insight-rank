@@ -19,6 +19,7 @@ type RankedProperty = {
 };
 
 import { scoreColor, scoreBgForRanking as scoreBg } from "@/lib/score-utils";
+import { RankingRowSkeleton } from "@/components/SkeletonCards";
 
 const RankingSearchBar = () => {
   const navigate = useNavigate();
@@ -159,8 +160,8 @@ const GlobalRanking = () => {
             </div>
 
             {loading ? (
-              <div className="flex justify-center py-12">
-                <div className="h-5 w-5 rounded-full border-2 border-t-primary border-border animate-spin" />
+              <div>
+                {[...Array(8)].map((_, i) => <RankingRowSkeleton key={i} />)}
               </div>
             ) : filtered.length === 0 ? (
               <div className="text-center py-12 text-sm text-muted-foreground">

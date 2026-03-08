@@ -9,6 +9,7 @@ import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { usePageTracking } from "@/hooks/usePageTracking";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { Suspense } from "react";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 
 // Lazy-loaded routes for code splitting
@@ -82,23 +83,25 @@ const AnimatedRoutes = () => {
 };
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="realhunt-theme">
-      <AuthProvider>
-        <SubscriptionProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <PageTracker>
-              <AnimatedRoutes />
-            </PageTracker>
-          </BrowserRouter>
-        </TooltipProvider>
-        </SubscriptionProvider>
-      </AuthProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="realhunt-theme">
+        <AuthProvider>
+          <SubscriptionProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <PageTracker>
+                <AnimatedRoutes />
+              </PageTracker>
+            </BrowserRouter>
+          </TooltipProvider>
+          </SubscriptionProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
