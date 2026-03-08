@@ -177,7 +177,4 @@ const NegotiationLetterModal = ({ analysis, open, onClose }: NegotiationLetterMo
   );
 };
 
-// Need Sparkles import
-import { Sparkles } from "lucide-react";
-
 export default NegotiationLetterModal;
