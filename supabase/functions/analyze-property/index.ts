@@ -1458,6 +1458,47 @@ serve(async (req) => {
       saved = { ...saved, market_rank: rank, market_total: total };
     }
 
+    // --- Scout Alert Matching ---
+    try {
+      if (saved && saved.city && saved.global_score) {
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const adminClient = createClient(supabaseUrl, serviceKey);
+
+        const { data: activeAlerts } = await adminClient
+          .from("scout_alerts")
+          .select("id, user_id, criteria")
+          .eq("active", true)
+          .neq("user_id", user.id); // Don't notify the user who created the analysis
+
+        if (activeAlerts && activeAlerts.length > 0) {
+          const priceNum = saved.price ? parseInt(String(saved.price).replace(/[^0-9]/g, "")) : null;
+
+          for (const alert of activeAlerts) {
+            const c = alert.criteria as any;
+            let match = true;
+
+            if (c.city && saved.city && c.city.toLowerCase() !== saved.city.toLowerCase()) match = false;
+            if (c.country && saved.country && c.country.toLowerCase() !== saved.country.toLowerCase()) match = false;
+            if (c.min_score && saved.global_score < c.min_score) match = false;
+            if (c.max_price && priceNum && priceNum > c.max_price) match = false;
+
+            if (match) {
+              await adminClient.from("notifications").insert({
+                user_id: alert.user_id,
+                type: "scout_match",
+                title: `🎯 New match: ${saved.address || saved.city}`,
+                body: `Score ${saved.global_score}/100 · ${saved.currency || "€"}${saved.price || "N/A"} · ${saved.city}, ${saved.country}`,
+                metadata: { analysis_id: saved.id, alert_id: alert.id },
+              });
+            }
+          }
+        }
+      }
+    } catch (scoutErr) {
+      console.error("Scout matching error (non-fatal):", scoutErr);
+    }
+
     return new Response(JSON.stringify({ success: true, data: saved, non_listing_warning: !isStandardListing, listing_type: listingType }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

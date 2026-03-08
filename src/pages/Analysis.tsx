@@ -28,6 +28,7 @@ import PropertyReviews from "@/components/PropertyReviews";
 import { PropertyNotes } from "@/components/PropertyNotes";
 import PriceHistoryTimeline from "@/components/PriceHistoryTimeline";
 import AddToPortfolioModal from "@/components/AddToPortfolioModal";
+import DueDiligenceChecklist from "@/components/DueDiligenceChecklist";
 import { useToast } from "@/hooks/use-toast";
 import {
   LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, Area, AreaChart,
@@ -1827,6 +1828,12 @@ const Analysis = () => {
         {id && (
           <Section delay={0.65} className="mb-8">
             <PropertyNotes analysisId={id} />
+          </Section>
+        )}
+
+        {id && (
+          <Section delay={0.68} className="mb-8">
+            <DueDiligenceChecklist analysisId={id} country={d.country} />
           </Section>
         )}
 
