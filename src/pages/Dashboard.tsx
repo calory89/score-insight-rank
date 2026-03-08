@@ -21,6 +21,8 @@ import SavingsCalculator from "@/components/SavingsCalculator";
 import { WatchlistSection } from "@/components/Watchlist";
 import { RedFlagBadgeList } from "@/components/RedFlagBadges";
 import { DashboardCardSkeleton } from "@/components/SkeletonCards";
+import { usePropertyNotes, PropertyNotes } from "@/components/PropertyNotes";
+import { SavedFilters, type DashboardFilter } from "@/components/SavedFilters";
 
 import { scoreColor, verdictColorSimple as verdictColor, riskLabel } from "@/lib/score-utils";
 
