@@ -19,6 +19,7 @@ import confetti from "canvas-confetti";
 import PropertyOfTheDay from "@/components/PropertyOfTheDay";
 import SavingsCalculator from "@/components/SavingsCalculator";
 import { WatchlistSection } from "@/components/Watchlist";
+import ScoutAlertSetup from "@/components/ScoutAlertSetup";
 import { RedFlagBadgeList } from "@/components/RedFlagBadges";
 import { DashboardCardSkeleton } from "@/components/SkeletonCards";
 import { usePropertyNotes, PropertyNotes } from "@/components/PropertyNotes";
@@ -463,6 +464,7 @@ const Dashboard = () => {
 
         <PropertyOfTheDay />
         <WatchlistSection />
+        <ScoutAlertSetup />
         {!isPro && analyses.length > 0 && <SavingsCalculator analyses={analyses} />}
 
         {/* Stats bar */}
