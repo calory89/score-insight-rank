@@ -1,37 +1,72 @@
 
 
-## Next Improvement: Analysis.tsx Modularization
+# Fix: Navegacion rota en la pagina de analisis
 
-The three batches from the original plan are complete. The single highest-impact remaining work is **splitting Analysis.tsx** (1,984 lines — the largest file in the codebase) into composable sub-components. This is a pure architecture improvement with zero user-facing changes.
+## Problemas identificados
 
----
+### 1. Boton "Back" no funciona desde la pagina del reporte
+El boton usa `window.history.back()` que puede llevar al usuario de vuelta a `/analysis/loading`, re-activando el loader en un bucle. Necesita detectar si la pagina anterior es una ruta de carga y saltar al dashboard en su lugar.
 
-### What to implement
+### 2. Click en reportes del feed no muestra nada visible
+Al clickar un reporte en "Top rated properties", se ejecuta `setPreviewId(report.id)` que renderiza un preview inline al final de la pagina, fuera de la vista del usuario. El usuario no ve nada porque no se hace scroll automatico hacia el preview.
 
-**Extract 6 sections from Analysis.tsx into dedicated components:**
+**Solucion**: Hacer scroll automatico hacia el preview cuando se selecciona un reporte y tambien ofrecer un boton para abrir el reporte completo.
 
-| New Component | Lines to Extract | Purpose |
-|---|---|---|
-| `src/components/analysis/AnalysisScoreCard.tsx` | Score ring, verdict, classification, confidence, percentile, market rank display | ~120 lines |
-| `src/components/analysis/AnalysisRadar.tsx` | RadarChart with 5 dimensions + score pills | ~80 lines |
-| `src/components/analysis/AnalysisROISection.tsx` | ROI projections, yield trend chart, upside/downside scenarios, investment calculator trigger | ~150 lines |
-| `src/components/analysis/AnalysisRedFlags.tsx` | Red flags list, why-not-90 items, opportunity signals | ~100 lines |
-| `src/components/analysis/AnalysisProsCons.tsx` | Pros/cons two-column layout | ~60 lines |
-| `src/components/analysis/AnalysisHeader.tsx` | Back button, address, city/country, property details (beds, baths, sqm, year), image, price badge | ~100 lines |
+### 3. "See above" / "Click to view" lleva a pagina en blanco
+Cuando el usuario clicka el banner "Your report is ready! Click to view", el codigo hace:
+- `setAnalyzing(false)` y `setReadyReportId(null)` -- limpia el estado del FomoLoader
+- `navigate(/analysis/ID, { replace: true })` -- cambia la URL
 
-**Result**: Analysis.tsx drops from ~1,984 lines to ~1,300 lines as orchestrator. Each extracted component receives props from the parent `AnalysisData` object. No logic changes, no UI changes, no API changes.
+Pero el componente se re-renderiza y como `data` es null (no se ha cargado aun), cae en `if (!data) return null` (linea 824) y muestra una pagina en blanco hasta que el `useEffect` de fetch se ejecuta. El problema es una condicion de carrera entre la navegacion y la carga de datos.
 
-### What stays in Analysis.tsx
-- Data fetching & state management
-- Loading state (FomoLoader — already extracted but not yet imported)
-- AI chat, share panel, negotiation letter, portfolio modal orchestration
-- Score explanations accordion
-- Price history timeline integration
+**Solucion**: Usar `window.location.href` para forzar un reload completo de la pagina, o mejor, no limpiar el estado hasta que los datos esten cargados.
 
-### Safety
-- All components receive typed props from `AnalysisData`
-- No routing changes
-- No database changes
-- No edge function changes
-- Pure refactor — identical rendered output
+## Cambios tecnicos
 
+### Archivo: `src/pages/Analysis.tsx`
+
+**Cambio 1 - Back button inteligente (linea 849-857)**
+
+Reemplazar la logica de `window.history.back()` para detectar si la pagina anterior es una ruta de carga:
+
+```typescript
+onClick={() => {
+  if (fromBulk) {
+    navigate("/dashboard?bulk=true&restore=true");
+  } else {
+    // Always go to dashboard — history.back() often goes to the loading page
+    navigate("/dashboard");
+  }
+}}
+```
+
+**Cambio 2 - Scroll automatico al preview (linea 416-434)**
+
+Agregar un `ref` al contenedor del preview y hacer `scrollIntoView` cuando se selecciona un reporte:
+
+```typescript
+const previewRef = useRef<HTMLDivElement>(null);
+
+// On setPreviewId, scroll to preview
+useEffect(() => {
+  if (previewId && previewRef.current) {
+    previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}, [previewId]);
+```
+
+Ademas, agregar un boton "View full report" dentro del InlineReportPreview que navega al reporte completo con `window.location.href`.
+
+**Cambio 3 - Fix pagina en blanco en "Click to view" (linea 777-782)**
+
+Cambiar `navigate()` por `window.location.href` para forzar una carga completa de la pagina, evitando la condicion de carrera:
+
+```typescript
+onViewReady={() => {
+  if (readyReportId) {
+    window.location.href = `/analysis/${readyReportId}`;
+  }
+}}
+```
+
+Esto garantiza que la pagina se recarga completamente con el ID correcto en la URL, activando el fetch de datos desde cero.
