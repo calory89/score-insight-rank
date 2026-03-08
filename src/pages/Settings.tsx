@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ const planColors: Record<string, string> = {
 
 const Settings = () => {
   const { user, loading: authLoading, signOut } = useAuth();
+  const { plan, creditsUsed, creditsTotal, billingPeriodEnd, loading: subLoading } = useSubscription();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [totalAnalyses, setTotalAnalyses] = useState(0);
@@ -33,7 +35,6 @@ const Settings = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [subscription, setSubscription] = useState<any>(null);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/");
@@ -46,16 +47,6 @@ const Settings = () => {
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .then(({ count }) => setTotalAnalyses(count || 0));
-    
-    // Load subscription
-    supabase
-      .from("subscriptions")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        setSubscription(data);
-      });
   }, [user]);
 
   const handlePasswordUpdate = async () => {
@@ -94,9 +85,6 @@ const Settings = () => {
   const isOAuthUser = user.app_metadata?.provider === "google" || user.app_metadata?.providers?.includes("google");
   const createdAt = new Date(user.created_at).toLocaleDateString();
 
-  const plan = subscription?.plan || "free";
-  const creditsTotal = subscription?.credits_total || 5;
-  const creditsUsed = subscription?.credits_used || totalAnalyses;
   const creditsRemaining = Math.max(0, creditsTotal - creditsUsed);
   const creditsPercent = creditsTotal > 0 ? Math.min(100, (creditsUsed / creditsTotal) * 100) : 0;
 
@@ -137,9 +125,9 @@ const Settings = () => {
                 <span className="text-xs text-muted-foreground">
                   {creditsTotal === 999 ? "Unlimited" : `${creditsRemaining} remaining`}
                 </span>
-                {subscription?.billing_period_end && (
+                {billingPeriodEnd && (
                   <span className="text-xs text-muted-foreground">
-                    Renews {new Date(subscription.billing_period_end).toLocaleDateString()}
+                    Renews {new Date(billingPeriodEnd).toLocaleDateString()}
                   </span>
                 )}
               </div>

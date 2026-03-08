@@ -8,20 +8,23 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { usePageTracking } from "@/hooks/usePageTracking";
 import { AnimatePresence, motion } from "framer-motion";
+import React, { Suspense } from "react";
 import Index from "./pages/Index";
-import Dashboard from "./pages/Dashboard";
-import Analysis from "./pages/Analysis";
-import Compare from "./pages/Compare";
-import Settings from "./pages/Settings";
-import Admin from "./pages/Admin";
-import Rankings from "./pages/Rankings";
-import Tickets from "./pages/Tickets";
-import Discover from "./pages/Discover";
-import Profile from "./pages/Profile";
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import ResetPassword from "./pages/ResetPassword";
-import NotFound from "./pages/NotFound";
+
+// Lazy-loaded routes for code splitting
+const Dashboard = React.lazy(() => import("./pages/Dashboard"));
+const Analysis = React.lazy(() => import("./pages/Analysis"));
+const Compare = React.lazy(() => import("./pages/Compare"));
+const Settings = React.lazy(() => import("./pages/Settings"));
+const Admin = React.lazy(() => import("./pages/Admin"));
+const Rankings = React.lazy(() => import("./pages/Rankings"));
+const Tickets = React.lazy(() => import("./pages/Tickets"));
+const Discover = React.lazy(() => import("./pages/Discover"));
+const Profile = React.lazy(() => import("./pages/Profile"));
+const Privacy = React.lazy(() => import("./pages/Privacy"));
+const Terms = React.lazy(() => import("./pages/Terms"));
+const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
+const NotFound = React.lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
 
