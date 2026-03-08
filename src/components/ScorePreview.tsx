@@ -47,31 +47,41 @@ const ScorePreview = () => {
   };
 
   return (
-    <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-5 sm:p-6 md:p-8 shadow-lg">
+    <div className="rounded-2xl border border-border bg-card/80 backdrop-blur-sm p-5 sm:p-6 md:p-8 shadow-lg card-hover">
       <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center">
         {/* Score Circle */}
         <div className="relative flex-shrink-0">
           <svg className="w-36 h-36 sm:w-44 sm:h-44 -rotate-90" viewBox="0 0 100 100">
             <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--border))" strokeWidth="5" />
-            <circle
+            <motion.circle
               cx="50" cy="50" r="42" fill="none"
               stroke="hsl(var(--primary))"
               strokeWidth="5"
               strokeLinecap="round"
               strokeDasharray="264"
-              strokeDashoffset="50"
-              className="animate-score-fill"
+              initial={{ strokeDashoffset: 264 }}
+              whileInView={{ strokeDashoffset: 50 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.8, ease: [0.22, 1, 0.36, 1], delay: 0.3 }}
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-5xl sm:text-[3.5rem] font-bold text-foreground font-mono leading-none">81</span>
+            <motion.span
+              className="text-5xl sm:text-[3.5rem] font-bold text-foreground font-mono leading-none"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.5 }}
+            >
+              81
+            </motion.span>
             <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest mt-1">Global Score</span>
           </div>
         </div>
 
         {/* Subscores */}
         <div className="flex-1 w-full space-y-2">
-          {subscores.map((s) => (
+          {subscores.map((s, idx) => (
             <div key={s.label} className="relative">
               <div
                 className="flex items-center gap-3 cursor-pointer group py-1"
@@ -83,12 +93,13 @@ const ScorePreview = () => {
                 <div className="flex-1 h-2 rounded-full bg-secondary overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${s.value}%` }}
-                    transition={{ delay: 1, duration: 1, ease: "easeOut" }}
+                    whileInView={{ width: `${s.value}%` }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.5 + idx * 0.1, duration: 0.8, ease: "easeOut" }}
                     className={`h-full rounded-full ${s.color}`}
                   />
                 </div>
-                <span className="text-xs font-mono text-foreground w-8 text-right">{s.value}</span>
+                <span className="text-xs font-mono text-foreground w-8 text-right tabular-nums">{s.value}</span>
               </div>
 
               {/* Tooltip */}
