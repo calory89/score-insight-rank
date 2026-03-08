@@ -332,6 +332,7 @@ const Compare = () => {
       </div>
     </div>
     <BottomNav />
+    </>
   );
 };
 
