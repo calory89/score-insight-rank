@@ -71,9 +71,18 @@ const HeroSection = () => {
             <span className="text-gradient-primary">Know If It's a Good Deal — Instantly.</span>
           </h1>
 
-          <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-10 leading-relaxed">
+          <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-6 leading-relaxed">
             We analyze risk, ROI, demand, liquidity, and market strength — so you don't buy blind.
           </p>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.35, duration: 0.5 }}
+            className="text-sm font-medium text-muted-foreground mb-10"
+          >
+            <span className="text-foreground font-semibold">12,400+</span> properties analyzed worldwide
+          </motion.p>
 
           {/* URL Input */}
           <motion.div
