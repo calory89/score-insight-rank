@@ -339,6 +339,7 @@ const BulkAnalyzeModal = ({ open, onClose, isPro, onUpgrade, user }: { open: boo
 };
 
 const Dashboard = () => {
+  useDocumentMeta({ title: "My Dashboard | RealHunt", description: "View and manage your property analyses, favorites, and investment insights." });
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();

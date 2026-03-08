@@ -49,6 +49,7 @@ type DiscoveryCard = {
 };
 
 const Discover = () => {
+  useDocumentMeta({ title: "Discover Properties | RealHunt", description: "Explore curated property discoveries shared by the RealHunt community." });
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

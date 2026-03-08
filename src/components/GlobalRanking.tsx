@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 import { Globe, TrendingUp, MapPin, Filter, ArrowRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import LoginGateModal from "@/components/LoginGateModal";
 
 type RankedProperty = {
   id: string;
@@ -32,10 +34,16 @@ const scoreBg = (v: number) => {
 
 const RankingSearchBar = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [url, setUrl] = useState("");
+  const [showLoginGate, setShowLoginGate] = useState(false);
 
   const handleAnalyze = () => {
     if (!url.trim()) return;
+    if (!user) {
+      setShowLoginGate(true);
+      return;
+    }
     navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
   };
 
