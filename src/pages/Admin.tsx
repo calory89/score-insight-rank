@@ -13,7 +13,7 @@ import {
   Users, BarChart3, Globe, Search, ChevronDown, ChevronUp,
   Calendar, MapPin, TrendingUp, Shield, ArrowLeft, Activity,
   Mail, Clock, Hash, Eye, Zap, Loader2, CheckCircle2, XCircle,
-  TicketCheck, Send, AlertCircle, MessageSquare,
+  TicketCheck, Send, AlertCircle, MessageSquare, Download, Newspaper,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 

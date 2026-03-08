@@ -362,6 +362,18 @@ const Dashboard = () => {
     if (!authLoading && !user) navigate("/");
   }, [user, authLoading, navigate]);
 
+  // Cmd/Ctrl+K shortcut to focus URL input
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        document.getElementById("dashboard-url-input")?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   // Subscription success celebration
   useEffect(() => {
     if (searchParams.get("subscription") === "success") {
