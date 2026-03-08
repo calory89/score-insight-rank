@@ -221,8 +221,13 @@ const Tickets = () => {
                   <div className="h-5 w-5 rounded-full border-2 border-t-primary border-border animate-spin" />
                 </div>
               ) : filteredTickets.length === 0 ? (
-                <div className="text-center py-8 px-4">
-                  <p className="text-xs text-muted-foreground">No tickets found.</p>
+                <div className="text-center py-12 px-4">
+                  <CheckCircle2 className="h-10 w-10 text-primary/30 mx-auto mb-3" />
+                  <p className="text-sm font-medium text-foreground mb-1">No tickets yet</p>
+                  <p className="text-xs text-muted-foreground mb-4">Everything looks good! Create a ticket if you need help.</p>
+                  <Button variant="hero-outline" size="sm" onClick={() => setShowCreate(true)}>
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Create Ticket
+                  </Button>
                 </div>
               ) : (
                 filteredTickets.map((t) => (

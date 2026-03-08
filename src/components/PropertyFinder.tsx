@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -67,11 +67,23 @@ const PropertyFinder = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
   const toggleAmenity = (id: string) => {
     setSelectedAmenities((prev) =>
       prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]
     );
   };
+
+  // Debounced auto-search when amenities change
+  useEffect(() => {
+    if (!searched && selectedAmenities.length === 0) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      handleSearch();
+    }, 500);
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, [selectedAmenities]);
 
   const matchesAmenities = (item: AnalysisResult) => {
     if (selectedAmenities.length === 0) return true;
@@ -120,7 +132,7 @@ const PropertyFinder = () => {
     selectedAmenities.every((a) => ECO_BEACH_CITY.amenities.includes(a));
 
   return (
-    <section className="py-16 md:py-20" id="property-finder">
+    <section className="py-16 md:py-20" id="property-finder" onKeyDown={(e) => { if (e.key === "Enter") handleSearch(); }}>
       <div className="container mx-auto px-4 max-w-5xl">
         <div className="text-center mb-10">
           <span className="text-3xl mb-3 block">🔍</span>

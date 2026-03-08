@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, BarChart3, TrendingUp, Star, Globe, ArrowLeft, ArrowRight } from "lucide-react";
+import { User, BarChart3, TrendingUp, Star, Globe, ArrowLeft, ArrowRight, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -250,6 +250,36 @@ const Profile = () => {
           </div>
           <Progress value={progressToNext} className="h-2" />
           <p className="text-[10px] text-muted-foreground mt-1.5">{stats.total} / {nextLevel?.min || stats.total} analyses</p>
+        </div>
+
+        {/* Milestones */}
+        <div className="mb-6">
+          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+            <Zap className="h-4 w-4 text-primary" /> Milestones
+          </h3>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { label: "First Analysis", icon: "🎯", unlocked: stats.total >= 1 },
+              { label: "10 Properties", icon: "🏠", unlocked: stats.total >= 10 },
+              { label: "5 Countries", icon: "🌍", unlocked: stats.countries >= 5 },
+              { label: "Score 85+", icon: "⭐", unlocked: stats.high85 >= 1 },
+            ].map((m) => (
+              <div
+                key={m.label}
+                className={`rounded-xl border p-3 text-center transition-all ${
+                  m.unlocked
+                    ? "border-primary/30 bg-primary/5"
+                    : "border-border bg-card opacity-50"
+                }`}
+              >
+                <span className="text-lg block mb-1">{m.icon}</span>
+                <p className={`text-[10px] font-medium ${m.unlocked ? "text-primary" : "text-muted-foreground"}`}>
+                  {m.label}
+                </p>
+                {m.unlocked && <span className="text-[9px] text-primary">✓ Unlocked</span>}
+              </div>
+            ))}
+          </div>
         </div>
 
         {isOwnProfile && (
