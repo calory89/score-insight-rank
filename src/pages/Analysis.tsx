@@ -32,6 +32,7 @@ import confetti from "canvas-confetti";
 
 import { scoreColor, scoreBg, verdictColor, classificationColor, confidenceColor } from "@/lib/score-utils";
 import AnimatedScoreRing from "@/components/AnimatedScoreRing";
+import AIChatBubble from "@/components/AIChatBubble";
 const sqmToAcres = (sqm: number) => (sqm * 0.000247105).toFixed(3);
 const sqmToSqft = (sqm: number) => Math.round(sqm * 10.7639);
 
@@ -1874,6 +1875,31 @@ const Analysis = () => {
           <Eye className="h-4 w-4" /> Visit Property
         </motion.button>
       )}
+
+      {/* AI Chat Assistant */}
+      <AIChatBubble context={{
+        address: d.address,
+        city: d.city,
+        country: d.country,
+        price: d.price,
+        currency: d.currency,
+        global_score: d.global_score,
+        roi_potential: d.roi_potential,
+        demand_strength: d.demand_strength,
+        risk_level: d.risk_level,
+        market_stability: d.market_stability,
+        liquidity_outlook: d.liquidity_outlook,
+        verdict: d.verdict,
+        ai_summary: d.ai_summary,
+        primary_insight: d.primary_insight,
+        pros: d.pros,
+        cons: d.cons,
+        red_flags: d.red_flags,
+        property_type: d.property_type,
+        bedrooms: d.bedrooms,
+        bathrooms: d.bathrooms,
+        size_sqm: d.size_sqm,
+      }} />
     </div>
   );
 };
