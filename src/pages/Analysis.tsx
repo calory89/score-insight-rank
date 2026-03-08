@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import { ADMIN_EMAIL } from "@/lib/constants";
 import Navbar from "@/components/Navbar";
 import ProtectedListingFallback from "@/components/ProtectedListingFallback";
 import ProGateOverlay from "@/components/ProGateOverlay";
@@ -900,7 +901,7 @@ const Analysis = () => {
       if (found) return;
 
       // Check free limit
-      const isAdmin = user?.email === "rrppspain@gmail.com";
+      const isAdmin = user?.email === ADMIN_EMAIL;
       if (!isAdmin) {
         const { count } = await supabase
           .from("analyses")

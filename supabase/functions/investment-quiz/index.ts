@@ -122,6 +122,16 @@ Return a JSON object with this exact structure (no markdown, just raw JSON):
     });
   } catch (e) {
     console.error("investment-quiz error:", e);
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const logClient = createClient(supabaseUrl, supabaseKey);
+      await logClient.from("error_logs").insert({
+        error_type: "investment_quiz_error",
+        error_message: e instanceof Error ? e.message : "Unknown error",
+        metadata: { stack: e instanceof Error ? e.stack : undefined },
+      });
+    } catch {}
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

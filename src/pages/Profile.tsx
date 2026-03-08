@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { User, BarChart3, TrendingUp, Star, Globe, ArrowLeft, ArrowRight, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -39,6 +40,7 @@ const getNextLevel = (count: number) => {
 };
 
 const Profile = () => {
+  useDocumentMeta({ title: "Profile | RealHunt", description: "View your investor profile, stats, and achievements on RealHunt." });
   const { userId } = useParams();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();

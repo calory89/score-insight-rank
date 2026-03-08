@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -26,6 +27,7 @@ const planColors: Record<string, string> = {
 };
 
 const Settings = () => {
+  useDocumentMeta({ title: "Settings | RealHunt", description: "Manage your account settings, subscription, and security preferences." });
   const { user, loading: authLoading, signOut } = useAuth();
   const { plan, creditsUsed, creditsTotal, billingPeriodEnd, loading: subLoading } = useSubscription();
   const navigate = useNavigate();

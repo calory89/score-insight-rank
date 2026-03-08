@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { ADMIN_EMAIL } from "@/lib/constants";
 
 interface SubscriptionContextType {
   plan: string;
@@ -70,7 +71,7 @@ export const SubscriptionProvider = ({ children }: { children: ReactNode }) => {
     fetchSubscription();
   }, [fetchSubscription]);
 
-  const isPro = plan === "pro" || plan === "super_pro" || plan === "enterprise" || user?.email === "rrppspain@gmail.com";
+  const isPro = plan === "pro" || plan === "super_pro" || plan === "enterprise" || user?.email === ADMIN_EMAIL;
 
   return (
     <SubscriptionContext.Provider value={{ plan, creditsUsed, creditsTotal, isPro, loading, billingPeriodEnd, stripeCustomerId, stripeSubscriptionId, refresh: fetchSubscription }}>

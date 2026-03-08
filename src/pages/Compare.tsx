@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +29,7 @@ const RADAR_COLORS = [
 type AnalysisData = any;
 
 const Compare = () => {
+  useDocumentMeta({ title: "Compare Properties | RealHunt", description: "Side-by-side comparison of property analyses with radar charts and winner badges." });
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
