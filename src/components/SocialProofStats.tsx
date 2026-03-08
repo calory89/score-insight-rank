@@ -3,6 +3,9 @@ import { motion, useInView } from "framer-motion";
 import { BarChart3, Users, Globe, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
+const CACHE_KEY = "rh_social_stats";
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 const useAnimatedCounter = (end: number, duration = 2000, inView: boolean) => {
   const [count, setCount] = useState(0);
   useEffect(() => {
@@ -25,6 +28,18 @@ const SocialProofStats = () => {
   const [stats, setStats] = useState({ analyses: 0, hunters: 0, countries: 0, rating: 0 });
 
   useEffect(() => {
+    // Check sessionStorage cache first
+    try {
+      const cached = sessionStorage.getItem(CACHE_KEY);
+      if (cached) {
+        const { data, ts } = JSON.parse(cached);
+        if (Date.now() - ts < CACHE_TTL) {
+          setStats(data);
+          return;
+        }
+      }
+    } catch {}
+
     const load = async () => {
       const [{ count: aC }, { count: pC }, { data: reviews }] = await Promise.all([
         supabase.from("analyses").select("*", { count: "exact", head: true }),
@@ -34,13 +49,14 @@ const SocialProofStats = () => {
       const avgRating = reviews?.length
         ? (reviews.reduce((s: number, r: any) => s + (r.rating || 0), 0) / reviews.length)
         : 4.8;
-      // Use real data with minimum thresholds for social proof
-      setStats({
+      const result = {
         analyses: Math.max(aC || 0, 120),
         hunters: Math.max(pC || 0, 45),
         countries: 12,
         rating: Math.round(Math.max(avgRating, 4.5) * 10) / 10,
-      });
+      };
+      setStats(result);
+      try { sessionStorage.setItem(CACHE_KEY, JSON.stringify({ data: result, ts: Date.now() })); } catch {}
     };
     load();
   }, []);

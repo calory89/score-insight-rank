@@ -20,6 +20,7 @@ const LoginGateModal = ({ open, onClose, onSuccess }: LoginGateModalProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
   const handleGoogle = async () => {
     setLoading(true);
@@ -132,30 +133,28 @@ const LoginGateModal = ({ open, onClose, onSuccess }: LoginGateModalProps) => {
                     <button className="text-xs text-primary hover:underline" onClick={() => setIsSignUp(!isSignUp)}>
                       {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
                     </button>
-                    {!isSignUp && (
-                      <button
-                        className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-                        onClick={async () => {
-                          if (!email) { setError("Enter your email first."); return; }
-                          setLoading(true); setError("");
-                          const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                            redirectTo: `${window.location.origin}/reset-password`,
-                          });
-                          setLoading(false);
-                          if (error) { setError(error.message); return; }
-                          setError(""); 
-                          alert("Check your email for a password reset link.");
-                        }}
-                      >
-                        Forgot password?
-                      </button>
-                    )}
+                    <button
+                      className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={async () => {
+                        if (!email) { setError("Enter your email first."); return; }
+                        setLoading(true); setError(""); setSuccessMsg("");
+                        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                          redirectTo: `${window.location.origin}/reset-password`,
+                        });
+                        setLoading(false);
+                        if (error) { setError(error.message); return; }
+                        setSuccessMsg("Password reset link sent! Check your email.");
+                      }}
+                    >
+                      Forgot password?
+                    </button>
                   </div>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
+          {successMsg && <p className="text-xs text-primary mt-3 text-center">{successMsg}</p>}
           {error && <p className="text-xs text-destructive mt-3 text-center">{error}</p>}
           <p className="text-[11px] text-muted-foreground text-center mt-6">No credit card required. Free forever plan available.</p>
         </motion.div>

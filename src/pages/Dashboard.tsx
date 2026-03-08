@@ -420,9 +420,17 @@ const Dashboard = () => {
 
   const handleAnalyze = () => {
     if (!url.trim() || analyzing) return;
-    // Check free limit (admin bypasses)
+    // Basic URL validation
+    try {
+      const parsed = new URL(url.trim().startsWith("http") ? url.trim() : `https://${url.trim()}`);
+      if (!parsed.hostname.includes(".")) throw new Error();
+    } catch {
+      toast({ title: "Invalid URL", description: "Please enter a valid property listing URL (e.g. https://idealista.com/...)", variant: "destructive" });
+      return;
+    }
+    // Check free limit using subscription credits (admin bypasses)
     const isAdmin = user?.email === "rrppspain@gmail.com";
-    if (!isAdmin && analyses.length >= FREE_LIMIT) {
+    if (!isAdmin && !isPro && analyses.length >= FREE_LIMIT) {
       setShowUpgrade(true);
       return;
     }

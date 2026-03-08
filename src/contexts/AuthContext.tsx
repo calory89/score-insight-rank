@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
+import { toast } from "@/hooks/use-toast";
 
 interface AuthContextType {
   user: User | null;
@@ -25,10 +26,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        // Welcome toast for first-time signups
+        if (event === "SIGNED_IN" && session?.user) {
+          const createdAt = new Date(session.user.created_at).getTime();
+          if (Date.now() - createdAt < 30000) {
+            setTimeout(() => {
+              toast({ title: "Welcome to RealHunt! 🎉", description: "Paste any property URL to get your first forensic report." });
+            }, 500);
+          }
+        }
       }
     );
 

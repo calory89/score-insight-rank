@@ -59,7 +59,9 @@ const confidenceColor = (c: string) => {
 const sqmToAcres = (sqm: number) => (sqm * 0.000247105).toFixed(3);
 const sqmToSqft = (sqm: number) => Math.round(sqm * 10.7639);
 
-type AnalysisData = any;
+import type { Tables } from "@/integrations/supabase/types";
+
+type AnalysisData = Tables<"analyses">;
 
 // --- FOMO Loading Steps ---
 const fomoSteps = [
