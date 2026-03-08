@@ -6,14 +6,31 @@ import { Menu, X, LogOut, LayoutDashboard, Settings, Sun, Moon, TicketCheck } fr
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "next-themes";
 import LoginGateModal from "@/components/LoginGateModal";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [scrolledPastHero, setScrolledPastHero] = useState(false);
+  const [creditsInfo, setCreditsInfo] = useState<{ used: number; total: number; plan: string } | null>(null);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+
+  // Fetch subscription credits for logged-in users
+  useEffect(() => {
+    if (!user) { setCreditsInfo(null); return; }
+    const fetchCredits = async () => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("credits_used, credits_total, plan")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (data) setCreditsInfo({ used: data.credits_used, total: data.credits_total, plan: data.plan });
+    };
+    fetchCredits();
+  }, [user]);
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
@@ -62,6 +79,11 @@ const Navbar = () => {
                 <Button variant="ghost" size="sm" onClick={() => navigate("/settings")} className="text-xs gap-1">
                   <Settings className="h-3.5 w-3.5" /> Settings
                 </Button>
+                {creditsInfo && creditsInfo.plan === "free" && (
+                  <Badge variant="secondary" className="text-[10px] cursor-pointer" onClick={() => { const el = document.getElementById("pricing"); if (el) el.scrollIntoView({ behavior: "smooth" }); }}>
+                    {creditsInfo.total - creditsInfo.used}/{creditsInfo.total} free
+                  </Badge>
+                )}
                 <span className="text-xs text-muted-foreground truncate max-w-[120px]">{user.email}</span>
                 <Button variant="ghost" size="sm" onClick={signOut}>
                   <LogOut className="h-4 w-4" />

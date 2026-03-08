@@ -48,7 +48,7 @@ const Testimonials = () => (
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: i * 0.1 }}
-            className="rounded-2xl border border-border bg-card p-6 flex flex-col"
+            className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
           >
             {/* Star rating */}
             <div className="flex items-center gap-0.5 mb-3">
