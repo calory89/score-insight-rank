@@ -105,17 +105,28 @@ const Compare = () => {
     { label: "Upside", key: "upside_scenario", format: (v: any) => v ? `+${v}%` : "—" },
   ];
 
-  // Find best value for highlighting
+  // Find best value for highlighting + category winners
   const getBest = (key: string | null, idx: number) => {
     if (!key || properties.length < 2) return false;
     const vals = properties.map(p => p[key]).filter(v => v != null);
     if (vals.length === 0) return false;
     const pVal = properties[idx]?.[key];
     if (pVal == null) return false;
-    // For risk_level, higher = better (lower risk). For others, higher = better
     const best = Math.max(...vals as number[]);
     return pVal === best;
   };
+
+  // Category winners for badges
+  const categoryWinners = properties.length >= 2 ? [
+    { label: "Best ROI", key: "roi_potential", icon: TrendingUp },
+    { label: "Most Stable", key: "market_stability", icon: Shield },
+    { label: "Highest Demand", key: "demand_strength", icon: Target },
+    { label: "Safest", key: "risk_level", icon: Shield },
+    { label: "Most Liquid", key: "liquidity_outlook", icon: DollarSign },
+  ].map(cat => {
+    const best = properties.reduce((a, b) => ((a[cat.key] || 0) > (b[cat.key] || 0) ? a : b));
+    return { ...cat, winnerId: best.id, winnerName: best.address || best.city };
+  }) : [];
 
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="h-8 w-8 rounded-full border-2 border-t-primary border-border animate-spin" /></div>;
 
