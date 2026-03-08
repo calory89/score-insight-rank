@@ -328,6 +328,8 @@ const Game = () => {
                 Sign up to analyze your own properties →
               </Button>
             )}
+
+            <GameLeaderboard currentUserId={user?.id} currentScore={correctCount} />
           </motion.div>
         )}
 
