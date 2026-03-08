@@ -106,6 +106,29 @@ const Game = () => {
     }, 1500);
   }, [phase, currentIndex, properties, x]);
 
+  // Keyboard shortcuts for arrow keys
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (phase !== "playing") return;
+      if (e.key === "ArrowRight") handleSwipe("right");
+      else if (e.key === "ArrowLeft") handleSwipe("left");
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [phase, handleSwipe]);
+
+  // Save score to DB when game finishes
+  useEffect(() => {
+    if (phase === "finished" && results.length === ROUNDS && user) {
+      const finalScore = results.filter(r => r.correct).length;
+      supabase.from("game_scores").insert({
+        user_id: user.id,
+        score: finalScore,
+        total_rounds: ROUNDS,
+      });
+    }
+  }, [phase, results, user]);
+
   const handleDragEnd = (_: any, info: PanInfo) => {
     if (Math.abs(info.offset.x) > 80) {
       handleSwipe(info.offset.x > 0 ? "right" : "left");
