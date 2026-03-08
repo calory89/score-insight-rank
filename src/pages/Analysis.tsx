@@ -28,6 +28,7 @@ import PropertyReviews from "@/components/PropertyReviews";
 import { PropertyNotes } from "@/components/PropertyNotes";
 import PriceHistoryTimeline from "@/components/PriceHistoryTimeline";
 import AddToPortfolioModal from "@/components/AddToPortfolioModal";
+import DueDiligenceChecklist from "@/components/DueDiligenceChecklist";
 import { useToast } from "@/hooks/use-toast";
 import {
   LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, Area, AreaChart,
