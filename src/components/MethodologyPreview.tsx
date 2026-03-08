@@ -12,7 +12,7 @@ const pillars = [
 
 const MethodologyPreview = () => {
   return (
-    <section id="trust" className="py-20 bg-secondary/30">
+    <section id="trust" className="py-20 bg-secondary/30" data-section="methodology">
       <div className="container mx-auto px-4 max-w-5xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
