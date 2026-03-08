@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { TrendingUp, Shield, Users, Droplets, BarChart3, Target } from "lucide-react";
+import { TrendingUp, Shield, Users, Droplets, BarChart3, Target, ShieldCheck, Database, Eye } from "lucide-react";
 
 const pillars = [
   { label: "ROI Potential", value: 85, icon: TrendingUp, description: "Projected returns vs. market average" },
@@ -73,10 +73,43 @@ const MethodologyPreview = () => {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.6 }}
-          className="text-center text-xs text-muted-foreground mt-8"
+          className="text-center text-xs text-muted-foreground mt-8 mb-14"
         >
           Example scores shown. Each property gets unique scores based on real-time data analysis.
         </motion.p>
+
+        {/* Trust badges — merged from TrustSection */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-8"
+        >
+          <h3 className="text-xl md:text-2xl font-bold text-foreground">
+            Independence is our product.
+          </h3>
+        </motion.div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-3xl mx-auto">
+          {[
+            { icon: ShieldCheck, title: "Transparent Scoring", description: "Every factor and weight is documented." },
+            { icon: BarChart3, title: "No Paid Placements", description: "Rankings are purely data-driven." },
+            { icon: Database, title: "Data Sources Displayed", description: "Verify every analysis independently." },
+            { icon: Eye, title: "No Affiliate Bias", description: "Our only product is insight." },
+          ].map((point, i) => (
+            <motion.div
+              key={point.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: i * 0.08 }}
+              className="rounded-xl border border-border bg-card p-4 sm:p-5 text-center hover:border-primary/20 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
+            >
+              <point.icon className="h-5 w-5 text-muted-foreground mx-auto mb-3" />
+              <h4 className="text-xs font-semibold text-foreground mb-1">{point.title}</h4>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">{point.description}</p>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   );

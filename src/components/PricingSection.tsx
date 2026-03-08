@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Check, Zap, Crown, Building2, Mail, X } from "lucide-react";
@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginGateModal from "@/components/LoginGateModal";
 import StripeCheckoutOverlay from "@/components/StripeCheckoutOverlay";
+import { supabase } from "@/integrations/supabase/client";
 
 // Stripe price IDs
 const STRIPE_PRICES = {
@@ -179,10 +180,23 @@ const ContactModal = ({ open, onClose }: { open: boolean; onClose: () => void })
               <p className="text-sm text-muted-foreground">We'll get back to you within 24 hours.</p>
             </div>
           ) : (
-            <form onSubmit={(e) => { e.preventDefault(); setSubmitted(true); }} className="space-y-4">
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const form = e.currentTarget;
+              const formData = new FormData(form);
+              await supabase.from("contact_requests").insert({
+                email: formData.get("email") as string,
+                phone: (formData.get("phone") as string) || null,
+                company: (formData.get("company") as string) || null,
+                estimated_searches: (formData.get("searches") as string) || null,
+                message: (formData.get("message") as string) || null,
+                source: "enterprise",
+              });
+              setSubmitted(true);
+            }} className="space-y-4">
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Email *</label>
-                <Input type="email" required placeholder="your@company.com" className="bg-secondary/50" />
+                <Input type="email" name="email" required placeholder="your@company.com" className="bg-secondary/50" />
               </div>
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Phone</label>
@@ -223,16 +237,16 @@ const ContactModal = ({ open, onClose }: { open: boolean; onClose: () => void })
                       </div>
                     )}
                   </div>
-                  <Input type="tel" placeholder="Phone number" className="bg-secondary/50 flex-1" />
+                  <Input type="tel" name="phone" placeholder="Phone number" className="bg-secondary/50 flex-1" />
                 </div>
               </div>
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Company Name</label>
-                <Input placeholder="Your company" className="bg-secondary/50" />
+                <Input name="company" placeholder="Your company" className="bg-secondary/50" />
               </div>
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Estimated Monthly Searches</label>
-                <select className="h-10 w-full rounded-md border border-border bg-secondary/50 px-3 text-sm text-foreground">
+                <select name="searches" className="h-10 w-full rounded-md border border-border bg-secondary/50 px-3 text-sm text-foreground">
                   <option>1,000 – 5,000</option>
                   <option>5,000 – 10,000</option>
                   <option>10,000 – 50,000</option>
@@ -241,7 +255,7 @@ const ContactModal = ({ open, onClose }: { open: boolean; onClose: () => void })
               </div>
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Message</label>
-                <Textarea placeholder="Tell us about your needs..." rows={3} className="bg-secondary/50" />
+                <Textarea name="message" placeholder="Tell us about your needs..." rows={3} className="bg-secondary/50" />
               </div>
               <Button type="submit" variant="hero" className="w-full">Send Request</Button>
             </form>
