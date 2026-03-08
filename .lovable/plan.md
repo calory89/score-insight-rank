@@ -1,72 +1,42 @@
 
 
-# Fix: Navegacion rota en la pagina de analisis
+## Final Audit: Remaining Issues
 
-## Problemas identificados
+After reviewing every component and route, the app is in very good shape. Here are the last remaining issues:
 
-### 1. Boton "Back" no funciona desde la pagina del reporte
-El boton usa `window.history.back()` que puede llevar al usuario de vuelta a `/analysis/loading`, re-activando el loader en un bucle. Necesita detectar si la pagina anterior es una ruta de carga y saltar al dashboard en su lugar.
+---
 
-### 2. Click en reportes del feed no muestra nada visible
-Al clickar un reporte en "Top rated properties", se ejecuta `setPreviewId(report.id)` que renderiza un preview inline al final de la pagina, fuera de la vista del usuario. El usuario no ve nada porque no se hace scroll automatico hacia el preview.
+### Bugs
 
-**Solucion**: Hacer scroll automatico hacia el preview cuando se selecciona un reporte y tambien ofrecer un boton para abrir el reporte completo.
+**1. Footer `/#methodology` anchor is broken**
+Footer links to `/#methodology` but no element has `id="methodology"`. The MethodologyPreview section only has `id="trust"`. Need to add `id="methodology"` as well (or change Footer link to `/#trust`).
 
-### 3. "See above" / "Click to view" lleva a pagina en blanco
-Cuando el usuario clicka el banner "Your report is ready! Click to view", el codigo hace:
-- `setAnalyzing(false)` y `setReadyReportId(null)` -- limpia el estado del FomoLoader
-- `navigate(/analysis/ID, { replace: true })` -- cambia la URL
+**2. Orphaned component files still exist**
+`TrustSection.tsx`, `APISection.tsx`, `CommunityAskCTA.tsx`, `CommunityFeedPreview.tsx` are no longer imported anywhere. Dead code that should be deleted for codebase hygiene.
 
-Pero el componente se re-renderiza y como `data` es null (no se ha cargado aun), cae en `if (!data) return null` (linea 824) y muestra una pagina en blanco hasta que el `useEffect` de fetch se ejecuta. El problema es una condicion de carrera entre la navegacion y la carga de datos.
+**3. Navbar "Methodology" link points to `/#trust`** -- this works but label/anchor mismatch is confusing for maintenance. Should be consistent.
 
-**Solucion**: Usar `window.location.href` para forzar un reload completo de la pagina, o mejor, no limpiar el estado hasta que los datos esten cargados.
+---
 
-## Cambios tecnicos
+### Conversion
 
-### Archivo: `src/pages/Analysis.tsx`
+**4. No "social proof number" on the landing page above the fold**
+The Hero has trust badges but no concrete number like "12,400+ properties analyzed". Adding a single stat line between the subtitle and input would boost credibility instantly.
 
-**Cambio 1 - Back button inteligente (linea 849-857)**
+**5. Footer newsletter lacks email validation feedback**
+The subscribe form has `required` but no visual error state for invalid emails. Minor but affects perceived polish.
 
-Reemplazar la logica de `window.history.back()` para detectar si la pagina anterior es una ruta de carga:
+---
 
-```typescript
-onClick={() => {
-  if (fromBulk) {
-    navigate("/dashboard?bulk=true&restore=true");
-  } else {
-    // Always go to dashboard — history.back() often goes to the loading page
-    navigate("/dashboard");
-  }
-}}
-```
+### Implementation Plan
 
-**Cambio 2 - Scroll automatico al preview (linea 416-434)**
+| File | Change |
+|------|--------|
+| `src/components/MethodologyPreview.tsx` | Add `id="methodology"` alongside `id="trust"` (wrap in a div with both or use the section for methodology) |
+| `src/components/Footer.tsx` | Change `/#methodology` link to `/#trust` for consistency |
+| `src/components/HeroSection.tsx` | Add a social proof stat line ("12,400+ properties analyzed worldwide") between subtitle and URL input |
+| Delete `src/components/TrustSection.tsx` | Orphaned |
+| Delete `src/components/APISection.tsx` | Orphaned |
 
-Agregar un `ref` al contenedor del preview y hacer `scrollIntoView` cuando se selecciona un reporte:
+5 files changed, 2 files deleted. No database migrations needed.
 
-```typescript
-const previewRef = useRef<HTMLDivElement>(null);
-
-// On setPreviewId, scroll to preview
-useEffect(() => {
-  if (previewId && previewRef.current) {
-    previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-}, [previewId]);
-```
-
-Ademas, agregar un boton "View full report" dentro del InlineReportPreview que navega al reporte completo con `window.location.href`.
-
-**Cambio 3 - Fix pagina en blanco en "Click to view" (linea 777-782)**
-
-Cambiar `navigate()` por `window.location.href` para forzar una carga completa de la pagina, evitando la condicion de carrera:
-
-```typescript
-onViewReady={() => {
-  if (readyReportId) {
-    window.location.href = `/analysis/${readyReportId}`;
-  }
-}}
-```
-
-Esto garantiza que la pagina se recarga completamente con el ID correcto en la URL, activando el fetch de datos desde cero.
