@@ -68,7 +68,7 @@ const RankingSearchBar = () => {
       <p className="text-[10px] text-muted-foreground text-center">
         Save time and money. Get a score of any real estate listing.
       </p>
-      {showLoginGate && <LoginGateModal onClose={() => setShowLoginGate(false)} />}
+      {showLoginGate && <LoginGateModal open={showLoginGate} onClose={() => setShowLoginGate(false)} />}
     </div>
   );
 };
