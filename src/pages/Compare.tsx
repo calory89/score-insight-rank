@@ -337,10 +337,14 @@ const Compare = () => {
               const sorted = [...properties].sort((a, b) => (b.global_score || 0) - (a.global_score || 0));
               const winner = sorted[0];
               const winnerIdx = properties.findIndex(p => p.id === winner.id);
+              const categoriesWon = categoryWinners.filter(c => c.winnerId === winner.id).length;
               return (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                   className="rounded-2xl border border-primary/20 bg-primary/5 p-6 mb-8 text-center">
-                  <Sparkles className="h-6 w-6 text-primary mx-auto mb-2" />
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <Trophy className="h-6 w-6 text-score-average" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded-full">Best Overall</span>
+                  </div>
                   <h3 className="text-sm font-semibold text-foreground mb-1">RealHunt Recommendation</h3>
                   <p className="text-xs text-muted-foreground mb-3">Based on overall forensic analysis</p>
                   <div className="inline-flex items-center gap-3 rounded-xl bg-card border border-border px-5 py-3">
@@ -350,9 +354,13 @@ const Compare = () => {
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-3 max-w-md mx-auto">
                     Scores {winner.global_score - sorted[1].global_score} points higher overall.
+                    Wins {categoriesWon} of {categoryWinners.length} categories.
                     {winner.roi_potential > sorted[1].roi_potential ? " Better ROI potential." : ""}
                     {winner.risk_level > sorted[1].risk_level ? " Better safety profile." : ""}
                   </p>
+                  <Button variant="hero" size="sm" className="mt-4" onClick={() => navigate(`/analysis/${winner.id}`)}>
+                    View Full Report <ChevronDown className="h-3.5 w-3.5 ml-1 -rotate-90" />
+                  </Button>
                 </motion.div>
               );
             })()}
