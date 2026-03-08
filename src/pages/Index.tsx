@@ -14,9 +14,13 @@ const Testimonials = lazy(() => import("@/components/Testimonials"));
 const ValueProposition = lazy(() => import("@/components/ValueProposition"));
 const PricingSection = lazy(() => import("@/components/PricingSection"));
 const TrustSection = lazy(() => import("@/components/TrustSection"));
+const MethodologyPreview = lazy(() => import("@/components/MethodologyPreview"));
 const APISection = lazy(() => import("@/components/APISection"));
+const FAQ = lazy(() => import("@/components/FAQ"));
 const FinalCTA = lazy(() => import("@/components/FinalCTA"));
 const Footer = lazy(() => import("@/components/Footer"));
+const StickyMobileCTA = lazy(() => import("@/components/StickyMobileCTA"));
+const LiveActivityToast = lazy(() => import("@/components/LiveActivityToast"));
 
 const Index = () => {
   return (
@@ -36,9 +40,13 @@ const Index = () => {
         <ValueProposition />
         <PricingSection />
         <TrustSection />
+        <MethodologyPreview />
         <APISection />
+        <FAQ />
         <FinalCTA />
         <Footer />
+        <StickyMobileCTA />
+        <LiveActivityToast />
       </Suspense>
     </div>
   );

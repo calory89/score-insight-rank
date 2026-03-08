@@ -1,73 +1,72 @@
 
 
-## Assessment: 85/100 — What's Missing for 100
+# Fix: Navegacion rota en la pagina de analisis
 
-The landing page now has strong structure with 15 sections, community proof, stats, and testimonials. But there are specific gaps that prevent it from being a true 100/100 conversion machine:
+## Problemas identificados
 
----
+### 1. Boton "Back" no funciona desde la pagina del reporte
+El boton usa `window.history.back()` que puede llevar al usuario de vuelta a `/analysis/loading`, re-activando el loader en un bucle. Necesita detectar si la pagina anterior es una ruta de carga y saltar al dashboard en su lugar.
 
-### What's Missing
+### 2. Click en reportes del feed no muestra nada visible
+Al clickar un reporte en "Top rated properties", se ejecuta `setPreviewId(report.id)` que renderiza un preview inline al final de la pagina, fuera de la vista del usuario. El usuario no ve nada porque no se hace scroll automatico hacia el preview.
 
-**1. FAQ Section** (before Footer)
-- Every high-converting SaaS landing page has one. Users have objections — "Is it accurate?", "What platforms do you support?", "Is my data safe?", "Can I cancel anytime?"
-- An accordion-based FAQ kills objections right before the final CTA
-- Uses existing Radix accordion component
+**Solucion**: Hacer scroll automatico hacia el preview cuando se selecciona un reporte y tambien ofrecer un boton para abrir el reporte completo.
 
-**2. "How Accurate Is It?" / Methodology Transparency Section** (after TrustSection)
-- The Trust section says "transparent scoring" but never shows HOW
-- A brief section showing the 6 scoring dimensions (ROI, Safety, Demand, Liquidity, Market Strength, Overall) with mini progress bars builds massive credibility
-- Differentiates from competitors who hide their methodology
+### 3. "See above" / "Click to view" lleva a pagina en blanco
+Cuando el usuario clicka el banner "Your report is ready! Click to view", el codigo hace:
+- `setAnalyzing(false)` y `setReadyReportId(null)` -- limpia el estado del FomoLoader
+- `navigate(/analysis/ID, { replace: true })` -- cambia la URL
 
-**3. Footer needs real links**
-- Currently all links go to `#` — Privacy, Terms, Methodology, Contact are dead
-- Add at least a contact email and basic legal pages (even simple ones)
-- Add social media links (Twitter/X, LinkedIn)
+Pero el componente se re-renderiza y como `data` es null (no se ha cargado aun), cae en `if (!data) return null` (linea 824) y muestra una pagina en blanco hasta que el `useEffect` de fetch se ejecuta. El problema es una condicion de carrera entre la navegacion y la carga de datos.
 
-**4. Mobile sticky CTA bar**
-- On mobile, once you scroll past the hero, there's no persistent way to start analyzing
-- A small sticky bottom bar with "Analyze Property" that appears after scrolling past the hero dramatically increases mobile conversion
+**Solucion**: Usar `window.location.href` para forzar un reload completo de la pagina, o mejor, no limpiar el estado hasta que los datos esten cargados.
 
-**5. "Live Activity" indicator**
-- A subtle floating notification showing "Someone just analyzed a property in Bali" (pulling from real recent analyses)
-- Creates urgency and FOMO — proves the platform is alive RIGHT NOW
+## Cambios tecnicos
 
----
+### Archivo: `src/pages/Analysis.tsx`
 
-### Technical Plan
+**Cambio 1 - Back button inteligente (linea 849-857)**
 
-**New components:**
-- `src/components/FAQ.tsx` — Radix accordion with 6-8 common questions
-- `src/components/MethodologyPreview.tsx` — Visual breakdown of the 6 scoring pillars with mini bars
-- `src/components/StickyMobileCTA.tsx` — Fixed bottom bar on mobile, appears after hero scroll
-- `src/components/LiveActivityToast.tsx` — Periodic toast showing recent real analyses
+Reemplazar la logica de `window.history.back()` para detectar si la pagina anterior es una ruta de carga:
 
-**Updated files:**
-- `src/pages/Index.tsx` — Add FAQ after APISection, MethodologyPreview after TrustSection
-- `src/components/Footer.tsx` — Add real contact email, social links, proper structure
-- `src/App.tsx` or layout — Add StickyMobileCTA and LiveActivityToast globally on Index
+```typescript
+onClick={() => {
+  if (fromBulk) {
+    navigate("/dashboard?bulk=true&restore=true");
+  } else {
+    // Always go to dashboard — history.back() often goes to the loading page
+    navigate("/dashboard");
+  }
+}}
+```
 
-**Final landing page order (additions marked):**
-1. Navbar
-2. HeroSection
-3. SocialProofStats
-4. MediaLogos
-5. HowItWorks
-6. AlternativesSection
-7. GlobalRanking
-8. CommunityFeedPreview
-9. CommunityAskCTA
-10. DiscoverPromo
-11. Testimonials
-12. ValueProposition
-13. PricingSection
-14. TrustSection
-15. **MethodologyPreview** (new)
-16. APISection
-17. **FAQ** (new)
-18. FinalCTA
-19. Footer (improved)
-20. **StickyMobileCTA** (new, floating)
-21. **LiveActivityToast** (new, floating)
+**Cambio 2 - Scroll automatico al preview (linea 416-434)**
 
-**No database changes needed.** LiveActivityToast pulls from existing `analyses` table. Everything else is static content.
+Agregar un `ref` al contenedor del preview y hacer `scrollIntoView` cuando se selecciona un reporte:
 
+```typescript
+const previewRef = useRef<HTMLDivElement>(null);
+
+// On setPreviewId, scroll to preview
+useEffect(() => {
+  if (previewId && previewRef.current) {
+    previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}, [previewId]);
+```
+
+Ademas, agregar un boton "View full report" dentro del InlineReportPreview que navega al reporte completo con `window.location.href`.
+
+**Cambio 3 - Fix pagina en blanco en "Click to view" (linea 777-782)**
+
+Cambiar `navigate()` por `window.location.href` para forzar una carga completa de la pagina, evitando la condicion de carrera:
+
+```typescript
+onViewReady={() => {
+  if (readyReportId) {
+    window.location.href = `/analysis/${readyReportId}`;
+  }
+}}
+```
+
+Esto garantiza que la pagina se recarga completamente con el ID correcto en la URL, activando el fetch de datos desde cero.
