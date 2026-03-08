@@ -10,6 +10,8 @@ import { usePageTracking } from "@/hooks/usePageTracking";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { Suspense } from "react";
 import ErrorBoundary from "@/components/ErrorBoundary";
+import CommandPalette from "@/components/CommandPalette";
+import OnboardingWizard from "@/components/OnboardingWizard";
 import Index from "./pages/Index";
 
 // Lazy-loaded routes for code splitting
@@ -96,6 +98,8 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <CommandPalette />
+              <OnboardingWizard />
               <PageTracker>
                 <AnimatedRoutes />
               </PageTracker>
