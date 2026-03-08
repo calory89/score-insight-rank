@@ -6,6 +6,8 @@ import { Menu, X, LogOut, LayoutDashboard, Settings, Sun, Moon, TicketCheck } fr
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "next-themes";
 import LoginGateModal from "@/components/LoginGateModal";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
