@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -635,24 +636,6 @@ const Admin = () => {
           </div>
         ) : (
           <>
-            {/* Visits Analytics Panel */}
-            <AdminVisitsPanel />
-
-            {/* Visitor Activity Log */}
-            <AdminVisitorLog />
-
-            {/* Batch Analysis Panel */}
-            <BatchAnalysisPanel />
-
-            {/* Error Logs Panel */}
-            <ErrorLogsPanel />
-
-            {/* Newsletter Subscribers Panel */}
-            <NewsletterPanel />
-
-            {/* Admin Tickets Panel */}
-            <AdminTicketsPanel />
-
             {/* Stats Cards */}
             {stats && (
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-8">
@@ -684,33 +667,49 @@ const Admin = () => {
               </div>
             )}
 
-            {/* Search */}
-            <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by email or country…"
-                className="w-full rounded-xl border border-border bg-card pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30"
-              />
-            </div>
+            <Tabs defaultValue="analytics" className="w-full">
+              <TabsList className="w-full justify-start overflow-x-auto flex-nowrap mb-6 bg-secondary/50 h-auto p-1">
+                <TabsTrigger value="analytics" className="text-xs gap-1.5"><Activity className="h-3.5 w-3.5" /> Analytics</TabsTrigger>
+                <TabsTrigger value="users" className="text-xs gap-1.5"><Users className="h-3.5 w-3.5" /> Users</TabsTrigger>
+                <TabsTrigger value="tickets" className="text-xs gap-1.5"><TicketCheck className="h-3.5 w-3.5" /> Tickets</TabsTrigger>
+                <TabsTrigger value="errors" className="text-xs gap-1.5"><AlertCircle className="h-3.5 w-3.5" /> Errors</TabsTrigger>
+                <TabsTrigger value="newsletter" className="text-xs gap-1.5"><Newspaper className="h-3.5 w-3.5" /> Newsletter</TabsTrigger>
+                <TabsTrigger value="batch" className="text-xs gap-1.5"><Zap className="h-3.5 w-3.5" /> Batch</TabsTrigger>
+              </TabsList>
 
-            {/* Users Table */}
-            <div className="rounded-2xl border border-border bg-card overflow-hidden">
-              <div className="grid grid-cols-[2fr_1fr_80px] sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_80px] gap-2 px-5 py-3 border-b border-border bg-secondary/30 text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
-                <span>User</span>
-                <span className="hidden sm:block">Signed Up</span>
-                <span className="hidden sm:block">Last Login</span>
-                <span>Searches</span>
-                <span className="hidden sm:block">Plan</span>
-                <span></span>
-              </div>
+              <TabsContent value="analytics">
+                <AdminVisitsPanel />
+                <AdminVisitorLog />
+              </TabsContent>
 
-              {filteredUsers.length === 0 ? (
-                <div className="px-5 py-8 text-center text-sm text-muted-foreground">No users found.</div>
-              ) : (
-                filteredUsers.map((u) => (
+              <TabsContent value="users">
+                {/* Search */}
+                <div className="relative mb-6">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by email or country…"
+                    className="w-full rounded-xl border border-border bg-card pl-10 pr-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30"
+                  />
+                </div>
+
+                {/* Users Table */}
+                <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                  <div className="grid grid-cols-[2fr_1fr_80px] sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_80px] gap-2 px-5 py-3 border-b border-border bg-secondary/30 text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+                    <span>User</span>
+                    <span className="hidden sm:block">Signed Up</span>
+                    <span className="hidden sm:block">Last Login</span>
+                    <span>Searches</span>
+                    <span className="hidden sm:block">Plan</span>
+                    <span></span>
+                  </div>
+
+                  {filteredUsers.length === 0 ? (
+                    <div className="px-5 py-8 text-center text-sm text-muted-foreground">No users found.</div>
+                  ) : (
+                    filteredUsers.map((u) => (
                   <div key={u.id} className="border-b border-border last:border-b-0">
                     <div
                       className="grid grid-cols-[2fr_1fr_80px] sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_80px] gap-2 px-5 py-3.5 items-center hover:bg-secondary/20 cursor-pointer transition-colors"
@@ -803,7 +802,25 @@ const Admin = () => {
                   </div>
                 ))
               )}
-            </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="tickets">
+                <AdminTicketsPanel />
+              </TabsContent>
+
+              <TabsContent value="errors">
+                <ErrorLogsPanel />
+              </TabsContent>
+
+              <TabsContent value="newsletter">
+                <NewsletterPanel />
+              </TabsContent>
+
+              <TabsContent value="batch">
+                <BatchAnalysisPanel />
+              </TabsContent>
+            </Tabs>
           </>
         )}
       </div>
