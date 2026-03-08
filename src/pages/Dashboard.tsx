@@ -9,10 +9,9 @@ import { ADMIN_EMAIL } from "@/lib/constants";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Search, ArrowRight, Calendar, Building2, TrendingUp, MapPin, Globe,
-  Shield, BarChart3, Heart, GitCompare, Filter, Star, Crown, Zap, Layers, X, Lock,
+  Shield, BarChart3, Heart, GitCompare, Filter, Star, Crown, Zap, Layers,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
