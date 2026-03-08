@@ -48,8 +48,8 @@ const Navbar = () => {
             <a href="/#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How It Works</a>
             <a href="/game" className="text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={(e) => { e.preventDefault(); navigate("/game"); }}>Game</a>
             <a href="/rankings" className="text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={(e) => { e.preventDefault(); navigate("/rankings"); }}>Rankings</a>
+            <a href="/leads" className="text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={(e) => { e.preventDefault(); navigate("/leads"); }}>Leads</a>
             <a href="/#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
-            <a href="/#trust" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Methodology</a>
           </div>
 
           <div className="hidden md:flex items-center gap-3">
@@ -119,8 +119,8 @@ const Navbar = () => {
             <a href="/#how-it-works" className="block text-sm text-muted-foreground py-2" onClick={() => setIsOpen(false)}>How It Works</a>
             <a href="/game" className="block text-sm text-muted-foreground py-2" onClick={(e) => { e.preventDefault(); navigate("/game"); setIsOpen(false); }}>Game</a>
             <a href="/rankings" className="block text-sm text-muted-foreground py-2" onClick={(e) => { e.preventDefault(); navigate("/rankings"); setIsOpen(false); }}>Rankings</a>
+            <a href="/leads" className="block text-sm text-muted-foreground py-2" onClick={(e) => { e.preventDefault(); navigate("/leads"); setIsOpen(false); }}>Leads</a>
             <a href="/#pricing" className="block text-sm text-muted-foreground py-2" onClick={() => setIsOpen(false)}>Pricing</a>
-            <a href="/#trust" className="block text-sm text-muted-foreground py-2" onClick={() => setIsOpen(false)}>Methodology</a>
             <div className="border-t border-border my-2" />
             {user ? (
               <div className="space-y-1">

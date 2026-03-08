@@ -274,6 +274,99 @@ export type Database = {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          ai_ideal_message: string | null
+          ai_pain_points: Json | null
+          ai_recommended_approach: string | null
+          ai_summary: string | null
+          company_name: string | null
+          company_size: string | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          conversation_history: Json | null
+          created_at: string
+          id: string
+          industry: string | null
+          last_contacted_at: string | null
+          lead_score: number | null
+          linkedin_url: string | null
+          location: string | null
+          metadata: Json | null
+          next_followup_at: string | null
+          notes: string | null
+          source: string | null
+          source_url: string | null
+          status: string | null
+          tags: Json | null
+          twitter_url: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          ai_ideal_message?: string | null
+          ai_pain_points?: Json | null
+          ai_recommended_approach?: string | null
+          ai_summary?: string | null
+          company_name?: string | null
+          company_size?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          conversation_history?: Json | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          last_contacted_at?: string | null
+          lead_score?: number | null
+          linkedin_url?: string | null
+          location?: string | null
+          metadata?: Json | null
+          next_followup_at?: string | null
+          notes?: string | null
+          source?: string | null
+          source_url?: string | null
+          status?: string | null
+          tags?: Json | null
+          twitter_url?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          ai_ideal_message?: string | null
+          ai_pain_points?: Json | null
+          ai_recommended_approach?: string | null
+          ai_summary?: string | null
+          company_name?: string | null
+          company_size?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          conversation_history?: Json | null
+          created_at?: string
+          id?: string
+          industry?: string | null
+          last_contacted_at?: string | null
+          lead_score?: number | null
+          linkedin_url?: string | null
+          location?: string | null
+          metadata?: Json | null
+          next_followup_at?: string | null
+          notes?: string | null
+          source?: string | null
+          source_url?: string | null
+          status?: string | null
+          tags?: Json | null
+          twitter_url?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       newsletter_subscribers: {
         Row: {
           created_at: string
