@@ -239,6 +239,24 @@ const Compare = () => {
               </motion.div>
             )}
 
+            {/* Category Winner Badges */}
+            {properties.length >= 2 && (
+              <div className="flex flex-wrap gap-2 mb-6">
+                {categoryWinners.map(cat => {
+                  const winnerIdx = properties.findIndex(p => p.id === cat.winnerId);
+                  return (
+                    <div key={cat.label} className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
+                      <cat.icon className="h-3.5 w-3.5 text-primary" />
+                      <span className="text-[10px] text-muted-foreground">{cat.label}:</span>
+                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: RADAR_COLORS[winnerIdx] }} />
+                      <span className="text-[10px] font-medium text-foreground">{cat.winnerName}</span>
+                      <Trophy className="h-3 w-3 text-score-average" />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Comparison Table */}
             <div className="rounded-2xl border border-border bg-card overflow-hidden mb-8">
               <div className="overflow-x-auto">
