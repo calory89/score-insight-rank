@@ -1069,6 +1069,9 @@ const Analysis = () => {
             }}>
               <Send className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Share</span>
             </Button>
+            <Button variant="outline" size="sm" className="text-xs print:hidden" onClick={() => window.print()}>
+              <Eye className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Print</span>
+            </Button>
             <Button variant="outline" size="sm" className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setShowReportError(true)}>
               <Flag className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Report Error</span>
             </Button>
