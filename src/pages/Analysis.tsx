@@ -59,53 +59,9 @@ const confidenceColor = (c: string) => {
 const sqmToAcres = (sqm: number) => (sqm * 0.000247105).toFixed(3);
 const sqmToSqft = (sqm: number) => Math.round(sqm * 10.7639);
 
-interface AnalysisData {
-  id: string;
-  url: string;
-  user_id: string;
-  created_at: string;
-  slug: string | null;
-  address: string | null;
-  city: string | null;
-  country: string | null;
-  price: string | null;
-  currency: string | null;
-  property_type: string | null;
-  bedrooms: number | null;
-  bathrooms: number | null;
-  size_sqm: number | null;
-  year_built: number | null;
-  image_url: string | null;
-  global_score: number | null;
-  verdict: string | null;
-  ai_summary: string | null;
-  primary_insight: string | null;
-  confidence_level: string | null;
-  data_source: string | null;
-  market_classification: string | null;
-  roi_potential: number | null;
-  risk_level: number | null;
-  demand_strength: number | null;
-  liquidity_outlook: number | null;
-  market_stability: number | null;
-  projected_roi_low: number | null;
-  projected_roi_high: number | null;
-  upside_scenario: number | null;
-  downside_scenario: number | null;
-  market_rank: number | null;
-  market_total: number | null;
-  percentile: number | null;
-  pros: string[] | null;
-  cons: string[] | null;
-  red_flags: string[] | null;
-  why_not_90: string[] | null;
-  opportunity_signals: string[] | null;
-  alternatives: any[] | null;
-  price_history: any[] | null;
-  yield_trend: any[] | null;
-  score_explanations: Record<string, string> | null;
-  [key: string]: any;
-}
+import type { Tables } from "@/integrations/supabase/types";
+
+type AnalysisData = Tables<"analyses">;
 
 // --- FOMO Loading Steps ---
 const fomoSteps = [
