@@ -1,72 +1,53 @@
 
 
-# Fix: Navegacion rota en la pagina de analisis
+## Batch 5 — Conversion, Retention & Premium Polish
 
-## Problemas identificados
+After 4 batches of structural improvements, the product is solid. This batch targets the highest-ROI refinements remaining: conversion optimization, retention hooks, and premium feel details.
 
-### 1. Boton "Back" no funciona desde la pagina del reporte
-El boton usa `window.history.back()` que puede llevar al usuario de vuelta a `/analysis/loading`, re-activando el loader en un bucle. Necesita detectar si la pagina anterior es una ruta de carga y saltar al dashboard en su lugar.
+---
 
-### 2. Click en reportes del feed no muestra nada visible
-Al clickar un reporte en "Top rated properties", se ejecuta `setPreviewId(report.id)` que renderiza un preview inline al final de la pagina, fuera de la vista del usuario. El usuario no ve nada porque no se hace scroll automatico hacia el preview.
+### 1. Share Score Social Cards
+**Files**: `src/pages/Analysis.tsx`
 
-**Solucion**: Hacer scroll automatico hacia el preview cuando se selecciona un reporte y tambien ofrecer un boton para abrir el reporte completo.
+Add a "Share" button group below the report header with WhatsApp, Twitter/X, and Copy Link buttons. Each generates a pre-formatted message: "I just analyzed this property on RealHunt — it scored 82/100! 🏠" with the public URL (`/r/:slug`). No backend changes needed — uses existing slug system and `navigator.share` API with fallback.
 
-### 3. "See above" / "Click to view" lleva a pagina en blanco
-Cuando el usuario clicka el banner "Your report is ready! Click to view", el codigo hace:
-- `setAnalyzing(false)` y `setReadyReportId(null)` -- limpia el estado del FomoLoader
-- `navigate(/analysis/ID, { replace: true })` -- cambia la URL
+### 2. AI Chat Assistant on Reports
+**Files**: New `src/components/AIChatBubble.tsx`, update `src/pages/Analysis.tsx`
 
-Pero el componente se re-renderiza y como `data` es null (no se ha cargado aun), cae en `if (!data) return null` (linea 824) y muestra una pagina en blanco hasta que el `useEffect` de fetch se ejecuta. El problema es una condicion de carrera entre la navegacion y la carga de datos.
+Floating chat bubble (bottom-right) on analysis report pages. Users type follow-up questions like "Is this good for Airbnb?" or "What's the ROI if I renovate?". Uses Lovable AI (gemini-2.5-flash) via a new edge function `supabase/functions/ai-chat/index.ts` that receives the analysis context + user question and returns a concise answer. The chat persists during the session (useState) but doesn't need DB storage.
 
-**Solucion**: Usar `window.location.href` para forzar un reload completo de la pagina, o mejor, no limpiar el estado hasta que los datos esten cargados.
+### 3. Toast Success Feedback on Key Actions
+**Files**: `src/pages/Dashboard.tsx`, `src/pages/Profile.tsx`
 
-## Cambios tecnicos
+Add confetti + success toast on first analysis completion ("Your first report! 🎉"), and on milestone achievements (10th analysis, first 85+ score). Uses existing confetti dependency. Check counts from existing state — no DB changes.
 
-### Archivo: `src/pages/Analysis.tsx`
+### 4. Improved Error States Across Pages
+**Files**: `src/pages/Analysis.tsx`, `src/pages/Dashboard.tsx`
 
-**Cambio 1 - Back button inteligente (linea 849-857)**
+Replace generic error text with branded error cards: icon + friendly message + retry button + "Contact support" link to `/tickets`. Consistent pattern across analysis loading failures and dashboard fetch errors.
 
-Reemplazar la logica de `window.history.back()` para detectar si la pagina anterior es una ruta de carga:
+### 5. Landing Page — Sticky Social Proof Counter
+**File**: `src/components/HeroSection.tsx`
 
-```typescript
-onClick={() => {
-  if (fromBulk) {
-    navigate("/dashboard?bulk=true&restore=true");
-  } else {
-    // Always go to dashboard — history.back() often goes to the loading page
-    navigate("/dashboard");
-  }
-}}
-```
+Replace the random `liveCount` (30-55 fake range) with a real count fetched from `analyses` table (`select count`). Show "12,847 properties analyzed" as a real number that grows. Cached in sessionStorage to avoid re-fetching. Much more credible than random numbers.
 
-**Cambio 2 - Scroll automatico al preview (linea 416-434)**
+### 6. Dashboard — Quick Stats Row
+**File**: `src/pages/Dashboard.tsx`
 
-Agregar un `ref` al contenedor del preview y hacer `scrollIntoView` cuando se selecciona un reporte:
+Add a compact 4-stat row above the analysis list: Total Analyses, Average Score, Best Score, Countries Covered. Computed from existing loaded data — no extra queries. Gives users instant portfolio awareness.
 
-```typescript
-const previewRef = useRef<HTMLDivElement>(null);
+---
 
-// On setPreviewId, scroll to preview
-useEffect(() => {
-  if (previewId && previewRef.current) {
-    previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-}, [previewId]);
-```
+### Summary
 
-Ademas, agregar un boton "View full report" dentro del InlineReportPreview que navega al reporte completo con `window.location.href`.
+| # | Change | Type | Impact |
+|---|--------|------|--------|
+| 1 | Share Score buttons | Frontend | Viral growth + organic traffic |
+| 2 | AI Chat on reports | Full-stack | Wow factor + retention |
+| 3 | Milestone celebrations | Frontend | Delight + retention |
+| 4 | Branded error states | Frontend | Polish + trust |
+| 5 | Real social proof counter | Frontend + query | Conversion credibility |
+| 6 | Dashboard quick stats | Frontend | Perceived value |
 
-**Cambio 3 - Fix pagina en blanco en "Click to view" (linea 777-782)**
+**6 changes. Zero breaking changes. Growth + premium feel.**
 
-Cambiar `navigate()` por `window.location.href` para forzar una carga completa de la pagina, evitando la condicion de carrera:
-
-```typescript
-onViewReady={() => {
-  if (readyReportId) {
-    window.location.href = `/analysis/${readyReportId}`;
-  }
-}}
-```
-
-Esto garantiza que la pagina se recarga completamente con el ID correcto en la URL, activando el fetch de datos desde cero.
