@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Check, Zap, Crown, Building2, X, Shield, TrendingUp, GitCompare } from "lucide-react";
+import { Check, Zap, Crown, Building2, X, Shield, TrendingUp, GitCompare, Clock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import StripeCheckoutOverlay from "@/components/StripeCheckoutOverlay";
 
@@ -61,6 +61,28 @@ const FreeLimitPricingModal = ({ open, onClose, usedCount = 5 }: FreeLimitPricin
   const [checkoutPlan, setCheckoutPlan] = useState<typeof plans[0] | null>(null);
   const { user } = useAuth();
 
+  // 24h countdown timer
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const stored = localStorage.getItem("realhunt_upgrade_deadline");
+    if (stored) return Math.max(0, parseInt(stored) - Date.now());
+    const deadline = Date.now() + 24 * 60 * 60 * 1000;
+    localStorage.setItem("realhunt_upgrade_deadline", deadline.toString());
+    return 24 * 60 * 60 * 1000;
+  });
+
+  useEffect(() => {
+    if (!open) return;
+    const interval = setInterval(() => {
+      const stored = localStorage.getItem("realhunt_upgrade_deadline");
+      if (stored) setTimeLeft(Math.max(0, parseInt(stored) - Date.now()));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [open]);
+
+  const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+  const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+
   if (!open) return null;
 
   const checkoutPriceId = checkoutPlan
@@ -101,6 +123,19 @@ const FreeLimitPricingModal = ({ open, onClose, usedCount = 5 }: FreeLimitPricin
               <p className="text-sm text-muted-foreground mt-1">
                 Upgrade to keep analyzing properties and never miss a deal.
               </p>
+
+              {/* Countdown timer */}
+              {timeLeft > 0 && (
+                <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5 flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-primary flex-shrink-0" />
+                  <p className="text-xs text-foreground">
+                    <span className="font-semibold">20% off</span> if you upgrade in{" "}
+                    <span className="font-mono font-bold text-primary">
+                      {String(hours).padStart(2, "0")}:{String(minutes).padStart(2, "0")}:{String(seconds).padStart(2, "0")}
+                    </span>
+                  </p>
+                </div>
+              )}
 
               {/* Benefits strip */}
               <div className="flex flex-wrap gap-3 mt-4">

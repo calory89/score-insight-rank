@@ -4,8 +4,12 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscription } from "@/contexts/SubscriptionContext";
 import Navbar from "@/components/Navbar";
 import ProtectedListingFallback from "@/components/ProtectedListingFallback";
+import ProGateOverlay from "@/components/ProGateOverlay";
+import ReportExpiryBanner from "@/components/ReportExpiryBanner";
+import BadDealAlert from "@/components/BadDealAlert";
 import FreeLimitPricingModal from "@/components/FreeLimitPricingModal";
 import {
   ArrowLeft, MapPin, Building2, Calendar, Ruler, BedDouble, Bath,
@@ -995,6 +999,7 @@ const Analysis = () => {
   if (!data) return null;
 
   const d = data;
+  const { isPro } = useSubscription();
   const explanations = (d.score_explanations || {}) as Record<string, any>;
   const f = (explanations.forensic || {}) as any;
   const globalScore = d.global_score;
@@ -1069,6 +1074,14 @@ const Analysis = () => {
             </Button>
           </div>
         </div>
+
+        {/* Report Expiry Banner for free users */}
+        {!isPro && d.created_at && <ReportExpiryBanner createdAt={d.created_at} />}
+
+        {/* Bad Deal Alert for free users */}
+        {!isPro && d.global_score != null && (
+          <BadDealAlert score={d.global_score} redFlagCount={(d.red_flags as string[])?.length || 0} />
+        )}
 
         {/* ===== PROJECT SITE WARNING (excluded for ecobeachcity) ===== */}
         {(d.data_source === "project_website" || confidenceLevel === "low") && !d.url?.toLowerCase().includes("ecobeachcity") && (
@@ -1304,7 +1317,8 @@ const Analysis = () => {
           </Section>
         )}
 
-        {/* ===== 4. YIELD & CASH FLOW ===== */}
+        {/* ===== 4. YIELD & CASH FLOW (Pro-gated) ===== */}
+        <ProGateOverlay isPro={isPro} label="Unlock Yield & Cash Flow Analysis">
         {(f.cap_rate || f.gross_yield || f.monthly_cash_flow) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <Section delay={0.28} className="rounded-2xl border border-border bg-card p-6">
@@ -1327,8 +1341,10 @@ const Analysis = () => {
             </Section>
           </div>
         )}
+        </ProGateOverlay>
 
-        {/* ===== 5. BREAK-EVEN + MORTGAGE SCENARIOS ===== */}
+        {/* ===== 5. BREAK-EVEN + MORTGAGE SCENARIOS (Pro-gated) ===== */}
+        <ProGateOverlay isPro={isPro} label="Unlock Break-Even & Mortgage Data">
         {(f.break_even_price || f.mortgage_scenarios?.length > 0) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {(f.break_even_price || f.break_even_rent) && (
@@ -1361,8 +1377,10 @@ const Analysis = () => {
             )}
           </div>
         )}
+        </ProGateOverlay>
 
-        {/* ===== 6. STRESS TESTS ===== */}
+        {/* ===== 6. STRESS TESTS (Pro-gated) ===== */}
+        <ProGateOverlay isPro={isPro} label="Unlock Stress Test Reports">
         {(f.stress_test_market_drop || f.stress_test_rental_decline) && (
           <Section delay={0.36} className="rounded-2xl border border-score-poor/10 bg-score-poor/5 p-6 mb-8">
             <SectionHeader icon={AlertTriangle} title="Stress Tests" subtitle="Downside scenario modeling" />
@@ -1384,6 +1402,7 @@ const Analysis = () => {
             )}
           </Section>
         )}
+        </ProGateOverlay>
 
         {/* ===== 7. NEIGHBORHOOD INTELLIGENCE ===== */}
         {f.neighborhood_scores && (
@@ -1436,7 +1455,8 @@ const Analysis = () => {
           </Section>
         )}
 
-        {/* ===== 8. COMPARABLE SALES ===== */}
+        {/* ===== 8. COMPARABLE SALES (Pro-gated) ===== */}
+        <ProGateOverlay isPro={isPro} label="Unlock Comparable Sales">
         {f.comparable_sales?.length > 0 && (
           <Section delay={0.4} className="rounded-2xl border border-border bg-card p-6 mb-8">
             <SectionHeader icon={BarChart3} title="Comparable Sales" subtitle="Recent transactions in the area" />
@@ -1495,6 +1515,7 @@ const Analysis = () => {
             </div>
           </Section>
         )}
+        </ProGateOverlay>
 
         {/* ===== 10. COST BREAKDOWN ===== */}
         {f.cost_breakdown && (
