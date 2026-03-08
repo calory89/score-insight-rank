@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import PropertyReviews from "@/components/PropertyReviews";
+import { PropertyNotes } from "@/components/PropertyNotes";
 import { useToast } from "@/hooks/use-toast";
 import {
   LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, Area, AreaChart,
@@ -1787,6 +1788,13 @@ const Analysis = () => {
         )}
 
         {/* ===== COMMUNITY REVIEWS ===== */}
+        {/* Smart Property Notes */}
+        {id && (
+          <Section delay={0.65} className="mb-8">
+            <PropertyNotes analysisId={id} />
+          </Section>
+        )}
+
         {id && (
           <Section delay={0.7} className="mb-8">
             <PropertyReviews analysisId={id} />
