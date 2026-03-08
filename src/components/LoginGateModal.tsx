@@ -126,11 +126,31 @@ const LoginGateModal = ({ open, onClose, onSuccess }: LoginGateModalProps) => {
                 <Button variant="hero" className="w-full h-12" onClick={handleEmail} disabled={loading || !email || !password}>
                   {isSignUp ? "Create Account" : "Sign In"}
                 </Button>
-                <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between">
                   <button className="text-xs text-muted-foreground hover:text-foreground transition-colors" onClick={() => setMode("initial")}>Back</button>
-                  <button className="text-xs text-primary hover:underline" onClick={() => setIsSignUp(!isSignUp)}>
-                    {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
-                  </button>
+                  <div className="flex flex-col items-end gap-1">
+                    <button className="text-xs text-primary hover:underline" onClick={() => setIsSignUp(!isSignUp)}>
+                      {isSignUp ? "Already have an account? Sign in" : "Need an account? Sign up"}
+                    </button>
+                    {!isSignUp && (
+                      <button
+                        className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={async () => {
+                          if (!email) { setError("Enter your email first."); return; }
+                          setLoading(true); setError("");
+                          const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                            redirectTo: `${window.location.origin}/reset-password`,
+                          });
+                          setLoading(false);
+                          if (error) { setError(error.message); return; }
+                          setError(""); 
+                          alert("Check your email for a password reset link.");
+                        }}
+                      >
+                        Forgot password?
+                      </button>
+                    )}
+                  </div>
                 </div>
               </motion.div>
             )}

@@ -19,6 +19,7 @@ import Discover from "./pages/Discover";
 import Profile from "./pages/Profile";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,7 @@ const AnimatedRoutes = () => {
         <Route path="/profile/:userId" element={<PageTransition><Profile /></PageTransition>} />
         <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
         <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
+        <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>
