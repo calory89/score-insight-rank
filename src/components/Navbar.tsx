@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { Menu, X, LogOut, LayoutDashboard, Settings, Sun, Moon, TicketCheck } from "lucide-react";
@@ -16,7 +16,10 @@ const Navbar = () => {
   const { user, signOut } = useAuth();
   const { creditsUsed, creditsTotal, plan } = useSubscription();
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme, setTheme } = useTheme();
+
+  const isActive = (path: string) => location.pathname === path;
 
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
@@ -46,10 +49,10 @@ const Navbar = () => {
 
           <div className="hidden md:flex items-center gap-8">
             <a href="/#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How It Works</a>
-            <a href="/game" className="text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={(e) => { e.preventDefault(); navigate("/game"); }}>Game</a>
-            <a href="/rankings" className="text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={(e) => { e.preventDefault(); navigate("/rankings"); }}>Rankings</a>
-            {user?.email === "rrppspain@gmail.com" && <a href="/leads" className="text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={(e) => { e.preventDefault(); navigate("/leads"); }}>Leads</a>}
-            <a href="/search" className="text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={(e) => { e.preventDefault(); navigate("/search"); }}>Search</a>
+            <a href="/game" className={`text-sm transition-colors ${isActive("/game") ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`} onClick={(e) => { e.preventDefault(); navigate("/game"); }}>Game</a>
+            <a href="/rankings" className={`text-sm transition-colors ${isActive("/rankings") ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`} onClick={(e) => { e.preventDefault(); navigate("/rankings"); }}>Rankings</a>
+            {user?.email === "rrppspain@gmail.com" && <a href="/leads" className={`text-sm transition-colors ${isActive("/leads") ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`} onClick={(e) => { e.preventDefault(); navigate("/leads"); }}>Leads</a>}
+            <a href="/search" className={`text-sm transition-colors ${isActive("/search") ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`} onClick={(e) => { e.preventDefault(); navigate("/search"); }}>Search</a>
             <a href="/#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
           </div>
 

@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import PropertyFinder from "@/components/PropertyFinder";
 import Footer from "@/components/Footer";
+import BottomNav from "@/components/BottomNav";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
 
 const Search = () => {
@@ -10,12 +11,13 @@ const Search = () => {
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-16 sm:pb-0">
       <Navbar />
       <div className="pt-16">
         <PropertyFinder />
       </div>
       <Footer />
+      <BottomNav />
     </div>
   );
 };

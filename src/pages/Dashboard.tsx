@@ -563,11 +563,27 @@ const Dashboard = () => {
               </>
             ) : (
               <>
-                <Search className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
+                <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
+                  <Search className="h-8 w-8 text-primary" />
+                </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">Analyze your first property</h3>
                 <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-                  Paste any real estate listing URL above — from Zillow, Idealista, Rightmove, Airbnb, or any other platform. Get a full AI-powered investment report in seconds.
+                  Get a full AI-powered investment report in seconds.
                 </p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8 text-left max-w-sm mx-auto">
+                  <div className="flex items-start gap-3">
+                    <span className="h-6 w-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
+                    <div><p className="text-xs font-medium text-foreground">Paste a URL</p><p className="text-[10px] text-muted-foreground">Zillow, Idealista, Airbnb…</p></div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="h-6 w-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
+                    <div><p className="text-xs font-medium text-foreground">Get AI analysis</p><p className="text-[10px] text-muted-foreground">Score, ROI, risks & more</p></div>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <span className="h-6 w-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
+                    <div><p className="text-xs font-medium text-foreground">Make better decisions</p><p className="text-[10px] text-muted-foreground">Compare & invest smarter</p></div>
+                  </div>
+                </div>
                 <Button variant="hero" size="lg" onClick={() => document.querySelector<HTMLInputElement>("input[type='url']")?.focus()}>
                   <Search className="h-4 w-4 mr-2" /> Paste a URL to Start
                 </Button>

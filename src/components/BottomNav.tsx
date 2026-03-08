@@ -10,6 +10,8 @@ const tabs = [
   { id: "profile", label: "Profile", icon: User, path: "/profile" },
 ];
 
+const searchPaths = ["/search", "/dashboard"];
+
 const BottomNav = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,7 +19,7 @@ const BottomNav = () => {
 
   if (!user) return null;
 
-  const currentTab = tabs.find((t) => location.pathname.startsWith(t.path))?.id || "score";
+  const currentTab = tabs.find((t) => location.pathname.startsWith(t.path))?.id || (searchPaths.some(p => location.pathname.startsWith(p)) ? "score" : "");
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur-xl sm:hidden">
@@ -32,7 +34,7 @@ const BottomNav = () => {
                 isActive ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              <tab.icon className={`h-5 w-5 ${isActive ? "text-primary" : ""}`} />
+              <tab.icon className={`h-5 w-5 transition-transform duration-200 ${isActive ? "text-primary scale-110" : ""}`} />
               <span className="text-[10px] font-medium">{tab.label}</span>
               {isActive && (
                 <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-6 rounded-full bg-primary" />

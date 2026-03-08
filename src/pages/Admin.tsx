@@ -674,12 +674,12 @@ const Admin = () => {
                 <TabsTrigger value="tickets" className="text-xs gap-1.5"><TicketCheck className="h-3.5 w-3.5" /> Tickets</TabsTrigger>
                 <TabsTrigger value="errors" className="text-xs gap-1.5"><AlertCircle className="h-3.5 w-3.5" /> Errors</TabsTrigger>
                 <TabsTrigger value="newsletter" className="text-xs gap-1.5"><Newspaper className="h-3.5 w-3.5" /> Newsletter</TabsTrigger>
+                <TabsTrigger value="visits" className="text-xs gap-1.5"><Eye className="h-3.5 w-3.5" /> Visits</TabsTrigger>
                 <TabsTrigger value="batch" className="text-xs gap-1.5"><Zap className="h-3.5 w-3.5" /> Batch</TabsTrigger>
               </TabsList>
 
               <TabsContent value="analytics">
                 <AdminVisitsPanel />
-                <AdminVisitorLog />
               </TabsContent>
 
               <TabsContent value="users">
@@ -815,6 +815,10 @@ const Admin = () => {
 
               <TabsContent value="newsletter">
                 <NewsletterPanel />
+              </TabsContent>
+
+              <TabsContent value="visits">
+                <AdminVisitorLog />
               </TabsContent>
 
               <TabsContent value="batch">
