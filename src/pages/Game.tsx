@@ -52,10 +52,6 @@ const Game = () => {
     loadProperties();
   }, []);
 
-  useEffect(() => {
-    loadProperties();
-  }, []);
-
   const loadProperties = async () => {
     const { data } = await supabase
       .from("analyses")
