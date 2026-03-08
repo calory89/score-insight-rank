@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
+import EmptyState from "@/components/EmptyState";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -232,18 +233,13 @@ const Portfolio = () => {
               ))}
             </div>
           ) : items.length === 0 ? (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <Briefcase className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-                <h3 className="font-semibold text-foreground mb-1">No properties yet</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Mark properties as "purchased" from any analysis page to start tracking your portfolio.
-                </p>
-                <Button variant="hero" size="sm" onClick={() => navigate("/dashboard")}>
-                  Go to Dashboard
-                </Button>
-              </CardContent>
-            </Card>
+            <EmptyState
+              icon={Briefcase}
+              title="Start tracking your first investment"
+              description="Mark properties as 'purchased' from any analysis page to build your portfolio and track ROI over time."
+              actionLabel="Go to Dashboard"
+              onAction={() => navigate("/dashboard")}
+            />
           ) : (
             <div className="space-y-3">
               {items.map((item, idx) => (
