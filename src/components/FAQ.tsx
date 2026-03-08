@@ -104,6 +104,21 @@ const FAQ = () => {
             ))}
           </Accordion>
         </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.2 }}
+          className="text-center mt-10"
+        >
+          <p className="text-sm text-muted-foreground">
+            Still have questions?{" "}
+            <a href="mailto:hello@realhunt.com" className="text-primary hover:underline font-medium">
+              Contact us
+            </a>
+          </p>
+        </motion.div>
       </div>
     </section>
   );

@@ -543,11 +543,30 @@ const Dashboard = () => {
             <div className="h-6 w-6 rounded-full border-2 border-t-primary border-border animate-spin" />
           </div>
         ) : displayAnalyses.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground text-sm">
-              {showFavoritesOnly ? "No favorites yet. Click the heart icon on any property." : "No analyses yet. Paste a listing URL above to get started."}
-            </p>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-20 rounded-2xl border border-dashed border-border bg-secondary/20"
+          >
+            {showFavoritesOnly ? (
+              <>
+                <Heart className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
+                <p className="text-muted-foreground text-sm font-medium mb-1">No favorites yet</p>
+                <p className="text-xs text-muted-foreground">Click the heart icon on any property to save it here.</p>
+              </>
+            ) : (
+              <>
+                <Search className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">Analyze your first property</h3>
+                <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+                  Paste any real estate listing URL above — from Zillow, Idealista, Rightmove, Airbnb, or any other platform. Get a full AI-powered investment report in seconds.
+                </p>
+                <Button variant="hero" size="lg" onClick={() => document.querySelector<HTMLInputElement>("input[type='url']")?.focus()}>
+                  <Search className="h-4 w-4 mr-2" /> Paste a URL to Start
+                </Button>
+              </>
+            )}
+          </motion.div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
             {displayAnalyses.map((a, i) => {

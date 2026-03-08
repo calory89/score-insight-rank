@@ -1079,6 +1079,17 @@ const Analysis = () => {
             <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate(`/compare?ids=${id}`)}>
               <GitCompare className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Compare</span>
             </Button>
+            <Button variant="outline" size="sm" className="text-xs" onClick={() => {
+              const shareUrl = d.slug ? `${window.location.origin}/r/${d.slug}` : window.location.href;
+              if (navigator.share) {
+                navigator.share({ title: `${d.address || d.city || "Property"} — Score ${d.global_score}/100`, url: shareUrl });
+              } else {
+                navigator.clipboard.writeText(shareUrl);
+                toast({ title: "Link copied!", description: "Share this report with anyone." });
+              }
+            }}>
+              <Send className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Share</span>
+            </Button>
             <Button variant="outline" size="sm" className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setShowReportError(true)}>
               <Flag className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Report Error</span>
             </Button>

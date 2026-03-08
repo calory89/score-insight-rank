@@ -57,7 +57,7 @@ const Footer = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
                   required
-                  className="flex-1 h-9 rounded-lg border border-border bg-secondary/50 px-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
+                  className="flex-1 h-9 rounded-lg border border-border bg-secondary/50 px-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30 invalid:[&:not(:placeholder-shown)]:border-destructive invalid:[&:not(:placeholder-shown)]:ring-destructive/30"
                 />
                 <Button type="submit" variant="hero" size="sm" className="h-9 px-3 text-xs" disabled={loading}>
                   {loading ? "..." : "Subscribe"} <ArrowRight className="ml-1 h-3 w-3" />

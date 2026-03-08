@@ -92,7 +92,7 @@ const HeroSection = () => {
             className="max-w-2xl mx-auto mb-4"
           >
             <div className="relative group">
-              <div className="absolute -inset-0.5 bg-gradient-cta rounded-2xl opacity-10 group-focus-within:opacity-20 blur transition-opacity duration-300" />
+              <div className="absolute -inset-0.5 bg-gradient-cta rounded-2xl opacity-10 group-focus-within:opacity-40 blur transition-opacity duration-300" />
               <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center bg-card rounded-xl border border-border p-2 sm:p-3">
                 <div className="flex items-center flex-1 min-w-0">
                   <Search className="ml-2 sm:ml-3 h-5 w-5 text-muted-foreground flex-shrink-0" />
