@@ -83,7 +83,7 @@ interface QuizResult {
 }
 
 const InvestorQuiz = () => {
-  useDocumentMeta("Investment Strategy Quiz | RealHunt", "Discover your investor profile and get AI-powered market recommendations tailored to your goals.");
+  useDocumentMeta({ title: "Investment Strategy Quiz | RealHunt", description: "Discover your investor profile and get AI-powered market recommendations tailored to your goals." });
   const { user } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);

@@ -35,6 +35,7 @@ import AnimatedScoreRing from "@/components/AnimatedScoreRing";
 import AIChatBubble from "@/components/AIChatBubble";
 import SharePanel from "@/components/SharePanel";
 import InvestmentCalculator from "@/components/InvestmentCalculator";
+import NegotiationLetterModal from "@/components/NegotiationLetterModal";
 import { WatchButton } from "@/components/Watchlist";
 const sqmToAcres = (sqm: number) => (sqm * 0.000247105).toFixed(3);
 const sqmToSqft = (sqm: number) => Math.round(sqm * 10.7639);
