@@ -350,13 +350,15 @@ const ErrorLogsPanel = () => {
     toast({ title: "Error log deleted" });
   };
 
+  const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
+
   const deleteAll = async () => {
-    if (!confirm("Delete all visible error logs?")) return;
     const ids = logs.map(l => l.id);
     for (const id of ids) {
       await (supabase.from("error_logs" as any).delete().eq("id", id) as any);
     }
     setLogs([]);
+    setShowDeleteAllDialog(false);
     toast({ title: "All error logs cleared" });
   };
 
