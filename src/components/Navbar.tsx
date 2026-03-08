@@ -49,6 +49,7 @@ const Navbar = () => {
             <a href="/game" className="text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={(e) => { e.preventDefault(); navigate("/game"); }}>Game</a>
             <a href="/rankings" className="text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={(e) => { e.preventDefault(); navigate("/rankings"); }}>Rankings</a>
             <a href="/leads" className="text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={(e) => { e.preventDefault(); navigate("/leads"); }}>Leads</a>
+            <a href="/search" className="text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={(e) => { e.preventDefault(); navigate("/search"); }}>Search</a>
             <a href="/#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
           </div>
 
@@ -120,6 +121,7 @@ const Navbar = () => {
             <a href="/game" className="block text-sm text-muted-foreground py-2" onClick={(e) => { e.preventDefault(); navigate("/game"); setIsOpen(false); }}>Game</a>
             <a href="/rankings" className="block text-sm text-muted-foreground py-2" onClick={(e) => { e.preventDefault(); navigate("/rankings"); setIsOpen(false); }}>Rankings</a>
             <a href="/leads" className="block text-sm text-muted-foreground py-2" onClick={(e) => { e.preventDefault(); navigate("/leads"); setIsOpen(false); }}>Leads</a>
+            <a href="/search" className="block text-sm text-muted-foreground py-2" onClick={(e) => { e.preventDefault(); navigate("/search"); setIsOpen(false); }}>Search</a>
             <a href="/#pricing" className="block text-sm text-muted-foreground py-2" onClick={() => setIsOpen(false)}>Pricing</a>
             <div className="border-t border-border my-2" />
             {user ? (
