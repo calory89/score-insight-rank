@@ -438,8 +438,6 @@ const Dashboard = () => {
     navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
   };
 
-  if (authLoading || !user) return null;
-
   const avgScore = useMemo(() => analyses.length > 0 ? Math.round(analyses.reduce((s, a) => s + (a.global_score || 0), 0) / analyses.length) : 0, [analyses]);
   const countriesAnalyzed = useMemo(() => [...new Set(analyses.map(a => a.country).filter(Boolean))].length, [analyses]);
 
@@ -449,6 +447,10 @@ const Dashboard = () => {
   }), [analyses, sortBy]);
 
   const displayAnalyses = useMemo(() => showFavoritesOnly ? sortedAnalyses.filter(a => favoriteIds.has(a.id)) : sortedAnalyses, [sortedAnalyses, showFavoritesOnly, favoriteIds]);
+
+  const notesMap = usePropertyNotes(useMemo(() => analyses.map(a => a.id), [analyses]));
+
+  if (authLoading || !user) return null;
 
   return (
     <div className="min-h-screen bg-background pb-16 sm:pb-0">
