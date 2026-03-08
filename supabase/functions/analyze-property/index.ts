@@ -459,6 +459,19 @@ serve(async (req) => {
       });
     }
 
+    // Rate limiting: max 20 analyses per hour per user
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count: recentCount } = await supabase
+      .from("analyses")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .gte("created_at", oneHourAgo);
+    if ((recentCount || 0) >= 20) {
+      return new Response(JSON.stringify({ error: "Rate limit exceeded. Maximum 20 analyses per hour. Please try again later." }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     let { url, manual_content, manual_fields } = await req.json();
 
     // Auto-prepend https:// if the URL is missing a protocol

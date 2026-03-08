@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, User, Shield, Trash2, LogOut, Mail, Key, Zap, Crown, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
+import BottomNav from "@/components/BottomNav";
 
 const planLabels: Record<string, string> = {
   free: "Free",
@@ -229,6 +230,7 @@ const Settings = () => {
           </Button>
         </div>
       </div>
+      <BottomNav />
     </div>
   );
 };
