@@ -692,7 +692,48 @@ const Analysis = () => {
   const [userAnalysesCount, setUserAnalysesCount] = useState(0);
   const { toast } = useToast();
 
-  // Resolve slug to ID
+  // Dynamic SEO meta
+  useDocumentMeta({
+    title: data ? `${data.address || data.city || "Property"} — Score ${data.global_score || ""}/100 | RealHunt` : "Analyzing Property… | RealHunt",
+    description: data ? `AI analysis of ${data.address || data.city || "property"}${data.country ? ` in ${data.country}` : ""}. Score: ${data.global_score}/100. ${data.primary_insight || ""}` : "Running AI-powered real estate analysis…",
+    ogImage: data?.image_url || undefined,
+  });
+
+  // JSON-LD structured data for analysis pages
+  useEffect(() => {
+    if (!data) return;
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": data.address || `${data.city || "Property"}${data.country ? `, ${data.country}` : ""}`,
+      "description": data.primary_insight || data.ai_summary || "AI-powered property analysis",
+      ...(data.image_url && { "image": data.image_url }),
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": String(((data.global_score || 0) / 20).toFixed(1)),
+        "bestRating": "5",
+        "worstRating": "1",
+        "ratingCount": "1",
+      },
+      ...(data.price && {
+        "offers": {
+          "@type": "Offer",
+          "price": data.price,
+          "priceCurrency": data.currency === "GBP" ? "GBP" : data.currency === "USD" ? "USD" : "EUR",
+        },
+      }),
+    };
+    let script = document.querySelector('script[data-jsonld="analysis"]') as HTMLScriptElement | null;
+    if (!script) {
+      script = document.createElement("script");
+      script.type = "application/ld+json";
+      script.setAttribute("data-jsonld", "analysis");
+      document.head.appendChild(script);
+    }
+    script.textContent = JSON.stringify(jsonLd);
+    return () => { script?.remove(); };
+  }, [data]);
+
   useEffect(() => {
     if (!slug) return;
     (supabase as any).from("analyses").select("id").eq("slug", slug).single().then(({ data: row }: any) => {
