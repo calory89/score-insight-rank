@@ -1515,6 +1515,7 @@ const Analysis = () => {
             </div>
           </Section>
         )}
+        </ProGateOverlay>
 
         {/* ===== 10. COST BREAKDOWN ===== */}
         {f.cost_breakdown && (
