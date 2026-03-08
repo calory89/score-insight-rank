@@ -673,10 +673,16 @@ const Analysis = () => {
   const { toast } = useToast();
 
   // Dynamic SEO meta
+  const ogImageUrl = data?.slug
+    ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-image?slug=${data.slug}`
+    : data?.id
+      ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/og-image?id=${data.id}`
+      : undefined;
+
   useDocumentMeta({
     title: data ? `${data.address || data.city || "Property"} — Score ${data.global_score || ""}/100 | RealHunt` : "Analyzing Property… | RealHunt",
     description: data ? `AI analysis of ${data.address || data.city || "property"}${data.country ? ` in ${data.country}` : ""}. Score: ${data.global_score}/100. ${data.primary_insight || ""}` : "Running AI-powered real estate analysis…",
-    ogImage: data?.image_url || undefined,
+    ogImage: ogImageUrl,
   });
 
   // JSON-LD structured data for analysis pages
