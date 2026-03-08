@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -10,11 +10,21 @@ import LoginGateModal from "@/components/LoginGateModal";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [scrolledPastHero, setScrolledPastHero] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
+
+  // Detect scroll past hero for CTA glow
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolledPastHero(window.scrollY > 500);
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <>
@@ -60,7 +70,14 @@ const Navbar = () => {
             ) : (
               <>
                 <Button variant="ghost" size="sm" onClick={() => setShowLogin(true)}>Log in</Button>
-                <Button variant="hero" size="sm" onClick={() => setShowLogin(true)}>Get Started</Button>
+                <Button
+                  variant="hero"
+                  size="sm"
+                  onClick={() => setShowLogin(true)}
+                  className={`transition-all duration-500 ${scrolledPastHero ? "shadow-[0_0_20px_hsl(var(--primary)/0.4)] scale-105" : ""}`}
+                >
+                  Get Started
+                </Button>
               </>
             )}
           </div>

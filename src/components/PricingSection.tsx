@@ -295,11 +295,14 @@ const PricingSection = () => {
           <div className="inline-flex items-center gap-3 rounded-full border border-border bg-card px-4 py-2">
             <span className={`text-xs font-medium transition-colors ${!annual ? "text-foreground" : "text-muted-foreground"}`}>Monthly</span>
             <button onClick={() => setAnnual(!annual)}
-              className={`relative h-6 w-11 rounded-full transition-colors ${annual ? "bg-primary" : "bg-border"}`}>
-              <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-card shadow transition-transform ${annual ? "translate-x-5" : ""}`} />
+              className={`relative h-6 w-11 rounded-full transition-all duration-300 ${annual ? "bg-primary" : "bg-border"}`}>
+              <span className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-card shadow-md transition-transform duration-300 ease-in-out ${annual ? "translate-x-5" : ""}`} />
             </button>
             <span className={`text-xs font-medium transition-colors ${annual ? "text-foreground" : "text-muted-foreground"}`}>
-              Annual <span className="text-primary font-semibold">-50%</span>
+              Annual{" "}
+              <span className={`inline-block text-[10px] font-bold uppercase tracking-wider text-primary-foreground bg-primary px-2 py-0.5 rounded-full transition-all duration-300 ${annual ? "scale-100 opacity-100" : "scale-90 opacity-60"}`}>
+                SAVE 50%
+              </span>
             </span>
           </div>
         </motion.div>

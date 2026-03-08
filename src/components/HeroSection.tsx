@@ -1,21 +1,26 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Search, Layers } from "lucide-react";
+import { motion } from "framer-motion";
+import { ArrowRight, Search, Layers, Brain, Database, Clock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginGateModal from "@/components/LoginGateModal";
-import ScorePreview from "@/components/ScorePreview";
-import ExampleReportsCarousel from "@/components/ExampleReportsCarousel";
 
 const HeroSection = () => {
   const [url, setUrl] = useState("");
   const [showLoginGate, setShowLoginGate] = useState(false);
+  const [liveCount, setLiveCount] = useState(42);
   const { user } = useAuth();
   const navigate = useNavigate();
-
-  // Store pending URL so we can navigate after auth state updates
   const pendingUrlRef = useRef<string | null>(null);
+
+  // Live animated counter
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLiveCount(Math.floor(30 + Math.random() * 25));
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleAnalyze = () => {
     if (!url.trim()) return;
@@ -27,16 +32,9 @@ const HeroSection = () => {
     navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
   };
 
-  const handleLoginClose = () => {
-    setShowLoginGate(false);
-  };
+  const handleLoginClose = () => setShowLoginGate(false);
+  const handleLoginSuccess = () => setShowLoginGate(false);
 
-  const handleLoginSuccess = () => {
-    setShowLoginGate(false);
-    // Store the URL, will navigate once auth state updates via useEffect
-  };
-
-  // Watch for auth state changes — if user just logged in and has a pending URL, navigate
   useEffect(() => {
     if (user && pendingUrlRef.current) {
       const pendingUrl = pendingUrlRef.current;
@@ -45,10 +43,8 @@ const HeroSection = () => {
     }
   }, [user, navigate]);
 
-
-
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-16">
+    <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden pt-16">
       <div className="absolute inset-0 bg-gradient-hero opacity-60" />
       <div className="absolute inset-0 grid-pattern opacity-15" />
       <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-primary/2 blur-[160px]" />
@@ -96,7 +92,7 @@ const HeroSection = () => {
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
-                    placeholder="Paste any Zillow, Rightmove, Redfin, or Airbnb URL…"
+                    placeholder="Paste any property listing URL…"
                     className="flex-1 bg-transparent px-3 sm:px-4 py-4 sm:py-5 text-sm sm:text-base text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0"
                   />
                 </div>
@@ -107,23 +103,50 @@ const HeroSection = () => {
             </div>
           </motion.div>
 
-          <p className="text-xs text-muted-foreground mb-2">
+          <p className="text-xs text-muted-foreground mb-3">
             5 free analyses · No credit card · 50+ platforms supported
           </p>
+
+          {/* AI Trust Badges */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
+            className="flex items-center justify-center gap-4 sm:gap-6 mb-4 flex-wrap"
+          >
+            <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Brain className="h-3.5 w-3.5 text-primary" /> AI-Powered Analysis
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Database className="h-3.5 w-3.5 text-primary" /> 50+ Data Sources
+            </span>
+            <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Clock className="h-3.5 w-3.5 text-primary" /> 30-Second Reports
+            </span>
+          </motion.div>
 
           {/* Live analyzing counter */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.5 }}
-            className="flex items-center justify-center gap-2 mb-2"
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="flex items-center justify-center gap-2 mb-4"
           >
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-score-excellent opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-score-excellent" />
             </span>
             <span className="text-xs text-muted-foreground">
-              <span className="font-semibold text-foreground">{Math.floor(37 + Math.sin(Date.now() / 10000) * 15)}</span> properties being analyzed right now
+              <motion.span
+                key={liveCount}
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="font-semibold text-foreground inline-block"
+              >
+                {liveCount}
+              </motion.span>{" "}
+              properties being analyzed right now
             </span>
           </motion.div>
 
@@ -131,15 +154,11 @@ const HeroSection = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.6, duration: 0.5 }}
-            className="mb-4"
+            transition={{ delay: 0.7, duration: 0.5 }}
           >
             <button
               onClick={() => {
-                if (!user) {
-                  setShowLoginGate(true);
-                  return;
-                }
+                if (!user) { setShowLoginGate(true); return; }
                 navigate("/dashboard?bulk=true");
               }}
               className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 hover:bg-primary/10 px-4 py-2 transition-colors group"
@@ -149,32 +168,6 @@ const HeroSection = () => {
               <ArrowRight className="h-3.5 w-3.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>
           </motion.div>
-        </motion.div>
-
-        {/* Score Preview — Visual Proof */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.8 }}
-          className="max-w-3xl mx-auto mt-12 sm:mt-16"
-        >
-          <div className="text-center mb-4">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Example Report Preview</p>
-          </div>
-          <ScorePreview />
-        </motion.div>
-
-        {/* Example Reports Carousel */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1, duration: 0.8 }}
-          className="max-w-5xl mx-auto mt-16 sm:mt-20" id="example-reports"
-        >
-          <div className="text-center mb-6">
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Last Reports Searched by Real Users</p>
-          </div>
-          <ExampleReportsCarousel />
         </motion.div>
       </div>
 

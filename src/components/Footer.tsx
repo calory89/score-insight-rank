@@ -1,19 +1,49 @@
-import { Mail, ExternalLink } from "lucide-react";
+import { useState } from "react";
+import { Mail, ExternalLink, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Footer = () => {
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setSubscribed(true);
+    setEmail("");
+  };
+
   return (
     <footer className="border-t border-border py-14 bg-card">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-10 mb-10">
           {/* Brand */}
-          <div className="md:col-span-1">
+          <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-3">
               <img src="/images/logo.png" alt="RealHunt" className="h-7 w-7 rounded-md object-cover" />
               <span className="text-sm font-bold text-foreground">RealHunt</span>
             </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed mb-5">
               AI-powered property analysis for smarter real estate investments worldwide.
             </p>
+            {/* Newsletter */}
+            {subscribed ? (
+              <p className="text-xs text-primary font-medium">✓ Subscribed! We'll keep you posted.</p>
+            ) : (
+              <form onSubmit={handleSubscribe} className="flex gap-2 max-w-sm">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  required
+                  className="flex-1 h-9 rounded-lg border border-border bg-secondary/50 px-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
+                />
+                <Button type="submit" variant="hero" size="sm" className="h-9 px-3 text-xs">
+                  Subscribe <ArrowRight className="ml-1 h-3 w-3" />
+                </Button>
+              </form>
+            )}
           </div>
 
           {/* Product */}
