@@ -485,11 +485,12 @@ const Dashboard = () => {
             <div className="flex items-center flex-1 min-w-0">
               <Search className="ml-3 h-4 w-4 text-muted-foreground flex-shrink-0" />
               <input
+                id="dashboard-url-input"
                 type="url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
-                placeholder="Paste any real estate URL to analyze…"
+                placeholder="Paste any real estate URL to analyze… (⌘K)"
                 className="flex-1 bg-transparent px-3 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0"
               />
             </div>
