@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowLeft, Plus, X, Building2, MapPin, TrendingUp, Shield, Ruler,
   BedDouble, Bath, Calendar, CheckCircle2, XCircle, Target, DollarSign,
-  AlertTriangle, Sparkles, ChevronDown,
+  AlertTriangle, Sparkles, ChevronDown, Trophy, Award, Share2, Download,
 } from "lucide-react";
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
@@ -105,17 +105,28 @@ const Compare = () => {
     { label: "Upside", key: "upside_scenario", format: (v: any) => v ? `+${v}%` : "—" },
   ];
 
-  // Find best value for highlighting
+  // Find best value for highlighting + category winners
   const getBest = (key: string | null, idx: number) => {
     if (!key || properties.length < 2) return false;
     const vals = properties.map(p => p[key]).filter(v => v != null);
     if (vals.length === 0) return false;
     const pVal = properties[idx]?.[key];
     if (pVal == null) return false;
-    // For risk_level, higher = better (lower risk). For others, higher = better
     const best = Math.max(...vals as number[]);
     return pVal === best;
   };
+
+  // Category winners for badges
+  const categoryWinners = properties.length >= 2 ? [
+    { label: "Best ROI", key: "roi_potential", icon: TrendingUp },
+    { label: "Most Stable", key: "market_stability", icon: Shield },
+    { label: "Highest Demand", key: "demand_strength", icon: Target },
+    { label: "Safest", key: "risk_level", icon: Shield },
+    { label: "Most Liquid", key: "liquidity_outlook", icon: DollarSign },
+  ].map(cat => {
+    const best = properties.reduce((a, b) => ((a[cat.key] || 0) > (b[cat.key] || 0) ? a : b));
+    return { ...cat, winnerId: best.id, winnerName: best.address || best.city };
+  }) : [];
 
   if (loading) return <div className="min-h-screen bg-background flex items-center justify-center"><div className="h-8 w-8 rounded-full border-2 border-t-primary border-border animate-spin" /></div>;
 
@@ -228,6 +239,24 @@ const Compare = () => {
               </motion.div>
             )}
 
+            {/* Category Winner Badges */}
+            {properties.length >= 2 && (
+              <div className="flex flex-wrap gap-2 mb-6">
+                {categoryWinners.map(cat => {
+                  const winnerIdx = properties.findIndex(p => p.id === cat.winnerId);
+                  return (
+                    <div key={cat.label} className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
+                      <cat.icon className="h-3.5 w-3.5 text-primary" />
+                      <span className="text-[10px] text-muted-foreground">{cat.label}:</span>
+                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: RADAR_COLORS[winnerIdx] }} />
+                      <span className="text-[10px] font-medium text-foreground">{cat.winnerName}</span>
+                      <Trophy className="h-3 w-3 text-score-average" />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Comparison Table */}
             <div className="rounded-2xl border border-border bg-card overflow-hidden mb-8">
               <div className="overflow-x-auto">
@@ -308,10 +337,14 @@ const Compare = () => {
               const sorted = [...properties].sort((a, b) => (b.global_score || 0) - (a.global_score || 0));
               const winner = sorted[0];
               const winnerIdx = properties.findIndex(p => p.id === winner.id);
+              const categoriesWon = categoryWinners.filter(c => c.winnerId === winner.id).length;
               return (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                   className="rounded-2xl border border-primary/20 bg-primary/5 p-6 mb-8 text-center">
-                  <Sparkles className="h-6 w-6 text-primary mx-auto mb-2" />
+                  <div className="flex items-center justify-center gap-2 mb-3">
+                    <Trophy className="h-6 w-6 text-score-average" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary bg-primary/10 px-2 py-0.5 rounded-full">Best Overall</span>
+                  </div>
                   <h3 className="text-sm font-semibold text-foreground mb-1">RealHunt Recommendation</h3>
                   <p className="text-xs text-muted-foreground mb-3">Based on overall forensic analysis</p>
                   <div className="inline-flex items-center gap-3 rounded-xl bg-card border border-border px-5 py-3">
@@ -321,9 +354,13 @@ const Compare = () => {
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-3 max-w-md mx-auto">
                     Scores {winner.global_score - sorted[1].global_score} points higher overall.
+                    Wins {categoriesWon} of {categoryWinners.length} categories.
                     {winner.roi_potential > sorted[1].roi_potential ? " Better ROI potential." : ""}
                     {winner.risk_level > sorted[1].risk_level ? " Better safety profile." : ""}
                   </p>
+                  <Button variant="hero" size="sm" className="mt-4" onClick={() => navigate(`/analysis/${winner.id}`)}>
+                    View Full Report <ChevronDown className="h-3.5 w-3.5 ml-1 -rotate-90" />
+                  </Button>
                 </motion.div>
               );
             })()}

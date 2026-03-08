@@ -16,7 +16,7 @@ import {
   TrendingUp, TrendingDown, AlertTriangle, Sparkles, ChevronDown, ChevronUp,
   Shield, Info, Target, DollarSign, PiggyBank, BarChart3, Home,
   Compass, Scale, Clock, Zap, CheckCircle2, XCircle, Eye,
-  Landmark, Percent, ArrowUpRight, ArrowDownRight, GitCompare, Flag, X, Send, Heart,
+  Landmark, Percent, ArrowUpRight, ArrowDownRight, GitCompare, Flag, X, Send, Heart, FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,6 +35,7 @@ import AnimatedScoreRing from "@/components/AnimatedScoreRing";
 import AIChatBubble from "@/components/AIChatBubble";
 import SharePanel from "@/components/SharePanel";
 import InvestmentCalculator from "@/components/InvestmentCalculator";
+import NegotiationLetterModal from "@/components/NegotiationLetterModal";
 import { WatchButton } from "@/components/Watchlist";
 const sqmToAcres = (sqm: number) => (sqm * 0.000247105).toFixed(3);
 const sqmToSqft = (sqm: number) => Math.round(sqm * 10.7639);
@@ -670,6 +671,7 @@ const Analysis = () => {
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const [readyReportId, setReadyReportId] = useState<string | null>(null);
+  const [showNegotiationLetter, setShowNegotiationLetter] = useState(false);
   const [showFreeLimitModal, setShowFreeLimitModal] = useState(false);
   const [userAnalysesCount, setUserAnalysesCount] = useState(0);
   const { toast } = useToast();
@@ -1078,11 +1080,17 @@ const Analysis = () => {
             <Button variant="outline" size="sm" className="text-xs print:hidden" onClick={() => window.print()}>
               <Eye className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Print</span>
             </Button>
+            <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowNegotiationLetter(true)}>
+              <FileText className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Negotiate</span>
+            </Button>
             <Button variant="outline" size="sm" className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setShowReportError(true)}>
               <Flag className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Report Error</span>
             </Button>
           </div>
         </div>
+
+        {/* Negotiation Letter Modal */}
+        <NegotiationLetterModal analysis={d} open={showNegotiationLetter} onClose={() => setShowNegotiationLetter(false)} />
 
         {/* Report Expiry Banner for free users */}
         {!isPro && d.created_at && <ReportExpiryBanner createdAt={d.created_at} />}
