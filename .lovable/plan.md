@@ -1,72 +1,67 @@
 
 
-# Fix: Navegacion rota en la pagina de analisis
+## Next Batch: Frontend Polish + UX Refinement
 
-## Problemas identificados
+Based on the deep audit, the product has strong feature coverage and solid architecture. The next highest-impact improvements are **UX polish and frontend refinement** — the details that make users say "wow, this is well built."
 
-### 1. Boton "Back" no funciona desde la pagina del reporte
-El boton usa `window.history.back()` que puede llevar al usuario de vuelta a `/analysis/loading`, re-activando el loader en un bucle. Necesita detectar si la pagina anterior es una ruta de carga y saltar al dashboard en su lugar.
+---
 
-### 2. Click en reportes del feed no muestra nada visible
-Al clickar un reporte en "Top rated properties", se ejecuta `setPreviewId(report.id)` que renderiza un preview inline al final de la pagina, fuera de la vista del usuario. El usuario no ve nada porque no se hace scroll automatico hacia el preview.
+### 1. Navbar Refinement — Cleaner, More Premium
+**Current issue**: Desktop navbar is cluttered with 7+ buttons (Dashboard, Support, Settings, credits badge, email, logout, theme, notifications). Mobile menu lacks notifications bell.
 
-**Solucion**: Hacer scroll automatico hacia el preview cuando se selecciona un reporte y tambien ofrecer un boton para abrir el reporte completo.
+**Fix**:
+- Group user actions into a single avatar/profile dropdown (Settings, Support, Sign Out, email display)
+- Keep only: nav links, theme toggle, notifications bell, credits badge, profile dropdown
+- Add notifications bell to mobile menu
+- Net result: cleaner, more Stripe/Linear-like navbar
 
-### 3. "See above" / "Click to view" lleva a pagina en blanco
-Cuando el usuario clicka el banner "Your report is ready! Click to view", el codigo hace:
-- `setAnalyzing(false)` y `setReadyReportId(null)` -- limpia el estado del FomoLoader
-- `navigate(/analysis/ID, { replace: true })` -- cambia la URL
+### 2. Dashboard — Empty State & Stats Skeleton Coordination
+**Current issue**: Stats bar and input appear instantly while cards show skeleton, causing visual mismatch. The `PropertyOfTheDay`, `WatchlistSection`, and `SavingsCalculator` render above the "Dashboard" heading, creating odd hierarchy.
 
-Pero el componente se re-renderiza y como `data` es null (no se ha cargado aun), cae en `if (!data) return null` (linea 824) y muestra una pagina en blanco hasta que el `useEffect` de fetch se ejecuta. El problema es una condicion de carrera entre la navegacion y la carga de datos.
+**Fix**:
+- Move heading above all widgets
+- Wrap stats + cards in coordinated skeleton (show all or nothing)
+- Add subtle fade-in animation to stats cards
 
-**Solucion**: Usar `window.location.href` para forzar un reload completo de la pagina, o mejor, no limpiar el estado hasta que los datos esten cargados.
+### 3. Footer — Add Discover Link + Game Link
+**Current issue**: Footer Product section missing Game and Search links. These are high-engagement features that should be discoverable.
 
-## Cambios tecnicos
+**Fix**: Add Game and Search to footer Product column.
 
-### Archivo: `src/pages/Analysis.tsx`
+### 4. Landing Page — Section Spacing Consistency
+**Current issue**: Mixed `py-12`, `py-16`, `py-20` across sections. Game CTA section uses emoji (🔥) as heading decoration — not premium.
 
-**Cambio 1 - Back button inteligente (linea 849-857)**
+**Fix**:
+- Standardize section spacing to `py-16 md:py-24`
+- Replace emoji with an icon or remove it
+- Add subtle `border-b border-border/30` between sections for visual rhythm
 
-Reemplazar la logica de `window.history.back()` para detectar si la pagina anterior es una ruta de carga:
+### 5. Login Modal — Polish & Error Handling
+**Current issue**: On signup, no indication that email confirmation is needed. User gets silently closed modal which is confusing.
 
-```typescript
-onClick={() => {
-  if (fromBulk) {
-    navigate("/dashboard?bulk=true&restore=true");
-  } else {
-    // Always go to dashboard — history.back() often goes to the loading page
-    navigate("/dashboard");
-  }
-}}
-```
+**Fix**:
+- After signup, show success state: "Check your email to confirm your account" instead of immediately closing
+- Add password minimum length hint (6 chars)
 
-**Cambio 2 - Scroll automatico al preview (linea 416-434)**
+### 6. Mobile Bottom Nav — Active State Polish
+**Current issue**: Bottom nav works but the active indicator (top line) is subtle. Icons could use fill states for active tabs.
 
-Agregar un `ref` al contenedor del preview y hacer `scrollIntoView` cuando se selecciona un reporte:
+**Fix**:
+- Use filled icon variants for active tab
+- Slightly increase icon size differentiation between active/inactive
 
-```typescript
-const previewRef = useRef<HTMLDivElement>(null);
+---
 
-// On setPreviewId, scroll to preview
-useEffect(() => {
-  if (previewId && previewRef.current) {
-    previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-}, [previewId]);
-```
+### Summary
 
-Ademas, agregar un boton "View full report" dentro del InlineReportPreview que navega al reporte completo con `window.location.href`.
+| # | Change | Impact |
+|---|--------|--------|
+| 1 | Navbar cleanup — profile dropdown | Cleaner, more premium feel |
+| 2 | Dashboard skeleton coordination | Perceived speed, no layout shift |
+| 3 | Footer link additions | Discoverability |
+| 4 | Landing section spacing | Visual consistency |
+| 5 | Login modal signup feedback | Reduced user confusion |
+| 6 | Mobile bottom nav polish | Better mobile UX |
 
-**Cambio 3 - Fix pagina en blanco en "Click to view" (linea 777-782)**
+**Pure polish batch. Zero new features. Maximum perceived quality increase.**
 
-Cambiar `navigate()` por `window.location.href` para forzar una carga completa de la pagina, evitando la condicion de carrera:
-
-```typescript
-onViewReady={() => {
-  if (readyReportId) {
-    window.location.href = `/analysis/${readyReportId}`;
-  }
-}}
-```
-
-Esto garantiza que la pagina se recarga completamente con el ID correcto en la URL, activando el fetch de datos desde cero.
