@@ -17,13 +17,15 @@ import {
   TrendingUp, TrendingDown, AlertTriangle, Sparkles, ChevronDown, ChevronUp,
   Shield, Info, Target, DollarSign, PiggyBank, BarChart3, Home,
   Compass, Scale, Clock, Zap, CheckCircle2, XCircle, Eye,
-  Landmark, Percent, ArrowUpRight, ArrowDownRight, GitCompare, Flag, X, Send, Heart, FileText,
+  Landmark, Percent, ArrowUpRight, ArrowDownRight, GitCompare, Flag, X, Send, Heart, FileText, RefreshCw,
 } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import PropertyReviews from "@/components/PropertyReviews";
+import { PropertyNotes } from "@/components/PropertyNotes";
 import { useToast } from "@/hooks/use-toast";
 import {
   LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, Area, AreaChart,
@@ -1087,7 +1089,28 @@ const Analysis = () => {
             <Button variant="outline" size="sm" className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setShowReportError(true)}>
               <Flag className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Report Error</span>
             </Button>
+            {d.url && d.url !== "manual-entry" && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs border-primary/30 text-primary hover:bg-primary/10"
+                onClick={() => {
+                  if (confirm("Re-analyze this property with fresh data? This will use 1 credit.")) {
+                    navigate(`/analysis/loading?url=${encodeURIComponent(d.url)}`);
+                  }
+                }}
+              >
+                <RefreshCw className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Re-Analyze</span>
+              </Button>
+            )}
           </div>
+          {/* Days since analysis badge */}
+          {d.created_at && (
+            <div className="text-[10px] text-muted-foreground mt-1 sm:mt-0 sm:ml-auto flex items-center gap-1">
+              <Clock className="h-3 w-3" />
+              Analyzed {formatDistanceToNow(new Date(d.created_at), { addSuffix: true })}
+            </div>
+          )}
         </div>
 
         {/* Negotiation Letter Modal */}
@@ -1787,6 +1810,13 @@ const Analysis = () => {
         )}
 
         {/* ===== COMMUNITY REVIEWS ===== */}
+        {/* Smart Property Notes */}
+        {id && (
+          <Section delay={0.65} className="mb-8">
+            <PropertyNotes analysisId={id} />
+          </Section>
+        )}
+
         {id && (
           <Section delay={0.7} className="mb-8">
             <PropertyReviews analysisId={id} />

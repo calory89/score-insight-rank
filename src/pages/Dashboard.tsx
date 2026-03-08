@@ -21,6 +21,8 @@ import SavingsCalculator from "@/components/SavingsCalculator";
 import { WatchlistSection } from "@/components/Watchlist";
 import { RedFlagBadgeList } from "@/components/RedFlagBadges";
 import { DashboardCardSkeleton } from "@/components/SkeletonCards";
+import { usePropertyNotes, PropertyNotes } from "@/components/PropertyNotes";
+import { SavedFilters, type DashboardFilter } from "@/components/SavedFilters";
 
 import { scoreColor, verdictColorSimple as verdictColor, riskLabel } from "@/lib/score-utils";
 
@@ -436,8 +438,6 @@ const Dashboard = () => {
     navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
   };
 
-  if (authLoading || !user) return null;
-
   const avgScore = useMemo(() => analyses.length > 0 ? Math.round(analyses.reduce((s, a) => s + (a.global_score || 0), 0) / analyses.length) : 0, [analyses]);
   const countriesAnalyzed = useMemo(() => [...new Set(analyses.map(a => a.country).filter(Boolean))].length, [analyses]);
 
@@ -447,6 +447,10 @@ const Dashboard = () => {
   }), [analyses, sortBy]);
 
   const displayAnalyses = useMemo(() => showFavoritesOnly ? sortedAnalyses.filter(a => favoriteIds.has(a.id)) : sortedAnalyses, [sortedAnalyses, showFavoritesOnly, favoriteIds]);
+
+  const notesMap = usePropertyNotes(useMemo(() => analyses.map(a => a.id), [analyses]));
+
+  if (authLoading || !user) return null;
 
   return (
     <div className="min-h-screen bg-background pb-16 sm:pb-0">
@@ -548,6 +552,10 @@ const Dashboard = () => {
                 <option value="date">Newest First</option>
                 <option value="score">Best Score</option>
               </select>
+              <SavedFilters
+                currentFilter={{ sortBy, favoritesOnly: showFavoritesOnly }}
+                onApply={(f) => { setSortBy(f.sortBy); setShowFavoritesOnly(f.favoritesOnly); }}
+              />
             </div>
             <AnimatePresence>
               {compareIds.size >= 2 && (
@@ -700,6 +708,20 @@ const Dashboard = () => {
                       {/* AI Summary preview */}
                       {a.ai_summary && (
                         <p className="text-[11px] text-muted-foreground line-clamp-2 mb-3 leading-relaxed">{a.ai_summary}</p>
+                      )}
+
+                      {/* Notes & Tags */}
+                      {notesMap[a.id] && (notesMap[a.id].tags.length > 0 || notesMap[a.id].note) && (
+                        <div className="mb-2">
+                          <div className="flex items-center gap-1 flex-wrap">
+                            {notesMap[a.id].tags.map(t => (
+                              <span key={t} className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">{t}</span>
+                            ))}
+                            {notesMap[a.id].note && (
+                              <span className="text-[9px] text-muted-foreground italic truncate max-w-[200px]">📝 {notesMap[a.id].note}</span>
+                            )}
+                          </div>
+                        </div>
                       )}
 
                       {/* Red Flag Badges */}
