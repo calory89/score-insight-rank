@@ -433,6 +433,53 @@ export type Database = {
         }
         Relationships: []
       }
+      portfolio_properties: {
+        Row: {
+          analysis_id: string
+          created_at: string
+          currency: string
+          id: string
+          notes: string | null
+          purchase_date: string
+          purchase_price: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analysis_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          purchase_date?: string
+          purchase_price: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analysis_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          purchase_date?: string
+          purchase_price?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_properties_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -690,6 +737,27 @@ export type Database = {
           subject?: string
           ticket_number?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_achievements: {
+        Row: {
+          achievement_key: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_key: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_key?: string
+          id?: string
+          unlocked_at?: string
           user_id?: string
         }
         Relationships: []

@@ -17,7 +17,7 @@ import {
   TrendingUp, TrendingDown, AlertTriangle, Sparkles, ChevronDown, ChevronUp,
   Shield, Info, Target, DollarSign, PiggyBank, BarChart3, Home,
   Compass, Scale, Clock, Zap, CheckCircle2, XCircle, Eye,
-  Landmark, Percent, ArrowUpRight, ArrowDownRight, GitCompare, Flag, X, Send, Heart, FileText, RefreshCw,
+  Landmark, Percent, ArrowUpRight, ArrowDownRight, GitCompare, Flag, X, Send, Heart, FileText, RefreshCw, Briefcase,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,8 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import PropertyReviews from "@/components/PropertyReviews";
 import { PropertyNotes } from "@/components/PropertyNotes";
+import PriceHistoryTimeline from "@/components/PriceHistoryTimeline";
+import AddToPortfolioModal from "@/components/AddToPortfolioModal";
 import { useToast } from "@/hooks/use-toast";
 import {
   LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, CartesianGrid, Area, AreaChart,
@@ -675,6 +677,7 @@ const Analysis = () => {
   const [isFavorited, setIsFavorited] = useState(false);
   const [readyReportId, setReadyReportId] = useState<string | null>(null);
   const [showNegotiationLetter, setShowNegotiationLetter] = useState(false);
+  const [showPortfolioModal, setShowPortfolioModal] = useState(false);
   const [showFreeLimitModal, setShowFreeLimitModal] = useState(false);
   const [userAnalysesCount, setUserAnalysesCount] = useState(0);
   const { toast } = useToast();
@@ -1086,6 +1089,9 @@ const Analysis = () => {
             <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowNegotiationLetter(true)}>
               <FileText className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Negotiate</span>
             </Button>
+            <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowPortfolioModal(true)}>
+              <Briefcase className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Portfolio</span>
+            </Button>
             <Button variant="outline" size="sm" className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setShowReportError(true)}>
               <Flag className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Report Error</span>
             </Button>
@@ -1115,6 +1121,8 @@ const Analysis = () => {
 
         {/* Negotiation Letter Modal */}
         <NegotiationLetterModal analysis={d} open={showNegotiationLetter} onClose={() => setShowNegotiationLetter(false)} />
+        {/* Add to Portfolio Modal */}
+        {id && <AddToPortfolioModal open={showPortfolioModal} onClose={() => setShowPortfolioModal(false)} analysisId={id} suggestedPrice={d.price || undefined} currency={d.currency || "€"} />}
 
         {/* Report Expiry Banner for free users */}
         {!isPro && d.created_at && <ReportExpiryBanner createdAt={d.created_at} />}
@@ -1626,6 +1634,11 @@ const Analysis = () => {
 
         {/* ===== CHARTS ===== */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {(d.price_history as any[])?.length > 1 && (
+            <Section delay={0.52}>
+              <PriceHistoryTimeline priceHistory={d.price_history as any[]} currentPrice={d.price} currency={d.currency || "€"} />
+            </Section>
+          )}
           {(d.price_history as any[])?.length > 0 && (
             <Section delay={0.52} className="rounded-2xl border border-border bg-card p-6">
               <h3 className="text-sm font-semibold text-foreground mb-4">Price Evolution Index</h3>
