@@ -1832,6 +1832,12 @@ const Analysis = () => {
         )}
 
         {id && (
+          <Section delay={0.68} className="mb-8">
+            <DueDiligenceChecklist analysisId={id} country={d.country} />
+          </Section>
+        )}
+
+        {id && (
           <Section delay={0.7} className="mb-8">
             <PropertyReviews analysisId={id} />
           </Section>
