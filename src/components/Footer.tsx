@@ -70,8 +70,10 @@ const Footer = () => {
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground mb-4">Product</h4>
             <ul className="space-y-2.5 text-xs text-muted-foreground">
+              <li><a href="/search" className="hover:text-foreground transition-colors">Search</a></li>
               <li><a href="/rankings" className="hover:text-foreground transition-colors">Rankings</a></li>
               <li><a href="/discover" className="hover:text-foreground transition-colors">Discover</a></li>
+              <li><a href="/game" className="hover:text-foreground transition-colors">Game</a></li>
               <li><a href="/#pricing" className="hover:text-foreground transition-colors">Pricing</a></li>
               <li><a href="/#trust" className="hover:text-foreground transition-colors">Methodology</a></li>
             </ul>

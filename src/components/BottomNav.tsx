@@ -34,8 +34,12 @@ const BottomNav = () => {
                 isActive ? "text-primary" : "text-muted-foreground"
               }`}
             >
-              <tab.icon className={`h-5 w-5 transition-transform duration-200 ${isActive ? "text-primary scale-110" : ""}`} />
-              <span className="text-[10px] font-medium">{tab.label}</span>
+              <tab.icon
+                className={`transition-all duration-200 ${isActive ? "h-[22px] w-[22px] text-primary" : "h-5 w-5"}`}
+                strokeWidth={isActive ? 2.5 : 2}
+                fill={isActive ? "currentColor" : "none"}
+              />
+              <span className={`text-[10px] transition-all ${isActive ? "font-semibold" : "font-medium"}`}>{tab.label}</span>
               {isActive && (
                 <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-6 rounded-full bg-primary transition-all" />
               )}

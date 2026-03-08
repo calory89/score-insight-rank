@@ -41,12 +41,20 @@ const LoginGateModal = ({ open, onClose, onSuccess }: LoginGateModalProps) => {
     setError("");
     try {
       if (isSignUp) {
+        if (password.length < 6) {
+          setError("Password must be at least 6 characters.");
+          setLoading(false);
+          return;
+        }
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: window.location.origin },
         });
         if (error) throw error;
+        setSuccessMsg("Check your email to confirm your account.");
+        setLoading(false);
+        return;
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -124,6 +132,9 @@ const LoginGateModal = ({ open, onClose, onSuccess }: LoginGateModalProps) => {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
+                {isSignUp && (
+                  <p className="text-[10px] text-muted-foreground">Minimum 6 characters</p>
+                )}
                 <Button variant="hero" className="w-full h-12" onClick={handleEmail} disabled={loading || !email || !password}>
                   {isSignUp ? "Create Account" : "Sign In"}
                 </Button>

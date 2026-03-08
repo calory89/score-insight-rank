@@ -451,31 +451,48 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background pb-16 sm:pb-0">
       <Navbar />
       <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl">
-        <PropertyOfTheDay />
-        <WatchlistSection />
-        {!isPro && analyses.length > 0 && <SavingsCalculator analyses={analyses} />}
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground mb-1">Dashboard</h1>
           <p className="text-sm text-muted-foreground">Your property intelligence hub.</p>
         </div>
 
+        <PropertyOfTheDay />
+        <WatchlistSection />
+        {!isPro && analyses.length > 0 && <SavingsCalculator analyses={analyses} />}
+
         {/* Stats bar */}
-        {analyses.length > 0 && (
+        {loading ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="rounded-xl border border-border bg-card p-4 text-center">
+                <div className="h-4 w-4 rounded bg-muted animate-pulse mx-auto mb-2" />
+                <div className="h-6 w-10 rounded bg-muted animate-pulse mx-auto mb-1" />
+                <div className="h-2.5 w-16 rounded bg-muted animate-pulse mx-auto" />
+              </div>
+            ))}
+          </div>
+        ) : analyses.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
             {[
               { icon: BarChart3, label: "Total Analyses", value: analyses.length, color: "text-foreground" },
               { icon: TrendingUp, label: "Avg. Score", value: avgScore, color: scoreColor(avgScore) },
               { icon: Globe, label: "Countries", value: countriesAnalyzed, color: "text-foreground" },
               { icon: Heart, label: "Favorites", value: favoriteIds.size, color: "text-primary" },
-            ].map((stat) => (
-              <div key={stat.label} className="rounded-xl border border-border bg-card p-4 text-center hover:shadow-md transition-shadow">
+            ].map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                className="rounded-xl border border-border bg-card p-4 text-center hover:shadow-md transition-shadow"
+              >
                 <stat.icon className="h-4 w-4 text-primary mx-auto mb-2" />
                 <p className={`text-2xl font-bold font-mono ${stat.color}`}>{stat.value}</p>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">{stat.label}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
-        )}
+        ) : null}
 
         {/* New analysis input */}
         <div className="mb-6">

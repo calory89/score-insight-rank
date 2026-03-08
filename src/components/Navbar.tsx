@@ -2,13 +2,21 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion, LayoutGroup } from "framer-motion";
-import { Menu, X, LogOut, LayoutDashboard, Settings, Sun, Moon, TicketCheck } from "lucide-react";
+import { Menu, X, LogOut, LayoutDashboard, Settings, Sun, Moon, TicketCheck, ChevronDown, User } from "lucide-react";
 import NotificationsBell from "@/components/NotificationsBell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { useTheme } from "next-themes";
 import LoginGateModal from "@/components/LoginGateModal";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,10 +30,8 @@ const Navbar = () => {
 
   const isActive = (path: string) => location.pathname === path;
 
-
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
-  // Detect scroll past hero for CTA glow
   useEffect(() => {
     const handleScroll = () => {
       setScrolledPastHero(window.scrollY > 500);
@@ -33,6 +39,8 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const userInitial = user?.email?.charAt(0).toUpperCase() || "U";
 
   return (
     <>
@@ -76,7 +84,7 @@ const Navbar = () => {
             ))}
           </div>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-2">
             <button onClick={toggleTheme} className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors" title="Toggle theme">
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
@@ -86,13 +94,7 @@ const Navbar = () => {
                 <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="text-xs gap-1">
                   <LayoutDashboard className="h-3.5 w-3.5" /> Dashboard
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/tickets")} className="text-xs gap-1">
-                  <TicketCheck className="h-3.5 w-3.5" /> Support
-                </Button>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/settings")} className="text-xs gap-1">
-                  <Settings className="h-3.5 w-3.5" /> Settings
-                </Button>
-                {user && (
+                {plan && (
                   <Badge
                     variant="secondary"
                     className={`text-[10px] cursor-pointer transition-all ${
@@ -105,10 +107,39 @@ const Navbar = () => {
                     {creditsTotal - creditsUsed}/{creditsTotal} {plan}
                   </Badge>
                 )}
-                <span className="text-xs text-muted-foreground truncate max-w-[120px]">{user.email}</span>
-                <Button variant="ghost" size="sm" onClick={signOut}>
-                  <LogOut className="h-4 w-4" />
-                </Button>
+                {/* Profile dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="flex items-center gap-1.5 p-1 rounded-lg hover:bg-secondary transition-colors">
+                      <Avatar className="h-7 w-7">
+                        <AvatarFallback className="text-[10px] font-semibold bg-primary/10 text-primary">
+                          {userInitial}
+                        </AvatarFallback>
+                      </Avatar>
+                      <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-52">
+                    <div className="px-3 py-2">
+                      <p className="text-xs font-medium text-foreground truncate">{user.email}</p>
+                      {plan && <p className="text-[10px] text-muted-foreground capitalize mt-0.5">{plan} plan</p>}
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate("/profile")} className="text-xs gap-2 cursor-pointer">
+                      <User className="h-3.5 w-3.5" /> Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/settings")} className="text-xs gap-2 cursor-pointer">
+                      <Settings className="h-3.5 w-3.5" /> Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/tickets")} className="text-xs gap-2 cursor-pointer">
+                      <TicketCheck className="h-3.5 w-3.5" /> Support
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={signOut} className="text-xs gap-2 cursor-pointer text-muted-foreground">
+                      <LogOut className="h-3.5 w-3.5" /> Sign Out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             ) : (
               <>
@@ -129,6 +160,7 @@ const Navbar = () => {
             <button onClick={toggleTheme} className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
               {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
+            {user && <NotificationsBell />}
             <button className="text-foreground p-1" onClick={() => setIsOpen(!isOpen)}>
               {isOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
@@ -168,6 +200,9 @@ const Navbar = () => {
                 )}
                 <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => { navigate("/dashboard"); setIsOpen(false); }}>
                   <LayoutDashboard className="h-4 w-4" /> Dashboard
+                </Button>
+                <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => { navigate("/profile"); setIsOpen(false); }}>
+                  <User className="h-4 w-4" /> Profile
                 </Button>
                 <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => { navigate("/tickets"); setIsOpen(false); }}>
                   <TicketCheck className="h-4 w-4" /> Support
