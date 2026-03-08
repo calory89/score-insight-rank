@@ -671,6 +671,7 @@ const Analysis = () => {
   const [reportSubmitting, setReportSubmitting] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   const [readyReportId, setReadyReportId] = useState<string | null>(null);
+  const [showNegotiationLetter, setShowNegotiationLetter] = useState(false);
   const [showFreeLimitModal, setShowFreeLimitModal] = useState(false);
   const [userAnalysesCount, setUserAnalysesCount] = useState(0);
   const { toast } = useToast();
