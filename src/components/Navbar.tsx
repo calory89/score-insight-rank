@@ -13,9 +13,24 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [scrolledPastHero, setScrolledPastHero] = useState(false);
+  const [creditsInfo, setCreditsInfo] = useState<{ used: number; total: number; plan: string } | null>(null);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+
+  // Fetch subscription credits for logged-in users
+  useEffect(() => {
+    if (!user) { setCreditsInfo(null); return; }
+    const fetchCredits = async () => {
+      const { data } = await supabase
+        .from("subscriptions")
+        .select("credits_used, credits_total, plan")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (data) setCreditsInfo({ used: data.credits_used, total: data.credits_total, plan: data.plan });
+    };
+    fetchCredits();
+  }, [user]);
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
 
