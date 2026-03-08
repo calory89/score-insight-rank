@@ -1341,8 +1341,10 @@ const Analysis = () => {
             </Section>
           </div>
         )}
+        </ProGateOverlay>
 
-        {/* ===== 5. BREAK-EVEN + MORTGAGE SCENARIOS ===== */}
+        {/* ===== 5. BREAK-EVEN + MORTGAGE SCENARIOS (Pro-gated) ===== */}
+        <ProGateOverlay isPro={isPro} label="Unlock Break-Even & Mortgage Data">
         {(f.break_even_price || f.mortgage_scenarios?.length > 0) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {(f.break_even_price || f.break_even_rent) && (
