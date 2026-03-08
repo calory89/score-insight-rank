@@ -288,6 +288,7 @@ const Profile = () => {
           <ReferralCard referralCode={profile?.referral_code} referralCount={referralCount} />
         )}
       </div>
+      <AchievementToast achievement={newlyUnlocked} onDismiss={dismissNew} />
       <BottomNav />
     </div>
   );

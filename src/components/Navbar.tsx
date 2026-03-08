@@ -3,7 +3,7 @@ import { ADMIN_EMAIL } from "@/lib/constants";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion, LayoutGroup } from "framer-motion";
-import { Menu, X, LogOut, LayoutDashboard, Settings, Sun, Moon, TicketCheck, ChevronDown, User } from "lucide-react";
+import { Menu, X, LogOut, LayoutDashboard, Settings, Sun, Moon, TicketCheck, ChevronDown, User, Briefcase } from "lucide-react";
 import NotificationsBell from "@/components/NotificationsBell";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
@@ -94,6 +94,9 @@ const Navbar = () => {
               <>
                 <Button variant="ghost" size="sm" onClick={() => navigate("/dashboard")} className="text-xs gap-1">
                   <LayoutDashboard className="h-3.5 w-3.5" /> Dashboard
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/portfolio")} className="text-xs gap-1">
+                  <Briefcase className="h-3.5 w-3.5" /> Portfolio
                 </Button>
                 {plan && (
                   <Badge
