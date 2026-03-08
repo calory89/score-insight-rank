@@ -1,72 +1,69 @@
 
 
-# Fix: Navegacion rota en la pagina de analisis
+## Safe Upgrade Pass 7: Product Polish & Growth Improvements
 
-## Problemas identificados
+After auditing the current state, here are the highest-impact improvements across UX, conversion, and engagement.
 
-### 1. Boton "Back" no funciona desde la pagina del reporte
-El boton usa `window.history.back()` que puede llevar al usuario de vuelta a `/analysis/loading`, re-activando el loader en un bucle. Necesita detectar si la pagina anterior es una ruta de carga y saltar al dashboard en su lugar.
+---
 
-### 2. Click en reportes del feed no muestra nada visible
-Al clickar un reporte en "Top rated properties", se ejecuta `setPreviewId(report.id)` que renderiza un preview inline al final de la pagina, fuera de la vista del usuario. El usuario no ve nada porque no se hace scroll automatico hacia el preview.
+### 1. Game page: No-auth access + CTA funnel
 
-**Solucion**: Hacer scroll automatico hacia el preview cuando se selecciona un reporte y tambien ofrecer un boton para abrir el reporte completo.
+Currently the Game page requires no auth to play (good), but the share text and empty state could be stronger. Also, the game fetches from `analyses` which has RLS -- unauthenticated users likely get 0 results.
 
-### 3. "See above" / "Click to view" lleva a pagina en blanco
-Cuando el usuario clicka el banner "Your report is ready! Click to view", el codigo hace:
-- `setAnalyzing(false)` y `setReadyReportId(null)` -- limpia el estado del FomoLoader
-- `navigate(/analysis/ID, { replace: true })` -- cambia la URL
+**Fix:**
+- Add a public RLS policy or use an edge function to serve random game properties
+- Show a signup CTA after every game round for non-logged-in users (not just at the end)
+- Add OG meta tags for `/game` so shared links have a preview card
 
-Pero el componente se re-renderiza y como `data` es null (no se ha cargado aun), cae en `if (!data) return null` (linea 824) y muestra una pagina en blanco hasta que el `useEffect` de fetch se ejecuta. El problema es una condicion de carrera entre la navegacion y la carga de datos.
+### 2. Landing page: Add Game CTA as social proof hook
 
-**Solucion**: Usar `window.location.href` para forzar un reload completo de la pagina, o mejor, no limpiar el estado hasta que los datos esten cargados.
+The landing page has no mention of the viral game. Adding a "Play the Deal or No Deal Game" CTA after the HowItWorks section would drive engagement from new visitors.
 
-## Cambios tecnicos
+**Fix:** Add a small promotional section on `Index.tsx` between existing sections, linking to `/game`.
 
-### Archivo: `src/pages/Analysis.tsx`
+### 3. Navbar: Add Game link for logged-in desktop users
 
-**Cambio 1 - Back button inteligente (linea 849-857)**
+Desktop users have no way to reach `/game` except via BottomNav (mobile only). The desktop navbar should include a "Game" link.
 
-Reemplazar la logica de `window.history.back()` para detectar si la pagina anterior es una ruta de carga:
+**Fix:** Add "Game" to the desktop navbar links alongside Rankings.
 
-```typescript
-onClick={() => {
-  if (fromBulk) {
-    navigate("/dashboard?bulk=true&restore=true");
-  } else {
-    // Always go to dashboard — history.back() often goes to the loading page
-    navigate("/dashboard");
-  }
-}}
-```
+### 4. Profile page: Empty state for new users
 
-**Cambio 2 - Scroll automatico al preview (linea 416-434)**
+When a user has 0 analyses, the profile shows "0" everywhere with no guidance. Should show an encouraging empty state with a CTA to analyze their first property.
 
-Agregar un `ref` al contenedor del preview y hacer `scrollIntoView` cuando se selecciona un reporte:
+**Fix:** Add conditional empty state in Profile when `stats.total === 0`.
 
-```typescript
-const previewRef = useRef<HTMLDivElement>(null);
+### 5. Share clipboard fallback feedback
 
-// On setPreviewId, scroll to preview
-useEffect(() => {
-  if (previewId && previewRef.current) {
-    previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-}, [previewId]);
-```
+In `Game.tsx` and `ReferralCard.tsx`, when `navigator.share` is unavailable and clipboard is used, there's no toast feedback in the Game page.
 
-Ademas, agregar un boton "View full report" dentro del InlineReportPreview que navega al reporte completo con `window.location.href`.
+**Fix:** Add toast notification after clipboard copy in the Game share handler.
 
-**Cambio 3 - Fix pagina en blanco en "Click to view" (linea 777-782)**
+### 6. BottomNav: Haptic-like active indicator
 
-Cambiar `navigate()` por `window.location.href` para forzar una carga completa de la pagina, evitando la condicion de carrera:
+The BottomNav has no visual indicator beyond color change. Add a small dot or pill under the active tab for clearer state.
 
-```typescript
-onViewReady={() => {
-  if (readyReportId) {
-    window.location.href = `/analysis/${readyReportId}`;
-  }
-}}
-```
+### 7. Score reveal: Show property location context
 
-Esto garantiza que la pagina se recarga completamente con el ID correcto en la URL, activando el fetch de datos desde cero.
+During game reveal, show whether the score means "above/below average for that city" to make it educational and sticky.
+
+### 8. SEO: Add `useDocumentMeta` to Game page
+
+The Game page has no meta tags. Add title/description for SEO and social sharing.
+
+---
+
+### Implementation Plan
+
+| Priority | Change | Files |
+|----------|--------|-------|
+| **High** | Add Game link to desktop Navbar | `Navbar.tsx` |
+| **High** | Add `useDocumentMeta` to Game page | `Game.tsx` |
+| **High** | Add toast on share clipboard fallback in Game | `Game.tsx` |
+| **High** | Add Game promo section on landing page | `Index.tsx` |
+| **Med** | Active dot indicator on BottomNav | `BottomNav.tsx` |
+| **Med** | Empty state CTA on Profile for 0 analyses | `Profile.tsx` |
+| **Med** | Better empty state for Game when not enough data | `Game.tsx` |
+
+**0 new files, ~5 files modified. No database migrations. No breaking changes.**
+
