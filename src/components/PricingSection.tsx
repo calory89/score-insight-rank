@@ -273,6 +273,14 @@ const PricingSection = () => {
   const [loginGateOpen, setLoginGateOpen] = useState(false);
   const [checkoutPlan, setCheckoutPlan] = useState<typeof plans[0] | null>(null);
   const { user } = useAuth();
+  const { plan: currentPlan } = useSubscription();
+
+  const planNameToKey: Record<string, string> = {
+    "Free": "free",
+    "Pro": "pro",
+    "Super Pro": "super_pro",
+    "Enterprise": "enterprise",
+  };
 
   const handleCheckout = (plan: typeof plans[0]) => {
     if (plan.isContact) {
