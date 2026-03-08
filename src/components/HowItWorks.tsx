@@ -52,7 +52,7 @@ const HowItWorks = () => {
               transition={{ delay: i * 0.1 }}
               className="relative group"
             >
-              <div className="rounded-xl border border-border bg-card p-4 sm:p-6 h-full hover:border-primary/15 transition-colors duration-300">
+              <div className="rounded-xl border border-border bg-card p-4 sm:p-6 h-full hover:border-primary/20 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
                 <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
                   <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                     <step.icon className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
