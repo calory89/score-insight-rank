@@ -1,72 +1,78 @@
 
 
-# Fix: Navegacion rota en la pagina de analisis
+## Next Batch: Backend Hardening + Database Indexes + Security + Performance
 
-## Problemas identificados
+The product's frontend is now polished and feature-rich. The next highest-impact improvements are **backend hardening, database optimization, and security** — the invisible infrastructure that makes a product production-grade.
 
-### 1. Boton "Back" no funciona desde la pagina del reporte
-El boton usa `window.history.back()` que puede llevar al usuario de vuelta a `/analysis/loading`, re-activando el loader en un bucle. Necesita detectar si la pagina anterior es una ruta de carga y saltar al dashboard en su lugar.
+---
 
-### 2. Click en reportes del feed no muestra nada visible
-Al clickar un reporte en "Top rated properties", se ejecuta `setPreviewId(report.id)` que renderiza un preview inline al final de la pagina, fuera de la vista del usuario. El usuario no ve nada porque no se hace scroll automatico hacia el preview.
+### 1. Database Indexes for Query Performance
+The most-queried tables (`analyses`, `page_visits`, `favorites`, `watchlist`) lack indexes beyond primary keys. Add indexes on the columns used in WHERE/ORDER BY clauses across the app.
 
-**Solucion**: Hacer scroll automatico hacia el preview cuando se selecciona un reporte y tambien ofrecer un boton para abrir el reporte completo.
+**Migration SQL:**
+- `analyses(user_id)` — Dashboard, admin queries
+- `analyses(country)` — Admin intelligence filter
+- `analyses(city)` — Admin intelligence filter  
+- `analyses(global_score DESC)` — Rankings, Game
+- `analyses(created_at DESC)` — Dashboard sort
+- `analyses(slug)` — Public report links `/r/:slug`
+- `page_visits(session_id)` — Visit tracking updates
+- `page_visits(created_at DESC)` — Admin visits panel
+- `favorites(user_id, analysis_id)` — Dashboard favorites
+- `watchlist(user_id)` — Dashboard watchlist
+- `game_scores(user_id)` — Leaderboard
+- `profiles(user_id)` — Auth lookups (unique already exists via constraint but explicit index helps)
 
-### 3. "See above" / "Click to view" lleva a pagina en blanco
-Cuando el usuario clicka el banner "Your report is ready! Click to view", el codigo hace:
-- `setAnalyzing(false)` y `setReadyReportId(null)` -- limpia el estado del FomoLoader
-- `navigate(/analysis/ID, { replace: true })` -- cambia la URL
+**Impact:** Faster queries across the entire app, especially as data grows.
 
-Pero el componente se re-renderiza y como `data` es null (no se ha cargado aun), cae en `if (!data) return null` (linea 824) y muestra una pagina en blanco hasta que el `useEffect` de fetch se ejecuta. El problema es una condicion de carrera entre la navegacion y la carga de datos.
+### 2. Edge Function Input Validation with Zod
+The `analyze-property`, `ai-chat`, `generate-negotiation-letter`, and `investment-quiz` edge functions currently accept unvalidated input. Add Zod schemas to validate request bodies at the entry point of each function.
 
-**Solucion**: Usar `window.location.href` para forzar un reload completo de la pagina, o mejor, no limpiar el estado hasta que los datos esten cargados.
+- `analyze-property`: validate `url` is a valid URL string, max 2000 chars
+- `ai-chat`: validate `message` is string max 2000 chars, `context` is optional object
+- `generate-negotiation-letter`: validate required fields (address, score, redFlags)
+- `investment-quiz`: validate `answers` is array of expected shape
 
-## Cambios tecnicos
+**Impact:** Prevents injection, malformed requests, and edge cases that could crash functions.
 
-### Archivo: `src/pages/Analysis.tsx`
+### 3. Rate Limiting on Edge Functions
+Add simple in-memory rate limiting to the `analyze-property` function (the most expensive operation) using a per-user counter with a sliding window. Limit to 10 requests per minute per user.
 
-**Cambio 1 - Back button inteligente (linea 849-857)**
+**Impact:** Prevents abuse, protects API costs.
 
-Reemplazar la logica de `window.history.back()` para detectar si la pagina anterior es una ruta de carga:
+### 4. Admin — Error Logs Enhancement
+The `error_logs` table exists and has an admin panel, but the edge functions don't consistently log errors. Add structured error logging to `analyze-property` and `ai-chat` functions so all failures are captured with:
+- `error_type` (scrape_timeout, ai_rate_limit, validation_error, etc.)
+- `url` 
+- `user_id` and `user_email`
+- `metadata` (stack trace, response status)
 
-```typescript
-onClick={() => {
-  if (fromBulk) {
-    navigate("/dashboard?bulk=true&restore=true");
-  } else {
-    // Always go to dashboard — history.back() often goes to the loading page
-    navigate("/dashboard");
-  }
-}}
-```
+**Impact:** Full operational observability — every failure is visible in the admin panel.
 
-**Cambio 2 - Scroll automatico al preview (linea 416-434)**
+### 5. Game — Duplicate `useEffect` Fix + `useDocumentMeta` on Missing Pages
+`Game.tsx` has duplicate `useEffect(() => { loadProperties(); }, [])` calls (lines 51-57). Remove the duplicate. Also add `useDocumentMeta` to `Profile.tsx`, `Compare.tsx`, `Settings.tsx`, and `Discover.tsx` where missing or incomplete.
 
-Agregar un `ref` al contenedor del preview y hacer `scrollIntoView` cuando se selecciona un reporte:
+**Impact:** Code quality + SEO coverage.
 
-```typescript
-const previewRef = useRef<HTMLDivElement>(null);
+### 6. Security — Admin Email Hardcoding Audit
+The admin email `rrppspain@gmail.com` is hardcoded in multiple places (Navbar, Admin page, edge functions, DB function). Consolidate to use only the `is_admin()` database function for all checks. The Navbar currently checks `user?.email === "rrppspain@gmail.com"` client-side — this should use a server-side check or at minimum a centralized constant.
 
-// On setPreviewId, scroll to preview
-useEffect(() => {
-  if (previewId && previewRef.current) {
-    previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-}, [previewId]);
-```
+**Fix:** Create a shared `ADMIN_EMAIL` constant in `src/lib/constants.ts` and use it everywhere in frontend. The DB function `is_admin()` already handles backend checks correctly.
 
-Ademas, agregar un boton "View full report" dentro del InlineReportPreview que navega al reporte completo con `window.location.href`.
+**Impact:** Maintainability + reduces risk of inconsistent access control.
 
-**Cambio 3 - Fix pagina en blanco en "Click to view" (linea 777-782)**
+---
 
-Cambiar `navigate()` por `window.location.href` para forzar una carga completa de la pagina, evitando la condicion de carrera:
+### Summary
 
-```typescript
-onViewReady={() => {
-  if (readyReportId) {
-    window.location.href = `/analysis/${readyReportId}`;
-  }
-}}
-```
+| # | Change | Type | Impact |
+|---|--------|------|--------|
+| 1 | Database indexes on 12 columns | Database | Query speed at scale |
+| 2 | Zod validation on 4 edge functions | Security | Input safety |
+| 3 | Rate limiting on analyze-property | Security | Abuse prevention |
+| 4 | Structured error logging in edge functions | Backend | Operational visibility |
+| 5 | Duplicate useEffect fix + meta tags | Code quality + SEO | Correctness |
+| 6 | Admin email constant consolidation | Security | Maintainability |
 
-Esto garantiza que la pagina se recarga completamente con el ID correcto en la URL, activando el fetch de datos desde cero.
+**Infrastructure hardening. Zero UI changes. Maximum production readiness.**
+
