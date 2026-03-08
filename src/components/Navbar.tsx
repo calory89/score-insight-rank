@@ -79,9 +79,9 @@ const Navbar = () => {
                 <Button variant="ghost" size="sm" onClick={() => navigate("/settings")} className="text-xs gap-1">
                   <Settings className="h-3.5 w-3.5" /> Settings
                 </Button>
-                {creditsInfo && creditsInfo.plan === "free" && (
-                  <Badge variant="secondary" className="text-[10px] cursor-pointer" onClick={() => { const el = document.getElementById("pricing"); if (el) el.scrollIntoView({ behavior: "smooth" }); }}>
-                    {creditsInfo.total - creditsInfo.used}/{creditsInfo.total} free
+                {creditsInfo && (
+                  <Badge variant="secondary" className="text-[10px] cursor-pointer" onClick={() => { if (creditsInfo.plan === "free") { const el = document.getElementById("pricing"); if (el) el.scrollIntoView({ behavior: "smooth" }); } }}>
+                    {creditsInfo.total - creditsInfo.used}/{creditsInfo.total} {creditsInfo.plan === "free" ? "free" : creditsInfo.plan}
                   </Badge>
                 )}
                 <span className="text-xs text-muted-foreground truncate max-w-[120px]">{user.email}</span>
