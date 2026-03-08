@@ -6,7 +6,7 @@ import {
 } from "recharts";
 import {
   Users, BarChart3, TrendingUp, Briefcase, Eye as EyeIcon,
-  Bell, Target, Trophy, FileText, ListChecks,
+  Bell, Target, Trophy, FileText, ListChecks, Layers, ArrowRight,
 } from "lucide-react";
 
 interface UserData {
@@ -14,6 +14,7 @@ interface UserData {
   email: string;
   created_at: string;
   analyses: any[];
+  plan?: string;
 }
 
 interface Props {
@@ -38,6 +39,12 @@ function groupByWeek(items: { created_at: string }[]): { week: string; count: nu
     .sort(([a], [b]) => a.localeCompare(b))
     .slice(-12)
     .map(([week, count]) => ({ week: week.slice(5), count }));
+}
+
+function getWeekKey(date: Date): string {
+  const weekStart = new Date(date);
+  weekStart.setDate(date.getDate() - date.getDay());
+  return weekStart.toISOString().slice(0, 10);
 }
 
 export default function AdminAnalyticsTab({ users }: Props) {
@@ -86,6 +93,60 @@ export default function AdminAnalyticsTab({ users }: Props) {
       .map(([name, count]) => ({ name, count }));
   }, [allAnalyses]);
 
+  // Conversion funnel
+  const funnel = useMemo(() => {
+    const total = users.length;
+    const withAnalysis = users.filter(u => (u.analyses || []).length > 0).length;
+    const with3Plus = users.filter(u => (u.analyses || []).length >= 3).length;
+    const proPlan = users.filter(u => u.plan && u.plan !== "free").length;
+    return [
+      { label: "Signed Up", value: total, pct: 100 },
+      { label: "1st Analysis", value: withAnalysis, pct: total > 0 ? Math.round((withAnalysis / total) * 100) : 0 },
+      { label: "3+ Analyses", value: with3Plus, pct: total > 0 ? Math.round((with3Plus / total) * 100) : 0 },
+      { label: "Pro Upgrade", value: proPlan, pct: total > 0 ? Math.round((proPlan / total) * 100) : 0 },
+    ];
+  }, [users]);
+
+  // Retention cohort grid
+  const cohortData = useMemo(() => {
+    const now = new Date();
+    const weekKeys: string[] = [];
+    for (let i = 7; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i * 7);
+      weekKeys.push(getWeekKey(d));
+    }
+
+    // Group users by signup week
+    const cohorts: { week: string; users: UserData[]; retention: number[] }[] = [];
+    
+    for (let ci = 0; ci < Math.min(weekKeys.length - 1, 6); ci++) {
+      const cohortWeek = weekKeys[ci];
+      const nextWeek = weekKeys[ci + 1] || "9999-99-99";
+      const cohortUsers = users.filter(u => {
+        const key = getWeekKey(new Date(u.created_at));
+        return key >= cohortWeek && key < nextWeek;
+      });
+      if (cohortUsers.length === 0) continue;
+
+      const retention: number[] = [];
+      for (let wi = 1; wi <= 4 && ci + wi < weekKeys.length; wi++) {
+        const targetWeek = weekKeys[ci + wi];
+        const activeCount = cohortUsers.filter(u =>
+          (u.analyses || []).some((a: any) => {
+            const aWeek = getWeekKey(new Date(a.created_at));
+            return aWeek >= targetWeek;
+          })
+        ).length;
+        retention.push(Math.round((activeCount / cohortUsers.length) * 100));
+      }
+
+      cohorts.push({ week: cohortWeek.slice(5), users: cohortUsers, retention });
+    }
+
+    return cohorts;
+  }, [users]);
+
   const features = [
     { label: "Portfolio Items", count: featureCounts.portfolio, icon: Briefcase },
     { label: "Watchlist Entries", count: featureCounts.watchlist, icon: EyeIcon },
@@ -102,8 +163,39 @@ export default function AdminAnalyticsTab({ users }: Props) {
     fontSize: 12,
   };
 
+  const retentionColor = (pct: number) => {
+    if (pct >= 60) return "bg-score-excellent/80 text-white";
+    if (pct >= 40) return "bg-score-good/60 text-white";
+    if (pct >= 20) return "bg-score-average/50 text-foreground";
+    if (pct > 0) return "bg-score-poor/40 text-foreground";
+    return "bg-muted text-muted-foreground";
+  };
+
   return (
     <div className="space-y-6">
+      {/* Conversion Funnel */}
+      <div className="rounded-xl border border-border bg-card p-5">
+        <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+          <Layers className="h-4 w-4 text-primary" /> Conversion Funnel
+        </h3>
+        <div className="flex items-center justify-between gap-2">
+          {funnel.map((step, i) => (
+            <div key={step.label} className="flex items-center gap-2 flex-1">
+              <div className="flex-1 text-center">
+                <div className="relative mx-auto mb-2" style={{ width: `${Math.max(40, step.pct)}%`, minWidth: 48 }}>
+                  <div className="h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
+                    <span className="text-lg font-bold font-mono text-primary">{step.value}</span>
+                  </div>
+                </div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{step.label}</p>
+                <p className="text-xs font-mono font-medium text-foreground">{step.pct}%</p>
+              </div>
+              {i < funnel.length - 1 && <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Signups + Analyses charts */}
       <div className="grid md:grid-cols-2 gap-6">
         <div className="rounded-xl border border-border bg-card p-5">
@@ -136,6 +228,48 @@ export default function AdminAnalyticsTab({ users }: Props) {
           </ResponsiveContainer>
         </div>
       </div>
+
+      {/* Retention Cohort Grid */}
+      {cohortData.length > 0 && (
+        <div className="rounded-xl border border-border bg-card p-5">
+          <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+            <TrendingUp className="h-4 w-4 text-primary" /> Retention Cohorts
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-border text-[10px] text-muted-foreground uppercase tracking-wider">
+                  <th className="text-left py-2 px-2">Cohort</th>
+                  <th className="text-center py-2 px-2">Users</th>
+                  <th className="text-center py-2 px-2">Week 1</th>
+                  <th className="text-center py-2 px-2">Week 2</th>
+                  <th className="text-center py-2 px-2">Week 3</th>
+                  <th className="text-center py-2 px-2">Week 4</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cohortData.map((cohort) => (
+                  <tr key={cohort.week} className="border-b border-border/50">
+                    <td className="py-2 px-2 font-mono text-muted-foreground">{cohort.week}</td>
+                    <td className="py-2 px-2 text-center font-mono font-medium text-foreground">{cohort.users.length}</td>
+                    {[0, 1, 2, 3].map((wi) => (
+                      <td key={wi} className="py-1.5 px-2 text-center">
+                        {cohort.retention[wi] != null ? (
+                          <span className={`inline-block px-2.5 py-1 rounded-md text-[10px] font-mono font-bold ${retentionColor(cohort.retention[wi])}`}>
+                            {cohort.retention[wi]}%
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Top Countries */}
       <div className="rounded-xl border border-border bg-card p-5">

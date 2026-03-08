@@ -10,10 +10,9 @@ import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
 import {
-  Search, ArrowRight, Calendar, Building2, TrendingUp, MapPin, Globe,
-  Shield, BarChart3, Heart, GitCompare, Filter, Star, Crown, Zap, Layers,
+  Search, ArrowRight, Calendar, Building2, TrendingUp, Globe,
+  BarChart3, Heart, GitCompare, Star, Layers,
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 import PropertyOfTheDay from "@/components/PropertyOfTheDay";
 import SavingsCalculator from "@/components/SavingsCalculator";
@@ -26,7 +25,7 @@ import { SavedFilters, type DashboardFilter } from "@/components/SavedFilters";
 import UpgradeModal from "@/components/dashboard/UpgradeModal";
 import BulkAnalyzeModal from "@/components/dashboard/BulkAnalyzeModal";
 
-import { scoreColor, verdictColorSimple as verdictColor, riskLabel } from "@/lib/score-utils";
+import { scoreColor } from "@/lib/score-utils";
 
 const FREE_LIMIT = 5;
 
