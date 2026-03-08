@@ -150,7 +150,10 @@ const Profile = () => {
               <User className="h-8 w-8 text-muted-foreground" />
             )}
           </div>
-          <h2 className="text-xl font-bold text-foreground">@{displayName}</h2>
+          <div className="flex items-center justify-center gap-2">
+            <h2 className="text-xl font-bold text-foreground">@{displayName}</h2>
+            {isOwnProfile && <StreakBadge />}
+          </div>
           <div className="flex items-center justify-center gap-2 mt-1">
             <span className={`text-xs font-medium ${hunterLevel.color}`}>{hunterLevel.name}</span>
             <span className="text-[10px] text-muted-foreground">·</span>
@@ -228,6 +231,10 @@ const Profile = () => {
           <Progress value={progressToNext} className="h-2" />
           <p className="text-[10px] text-muted-foreground mt-1.5">{stats.total} / {nextLevel?.min || stats.total} analyses</p>
         </div>
+
+        {isOwnProfile && (
+          <ReferralCard referralCode={profile?.referral_code} referralCount={referralCount} />
+        )}
       </div>
       <BottomNav />
     </div>
