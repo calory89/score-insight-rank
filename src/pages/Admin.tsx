@@ -901,6 +901,7 @@ const Admin = () => {
                     <div
                       className="grid grid-cols-[2fr_1fr_80px] sm:grid-cols-[2fr_1fr_1fr_1fr_1fr_80px] gap-2 px-5 py-3.5 items-center hover:bg-secondary/20 cursor-pointer transition-colors"
                       onClick={() => setExpandedUser(expandedUser === u.id ? null : u.id)}
+                      onDoubleClick={() => setSelectedUser(u)}
                     >
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground truncate">{u.email}</p>
@@ -990,6 +991,8 @@ const Admin = () => {
                 ))
               )}
                 </div>
+
+                <AdminUserDetail user={selectedUser} onClose={() => setSelectedUser(null)} />
               </TabsContent>
 
               <TabsContent value="tickets">
