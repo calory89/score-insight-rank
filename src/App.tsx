@@ -19,6 +19,7 @@ const Compare = React.lazy(() => import("./pages/Compare"));
 const Settings = React.lazy(() => import("./pages/Settings"));
 const Admin = React.lazy(() => import("./pages/Admin"));
 const Rankings = React.lazy(() => import("./pages/Rankings"));
+const Leads = React.lazy(() => import("./pages/Leads"));
 const Tickets = React.lazy(() => import("./pages/Tickets"));
 const Discover = React.lazy(() => import("./pages/Discover"));
 const Profile = React.lazy(() => import("./pages/Profile"));
@@ -67,6 +68,7 @@ const AnimatedRoutes = () => {
           <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
           <Route path="/admin" element={<PageTransition><Admin /></PageTransition>} />
           <Route path="/rankings" element={<PageTransition><Rankings /></PageTransition>} />
+          <Route path="/leads" element={<PageTransition><Leads /></PageTransition>} />
           <Route path="/tickets" element={<PageTransition><Tickets /></PageTransition>} />
           <Route path="/discover" element={<PageTransition><Discover /></PageTransition>} />
           <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
