@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -95,6 +96,17 @@ Rules:
     });
   } catch (e) {
     console.error("ai-chat error:", e);
+    // Log to error_logs
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+      const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const logClient = createClient(supabaseUrl, supabaseKey);
+      await logClient.from("error_logs").insert({
+        error_type: "ai_chat_error",
+        error_message: e instanceof Error ? e.message : "Unknown error",
+        metadata: { stack: e instanceof Error ? e.stack : undefined },
+      });
+    } catch {}
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
