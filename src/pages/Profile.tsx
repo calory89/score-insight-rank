@@ -40,6 +40,7 @@ const getNextLevel = (count: number) => {
 };
 
 const Profile = () => {
+  useDocumentMeta({ title: "Profile | RealHunt", description: "View your investor profile, stats, and achievements on RealHunt." });
   const { userId } = useParams();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();

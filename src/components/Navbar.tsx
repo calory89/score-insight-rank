@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ADMIN_EMAIL } from "@/lib/constants";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion, LayoutGroup } from "framer-motion";
@@ -62,7 +63,7 @@ const Navbar = () => {
               { href: "/#how-it-works", label: "How It Works", path: null },
               { href: "/game", label: "Game", path: "/game" },
               { href: "/rankings", label: "Rankings", path: "/rankings" },
-              ...(user?.email === "rrppspain@gmail.com" ? [{ href: "/leads", label: "Leads", path: "/leads" }] : []),
+              ...(user?.email === ADMIN_EMAIL ? [{ href: "/leads", label: "Leads", path: "/leads" }] : []),
               { href: "/search", label: "Search", path: "/search" },
               { href: "/#pricing", label: "Pricing", path: null },
             ].map((link) => (
@@ -177,7 +178,7 @@ const Navbar = () => {
             <a href="/#how-it-works" className="block text-sm text-muted-foreground py-2" onClick={() => setIsOpen(false)}>How It Works</a>
             <a href="/game" className="block text-sm text-muted-foreground py-2" onClick={(e) => { e.preventDefault(); navigate("/game"); setIsOpen(false); }}>Game</a>
             <a href="/rankings" className="block text-sm text-muted-foreground py-2" onClick={(e) => { e.preventDefault(); navigate("/rankings"); setIsOpen(false); }}>Rankings</a>
-            {user?.email === "rrppspain@gmail.com" && <a href="/leads" className="block text-sm text-muted-foreground py-2" onClick={(e) => { e.preventDefault(); navigate("/leads"); setIsOpen(false); }}>Leads</a>}
+            {user?.email === ADMIN_EMAIL && <a href="/leads" className="block text-sm text-muted-foreground py-2" onClick={(e) => { e.preventDefault(); navigate("/leads"); setIsOpen(false); }}>Leads</a>}
             <a href="/search" className="block text-sm text-muted-foreground py-2" onClick={(e) => { e.preventDefault(); navigate("/search"); setIsOpen(false); }}>Search</a>
             <a href="/#pricing" className="block text-sm text-muted-foreground py-2" onClick={() => setIsOpen(false)}>Pricing</a>
             <div className="border-t border-border my-2" />

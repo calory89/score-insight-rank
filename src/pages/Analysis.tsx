@@ -900,7 +900,7 @@ const Analysis = () => {
       if (found) return;
 
       // Check free limit
-      const isAdmin = user?.email === "rrppspain@gmail.com";
+      const isAdmin = user?.email === ADMIN_EMAIL;
       if (!isAdmin) {
         const { count } = await supabase
           .from("analyses")

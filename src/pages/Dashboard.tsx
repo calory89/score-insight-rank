@@ -427,7 +427,7 @@ const Dashboard = () => {
       return;
     }
     // Check free limit using subscription credits (admin bypasses)
-    const isAdmin = user?.email === "rrppspain@gmail.com";
+    const isAdmin = user?.email === ADMIN_EMAIL;
     if (!isAdmin && !isPro && creditsUsed >= creditsTotal) {
       setShowUpgrade(true);
       return;
