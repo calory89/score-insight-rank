@@ -76,7 +76,7 @@ const Index = () => {
         <PricingSection />
         <DiscoverPromo />
         <MethodologyPreview />
-        <APISection />
+        
         <FAQ />
         <FinalCTA />
         <Footer />
