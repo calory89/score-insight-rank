@@ -6,6 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
+import StreakBadge from "@/components/StreakBadge";
+import ReferralCard from "@/components/ReferralCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -45,6 +47,7 @@ const Profile = () => {
   const targetUserId = userId || user?.id;
 
   const [profile, setProfile] = useState<any>(null);
+  const [referralCount, setReferralCount] = useState(0);
   const [stats, setStats] = useState({ total: 0, high85: 0, avgScore: 0, countries: 0 });
   const [followerCount, setFollowerCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
@@ -63,11 +66,12 @@ const Profile = () => {
   const loadProfile = async () => {
     if (!targetUserId) return;
 
-    const [profileRes, analysesRes, followersRes, followingRes] = await Promise.all([
+    const [profileRes, analysesRes, followersRes, followingRes, referralsRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", targetUserId).maybeSingle(),
       supabase.from("analyses").select("global_score, country").eq("user_id", targetUserId),
       (supabase as any).from("follows").select("id").eq("following_id", targetUserId),
       (supabase as any).from("follows").select("id").eq("follower_id", targetUserId),
+      (supabase as any).from("referrals").select("id").eq("referrer_id", targetUserId),
     ]);
 
     const profileData = profileRes.data as any;
@@ -76,6 +80,7 @@ const Profile = () => {
     setEditBio(profileData?.bio || "");
     setFollowerCount(followersRes.data?.length || 0);
     setFollowingCount(followingRes.data?.length || 0);
+    setReferralCount(referralsRes.data?.length || 0);
 
     const analyses = analysesRes.data || [];
     const scores = analyses.map((a: any) => a.global_score || 0);
@@ -145,7 +150,10 @@ const Profile = () => {
               <User className="h-8 w-8 text-muted-foreground" />
             )}
           </div>
-          <h2 className="text-xl font-bold text-foreground">@{displayName}</h2>
+          <div className="flex items-center justify-center gap-2">
+            <h2 className="text-xl font-bold text-foreground">@{displayName}</h2>
+            {isOwnProfile && <StreakBadge />}
+          </div>
           <div className="flex items-center justify-center gap-2 mt-1">
             <span className={`text-xs font-medium ${hunterLevel.color}`}>{hunterLevel.name}</span>
             <span className="text-[10px] text-muted-foreground">·</span>
@@ -223,6 +231,10 @@ const Profile = () => {
           <Progress value={progressToNext} className="h-2" />
           <p className="text-[10px] text-muted-foreground mt-1.5">{stats.total} / {nextLevel?.min || stats.total} analyses</p>
         </div>
+
+        {isOwnProfile && (
+          <ReferralCard referralCode={profile?.referral_code} referralCount={referralCount} />
+        )}
       </div>
       <BottomNav />
     </div>

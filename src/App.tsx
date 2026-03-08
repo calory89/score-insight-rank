@@ -21,6 +21,7 @@ const Rankings = React.lazy(() => import("./pages/Rankings"));
 const Tickets = React.lazy(() => import("./pages/Tickets"));
 const Discover = React.lazy(() => import("./pages/Discover"));
 const Profile = React.lazy(() => import("./pages/Profile"));
+const Game = React.lazy(() => import("./pages/Game"));
 const Privacy = React.lazy(() => import("./pages/Privacy"));
 const Terms = React.lazy(() => import("./pages/Terms"));
 const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
@@ -69,6 +70,7 @@ const AnimatedRoutes = () => {
           <Route path="/discover" element={<PageTransition><Discover /></PageTransition>} />
           <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
           <Route path="/profile/:userId" element={<PageTransition><Profile /></PageTransition>} />
+          <Route path="/game" element={<PageTransition><Game /></PageTransition>} />
           <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
           <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
           <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
