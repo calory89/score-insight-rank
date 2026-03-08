@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import AdminVisitsPanel from "@/components/AdminVisitsPanel";
+import AdminAnalyticsTab from "@/components/admin/AdminAnalyticsTab";
 import AdminVisitorLog from "@/components/AdminVisitorLog";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -849,7 +850,7 @@ const Admin = () => {
               </TabsList>
 
               <TabsContent value="analytics">
-                <AdminVisitsPanel />
+                <AdminAnalyticsTab users={users} />
               </TabsContent>
 
               <TabsContent value="users">
@@ -1010,6 +1011,7 @@ const Admin = () => {
               </TabsContent>
 
               <TabsContent value="visits">
+                <AdminVisitsPanel />
                 <AdminVisitorLog />
               </TabsContent>
 
