@@ -132,6 +132,7 @@ const Navbar = () => {
             </button>
           </div>
         </div>
+        </LayoutGroup>
 
         {isOpen && (
           <motion.div
