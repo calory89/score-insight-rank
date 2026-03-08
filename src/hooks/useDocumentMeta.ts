@@ -3,9 +3,10 @@ import { useEffect } from "react";
 interface DocumentMeta {
   title: string;
   description?: string;
+  ogImage?: string;
 }
 
-const useDocumentMeta = ({ title, description }: DocumentMeta) => {
+const useDocumentMeta = ({ title, description, ogImage }: DocumentMeta) => {
   useEffect(() => {
     document.title = title;
 
@@ -25,7 +26,18 @@ const useDocumentMeta = ({ title, description }: DocumentMeta) => {
         ogTitle.setAttribute("content", title);
       }
     }
-  }, [title, description]);
+
+    if (ogImage) {
+      let ogImg = document.querySelector('meta[property="og:image"]');
+      if (ogImg) {
+        ogImg.setAttribute("content", ogImage);
+      }
+      let twImg = document.querySelector('meta[name="twitter:image"]');
+      if (twImg) {
+        twImg.setAttribute("content", ogImage);
+      }
+    }
+  }, [title, description, ogImage]);
 };
 
 export default useDocumentMeta;

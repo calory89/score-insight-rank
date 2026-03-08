@@ -1,12 +1,23 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Compass, Users, Trophy, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import LoginGateModal from "@/components/LoginGateModal";
 
 const DiscoverPromo = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [showLoginGate, setShowLoginGate] = useState(false);
+
+  const handleClick = () => {
+    if (user) {
+      navigate("/discover");
+    } else {
+      setShowLoginGate(true);
+    }
+  };
 
   return (
     <section className="py-24 md:py-32 relative">
@@ -48,18 +59,13 @@ const DiscoverPromo = () => {
             </div>
           </div>
 
-          <Button
-            variant="hero"
-            size="lg"
-            onClick={() => {
-              if (user) navigate("/discover");
-              else navigate("/#pricing");
-            }}
-          >
+          <Button variant="hero" size="lg" onClick={handleClick}>
             {user ? "Open Discover" : "Get Started — Free"} <ArrowRight className="ml-1 h-4 w-4" />
           </Button>
         </motion.div>
       </div>
+
+      <LoginGateModal open={showLoginGate} onClose={() => setShowLoginGate(false)} />
     </section>
   );
 };

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Quote, MapPin } from "lucide-react";
+import { Quote, MapPin, Star } from "lucide-react";
 
 const testimonials = [
   {
@@ -7,18 +7,21 @@ const testimonials = [
     name: "Marcus L.",
     location: "Berlin, Germany",
     role: "Serial Property Investor",
+    stars: 5,
   },
   {
     quote: "I found my dream villa in Bali through the Discover feed. Another Hunter had analyzed it and scored it 87/100. I flew out, visited, and closed the deal in 3 weeks.",
     name: "Sarah K.",
     location: "London, UK",
     role: "First-time Overseas Buyer",
+    stars: 5,
   },
   {
     quote: "The community is gold. I asked about Tulum and got 14 detailed responses within 24 hours from people who actually own there. No real estate agent gives you that.",
     name: "Carlos M.",
     location: "Miami, USA",
     role: "Portfolio Manager",
+    stars: 5,
   },
 ];
 
@@ -47,12 +50,18 @@ const Testimonials = () => (
             transition={{ delay: i * 0.1 }}
             className="rounded-2xl border border-border bg-card p-6 flex flex-col"
           >
+            {/* Star rating */}
+            <div className="flex items-center gap-0.5 mb-3">
+              {[...Array(t.stars)].map((_, j) => (
+                <Star key={j} className="h-3.5 w-3.5 fill-primary text-primary" />
+              ))}
+            </div>
             <Quote className="h-5 w-5 text-primary/30 mb-3" />
             <p className="text-sm text-muted-foreground leading-relaxed flex-1 mb-5">
               "{t.quote}"
             </p>
             <div className="flex items-center gap-3 pt-4 border-t border-border">
-              <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+              <div className="h-9 w-9 rounded-full bg-gradient-cta flex items-center justify-center text-sm font-bold text-primary-foreground">
                 {t.name.charAt(0)}
               </div>
               <div>
