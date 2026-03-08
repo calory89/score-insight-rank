@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/contexts/AuthContext";
 
 const StickyMobileCTA = () => {
   const isMobile = useIsMobile();
+  const { user } = useAuth();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -15,7 +17,8 @@ const StickyMobileCTA = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  if (!isMobile || !visible) return null;
+  // Hide for authenticated users (BottomNav handles navigation)
+  if (!isMobile || !visible || user) return null;
 
   const scrollToHero = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });

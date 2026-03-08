@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,41 +14,49 @@ const LiveActivityToast = () => {
   const [activity, setActivity] = useState<ActivityItem | null>(null);
   const [show, setShow] = useState(false);
   const isMobile = useIsMobile();
+  const cacheRef = useRef<ActivityItem[]>([]);
+  const indexRef = useRef(0);
 
-  const fetchRandom = useCallback(async () => {
-    const { data } = await supabase
-      .from("analyses")
-      .select("city, country, global_score")
-      .not("city", "is", null)
-      .not("country", "is", null)
-      .not("global_score", "is", null)
-      .order("created_at", { ascending: false })
-      .limit(20);
+  // Fetch once, cache, then rotate
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data } = await supabase
+        .from("analyses")
+        .select("city, country, global_score")
+        .not("city", "is", null)
+        .not("country", "is", null)
+        .not("global_score", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(20);
 
-    if (data && data.length > 0) {
-      const pick = data[Math.floor(Math.random() * data.length)];
-      setActivity({
-        city: pick.city!,
-        country: pick.country!,
-        score: pick.global_score!,
-      });
-      setShow(true);
-      setTimeout(() => setShow(false), 4000);
-    }
+      if (data && data.length > 0) {
+        cacheRef.current = data.map((pick) => ({
+          city: pick.city!,
+          country: pick.country!,
+          score: pick.global_score!,
+        }));
+      }
+    };
+    fetchData();
+  }, []);
+
+  const showNext = useCallback(() => {
+    if (cacheRef.current.length === 0) return;
+    const idx = indexRef.current % cacheRef.current.length;
+    setActivity(cacheRef.current[idx]);
+    indexRef.current = idx + 1;
+    setShow(true);
+    setTimeout(() => setShow(false), 4000);
   }, []);
 
   useEffect(() => {
-    const initialDelay = setTimeout(() => {
-      fetchRandom();
-    }, 8000);
-
-    const interval = setInterval(fetchRandom, 25000);
-
+    const initialDelay = setTimeout(showNext, 8000);
+    const interval = setInterval(showNext, 25000);
     return () => {
       clearTimeout(initialDelay);
       clearInterval(interval);
     };
-  }, [fetchRandom]);
+  }, [showNext]);
 
   if (isMobile) return null;
 
@@ -56,8 +64,9 @@ const LiveActivityToast = () => {
     <AnimatePresence>
       {show && activity && (
         <motion.div
-          initial={{ opacity: 0, x: -80, y: 0 }}
-          animate={{ opacity: 1, x: 0, y: 0 }}
+          key={`toast-${indexRef.current}`}
+          initial={{ opacity: 0, x: -80 }}
+          animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: -80 }}
           transition={{ type: "spring", damping: 20 }}
           className="fixed bottom-6 left-6 z-50 bg-card border border-border rounded-xl px-4 py-3 shadow-lg flex items-center gap-3 max-w-xs"

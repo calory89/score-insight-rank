@@ -1,7 +1,11 @@
 import { motion } from "framer-motion";
 
 const logos = [
-  "TechCrunch", "Bloomberg", "Forbes", "Business Insider", "The Guardian"
+  { name: "TechCrunch", font: "font-bold italic" },
+  { name: "Bloomberg", font: "font-black tracking-tight" },
+  { name: "Forbes", font: "font-bold italic tracking-wide" },
+  { name: "Business Insider", font: "font-extrabold" },
+  { name: "The Guardian", font: "font-serif font-bold" },
 ];
 
 const MediaLogos = () => (
@@ -17,12 +21,12 @@ const MediaLogos = () => (
           Trusted by investors worldwide
         </p>
         <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
-          {logos.map((name) => (
+          {logos.map((logo) => (
             <span
-              key={name}
-              className="text-sm font-semibold text-muted-foreground/30 select-none"
+              key={logo.name}
+              className={`text-base md:text-lg text-muted-foreground/40 select-none ${logo.font}`}
             >
-              {name}
+              {logo.name}
             </span>
           ))}
         </div>
