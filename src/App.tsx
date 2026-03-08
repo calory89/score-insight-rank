@@ -36,7 +36,16 @@ const MarketDirectory = React.lazy(() => import("./pages/MarketDirectory"));
 const MarketPulse = React.lazy(() => import("./pages/MarketPulse"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,      // 5 min — avoid redundant fetches
+      gcTime: 15 * 60 * 1000,         // 15 min garbage collection
+      retry: 2,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const PageTracker = ({ children }: { children: React.ReactNode }) => {
   usePageTracking();
@@ -45,18 +54,23 @@ const PageTracker = ({ children }: { children: React.ReactNode }) => {
 
 const PageTransition = ({ children }: { children: React.ReactNode }) => (
   <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
-    transition={{ duration: 0.2 }}
+    initial={{ opacity: 0, y: 6 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: -4 }}
+    transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
   >
     {children}
   </motion.div>
 );
 
 const SuspenseFallback = () => (
-  <div className="min-h-screen bg-background flex items-center justify-center">
-    <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
+    <div className="relative">
+      <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+        <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    </div>
+    <p className="text-xs text-muted-foreground animate-pulse">Loading…</p>
   </div>
 );
 
@@ -102,7 +116,7 @@ const App = () => (
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="realhunt-theme">
         <AuthProvider>
           <SubscriptionProvider>
-          <TooltipProvider>
+          <TooltipProvider delayDuration={300}>
             <Toaster />
             <Sonner />
             <BrowserRouter>
