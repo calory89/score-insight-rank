@@ -16,6 +16,7 @@ import {
 } from "recharts";
 
 import { scoreColor, scoreBg, verdictColorSimple as verdictColor } from "@/lib/score-utils";
+import BottomNav from "@/components/BottomNav";
 
 const RADAR_COLORS = [
   "hsl(160, 84%, 39%)",
@@ -40,7 +41,7 @@ const Compare = () => {
   useEffect(() => {
     if (!user) return;
     // Load all user analyses for the picker
-    supabase.from("analyses").select("*").eq("user_id", user.id).order("created_at", { ascending: false })
+    supabase.from("analyses").select("id, address, city, country, global_score, price, image_url, property_type, created_at").eq("user_id", user.id).order("created_at", { ascending: false })
       .then(({ data }) => setAllAnalyses(data || []));
   }, [user]);
 
@@ -329,6 +330,7 @@ const Compare = () => {
         )}
       </div>
     </div>
+    <BottomNav />
   );
 };
 
