@@ -4,40 +4,38 @@ interface DocumentMeta {
   title: string;
   description?: string;
   ogImage?: string;
+  canonicalUrl?: string;
 }
 
-const useDocumentMeta = ({ title, description, ogImage }: DocumentMeta) => {
+const setMeta = (selector: string, attr: string, value: string) => {
+  const el = document.querySelector(selector);
+  if (el) el.setAttribute(attr, value);
+};
+
+const useDocumentMeta = ({ title, description, ogImage, canonicalUrl }: DocumentMeta) => {
   useEffect(() => {
     document.title = title;
 
     if (description) {
-      let meta = document.querySelector('meta[name="description"]');
-      if (meta) {
-        meta.setAttribute("content", description);
-      }
-
-      let ogDesc = document.querySelector('meta[property="og:description"]');
-      if (ogDesc) {
-        ogDesc.setAttribute("content", description);
-      }
-
-      let ogTitle = document.querySelector('meta[property="og:title"]');
-      if (ogTitle) {
-        ogTitle.setAttribute("content", title);
-      }
+      setMeta('meta[name="description"]', "content", description);
+      setMeta('meta[property="og:description"]', "content", description);
+      setMeta('meta[name="twitter:description"]', "content", description);
     }
+
+    setMeta('meta[property="og:title"]', "content", title);
+    setMeta('meta[name="twitter:title"]', "content", title);
 
     if (ogImage) {
-      let ogImg = document.querySelector('meta[property="og:image"]');
-      if (ogImg) {
-        ogImg.setAttribute("content", ogImage);
-      }
-      let twImg = document.querySelector('meta[name="twitter:image"]');
-      if (twImg) {
-        twImg.setAttribute("content", ogImage);
-      }
+      setMeta('meta[property="og:image"]', "content", ogImage);
+      setMeta('meta[name="twitter:image"]', "content", ogImage);
     }
-  }, [title, description, ogImage]);
+
+    if (canonicalUrl) {
+      setMeta('meta[property="og:url"]', "content", canonicalUrl);
+      const canonical = document.querySelector('link[rel="canonical"]');
+      if (canonical) canonical.setAttribute("href", canonicalUrl);
+    }
+  }, [title, description, ogImage, canonicalUrl]);
 };
 
 export default useDocumentMeta;
