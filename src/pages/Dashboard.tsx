@@ -552,6 +552,10 @@ const Dashboard = () => {
                 <option value="date">Newest First</option>
                 <option value="score">Best Score</option>
               </select>
+              <SavedFilters
+                currentFilter={{ sortBy, favoritesOnly: showFavoritesOnly }}
+                onApply={(f) => { setSortBy(f.sortBy); setShowFavoritesOnly(f.favoritesOnly); }}
+              />
             </div>
             <AnimatePresence>
               {compareIds.size >= 2 && (
@@ -704,6 +708,20 @@ const Dashboard = () => {
                       {/* AI Summary preview */}
                       {a.ai_summary && (
                         <p className="text-[11px] text-muted-foreground line-clamp-2 mb-3 leading-relaxed">{a.ai_summary}</p>
+                      )}
+
+                      {/* Notes & Tags */}
+                      {notesMap[a.id] && (notesMap[a.id].tags.length > 0 || notesMap[a.id].note) && (
+                        <div className="mb-2">
+                          <div className="flex items-center gap-1 flex-wrap">
+                            {notesMap[a.id].tags.map(t => (
+                              <span key={t} className="text-[9px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">{t}</span>
+                            ))}
+                            {notesMap[a.id].note && (
+                              <span className="text-[9px] text-muted-foreground italic truncate max-w-[200px]">📝 {notesMap[a.id].note}</span>
+                            )}
+                          </div>
+                        </div>
                       )}
 
                       {/* Red Flag Badges */}
