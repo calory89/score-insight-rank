@@ -1317,7 +1317,8 @@ const Analysis = () => {
           </Section>
         )}
 
-        {/* ===== 4. YIELD & CASH FLOW ===== */}
+        {/* ===== 4. YIELD & CASH FLOW (Pro-gated) ===== */}
+        <ProGateOverlay isPro={isPro} label="Unlock Yield & Cash Flow Analysis">
         {(f.cap_rate || f.gross_yield || f.monthly_cash_flow) && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <Section delay={0.28} className="rounded-2xl border border-border bg-card p-6">
