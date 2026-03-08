@@ -46,6 +46,7 @@ const Navbar = () => {
 
           <div className="hidden md:flex items-center gap-8">
             <a href="/#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">How It Works</a>
+            <a href="/game" className="text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={(e) => { e.preventDefault(); navigate("/game"); }}>Game</a>
             <a href="/rankings" className="text-sm text-muted-foreground hover:text-foreground transition-colors" onClick={(e) => { e.preventDefault(); navigate("/rankings"); }}>Rankings</a>
             <a href="/#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
             <a href="/#trust" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Methodology</a>
@@ -108,6 +109,7 @@ const Navbar = () => {
             className="md:hidden border-t border-border bg-background px-4 py-4 space-y-3"
           >
             <a href="/#how-it-works" className="block text-sm text-muted-foreground py-1" onClick={() => setIsOpen(false)}>How It Works</a>
+            <a href="/game" className="block text-sm text-muted-foreground py-1" onClick={(e) => { e.preventDefault(); navigate("/game"); setIsOpen(false); }}>Game</a>
             <a href="/rankings" className="block text-sm text-muted-foreground py-1" onClick={(e) => { e.preventDefault(); navigate("/rankings"); setIsOpen(false); }}>Rankings</a>
             <a href="/#pricing" className="block text-sm text-muted-foreground py-1" onClick={() => setIsOpen(false)}>Pricing</a>
             <a href="/#trust" className="block text-sm text-muted-foreground py-1" onClick={() => setIsOpen(false)}>Methodology</a>
