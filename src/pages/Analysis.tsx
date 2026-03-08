@@ -1377,8 +1377,10 @@ const Analysis = () => {
             )}
           </div>
         )}
+        </ProGateOverlay>
 
-        {/* ===== 6. STRESS TESTS ===== */}
+        {/* ===== 6. STRESS TESTS (Pro-gated) ===== */}
+        <ProGateOverlay isPro={isPro} label="Unlock Stress Test Reports">
         {(f.stress_test_market_drop || f.stress_test_rental_decline) && (
           <Section delay={0.36} className="rounded-2xl border border-score-poor/10 bg-score-poor/5 p-6 mb-8">
             <SectionHeader icon={AlertTriangle} title="Stress Tests" subtitle="Downside scenario modeling" />
