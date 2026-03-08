@@ -98,6 +98,8 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <CommandPalette />
+              <OnboardingWizard />
               <PageTracker>
                 <AnimatedRoutes />
               </PageTracker>
