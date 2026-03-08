@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowLeft, Plus, X, Building2, MapPin, TrendingUp, Shield, Ruler,
   BedDouble, Bath, Calendar, CheckCircle2, XCircle, Target, DollarSign,
-  AlertTriangle, Sparkles, ChevronDown,
+  AlertTriangle, Sparkles, ChevronDown, Trophy, Award, Share2, Download,
 } from "lucide-react";
 import {
   RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
