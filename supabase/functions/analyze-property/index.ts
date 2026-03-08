@@ -474,9 +474,38 @@ serve(async (req) => {
 
     let { url, manual_content, manual_fields } = await req.json();
 
+    // Input validation
+    if (url && typeof url !== "string") {
+      return new Response(JSON.stringify({ error: "URL must be a string" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (url && url.length > 2000) {
+      return new Response(JSON.stringify({ error: "URL too long. Maximum 2000 characters." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (manual_content && typeof manual_content === "string" && manual_content.length > 50000) {
+      return new Response(JSON.stringify({ error: "Content too long. Maximum 50,000 characters." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Auto-prepend https:// if the URL is missing a protocol
     if (url && url !== "manual-entry" && !/^https?:\/\//i.test(url)) {
       url = "https://" + url;
+    }
+
+    // Validate URL format
+    if (url && url !== "manual-entry") {
+      try {
+        const parsed = new URL(url);
+        if (!parsed.hostname.includes(".")) throw new Error();
+      } catch {
+        return new Response(JSON.stringify({ error: "Invalid URL format" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // URL classification - accept all URLs but flag non-listing sites
