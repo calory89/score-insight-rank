@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
+import { GameLeaderboard } from "@/components/GameLeaderboard";
 import { Button } from "@/components/ui/button";
 import { ThumbsUp, ThumbsDown, Share2, RotateCcw, Trophy, MapPin, ArrowLeft, Flame } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
@@ -46,6 +47,17 @@ const Game = () => {
   const rotate = useTransform(x, [-200, 200], [-15, 15]);
   const goodOpacity = useTransform(x, [0, 100], [0, 1]);
   const badOpacity = useTransform(x, [-100, 0], [1, 0]);
+
+  // Keyboard shortcuts for arrow keys
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (phase !== "playing") return;
+      if (e.key === "ArrowRight") handleSwipe("right");
+      else if (e.key === "ArrowLeft") handleSwipe("left");
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [phase, handleSwipe]);
 
   useEffect(() => {
     loadProperties();
