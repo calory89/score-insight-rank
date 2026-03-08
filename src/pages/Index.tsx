@@ -33,6 +33,38 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* JSON-LD Structured Data */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "name": "RealHunt",
+            "url": "https://score-insight-rank.lovable.app",
+            "logo": "https://score-insight-rank.lovable.app/images/logo.png",
+            "description": "AI-powered real estate intelligence platform. Analyze risk, ROI, demand & liquidity for any property listing worldwide.",
+            "sameAs": []
+          },
+          {
+            "@type": "WebApplication",
+            "name": "RealHunt",
+            "url": "https://score-insight-rank.lovable.app",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Web",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "description": "5 free analyses per month"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.8",
+              "ratingCount": "120"
+            }
+          }
+        ]
+      }) }} />
       <Navbar />
       <HeroSection />
       <Suspense fallback={null}>

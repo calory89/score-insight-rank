@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import AdminVisitsPanel from "@/components/AdminVisitsPanel";
 import AdminVisitorLog from "@/components/AdminVisitorLog";
 import { useNavigate } from "react-router-dom";
@@ -20,6 +20,7 @@ import {
   Calendar, MapPin, TrendingUp, Shield, ArrowLeft, Activity,
   Mail, Clock, Hash, Eye, Zap, Loader2, CheckCircle2, XCircle,
   TicketCheck, Send, AlertCircle, MessageSquare, Download, Newspaper,
+  Building2, Phone, FileText,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
@@ -501,6 +502,173 @@ const ErrorLogsPanel = () => {
   );
 }
 
+const ContactRequestsPanel = () => {
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const { data } = await supabase.from("contact_requests").select("*").order("created_at", { ascending: false });
+      setContacts((data as any[]) || []);
+      setLoading(false);
+    };
+    fetch();
+  }, []);
+
+  const exportCsv = () => {
+    const csv = "email,company,phone,message,source,estimated_searches,created_at\n" +
+      contacts.map(c => `"${c.email}","${c.company || ""}","${c.phone || ""}","${(c.message || "").replace(/"/g, '""')}","${c.source}","${c.estimated_searches || ""}","${c.created_at}"`).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `contact-requests-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-6 mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Phone className="h-5 w-5 text-primary" />
+          <h2 className="text-base font-semibold text-foreground">Contact Requests</h2>
+          <span className="text-[10px] text-muted-foreground ml-2">{contacts.length} total</span>
+        </div>
+        {contacts.length > 0 && (
+          <button onClick={exportCsv} className="flex items-center gap-1 text-xs text-primary hover:underline">
+            <Download className="h-3.5 w-3.5" /> Export CSV
+          </button>
+        )}
+      </div>
+      {loading ? (
+        <div className="flex justify-center py-6"><div className="h-5 w-5 rounded-full border-2 border-t-primary border-border animate-spin" /></div>
+      ) : contacts.length === 0 ? (
+        <p className="text-xs text-muted-foreground text-center py-6">No contact requests yet.</p>
+      ) : (
+        <div className="space-y-2 max-h-[400px] overflow-y-auto">
+          {contacts.map((c) => (
+            <div key={c.id} className="rounded-lg border border-border px-4 py-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-foreground">{c.email}</span>
+                  {c.company && <span className="text-[10px] text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{c.company}</span>}
+                </div>
+                <span className="text-[10px] text-muted-foreground">{new Date(c.created_at).toLocaleDateString()}</span>
+              </div>
+              <div className="flex items-center gap-3 text-[10px] text-muted-foreground mb-1">
+                <span className="uppercase tracking-wider font-medium text-primary/70">{c.source}</span>
+                {c.phone && <span>📞 {c.phone}</span>}
+                {c.estimated_searches && <span>~{c.estimated_searches} searches</span>}
+              </div>
+              {c.message && <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{c.message}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const AnalysesIntelligencePanel = ({ users }: { users: UserData[] }) => {
+  const navigate = useNavigate();
+  const allAnalyses = useMemo(() => {
+    return users.flatMap(u => (u.analyses || []).map((a: any) => ({ ...a, user_email: u.email })));
+  }, [users]);
+
+  const [countryFilter, setCountryFilter] = useState("");
+  const [cityFilter, setCityFilter] = useState("");
+
+  const countries = useMemo(() => [...new Set(allAnalyses.map(a => a.country).filter(Boolean))].sort(), [allAnalyses]);
+  const cities = useMemo(() => {
+    const filtered = countryFilter ? allAnalyses.filter(a => a.country === countryFilter) : allAnalyses;
+    return [...new Set(filtered.map(a => a.city).filter(Boolean))].sort();
+  }, [allAnalyses, countryFilter]);
+
+  const filtered = useMemo(() => {
+    let result = allAnalyses;
+    if (countryFilter) result = result.filter(a => a.country === countryFilter);
+    if (cityFilter) result = result.filter(a => a.city === cityFilter);
+    return result.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  }, [allAnalyses, countryFilter, cityFilter]);
+
+  const exportCsv = () => {
+    const csv = "address,city,country,score,price,user_email,created_at\n" +
+      filtered.map((a: any) => `"${a.address || ""}","${a.city || ""}","${a.country || ""}",${a.global_score || ""},"${a.price || ""}","${a.user_email}","${a.created_at}"`).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const el = document.createElement("a"); el.href = url; el.download = `analyses-${new Date().toISOString().slice(0, 10)}.csv`; el.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="rounded-2xl border border-border bg-card p-6 mb-8">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <FileText className="h-5 w-5 text-primary" />
+          <h2 className="text-base font-semibold text-foreground">All Analyses</h2>
+          <span className="text-[10px] text-muted-foreground ml-2">{filtered.length} of {allAnalyses.length}</span>
+        </div>
+        <button onClick={exportCsv} className="flex items-center gap-1 text-xs text-primary hover:underline">
+          <Download className="h-3.5 w-3.5" /> Export CSV
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <select value={countryFilter} onChange={e => { setCountryFilter(e.target.value); setCityFilter(""); }}
+          className="text-xs rounded-lg border border-border bg-secondary/50 px-2.5 py-1.5 text-foreground">
+          <option value="">All Countries</option>
+          {countries.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <select value={cityFilter} onChange={e => setCityFilter(e.target.value)}
+          className="text-xs rounded-lg border border-border bg-secondary/50 px-2.5 py-1.5 text-foreground">
+          <option value="">All Cities</option>
+          {cities.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        {(countryFilter || cityFilter) && (
+          <button onClick={() => { setCountryFilter(""); setCityFilter(""); }}
+            className="text-[10px] text-primary hover:underline">Clear filters</button>
+        )}
+      </div>
+
+      {/* Table */}
+      {filtered.length === 0 ? (
+        <p className="text-xs text-muted-foreground text-center py-8">No analyses found.</p>
+      ) : (
+        <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+          <table className="w-full text-xs">
+            <thead className="sticky top-0 bg-card">
+              <tr className="border-b border-border text-[10px] text-muted-foreground uppercase tracking-wider">
+                <th className="text-left py-2 px-2">Address</th>
+                <th className="text-left py-2 px-2">City</th>
+                <th className="text-left py-2 px-2">Country</th>
+                <th className="text-center py-2 px-2">Score</th>
+                <th className="text-right py-2 px-2">Price</th>
+                <th className="text-left py-2 px-2">User</th>
+                <th className="text-right py-2 px-2">Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.slice(0, 200).map((a: any) => (
+                <tr key={a.id} onClick={() => navigate(`/analysis/${a.id}`)}
+                  className="border-b border-border/50 hover:bg-secondary/20 cursor-pointer transition-colors">
+                  <td className="py-2 px-2 font-medium text-foreground max-w-[180px] truncate">{a.address || "—"}</td>
+                  <td className="py-2 px-2 text-muted-foreground">{a.city || "—"}</td>
+                  <td className="py-2 px-2 text-muted-foreground">{a.country || "—"}</td>
+                  <td className="py-2 px-2 text-center"><span className={`font-mono font-bold ${scoreColor(a.global_score)}`}>{a.global_score || "—"}</span></td>
+                  <td className="py-2 px-2 text-right font-mono text-foreground">{a.price || "—"}</td>
+                  <td className="py-2 px-2 text-muted-foreground max-w-[140px] truncate">{a.user_email}</td>
+                  <td className="py-2 px-2 text-right text-muted-foreground">{new Date(a.created_at).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {filtered.length > 200 && <p className="text-[10px] text-muted-foreground text-center py-2">Showing first 200 of {filtered.length}</p>}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const NewsletterPanel = () => {
   const [subscribers, setSubscribers] = useState<{ id: string; email: string; created_at: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -599,10 +767,10 @@ const Admin = () => {
   if (authLoading || !user) return null;
   if (user.email !== ADMIN_EMAIL) return null;
 
-  const filteredUsers = users.filter(u =>
+  const filteredUsers = useMemo(() => users.filter(u =>
     u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     u.detected_country?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ), [users, searchQuery]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -673,6 +841,8 @@ const Admin = () => {
                 <TabsTrigger value="users" className="text-xs gap-1.5"><Users className="h-3.5 w-3.5" /> Users</TabsTrigger>
                 <TabsTrigger value="tickets" className="text-xs gap-1.5"><TicketCheck className="h-3.5 w-3.5" /> Tickets</TabsTrigger>
                 <TabsTrigger value="errors" className="text-xs gap-1.5"><AlertCircle className="h-3.5 w-3.5" /> Errors</TabsTrigger>
+                <TabsTrigger value="contacts" className="text-xs gap-1.5"><Phone className="h-3.5 w-3.5" /> Contacts</TabsTrigger>
+                <TabsTrigger value="analyses" className="text-xs gap-1.5"><FileText className="h-3.5 w-3.5" /> Analyses</TabsTrigger>
                 <TabsTrigger value="newsletter" className="text-xs gap-1.5"><Newspaper className="h-3.5 w-3.5" /> Newsletter</TabsTrigger>
                 <TabsTrigger value="visits" className="text-xs gap-1.5"><Eye className="h-3.5 w-3.5" /> Visits</TabsTrigger>
                 <TabsTrigger value="batch" className="text-xs gap-1.5"><Zap className="h-3.5 w-3.5" /> Batch</TabsTrigger>
@@ -825,6 +995,14 @@ const Admin = () => {
 
               <TabsContent value="errors">
                 <ErrorLogsPanel />
+              </TabsContent>
+
+              <TabsContent value="contacts">
+                <ContactRequestsPanel />
+              </TabsContent>
+
+              <TabsContent value="analyses">
+                <AnalysesIntelligencePanel users={users} />
               </TabsContent>
 
               <TabsContent value="newsletter">

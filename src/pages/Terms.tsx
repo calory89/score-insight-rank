@@ -1,6 +1,12 @@
+import useDocumentMeta from "@/hooks/useDocumentMeta";
 import Navbar from "@/components/Navbar";
 
-const Terms = () => (
+const Terms = () => {
+  useDocumentMeta({
+    title: "Terms of Service | RealHunt",
+    description: "Read the RealHunt terms of service. Understand our policies on subscriptions, acceptable use, and liability.",
+  });
+  return (
   <div className="min-h-screen bg-background">
     <Navbar />
     <div className="container mx-auto px-4 py-20 max-w-3xl">
@@ -28,6 +34,7 @@ const Terms = () => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export default Terms;
