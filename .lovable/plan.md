@@ -1,72 +1,50 @@
 
 
-# Fix: Navegacion rota en la pagina de analisis
+## Safe Upgrade Pass 4: Shared Utilities, Admin Polish & Confirm Dialog
 
-## Problemas identificados
+After auditing the codebase post-previous upgrades, here are the remaining high-impact, non-breaking improvements:
 
-### 1. Boton "Back" no funciona desde la pagina del reporte
-El boton usa `window.history.back()` que puede llevar al usuario de vuelta a `/analysis/loading`, re-activando el loader en un bucle. Necesita detectar si la pagina anterior es una ruta de carga y saltar al dashboard en su lugar.
+---
 
-### 2. Click en reportes del feed no muestra nada visible
-Al clickar un reporte en "Top rated properties", se ejecuta `setPreviewId(report.id)` que renderiza un preview inline al final de la pagina, fuera de la vista del usuario. El usuario no ve nada porque no se hace scroll automatico hacia el preview.
+### 1. Extract duplicated `scoreColor` utility (7 copies)
 
-**Solucion**: Hacer scroll automatico hacia el preview cuando se selecciona un reporte y tambien ofrecer un boton para abrir el reporte completo.
+The exact same `scoreColor` function is copy-pasted in 7 files: `Dashboard.tsx`, `Admin.tsx`, `Analysis.tsx`, `Compare.tsx`, `Discover.tsx`, `ExampleReportsCarousel.tsx`, `GlobalRanking.tsx`. Same for `verdictColor` (2+ copies).
 
-### 3. "See above" / "Click to view" lleva a pagina en blanco
-Cuando el usuario clicka el banner "Your report is ready! Click to view", el codigo hace:
-- `setAnalyzing(false)` y `setReadyReportId(null)` -- limpia el estado del FomoLoader
-- `navigate(/analysis/ID, { replace: true })` -- cambia la URL
+**Fix:** Create `src/lib/score-utils.ts` exporting `scoreColor`, `scoreBg`, `verdictColor`, `riskLabel`. Replace all inline copies with imports.
 
-Pero el componente se re-renderiza y como `data` es null (no se ha cargado aun), cae en `if (!data) return null` (linea 824) y muestra una pagina en blanco hasta que el `useEffect` de fetch se ejecuta. El problema es una condicion de carrera entre la navegacion y la carga de datos.
+### 2. Replace native `confirm()` in Admin.tsx with proper dialog
 
-**Solucion**: Usar `window.location.href` para forzar un reload completo de la pagina, o mejor, no limpiar el estado hasta que los datos esten cargados.
+Line 359 uses `confirm("Delete all visible error logs?")` -- blocking and un-premium. Replace with a controlled `AlertDialog` from the existing `@radix-ui/react-alert-dialog` component.
 
-## Cambios tecnicos
+### 3. Dashboard fetches ALL analyses (no user_id filter, relies on RLS)
 
-### Archivo: `src/pages/Analysis.tsx`
+Line 393: `supabase.from("analyses").select("*").order(...)` -- works because of RLS, but sends all columns including large JSONB fields (`alternatives`, `price_history`, `yield_trend`, `pros`, `cons`, `red_flags`, etc.) that are never displayed on the dashboard cards. This wastes bandwidth.
 
-**Cambio 1 - Back button inteligente (linea 849-857)**
+**Fix:** Select only the columns needed for dashboard cards: `id, url, address, city, country, price, global_score, verdict, risk_level, projected_roi_low, projected_roi_high, market_classification, property_type, image_url, ai_summary, confidence_level, data_source, created_at`.
 
-Reemplazar la logica de `window.history.back()` para detectar si la pagina anterior es una ruta de carga:
+### 4. Admin users table not responsive on mobile
 
-```typescript
-onClick={() => {
-  if (fromBulk) {
-    navigate("/dashboard?bulk=true&restore=true");
-  } else {
-    // Always go to dashboard — history.back() often goes to the loading page
-    navigate("/dashboard");
-  }
-}}
-```
+The 6-column grid (line 681) breaks on small screens. Admin is admin-only so lower priority, but it should at least not break.
 
-**Cambio 2 - Scroll automatico al preview (linea 416-434)**
+**Fix:** Add responsive breakpoints: hide non-essential columns on mobile, stack user info.
 
-Agregar un `ref` al contenedor del preview y hacer `scrollIntoView` cuando se selecciona un reporte:
+### 5. PricingSection doesn't use SubscriptionContext
 
-```typescript
-const previewRef = useRef<HTMLDivElement>(null);
+`PricingSection.tsx` doesn't fetch subscription data at all -- it shows all plans without highlighting the current one. This is a missed conversion opportunity.
 
-// On setPreviewId, scroll to preview
-useEffect(() => {
-  if (previewId && previewRef.current) {
-    previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-}, [previewId]);
-```
+**Fix:** Import `useSubscription()` and add a "Current Plan" badge on the user's active plan.
 
-Ademas, agregar un boton "View full report" dentro del InlineReportPreview que navega al reporte completo con `window.location.href`.
+---
 
-**Cambio 3 - Fix pagina en blanco en "Click to view" (linea 777-782)**
+### Implementation Plan
 
-Cambiar `navigate()` por `window.location.href` para forzar una carga completa de la pagina, evitando la condicion de carrera:
+| Priority | File | Change |
+|----------|------|--------|
+| **High** | New: `src/lib/score-utils.ts` | Extract `scoreColor`, `verdictColor`, `riskLabel`, `scoreBg` |
+| **High** | 7 files | Replace inline `scoreColor` etc. with imports from `score-utils` |
+| **High** | `src/pages/Dashboard.tsx` | Select only needed columns instead of `*` |
+| **Med** | `src/pages/Admin.tsx` | Replace `confirm()` with `AlertDialog`; make users table responsive |
+| **Med** | `src/components/PricingSection.tsx` | Add "Current Plan" badge using `useSubscription()` |
 
-```typescript
-onViewReady={() => {
-  if (readyReportId) {
-    window.location.href = `/analysis/${readyReportId}`;
-  }
-}}
-```
+**1 new file, ~9 files modified. No database migrations. No breaking changes.**
 
-Esto garantiza que la pagina se recarga completamente con el ID correcto en la URL, activando el fetch de datos desde cero.
