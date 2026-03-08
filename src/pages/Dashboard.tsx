@@ -81,7 +81,7 @@ const Dashboard = () => {
     if (!user) return;
     // Load analyses and favorites in parallel (subscription comes from context)
     Promise.all([
-      supabase.from("analyses").select("id, url, address, city, country, price, global_score, verdict, risk_level, projected_roi_low, projected_roi_high, market_classification, property_type, image_url, ai_summary, confidence_level, data_source, created_at, currency, slug").order("created_at", { ascending: false }),
+      supabase.from("analyses").select("id, url, address, city, country, price, global_score, verdict, risk_level, projected_roi_low, projected_roi_high, market_classification, property_type, image_url, ai_summary, confidence_level, data_source, created_at, currency, slug, red_flags, roi_potential, score_explanations").order("created_at", { ascending: false }),
       supabase.from("favorites").select("analysis_id").eq("user_id", user.id),
     ]).then(([{ data: analysesData }, { data: favData }]) => {
       setAnalyses(analysesData || []);

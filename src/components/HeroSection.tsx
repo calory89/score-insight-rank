@@ -92,16 +92,8 @@ const HeroSection = () => {
             We analyze risk, ROI, demand, liquidity, and market strength — so you don't buy blind.
           </p>
 
-          {totalAnalyses !== null && totalAnalyses > 0 && (
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.35, duration: 0.5 }}
-              className="text-sm font-medium text-muted-foreground mb-10"
-            >
-              <span className="text-foreground font-semibold">{totalAnalyses.toLocaleString()}+</span> properties analyzed worldwide
-            </motion.p>
-          )}
+          {/* Counter shown below trust badges instead */}
+          <div className="mb-10" />
 
           {/* URL Input */}
           <motion.div
