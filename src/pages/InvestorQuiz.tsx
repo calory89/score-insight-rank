@@ -105,7 +105,7 @@ const InvestorQuiz = () => {
     try {
       const { data, error: fnError } = await supabase.functions.invoke("investment-quiz", {
         body: { answers },
-      });
+      }) as { data: any; error: any };
       if (fnError) throw fnError;
       if (data?.error) throw new Error(data.error);
       setResult(data);
