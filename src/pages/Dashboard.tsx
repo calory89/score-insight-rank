@@ -13,6 +13,7 @@ import {
   Search, ArrowRight, Calendar, Building2, TrendingUp, Globe,
   BarChart3, Heart, GitCompare, Star, Layers,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
 import PropertyOfTheDay from "@/components/PropertyOfTheDay";
 import SavingsCalculator from "@/components/SavingsCalculator";
