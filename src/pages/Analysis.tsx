@@ -33,6 +33,7 @@ import confetti from "canvas-confetti";
 import { scoreColor, scoreBg, verdictColor, classificationColor, confidenceColor } from "@/lib/score-utils";
 import AnimatedScoreRing from "@/components/AnimatedScoreRing";
 import AIChatBubble from "@/components/AIChatBubble";
+import SharePanel from "@/components/SharePanel";
 const sqmToAcres = (sqm: number) => (sqm * 0.000247105).toFixed(3);
 const sqmToSqft = (sqm: number) => Math.round(sqm * 10.7639);
 
