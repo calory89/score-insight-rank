@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import confetti from "canvas-confetti";
+import PropertyOfTheDay from "@/components/PropertyOfTheDay";
 
 import { scoreColor, verdictColorSimple as verdictColor, riskLabel } from "@/lib/score-utils";
 
@@ -446,6 +447,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background pb-16 sm:pb-0">
       <Navbar />
       <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl">
+        <PropertyOfTheDay />
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground mb-1">Dashboard</h1>
           <p className="text-sm text-muted-foreground">Your property intelligence hub.</p>
