@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
+import LoginGateModal from "@/components/LoginGateModal";
 import StripeCheckoutOverlay from "@/components/StripeCheckoutOverlay";
 import { supabase } from "@/integrations/supabase/client";
 
