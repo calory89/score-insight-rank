@@ -5,9 +5,10 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Search, Star, MapPin, ArrowRight } from "lucide-react";
+import { Search, Star, MapPin, ArrowRight, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { scoreColor } from "@/lib/score-utils";
 
 const AMENITIES = [
   { id: "beach", label: "Beach Access", icon: "🏖️" },
@@ -156,7 +157,7 @@ const PropertyFinder = () => {
             {/* Amenities */}
             <div>
               <label className="text-sm font-medium text-foreground mb-3 block">Amenities</label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                 {AMENITIES.map((amenity) => (
                   <label
                     key={amenity.id}
@@ -178,14 +179,21 @@ const PropertyFinder = () => {
               </div>
             </div>
 
-            <Button variant="hero" size="lg" className="w-full" onClick={handleSearch} disabled={loading}>
-              {loading ? (
-                <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2" />
-              ) : (
-                <Search className="h-4 w-4 mr-2" />
+            <div className="flex items-center gap-2">
+              {selectedAmenities.length > 0 && (
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={() => setSelectedAmenities([])}>
+                  <X className="h-3 w-3 mr-1" /> Clear filters
+                </Button>
               )}
-              Search Properties
-            </Button>
+              <Button variant="hero" size="lg" className="flex-1" onClick={handleSearch} disabled={loading}>
+                {loading ? (
+                  <div className="h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin mr-2" />
+                ) : (
+                  <Search className="h-4 w-4 mr-2" />
+                )}
+                Search Properties
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -197,9 +205,9 @@ const PropertyFinder = () => {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-4"
             >
-              <p className="text-xs text-muted-foreground">
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-muted-foreground">
                 {ecoMatchesFilters ? 1 + results.length : results.length} properties found
-              </p>
+              </motion.p>
 
               {/* Eco Beach City — always first */}
               {ecoMatchesFilters && (
@@ -286,7 +294,7 @@ const PropertyFinder = () => {
                           </div>
                           {item.global_score && (
                             <div className="text-right">
-                              <div className="text-xl font-bold text-primary">{item.global_score}</div>
+                              <div className={`text-xl font-bold ${scoreColor(item.global_score)}`}>{item.global_score}</div>
                               <div className="text-[10px] text-muted-foreground">Score</div>
                             </div>
                           )}
@@ -304,9 +312,14 @@ const PropertyFinder = () => {
               ))}
 
               {results.length === 0 && !ecoMatchesFilters && (
-                <div className="text-center py-12 text-muted-foreground">
-                  <p className="text-sm">No properties match your filters. Try adjusting your budget or amenities.</p>
-                </div>
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center py-16 rounded-2xl border border-dashed border-border bg-secondary/20">
+                  <Search className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
+                  <p className="text-sm font-medium text-foreground mb-1">No properties match your filters</p>
+                  <p className="text-xs text-muted-foreground mb-4">Try increasing your budget or removing some amenity filters.</p>
+                  <Button variant="ghost" size="sm" onClick={() => { setSelectedAmenities([]); setMaxPrice([2_000_000]); }}>
+                    Reset Filters
+                  </Button>
+                </motion.div>
               )}
             </motion.div>
           )}
