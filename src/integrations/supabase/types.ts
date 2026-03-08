@@ -155,6 +155,39 @@ export type Database = {
         }
         Relationships: []
       }
+      contact_requests: {
+        Row: {
+          company: string | null
+          created_at: string
+          email: string
+          estimated_searches: string | null
+          id: string
+          message: string | null
+          phone: string | null
+          source: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          email: string
+          estimated_searches?: string | null
+          id?: string
+          message?: string | null
+          phone?: string | null
+          source?: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          email?: string
+          estimated_searches?: string | null
+          id?: string
+          message?: string | null
+          phone?: string | null
+          source?: string
+        }
+        Relationships: []
+      }
       error_logs: {
         Row: {
           created_at: string
