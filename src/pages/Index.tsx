@@ -16,6 +16,7 @@ const AlternativesSection = lazy(() => import("@/components/AlternativesSection"
 const PricingSection = lazy(() => import("@/components/PricingSection"));
 const DiscoverPromo = lazy(() => import("@/components/DiscoverPromo"));
 const MethodologyPreview = lazy(() => import("@/components/MethodologyPreview"));
+const PropertyFinder = lazy(() => import("@/components/PropertyFinder"));
 const FAQ = lazy(() => import("@/components/FAQ"));
 const FinalCTA = lazy(() => import("@/components/FinalCTA"));
 const Footer = lazy(() => import("@/components/Footer"));
@@ -85,6 +86,7 @@ const Index = () => {
         <Testimonials />
         <ValueProposition />
         <AlternativesSection />
+        <PropertyFinder />
         <PricingSection />
         <DiscoverPromo />
         <MethodologyPreview />
