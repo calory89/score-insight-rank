@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 
@@ -23,6 +24,11 @@ const StickyMobileCTA = lazy(() => import("@/components/StickyMobileCTA"));
 const LiveActivityToast = lazy(() => import("@/components/LiveActivityToast"));
 
 const Index = () => {
+  useDocumentMeta({
+    title: "RealHunt — Paste Any Listing. Know If It's a Good Deal — Instantly.",
+    description: "AI-powered real estate intelligence. Analyze risk, ROI, demand & liquidity for any property listing worldwide. 5 free analyses, no credit card required.",
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

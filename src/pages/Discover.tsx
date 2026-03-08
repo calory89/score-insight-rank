@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Compass, TrendingUp, Shield, Bookmark, ArrowRight, MapPin } from "lucide-react";
@@ -48,6 +49,7 @@ type DiscoveryCard = {
 };
 
 const Discover = () => {
+  useDocumentMeta({ title: "Discover Properties | RealHunt", description: "Explore curated property discoveries shared by the RealHunt community." });
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

@@ -12,3 +12,5 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://score-insight-rank.lovable.app/sitemap.xml
