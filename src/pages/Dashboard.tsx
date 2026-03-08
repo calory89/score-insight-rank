@@ -330,7 +330,7 @@ const Dashboard = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04 }}
                   onClick={() => navigate(`/analysis/${a.id}`)}
-                  className={`rounded-xl border bg-card overflow-hidden hover:border-primary/20 transition-all cursor-pointer group ${
+                  className={`rounded-xl border bg-card overflow-hidden hover:border-primary/20 transition-all duration-300 cursor-pointer group card-hover ${
                     isCompare ? "border-primary/30 ring-1 ring-primary/20" : "border-border"
                   }`}
                 >

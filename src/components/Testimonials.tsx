@@ -44,24 +44,24 @@ const Testimonials = () => (
         {testimonials.map((t, i) => (
           <motion.div
             key={i}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.1 }}
-            className="rounded-2xl border border-border bg-card p-6 flex flex-col hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300"
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ delay: i * 0.12, duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+            className="rounded-2xl border border-border bg-card p-6 flex flex-col card-hover group"
           >
             {/* Star rating */}
             <div className="flex items-center gap-0.5 mb-3">
               {[...Array(t.stars)].map((_, j) => (
-                <Star key={j} className="h-3.5 w-3.5 fill-primary text-primary" />
+                <Star key={j} className="h-3.5 w-3.5 fill-primary text-primary transition-transform group-hover:scale-110" style={{ transitionDelay: `${j * 30}ms` }} />
               ))}
             </div>
-            <Quote className="h-5 w-5 text-primary/30 mb-3" />
+            <Quote className="h-5 w-5 text-primary/20 mb-3 transition-colors group-hover:text-primary/40" />
             <p className="text-sm text-muted-foreground leading-relaxed flex-1 mb-5">
               "{t.quote}"
             </p>
             <div className="flex items-center gap-3 pt-4 border-t border-border">
-              <div className="h-9 w-9 rounded-full bg-gradient-cta flex items-center justify-center text-sm font-bold text-primary-foreground">
+              <div className="h-9 w-9 rounded-full bg-gradient-cta flex items-center justify-center text-sm font-bold text-primary-foreground shadow-sm">
                 {t.name.charAt(0)}
               </div>
               <div>

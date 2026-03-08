@@ -176,6 +176,56 @@
       linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px);
     background-size: 60px 60px;
   }
+
+  /* Premium shimmer effect for CTAs and loading */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      110deg,
+      transparent 25%,
+      hsl(0 0% 100% / 0.1) 50%,
+      transparent 75%
+    );
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  /* Glass morphism utility */
+  .glass {
+    background: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(20px) saturate(1.8);
+    -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  }
+
+  /* Premium card hover lift */
+  .card-hover {
+    @apply transition-all duration-300;
+  }
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px hsl(0 0% 0% / 0.08);
+  }
+  .dark .card-hover:hover {
+    box-shadow: 0 8px 30px hsl(0 0% 0% / 0.3);
+  }
+
+  /* Smooth focus ring */
+  .focus-ring {
+    @apply outline-none ring-0 transition-shadow duration-200;
+  }
+  .focus-ring:focus-visible {
+    @apply ring-2 ring-primary/40 ring-offset-2 ring-offset-background;
+  }
+
+  /* Safe area for iOS bottom nav */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
 
 /* Print-ready styles */

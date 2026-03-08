@@ -126,8 +126,8 @@ const HeroSection = () => {
                   />
                   <kbd className="hidden md:inline-flex items-center gap-0.5 rounded-md border border-border bg-secondary px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground mr-2">⌘K</kbd>
                 </div>
-                <Button variant="hero" size="lg" className="rounded-lg h-12 sm:h-14 px-4 sm:px-6 text-sm sm:text-base flex-shrink-0" onClick={handleAnalyze}>
-                  Analyze Property — Free <ArrowRight className="ml-1 h-4 w-4 hidden sm:inline" />
+                <Button variant="hero" size="lg" className="rounded-lg h-12 sm:h-14 px-4 sm:px-6 text-sm sm:text-base flex-shrink-0 group" onClick={handleAnalyze}>
+                  Analyze Property — Free <ArrowRight className="ml-1 h-4 w-4 hidden sm:inline transition-transform group-hover:translate-x-0.5" />
                 </Button>
               </div>
             </div>

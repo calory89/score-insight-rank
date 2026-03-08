@@ -32,8 +32,13 @@ const AnimatedScoreRing = ({ score, size = 160 }: AnimatedScoreRingProps) => {
 
   return (
     <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
-      <svg className="-rotate-90" viewBox="0 0 100 100" style={{ width: size, height: size }}>
-        <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--border))" strokeWidth="5" />
+      {/* Subtle glow behind the ring */}
+      <div
+        className="absolute inset-2 rounded-full blur-xl opacity-20 transition-all duration-1000"
+        style={{ backgroundColor: getStrokeColor(displayScore) }}
+      />
+      <svg className="-rotate-90 relative" viewBox="0 0 100 100" style={{ width: size, height: size }}>
+        <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--border))" strokeWidth="4.5" opacity="0.5" />
         <motion.circle
           cx="50" cy="50" r="42"
           fill="none"
@@ -42,11 +47,11 @@ const AnimatedScoreRing = ({ score, size = 160 }: AnimatedScoreRingProps) => {
           strokeLinecap="round"
           strokeDasharray={circumference}
           strokeDashoffset={circumference - (circumference * displayScore) / 100}
-          style={{ transition: "stroke 0.3s ease" }}
+          style={{ transition: "stroke 0.5s ease" }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className={`font-bold font-mono leading-none ${scoreColor(score)} ${size >= 140 ? "text-5xl" : "text-3xl"}`}>
+        <span className={`font-bold font-mono leading-none tabular-nums ${scoreColor(score)} ${size >= 140 ? "text-5xl" : "text-3xl"}`}>
           {displayScore}
         </span>
         <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest mt-1">Global Score</span>
