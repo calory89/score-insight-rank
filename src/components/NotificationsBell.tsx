@@ -1,38 +1,79 @@
 import { useState, useEffect, useRef } from "react";
 import { Bell } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Notification {
   id: string;
   title: string;
-  body: string;
-  timestamp: number;
+  body: string | null;
+  type: string;
   read: boolean;
+  created_at: string;
+  metadata: any;
 }
 
-const STORAGE_KEY = "rh_notifications";
-
 export function useNotifications() {
-  const [notifications, setNotifications] = useState<Notification[]>(() => {
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    const load = async () => {
+      const { data } = await supabase
+        .from("notifications" as any)
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      setNotifications((data as any[] || []) as Notification[]);
+    };
+    load();
+
+    // Also check localStorage for legacy notifications
     try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    } catch { return []; }
-  });
+      const legacy = JSON.parse(localStorage.getItem("rh_notifications") || "[]");
+      if (legacy.length > 0) {
+        // Migrate legacy to DB
+        const toInsert = legacy.map((n: any) => ({
+          user_id: user.id,
+          type: "system",
+          title: n.title,
+          body: n.body,
+          read: n.read,
+        }));
+        supabase.from("notifications" as any).insert(toInsert as any).then(() => {
+          localStorage.removeItem("rh_notifications");
+          load();
+        });
+      }
+    } catch {}
+  }, [user]);
 
-  const save = (items: Notification[]) => {
-    setNotifications(items);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  const push = async (title: string, body: string) => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("notifications" as any)
+      .insert({ user_id: user.id, type: "system", title, body } as any)
+      .select()
+      .single();
+    if (data) setNotifications(prev => [data as any as Notification, ...prev].slice(0, 20));
   };
 
-  const push = (title: string, body: string) => {
-    const n: Notification = { id: crypto.randomUUID(), title, body, timestamp: Date.now(), read: false };
-    save([n, ...notifications].slice(0, 20));
+  const markAllRead = async () => {
+    if (!user) return;
+    await supabase.from("notifications" as any).update({ read: true } as any).eq("user_id", user.id).eq("read", false);
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
-  const markAllRead = () => save(notifications.map(n => ({ ...n, read: true })));
-  const clear = () => save([]);
+  const clear = async () => {
+    if (!user) return;
+    await supabase.from("notifications" as any).delete().eq("user_id", user.id);
+    setNotifications([]);
+  };
+
   const unreadCount = notifications.filter(n => !n.read).length;
-
   return { notifications, push, markAllRead, clear, unreadCount };
 }
 
@@ -54,8 +95,8 @@ export default function NotificationsBell() {
     if (!open && unreadCount > 0) markAllRead();
   };
 
-  const timeAgo = (ts: number) => {
-    const mins = Math.floor((Date.now() - ts) / 60000);
+  const timeAgo = (ts: string) => {
+    const mins = Math.floor((Date.now() - new Date(ts).getTime()) / 60000);
     if (mins < 1) return "just now";
     if (mins < 60) return `${mins}m ago`;
     const hrs = Math.floor(mins / 60);
@@ -97,8 +138,8 @@ export default function NotificationsBell() {
                 notifications.map(n => (
                   <div key={n.id} className={`px-4 py-3 border-b border-border/50 last:border-b-0 ${!n.read ? "bg-primary/5" : ""}`}>
                     <p className="text-xs font-medium text-foreground">{n.title}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">{n.body}</p>
-                    <p className="text-[9px] text-muted-foreground/60 mt-1">{timeAgo(n.timestamp)}</p>
+                    {n.body && <p className="text-[10px] text-muted-foreground mt-0.5">{n.body}</p>}
+                    <p className="text-[9px] text-muted-foreground/60 mt-1">{timeAgo(n.created_at)}</p>
                   </div>
                 ))
               )}
