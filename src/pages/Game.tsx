@@ -48,16 +48,9 @@ const Game = () => {
   const goodOpacity = useTransform(x, [0, 100], [0, 1]);
   const badOpacity = useTransform(x, [-100, 0], [1, 0]);
 
-  // Keyboard shortcuts for arrow keys
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (phase !== "playing") return;
-      if (e.key === "ArrowRight") handleSwipe("right");
-      else if (e.key === "ArrowLeft") handleSwipe("left");
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [phase, handleSwipe]);
+    loadProperties();
+  }, []);
 
   useEffect(() => {
     loadProperties();
