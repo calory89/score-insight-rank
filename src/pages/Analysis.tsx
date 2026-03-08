@@ -32,6 +32,7 @@ import confetti from "canvas-confetti";
 
 import { scoreColor, scoreBg, verdictColor, classificationColor, confidenceColor } from "@/lib/score-utils";
 import AnimatedScoreRing from "@/components/AnimatedScoreRing";
+import AIChatBubble from "@/components/AIChatBubble";
 const sqmToAcres = (sqm: number) => (sqm * 0.000247105).toFixed(3);
 const sqmToSqft = (sqm: number) => Math.round(sqm * 10.7639);
 
@@ -1869,11 +1870,36 @@ const Analysis = () => {
             if (url && !url.startsWith("http")) url = "https://" + url;
             window.open(url, "_blank");
           }}
-          className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 bg-gradient-cta text-primary-foreground px-5 py-3 rounded-full shadow-xl hover:shadow-2xl hover:brightness-110 transition-all flex items-center gap-2 text-sm font-semibold"
+          className="fixed bottom-20 sm:bottom-6 left-4 sm:left-6 z-40 bg-gradient-cta text-primary-foreground px-5 py-3 rounded-full shadow-xl hover:shadow-2xl hover:brightness-110 transition-all flex items-center gap-2 text-sm font-semibold"
         >
           <Eye className="h-4 w-4" /> Visit Property
         </motion.button>
       )}
+
+      {/* AI Chat Assistant */}
+      <AIChatBubble context={{
+        address: d.address,
+        city: d.city,
+        country: d.country,
+        price: d.price,
+        currency: d.currency,
+        global_score: d.global_score,
+        roi_potential: d.roi_potential,
+        demand_strength: d.demand_strength,
+        risk_level: d.risk_level,
+        market_stability: d.market_stability,
+        liquidity_outlook: d.liquidity_outlook,
+        verdict: d.verdict,
+        ai_summary: d.ai_summary,
+        primary_insight: d.primary_insight,
+        pros: d.pros,
+        cons: d.cons,
+        red_flags: d.red_flags,
+        property_type: d.property_type,
+        bedrooms: d.bedrooms,
+        bathrooms: d.bathrooms,
+        size_sqm: d.size_sqm,
+      }} />
     </div>
   );
 };
