@@ -23,7 +23,11 @@ const BottomNav = () => {
   const currentTab = tabs.find((t) => location.pathname.startsWith(t.path))?.id || (searchPaths.some(p => location.pathname.startsWith(p)) ? "score" : "");
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/60 bg-background/95 backdrop-blur-xl sm:hidden pb-safe">
+    <nav
+      role="navigation"
+      aria-label="Mobile navigation"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/60 bg-background/95 backdrop-blur-xl sm:hidden pb-safe"
+    >
       <div className="flex items-center justify-around h-14">
         {tabs.map((tab) => {
           const isActive = currentTab === tab.id;

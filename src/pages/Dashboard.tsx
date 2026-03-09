@@ -191,7 +191,7 @@ const Dashboard = () => {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="rounded-xl border border-border bg-card p-4 text-center hover:shadow-md transition-shadow"
+                className="rounded-xl border border-border bg-card p-4 text-center hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 cursor-default"
               >
                 <stat.icon className="h-4 w-4 text-primary mx-auto mb-2" />
                 <p className={`text-2xl font-bold font-mono ${stat.color}`}>{stat.value}</p>
@@ -280,40 +280,85 @@ const Dashboard = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center py-20 rounded-2xl border border-dashed border-border bg-secondary/20"
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="text-center py-20 rounded-2xl border border-dashed border-border bg-gradient-to-br from-secondary/30 to-secondary/10"
           >
             {showFavoritesOnly ? (
-              <>
-                <Heart className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+              >
+                <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/5">
+                  <Heart className="h-7 w-7 text-primary/60" />
+                </div>
                 <p className="text-muted-foreground text-sm font-medium mb-1">No favorites yet</p>
                 <p className="text-xs text-muted-foreground">Click the heart icon on any property to save it here.</p>
-              </>
+              </motion.div>
             ) : (
               <>
-                <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
-                  <Search className="h-8 w-8 text-primary" />
-                </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">Analyze your first property</h3>
-                <p className="text-sm text-muted-foreground mb-6 max-w-md mx-auto">
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+                  className="relative h-16 w-16 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center mx-auto mb-5 shadow-xl shadow-primary/10"
+                >
+                  <div className="absolute inset-0 rounded-2xl bg-primary/10 animate-pulse" />
+                  <Search className="h-8 w-8 text-primary relative z-10" />
+                </motion.div>
+                <motion.h3
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="text-lg font-semibold text-foreground mb-2"
+                >
+                  Analyze your first property
+                </motion.h3>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.25 }}
+                  className="text-sm text-muted-foreground mb-6 max-w-md mx-auto"
+                >
                   Get a full AI-powered investment report in seconds.
-                </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8 text-left max-w-sm mx-auto">
-                  <div className="flex items-start gap-3">
-                    <span className="h-6 w-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
-                    <div><p className="text-xs font-medium text-foreground">Paste a URL</p><p className="text-[10px] text-muted-foreground">Zillow, Idealista, Airbnb…</p></div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <span className="h-6 w-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
-                    <div><p className="text-xs font-medium text-foreground">Get AI analysis</p><p className="text-[10px] text-muted-foreground">Score, ROI, risks & more</p></div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <span className="h-6 w-6 rounded-full bg-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
-                    <div><p className="text-xs font-medium text-foreground">Make better decisions</p><p className="text-[10px] text-muted-foreground">Compare & invest smarter</p></div>
-                  </div>
-                </div>
-                <Button variant="hero" size="lg" onClick={() => document.querySelector<HTMLInputElement>("input[type='url']")?.focus()}>
-                  <Search className="h-4 w-4 mr-2" /> Paste a URL to Start
-                </Button>
+                </motion.p>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8 text-left max-w-sm mx-auto"
+                >
+                  {[
+                    { step: "1", title: "Paste a URL", desc: "Zillow, Idealista, Airbnb…" },
+                    { step: "2", title: "Get AI analysis", desc: "Score, ROI, risks & more" },
+                    { step: "3", title: "Make better decisions", desc: "Compare & invest smarter" },
+                  ].map((item, i) => (
+                    <motion.div
+                      key={item.step}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.35 + i * 0.08 }}
+                      className="flex items-start gap-3"
+                    >
+                      <span className="h-6 w-6 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 text-primary text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                        {item.step}
+                      </span>
+                      <div>
+                        <p className="text-xs font-medium text-foreground">{item.title}</p>
+                        <p className="text-[10px] text-muted-foreground">{item.desc}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <Button variant="hero" size="lg" onClick={() => document.querySelector<HTMLInputElement>("input[type='url']")?.focus()}>
+                    <Search className="h-4 w-4 mr-2" /> Paste a URL to Start
+                  </Button>
+                </motion.div>
               </>
             )}
           </motion.div>

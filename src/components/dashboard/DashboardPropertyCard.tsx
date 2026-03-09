@@ -64,14 +64,16 @@ const DashboardPropertyCard = ({
               <button
                 onClick={(e) => onToggleFavorite(e, a.id)}
                 className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isFav ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}
-                title={isFav ? "Remove from favorites" : "Add to favorites"}
+                aria-label={isFav ? "Remove from favorites" : "Add to favorites"}
+                aria-pressed={isFav}
               >
                 <Heart className={`h-4 w-4 ${isFav ? "fill-current" : ""}`} />
               </button>
               <button
                 onClick={(e) => onToggleCompare(e, a.id)}
                 className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isCompare ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}
-                title={isCompare ? "Remove from comparison" : "Add to comparison"}
+                aria-label={isCompare ? "Remove from comparison" : "Add to comparison"}
+                aria-pressed={isCompare}
               >
                 <GitCompare className="h-4 w-4" />
               </button>
