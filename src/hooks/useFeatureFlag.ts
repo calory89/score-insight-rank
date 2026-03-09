@@ -28,7 +28,7 @@ export const useFeatureFlag = (key: string): { enabled: boolean; isLoading: bool
         console.warn(`Feature flag "${key}" not found, defaulting to false`);
         return false;
       }
-      return (data as any)?.enabled ?? false;
+      return (data as unknown as { enabled: boolean })?.enabled ?? false;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
@@ -50,7 +50,7 @@ export const useFeatureFlags = () => {
         .order("key");
       
       if (error) throw error;
-      return (data || []) as FeatureFlag[];
+      return (data as unknown as FeatureFlag[]) || [];
     },
     staleTime: 30 * 1000, // 30 seconds for admin
   });
