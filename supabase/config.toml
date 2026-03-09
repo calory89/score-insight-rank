@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.investment-quiz]
 verify_jwt = false
+
+[functions.generate-memo]
+verify_jwt = false

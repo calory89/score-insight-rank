@@ -16,7 +16,7 @@ import {
   ArrowLeft, AlertTriangle, ChevronDown, ChevronUp,
   Info, DollarSign, BarChart3, Home,
   Clock, Zap, CheckCircle2, XCircle, Eye,
-  Percent, ArrowUpRight, ArrowDownRight, GitCompare, Flag, X, Send, Heart, FileText, RefreshCw, Briefcase, Target,
+  Percent, ArrowUpRight, ArrowDownRight, GitCompare, Flag, X, Send, Heart, FileText, RefreshCw, Briefcase, Target, Sparkles,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,7 @@ import SharePanel from "@/components/SharePanel";
 import InvestmentCalculator from "@/components/InvestmentCalculator";
 import NegotiationLetterModal from "@/components/NegotiationLetterModal";
 import { WatchButton } from "@/components/Watchlist";
+import InvestmentMemoModal from "@/components/InvestmentMemoModal";
 
 // Extracted sub-components
 import { FomoLoader, fomoSteps } from "@/components/analysis/AnalysisLoadingState";
@@ -84,6 +85,7 @@ const Analysis = () => {
   const [readyReportId, setReadyReportId] = useState<string | null>(null);
   const [showNegotiationLetter, setShowNegotiationLetter] = useState(false);
   const [showPortfolioModal, setShowPortfolioModal] = useState(false);
+  const [showMemoModal, setShowMemoModal] = useState(false);
   const [showFreeLimitModal, setShowFreeLimitModal] = useState(false);
   const [userAnalysesCount, setUserAnalysesCount] = useState(0);
   const { toast } = useToast();
@@ -485,6 +487,9 @@ const Analysis = () => {
             <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowPortfolioModal(true)}>
               <Briefcase className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Portfolio</span>
             </Button>
+            <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowMemoModal(true)}>
+              <Sparkles className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">AI Memo</span>
+            </Button>
             <Button variant="outline" size="sm" className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setShowReportError(true)}>
               <Flag className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Report Error</span>
             </Button>
@@ -514,6 +519,7 @@ const Analysis = () => {
         {/* Modals */}
         <NegotiationLetterModal analysis={d} open={showNegotiationLetter} onClose={() => setShowNegotiationLetter(false)} />
         {id && <AddToPortfolioModal open={showPortfolioModal} onClose={() => setShowPortfolioModal(false)} analysisId={id} suggestedPrice={d.price || undefined} currency={d.currency || "€"} />}
+        {id && <InvestmentMemoModal open={showMemoModal} onClose={() => setShowMemoModal(false)} analysisId={id} propertyName={d.address || d.city || "Property"} />}
 
         {/* Report Expiry Banner for free users */}
         {!isPro && d.created_at && <ReportExpiryBanner createdAt={d.created_at} />}
