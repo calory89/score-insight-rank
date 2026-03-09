@@ -102,6 +102,21 @@ const Dashboard = () => {
     if (isFav) {
       await supabase.from("favorites").delete().eq("user_id", user.id).eq("analysis_id", analysisId);
       setFavoriteIds(prev => { const n = new Set(prev); n.delete(analysisId); return n; });
+      toast({
+        title: "Removed from favorites",
+        description: "Property removed from your collection.",
+        action: (
+          <button
+            onClick={async () => {
+              await supabase.from("favorites").insert({ user_id: user.id, analysis_id: analysisId });
+              setFavoriteIds(prev => new Set(prev).add(analysisId));
+            }}
+            className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+          >
+            Undo
+          </button>
+        ),
+      });
     } else {
       await supabase.from("favorites").insert({ user_id: user.id, analysis_id: analysisId });
       setFavoriteIds(prev => new Set(prev).add(analysisId));
@@ -206,13 +221,14 @@ const Dashboard = () => {
           <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center bg-card rounded-xl border border-border p-2">
             <div className="flex items-center flex-1 min-w-0">
               <Search className="ml-3 h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <input
+            <input
                 id="dashboard-url-input"
                 type="url"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
                 placeholder="Paste any real estate URL to analyze… (⌘K)"
+                autoFocus={analyses.length === 0 && !loading}
                 className="flex-1 bg-transparent px-3 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0"
               />
             </div>

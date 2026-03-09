@@ -31,6 +31,10 @@ class ErrorBoundary extends Component<Props, State> {
     this.setState((prev) => ({ hasError: false, error: undefined, errorCount: prev.errorCount + 1 }));
   };
 
+  handleRefresh = () => {
+    window.location.reload();
+  };
+
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
@@ -50,9 +54,13 @@ class ErrorBoundary extends Component<Props, State> {
               </p>
             </div>
             <div className="flex flex-col gap-2.5">
-              {this.state.errorCount < 2 && (
+              {this.state.errorCount < 2 ? (
                 <Button variant="hero" onClick={this.handleRetry} className="w-full gap-2">
                   <RefreshCw className="h-4 w-4" /> Try Again
+                </Button>
+              ) : (
+                <Button variant="hero" onClick={this.handleRefresh} className="w-full gap-2">
+                  <RefreshCw className="h-4 w-4" /> Refresh Page
                 </Button>
               )}
               <Button variant="outline" onClick={() => window.history.back()} className="w-full gap-2 text-sm">
