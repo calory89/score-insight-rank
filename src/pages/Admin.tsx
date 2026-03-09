@@ -9,6 +9,8 @@ import AdminErrorLogsPanel from "@/components/admin/AdminErrorLogsPanel";
 import AdminContactsPanel from "@/components/admin/AdminContactsPanel";
 import AdminAnalysesPanel from "@/components/admin/AdminAnalysesPanel";
 import AdminNewsletterPanel from "@/components/admin/AdminNewsletterPanel";
+import AdminSystemPanel from "@/components/admin/AdminSystemPanel";
+import AdminFeatureFlagsPanel from "@/components/admin/AdminFeatureFlagsPanel";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +23,7 @@ import {
   TrendingUp, Shield, ArrowLeft, Activity,
   Mail, Clock, Hash, Eye, MapPin, Download,
   TicketCheck, AlertCircle, Phone, FileText, Newspaper, Zap,
+  Server, Flag,
 } from "lucide-react";
 import { scoreColor } from "@/lib/score-utils";
 
@@ -148,6 +151,8 @@ const Admin = () => {
             <Tabs defaultValue="analytics" className="w-full">
               <TabsList className="w-full justify-start overflow-x-auto flex-nowrap mb-6 bg-secondary/50 h-auto p-1">
                 <TabsTrigger value="analytics" className="text-xs gap-1.5"><Activity className="h-3.5 w-3.5" /> Analytics</TabsTrigger>
+                <TabsTrigger value="system" className="text-xs gap-1.5"><Server className="h-3.5 w-3.5" /> System</TabsTrigger>
+                <TabsTrigger value="flags" className="text-xs gap-1.5"><Flag className="h-3.5 w-3.5" /> Flags</TabsTrigger>
                 <TabsTrigger value="users" className="text-xs gap-1.5"><Users className="h-3.5 w-3.5" /> Users</TabsTrigger>
                 <TabsTrigger value="tickets" className="text-xs gap-1.5"><TicketCheck className="h-3.5 w-3.5" /> Tickets</TabsTrigger>
                 <TabsTrigger value="errors" className="text-xs gap-1.5"><AlertCircle className="h-3.5 w-3.5" /> Errors</TabsTrigger>
@@ -160,6 +165,14 @@ const Admin = () => {
 
               <TabsContent value="analytics">
                 <AdminAnalyticsTab users={users} />
+              </TabsContent>
+
+              <TabsContent value="system">
+                <AdminSystemPanel />
+              </TabsContent>
+
+              <TabsContent value="flags">
+                <AdminFeatureFlagsPanel />
               </TabsContent>
 
               <TabsContent value="users">
