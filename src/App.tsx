@@ -135,7 +135,9 @@ const App = () => (
               <CommandPalette />
               <FeatureGatedOnboarding />
               <PageTracker>
-                <AnimatedRoutes />
+                <main id="main-content">
+                  <AnimatedRoutes />
+                </main>
               </PageTracker>
             </BrowserRouter>
           </TooltipProvider>
