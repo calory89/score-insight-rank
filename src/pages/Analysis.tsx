@@ -40,6 +40,7 @@ import SharePanel from "@/components/SharePanel";
 import InvestmentCalculator from "@/components/InvestmentCalculator";
 import NegotiationLetterModal from "@/components/NegotiationLetterModal";
 import { WatchButton } from "@/components/Watchlist";
+import InvestmentMemoModal from "@/components/InvestmentMemoModal";
 
 // Extracted sub-components
 import { FomoLoader, fomoSteps } from "@/components/analysis/AnalysisLoadingState";
@@ -84,6 +85,7 @@ const Analysis = () => {
   const [readyReportId, setReadyReportId] = useState<string | null>(null);
   const [showNegotiationLetter, setShowNegotiationLetter] = useState(false);
   const [showPortfolioModal, setShowPortfolioModal] = useState(false);
+  const [showMemoModal, setShowMemoModal] = useState(false);
   const [showFreeLimitModal, setShowFreeLimitModal] = useState(false);
   const [userAnalysesCount, setUserAnalysesCount] = useState(0);
   const { toast } = useToast();
