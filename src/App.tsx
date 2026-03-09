@@ -120,6 +120,9 @@ const AnimatedRoutes = () => {
 
 const App = () => (
   <ErrorBoundary>
+    <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium focus:shadow-lg">
+      Skip to content
+    </a>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="realhunt-theme">
         <AuthProvider>
@@ -132,7 +135,9 @@ const App = () => (
               <CommandPalette />
               <FeatureGatedOnboarding />
               <PageTracker>
-                <AnimatedRoutes />
+                <main id="main-content">
+                  <AnimatedRoutes />
+                </main>
               </PageTracker>
             </BrowserRouter>
           </TooltipProvider>
