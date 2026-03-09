@@ -12,6 +12,7 @@ import React, { Suspense } from "react";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import CommandPalette from "@/components/CommandPalette";
 import OnboardingWizard from "@/components/OnboardingWizard";
+import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import OfflineBanner from "@/components/OfflineBanner";
 import Index from "./pages/Index";
 
@@ -75,6 +76,12 @@ const SuspenseFallback = () => (
   </div>
 );
 
+const FeatureGatedOnboarding = () => {
+  const { enabled } = useFeatureFlag("onboarding_tour");
+  if (!enabled) return null;
+  return <OnboardingWizard />;
+};
+
 const AnimatedRoutes = () => {
   const location = useLocation();
   return (
@@ -123,7 +130,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <CommandPalette />
-              <OnboardingWizard />
+              <FeatureGatedOnboarding />
               <PageTracker>
                 <AnimatedRoutes />
               </PageTracker>

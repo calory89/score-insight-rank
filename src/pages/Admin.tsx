@@ -1,16 +1,18 @@
-import { useEffect, useState, useMemo } from "react";
-import AdminVisitsPanel from "@/components/AdminVisitsPanel";
-import AdminAnalyticsTab from "@/components/admin/AdminAnalyticsTab";
+import { useEffect, useState, useMemo, lazy, Suspense } from "react";
 import AdminUserDetail from "@/components/admin/AdminUserDetail";
-import AdminVisitorLog from "@/components/AdminVisitorLog";
-import AdminBatchPanel from "@/components/admin/AdminBatchPanel";
-import AdminTicketsPanel from "@/components/admin/AdminTicketsPanel";
-import AdminErrorLogsPanel from "@/components/admin/AdminErrorLogsPanel";
-import AdminContactsPanel from "@/components/admin/AdminContactsPanel";
-import AdminAnalysesPanel from "@/components/admin/AdminAnalysesPanel";
-import AdminNewsletterPanel from "@/components/admin/AdminNewsletterPanel";
-import AdminSystemPanel from "@/components/admin/AdminSystemPanel";
-import AdminFeatureFlagsPanel from "@/components/admin/AdminFeatureFlagsPanel";
+
+// Lazy-loaded admin panels for code splitting
+const AdminVisitsPanel = lazy(() => import("@/components/AdminVisitsPanel"));
+const AdminAnalyticsTab = lazy(() => import("@/components/admin/AdminAnalyticsTab"));
+const AdminVisitorLog = lazy(() => import("@/components/AdminVisitorLog"));
+const AdminBatchPanel = lazy(() => import("@/components/admin/AdminBatchPanel"));
+const AdminTicketsPanel = lazy(() => import("@/components/admin/AdminTicketsPanel"));
+const AdminErrorLogsPanel = lazy(() => import("@/components/admin/AdminErrorLogsPanel"));
+const AdminContactsPanel = lazy(() => import("@/components/admin/AdminContactsPanel"));
+const AdminAnalysesPanel = lazy(() => import("@/components/admin/AdminAnalysesPanel"));
+const AdminNewsletterPanel = lazy(() => import("@/components/admin/AdminNewsletterPanel"));
+const AdminSystemPanel = lazy(() => import("@/components/admin/AdminSystemPanel"));
+const AdminFeatureFlagsPanel = lazy(() => import("@/components/admin/AdminFeatureFlagsPanel"));
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +28,9 @@ import {
   Server, Flag,
 } from "lucide-react";
 import { scoreColor } from "@/lib/score-utils";
+import { PageLoader } from "@/components/PageLoader";
+
+const AdminPanelFallback = () => <PageLoader variant="table" count={4} />;
 
 const ADMIN_EMAIL = "rrppspain@gmail.com";
 
@@ -164,15 +169,21 @@ const Admin = () => {
               </TabsList>
 
               <TabsContent value="analytics">
-                <AdminAnalyticsTab users={users} />
+                <Suspense fallback={<AdminPanelFallback />}>
+                  <AdminAnalyticsTab users={users} />
+                </Suspense>
               </TabsContent>
 
               <TabsContent value="system">
-                <AdminSystemPanel />
+                <Suspense fallback={<AdminPanelFallback />}>
+                  <AdminSystemPanel />
+                </Suspense>
               </TabsContent>
 
               <TabsContent value="flags">
-                <AdminFeatureFlagsPanel />
+                <Suspense fallback={<AdminPanelFallback />}>
+                  <AdminFeatureFlagsPanel />
+                </Suspense>
               </TabsContent>
 
               <TabsContent value="users">
@@ -284,13 +295,13 @@ const Admin = () => {
                 <AdminUserDetail user={selectedUser} onClose={() => setSelectedUser(null)} />
               </TabsContent>
 
-              <TabsContent value="tickets"><AdminTicketsPanel /></TabsContent>
-              <TabsContent value="errors"><AdminErrorLogsPanel /></TabsContent>
-              <TabsContent value="contacts"><AdminContactsPanel /></TabsContent>
-              <TabsContent value="analyses"><AdminAnalysesPanel users={users} /></TabsContent>
-              <TabsContent value="newsletter"><AdminNewsletterPanel /></TabsContent>
-              <TabsContent value="visits"><AdminVisitsPanel /><AdminVisitorLog /></TabsContent>
-              <TabsContent value="batch"><AdminBatchPanel /></TabsContent>
+              <TabsContent value="tickets"><Suspense fallback={<AdminPanelFallback />}><AdminTicketsPanel /></Suspense></TabsContent>
+              <TabsContent value="errors"><Suspense fallback={<AdminPanelFallback />}><AdminErrorLogsPanel /></Suspense></TabsContent>
+              <TabsContent value="contacts"><Suspense fallback={<AdminPanelFallback />}><AdminContactsPanel /></Suspense></TabsContent>
+              <TabsContent value="analyses"><Suspense fallback={<AdminPanelFallback />}><AdminAnalysesPanel users={users} /></Suspense></TabsContent>
+              <TabsContent value="newsletter"><Suspense fallback={<AdminPanelFallback />}><AdminNewsletterPanel /></Suspense></TabsContent>
+              <TabsContent value="visits"><Suspense fallback={<AdminPanelFallback />}><AdminVisitsPanel /><AdminVisitorLog /></Suspense></TabsContent>
+              <TabsContent value="batch"><Suspense fallback={<AdminPanelFallback />}><AdminBatchPanel /></Suspense></TabsContent>
             </Tabs>
           </>
         )}
