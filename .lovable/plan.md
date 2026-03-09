@@ -1,72 +1,91 @@
 
 
-# Fix: Navegacion rota en la pagina de analisis
+# Strategic Product Upgrade Plan — Next Iteration
 
-## Problemas identificados
+Following Safe Upgrade Mode, this plan focuses on the highest-impact improvements across multiple dimensions while continuing the feature roadmap.
 
-### 1. Boton "Back" no funciona desde la pagina del reporte
-El boton usa `window.history.back()` que puede llevar al usuario de vuelta a `/analysis/loading`, re-activando el loader en un bucle. Necesita detectar si la pagina anterior es una ruta de carga y saltar al dashboard en su lugar.
+---
 
-### 2. Click en reportes del feed no muestra nada visible
-Al clickar un reporte en "Top rated properties", se ejecuta `setPreviewId(report.id)` que renderiza un preview inline al final de la pagina, fuera de la vista del usuario. El usuario no ve nada porque no se hace scroll automatico hacia el preview.
+## Phase 1: Feature #4 — Price Drop Tracker & Opportunity Alerts
 
-**Solucion**: Hacer scroll automatico hacia el preview cuando se selecciona un reporte y tambien ofrecer un boton para abrir el reporte completo.
+**What**: Leverage the existing `watchlist` table (already has `initial_price`, `latest_price`, `price_delta`, `score_delta` columns) to build a price monitoring system with visual opportunity alerts.
 
-### 3. "See above" / "Click to view" lleva a pagina en blanco
-Cuando el usuario clicka el banner "Your report is ready! Click to view", el codigo hace:
-- `setAnalyzing(false)` y `setReadyReportId(null)` -- limpia el estado del FomoLoader
-- `navigate(/analysis/ID, { replace: true })` -- cambia la URL
+**Implementation**:
+- Create edge function `check-price-drops` that re-scrapes watched properties, compares prices, and updates `watchlist` records
+- Add a "Price Drops" section to the Dashboard showing properties with negative price deltas, ranked by opportunity value
+- Show visual badges on watchlist items: green "Price Drop!" chip with percentage, updated score comparison
+- Create notifications when price drops are detected (insert into `notifications` table)
 
-Pero el componente se re-renderiza y como `data` es null (no se ha cargado aun), cae en `if (!data) return null` (linea 824) y muestra una pagina en blanco hasta que el `useEffect` de fetch se ejecuta. El problema es una condicion de carrera entre la navegacion y la carga de datos.
+**No new tables needed** — all columns already exist in `watchlist`.
 
-**Solucion**: Usar `window.location.href` para forzar un reload completo de la pagina, o mejor, no limpiar el estado hasta que los datos esten cargados.
+---
 
-## Cambios tecnicos
+## Phase 2: Feature #5 — Investment Strategy Templates
 
-### Archivo: `src/pages/Analysis.tsx`
+**What**: Pre-built strategy profiles that filter and rank the user's analyses based on investment criteria.
 
-**Cambio 1 - Back button inteligente (linea 849-857)**
+**Implementation**:
+- Add strategy selector to Dashboard/Discover with 5 templates:
+  - Cash Flow Maximizer (sort by ROI potential, filter risk < 60)
+  - Capital Appreciation (sort by market stability + demand strength)
+  - Digital Nomad Rental (filter beach/urban, high demand)
+  - Retirement Haven (low risk, high market stability)
+  - Quick Flip (high ROI potential, low price)
+- Each template applies client-side filters/sorting to existing analyses data
+- Show strategy match percentage on each property card
 
-Reemplazar la logica de `window.history.back()` para detectar si la pagina anterior es una ruta de carga:
+**No backend changes** — pure frontend filtering logic using existing analysis fields.
 
-```typescript
-onClick={() => {
-  if (fromBulk) {
-    navigate("/dashboard?bulk=true&restore=true");
-  } else {
-    // Always go to dashboard — history.back() often goes to the loading page
-    navigate("/dashboard");
-  }
-}}
+---
+
+## Phase 3: Database Performance — Add Critical Indexes
+
+**What**: Add indexes to improve query performance for the most common access patterns.
+
+**SQL Migration**:
+```sql
+CREATE INDEX IF NOT EXISTS idx_analyses_user_created ON analyses(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_analyses_city_country ON analyses(city, country);
+CREATE INDEX IF NOT EXISTS idx_analyses_global_score ON analyses(global_score DESC);
+CREATE INDEX IF NOT EXISTS idx_watchlist_user ON watchlist(user_id);
+CREATE INDEX IF NOT EXISTS idx_page_visits_session ON page_visits(session_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_page_visits_created ON page_visits(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_error_logs_created ON error_logs(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_portfolio_user ON portfolio_properties(user_id);
 ```
 
-**Cambio 2 - Scroll automatico al preview (linea 416-434)**
+---
 
-Agregar un `ref` al contenedor del preview y hacer `scrollIntoView` cuando se selecciona un reporte:
+## Phase 4: UX Polish — Micro-Improvements
 
-```typescript
-const previewRef = useRef<HTMLDivElement>(null);
+**What**: Small, high-impact refinements across existing surfaces.
 
-// On setPreviewId, scroll to preview
-useEffect(() => {
-  if (previewId && previewRef.current) {
-    previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-}, [previewId]);
-```
+1. **Empty state improvements**: Add illustrated empty states with clear CTAs to Portfolio, Watchlist, and Discover pages
+2. **Loading skeleton consistency**: Ensure all data-loading pages use consistent skeleton patterns
+3. **Toast feedback**: Add success toasts for all destructive/important actions (delete analysis, remove from portfolio, etc.)
+4. **Navbar active state**: Add subtle underline/highlight for the current active route in mobile bottom nav
 
-Ademas, agregar un boton "View full report" dentro del InlineReportPreview que navega al reporte completo con `window.location.href`.
+---
 
-**Cambio 3 - Fix pagina en blanco en "Click to view" (linea 777-782)**
+## Phase 5: Admin Enhancements
 
-Cambiar `navigate()` por `window.location.href` para forzar una carga completa de la pagina, evitando la condicion de carrera:
+**What**: Add revenue tracking and user lifecycle insights to the Admin CRM.
 
-```typescript
-onViewReady={() => {
-  if (readyReportId) {
-    window.location.href = `/analysis/${readyReportId}`;
-  }
-}}
-```
+1. **Conversion funnel widget**: Show signup → first analysis → 5th analysis → upgrade funnel with percentages
+2. **User cohort view**: Group users by signup week, show retention curves
+3. **Quick actions**: Add "Send notification" button per user in the admin user list
 
-Esto garantiza que la pagina se recarga completamente con el ID correcto en la URL, activando el fetch de datos desde cero.
+---
+
+## Summary
+
+| Phase | Feature | Effort | New Tables | New Edge Functions |
+|-------|---------|--------|------------|-------------------|
+| 1 | Price Drop Tracker | Medium | 0 | 1 (check-price-drops) |
+| 2 | Strategy Templates | Low | 0 | 0 |
+| 3 | DB Indexes | Low | 0 | 0 |
+| 4 | UX Polish | Low | 0 | 0 |
+| 5 | Admin Enhancements | Medium | 0 | 0 |
+
+All changes are additive and non-breaking. No existing features are modified or removed.
+
