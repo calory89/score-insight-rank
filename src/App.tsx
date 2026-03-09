@@ -11,6 +11,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import React, { Suspense } from "react";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import CommandPalette from "@/components/CommandPalette";
+import KeyboardShortcutsModal from "@/components/KeyboardShortcutsModal";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import OfflineBanner from "@/components/OfflineBanner";
@@ -133,6 +134,7 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
               <CommandPalette />
+              <KeyboardShortcutsModal />
               <FeatureGatedOnboarding />
               <PageTracker>
                 <main id="main-content">
