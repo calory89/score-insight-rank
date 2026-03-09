@@ -6,6 +6,44 @@ import { ArrowRight, Search, Layers, Brain, Database, Clock } from "lucide-react
 import { useAuth } from "@/contexts/AuthContext";
 import LoginGateModal from "@/components/LoginGateModal";
 import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
+
+// URL validation schema
+const urlSchema = z.string().min(1, "URL is required").refine(
+  (val) => /^https?:\/\//.test(val) || val.includes("."),
+  { message: "Enter a valid URL" }
+);
+
+// Animated count-up hook for WOW factor
+const useCountUp = (target: number, duration = 2000) => {
+  const [count, setCount] = useState(0);
+  
+  useEffect(() => {
+    if (target <= 0) return;
+    
+    const startTime = performance.now();
+    const startValue = 0;
+    
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Ease-out cubic for premium feel
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      const currentValue = Math.floor(startValue + (target - startValue) * easeOut);
+      
+      setCount(currentValue);
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    
+    requestAnimationFrame(animate);
+  }, [target, duration]);
+  
+  return count;
+};
 
 const HeroSection = () => {
   const [url, setUrl] = useState("");
@@ -147,23 +185,9 @@ const HeroSection = () => {
             </span>
           </motion.div>
 
-          {/* Real social proof counter */}
+          {/* Real social proof counter with animated count-up */}
           {totalAnalyses !== null && totalAnalyses > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
-              className="flex items-center justify-center gap-2 mb-4"
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-score-excellent opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-score-excellent" />
-              </span>
-              <span className="text-xs text-muted-foreground">
-                <span className="font-semibold text-foreground">{totalAnalyses.toLocaleString()}</span>{" "}
-                properties analyzed worldwide
-              </span>
-            </motion.div>
+            <AnimatedCounter target={totalAnalyses} />
           )}
 
           {/* Bulk Analyze CTA */}
@@ -189,6 +213,29 @@ const HeroSection = () => {
 
       <LoginGateModal open={showLoginGate} onClose={handleLoginClose} onSuccess={handleLoginSuccess} />
     </section>
+  );
+};
+
+// Extracted animated counter component for cleaner code
+const AnimatedCounter = ({ target }: { target: number }) => {
+  const animatedCount = useCountUp(target, 2000);
+  
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.6, duration: 0.5 }}
+      className="flex items-center justify-center gap-2 mb-4"
+    >
+      <span className="relative flex h-2 w-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-score-excellent opacity-75" />
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-score-excellent" />
+      </span>
+      <span className="text-xs text-muted-foreground">
+        <span className="font-semibold text-foreground tabular-nums">{animatedCount.toLocaleString()}</span>{" "}
+        properties analyzed worldwide
+      </span>
+    </motion.div>
   );
 };
 
