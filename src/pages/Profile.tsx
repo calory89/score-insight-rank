@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
-import { ProfileSkeleton } from "@/components/SkeletonCards";
+import { PageLoader } from "@/components/PageLoader";
 import { useAchievements, AchievementGrid, AchievementToast } from "@/components/AchievementSystem";
 
 const levelConfig = [
@@ -156,7 +156,7 @@ const Profile = () => {
     <div className="min-h-screen bg-background pb-16 sm:pb-0">
       <Navbar />
       <div className="container mx-auto px-4 pt-20 pb-8 max-w-xl">
-        <ProfileSkeleton />
+        <PageLoader variant="profile" />
       </div>
       <BottomNav />
     </div>

@@ -35,7 +35,7 @@ const DashboardPropertyCard = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04 }}
       onClick={() => navigate(`/analysis/${a.id}`)}
-      className={`rounded-xl border bg-card overflow-hidden hover:border-primary/20 transition-all cursor-pointer group ${
+      className={`rounded-xl border bg-card overflow-hidden hover:border-primary/20 hover:scale-[1.003] active:scale-[0.997] transition-all duration-200 cursor-pointer group ${
         isCompare ? "border-primary/30 ring-1 ring-primary/20" : "border-border"
       }`}
     >
@@ -63,14 +63,14 @@ const DashboardPropertyCard = ({
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
                 onClick={(e) => onToggleFavorite(e, a.id)}
-                className={`p-1.5 rounded-lg transition-colors ${isFav ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}
+                className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isFav ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}
                 title={isFav ? "Remove from favorites" : "Add to favorites"}
               >
                 <Heart className={`h-4 w-4 ${isFav ? "fill-current" : ""}`} />
               </button>
               <button
                 onClick={(e) => onToggleCompare(e, a.id)}
-                className={`p-1.5 rounded-lg transition-colors ${isCompare ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}
+                className={`p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-lg transition-colors ${isCompare ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}
                 title={isCompare ? "Remove from comparison" : "Add to comparison"}
               >
                 <GitCompare className="h-4 w-4" />
