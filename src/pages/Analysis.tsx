@@ -519,6 +519,7 @@ const Analysis = () => {
         {/* Modals */}
         <NegotiationLetterModal analysis={d} open={showNegotiationLetter} onClose={() => setShowNegotiationLetter(false)} />
         {id && <AddToPortfolioModal open={showPortfolioModal} onClose={() => setShowPortfolioModal(false)} analysisId={id} suggestedPrice={d.price || undefined} currency={d.currency || "€"} />}
+        {id && <InvestmentMemoModal open={showMemoModal} onClose={() => setShowMemoModal(false)} analysisId={id} propertyName={d.address || d.city || "Property"} />}
 
         {/* Report Expiry Banner for free users */}
         {!isPro && d.created_at && <ReportExpiryBanner createdAt={d.created_at} />}
