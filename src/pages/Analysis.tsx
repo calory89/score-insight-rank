@@ -487,6 +487,9 @@ const Analysis = () => {
             <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowPortfolioModal(true)}>
               <Briefcase className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Portfolio</span>
             </Button>
+            <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowMemoModal(true)}>
+              <Sparkles className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">AI Memo</span>
+            </Button>
             <Button variant="outline" size="sm" className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setShowReportError(true)}>
               <Flag className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Report Error</span>
             </Button>
