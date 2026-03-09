@@ -5,6 +5,8 @@ interface FeatureFlag {
   key: string;
   enabled: boolean;
   description: string | null;
+  created_at?: string;
+  updated_at?: string;
 }
 
 /**
@@ -15,8 +17,9 @@ export const useFeatureFlag = (key: string): { enabled: boolean; isLoading: bool
   const { data, isLoading } = useQuery({
     queryKey: ["feature-flag", key],
     queryFn: async () => {
+      // Use raw SQL query since table may not be in generated types yet
       const { data, error } = await supabase
-        .from("feature_flags")
+        .from("feature_flags" as any)
         .select("enabled")
         .eq("key", key)
         .single();
@@ -25,7 +28,7 @@ export const useFeatureFlag = (key: string): { enabled: boolean; isLoading: bool
         console.warn(`Feature flag "${key}" not found, defaulting to false`);
         return false;
       }
-      return data?.enabled ?? false;
+      return (data as any)?.enabled ?? false;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
@@ -42,12 +45,12 @@ export const useFeatureFlags = () => {
     queryKey: ["feature-flags"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("feature_flags")
+        .from("feature_flags" as any)
         .select("*")
         .order("key");
       
       if (error) throw error;
-      return data as FeatureFlag[];
+      return (data || []) as FeatureFlag[];
     },
     staleTime: 30 * 1000, // 30 seconds for admin
   });

@@ -5,7 +5,7 @@ import { useFeatureFlags } from "@/hooks/useFeatureFlag";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  Flag, ToggleLeft, ToggleRight, Clock, Info, Save
+  Flag, ToggleLeft, ToggleRight, Clock, Info
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,7 @@ const AdminFeatureFlagsPanel = () => {
     setUpdating(key);
     try {
       const { error } = await supabase
-        .from("feature_flags")
+        .from("feature_flags" as any)
         .update({ enabled: !currentValue, updated_at: new Date().toISOString() })
         .eq("key", key);
 
