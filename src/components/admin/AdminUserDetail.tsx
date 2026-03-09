@@ -1,9 +1,13 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { scoreColor } from "@/lib/score-utils";
-import { Mail, Hash, Clock, Globe, Search, Eye, BarChart3, Briefcase, Trophy } from "lucide-react";
+import { Mail, Hash, Clock, Globe, Search, Eye, BarChart3, Briefcase, Trophy, Send } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface UserData {
   id: string;
@@ -25,7 +29,27 @@ interface AdminUserDetailProps {
 
 const AdminUserDetail = ({ user, onClose }: AdminUserDetailProps) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const [notifTitle, setNotifTitle] = useState("");
+  const [notifBody, setNotifBody] = useState("");
+  const [sending, setSending] = useState(false);
+
   if (!user) return null;
+
+  const sendNotification = async () => {
+    if (!notifTitle.trim()) return;
+    setSending(true);
+    await supabase.from("notifications").insert({
+      user_id: user.id,
+      title: notifTitle.trim(),
+      body: notifBody.trim() || null,
+      type: "admin_message",
+    });
+    toast({ title: "Notification sent", description: `Sent to ${user.email}` });
+    setNotifTitle("");
+    setNotifBody("");
+    setSending(false);
+  };
 
   return (
     <Dialog open={!!user} onOpenChange={() => onClose()}>
@@ -82,6 +106,30 @@ const AdminUserDetail = ({ user, onClose }: AdminUserDetailProps) => {
         ) : (
           <p className="text-xs text-muted-foreground text-center py-4">No analyses yet.</p>
         )}
+
+        {/* Send Notification */}
+        <div className="rounded-xl border border-border bg-secondary/20 p-4">
+          <h4 className="text-xs font-semibold text-foreground mb-3 flex items-center gap-1.5">
+            <Send className="h-3.5 w-3.5 text-primary" /> Send Notification
+          </h4>
+          <input
+            type="text"
+            value={notifTitle}
+            onChange={(e) => setNotifTitle(e.target.value)}
+            placeholder="Notification title…"
+            className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30 mb-2"
+          />
+          <textarea
+            value={notifBody}
+            onChange={(e) => setNotifBody(e.target.value)}
+            placeholder="Optional message body…"
+            rows={2}
+            className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30 resize-none mb-2"
+          />
+          <Button variant="hero" size="sm" onClick={sendNotification} disabled={sending || !notifTitle.trim()}>
+            <Send className="h-3.5 w-3.5" /> {sending ? "Sending…" : "Send"}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

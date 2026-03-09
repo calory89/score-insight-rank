@@ -16,6 +16,8 @@ import {
   ArrowUpRight, ArrowDownRight, Plus, Trash2, Building2, Target,
   BarChart3, Shield, Zap, Eye, ChevronRight,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { PortfolioCardSkeleton } from "@/components/SkeletonCards";
 import {
   PieChart as RechartsPie, Pie, Cell, ResponsiveContainer, Tooltip,
   BarChart, Bar, XAxis, YAxis, CartesianGrid, AreaChart, Area, LineChart, Line,
@@ -81,9 +83,16 @@ const Portfolio = () => {
     setLoading(false);
   };
 
+  const { toast } = useToast();
+
   const removeItem = async (id: string) => {
+    const removed = items.find(i => i.id === id);
     await supabase.from("portfolio_properties" as any).delete().eq("id", id);
     setItems(prev => prev.filter(i => i.id !== id));
+    toast({
+      title: "Property removed",
+      description: removed?.analysis?.address || "Removed from portfolio.",
+    });
   };
 
   // --- Computed Metrics ---
@@ -195,9 +204,9 @@ const Portfolio = () => {
           </div>
 
           {loading ? (
-            <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
               {[1, 2, 3, 4].map(i => (
-                <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />
+                <PortfolioCardSkeleton key={i} />
               ))}
             </div>
           ) : items.length === 0 ? (
