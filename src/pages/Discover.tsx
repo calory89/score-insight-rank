@@ -3,6 +3,7 @@ import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Compass, TrendingUp, Shield, Bookmark, ArrowRight, MapPin } from "lucide-react";
+import EmptyState from "@/components/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import Navbar from "@/components/Navbar";
@@ -154,13 +155,13 @@ const Discover = () => {
             {[...Array(3)].map((_, i) => <DiscoverCardSkeleton key={i} />)}
           </div>
         ) : discoveries.length === 0 ? (
-          <div className="text-center py-16">
-            <Compass className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
-            <p className="text-sm text-muted-foreground mb-2">No discoveries shared yet.</p>
-            <p className="text-xs text-muted-foreground">
-              Analyze a property with a score above 70 and share it with the community!
-            </p>
-          </div>
+          <EmptyState
+            icon={Compass}
+            title="No discoveries shared yet"
+            description="Analyze a property with a score above 70 and share it with the community!"
+            actionLabel="Analyze a Property"
+            onAction={() => navigate("/dashboard")}
+          />
         ) : (
           <div className="space-y-4">
             {discoveries.map((d, i) => (
