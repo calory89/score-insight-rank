@@ -16,7 +16,7 @@ import {
   ArrowLeft, AlertTriangle, ChevronDown, ChevronUp,
   Info, DollarSign, BarChart3, Home,
   Clock, Zap, CheckCircle2, XCircle, Eye,
-  Percent, ArrowUpRight, ArrowDownRight, GitCompare, Flag, X, Send, Heart, FileText, RefreshCw, Briefcase, Target,
+  Percent, ArrowUpRight, ArrowDownRight, GitCompare, Flag, X, Send, Heart, FileText, RefreshCw, Briefcase, Target, Sparkles,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/components/ui/button";
