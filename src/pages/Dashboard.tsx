@@ -240,7 +240,7 @@ const Dashboard = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                className={`text-xs flex items-center gap-1.5 px-3 py-1.5 rounded-lg border transition-colors ${
+                className={`text-xs flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-lg border transition-colors ${
                   showFavoritesOnly ? "border-primary/30 bg-primary/10 text-primary" : "border-border bg-card text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -249,7 +249,7 @@ const Dashboard = () => {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as "date" | "score")}
-                className="text-xs px-3 py-1.5 rounded-lg border border-border bg-card text-muted-foreground focus:outline-none focus:border-primary/40"
+                className="text-xs px-3 py-2 min-h-[44px] rounded-lg border border-border bg-card text-muted-foreground focus:outline-none focus:border-primary/40"
               >
                 <option value="date">Newest First</option>
                 <option value="score">Best Score</option>
