@@ -61,7 +61,7 @@ const IndexNew = () => {
       const { data } = await supabase
         .from("projects")
         .select(
-          "slug,name,city,ticket_min_eur,is_owned_by_realhunt,developer:developers(name),country:countries(name,slug,flag_emoji),score:project_scores(weighted_score,rank_global,dim_developer_reputation,dim_delivery_certainty,dim_legal_protection,dim_location_fundamentals,dim_investment_economics)"
+          "slug,name,city,ticket_min_eur,hero_image_url,is_owned_by_realhunt,developer:developers(name),country:countries(name,slug,flag_emoji),score:project_scores(weighted_score,rank_global,dim_developer_reputation,dim_delivery_certainty,dim_legal_protection,dim_location_fundamentals,dim_investment_economics)"
         )
         .eq("active", true)
         .limit(1200);
