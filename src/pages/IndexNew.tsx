@@ -187,6 +187,7 @@ const IndexNew = () => {
               <thead>
                 <tr className="bg-slate-100 text-slate-700">
                   <th className="text-left font-semibold px-4 py-3 w-14">Rank</th>
+                  <th className="px-2 py-3 w-16"></th>
                   <th className="text-left font-semibold px-3 py-3">Project</th>
                   <th className="text-left font-semibold px-3 py-3 w-20">Country</th>
                   <th className="text-center font-semibold px-3 py-3 w-20">RH Score</th>
