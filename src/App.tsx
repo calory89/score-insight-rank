@@ -18,6 +18,7 @@ import OfflineBanner from "@/components/OfflineBanner";
 import IndexNew from "./pages/IndexNew";
 import HomeScoring from "./pages/HomeScoring";
 import Apply from "./pages/Apply";
+import ProjectDetail from "./pages/ProjectDetail";
 
 // Lazy-loaded routes for code splitting
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
@@ -95,6 +96,7 @@ const AnimatedRoutes = () => {
           <Route path="/" element={<PageTransition><IndexNew /></PageTransition>} />
           <Route path="/homescoring" element={<PageTransition><HomeScoring /></PageTransition>} />
           <Route path="/apply" element={<PageTransition><Apply /></PageTransition>} />
+          <Route path="/projects/:slug" element={<PageTransition><ProjectDetail /></PageTransition>} />
           <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
           <Route path="/analysis/loading" element={<PageTransition><Analysis /></PageTransition>} />
           <Route path="/analysis/:id" element={<PageTransition><Analysis /></PageTransition>} />
