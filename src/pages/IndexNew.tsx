@@ -62,7 +62,8 @@ const IndexNew = () => {
         .select(
           "slug,name,city,ticket_min_eur,is_owned_by_realhunt,developer:developers(name),country:countries(name,slug,flag_emoji),score:project_scores(weighted_score,rank_global,dim_developer_reputation,dim_delivery_certainty,dim_legal_protection,dim_location_fundamentals,dim_investment_economics)"
         )
-        .eq("active", true);
+        .eq("active", true)
+        .limit(1200);
       const rows = (data || []).map((p: any) => ({
         ...p,
         score: Array.isArray(p.score) ? p.score[0] : p.score,
