@@ -204,14 +204,14 @@ const IndexNew = () => {
                 {loading ? (
                   Array.from({ length: 8 }).map((_, i) => (
                     <tr key={i} className="border-t border-slate-100">
-                      <td colSpan={11} className="px-4 py-4">
+                      <td colSpan={12} className="px-4 py-4">
                         <div className="h-5 bg-slate-100 rounded animate-pulse" />
                       </td>
                     </tr>
                   ))
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={11} className="px-4 py-12 text-center text-slate-500 text-sm">
+                    <td colSpan={12} className="px-4 py-12 text-center text-slate-500 text-sm">
                       No projects match these filters yet.
                     </td>
                   </tr>
