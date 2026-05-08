@@ -1,489 +1,413 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Search, Globe, Eye, Scale, ShieldCheck, Ban, Plus, Loader2, Sparkles, Lock } from "lucide-react";
-import useDocumentMeta from "@/hooks/useDocumentMeta";
-import { supabase } from "@/integrations/supabase/client";
+import { ArrowRight, Check } from "lucide-react";
 import RHNav from "@/components/realhunt/RHNav";
 import RHFooter from "@/components/realhunt/RHFooter";
-import ScoreRing from "@/components/realhunt/ScoreRing";
-import LoginGateModal from "@/components/LoginGateModal";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "@/hooks/use-toast";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
+import { detectListingSource, isLikelyListingUrl } from "@/lib/source-detect";
 
-interface ProjectRow {
-  slug: string;
-  name: string;
-  city: string | null;
-  hero_image_url: string | null;
-  is_owned_by_realhunt: boolean | null;
-  developer: { name: string } | null;
-  country: { name: string; slug: string; flag_emoji: string | null };
-  score: {
-    weighted_score: number | null;
-    rank_global: number | null;
-    dim_developer_reputation: number | null;
-    dim_delivery_certainty: number | null;
-    dim_legal_protection: number | null;
-    dim_location_fundamentals: number | null;
-    dim_investment_economics: number | null;
-  } | null;
-  ticket_min_eur: number | null;
-}
+const EXAMPLES = [
+  { label: "Dubai off-plan", url: "https://www.propertyfinder.ae/en/plp/buy/apartment-for-sale-dubai-business-bay.html" },
+  { label: "Marbella resale", url: "https://www.idealista.com/inmueble/sample-marbella" },
+  { label: "London buy-to-let", url: "https://www.rightmove.co.uk/properties/sample-london" },
+  { label: "Miami new build", url: "https://www.zillow.com/homedetails/sample-miami" },
+];
 
-const PAGE = 50;
-const PUBLIC_LIMIT = 5;
+const PasteInput = ({ size = "lg" }: { size?: "lg" | "md" }) => {
+  const navigate = useNavigate();
+  const [value, setValue] = useState("");
+  const [focused, setFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-const fmtEur = (v: number | null) => {
-  if (!v) return "—";
-  if (v >= 1_000_000) return `€${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `€${Math.round(v / 1_000)}k`;
-  return `€${v}`;
+  const detected = useMemo(() => (value ? detectListingSource(value) : null), [value]);
+  const valid = isLikelyListingUrl(value);
+
+  const submit = (url?: string) => {
+    const u = (url ?? value).trim();
+    if (!isLikelyListingUrl(u)) return;
+    navigate(`/app/analyze?u=${encodeURIComponent(u)}`);
+  };
+
+  return (
+    <div className="w-full">
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          submit();
+        }}
+        className="flex flex-col sm:flex-row gap-3"
+      >
+        <div className="relative flex-1">
+          <input
+            ref={inputRef}
+            type="url"
+            inputMode="url"
+            autoComplete="off"
+            spellCheck={false}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setTimeout(() => setFocused(false), 150)}
+            placeholder="Paste listing URL…"
+            className="rh-input"
+            style={size === "lg" ? { fontSize: 17, padding: "20px 18px" } : undefined}
+            aria-label="Listing URL"
+          />
+          {detected && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-2 text-[12px] text-ink-muted bg-paper px-2 py-1 rounded-md border border-hairline">
+              <span>{detected.flag}</span>
+              <span>{detected.platform}</span>
+              <span className="text-ink-soft">·</span>
+              <span>{detected.country}</span>
+            </div>
+          )}
+        </div>
+        <button
+          type="submit"
+          disabled={!valid}
+          className="rh-btn-primary sm:min-w-[140px]"
+          style={size === "lg" ? { padding: "20px 28px", fontSize: 16 } : undefined}
+        >
+          Analyze
+          <ArrowRight size={16} />
+        </button>
+      </form>
+
+      {focused && !value && (
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-[13px]">
+          <span className="text-ink-soft">Try one of these →</span>
+          {EXAMPLES.map((ex) => (
+            <button
+              key={ex.label}
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                setValue(ex.url);
+                submit(ex.url);
+              }}
+              className="px-3 py-1.5 rounded-full border border-hairline text-ink-muted hover:text-ink hover:border-hairline-strong transition-colors"
+            >
+              {ex.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <p className="mt-4 text-[13px] text-ink-soft">
+        5 free analyses · No credit card · Cancel anytime
+      </p>
+    </div>
+  );
 };
 
-const SELECT =
-  "slug,name,city,ticket_min_eur,hero_image_url,is_owned_by_realhunt,developer:developers(name),country:countries(name,slug,flag_emoji),score:project_scores(weighted_score,rank_global,dim_developer_reputation,dim_delivery_certainty,dim_legal_protection,dim_location_fundamentals,dim_investment_economics)";
+const Section = ({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => (
+  <section className={`max-w-[1140px] mx-auto px-6 py-20 md:py-32 ${className}`}>{children}</section>
+);
 
-const normalize = (rows: any[]): ProjectRow[] =>
-  (rows || []).map((p: any) => ({ ...p, score: Array.isArray(p.score) ? p.score[0] : p.score })) as ProjectRow[];
+const FeatureTile = ({
+  title,
+  body,
+}: {
+  title: string;
+  body: string;
+}) => (
+  <div className="rh-card">
+    <h3 className="font-display text-[22px] text-ink leading-tight">{title}</h3>
+    <p className="mt-3 text-ink-muted text-[15px] leading-relaxed">{body}</p>
+  </div>
+);
+
+const MethodRow = ({ name, what }: { name: string; what: string }) => (
+  <div className="grid grid-cols-12 gap-4 py-5 hairline-b">
+    <div className="col-span-12 md:col-span-3 font-display text-[17px] text-ink">{name}</div>
+    <div className="col-span-12 md:col-span-7 text-ink-muted text-[15px]">{what}</div>
+    <div className="col-span-12 md:col-span-2 md:text-right">
+      <Link to="/method" className="rh-btn-tertiary text-[14px]">See sources</Link>
+    </div>
+  </div>
+);
+
+const PriceCard = ({
+  name,
+  price,
+  cadence,
+  features,
+  cta,
+  highlight = false,
+}: {
+  name: string;
+  price: string;
+  cadence?: string;
+  features: string[];
+  cta: { label: string; to: string };
+  highlight?: boolean;
+}) => (
+  <div
+    className={`rh-card flex flex-col h-full ${highlight ? "border-2" : ""}`}
+    style={highlight ? { borderColor: "var(--rh-accent)" } : undefined}
+  >
+    <div className="font-display text-[20px] text-ink">{name}</div>
+    <div className="mt-3 flex items-baseline gap-1">
+      <span className="font-display text-[44px] tabular text-ink leading-none">{price}</span>
+      {cadence && <span className="text-ink-soft text-[14px]">/{cadence}</span>}
+    </div>
+    <ul className="mt-6 space-y-2.5 text-[14px] text-ink-muted flex-1">
+      {features.map((f) => (
+        <li key={f} className="flex items-start gap-2">
+          <Check size={15} className="text-accent-gold mt-0.5 shrink-0" />
+          <span>{f}</span>
+        </li>
+      ))}
+    </ul>
+    <Link to={cta.to} className={highlight ? "rh-btn-primary mt-6" : "rh-btn-secondary mt-6 justify-center"}>
+      {cta.label}
+    </Link>
+  </div>
+);
 
 const IndexNew = () => {
   useDocumentMeta({
-    title: "RealHunt — The Global Off-Plan Real Estate Index",
-    description: "Every off-plan project on Earth, ranked on five public dimensions. Independent and free for verified agents.",
+    title: "RealHunt — Is this listing actually a good deal?",
+    description:
+      "Paste any Zillow, Rightmove, Idealista, Redfin, Airbnb or PropertyFinder URL. Get a forensic real-estate score in under 10 seconds.",
   });
 
-  const navigate = useNavigate();
-  const { user } = useAuth();
-
-  const [projects, setProjects] = useState<ProjectRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-  const [country, setCountry] = useState<string>("all");
-  const [search, setSearch] = useState("");
-  const [searching, setSearching] = useState(false);
-  const [searchHits, setSearchHits] = useState<ProjectRow[] | null>(null);
-  const [discovering, setDiscovering] = useState(false);
-
-  // Submit URL section
-  const [submitUrl, setSubmitUrl] = useState("");
-  const [submitLoading, setSubmitLoading] = useState(false);
-  const [loginOpen, setLoginOpen] = useState(false);
-
-  // Initial fetch (only first page sorted by score)
-  const fetchPage = useCallback(async (offset: number) => {
-    const { data, count } = await supabase
-      .from("projects")
-      .select(SELECT, { count: "exact" })
-      .eq("active", true)
-      .order("name", { ascending: true })
-      .range(offset, offset + PAGE - 1);
-    const rows = normalize(data || []);
-    rows.sort((a, b) => (b.score?.weighted_score || 0) - (a.score?.weighted_score || 0));
-    return { rows, total: count || 0 };
-  }, []);
-
-  useEffect(() => {
-    (async () => {
-      const { rows, total } = await fetchPage(0);
-      setProjects(rows);
-      setHasMore(rows.length < total);
-      setLoading(false);
-    })();
-  }, [fetchPage]);
-
-  const loadMore = async () => {
-    if (!user) {
-      setLoginOpen(true);
-      return;
-    }
-    setLoadingMore(true);
-    const { rows, total } = await fetchPage(projects.length);
-    const merged = [...projects, ...rows].sort((a, b) => (b.score?.weighted_score || 0) - (a.score?.weighted_score || 0));
-    setProjects(merged);
-    setHasMore(merged.length < total);
-    setLoadingMore(false);
-  };
-
-  // Server-side search debounced
-  useEffect(() => {
-    const q = search.trim();
-    if (!q) {
-      setSearchHits(null);
-      return;
-    }
-    const t = setTimeout(async () => {
-      setSearching(true);
-      const like = `%${q}%`;
-      const { data } = await supabase
-        .from("projects")
-        .select(SELECT)
-        .eq("active", true)
-        .or(`name.ilike.${like},city.ilike.${like}`)
-        .limit(50);
-      const rows = normalize(data || []).sort((a, b) => (b.score?.weighted_score || 0) - (a.score?.weighted_score || 0));
-      setSearchHits(rows);
-      setSearching(false);
-    }, 280);
-    return () => clearTimeout(t);
-  }, [search]);
-
-  const countries = useMemo(() => {
-    const m = new Map<string, { slug: string; name: string; flag: string | null }>();
-    projects.forEach((p) => m.set(p.country.slug, { slug: p.country.slug, name: p.country.name, flag: p.country.flag_emoji }));
-    return Array.from(m.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [projects]);
-
-  const baseList = searchHits ?? projects;
-  const filtered = useMemo(() => {
-    if (country === "all") return baseList;
-    return baseList.filter((p) => p.country.slug === country);
-  }, [baseList, country]);
-
-  const visibleCap = user ? filtered.length : Math.min(filtered.length, PUBLIC_LIMIT);
-  const visible = filtered.slice(0, visibleCap);
-  const hiddenCount = filtered.length - visibleCap;
-
-  const discoverViaAI = async () => {
-    const q = search.trim();
-    if (!q) return;
-    if (!user) { setLoginOpen(true); return; }
-    setDiscovering(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("discover-project", { body: { query: q } });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      if (data?.off_plan === false) {
-        toast({ title: "Not an off-plan project", description: data.reason || "We couldn't classify this as an off-plan development.", variant: "destructive" });
-        return;
-      }
-      const slug = data?.project?.slug;
-      toast({ title: "Project added to the index", description: data.found ? "Already tracked." : "Scored and indexed." });
-      if (slug) navigate(`/projects/${slug}`);
-    } catch (e: any) {
-      toast({ title: "Discovery failed", description: e.message || "Try a more specific name or paste the developer URL.", variant: "destructive" });
-    } finally {
-      setDiscovering(false);
-    }
-  };
-
-  const handleSubmitUrl = async () => {
-    const url = submitUrl.trim();
-    if (!url.startsWith("http")) {
-      toast({ title: "Invalid URL", description: "Paste a full https:// link to a development website.", variant: "destructive" });
-      return;
-    }
-    if (!user) { setLoginOpen(true); return; }
-    setSubmitLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("discover-project", { body: { query: url } });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      if (data?.off_plan === false) {
-        toast({ title: "Not an off-plan project", description: data.reason || "Couldn't classify this URL.", variant: "destructive" });
-        return;
-      }
-      const slug = data?.project?.slug;
-      toast({ title: "Score generated", description: data.found ? "Already in the index." : "Added to the index." });
-      if (slug) navigate(`/projects/${slug}`);
-    } catch (e: any) {
-      toast({ title: "Could not score this URL", description: e.message || "Try a different link.", variant: "destructive" });
-    } finally {
-      setSubmitLoading(false);
-    }
-  };
-
-  const noLocalHits = !!search.trim() && searchHits !== null && searchHits.length === 0;
-
   return (
-    <div className="min-h-screen bg-white text-slate-900 antialiased">
+    <div className="min-h-screen bg-paper text-ink">
       <RHNav />
 
-      {/* Hero */}
-      <section className="border-b border-slate-200 bg-gradient-to-b from-slate-50 to-white">
-        <div className="max-w-7xl mx-auto px-6 pt-14 pb-10">
-          <p className="text-[11px] tracking-[0.25em] uppercase text-amber-600 font-semibold mb-4">The Global Off-Plan Index</p>
-          <h1 className="font-serif text-4xl md:text-6xl leading-[1.05] tracking-tight max-w-4xl">
-            Every off-plan project on Earth, <span className="italic text-amber-600">scored & ranked.</span>
+      {/* HERO */}
+      <Section className="!py-20 md:!py-28">
+        <div className="max-w-[820px]">
+          <h1 className="font-display text-[44px] sm:text-[58px] md:text-[68px] text-ink leading-[1.05]">
+            Is this listing actually a good deal?
           </h1>
-          <p className="mt-5 text-base md:text-lg text-slate-600 max-w-2xl leading-relaxed">
-            Five public dimensions. Real delivery data. Independent and free for verified agents.
+          <p className="mt-6 text-ink-muted text-[17px] sm:text-[19px] leading-relaxed max-w-[640px]">
+            Paste any Zillow, Rightmove, Idealista, Redfin, Airbnb or PropertyFinder URL.
+            Get a forensic score in under 10 seconds.
           </p>
-
-          <div className="mt-8 flex flex-col md:flex-row gap-3 items-stretch">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search project, developer, city — or paste a URL…"
-                className="w-full h-11 pl-10 pr-3 rounded-md border border-slate-300 bg-white text-sm focus:border-slate-900 focus:ring-0 outline-none"
-              />
-              {searching && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 animate-spin" />}
-            </div>
-            <div className="relative md:w-64">
-              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
-              <select
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                className="w-full h-11 pl-10 pr-3 rounded-md border border-slate-300 bg-white text-sm appearance-none focus:border-slate-900 outline-none"
-              >
-                <option value="all">All countries</option>
-                {countries.map((c) => (
-                  <option key={c.slug} value={c.slug}>{c.flag} {c.name}</option>
-                ))}
-              </select>
-            </div>
+          <div className="mt-10 max-w-[680px]">
+            <PasteInput />
           </div>
-
-          {noLocalHits && (
-            <div className="mt-4 p-4 rounded-lg border border-amber-200 bg-amber-50 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-              <div className="text-sm text-amber-900">
-                We don't have <span className="font-semibold">"{search}"</span> yet. Want us to find, score and add it?
-              </div>
-              <button
-                onClick={discoverViaAI}
-                disabled={discovering}
-                className="inline-flex items-center gap-2 h-9 px-4 rounded-md bg-amber-600 text-white text-sm font-semibold hover:bg-amber-700 disabled:opacity-60"
-              >
-                {discovering ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Searching…</> : <><Sparkles className="h-3.5 w-3.5" /> Discover with AI</>}
-              </button>
-            </div>
-          )}
         </div>
-      </section>
+      </Section>
 
-      {/* Screener */}
-      <section className="border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-10">
-          <div className="flex items-end justify-between mb-4 px-2">
-            <div>
-              <h2 className="font-serif text-2xl text-slate-900">Live Ranking</h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {searchHits ? `${filtered.length} matches` : `Showing ${visible.length} of ${filtered.length} loaded`} · sorted by RealHunt weighted score
+      {/* WHAT YOU GET */}
+      <Section>
+        <div className="mb-12">
+          <div className="text-[12px] uppercase tracking-[0.18em] text-ink-soft">What you get</div>
+          <h2 className="font-display text-[34px] md:text-[42px] text-ink mt-3 max-w-[680px]">
+            Three things. Done well.
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <FeatureTile
+            title="Forensic 5D score."
+            body="Developer, Delivery, Legal, Location, Economics. Every number sourced. No black box."
+          />
+          <FeatureTile
+            title="Verdict in one line."
+            body='"Buy below 4.2M AED" or "Pass — escrow risk." No essays. No hedging.'
+          />
+          <FeatureTile
+            title="Send-to-client PDF."
+            body="Your logo, your phone, your disclaimer. WhatsApp-ready in two taps."
+          />
+        </div>
+      </Section>
+
+      {/* LIVE DEMO TEASER */}
+      <div className="bg-surface-2 border-y border-hairline">
+        <Section className="!py-20 md:!py-24">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-10 items-center">
+            <div className="md:col-span-5">
+              <div className="text-[12px] uppercase tracking-[0.18em] text-ink-soft">Live demo</div>
+              <h2 className="font-display text-[34px] md:text-[42px] text-ink mt-3 leading-tight">
+                See a real report.
+              </h2>
+              <p className="mt-4 text-ink-muted text-[16px] leading-relaxed">
+                A forensic analysis of an actual listing, rendered exactly as your clients will see it.
               </p>
+              <div className="mt-6">
+                <Link to="/a/demo" className="rh-btn-secondary">
+                  Open the demo report
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
             </div>
-          </div>
-
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-slate-100 text-slate-700">
-                  <th className="text-left font-semibold px-4 py-3 w-14">Rank</th>
-                  <th className="px-2 py-3 w-16"></th>
-                  <th className="text-left font-semibold px-3 py-3">Project</th>
-                  <th className="text-left font-semibold px-3 py-3 w-20">Country</th>
-                  <th className="text-center font-semibold px-3 py-3 w-20">RH Score</th>
-                  <th className="text-center font-semibold px-3 py-3 w-20 hidden md:table-cell">Developer</th>
-                  <th className="text-center font-semibold px-3 py-3 w-20 hidden md:table-cell">Delivery</th>
-                  <th className="text-center font-semibold px-3 py-3 w-20 hidden lg:table-cell">Legal</th>
-                  <th className="text-center font-semibold px-3 py-3 w-20 hidden lg:table-cell">Location</th>
-                  <th className="text-center font-semibold px-3 py-3 w-20 hidden lg:table-cell">Economics</th>
-                  <th className="text-right font-semibold px-3 py-3 hidden md:table-cell">From</th>
-                  <th className="text-center font-semibold px-3 py-3 w-12"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  Array.from({ length: 8 }).map((_, i) => (
-                    <tr key={i} className="border-t border-slate-100">
-                      <td colSpan={12} className="px-4 py-4"><div className="h-5 bg-slate-100 rounded animate-pulse" /></td>
-                    </tr>
-                  ))
-                ) : visible.length === 0 ? (
-                  <tr><td colSpan={12} className="px-4 py-12 text-center text-slate-500 text-sm">No projects match these filters yet.</td></tr>
-                ) : (
-                  visible.map((p, i) => {
-                    const s = p.score;
-                    return (
-                      <tr key={p.slug} className="border-t border-slate-100 hover:bg-slate-50 transition">
-                        <td className="px-4 py-3 font-mono tabular-nums text-slate-500">{i + 1}</td>
-                        <td className="px-2 py-2">
-                          {p.hero_image_url ? (
-                            <img src={p.hero_image_url} alt={p.name} loading="lazy" className="h-10 w-14 object-cover rounded border border-slate-200" />
-                          ) : (
-                            <div className="h-10 w-14 rounded bg-slate-100 border border-slate-200" />
-                          )}
-                        </td>
-                        <td className="px-3 py-3">
-                          <Link to={`/projects/${p.slug}`} className="font-semibold text-slate-900 hover:text-amber-700">{p.name}</Link>
-                          <div className="text-xs text-slate-500 mt-0.5 flex items-center gap-2">
-                            <span>{p.developer?.name}</span>
-                            {p.city && <span>· {p.city}</span>}
-                            {p.is_owned_by_realhunt && (
-                              <span className="text-[9px] tracking-widest uppercase px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 ring-1 ring-amber-200">Owned by RH</span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-3 py-3"><span className="text-xl leading-none mr-1">{p.country.flag_emoji}</span><span className="text-xs text-slate-600 hidden xl:inline">{p.country.name}</span></td>
-                        <td className="px-3 py-3"><div className="flex justify-center"><ScoreRing score={Number(s?.weighted_score || 0)} /></div></td>
-                        <td className="px-3 py-3 hidden md:table-cell"><div className="flex justify-center"><ScoreRing size="sm" score={Number(s?.dim_developer_reputation || 0)} /></div></td>
-                        <td className="px-3 py-3 hidden md:table-cell"><div className="flex justify-center"><ScoreRing size="sm" score={Number(s?.dim_delivery_certainty || 0)} /></div></td>
-                        <td className="px-3 py-3 hidden lg:table-cell"><div className="flex justify-center"><ScoreRing size="sm" score={Number(s?.dim_legal_protection || 0)} /></div></td>
-                        <td className="px-3 py-3 hidden lg:table-cell"><div className="flex justify-center"><ScoreRing size="sm" score={Number(s?.dim_location_fundamentals || 0)} /></div></td>
-                        <td className="px-3 py-3 hidden lg:table-cell"><div className="flex justify-center"><ScoreRing size="sm" score={Number(s?.dim_investment_economics || 0)} /></div></td>
-                        <td className="px-3 py-3 text-right text-slate-700 font-mono tabular-nums hidden md:table-cell">{fmtEur(p.ticket_min_eur)}</td>
-                        <td className="px-3 py-3 text-center">
-                          <Link to={`/projects/${p.slug}`} className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 text-slate-500 hover:border-slate-900 hover:text-slate-900" aria-label="View">
-                            <Plus className="h-3.5 w-3.5" />
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Login gate / load-more */}
-          {!loading && (
-            <div className="mt-6 flex justify-center">
-              {!user && hiddenCount > 0 ? (
-                <div className="w-full max-w-xl rounded-xl border border-slate-200 bg-slate-50 p-6 text-center">
-                  <Lock className="h-5 w-5 text-amber-600 mx-auto mb-2" />
-                  <div className="font-serif text-xl text-slate-900">{hiddenCount}+ more projects below</div>
-                  <p className="text-sm text-slate-600 mt-1">Free forever. Sign in to see the full ranking, save favorites and contact developers.</p>
-                  <button onClick={() => setLoginOpen(true)} className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800">
-                    Sign in to unlock <ArrowRight className="h-4 w-4" />
-                  </button>
+            <div className="md:col-span-7">
+              <div className="rh-card !p-8">
+                <div className="text-[11px] uppercase tracking-[0.16em] text-ink-soft">
+                  Idealista · Marbella · Resale
                 </div>
-              ) : !searchHits && hasMore ? (
-                <button onClick={loadMore} disabled={loadingMore} className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md border border-slate-300 bg-white text-sm font-semibold text-slate-900 hover:bg-slate-50 disabled:opacity-60">
-                  {loadingMore ? <><Loader2 className="h-4 w-4 animate-spin" /> Loading…</> : <>Load 50 more</>}
-                </button>
-              ) : null}
+                <div className="mt-2 font-display text-[20px] text-ink truncate">
+                  Villa with sea view — Sierra Blanca
+                </div>
+                <div className="mt-6 flex items-end gap-6">
+                  <div>
+                    <div className="font-display text-[88px] leading-none tabular text-good">7.4</div>
+                    <div className="text-[12px] text-ink-soft mt-1">RH Score / 10</div>
+                  </div>
+                  <div className="flex-1 hairline-l pl-6">
+                    <div className="font-display text-[18px] text-ink leading-snug">
+                      Decent yield, weak developer track record — negotiate 8% off list.
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-8 grid grid-cols-5 gap-0 hairline-t pt-5">
+                  {[
+                    { l: "Developer", v: "5.8" },
+                    { l: "Delivery", v: "8.1" },
+                    { l: "Legal", v: "8.7" },
+                    { l: "Location", v: "8.4" },
+                    { l: "Economics", v: "6.2" },
+                  ].map((d, i) => (
+                    <div
+                      key={d.l}
+                      className={`text-center ${i > 0 ? "hairline-l" : ""}`}
+                    >
+                      <div className="text-[11px] uppercase tracking-wider text-ink-soft">{d.l}</div>
+                      <div className="font-display text-[26px] tabular text-ink mt-1">{d.v}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          )}
-        </div>
-      </section>
+          </div>
+        </Section>
+      </div>
 
-      {/* Submit any URL — viral acquisition */}
-      <section className="border-b border-slate-200 bg-slate-50">
-        <div className="max-w-5xl mx-auto px-6 py-16">
-          <div className="rounded-2xl border border-slate-200 bg-white p-8 md:p-10 shadow-sm">
-            <div className="flex items-center gap-2 text-amber-600 text-[11px] tracking-[0.25em] uppercase font-semibold mb-3">
-              <Sparkles className="h-3.5 w-3.5" /> Score any development
-            </div>
-            <h2 className="font-serif text-3xl md:text-4xl text-slate-900 leading-tight max-w-3xl">
-              Paste a link to any off-plan project website. We'll score it and add it to the index.
+      {/* BUILT FOR AGENTS */}
+      <Section>
+        <div className="mb-12 max-w-[680px]">
+          <div className="text-[12px] uppercase tracking-[0.18em] text-ink-soft">For agents who close</div>
+          <h2 className="font-display text-[34px] md:text-[42px] text-ink mt-3 leading-tight">
+            Paste. Score. Send. Close.
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <FeatureTile
+            title="Mobile-first analyze."
+            body="One thumb, parking lot, 23:00. The whole flow works on a 4-inch screen."
+          />
+          <FeatureTile
+            title="Branded PDF on WhatsApp."
+            body="Your logo and phone on every report. Clients reopen them. You see when."
+          />
+          <FeatureTile
+            title="Library + light CRM."
+            body="Every analysis tied to a client. Stop juggling tabs and screenshots."
+          />
+        </div>
+      </Section>
+
+      {/* METHODOLOGY TEASER */}
+      <div className="bg-surface-2 border-y border-hairline">
+        <Section className="!py-20 md:!py-24">
+          <div className="mb-10 max-w-[680px]">
+            <div className="text-[12px] uppercase tracking-[0.18em] text-ink-soft">Method</div>
+            <h2 className="font-display text-[34px] md:text-[42px] text-ink mt-3 leading-tight">
+              Five dimensions. Zero black box.
             </h2>
-            <p className="text-slate-600 mt-4 max-w-2xl">
-              Brokers and analysts use this to instantly evaluate any new launch. Independent scoring based on what's public on the developer's website. Free.
+          </div>
+          <div className="rh-card !p-0 !bg-surface">
+            <div className="px-6">
+              <MethodRow name="Developer" what="Track record, delivered projects, complaints, financial health." />
+              <MethodRow name="Delivery" what="Construction stage, escrow, contractor, expected handover vs market." />
+              <MethodRow name="Legal" what="Title clarity, planning permission, registry checks, litigation history." />
+              <MethodRow name="Location" what="Walkability, transit, school catchment, comparable sales density." />
+              <MethodRow name="Economics" what="Yield, price/sqm vs comparables, exit liquidity, downside scenarios." />
+            </div>
+            <div className="px-6 py-5 flex items-center justify-between">
+              <span className="text-[14px] text-ink-soft">
+                We publish every weight, every source, every formula.
+              </span>
+              <Link to="/method" className="rh-btn-tertiary text-[14px]">Read the full method →</Link>
+            </div>
+          </div>
+        </Section>
+      </div>
+
+      {/* PRICING PREVIEW */}
+      <Section>
+        <div className="mb-12 max-w-[680px]">
+          <div className="text-[12px] uppercase tracking-[0.18em] text-ink-soft">Pricing</div>
+          <h2 className="font-display text-[34px] md:text-[42px] text-ink mt-3 leading-tight">
+            Free forever. Pro when you close.
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <PriceCard
+            name="Free"
+            price="€0"
+            features={[
+              "5 analyses / month",
+              "PDF with RealHunt watermark",
+              "Library — 30 days",
+              "3 comparables per report",
+            ]}
+            cta={{ label: "Start free", to: "/auth/sign-up" }}
+          />
+          <PriceCard
+            name="Pro"
+            price="€19"
+            cadence="mo"
+            highlight
+            features={[
+              "200 analyses / month",
+              "Your logo, name, phone on PDFs",
+              "Unlimited library",
+              "Batch up to 50 URLs",
+              "Read receipts on shared reports",
+              "Priority queue",
+            ]}
+            cta={{ label: "Go Pro", to: "/auth/sign-up?plan=pro" }}
+          />
+          <PriceCard
+            name="Agency"
+            price="€79"
+            cadence="mo"
+            features={[
+              "1,000 analyses / month",
+              "3 seats (+€19/extra)",
+              "Custom color, multi-agent",
+              "Team library + analytics",
+              "API access (2,000 calls/mo)",
+              "White-label domain",
+            ]}
+            cta={{ label: "Talk to us", to: "/contact" }}
+          />
+        </div>
+        <p className="mt-6 text-[13px] text-ink-soft">
+          No credit card to start. Cancel in two clicks. We don't sell your data — see{" "}
+          <Link to="/legal/privacy" className="rh-btn-tertiary">privacy</Link>.
+        </p>
+      </Section>
+
+      {/* FINAL CTA */}
+      <div className="border-t border-hairline">
+        <Section className="!py-24">
+          <div className="max-w-[720px]">
+            <h2 className="font-display text-[40px] md:text-[54px] text-ink leading-[1.05]">
+              Your next deal is one paste away.
+            </h2>
+            <div className="mt-10">
+              <PasteInput />
+            </div>
+            <p className="mt-6 text-[13px] text-ink-soft">
+              5 free. Then €19/mo. Cancel in two clicks.
             </p>
-            <div className="mt-7 flex flex-col sm:flex-row gap-3">
-              <input
-                value={submitUrl}
-                onChange={(e) => setSubmitUrl(e.target.value)}
-                placeholder="https://developer-website.com/project-name"
-                className="flex-1 h-12 px-4 rounded-md border border-slate-300 bg-white text-sm focus:border-slate-900 outline-none"
-                onKeyDown={(e) => e.key === "Enter" && handleSubmitUrl()}
-              />
-              <button
-                onClick={handleSubmitUrl}
-                disabled={submitLoading}
-                className="h-12 px-6 rounded-md bg-slate-900 text-white font-semibold hover:bg-slate-800 transition inline-flex items-center justify-center gap-2 disabled:opacity-60"
-              >
-                {submitLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Scoring…</> : <>Generate score <ArrowRight className="h-4 w-4" /></>}
-              </button>
-            </div>
-            <p className="text-xs text-slate-500 mt-3">We auto-detect if it's an off-plan development. Scoring takes ~30 seconds.</p>
           </div>
-        </div>
-      </section>
-
-      {/* Methodology */}
-      <section className="border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <p className="text-[11px] tracking-[0.25em] uppercase text-amber-600 font-semibold mb-3">The methodology</p>
-          <h2 className="font-serif text-3xl md:text-5xl text-slate-900 max-w-3xl leading-tight">Five dimensions. One score. Public weights.</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-12">
-            {[
-              { d: "Developer reputation", w: "20%", desc: "Track record, delivered units, default history." },
-              { d: "Delivery certainty", w: "25%", desc: "Construction progress, escrow, regulator status." },
-              { d: "Legal protection", w: "15%", desc: "Title, jurisdiction, escrow law, buyer recourse." },
-              { d: "Location fundamentals", w: "20%", desc: "Demand, infrastructure, supply pipeline." },
-              { d: "Investment economics", w: "20%", desc: "Yield, exit liquidity, payment plan, ticket fit." },
-            ].map((d, i) => (
-              <div key={d.d} className="rounded-lg border border-slate-200 bg-white p-5">
-                <div className="text-[10px] tracking-widest uppercase text-slate-400">Dim. {i + 1}</div>
-                <div className="font-mono text-2xl text-amber-600 mt-2">{d.w}</div>
-                <h4 className="font-serif text-lg text-slate-900 mt-3">{d.d}</h4>
-                <p className="text-sm text-slate-600 mt-2 leading-relaxed">{d.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pillars */}
-      <section className="border-b border-slate-200 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-6 py-20">
-          <h2 className="font-serif text-3xl md:text-4xl text-slate-900 max-w-3xl">Four principles. No exceptions.</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
-            {[
-              { icon: Eye, title: "Public methodology", body: "Five dimensions. Documented weights. Reproducible by anyone." },
-              { icon: Scale, title: "Independent ranking", body: "Developers cannot pay for placement. Owned-by-RH projects flagged." },
-              { icon: ShieldCheck, title: "Real commission data", body: "Live percentages, milestones. Sourced from signed agreements." },
-              { icon: Ban, title: "Free for agents", body: "Verified agents access everything for free. We monetize developers." },
-            ].map(({ icon: Icon, title, body }) => (
-              <div key={title} className="rounded-lg border border-slate-200 bg-white p-6">
-                <Icon className="h-5 w-5 text-amber-600 mb-4" />
-                <h3 className="font-serif text-lg text-slate-900 mb-2">{title}</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">{body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Home Score callout */}
-      <section className="border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 py-16 grid md:grid-cols-[1.2fr_1fr] gap-10 items-center">
-          <div>
-            <p className="text-[11px] tracking-[0.25em] uppercase text-amber-600 font-semibold mb-3">Individual property tool</p>
-            <h2 className="font-serif text-3xl md:text-4xl text-slate-900 leading-tight">Want to score a single home, not a whole development?</h2>
-            <p className="text-slate-600 mt-4 text-lg">Use <span className="font-semibold text-slate-900">Home Score</span> — our forensic tool for individual listings on Zillow, Idealista, Rightmove and 100+ portals.</p>
-            <Link to="/homescoring" className="inline-flex items-center gap-2 mt-6 px-5 py-3 rounded-md border border-slate-900 text-slate-900 font-semibold hover:bg-slate-900 hover:text-white transition">
-              Open Home Score <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-6">
-            <div className="flex items-center gap-4">
-              <ScoreRing score={6.8} size="lg" />
-              <div>
-                <div className="font-mono text-xs text-slate-500">SAMPLE</div>
-                <div className="font-serif text-lg text-slate-900">Penthouse · Marbella</div>
-                <div className="text-xs text-slate-500">€1.2M · Verdict: Moderate</div>
-              </div>
-            </div>
-            <div className="grid grid-cols-5 gap-2 mt-5">
-              {[7.1, 6.4, 5.8, 7.6, 6.9].map((v, i) => (
-                <div key={i} className="flex flex-col items-center gap-1">
-                  <ScoreRing size="sm" score={v} />
-                  <span className="text-[9px] uppercase tracking-wider text-slate-400">D{i + 1}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA strip */}
-      <section className="bg-slate-900 text-white">
-        <div className="max-w-7xl mx-auto px-6 py-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div>
-            <h3 className="font-serif text-2xl md:text-3xl">Free forever for verified agents.</h3>
-            <p className="text-white/60 mt-1 text-sm">Save favorites, contact developers, reserve allocation slots.</p>
-          </div>
-          <Link to="/apply" className="inline-flex items-center gap-2 px-6 py-3 rounded-md bg-amber-500 text-slate-900 font-semibold hover:bg-amber-400">
-            Apply as agent <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </section>
+        </Section>
+      </div>
 
       <RHFooter />
-      <LoginGateModal open={loginOpen} onClose={() => setLoginOpen(false)} onSuccess={() => setLoginOpen(false)} />
     </div>
   );
 };
