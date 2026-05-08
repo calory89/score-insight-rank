@@ -14,6 +14,7 @@ interface ProjectRow {
   slug: string;
   name: string;
   city: string | null;
+  hero_image_url: string | null;
   is_owned_by_realhunt: boolean | null;
   developer: { name: string } | null;
   country: { name: string; slug: string; flag_emoji: string | null };
