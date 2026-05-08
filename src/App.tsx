@@ -19,6 +19,7 @@ import IndexNew from "./pages/IndexNew";
 import HomeScoring from "./pages/HomeScoring";
 import Apply from "./pages/Apply";
 import ProjectDetail from "./pages/ProjectDetail";
+import Method from "./pages/Method";
 
 // Lazy-loaded routes for code splitting
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
@@ -97,6 +98,11 @@ const AnimatedRoutes = () => {
           <Route path="/homescoring" element={<PageTransition><HomeScoring /></PageTransition>} />
           <Route path="/apply" element={<PageTransition><Apply /></PageTransition>} />
           <Route path="/projects/:slug" element={<PageTransition><ProjectDetail /></PageTransition>} />
+          <Route path="/method" element={<PageTransition><Method /></PageTransition>} />
+          <Route path="/pricing" element={<PageTransition><Method /></PageTransition>} />
+          <Route path="/auth/sign-in" element={<PageTransition><Apply /></PageTransition>} />
+          <Route path="/auth/sign-up" element={<PageTransition><Apply /></PageTransition>} />
+          <Route path="/app" element={<PageTransition><Dashboard /></PageTransition>} />
           <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
           <Route path="/analysis/loading" element={<PageTransition><Analysis /></PageTransition>} />
           <Route path="/analysis/:id" element={<PageTransition><Analysis /></PageTransition>} />
@@ -133,7 +139,7 @@ const App = () => (
       Skip to content
     </a>
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="realhunt-theme">
+      <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light" enableSystem={false} storageKey="realhunt-theme">
         <AuthProvider>
           <SubscriptionProvider>
           <TooltipProvider delayDuration={300}>
