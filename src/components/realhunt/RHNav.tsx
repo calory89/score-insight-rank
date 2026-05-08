@@ -36,7 +36,11 @@ const RHNav = () => {
               {item.label}
             </Link>
           ))}
-          {user ? null : (
+          {user ? (
+            <Link to="/app/brand" className="text-ink-muted hover:text-ink transition-colors">
+              Brand
+            </Link>
+          ) : (
             <Link to="/auth/sign-in" className="text-ink-muted hover:text-ink transition-colors">
               Sign in
             </Link>

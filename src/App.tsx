@@ -23,6 +23,8 @@ import Method from "./pages/Method";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
 import Callback from "./pages/auth/Callback";
+import Brand from "./pages/app/Brand";
+import ShortLinkRedirect from "./pages/ShortLinkRedirect";
 
 // Lazy-loaded routes for code splitting
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
@@ -108,6 +110,8 @@ const AnimatedRoutes = () => {
           <Route path="/auth/callback" element={<PageTransition><Callback /></PageTransition>} />
           <Route path="/auth/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
           <Route path="/app" element={<PageTransition><Dashboard /></PageTransition>} />
+          <Route path="/app/brand" element={<PageTransition><Brand /></PageTransition>} />
+          <Route path="/s/:slug" element={<ShortLinkRedirect />} />
           <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
           <Route path="/analysis/loading" element={<PageTransition><Analysis /></PageTransition>} />
           <Route path="/analysis/:id" element={<PageTransition><Analysis /></PageTransition>} />
