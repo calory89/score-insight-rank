@@ -1,48 +1,94 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Menu, X } from "lucide-react";
+
+const NAV_ITEMS = [
+  { to: "/", label: "Score a property" },
+  { to: "/rankings", label: "Rankings" },
+  { to: "/method", label: "Method" },
+  { to: "/pricing", label: "Pricing" },
+];
 
 const RHNav = () => {
-  const [scrolled, setScrolled] = useState(false);
   const { user } = useAuth();
+  const location = useLocation();
+  const [open, setOpen] = useState(false);
+
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    setOpen(false);
+  }, [location.pathname]);
 
   return (
-    <header
-      className={`sticky top-0 z-40 transition-all ${
-        scrolled
-          ? "bg-white/90 backdrop-blur-xl border-b border-slate-200"
-          : "bg-white border-b border-slate-100"
-      }`}
-    >
-      <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 h-16">
-        <Link to="/" className="flex items-center gap-2 font-serif text-xl text-slate-900">
-          <span className="text-amber-600">◆</span> RealHunt
+    <header className="sticky top-0 z-40 bg-paper/85 backdrop-blur-md border-b border-hairline">
+      <nav className="max-w-[1140px] mx-auto flex items-center justify-between px-6 h-16">
+        <Link to="/" className="font-display text-[22px] tracking-tight text-ink leading-none">
+          RealHunt
         </Link>
-        <div className="hidden md:flex items-center gap-7 text-sm text-slate-600">
-          <Link to="/" className="hover:text-slate-900 transition">Index</Link>
-          <Link to="/homescoring" className="hover:text-slate-900 transition">Home Score</Link>
-          <Link to="/methodology" className="hover:text-slate-900 transition">Methodology</Link>
-          <Link to="/for-developers" className="hover:text-slate-900 transition">For Developers</Link>
-        </div>
-        <div className="flex items-center gap-3">
-          {user ? (
-            <Link to="/dashboard" className="text-sm text-slate-700 hover:text-slate-900">Dashboard</Link>
-          ) : (
-            <Link to="/apply" className="text-sm text-slate-700 hover:text-slate-900 hidden sm:inline">Sign in</Link>
+
+        <div className="hidden md:flex items-center gap-8 text-[14px]">
+          {NAV_ITEMS.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className="text-ink-muted hover:text-ink transition-colors"
+            >
+              {item.label}
+            </Link>
+          ))}
+          {user ? null : (
+            <Link to="/auth/sign-in" className="text-ink-muted hover:text-ink transition-colors">
+              Sign in
+            </Link>
           )}
           <Link
-            to="/apply"
-            className="text-sm font-semibold px-4 py-2 rounded-md bg-slate-900 text-white hover:bg-slate-800 transition"
+            to={user ? "/app" : "/auth/sign-up"}
+            className="rh-btn-primary !px-5 !py-2.5 !text-[14px]"
           >
-            Apply as agent
+            {user ? "Open the app →" : "Open the app →"}
           </Link>
         </div>
+
+        <button
+          className="md:hidden p-2 -mr-2 text-ink"
+          onClick={() => setOpen((v) => !v)}
+          aria-label={open ? "Close menu" : "Open menu"}
+        >
+          {open ? <X size={20} /> : <Menu size={20} />}
+        </button>
       </nav>
+
+      {open && (
+        <div className="md:hidden border-t border-hairline bg-paper">
+          <div className="max-w-[1140px] mx-auto px-6 py-4 flex flex-col gap-1">
+            {NAV_ITEMS.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className="py-3 text-ink text-[15px] hairline-b last:border-b-0"
+              >
+                {item.label}
+              </Link>
+            ))}
+            {!user && (
+              <>
+                <Link to="/auth/sign-in" className="py-3 text-ink text-[15px] hairline-b">
+                  Sign in
+                </Link>
+                <Link to="/auth/sign-up" className="py-3 text-ink text-[15px] hairline-b">
+                  Sign up
+                </Link>
+              </>
+            )}
+            <Link
+              to={user ? "/app" : "/auth/sign-up"}
+              className="rh-btn-primary mt-3 w-full"
+            >
+              Open the app →
+            </Link>
+          </div>
+        </div>
+      )}
     </header>
   );
 };
