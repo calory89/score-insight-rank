@@ -1,12 +1,14 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight, Check, ShieldCheck, Eye, Scale, Ban } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowRight, Search, Globe, Eye, Scale, ShieldCheck, Ban, Plus, Loader2, Sparkles } from "lucide-react";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { supabase } from "@/integrations/supabase/client";
 import RHNav from "@/components/realhunt/RHNav";
 import RHFooter from "@/components/realhunt/RHFooter";
-import ScoreBadge from "@/components/realhunt/ScoreBadge";
-import CountryPreviewTable, { PreviewRow } from "@/components/realhunt/CountryPreviewTable";
+import ScoreRing from "@/components/realhunt/ScoreRing";
+import LoginGateModal from "@/components/LoginGateModal";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
 
 interface ProjectRow {
   slug: string;
@@ -15,30 +17,52 @@ interface ProjectRow {
   is_owned_by_realhunt: boolean | null;
   developer: { name: string } | null;
   country: { name: string; slug: string; flag_emoji: string | null };
-  score: { weighted_score: number | null; rank_global: number | null } | null;
+  score: {
+    weighted_score: number | null;
+    rank_global: number | null;
+    dim_developer_reputation: number | null;
+    dim_delivery_certainty: number | null;
+    dim_legal_protection: number | null;
+    dim_location_fundamentals: number | null;
+    dim_investment_economics: number | null;
+  } | null;
+  ticket_min_eur: number | null;
 }
 
-const FEATURED_COUNTRIES = ["uae", "spain", "indonesia", "mexico"];
+const fmtEur = (v: number | null) => {
+  if (!v) return "—";
+  if (v >= 1_000_000) return `€${(v / 1_000_000).toFixed(1)}M`;
+  if (v >= 1_000) return `€${Math.round(v / 1_000)}k`;
+  return `€${v}`;
+};
 
 const IndexNew = () => {
   useDocumentMeta({
     title: "RealHunt — The Global Off-Plan Real Estate Index",
     description:
-      "Every off-plan and pre-construction project on Earth, scored 1 to 10 on the same five public dimensions. Independent. Transparent. Free for verified agents.",
+      "Every off-plan project on Earth, ranked on five public dimensions. Independent, transparent, free for verified agents.",
   });
 
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [projects, setProjects] = useState<ProjectRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [country, setCountry] = useState<string>("all");
+  const [search, setSearch] = useState("");
+
+  // Submit URL section
+  const [submitUrl, setSubmitUrl] = useState("");
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
 
   useEffect(() => {
     (async () => {
       const { data } = await supabase
         .from("projects")
         .select(
-          "slug,name,city,is_owned_by_realhunt,developer:developers(name),country:countries(name,slug,flag_emoji),score:project_scores(weighted_score,rank_global)"
+          "slug,name,city,ticket_min_eur,is_owned_by_realhunt,developer:developers(name),country:countries(name,slug,flag_emoji),score:project_scores(weighted_score,rank_global,dim_developer_reputation,dim_delivery_certainty,dim_legal_protection,dim_location_fundamentals,dim_investment_economics)"
         )
         .eq("active", true);
-
       const rows = (data || []).map((p: any) => ({
         ...p,
         score: Array.isArray(p.score) ? p.score[0] : p.score,
@@ -49,208 +73,241 @@ const IndexNew = () => {
     })();
   }, []);
 
-  const top10 = projects.slice(0, 10);
+  const countries = useMemo(() => {
+    const m = new Map<string, { slug: string; name: string; flag: string | null }>();
+    projects.forEach((p) =>
+      m.set(p.country.slug, { slug: p.country.slug, name: p.country.name, flag: p.country.flag_emoji })
+    );
+    return Array.from(m.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [projects]);
 
-  const byCountry = (slug: string): PreviewRow[] =>
-    projects
-      .filter((p) => p.country.slug === slug)
-      .slice(0, 5)
-      .map((p, i) => ({
-        rank: i + 1,
-        name: p.name,
-        slug: p.slug,
-        developer: p.developer?.name || "—",
-        city: p.city || "",
-        score: Number(p.score?.weighted_score || 0),
-        is_owned_by_realhunt: !!p.is_owned_by_realhunt,
-      }));
+  const filtered = useMemo(() => {
+    let r = projects;
+    if (country !== "all") r = r.filter((p) => p.country.slug === country);
+    if (search.trim()) {
+      const s = search.toLowerCase();
+      r = r.filter(
+        (p) =>
+          p.name.toLowerCase().includes(s) ||
+          p.developer?.name.toLowerCase().includes(s) ||
+          p.city?.toLowerCase().includes(s)
+      );
+    }
+    return r;
+  }, [projects, country, search]);
+
+  const handleSubmitUrl = async () => {
+    const url = submitUrl.trim();
+    if (!url.startsWith("http")) {
+      toast({ title: "Invalid URL", description: "Paste a full https:// link to a development website.", variant: "destructive" });
+      return;
+    }
+    if (!user) {
+      setLoginOpen(true);
+      return;
+    }
+    setSubmitLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("analyze-property", { body: { url } });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      const id = data?.data?.id;
+      toast({ title: "Score generated", description: "We added it to the global index." });
+      if (id) navigate(`/analysis/${id}`);
+    } catch (e: any) {
+      toast({ title: "Could not score this URL", description: e.message || "Try a different link.", variant: "destructive" });
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-rh-navy text-white antialiased">
+    <div className="min-h-screen bg-white text-slate-900 antialiased">
       <RHNav />
 
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div
-          className="absolute inset-0 opacity-[0.06] pointer-events-none"
-          style={{
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)",
-            backgroundSize: "48px 48px",
-          }}
-        />
-        <div className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full bg-rh-gold/5 blur-3xl pointer-events-none" />
-
-        <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-24 md:pt-28 md:pb-32">
-          <p className="text-[11px] tracking-[0.25em] uppercase text-rh-gold font-semibold mb-6">
+      <section className="border-b border-slate-200 bg-gradient-to-b from-slate-50 to-white">
+        <div className="max-w-7xl mx-auto px-6 pt-14 pb-10">
+          <p className="text-[11px] tracking-[0.25em] uppercase text-amber-600 font-semibold mb-4">
             The Global Off-Plan Index
           </p>
-          <h1 className="font-serif text-5xl md:text-7xl leading-[1.02] tracking-tight max-w-4xl">
-            Every off-plan project on Earth.{" "}
-            <span className="italic text-rh-gold">Ranked.</span>
+          <h1 className="font-serif text-4xl md:text-6xl leading-[1.05] tracking-tight max-w-4xl">
+            Every off-plan project on Earth, <span className="italic text-amber-600">scored & ranked.</span>
           </h1>
-          <p className="mt-8 text-lg md:text-xl text-white/70 max-w-2xl leading-relaxed">
-            Independent scoring on five public dimensions. Live commission terms. Real delivery
-            data. Built for the next decade of off-plan real estate.
+          <p className="mt-5 text-base md:text-lg text-slate-600 max-w-2xl leading-relaxed">
+            Five public dimensions. Live commission terms. Real delivery data. Independent and free for verified agents.
           </p>
-          <div className="mt-10 flex flex-col sm:flex-row gap-4">
-            <Link
-              to="/browse"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-md bg-rh-gold text-rh-navy font-semibold hover:bg-rh-gold-soft transition"
-            >
-              Browse the index <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              to="/apply"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-md border border-white/15 text-white hover:bg-white/5 transition"
-            >
-              Apply as agent — free forever
-            </Link>
+
+          {/* Filter bar */}
+          <div className="mt-8 flex flex-col md:flex-row gap-3 items-stretch">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search project, developer or city…"
+                className="w-full h-11 pl-10 pr-3 rounded-md border border-slate-300 bg-white text-sm focus:border-slate-900 focus:ring-0 outline-none"
+              />
+            </div>
+            <div className="relative md:w-64">
+              <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
+              <select
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                className="w-full h-11 pl-10 pr-3 rounded-md border border-slate-300 bg-white text-sm appearance-none focus:border-slate-900 outline-none"
+              >
+                <option value="all">All countries ({projects.length})</option>
+                {countries.map((c) => (
+                  <option key={c.slug} value={c.slug}>
+                    {c.flag} {c.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Screener table */}
+      <section className="border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-10">
+          <div className="flex items-end justify-between mb-4 px-2">
+            <div>
+              <h2 className="font-serif text-2xl text-slate-900">Live Ranking</h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {filtered.length} projects · sorted by RealHunt weighted score · always high to low
+              </p>
+            </div>
           </div>
 
-          {/* Top 10 ranking preview */}
-          <div className="mt-16 rounded-xl border border-rh-line bg-rh-navy-2/60 backdrop-blur overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-rh-line">
-              <div>
-                <h3 className="font-serif text-xl text-white">Global Top 10 — live</h3>
-                <p className="text-xs text-white/40 mt-0.5">
-                  Ranked by RealHunt 5-dimension weighted score · updated continuously
-                </p>
-              </div>
-              <Link to="/browse" className="text-xs text-rh-gold hover:text-rh-gold-soft">
-                Full ranking →
-              </Link>
-            </div>
+          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
             <table className="w-full text-sm">
-              <thead className="text-[10px] tracking-widest uppercase text-white/40">
-                <tr>
-                  <th className="text-left font-medium px-5 py-2 w-12">Rank</th>
-                  <th className="text-left font-medium px-2 py-2">Project</th>
-                  <th className="text-left font-medium px-2 py-2 hidden md:table-cell">Developer</th>
-                  <th className="text-left font-medium px-2 py-2 hidden md:table-cell">Country</th>
-                  <th className="text-right font-medium px-5 py-2">Score</th>
+              <thead>
+                <tr className="bg-slate-100 text-slate-700">
+                  <th className="text-left font-semibold px-4 py-3 w-14">Rank</th>
+                  <th className="text-left font-semibold px-3 py-3">Project</th>
+                  <th className="text-left font-semibold px-3 py-3 w-20">Country</th>
+                  <th className="text-center font-semibold px-3 py-3 w-20">RH Score</th>
+                  <th className="text-center font-semibold px-3 py-3 w-20 hidden md:table-cell">Developer</th>
+                  <th className="text-center font-semibold px-3 py-3 w-20 hidden md:table-cell">Delivery</th>
+                  <th className="text-center font-semibold px-3 py-3 w-20 hidden lg:table-cell">Legal</th>
+                  <th className="text-center font-semibold px-3 py-3 w-20 hidden lg:table-cell">Location</th>
+                  <th className="text-center font-semibold px-3 py-3 w-20 hidden lg:table-cell">Economics</th>
+                  <th className="text-right font-semibold px-3 py-3 hidden md:table-cell">From</th>
+                  <th className="text-center font-semibold px-3 py-3 w-12"></th>
                 </tr>
               </thead>
               <tbody>
-                {loading
-                  ? Array.from({ length: 6 }).map((_, i) => (
-                      <tr key={i} className="border-t border-rh-line/60">
-                        <td colSpan={5} className="px-5 py-4">
-                          <div className="h-4 bg-white/[0.04] rounded animate-pulse" />
-                        </td>
-                      </tr>
-                    ))
-                  : top10.map((p, i) => (
-                      <tr key={p.slug} className="border-t border-rh-line/60 hover:bg-white/[0.02] transition">
-                        <td className="px-5 py-3.5 font-mono text-white/40 tabular-nums text-xs">
-                          {String(i + 1).padStart(2, "0")}
-                        </td>
-                        <td className="px-2 py-3.5">
-                          <Link to={`/projects/${p.slug}`} className="text-white hover:text-rh-gold font-medium">
+                {loading ? (
+                  Array.from({ length: 8 }).map((_, i) => (
+                    <tr key={i} className="border-t border-slate-100">
+                      <td colSpan={11} className="px-4 py-4">
+                        <div className="h-5 bg-slate-100 rounded animate-pulse" />
+                      </td>
+                    </tr>
+                  ))
+                ) : filtered.length === 0 ? (
+                  <tr>
+                    <td colSpan={11} className="px-4 py-12 text-center text-slate-500 text-sm">
+                      No projects match these filters yet.
+                    </td>
+                  </tr>
+                ) : (
+                  filtered.map((p, i) => {
+                    const s = p.score;
+                    return (
+                      <tr key={p.slug} className="border-t border-slate-100 hover:bg-slate-50 transition">
+                        <td className="px-4 py-3 font-mono tabular-nums text-slate-500">{i + 1}</td>
+                        <td className="px-3 py-3">
+                          <Link to={`/projects/${p.slug}`} className="font-semibold text-slate-900 hover:text-amber-700">
                             {p.name}
                           </Link>
-                          <div className="text-xs text-white/40 mt-0.5 flex items-center gap-2">
-                            <span className="md:hidden">{p.country.flag_emoji}</span>
-                            {p.city}
+                          <div className="text-xs text-slate-500 mt-0.5 flex items-center gap-2">
+                            <span>{p.developer?.name}</span>
+                            {p.city && <span>· {p.city}</span>}
                             {p.is_owned_by_realhunt && (
-                              <span className="text-[9px] tracking-widest uppercase px-1.5 py-0.5 rounded bg-rh-gold/15 text-rh-gold ring-1 ring-rh-gold/30">
-                                Owned by RealHunt
+                              <span className="text-[9px] tracking-widest uppercase px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 ring-1 ring-amber-200">
+                                Owned by RH
                               </span>
                             )}
                           </div>
                         </td>
-                        <td className="px-2 py-3.5 text-white/60 hidden md:table-cell">
-                          {p.developer?.name}
+                        <td className="px-3 py-3">
+                          <span className="text-xl leading-none mr-1">{p.country.flag_emoji}</span>
+                          <span className="text-xs text-slate-600 hidden xl:inline">{p.country.name}</span>
                         </td>
-                        <td className="px-2 py-3.5 text-white/60 hidden md:table-cell">
-                          <span className="mr-1.5">{p.country.flag_emoji}</span>
-                          {p.country.name}
-                        </td>
-                        <td className="px-5 py-3.5 text-right">
-                          <ScoreBadge score={Number(p.score?.weighted_score || 0)} />
+                        <td className="px-3 py-3"><div className="flex justify-center"><ScoreRing score={Number(s?.weighted_score || 0)} /></div></td>
+                        <td className="px-3 py-3 hidden md:table-cell"><div className="flex justify-center"><ScoreRing size="sm" score={Number(s?.dim_developer_reputation || 0)} /></div></td>
+                        <td className="px-3 py-3 hidden md:table-cell"><div className="flex justify-center"><ScoreRing size="sm" score={Number(s?.dim_delivery_certainty || 0)} /></div></td>
+                        <td className="px-3 py-3 hidden lg:table-cell"><div className="flex justify-center"><ScoreRing size="sm" score={Number(s?.dim_legal_protection || 0)} /></div></td>
+                        <td className="px-3 py-3 hidden lg:table-cell"><div className="flex justify-center"><ScoreRing size="sm" score={Number(s?.dim_location_fundamentals || 0)} /></div></td>
+                        <td className="px-3 py-3 hidden lg:table-cell"><div className="flex justify-center"><ScoreRing size="sm" score={Number(s?.dim_investment_economics || 0)} /></div></td>
+                        <td className="px-3 py-3 text-right text-slate-700 font-mono tabular-nums hidden md:table-cell">{fmtEur(p.ticket_min_eur)}</td>
+                        <td className="px-3 py-3 text-center">
+                          <Link
+                            to={`/projects/${p.slug}`}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-slate-300 text-slate-500 hover:border-slate-900 hover:text-slate-900"
+                            aria-label="View"
+                          >
+                            <Plus className="h-3.5 w-3.5" />
+                          </Link>
                         </td>
                       </tr>
-                    ))}
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
         </div>
       </section>
 
-      {/* Pain section */}
-      <section className="border-t border-rh-line bg-rh-navy-2/40">
+      {/* Submit any URL section — viral acquisition */}
+      <section className="border-b border-slate-200 bg-slate-50">
+        <div className="max-w-5xl mx-auto px-6 py-16">
+          <div className="rounded-2xl border border-slate-200 bg-white p-8 md:p-10 shadow-sm">
+            <div className="flex items-center gap-2 text-amber-600 text-[11px] tracking-[0.25em] uppercase font-semibold mb-3">
+              <Sparkles className="h-3.5 w-3.5" /> Score any development
+            </div>
+            <h2 className="font-serif text-3xl md:text-4xl text-slate-900 leading-tight max-w-3xl">
+              Paste a link to any off-plan project website. We'll score it and add it to the index.
+            </h2>
+            <p className="text-slate-600 mt-4 max-w-2xl">
+              Brokers and analysts use this to instantly evaluate any new launch. The scoring is independent — based only on what's public on the developer's website. Free for everyone.
+            </p>
+            <div className="mt-7 flex flex-col sm:flex-row gap-3">
+              <input
+                value={submitUrl}
+                onChange={(e) => setSubmitUrl(e.target.value)}
+                placeholder="https://developer-website.com/project-name"
+                className="flex-1 h-12 px-4 rounded-md border border-slate-300 bg-white text-sm focus:border-slate-900 outline-none"
+                onKeyDown={(e) => e.key === "Enter" && handleSubmitUrl()}
+              />
+              <button
+                onClick={handleSubmitUrl}
+                disabled={submitLoading}
+                className="h-12 px-6 rounded-md bg-slate-900 text-white font-semibold hover:bg-slate-800 transition inline-flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {submitLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Scoring…</> : <>Generate score <ArrowRight className="h-4 w-4" /></>}
+              </button>
+            </div>
+            <p className="text-xs text-slate-500 mt-3">
+              We auto-detect if the URL is an off-plan development. Scoring takes ~30 seconds.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Methodology */}
+      <section className="border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6 py-20">
-          <p className="text-[11px] tracking-[0.25em] uppercase text-rh-gold font-semibold mb-4">
-            The problem
-          </p>
-          <h2 className="font-serif text-4xl md:text-5xl text-white max-w-3xl leading-tight">
-            Off-plan real estate is the largest opaque market on Earth.
-          </h2>
-          <div className="grid md:grid-cols-2 gap-12 mt-12 text-white/70 text-lg leading-relaxed">
-            <p>
-              Buyers compare glossy renders, never delivery records. Agents juggle 40 spreadsheets
-              of commission terms that change every quarter. Developers launch in silence.
-            </p>
-            <p>
-              Trillions of dollars move every year on broker hearsay. There is no Bloomberg for
-              off-plan. No Morningstar. No public ranking. <span className="text-white">Until now.</span>
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Pillars */}
-      <section className="border-t border-rh-line">
-        <div className="max-w-7xl mx-auto px-6 py-24">
-          <p className="text-[11px] tracking-[0.25em] uppercase text-rh-gold font-semibold mb-4">
-            What RealHunt is
-          </p>
-          <h2 className="font-serif text-4xl md:text-5xl text-white max-w-3xl leading-tight">
-            Four principles. No exceptions.
-          </h2>
-          <div className="grid md:grid-cols-2 gap-px mt-14 bg-rh-line rounded-xl overflow-hidden border border-rh-line">
-            {[
-              {
-                icon: Eye,
-                title: "Public methodology",
-                body: "Five dimensions. Documented weights. Every score is reproducible by anyone.",
-              },
-              {
-                icon: Scale,
-                title: "Independent ranking",
-                body: "Developers cannot pay for placement. Owned-by-RealHunt projects are flagged in every view.",
-              },
-              {
-                icon: ShieldCheck,
-                title: "Real commission data",
-                body: "Live percentages, milestones, payout terms. Sourced from signed broker agreements.",
-              },
-              {
-                icon: Ban,
-                title: "No paywalls for agents",
-                body: "Verified off-plan agents access everything for free. Always. We monetize developers, never brokers.",
-              },
-            ].map(({ icon: Icon, title, body }) => (
-              <div key={title} className="bg-rh-navy p-8">
-                <Icon className="h-6 w-6 text-rh-gold mb-5" />
-                <h3 className="font-serif text-2xl text-white mb-3">{title}</h3>
-                <p className="text-white/60 leading-relaxed">{body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Methodology preview */}
-      <section className="border-t border-rh-line bg-rh-navy-2/40">
-        <div className="max-w-7xl mx-auto px-6 py-24">
-          <p className="text-[11px] tracking-[0.25em] uppercase text-rh-gold font-semibold mb-4">
+          <p className="text-[11px] tracking-[0.25em] uppercase text-amber-600 font-semibold mb-3">
             The methodology
           </p>
-          <h2 className="font-serif text-4xl md:text-5xl text-white max-w-3xl leading-tight">
+          <h2 className="font-serif text-3xl md:text-5xl text-slate-900 max-w-3xl leading-tight">
             Five dimensions. One score. Public weights.
           </h2>
-          <div className="grid md:grid-cols-5 gap-6 mt-14">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-12">
             {[
               { d: "Developer reputation", w: "20%", desc: "Track record, delivered units, default history." },
               { d: "Delivery certainty", w: "25%", desc: "Construction progress, escrow, regulator status." },
@@ -258,168 +315,97 @@ const IndexNew = () => {
               { d: "Location fundamentals", w: "20%", desc: "Demand, infrastructure, supply pipeline." },
               { d: "Investment economics", w: "20%", desc: "Yield, exit liquidity, payment plan, ticket fit." },
             ].map((d, i) => (
-              <div key={d.d} className="rounded-lg border border-rh-line bg-rh-navy p-5">
-                <div className="text-[10px] tracking-widest uppercase text-white/40">Dim. {i + 1}</div>
-                <div className="font-mono text-2xl text-rh-gold mt-2">{d.w}</div>
-                <h4 className="font-serif text-lg text-white mt-3">{d.d}</h4>
-                <p className="text-sm text-white/50 mt-2 leading-relaxed">{d.desc}</p>
+              <div key={d.d} className="rounded-lg border border-slate-200 bg-white p-5">
+                <div className="text-[10px] tracking-widest uppercase text-slate-400">Dim. {i + 1}</div>
+                <div className="font-mono text-2xl text-amber-600 mt-2">{d.w}</div>
+                <h4 className="font-serif text-lg text-slate-900 mt-3">{d.d}</h4>
+                <p className="text-sm text-slate-600 mt-2 leading-relaxed">{d.desc}</p>
               </div>
             ))}
           </div>
-          <Link to="/methodology" className="inline-flex items-center gap-2 mt-10 text-rh-gold hover:text-rh-gold-soft text-sm">
-            Read the full methodology <ArrowRight className="h-4 w-4" />
-          </Link>
         </div>
       </section>
 
-      {/* EcoBeachCity disclosure */}
-      <section className="border-t border-rh-line">
-        <div className="max-w-7xl mx-auto px-6 py-16">
-          <div className="rounded-xl border border-rh-gold/30 bg-rh-gold/[0.04] p-8 md:p-10">
-            <div className="text-[11px] tracking-[0.25em] uppercase text-rh-gold font-semibold mb-3">
-              Conflict-of-interest disclosure
-            </div>
-            <h3 className="font-serif text-2xl md:text-3xl text-white leading-snug max-w-3xl">
-              EcoBeachCity is owned by RealHunt's founders.
-            </h3>
-            <p className="text-white/70 mt-4 max-w-3xl leading-relaxed">
-              It appears in our index like any other project, scored by the same independent
-              methodology. We flag this on every page where it appears so you can decide whether to
-              include it in your shortlist. Full disclosure on the project page.
-            </p>
+      {/* Pillars */}
+      <section className="border-b border-slate-200 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-6 py-20">
+          <h2 className="font-serif text-3xl md:text-4xl text-slate-900 max-w-3xl">Four principles. No exceptions.</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
+            {[
+              { icon: Eye, title: "Public methodology", body: "Five dimensions. Documented weights. Reproducible by anyone." },
+              { icon: Scale, title: "Independent ranking", body: "Developers cannot pay for placement. Owned-by-RH projects flagged." },
+              { icon: ShieldCheck, title: "Real commission data", body: "Live percentages, milestones. Sourced from signed agreements." },
+              { icon: Ban, title: "Free for agents", body: "Verified agents access everything for free. We monetize developers." },
+            ].map(({ icon: Icon, title, body }) => (
+              <div key={title} className="rounded-lg border border-slate-200 bg-white p-6">
+                <Icon className="h-5 w-5 text-amber-600 mb-4" />
+                <h3 className="font-serif text-lg text-slate-900 mb-2">{title}</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">{body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Country preview tables */}
-      <section className="border-t border-rh-line bg-rh-navy-2/40">
-        <div className="max-w-7xl mx-auto px-6 py-24">
-          <p className="text-[11px] tracking-[0.25em] uppercase text-rh-gold font-semibold mb-4">
-            By country
-          </p>
-          <h2 className="font-serif text-4xl md:text-5xl text-white max-w-3xl leading-tight">
-            Live rankings, top markets.
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6 mt-12">
-            {FEATURED_COUNTRIES.map((slug) => {
-              const sample = projects.find((p) => p.country.slug === slug);
-              if (!sample) return null;
-              return (
-                <CountryPreviewTable
-                  key={slug}
-                  countrySlug={slug}
-                  countryName={sample.country.name}
-                  flag={sample.country.flag_emoji || ""}
-                  rows={byCountry(slug)}
-                />
-              );
-            })}
-          </div>
-          <Link to="/countries" className="inline-flex items-center gap-2 mt-10 text-rh-gold hover:text-rh-gold-soft text-sm">
-            All countries <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-      </section>
-
-      {/* Free for agents */}
-      <section className="border-t border-rh-line">
-        <div className="max-w-7xl mx-auto px-6 py-24 grid md:grid-cols-2 gap-16 items-start">
+      {/* Home Score callout */}
+      <section className="border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6 py-16 grid md:grid-cols-[1.2fr_1fr] gap-10 items-center">
           <div>
-            <p className="text-[11px] tracking-[0.25em] uppercase text-rh-gold font-semibold mb-4">
-              For agents
+            <p className="text-[11px] tracking-[0.25em] uppercase text-amber-600 font-semibold mb-3">
+              Individual property tool
             </p>
-            <h2 className="font-serif text-4xl md:text-5xl text-white leading-tight">
-              Free forever. Independent. No platform fees, no client lock-in.
+            <h2 className="font-serif text-3xl md:text-4xl text-slate-900 leading-tight">
+              Want to score a single home, not a whole development?
             </h2>
-            <p className="text-white/70 mt-6 text-lg leading-relaxed">
-              We monetize developers who want exposure on the index. Agents never pay. Your client
-              list stays yours. Approval rate ~60%. 24-hour turnaround.
+            <p className="text-slate-600 mt-4 text-lg">
+              Use <span className="font-semibold text-slate-900">Home Score</span> — our forensic tool for individual listings on Zillow, Idealista, Rightmove and 100+ portals.
             </p>
             <Link
-              to="/apply"
-              className="inline-flex items-center gap-2 mt-8 px-6 py-3.5 rounded-md bg-rh-gold text-rh-navy font-semibold hover:bg-rh-gold-soft transition"
+              to="/homescoring"
+              className="inline-flex items-center gap-2 mt-6 px-5 py-3 rounded-md border border-slate-900 text-slate-900 font-semibold hover:bg-slate-900 hover:text-white transition"
             >
-              Apply now <ArrowRight className="h-4 w-4" />
+              Open Home Score <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <ul className="space-y-4">
-            {[
-              "Unlimited dossier downloads",
-              "Live commission terms across 100+ projects",
-              "Reserve allocation slots before public launch",
-              "Saved searches with email alerts",
-              "Pipeline manager built for off-plan timelines",
-              "Direct line to project owners — no middlemen",
-            ].map((b) => (
-              <li key={b} className="flex items-start gap-3 text-white/80">
-                <Check className="h-5 w-5 text-rh-gold flex-shrink-0 mt-0.5" />
-                <span>{b}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="border-t border-rh-line bg-rh-navy-2/40">
-        <div className="max-w-3xl mx-auto px-6 py-24">
-          <p className="text-[11px] tracking-[0.25em] uppercase text-rh-gold font-semibold mb-4">FAQ</p>
-          <h2 className="font-serif text-4xl md:text-5xl text-white leading-tight">
-            What people ask first.
-          </h2>
-          <div className="mt-12 divide-y divide-rh-line border-y border-rh-line">
-            {[
-              { q: "Who builds the scores?", a: "RealHunt's independent research team using a public methodology. Developers cannot influence rankings." },
-              { q: "How do you make money if agents are free?", a: "Developers pay for verified profile placement, dossier hosting, and qualified agent introductions. Agents pay nothing." },
-              { q: "Is the methodology really public?", a: "Yes. Every weight, every input, every formula is documented at /methodology. Anyone can audit a score." },
-              { q: "Do you cover resale or rentals?", a: "No. Out of scope, on purpose. RealHunt is off-plan and pre-construction only." },
-              { q: "What countries are live?", a: "UAE, Spain, Indonesia, Mexico, Portugal, Greece, Thailand, Costa Rica, Dominican Republic. Coming next: Vietnam, Brazil, Georgia, Egypt, Saudi Arabia, Oman." },
-              { q: "How do you verify agents?", a: "Quick form. We confirm one closed off-plan transaction. ~24-hour turnaround. Approval rate ~60%." },
-              { q: "Will you share my client list?", a: "Never. Your list is yours. We never contact your buyers." },
-              { q: "What about EcoBeachCity?", a: "Owned by RealHunt's founders. Disclosed on every page where it appears, scored by the same independent methodology." },
-              { q: "How do I cancel?", a: "Nothing to cancel — there's nothing to pay. You can delete your account anytime from settings." },
-              { q: "Can I propose a project for the index?", a: "Yes. Verified agents and developers can submit projects for review from inside the dashboard." },
-            ].map((f) => (
-              <details key={f.q} className="group py-5">
-                <summary className="cursor-pointer flex items-center justify-between gap-6 text-white font-medium list-none">
-                  {f.q}
-                  <span className="text-rh-gold text-xl leading-none transition group-open:rotate-45">+</span>
-                </summary>
-                <p className="text-white/60 mt-3 leading-relaxed">{f.a}</p>
-              </details>
-            ))}
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-6">
+            <div className="flex items-center gap-4">
+              <ScoreRing score={8.7} size="lg" />
+              <div>
+                <div className="font-mono text-xs text-slate-500">SAMPLE</div>
+                <div className="font-serif text-lg text-slate-900">Penthouse · Marbella</div>
+                <div className="text-xs text-slate-500">€1.2M · Verdict: Exceptional</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-5 gap-2 mt-5">
+              {[8.6, 9.1, 8.4, 8.8, 8.5].map((v, i) => (
+                <div key={i} className="flex flex-col items-center gap-1">
+                  <ScoreRing size="sm" score={v} />
+                  <span className="text-[9px] uppercase tracking-wider text-slate-400">D{i + 1}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="border-t border-rh-line">
-        <div className="max-w-5xl mx-auto px-6 py-28 text-center">
-          <h2 className="font-serif text-5xl md:text-6xl text-white leading-[1.05] tracking-tight">
-            Stop guessing. <span className="italic text-rh-gold">Start ranking.</span>
-          </h2>
-          <p className="text-white/70 mt-6 text-lg max-w-2xl mx-auto">
-            One index. Every market. Built for the brokers, buyers, and developers who want
-            off-plan to grow up.
-          </p>
-          <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/browse"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-md bg-rh-gold text-rh-navy font-semibold hover:bg-rh-gold-soft transition"
-            >
-              Browse the index <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              to="/apply"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-md border border-white/15 text-white hover:bg-white/5 transition"
-            >
-              Apply as agent
-            </Link>
+      {/* CTA strip */}
+      <section className="bg-slate-900 text-white">
+        <div className="max-w-7xl mx-auto px-6 py-14 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div>
+            <h3 className="font-serif text-2xl md:text-3xl">Free forever for verified agents.</h3>
+            <p className="text-white/60 mt-1 text-sm">Save favorites, contact developers, reserve allocation slots.</p>
           </div>
+          <Link
+            to="/apply"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-md bg-amber-500 text-slate-900 font-semibold hover:bg-amber-400"
+          >
+            Apply as agent <ArrowRight className="h-4 w-4" />
+          </Link>
         </div>
       </section>
 
       <RHFooter />
+      <LoginGateModal open={loginOpen} onClose={() => setLoginOpen(false)} onSuccess={() => setLoginOpen(false)} />
     </div>
   );
 };
