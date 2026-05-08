@@ -20,6 +20,9 @@ import HomeScoring from "./pages/HomeScoring";
 import Apply from "./pages/Apply";
 import ProjectDetail from "./pages/ProjectDetail";
 import Method from "./pages/Method";
+import SignIn from "./pages/auth/SignIn";
+import SignUp from "./pages/auth/SignUp";
+import Callback from "./pages/auth/Callback";
 
 // Lazy-loaded routes for code splitting
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
@@ -100,8 +103,10 @@ const AnimatedRoutes = () => {
           <Route path="/projects/:slug" element={<PageTransition><ProjectDetail /></PageTransition>} />
           <Route path="/method" element={<PageTransition><Method /></PageTransition>} />
           <Route path="/pricing" element={<PageTransition><Method /></PageTransition>} />
-          <Route path="/auth/sign-in" element={<PageTransition><Apply /></PageTransition>} />
-          <Route path="/auth/sign-up" element={<PageTransition><Apply /></PageTransition>} />
+          <Route path="/auth/sign-in" element={<PageTransition><SignIn /></PageTransition>} />
+          <Route path="/auth/sign-up" element={<PageTransition><SignUp /></PageTransition>} />
+          <Route path="/auth/callback" element={<PageTransition><Callback /></PageTransition>} />
+          <Route path="/auth/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
           <Route path="/app" element={<PageTransition><Dashboard /></PageTransition>} />
           <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
           <Route path="/analysis/loading" element={<PageTransition><Analysis /></PageTransition>} />
