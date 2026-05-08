@@ -133,7 +133,7 @@ const App = () => (
       Skip to content
     </a>
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="realhunt-theme">
+      <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light" enableSystem={false} storageKey="realhunt-theme">
         <AuthProvider>
           <SubscriptionProvider>
           <TooltipProvider delayDuration={300}>
