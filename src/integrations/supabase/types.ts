@@ -62,6 +62,57 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_brand: {
+        Row: {
+          accent_hex: string | null
+          agency_name: string | null
+          agent_name: string | null
+          bio: string | null
+          created_at: string
+          email: string | null
+          id: string
+          logo_url: string | null
+          phone_e164: string | null
+          slug: string | null
+          updated_at: string
+          user_id: string
+          website_url: string | null
+          whatsapp_e164: string | null
+        }
+        Insert: {
+          accent_hex?: string | null
+          agency_name?: string | null
+          agent_name?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          phone_e164?: string | null
+          slug?: string | null
+          updated_at?: string
+          user_id: string
+          website_url?: string | null
+          whatsapp_e164?: string | null
+        }
+        Update: {
+          accent_hex?: string | null
+          agency_name?: string | null
+          agent_name?: string | null
+          bio?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          phone_e164?: string | null
+          slug?: string | null
+          updated_at?: string
+          user_id?: string
+          website_url?: string | null
+          whatsapp_e164?: string | null
+        }
+        Relationships: []
+      }
       agents: {
         Row: {
           active_markets: string[] | null
@@ -1246,6 +1297,39 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      short_links: {
+        Row: {
+          analysis_id: string | null
+          click_count: number
+          created_at: string
+          id: string
+          last_clicked_at: string | null
+          owner_user_id: string | null
+          slug: string
+          target_url: string
+        }
+        Insert: {
+          analysis_id?: string | null
+          click_count?: number
+          created_at?: string
+          id?: string
+          last_clicked_at?: string | null
+          owner_user_id?: string | null
+          slug: string
+          target_url: string
+        }
+        Update: {
+          analysis_id?: string | null
+          click_count?: number
+          created_at?: string
+          id?: string
+          last_clicked_at?: string | null
+          owner_user_id?: string | null
+          slug?: string
+          target_url?: string
         }
         Relationships: []
       }
