@@ -8,6 +8,8 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { ADMIN_EMAIL } from "@/lib/constants";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
+import RHNav from "@/components/realhunt/RHNav";
+import LegacyBanner from "@/components/LegacyBanner";
 import { Button } from "@/components/ui/button";
 import {
   Search, ArrowRight, Calendar, Building2, TrendingUp, Globe,
@@ -170,11 +172,12 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background pb-16 sm:pb-0">
-      <Navbar />
-      <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl">
+      <RHNav />
+      <LegacyBanner />
+      <div className="container mx-auto px-4 pt-8 pb-16 max-w-5xl">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold text-foreground mb-1">Dashboard</h1>
-          <p className="text-sm text-muted-foreground">Your property intelligence hub.</p>
+          <h1 className="text-2xl font-bold text-foreground mb-1">Agent Dashboard · Home Score</h1>
+          <p className="text-sm text-muted-foreground">Your RealHunt workspace — analyze single listings, save favorites, and track your pipeline.</p>
         </div>
 
         <PropertyOfTheDay />

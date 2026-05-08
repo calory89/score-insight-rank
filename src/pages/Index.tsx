@@ -25,7 +25,7 @@ const LiveActivityToast = lazy(() => import("@/components/LiveActivityToast"));
 
 const scrollToHero = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-const Index = () => {
+const Index = ({ embedded = false }: { embedded?: boolean }) => {
   useDocumentMeta({
     title: "RealHunt — Paste Any Listing. Know If It's a Good Deal — Instantly.",
     description: "AI-powered real estate intelligence. Analyze risk, ROI, demand & liquidity for any property listing worldwide. 5 free analyses, no credit card required.",
@@ -65,7 +65,7 @@ const Index = () => {
           }
         ]
       }) }} />
-      <Navbar />
+      {!embedded && <Navbar />}
       <HeroSection />
       <Suspense fallback={null}>
         <SocialProofStats />
@@ -124,7 +124,7 @@ const Index = () => {
         
         <FAQ />
         <FinalCTA />
-        <Footer />
+        {!embedded && <Footer />}
         <StickyMobileCTA />
         <LiveActivityToast />
       </Suspense>

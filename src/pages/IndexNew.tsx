@@ -14,6 +14,7 @@ interface ProjectRow {
   slug: string;
   name: string;
   city: string | null;
+  hero_image_url: string | null;
   is_owned_by_realhunt: boolean | null;
   developer: { name: string } | null;
   country: { name: string; slug: string; flag_emoji: string | null };
@@ -60,9 +61,10 @@ const IndexNew = () => {
       const { data } = await supabase
         .from("projects")
         .select(
-          "slug,name,city,ticket_min_eur,is_owned_by_realhunt,developer:developers(name),country:countries(name,slug,flag_emoji),score:project_scores(weighted_score,rank_global,dim_developer_reputation,dim_delivery_certainty,dim_legal_protection,dim_location_fundamentals,dim_investment_economics)"
+          "slug,name,city,ticket_min_eur,hero_image_url,is_owned_by_realhunt,developer:developers(name),country:countries(name,slug,flag_emoji),score:project_scores(weighted_score,rank_global,dim_developer_reputation,dim_delivery_certainty,dim_legal_protection,dim_location_fundamentals,dim_investment_economics)"
         )
-        .eq("active", true);
+        .eq("active", true)
+        .limit(1200);
       const rows = (data || []).map((p: any) => ({
         ...p,
         score: Array.isArray(p.score) ? p.score[0] : p.score,
@@ -185,6 +187,7 @@ const IndexNew = () => {
               <thead>
                 <tr className="bg-slate-100 text-slate-700">
                   <th className="text-left font-semibold px-4 py-3 w-14">Rank</th>
+                  <th className="px-2 py-3 w-16"></th>
                   <th className="text-left font-semibold px-3 py-3">Project</th>
                   <th className="text-left font-semibold px-3 py-3 w-20">Country</th>
                   <th className="text-center font-semibold px-3 py-3 w-20">RH Score</th>
@@ -201,14 +204,14 @@ const IndexNew = () => {
                 {loading ? (
                   Array.from({ length: 8 }).map((_, i) => (
                     <tr key={i} className="border-t border-slate-100">
-                      <td colSpan={11} className="px-4 py-4">
+                      <td colSpan={12} className="px-4 py-4">
                         <div className="h-5 bg-slate-100 rounded animate-pulse" />
                       </td>
                     </tr>
                   ))
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={11} className="px-4 py-12 text-center text-slate-500 text-sm">
+                    <td colSpan={12} className="px-4 py-12 text-center text-slate-500 text-sm">
                       No projects match these filters yet.
                     </td>
                   </tr>
@@ -218,6 +221,13 @@ const IndexNew = () => {
                     return (
                       <tr key={p.slug} className="border-t border-slate-100 hover:bg-slate-50 transition">
                         <td className="px-4 py-3 font-mono tabular-nums text-slate-500">{i + 1}</td>
+                        <td className="px-2 py-2">
+                          {p.hero_image_url ? (
+                            <img src={p.hero_image_url} alt={p.name} loading="lazy" className="h-10 w-14 object-cover rounded border border-slate-200" />
+                          ) : (
+                            <div className="h-10 w-14 rounded bg-slate-100 border border-slate-200" />
+                          )}
+                        </td>
                         <td className="px-3 py-3">
                           <Link to={`/projects/${p.slug}`} className="font-semibold text-slate-900 hover:text-amber-700">
                             {p.name}

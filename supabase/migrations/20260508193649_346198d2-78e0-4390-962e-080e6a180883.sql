@@ -1,0 +1,13 @@
+INSERT INTO countries (slug,name,iso_code,flag_emoji,region,active) VALUES ('uae','United Arab Emirates','AE','🇦🇪','Middle East',true) ON CONFLICT (slug) DO UPDATE SET name=EXCLUDED.name, iso_code=EXCLUDED.iso_code, flag_emoji=EXCLUDED.flag_emoji, region=EXCLUDED.region;
+INSERT INTO countries (slug,name,iso_code,flag_emoji,region,active) VALUES ('spain','Spain','ES','🇪🇸','Europe',true) ON CONFLICT (slug) DO UPDATE SET name=EXCLUDED.name, iso_code=EXCLUDED.iso_code, flag_emoji=EXCLUDED.flag_emoji, region=EXCLUDED.region;
+INSERT INTO countries (slug,name,iso_code,flag_emoji,region,active) VALUES ('indonesia','Indonesia','ID','🇮🇩','Asia',true) ON CONFLICT (slug) DO UPDATE SET name=EXCLUDED.name, iso_code=EXCLUDED.iso_code, flag_emoji=EXCLUDED.flag_emoji, region=EXCLUDED.region;
+INSERT INTO countries (slug,name,iso_code,flag_emoji,region,active) VALUES ('united-kingdom','United Kingdom','GB','🇬🇧','Europe',true) ON CONFLICT (slug) DO UPDATE SET name=EXCLUDED.name, iso_code=EXCLUDED.iso_code, flag_emoji=EXCLUDED.flag_emoji, region=EXCLUDED.region;
+INSERT INTO countries (slug,name,iso_code,flag_emoji,region,active) VALUES ('australia','Australia','AU','🇦🇺','Oceania',true) ON CONFLICT (slug) DO UPDATE SET name=EXCLUDED.name, iso_code=EXCLUDED.iso_code, flag_emoji=EXCLUDED.flag_emoji, region=EXCLUDED.region;
+INSERT INTO countries (slug,name,iso_code,flag_emoji,region,active) VALUES ('france','France','FR','🇫🇷','Europe',true) ON CONFLICT (slug) DO UPDATE SET name=EXCLUDED.name, iso_code=EXCLUDED.iso_code, flag_emoji=EXCLUDED.flag_emoji, region=EXCLUDED.region;
+INSERT INTO countries (slug,name,iso_code,flag_emoji,region,active) VALUES ('united-states','United States','US','🇺🇸','North America',true) ON CONFLICT (slug) DO UPDATE SET name=EXCLUDED.name, iso_code=EXCLUDED.iso_code, flag_emoji=EXCLUDED.flag_emoji, region=EXCLUDED.region;
+INSERT INTO countries (slug,name,iso_code,flag_emoji,region,active) VALUES ('singapore','Singapore','SG','🇸🇬','Asia',true) ON CONFLICT (slug) DO UPDATE SET name=EXCLUDED.name, iso_code=EXCLUDED.iso_code, flag_emoji=EXCLUDED.flag_emoji, region=EXCLUDED.region;
+INSERT INTO countries (slug,name,iso_code,flag_emoji,region,active) VALUES ('canada','Canada','CA','🇨🇦','North America',true) ON CONFLICT (slug) DO UPDATE SET name=EXCLUDED.name, iso_code=EXCLUDED.iso_code, flag_emoji=EXCLUDED.flag_emoji, region=EXCLUDED.region;
+INSERT INTO countries (slug,name,iso_code,flag_emoji,region,active) VALUES ('netherlands','Netherlands','NL','🇳🇱','Europe',true) ON CONFLICT (slug) DO UPDATE SET name=EXCLUDED.name, iso_code=EXCLUDED.iso_code, flag_emoji=EXCLUDED.flag_emoji, region=EXCLUDED.region;
+DELETE FROM project_scores;
+DELETE FROM commission_terms;
+DELETE FROM projects;
