@@ -18,6 +18,7 @@ import OfflineBanner from "@/components/OfflineBanner";
 import IndexNew from "./pages/IndexNew";
 import HomeScoring from "./pages/HomeScoring";
 import Apply from "./pages/Apply";
+import ProjectDetail from "./pages/ProjectDetail";
 
 // Lazy-loaded routes for code splitting
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
