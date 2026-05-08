@@ -221,6 +221,13 @@ const IndexNew = () => {
                     return (
                       <tr key={p.slug} className="border-t border-slate-100 hover:bg-slate-50 transition">
                         <td className="px-4 py-3 font-mono tabular-nums text-slate-500">{i + 1}</td>
+                        <td className="px-2 py-2">
+                          {p.hero_image_url ? (
+                            <img src={p.hero_image_url} alt={p.name} loading="lazy" className="h-10 w-14 object-cover rounded border border-slate-200" />
+                          ) : (
+                            <div className="h-10 w-14 rounded bg-slate-100 border border-slate-200" />
+                          )}
+                        </td>
                         <td className="px-3 py-3">
                           <Link to={`/projects/${p.slug}`} className="font-semibold text-slate-900 hover:text-amber-700">
                             {p.name}
