@@ -124,7 +124,7 @@ const Index = ({ embedded = false }: { embedded?: boolean }) => {
         
         <FAQ />
         <FinalCTA />
-        <Footer />
+        {!embedded && <Footer />}
         <StickyMobileCTA />
         <LiveActivityToast />
       </Suspense>
