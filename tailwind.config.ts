@@ -16,9 +16,19 @@ export default {
       fontFamily: {
         sans: ["Inter", "system-ui", "sans-serif"],
         display: ["Space Grotesk", "Inter", "system-ui", "sans-serif"],
+        serif: ["Fraunces", "Georgia", "serif"],
         mono: ["JetBrains Mono", "monospace"],
       },
       colors: {
+        rh: {
+          navy: "#0B1426",
+          "navy-2": "#0F1B30",
+          gold: "#C9A961",
+          "gold-soft": "#d4b876",
+          ink: "#E6EAF2",
+          dim: "#8C95A8",
+          line: "#1B2740",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
