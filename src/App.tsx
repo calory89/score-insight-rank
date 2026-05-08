@@ -15,7 +15,8 @@ import KeyboardShortcutsModal from "@/components/KeyboardShortcutsModal";
 import OnboardingWizard from "@/components/OnboardingWizard";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import OfflineBanner from "@/components/OfflineBanner";
-import Index from "./pages/Index";
+import IndexNew from "./pages/IndexNew";
+import HomeScoring from "./pages/HomeScoring";
 
 // Lazy-loaded routes for code splitting
 const Dashboard = React.lazy(() => import("./pages/Dashboard"));
@@ -90,7 +91,8 @@ const AnimatedRoutes = () => {
     <Suspense fallback={<SuspenseFallback />}>
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+          <Route path="/" element={<PageTransition><IndexNew /></PageTransition>} />
+          <Route path="/homescoring" element={<PageTransition><HomeScoring /></PageTransition>} />
           <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
           <Route path="/analysis/loading" element={<PageTransition><Analysis /></PageTransition>} />
           <Route path="/analysis/:id" element={<PageTransition><Analysis /></PageTransition>} />

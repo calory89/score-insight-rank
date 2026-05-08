@@ -14,6 +14,113 @@ export type Database = {
   }
   public: {
     Tables: {
+      agent_applications: {
+        Row: {
+          active_markets: string[] | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          linkedin_url: string | null
+          one_closed_transaction: string | null
+          primary_country: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          whatsapp: string | null
+          years_experience: number | null
+        }
+        Insert: {
+          active_markets?: string[] | null
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          linkedin_url?: string | null
+          one_closed_transaction?: string | null
+          primary_country?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          whatsapp?: string | null
+          years_experience?: number | null
+        }
+        Update: {
+          active_markets?: string[] | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          linkedin_url?: string | null
+          one_closed_transaction?: string | null
+          primary_country?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          whatsapp?: string | null
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
+      agents: {
+        Row: {
+          active_markets: string[] | null
+          agent_number: number | null
+          approx_closes_per_year: number | null
+          badge_directory_optin: boolean | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          primary_country_id: string | null
+          user_id: string | null
+          verified: boolean | null
+          verified_at: string | null
+          whatsapp: string | null
+          years_experience: number | null
+        }
+        Insert: {
+          active_markets?: string[] | null
+          agent_number?: number | null
+          approx_closes_per_year?: number | null
+          badge_directory_optin?: boolean | null
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          primary_country_id?: string | null
+          user_id?: string | null
+          verified?: boolean | null
+          verified_at?: string | null
+          whatsapp?: string | null
+          years_experience?: number | null
+        }
+        Update: {
+          active_markets?: string[] | null
+          agent_number?: number | null
+          approx_closes_per_year?: number | null
+          badge_directory_optin?: boolean | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          primary_country_id?: string | null
+          user_id?: string | null
+          verified?: boolean | null
+          verified_at?: string | null
+          whatsapp?: string | null
+          years_experience?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agents_primary_country_id_fkey"
+            columns: ["primary_country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analyses: {
         Row: {
           address: string | null
@@ -155,6 +262,50 @@ export type Database = {
         }
         Relationships: []
       }
+      commission_terms: {
+        Row: {
+          base_pct: number | null
+          base_pct_top_tier: number | null
+          bonus_text: string | null
+          display_string: string | null
+          escrow_protected: boolean | null
+          flat_eur: number | null
+          id: string
+          payment_milestones: string | null
+          project_id: string
+        }
+        Insert: {
+          base_pct?: number | null
+          base_pct_top_tier?: number | null
+          bonus_text?: string | null
+          display_string?: string | null
+          escrow_protected?: boolean | null
+          flat_eur?: number | null
+          id?: string
+          payment_milestones?: string | null
+          project_id: string
+        }
+        Update: {
+          base_pct?: number | null
+          base_pct_top_tier?: number | null
+          bonus_text?: string | null
+          display_string?: string | null
+          escrow_protected?: boolean | null
+          flat_eur?: number | null
+          id?: string
+          payment_milestones?: string | null
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_terms_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_requests: {
         Row: {
           company: string | null
@@ -187,6 +338,128 @@ export type Database = {
           source?: string
         }
         Relationships: []
+      }
+      countries: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          flag_emoji: string | null
+          golden_visa_eligible: boolean | null
+          id: string
+          iso_code: string
+          name: string
+          project_count: number | null
+          region: string | null
+          slug: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          flag_emoji?: string | null
+          golden_visa_eligible?: boolean | null
+          id?: string
+          iso_code: string
+          name: string
+          project_count?: number | null
+          region?: string | null
+          slug: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          flag_emoji?: string | null
+          golden_visa_eligible?: boolean | null
+          id?: string
+          iso_code?: string
+          name?: string
+          project_count?: number | null
+          region?: string | null
+          slug?: string
+        }
+        Relationships: []
+      }
+      developers: {
+        Row: {
+          country_id: string | null
+          created_at: string
+          founded_year: number | null
+          id: string
+          logo_url: string | null
+          name: string
+          projects_delivered: number | null
+          reputation_notes: string | null
+          slug: string
+          website: string | null
+        }
+        Insert: {
+          country_id?: string | null
+          created_at?: string
+          founded_year?: number | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          projects_delivered?: number | null
+          reputation_notes?: string | null
+          slug: string
+          website?: string | null
+        }
+        Update: {
+          country_id?: string | null
+          created_at?: string
+          founded_year?: number | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          projects_delivered?: number | null
+          reputation_notes?: string | null
+          slug?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "developers_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dossier_downloads: {
+        Row: {
+          agent_id: string
+          downloaded_at: string
+          id: string
+          project_id: string
+        }
+        Insert: {
+          agent_id: string
+          downloaded_at?: string
+          id?: string
+          project_id: string
+        }
+        Update: {
+          agent_id?: string
+          downloaded_at?: string
+          id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dossier_downloads_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dossier_downloads_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       due_diligence_checklists: {
         Row: {
@@ -525,6 +798,51 @@ export type Database = {
         }
         Relationships: []
       }
+      pipeline_entries: {
+        Row: {
+          agent_id: string
+          client_alias: string | null
+          id: string
+          notes: string | null
+          project_id: string
+          stage: string | null
+          updated_at: string
+        }
+        Insert: {
+          agent_id: string
+          client_alias?: string | null
+          id?: string
+          notes?: string | null
+          project_id: string
+          stage?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agent_id?: string
+          client_alias?: string | null
+          id?: string
+          notes?: string | null
+          project_id?: string
+          stage?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pipeline_entries_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pipeline_entries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portfolio_properties: {
         Row: {
           analysis_id: string
@@ -613,6 +931,158 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      project_scores: {
+        Row: {
+          computed_at: string
+          dim_delivery_certainty: number | null
+          dim_developer_reputation: number | null
+          dim_investment_economics: number | null
+          dim_legal_protection: number | null
+          dim_location_fundamentals: number | null
+          id: string
+          notes: string | null
+          project_id: string
+          rank_global: number | null
+          rank_in_country: number | null
+          weighted_score: number | null
+        }
+        Insert: {
+          computed_at?: string
+          dim_delivery_certainty?: number | null
+          dim_developer_reputation?: number | null
+          dim_investment_economics?: number | null
+          dim_legal_protection?: number | null
+          dim_location_fundamentals?: number | null
+          id?: string
+          notes?: string | null
+          project_id: string
+          rank_global?: number | null
+          rank_in_country?: number | null
+          weighted_score?: number | null
+        }
+        Update: {
+          computed_at?: string
+          dim_delivery_certainty?: number | null
+          dim_developer_reputation?: number | null
+          dim_investment_economics?: number | null
+          dim_legal_protection?: number | null
+          dim_location_fundamentals?: number | null
+          id?: string
+          notes?: string | null
+          project_id?: string
+          rank_global?: number | null
+          rank_in_country?: number | null
+          weighted_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_scores_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          active: boolean | null
+          asset_tags: string[] | null
+          city: string | null
+          conflict_disclosure: string | null
+          construction_pct: number | null
+          country_id: string
+          created_at: string
+          delivery_quarter: string | null
+          description: string | null
+          developer_id: string
+          district: string | null
+          gallery_image_urls: string[] | null
+          golden_visa_eligible: boolean | null
+          hero_image_url: string | null
+          id: string
+          is_owned_by_realhunt: boolean | null
+          name: string
+          risk_flags: string[] | null
+          slug: string
+          status: string | null
+          ticket_max_eur: number | null
+          ticket_min_eur: number | null
+          unit_types: string[] | null
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          asset_tags?: string[] | null
+          city?: string | null
+          conflict_disclosure?: string | null
+          construction_pct?: number | null
+          country_id: string
+          created_at?: string
+          delivery_quarter?: string | null
+          description?: string | null
+          developer_id: string
+          district?: string | null
+          gallery_image_urls?: string[] | null
+          golden_visa_eligible?: boolean | null
+          hero_image_url?: string | null
+          id?: string
+          is_owned_by_realhunt?: boolean | null
+          name: string
+          risk_flags?: string[] | null
+          slug: string
+          status?: string | null
+          ticket_max_eur?: number | null
+          ticket_min_eur?: number | null
+          unit_types?: string[] | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          asset_tags?: string[] | null
+          city?: string | null
+          conflict_disclosure?: string | null
+          construction_pct?: number | null
+          country_id?: string
+          created_at?: string
+          delivery_quarter?: string | null
+          description?: string | null
+          developer_id?: string
+          district?: string | null
+          gallery_image_urls?: string[] | null
+          golden_visa_eligible?: boolean | null
+          hero_image_url?: string | null
+          id?: string
+          is_owned_by_realhunt?: boolean | null
+          name?: string
+          risk_flags?: string[] | null
+          slug?: string
+          status?: string | null
+          ticket_max_eur?: number | null
+          ticket_min_eur?: number | null
+          unit_types?: string[] | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_developer_id_fkey"
+            columns: ["developer_id"]
+            isOneToOne: false
+            referencedRelation: "developers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       property_notes: {
         Row: {
@@ -720,6 +1190,38 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_searches: {
+        Row: {
+          agent_id: string
+          created_at: string
+          filters: Json
+          id: string
+          name: string
+        }
+        Insert: {
+          agent_id: string
+          created_at?: string
+          filters: Json
+          id?: string
+          name: string
+        }
+        Update: {
+          agent_id?: string
+          created_at?: string
+          filters?: Json
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_searches_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scout_alerts: {
         Row: {
           active: boolean
@@ -746,6 +1248,51 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      slot_reservations: {
+        Row: {
+          agent_id: string
+          client_alias: string | null
+          id: string
+          notes: string | null
+          project_id: string
+          reserved_at: string
+          status: string | null
+        }
+        Insert: {
+          agent_id: string
+          client_alias?: string | null
+          id?: string
+          notes?: string | null
+          project_id: string
+          reserved_at?: string
+          status?: string | null
+        }
+        Update: {
+          agent_id?: string
+          client_alias?: string | null
+          id?: string
+          notes?: string | null
+          project_id?: string
+          reserved_at?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slot_reservations_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "slot_reservations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {
@@ -967,6 +1514,7 @@ export type Database = {
     }
     Functions: {
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_realhunt_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
