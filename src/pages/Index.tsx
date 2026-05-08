@@ -65,7 +65,7 @@ const Index = ({ embedded = false }: { embedded?: boolean }) => {
           }
         ]
       }) }} />
-      <Navbar />
+      {!embedded && <Navbar />}
       <HeroSection />
       <Suspense fallback={null}>
         <SocialProofStats />
