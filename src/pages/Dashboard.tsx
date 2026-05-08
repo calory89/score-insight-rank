@@ -8,6 +8,8 @@ import { useSubscription } from "@/contexts/SubscriptionContext";
 import { ADMIN_EMAIL } from "@/lib/constants";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
+import RHNav from "@/components/realhunt/RHNav";
+import LegacyBanner from "@/components/LegacyBanner";
 import { Button } from "@/components/ui/button";
 import {
   Search, ArrowRight, Calendar, Building2, TrendingUp, Globe,
