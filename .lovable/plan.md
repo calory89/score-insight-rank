@@ -1,72 +1,108 @@
+# RealHunt v2 — Plan de Migración + Nueva Plataforma
 
+Esto es un proyecto enorme (15+ rutas nuevas, 12 tablas nuevas, panel admin, dashboard, auth, seed data). Lo voy a ejecutar en **olas incrementales** para que puedas validar progreso real al final de cada una, en vez de un único entregable gigante de varias horas que probablemente rompa cosas.
 
-# Fix: Navegacion rota en la pagina de analisis
+---
 
-## Problemas identificados
+## FASE 0 — Migración crítica (PRIMERO, separado)
 
-### 1. Boton "Back" no funciona desde la pagina del reporte
-El boton usa `window.history.back()` que puede llevar al usuario de vuelta a `/analysis/loading`, re-activando el loader en un bucle. Necesita detectar si la pagina anterior es una ruta de carga y saltar al dashboard en su lugar.
+**Objetivo**: Mover el landing actual a `/homescoring` sin tocar nada de su contenido, y dejar `/` libre.
 
-### 2. Click en reportes del feed no muestra nada visible
-Al clickar un reporte en "Top rated properties", se ejecuta `setPreviewId(report.id)` que renderiza un preview inline al final de la pagina, fuera de la vista del usuario. El usuario no ve nada porque no se hace scroll automatico hacia el preview.
+1. En `src/App.tsx`: añadir ruta `/homescoring` que renderiza el `Index` actual.
+2. Crear nuevo `src/pages/IndexNew.tsx` (placeholder temporal "Coming soon — RealHunt v2") y montarlo en `/`.
+3. Crear `src/components/LegacyBanner.tsx` con el aviso y montarlo encima del Index legacy solo cuando esté en `/homescoring`.
+4. Buscar enlaces internos a `/` que sean del producto legacy (CTAs del scoring, "volver al inicio", etc.) y redirigirlos a `/homescoring` cuando aplique. **No** tocar enlaces neutros de marca.
+5. Verificar: `/homescoring` funciona, `/` muestra placeholder.
 
-**Solucion**: Hacer scroll automatico hacia el preview cuando se selecciona un reporte y tambien ofrecer un boton para abrir el reporte completo.
+**Entregable de Fase 0**: legacy preservado + ruta nueva libre. Te aviso para que valides antes de seguir.
 
-### 3. "See above" / "Click to view" lleva a pagina en blanco
-Cuando el usuario clicka el banner "Your report is ready! Click to view", el codigo hace:
-- `setAnalyzing(false)` y `setReadyReportId(null)` -- limpia el estado del FomoLoader
-- `navigate(/analysis/ID, { replace: true })` -- cambia la URL
+---
 
-Pero el componente se re-renderiza y como `data` es null (no se ha cargado aun), cae en `if (!data) return null` (linea 824) y muestra una pagina en blanco hasta que el `useEffect` de fetch se ejecuta. El problema es una condicion de carrera entre la navegacion y la carga de datos.
+## FASE 1 — Esquema de base de datos + seed
 
-**Solucion**: Usar `window.location.href` para forzar un reload completo de la pagina, o mejor, no limpiar el estado hasta que los datos esten cargados.
+1. Migración Supabase con las 12 tablas (`countries`, `developers`, `projects`, `project_scores`, `commission_terms`, `agents`, `agent_applications`, `dossier_downloads`, `slot_reservations`, `pipeline_entries`, `saved_searches`).
+2. RLS según especificación (público lee catálogo; agentes solo sus propios datos; admin escribe).
+3. Función `is_realhunt_admin()` reutilizando el patrón existente `is_admin()` (admin sigue siendo `rrppspain@gmail.com`).
+4. Seed de los 20 proyectos + sus developers + countries + scores + commission_terms vía `supabase--insert`.
+5. EcoBeachCity con `is_owned_by_realhunt = true` y disclosure completo.
 
-## Cambios tecnicos
+---
 
-### Archivo: `src/pages/Analysis.tsx`
+## FASE 2 — Homepage nueva (`/`)
 
-**Cambio 1 - Back button inteligente (linea 849-857)**
+Reemplazar el placeholder por el homepage completo de la Parte 2.A:
+- Navbar nuevo (sticky)
+- Hero + mock visual de tabla de ranking (Bloomberg-style)
+- Sección de dolor
+- 4 pilares
+- Preview de metodología (5 dimensiones)
+- Disclosure EcoBeachCity
+- 4 country preview tables (UAE, España, Indonesia, México) con datos reales del seed
+- Sección "Free for agents"
+- FAQ (10 preguntas del apéndice)
+- CTA final
+- Footer nuevo
 
-Reemplazar la logica de `window.history.back()` para detectar si la pagina anterior es una ruta de carga:
+Componentes reutilizables: `<ScoreBadge>`, `<ProjectCard>`, `<CountryPreviewTable>`.
 
-```typescript
-onClick={() => {
-  if (fromBulk) {
-    navigate("/dashboard?bulk=true&restore=true");
-  } else {
-    // Always go to dashboard — history.back() often goes to the loading page
-    navigate("/dashboard");
-  }
-}}
-```
+Diseño: deep navy `#0B1426`, gold `#C9A961`, score green/amber/red, fuentes Fraunces + Inter + JetBrains Mono. Todo en `index.css` + `tailwind.config.ts` con tokens HSL.
 
-**Cambio 2 - Scroll automatico al preview (linea 416-434)**
+---
 
-Agregar un `ref` al contenedor del preview y hacer `scrollIntoView` cuando se selecciona un reporte:
+## FASE 3 — Browse + Countries + Country detail
 
-```typescript
-const previewRef = useRef<HTMLDivElement>(null);
+- `/browse` — grid maestro filtrable de todos los proyectos
+- `/countries` — grid de tarjetas país (con stats agregados)
+- `/countries/:slug` — ranking filtrable por país, sidebar de filtros, SEO meta + JSON-LD ItemList
 
-// On setPreviewId, scroll to preview
-useEffect(() => {
-  if (previewId && previewRef.current) {
-    previewRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-}, [previewId]);
-```
+---
 
-Ademas, agregar un boton "View full report" dentro del InlineReportPreview que navega al reporte completo con `window.location.href`.
+## FASE 4 — Project detail + Methodology + For Developers
 
-**Cambio 3 - Fix pagina en blanco en "Click to view" (linea 777-782)**
+- `/projects/:slug` — página pública con dossier y reserva bloqueados detrás de auth
+- `/methodology` — long-form con 14 secciones
+- `/for-developers` — landing B2B con 3 tiers + form de aplicación
 
-Cambiar `navigate()` por `window.location.href` para forzar una carga completa de la pagina, evitando la condicion de carrera:
+---
 
-```typescript
-onViewReady={() => {
-  if (readyReportId) {
-    window.location.href = `/analysis/${readyReportId}`;
-  }
-}}
-```
+## FASE 5 — Agent apply + Auth + Dashboard
 
-Esto garantiza que la pagina se recarga completamente con el ID correcto en la URL, activando el fetch de datos desde cero.
+- `/apply` — formulario que inserta en `agent_applications`
+- `/login` — magic link (Supabase auth ya existe, adaptar)
+- `/dashboard` + sub-rutas (`/dashboard/pipeline`, `/dashboard/saved`, `/dashboard/projects/:slug` con dossier desbloqueado)
+- Botones de "Reserve slot" y "Download dossier" funcionales para agentes verificados
+
+---
+
+## FASE 6 — Admin panel
+
+- `/admin/projects`, `/admin/agents`, `/admin/countries`, `/admin/developers`, `/admin/analytics`
+- Reutiliza el `Admin.tsx` existente o crea uno paralelo. CRUD funcional con shadcn Table + Dialog + Form.
+- Cola de aprobación de agentes con asignación de `agent_number` secuencial.
+
+---
+
+## Decisiones clave que tomo por defecto (avísame si no)
+
+1. **PostHog y Resend NO se instalan ahora** — no hay secrets configurados y añaden fricción. Uso eventos vacíos (stub) y emails vía edge function existente. Cuando estés listo me das las API keys.
+2. **Magic-link auth**: uso el `AuthContext` existente. Añado opción magic-link a la pantalla de login actual sin romper email/password ni Google.
+3. **Admin = mismo usuario actual** (`rrppspain@gmail.com`) vía `is_admin()` existente. No creo sistema de roles nuevo todavía.
+4. **El landing legacy en `/homescoring` queda intocable** — ni un pixel cambia salvo el banner superior.
+5. **No borro nada del producto antiguo** (Dashboard, Analysis, Portfolio, etc.) — siguen accesibles. El nuevo producto vive en paralelo. Más adelante decides si los retiras.
+6. **Imágenes de proyectos**: como no tengo fotos reales de Solaya/Armani/etc., uso placeholders con gradiente + nombre del proyecto sobre el navy corporativo. Marco en admin que faltan fotos reales. Si prefieres que genere imágenes con AI dímelo (cuesta créditos).
+
+---
+
+## Tiempo estimado de ejecución
+
+- Fase 0: rápida (~5 min de tool calls)
+- Fase 1: media (migración + 20 inserts)
+- Fases 2-6: cada una es sustancial. **Voy a parar al final de cada fase** y resumirte qué quedó hecho para que puedas revisar el preview antes de seguir.
+
+---
+
+## Pregunta antes de empezar
+
+¿Procedo así, fase por fase, **empezando por Fase 0 + Fase 1 ahora mismo en este turno**? ¿O prefieres que ejecute las 7 fases seguidas sin pausa (más rápido pero más riesgo de errores acumulados sin que puedas validar)?
+
+Por defecto, si apruebas tal cual, hago **Fase 0 + Fase 1** en este turno y te paso el preview.
