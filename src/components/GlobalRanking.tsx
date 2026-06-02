@@ -1,14 +1,15 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Globe, TrendingUp, MapPin, Filter, ArrowRight, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowRight, Search, Mail, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginGateModal from "@/components/LoginGateModal";
+import { scoreToGrade, gradeColor } from "@/lib/grade";
+import { useToast } from "@/hooks/use-toast";
 
 type RankedProperty = {
   id: string;
+  slug: string | null;
   city: string | null;
   country: string | null;
   address: string | null;
@@ -16,10 +17,36 @@ type RankedProperty = {
   roi_potential: number | null;
   verdict: string | null;
   price: string | null;
+  size_sqm: number | null;
+  currency: string | null;
+  property_type: string | null;
 };
 
-import { scoreColor, scoreBgForRanking as scoreBg } from "@/lib/score-utils";
-import { RankingRowSkeleton } from "@/components/SkeletonCards";
+const CATEGORIES = [
+  { id: "all", label: "All deals" },
+  { id: "beachfront", label: "Beachfront" },
+  { id: "ppsm", label: "Best €/m²" },
+  { id: "roi", label: "Top ROI" },
+  { id: "price", label: "Cheapest" },
+];
+
+const parsePrice = (p: string | null): number | null => {
+  if (!p) return null;
+  const n = parseFloat(String(p).replace(/[^0-9.]/g, ""));
+  return isNaN(n) || n === 0 ? null : n;
+};
+
+const computePpsm = (p: RankedProperty): number | null => {
+  const price = parsePrice(p.price);
+  if (!price || !p.size_sqm || p.size_sqm <= 0) return null;
+  return Math.round(price / p.size_sqm);
+};
+
+const isBeachfront = (p: RankedProperty): boolean => {
+  const hay = `${p.address || ""} ${p.city || ""} ${p.property_type || ""}`.toLowerCase();
+  return /\b(beach|beachfront|playa|seafront|oceanfront|coast|costa|frente al mar)\b/.test(hay) ||
+    /ecobeachcity|eco beach/i.test(hay);
+};
 
 const RankingSearchBar = () => {
   const navigate = useNavigate();
@@ -29,186 +56,258 @@ const RankingSearchBar = () => {
 
   const handleAnalyze = () => {
     if (!url.trim()) return;
-    if (!user) {
-      setShowLoginGate(true);
-      return;
-    }
+    if (!user) { setShowLoginGate(true); return; }
     navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
   };
 
   return (
     <div className="space-y-2">
-      <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center bg-card rounded-xl border border-border p-2">
+      <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center bg-surface rounded-xl border border-hairline p-2">
         <div className="flex items-center flex-1 min-w-0">
-          <Search className="ml-3 h-4 w-4 text-muted-foreground flex-shrink-0" />
+          <Search className="ml-3 h-4 w-4 text-ink-soft flex-shrink-0" />
           <input
             type="url"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleAnalyze()}
-            placeholder="Paste any property URL to get its score…"
-            className="flex-1 bg-transparent px-3 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none min-w-0"
+            placeholder="Paste any property URL to score it…"
+            className="flex-1 bg-transparent px-3 py-3 text-sm text-ink placeholder:text-ink-soft focus:outline-none min-w-0"
           />
         </div>
-        <Button variant="hero" size="sm" className="rounded-lg px-4 flex-shrink-0" onClick={handleAnalyze}>
-          Analyze any listing <ArrowRight className="ml-1 h-3 w-3" />
-        </Button>
+        <button className="rh-btn-primary !px-4 !py-2.5 !text-[13px]" onClick={handleAnalyze}>
+          Score this listing <ArrowRight className="ml-1 h-3 w-3" />
+        </button>
       </div>
-      <p className="text-[10px] text-muted-foreground text-center">
-        Save time and money. Get a score of any real estate listing.
-      </p>
       {showLoginGate && <LoginGateModal open={showLoginGate} onClose={() => setShowLoginGate(false)} />}
+    </div>
+  );
+};
+
+const WeeklyEmailCapture = () => {
+  const [email, setEmail] = useState("");
+  const [done, setDone] = useState(false);
+  const { toast } = useToast();
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      toast({ title: "Enter a valid email" });
+      return;
+    }
+    try {
+      await (supabase as any).from("newsletter_subscribers").insert({ email, source: "rankings" });
+    } catch {}
+    setDone(true);
+    toast({ title: "You're in.", description: "Top 10 deals every Friday." });
+  };
+
+  return (
+    <div className="rounded-2xl border border-hairline bg-[#FBF8F1] p-5 md:p-6 mt-6">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 justify-between">
+        <div>
+          <p className="font-display text-[18px] text-ink">Get the Top 10 deals every Friday.</p>
+          <p className="text-[12px] text-ink-soft mt-1">One email. Highest-scoring listings only. No promos.</p>
+        </div>
+        {done ? (
+          <div className="flex items-center gap-2 text-good text-sm"><Check className="h-4 w-4" /> Subscribed</div>
+        ) : (
+          <form onSubmit={submit} className="flex w-full md:w-auto gap-2">
+            <div className="relative flex-1 md:w-72">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-soft" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@email.com"
+                className="rh-input !py-3 !pl-9 !text-[14px]"
+              />
+            </div>
+            <button type="submit" className="rh-btn-primary !px-5 !py-3 !text-[14px]">Subscribe</button>
+          </form>
+        )}
+      </div>
     </div>
   );
 };
 
 const GlobalRanking = () => {
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
   const [rankings, setRankings] = useState<RankedProperty[]>([]);
   const [loading, setLoading] = useState(true);
-  const [countries, setCountries] = useState<string[]>([]);
-  const [cities, setCities] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
   const [selectedCountry, setSelectedCountry] = useState<string>("All");
-  const [selectedCity, setSelectedCity] = useState<string>("All");
+  const category = params.get("cat") || "all";
 
   useEffect(() => {
-    loadRankings();
+    (async () => {
+      const { data } = await supabase
+        .from("analyses")
+        .select("id, slug, city, country, address, global_score, roi_potential, verdict, price, size_sqm, currency, property_type")
+        .not("global_score", "is", null)
+        .order("global_score", { ascending: false })
+        .limit(300);
+      if (data) setRankings(data as RankedProperty[]);
+      setLoading(false);
+    })();
   }, []);
 
-  const loadRankings = async () => {
-    const { data } = await supabase
-      .from("analyses")
-      .select("id, city, country, address, global_score, roi_potential, verdict, price")
-      .not("global_score", "is", null)
-      .order("global_score", { ascending: false })
-      .limit(100);
+  const countries = useMemo(
+    () => [...new Set(rankings.map((r) => r.country).filter(Boolean))].sort() as string[],
+    [rankings]
+  );
 
-    if (data) {
-      setRankings(data);
-      const uniqueCountries = [...new Set(data.map((d) => d.country).filter(Boolean))] as string[];
-      setCountries(uniqueCountries.sort());
-      const uniqueCities = [...new Set(data.map((d) => d.city).filter(Boolean))] as string[];
-      setCities(uniqueCities.sort());
+  const processed = useMemo(() => {
+    let rows = [...rankings];
+    if (selectedCountry !== "All") rows = rows.filter((r) => r.country === selectedCountry);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      rows = rows.filter((r) =>
+        [r.address, r.city, r.country, r.property_type].some((f) => f?.toLowerCase().includes(q))
+      );
     }
-    setLoading(false);
+    if (category === "beachfront") rows = rows.filter(isBeachfront);
+    if (category === "ppsm") rows = rows.filter((r) => computePpsm(r) != null).sort((a, b) => (computePpsm(a)! - computePpsm(b)!));
+    if (category === "price") rows = rows.filter((r) => parsePrice(r.price) != null).sort((a, b) => parsePrice(a.price)! - parsePrice(b.price)!);
+    if (category === "roi") rows = rows.filter((r) => r.roi_potential != null).sort((a, b) => (b.roi_potential || 0) - (a.roi_potential || 0));
+
+    // For beachfront, surface Eco Beach City to the top if present
+    if (category === "beachfront") {
+      const ecoIdx = rows.findIndex((r) => /ecobeachcity|eco beach/i.test(`${r.address} ${r.city}`));
+      if (ecoIdx > 0) {
+        const [eco] = rows.splice(ecoIdx, 1);
+        rows.unshift(eco);
+      }
+    }
+    return rows;
+  }, [rankings, selectedCountry, search, category]);
+
+  const setCategory = (id: string) => {
+    const p = new URLSearchParams(params);
+    if (id === "all") p.delete("cat"); else p.set("cat", id);
+    setParams(p, { replace: true });
   };
 
-  const filtered = rankings.filter((r) => {
-    if (selectedCountry !== "All" && r.country !== selectedCountry) return false;
-    if (selectedCity !== "All" && r.city !== selectedCity) return false;
-    return true;
-  });
-
-  const availableCities = selectedCountry === "All"
-    ? cities
-    : [...new Set(rankings.filter((r) => r.country === selectedCountry).map((r) => r.city).filter(Boolean))] as string[];
+  const curr = (c: string | null | undefined) => (c === "GBP" ? "£" : c === "USD" ? "$" : "€");
 
   return (
-    <section id="rankings" className="py-10 md:py-16 relative">
-      <div className="absolute inset-0 bg-gradient-hero opacity-30" />
-      <div className="container relative mx-auto px-4">
-        {/* Search Bar */}
-        <div className="max-w-2xl mx-auto mb-6">
-          <RankingSearchBar />
-        </div>
+    <section id="rankings" className="py-10 md:py-16">
+      <div className="max-w-[1140px] mx-auto px-6">
+        <div className="text-[12px] uppercase tracking-[0.2em] text-ink-soft">Leaderboard</div>
+        <h1 className="font-display text-[36px] md:text-[52px] text-ink leading-[1.05] mt-2">
+          Top real-estate deals worldwide<span className="text-accent-gold">.</span>
+        </h1>
+        <p className="reading text-ink-muted mt-3 max-w-[640px]">
+          Ranked by the RealHunt forensic score. No sponsors. No paid placement. Every number traceable in{" "}
+          <a href="/method" className="rh-btn-tertiary">/method</a>.
+        </p>
 
-        <div className="text-center mb-4">
-          <h2 className="text-xl md:text-2xl font-bold text-foreground mb-1">
-            Top Properties Worldwide
-          </h2>
-          <p className="text-[11px] text-muted-foreground">
-            Real-time rankings. No sponsors. Data-driven.
-          </p>
+        <div className="mt-8 max-w-2xl"><RankingSearchBar /></div>
+
+        {/* Category tabs */}
+        <div className="mt-8 flex items-center gap-2 flex-wrap">
+          {CATEGORIES.map((c) => {
+            const active = (category === "all" && c.id === "all") || category === c.id;
+            return (
+              <button
+                key={c.id}
+                onClick={() => setCategory(c.id)}
+                className={`text-[13px] px-4 py-2 rounded-full border transition-colors ${
+                  active
+                    ? "bg-ink text-paper border-ink"
+                    : "bg-surface text-ink-muted border-hairline hover:border-hairline-strong"
+                }`}
+              >
+                {c.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* Filters */}
-        <div className="flex items-center justify-center gap-2 mb-4 flex-wrap">
+        <div className="mt-4 flex items-center gap-3 flex-wrap">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-soft" />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by city, country, address…"
+              className="rh-input !py-2.5 !pl-9 !text-[14px]"
+            />
+          </div>
           <select
             value={selectedCountry}
-            onChange={(e) => {
-              setSelectedCountry(e.target.value);
-              setSelectedCity("All");
-            }}
-            className="rounded-full text-xs px-3 py-1.5 bg-secondary text-foreground border border-border focus:outline-none focus:border-primary/40"
+            onChange={(e) => setSelectedCountry(e.target.value)}
+            className="rounded-full text-[13px] px-4 py-2 bg-surface text-ink border border-hairline focus:outline-none"
           >
-            <option value="All">🌍 All Countries</option>
-            {countries.map((c) => (
-              <option key={c} value={c}>{c}</option>
-            ))}
+            <option value="All">🌍 All countries</option>
+            {countries.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
-          <select
-            value={selectedCity}
-            onChange={(e) => setSelectedCity(e.target.value)}
-            className="rounded-full text-xs px-3 py-1.5 bg-secondary text-foreground border border-border focus:outline-none focus:border-primary/40"
-          >
-            <option value="All">All Cities</option>
-            {availableCities.map((c) => (
-              <option key={c} value={c!}>{c}</option>
-            ))}
-          </select>
+          <span className="text-[12px] text-ink-soft ml-auto tabular-nums">
+            {processed.length} {processed.length === 1 ? "listing" : "listings"}
+          </span>
         </div>
 
-        {/* Rankings Table */}
-        <div className="max-w-3xl mx-auto">
-          <div className="rounded-xl border border-border bg-card overflow-hidden">
-            <div className="hidden sm:grid grid-cols-12 gap-2 px-4 py-2 border-b border-border text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-              <div className="col-span-1">#</div>
-              <div className="col-span-5">Location</div>
-              <div className="col-span-2 text-center">Score</div>
-              <div className="col-span-2 text-center">Price</div>
-              <div className="col-span-2 text-right">Verdict</div>
-            </div>
+        {/* Leaderboard */}
+        <div className="mt-6 rounded-2xl border border-hairline bg-surface overflow-hidden">
+          <div className="hidden md:grid grid-cols-[3rem_1fr_5rem_4rem_8rem_7rem_6rem] gap-3 px-5 py-3 border-b border-hairline text-[10px] font-medium text-ink-soft uppercase tracking-[0.14em]">
+            <div>#</div>
+            <div>Location</div>
+            <div className="text-center">Score</div>
+            <div className="text-center">Grade</div>
+            <div className="text-right">Price</div>
+            <div className="text-right">€/m²</div>
+            <div className="text-right">Verdict</div>
+          </div>
 
-            {loading ? (
-              <div>
-                {[...Array(8)].map((_, i) => <RankingRowSkeleton key={i} />)}
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="text-center py-12 text-sm text-muted-foreground">
-                No analyses found{selectedCountry !== "All" ? ` in ${selectedCountry}` : ""}. Be the first!
-              </div>
-            ) : (
-              filtered.slice(0, 30).map((prop, i) => (
+          {loading ? (
+            <div className="p-10 text-center text-ink-soft text-sm">Loading the leaderboard…</div>
+          ) : processed.length === 0 ? (
+            <div className="p-10 text-center text-ink-soft text-sm">No listings match this filter yet.</div>
+          ) : (
+            processed.slice(0, 50).map((p, i) => {
+              const ppsm = computePpsm(p);
+              const grade = scoreToGrade(p.global_score);
+              return (
                 <div
-                  key={prop.id}
-                  onClick={() => navigate(`/analysis/${prop.id}`)}
-                  className="grid grid-cols-[1.5rem_1fr] sm:grid-cols-12 gap-x-2 sm:gap-2 px-3 sm:px-4 py-2.5 border-b border-border/50 last:border-0 hover:bg-secondary/30 transition-colors items-center cursor-pointer group"
+                  key={p.id}
+                  onClick={() => navigate(p.slug ? `/r/${p.slug}` : `/analysis/${p.id}`)}
+                  className="grid grid-cols-[2rem_1fr] md:grid-cols-[3rem_1fr_5rem_4rem_8rem_7rem_6rem] gap-x-3 gap-y-1 px-4 md:px-5 py-3 border-b border-hairline last:border-0 hover:bg-[#FBF8F1] transition-colors items-center cursor-pointer group"
                 >
-                  {/* Rank */}
-                  <div className="font-mono text-[11px] text-muted-foreground row-span-2 sm:row-span-1 self-center">{i + 1}</div>
-                  {/* Location - top row on mobile */}
-                  <div className="flex items-center gap-1.5 min-w-0 sm:col-span-5">
-                    <div className="min-w-0 flex-1">
-                      <span className="text-xs font-medium text-foreground truncate block">
-                        {prop.address || `${prop.city}, ${prop.country}`}
-                      </span>
-                      <span className="text-[10px] text-muted-foreground">{prop.city}, {prop.country}</span>
+                  <div className="font-mono text-[12px] text-ink-soft row-span-2 md:row-span-1 self-center">{i + 1}</div>
+                  <div className="min-w-0">
+                    <div className="text-[14px] text-ink truncate font-medium">
+                      {p.address || `${p.city}, ${p.country}`}
+                    </div>
+                    <div className="text-[11px] text-ink-soft">
+                      {p.city}{p.country ? `, ${p.country}` : ""}
+                      {p.property_type ? ` · ${p.property_type}` : ""}
+                      {p.size_sqm ? ` · ${p.size_sqm} m²` : ""}
                     </div>
                   </div>
-                  {/* Score + Price + Verdict - bottom row on mobile, inline on desktop */}
-                  <div className="col-start-2 sm:col-span-6 sm:contents flex items-center gap-2 mt-0.5 sm:mt-0">
-                    <span className={`inline-flex items-center justify-center h-6 w-10 rounded font-mono text-xs font-semibold ${scoreBg(prop.global_score || 0)} ${scoreColor(prop.global_score || 0)} sm:col-span-2 sm:mx-auto`}>
-                      {prop.global_score}
-                    </span>
-                    <span className="font-mono text-[11px] sm:text-xs text-muted-foreground sm:text-foreground truncate sm:col-span-2 sm:text-center">{prop.price || "—"}</span>
-                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full sm:col-span-2 sm:text-right ${
-                      prop.verdict === "Exceptional" ? "text-score-excellent bg-score-excellent/10" :
-                      prop.verdict === "Strong" ? "text-score-good bg-score-good/10" :
-                      prop.verdict === "Moderate" ? "text-score-average bg-score-average/10" :
-                      "text-score-poor bg-score-poor/10"
-                    }`}>
-                      {prop.verdict || "—"}
-                    </span>
-                    <ArrowRight className="h-2.5 w-2.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block sm:col-span-0" />
+                  <div className="col-start-2 md:col-start-3 md:text-center text-[13px] font-mono text-ink tabular-nums flex md:block items-center gap-3">
+                    <span className="font-semibold">{p.global_score}</span>
+                  </div>
+                  <div className={`md:text-center font-display text-[16px] ${gradeColor(p.global_score)}`}>{grade}</div>
+                  <div className="md:text-right text-[13px] font-mono text-ink tabular-nums">{p.price || "—"}</div>
+                  <div className="md:text-right text-[13px] font-mono text-ink-muted tabular-nums">
+                    {ppsm ? `${curr(p.currency)}${ppsm.toLocaleString()}` : "—"}
+                  </div>
+                  <div className="md:text-right">
+                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
+                      p.verdict === "Exceptional" ? "text-good bg-good/10" :
+                      p.verdict === "Strong" ? "text-good bg-good/10" :
+                      p.verdict === "Moderate" ? "text-warn bg-warn/10" :
+                      "text-bad bg-bad/10"
+                    }`}>{p.verdict || "—"}</span>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-          <p className="text-[11px] text-muted-foreground text-center mt-3">
-            Real-time performance ranking across global markets. Powered by community analyses.
-          </p>
+              );
+            })
+          )}
         </div>
+
+        <WeeklyEmailCapture />
       </div>
     </section>
   );

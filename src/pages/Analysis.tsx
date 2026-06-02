@@ -6,7 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/contexts/SubscriptionContext";
 import { ADMIN_EMAIL } from "@/lib/constants";
-import Navbar from "@/components/Navbar";
+import RHNav from "@/components/realhunt/RHNav";
+import RHFooter from "@/components/realhunt/RHFooter";
+import VerdictBanner from "@/components/analysis/VerdictBanner";
+import ExplainableAI from "@/components/analysis/ExplainableAI";
 import ProtectedListingFallback from "@/components/ProtectedListingFallback";
 import ProGateOverlay from "@/components/ProGateOverlay";
 import ReportExpiryBanner from "@/components/ReportExpiryBanner";
@@ -354,7 +357,7 @@ const Analysis = () => {
 
   if (showFreeLimitModal) return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <RHNav />
       <FreeLimitPricingModal
         open={showFreeLimitModal}
         onClose={() => { setShowFreeLimitModal(false); navigate("/dashboard"); }}
@@ -378,7 +381,7 @@ const Analysis = () => {
   if (scrapeFailed && !analyzing) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
+        <RHNav />
         <div className="container mx-auto px-4 pt-20 pb-16">
           <Button variant="ghost" size="sm" className="mb-6 text-muted-foreground" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-4 w-4 mr-1" /> Back to Dashboard
@@ -397,7 +400,7 @@ const Analysis = () => {
     }
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
+        <RHNav />
         <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl text-center">
           <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-8 max-w-md mx-auto">
             <AlertTriangle className="h-8 w-8 text-destructive mx-auto mb-4" />
@@ -432,7 +435,7 @@ const Analysis = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <RHNav />
       <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
           <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => {
@@ -569,6 +572,11 @@ const Analysis = () => {
           </Section>
         )}
 
+        {/* ===== VERDICT BANNER (score + grade + one-line verdict) ===== */}
+        <Section delay={0.02} className="mb-6">
+          <VerdictBanner data={d} />
+        </Section>
+
         {/* ===== UNIFIED PROPERTY CARD ===== */}
         <Section delay={0.05} className="mb-8">
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
@@ -576,6 +584,11 @@ const Analysis = () => {
             <div className="border-t border-border" />
             <AnalysisScoreCard data={d} explanations={explanations} globalScore={globalScore} />
           </div>
+        </Section>
+
+        {/* ===== EXPLAINABLE AI ===== */}
+        <Section delay={0.08} className="mb-8">
+          <ExplainableAI data={d} explanations={explanations} />
         </Section>
 
         {/* ===== RADAR CHART ===== */}
@@ -983,6 +996,7 @@ const Analysis = () => {
         bathrooms: d.bathrooms,
         size_sqm: d.size_sqm,
       }} />
+      <RHFooter />
     </div>
   );
 };
