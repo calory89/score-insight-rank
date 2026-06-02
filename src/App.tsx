@@ -20,6 +20,8 @@ import HomeScoring from "./pages/HomeScoring";
 import Apply from "./pages/Apply";
 import ProjectDetail from "./pages/ProjectDetail";
 import Method from "./pages/Method";
+import Pricing from "./pages/Pricing";
+import ForAgents from "./pages/ForAgents";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
 import Callback from "./pages/auth/Callback";
@@ -104,7 +106,8 @@ const AnimatedRoutes = () => {
           <Route path="/apply" element={<PageTransition><Apply /></PageTransition>} />
           <Route path="/projects/:slug" element={<PageTransition><ProjectDetail /></PageTransition>} />
           <Route path="/method" element={<PageTransition><Method /></PageTransition>} />
-          <Route path="/pricing" element={<PageTransition><Method /></PageTransition>} />
+          <Route path="/pricing" element={<PageTransition><Pricing /></PageTransition>} />
+          <Route path="/for-agents" element={<PageTransition><ForAgents /></PageTransition>} />
           <Route path="/auth/sign-in" element={<PageTransition><SignIn /></PageTransition>} />
           <Route path="/auth/sign-up" element={<PageTransition><SignUp /></PageTransition>} />
           <Route path="/auth/callback" element={<PageTransition><Callback /></PageTransition>} />

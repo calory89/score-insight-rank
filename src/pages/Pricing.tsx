@@ -45,7 +45,7 @@ const PLANS = [
     priceLabel: "€390",
     cadence: "/month",
     tagline: "For developers placing projects.",
-    priceId: "price_1Tdzqc J3dZ2FxAKF8lTFnAKL".replace(" ", ""),
+    priceId: "price_1TdzqcJ3dZ2FxAKF8lTFnAKL",
     features: [
       "Your projects independently analyzed",
       "Featured placement in /rankings",
