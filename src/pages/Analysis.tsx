@@ -996,6 +996,7 @@ const Analysis = () => {
         bathrooms: d.bathrooms,
         size_sqm: d.size_sqm,
       }} />
+      <RHFooter />
     </div>
   );
 };
