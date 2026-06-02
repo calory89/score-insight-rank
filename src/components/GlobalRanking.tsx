@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowRight, Search, Mail, Check } from "lucide-react";
+import { ArrowRight, Search, Mail, Check, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginGateModal from "@/components/LoginGateModal";
@@ -20,6 +20,7 @@ type RankedProperty = {
   size_sqm: number | null;
   currency: string | null;
   property_type: string | null;
+  url: string | null;
 };
 
 const CATEGORIES = [
@@ -143,7 +144,7 @@ const GlobalRanking = () => {
     (async () => {
       const { data } = await supabase
         .from("analyses")
-        .select("id, slug, city, country, address, global_score, roi_potential, verdict, price, size_sqm, currency, property_type")
+        .select("id, slug, city, country, address, global_score, roi_potential, verdict, price, size_sqm, currency, property_type, url")
         .not("global_score", "is", null)
         .order("global_score", { ascending: false })
         .limit(300);
@@ -166,19 +167,21 @@ const GlobalRanking = () => {
         [r.address, r.city, r.country, r.property_type].some((f) => f?.toLowerCase().includes(q))
       );
     }
-    if (category === "beachfront") rows = rows.filter(isBeachfront);
+    if (category === "beachfront") {
+      // Strict: real beachfront only, sorted by €/m² asc (best value first), tiebreak by score desc
+      rows = rows.filter(isBeachfront).sort((a, b) => {
+        const pa = computePpsm(a);
+        const pb = computePpsm(b);
+        if (pa != null && pb != null && pa !== pb) return pa - pb;
+        if (pa != null && pb == null) return -1;
+        if (pb != null && pa == null) return 1;
+        return (b.global_score || 0) - (a.global_score || 0);
+      });
+    }
     if (category === "ppsm") rows = rows.filter((r) => computePpsm(r) != null).sort((a, b) => (computePpsm(a)! - computePpsm(b)!));
     if (category === "price") rows = rows.filter((r) => parsePrice(r.price) != null).sort((a, b) => parsePrice(a.price)! - parsePrice(b.price)!);
     if (category === "roi") rows = rows.filter((r) => r.roi_potential != null).sort((a, b) => (b.roi_potential || 0) - (a.roi_potential || 0));
 
-    // For beachfront, surface Eco Beach City to the top if present
-    if (category === "beachfront") {
-      const ecoIdx = rows.findIndex((r) => /ecobeachcity|eco beach/i.test(`${r.address} ${r.city}`));
-      if (ecoIdx > 0) {
-        const [eco] = rows.splice(ecoIdx, 1);
-        rows.unshift(eco);
-      }
-    }
     return rows;
   }, [rankings, selectedCountry, search, category]);
 
@@ -250,7 +253,7 @@ const GlobalRanking = () => {
 
         {/* Leaderboard */}
         <div className="mt-6 rounded-2xl border border-hairline bg-surface overflow-hidden">
-          <div className="hidden md:grid grid-cols-[3rem_1fr_5rem_4rem_8rem_7rem_6rem] gap-3 px-5 py-3 border-b border-hairline text-[10px] font-medium text-ink-soft uppercase tracking-[0.14em]">
+          <div className="hidden md:grid grid-cols-[3rem_1fr_5rem_4rem_7rem_6rem_6rem_5rem] gap-3 px-5 py-3 border-b border-hairline text-[10px] font-medium text-ink-soft uppercase tracking-[0.14em]">
             <div>#</div>
             <div>Location</div>
             <div className="text-center">Score</div>
@@ -258,6 +261,7 @@ const GlobalRanking = () => {
             <div className="text-right">Price</div>
             <div className="text-right">€/m²</div>
             <div className="text-right">Verdict</div>
+            <div className="text-right">Web</div>
           </div>
 
           {loading ? (
@@ -268,11 +272,12 @@ const GlobalRanking = () => {
             processed.slice(0, 50).map((p, i) => {
               const ppsm = computePpsm(p);
               const grade = scoreToGrade(p.global_score);
+              const webUrl = p.url && p.url !== "manual-entry" ? (p.url.startsWith("http") ? p.url : `https://${p.url}`) : null;
               return (
                 <div
                   key={p.id}
                   onClick={() => navigate(p.slug ? `/r/${p.slug}` : `/analysis/${p.id}`)}
-                  className="grid grid-cols-[2rem_1fr] md:grid-cols-[3rem_1fr_5rem_4rem_8rem_7rem_6rem] gap-x-3 gap-y-1 px-4 md:px-5 py-3 border-b border-hairline last:border-0 hover:bg-[#FBF8F1] transition-colors items-center cursor-pointer group"
+                  className="grid grid-cols-[2rem_1fr_auto] md:grid-cols-[3rem_1fr_5rem_4rem_7rem_6rem_6rem_5rem] gap-x-3 gap-y-1 px-4 md:px-5 py-3 border-b border-hairline last:border-0 hover:bg-[#FBF8F1] transition-colors items-center cursor-pointer group"
                 >
                   <div className="font-mono text-[12px] text-ink-soft row-span-2 md:row-span-1 self-center">{i + 1}</div>
                   <div className="min-w-0">
@@ -288,18 +293,33 @@ const GlobalRanking = () => {
                   <div className="col-start-2 md:col-start-3 md:text-center text-[13px] font-mono text-ink tabular-nums flex md:block items-center gap-3">
                     <span className="font-semibold">{p.global_score}</span>
                   </div>
-                  <div className={`md:text-center font-display text-[16px] ${gradeColor(p.global_score)}`}>{grade}</div>
-                  <div className="md:text-right text-[13px] font-mono text-ink tabular-nums">{p.price || "—"}</div>
-                  <div className="md:text-right text-[13px] font-mono text-ink-muted tabular-nums">
+                  <div className={`md:text-center font-display text-[16px] ${gradeColor(p.global_score)} hidden md:block`}>{grade}</div>
+                  <div className="md:text-right text-[13px] font-mono text-ink tabular-nums hidden md:block">{p.price || "—"}</div>
+                  <div className="md:text-right text-[13px] font-mono text-ink-muted tabular-nums hidden md:block">
                     {ppsm ? `${curr(p.currency)}${ppsm.toLocaleString()}` : "—"}
                   </div>
-                  <div className="md:text-right">
+                  <div className="md:text-right hidden md:block">
                     <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
                       p.verdict === "Exceptional" ? "text-good bg-good/10" :
                       p.verdict === "Strong" ? "text-good bg-good/10" :
                       p.verdict === "Moderate" ? "text-warn bg-warn/10" :
                       "text-bad bg-bad/10"
                     }`}>{p.verdict || "—"}</span>
+                  </div>
+                  <div className="md:text-right row-start-1 col-start-3 md:row-start-auto md:col-start-auto" onClick={(e) => e.stopPropagation()}>
+                    {webUrl ? (
+                      <a
+                        href={webUrl}
+                        target="_blank"
+                        rel="noopener noreferrer nofollow"
+                        className="inline-flex items-center gap-1 text-[11px] text-ink-muted hover:text-ink px-2 py-1 rounded-md border border-hairline hover:border-hairline-strong transition-colors"
+                        title="Open the original listing"
+                      >
+                        <ExternalLink className="h-3 w-3" /> Web
+                      </a>
+                    ) : (
+                      <span className="text-[11px] text-ink-soft">—</span>
+                    )}
                   </div>
                 </div>
               );
