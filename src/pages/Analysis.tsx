@@ -572,6 +572,11 @@ const Analysis = () => {
           </Section>
         )}
 
+        {/* ===== VERDICT BANNER (score + grade + one-line verdict) ===== */}
+        <Section delay={0.02} className="mb-6">
+          <VerdictBanner data={d} />
+        </Section>
+
         {/* ===== UNIFIED PROPERTY CARD ===== */}
         <Section delay={0.05} className="mb-8">
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
@@ -579,6 +584,11 @@ const Analysis = () => {
             <div className="border-t border-border" />
             <AnalysisScoreCard data={d} explanations={explanations} globalScore={globalScore} />
           </div>
+        </Section>
+
+        {/* ===== EXPLAINABLE AI ===== */}
+        <Section delay={0.08} className="mb-8">
+          <ExplainableAI data={d} explanations={explanations} />
         </Section>
 
         {/* ===== RADAR CHART ===== */}
