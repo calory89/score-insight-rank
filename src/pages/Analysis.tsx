@@ -357,7 +357,7 @@ const Analysis = () => {
 
   if (showFreeLimitModal) return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <RHNav />
       <FreeLimitPricingModal
         open={showFreeLimitModal}
         onClose={() => { setShowFreeLimitModal(false); navigate("/dashboard"); }}
@@ -381,7 +381,7 @@ const Analysis = () => {
   if (scrapeFailed && !analyzing) {
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
+        <RHNav />
         <div className="container mx-auto px-4 pt-20 pb-16">
           <Button variant="ghost" size="sm" className="mb-6 text-muted-foreground" onClick={() => navigate("/dashboard")}>
             <ArrowLeft className="h-4 w-4 mr-1" /> Back to Dashboard
@@ -400,7 +400,7 @@ const Analysis = () => {
     }
     return (
       <div className="min-h-screen bg-background">
-        <Navbar />
+        <RHNav />
         <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl text-center">
           <div className="rounded-2xl border border-destructive/20 bg-destructive/5 p-8 max-w-md mx-auto">
             <AlertTriangle className="h-8 w-8 text-destructive mx-auto mb-4" />
@@ -435,7 +435,7 @@ const Analysis = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <RHNav />
       <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
           <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => {
