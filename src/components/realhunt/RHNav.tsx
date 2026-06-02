@@ -6,6 +6,7 @@ import { Menu, X } from "lucide-react";
 const NAV_ITEMS = [
   { to: "/", label: "Score a property" },
   { to: "/rankings", label: "Rankings" },
+  { to: "/for-agents", label: "For Agents" },
   { to: "/method", label: "Method" },
   { to: "/pricing", label: "Pricing" },
 ];
