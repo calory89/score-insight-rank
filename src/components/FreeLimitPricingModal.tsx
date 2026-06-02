@@ -189,10 +189,10 @@ const FreeLimitPricingModal = ({ open, onClose, usedCount = 5 }: FreeLimitPricin
                       <h4 className="text-sm font-semibold text-foreground">{plan.name}</h4>
                     </div>
                     <div className="flex items-baseline gap-1 mb-3">
-                      <span className="text-3xl font-bold text-foreground">${price}</span>
+                      <span className="text-3xl font-bold text-foreground">€{price}</span>
                       <span className="text-xs text-muted-foreground">/mo</span>
                       {annual && (
-                        <span className="text-xs text-muted-foreground line-through ml-1">${plan.monthlyPrice}</span>
+                        <span className="text-xs text-muted-foreground line-through ml-1">€{plan.monthlyPrice}</span>
                       )}
                     </div>
                     <ul className="space-y-1.5 mb-4 flex-1">
