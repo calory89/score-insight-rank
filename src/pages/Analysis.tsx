@@ -549,7 +549,7 @@ const Analysis = () => {
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
             <AnalysisHeader data={d} forensic={f} globalScore={globalScore} confidenceLevel={confidenceLevel} />
             <div className="border-t border-border" />
-            <AnalysisScoreCard data={d} explanations={explanations} globalScore={globalScore} />
+            <AnalysisScoreCard data={d} explanations={explanations} globalScore={globalScore} gated={!user} />
           </div>
         </Section>
 
