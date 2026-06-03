@@ -253,6 +253,7 @@ const GlobalRanking = () => {
 
         {/* Leaderboard */}
         <div className="mt-6 rounded-2xl border border-hairline bg-surface overflow-hidden">
+          {/* Desktop header */}
           <div className="hidden md:grid grid-cols-[3rem_1fr_5rem_4rem_7rem_6rem_6rem_5rem] gap-3 px-5 py-3 border-b border-hairline text-[10px] font-medium text-ink-soft uppercase tracking-[0.14em]">
             <div>#</div>
             <div>Location</div>
@@ -273,59 +274,117 @@ const GlobalRanking = () => {
               const ppsm = computePpsm(p);
               const grade = scoreToGrade(p.global_score);
               const webUrl = p.url && p.url !== "manual-entry" ? (p.url.startsWith("http") ? p.url : `https://${p.url}`) : null;
+              const verdictClass =
+                p.verdict === "Exceptional" || p.verdict === "Strong" ? "text-good bg-good/10" :
+                p.verdict === "Moderate" ? "text-warn bg-warn/10" : "text-bad bg-bad/10";
+              const onOpen = () => navigate(p.slug ? `/r/${p.slug}` : `/analysis/${p.id}`);
+
               return (
-                <div
-                  key={p.id}
-                  onClick={() => navigate(p.slug ? `/r/${p.slug}` : `/analysis/${p.id}`)}
-                  className="grid grid-cols-[2rem_1fr_auto] md:grid-cols-[3rem_1fr_5rem_4rem_7rem_6rem_6rem_5rem] gap-x-3 gap-y-1 px-4 md:px-5 py-3 border-b border-hairline last:border-0 hover:bg-[#FBF8F1] transition-colors items-center cursor-pointer group"
-                >
-                  <div className="font-mono text-[12px] text-ink-soft row-span-2 md:row-span-1 self-center">{i + 1}</div>
-                  <div className="min-w-0">
-                    <div className="text-[14px] text-ink truncate font-medium">
-                      {p.address || `${p.city}, ${p.country}`}
+                <div key={p.id} className="border-b border-hairline last:border-0">
+                  {/* MOBILE CARD */}
+                  <button
+                    onClick={onOpen}
+                    className="md:hidden w-full text-left px-4 py-4 hover:bg-[#FBF8F1] transition-colors block"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`flex-shrink-0 w-12 h-12 rounded-xl border border-hairline bg-paper flex flex-col items-center justify-center ${gradeColor(p.global_score)}`}>
+                        <span className="font-mono text-[14px] font-semibold leading-none">{p.global_score}</span>
+                        <span className="font-display text-[10px] mt-0.5 leading-none">{grade}</span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="text-[14px] text-ink font-medium truncate">
+                              {p.address || `${p.city}, ${p.country}`}
+                            </div>
+                            <div className="text-[11px] text-ink-soft truncate">
+                              <span className="font-mono">#{i + 1}</span>
+                              {p.city ? ` · ${p.city}` : ""}{p.country ? `, ${p.country}` : ""}
+                              {p.property_type ? ` · ${p.property_type}` : ""}
+                            </div>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="text-[15px] font-mono font-semibold text-ink tabular-nums leading-tight">
+                              {p.price ? `${curr(p.currency)}${p.price.replace(/^[€$£]/, "")}` : "—"}
+                            </div>
+                            {ppsm && (
+                              <div className="text-[10px] font-mono text-ink-soft tabular-nums">
+                                {curr(p.currency)}{ppsm.toLocaleString()}/m²
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="mt-2 flex items-center gap-2 flex-wrap">
+                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${verdictClass}`}>
+                            {p.verdict || "—"}
+                          </span>
+                          {webUrl && (
+                            <a
+                              href={webUrl}
+                              target="_blank"
+                              rel="noopener noreferrer nofollow"
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1 text-[10px] text-ink-muted hover:text-ink px-2 py-0.5 rounded-full border border-hairline"
+                            >
+                              <ExternalLink className="h-2.5 w-2.5" /> Listing
+                            </a>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-[11px] text-ink-soft">
-                      {p.city}{p.country ? `, ${p.country}` : ""}
-                      {p.property_type ? ` · ${p.property_type}` : ""}
-                      {p.size_sqm ? ` · ${p.size_sqm} m²` : ""}
+                  </button>
+
+                  {/* DESKTOP ROW */}
+                  <div
+                    onClick={onOpen}
+                    className="hidden md:grid grid-cols-[3rem_1fr_5rem_4rem_7rem_6rem_6rem_5rem] gap-3 px-5 py-3 hover:bg-[#FBF8F1] transition-colors items-center cursor-pointer"
+                  >
+                    <div className="font-mono text-[12px] text-ink-soft">{i + 1}</div>
+                    <div className="min-w-0">
+                      <div className="text-[14px] text-ink truncate font-medium">
+                        {p.address || `${p.city}, ${p.country}`}
+                      </div>
+                      <div className="text-[11px] text-ink-soft">
+                        {p.city}{p.country ? `, ${p.country}` : ""}
+                        {p.property_type ? ` · ${p.property_type}` : ""}
+                        {p.size_sqm ? ` · ${p.size_sqm} m²` : ""}
+                      </div>
                     </div>
-                  </div>
-                  <div className="col-start-2 md:col-start-3 md:text-center text-[13px] font-mono text-ink tabular-nums flex md:block items-center gap-3">
-                    <span className="font-semibold">{p.global_score}</span>
-                  </div>
-                  <div className={`md:text-center font-display text-[16px] ${gradeColor(p.global_score)} hidden md:block`}>{grade}</div>
-                  <div className="md:text-right text-[13px] font-mono text-ink tabular-nums hidden md:block">{p.price || "—"}</div>
-                  <div className="md:text-right text-[13px] font-mono text-ink-muted tabular-nums hidden md:block">
-                    {ppsm ? `${curr(p.currency)}${ppsm.toLocaleString()}` : "—"}
-                  </div>
-                  <div className="md:text-right hidden md:block">
-                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
-                      p.verdict === "Exceptional" ? "text-good bg-good/10" :
-                      p.verdict === "Strong" ? "text-good bg-good/10" :
-                      p.verdict === "Moderate" ? "text-warn bg-warn/10" :
-                      "text-bad bg-bad/10"
-                    }`}>{p.verdict || "—"}</span>
-                  </div>
-                  <div className="md:text-right row-start-1 col-start-3 md:row-start-auto md:col-start-auto" onClick={(e) => e.stopPropagation()}>
-                    {webUrl ? (
-                      <a
-                        href={webUrl}
-                        target="_blank"
-                        rel="noopener noreferrer nofollow"
-                        className="inline-flex items-center gap-1 text-[11px] text-ink-muted hover:text-ink px-2 py-1 rounded-md border border-hairline hover:border-hairline-strong transition-colors"
-                        title="Open the original listing"
-                      >
-                        <ExternalLink className="h-3 w-3" /> Web
-                      </a>
-                    ) : (
-                      <span className="text-[11px] text-ink-soft">—</span>
-                    )}
+                    <div className="text-center text-[13px] font-mono text-ink tabular-nums">
+                      <span className="font-semibold">{p.global_score}</span>
+                    </div>
+                    <div className={`text-center font-display text-[16px] ${gradeColor(p.global_score)}`}>{grade}</div>
+                    <div className="text-right text-[13px] font-mono text-ink tabular-nums">{p.price || "—"}</div>
+                    <div className="text-right text-[13px] font-mono text-ink-muted tabular-nums">
+                      {ppsm ? `${curr(p.currency)}${ppsm.toLocaleString()}` : "—"}
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${verdictClass}`}>
+                        {p.verdict || "—"}
+                      </span>
+                    </div>
+                    <div className="text-right" onClick={(e) => e.stopPropagation()}>
+                      {webUrl ? (
+                        <a
+                          href={webUrl}
+                          target="_blank"
+                          rel="noopener noreferrer nofollow"
+                          className="inline-flex items-center gap-1 text-[11px] text-ink-muted hover:text-ink px-2 py-1 rounded-md border border-hairline hover:border-hairline-strong transition-colors"
+                          title="Open the original listing"
+                        >
+                          <ExternalLink className="h-3 w-3" /> Web
+                        </a>
+                      ) : (
+                        <span className="text-[11px] text-ink-soft">—</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
             })
           )}
         </div>
+
 
         <WeeklyEmailCapture />
       </div>
