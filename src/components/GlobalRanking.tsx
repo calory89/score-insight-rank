@@ -354,7 +354,7 @@ const GlobalRanking = () => {
                       <span className="font-semibold">{p.global_score}</span>
                     </div>
                     <div className={`text-center font-display text-[16px] ${gradeColor(p.global_score)}`}>{grade}</div>
-                    <div className="text-right text-[13px] font-mono text-ink tabular-nums">{p.price || "—"}</div>
+                    <div className="text-right text-[13px] font-mono text-ink tabular-nums">{formatPrice(p.price, p.currency)}</div>
                     <div className="text-right text-[13px] font-mono text-ink-muted tabular-nums">
                       {ppsm ? `${curr(p.currency)}${ppsm.toLocaleString()}` : "—"}
                     </div>
