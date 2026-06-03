@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, ArrowRight, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import RHNav from "@/components/realhunt/RHNav";
 import RHFooter from "@/components/realhunt/RHFooter";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
