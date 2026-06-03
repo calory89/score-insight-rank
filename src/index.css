@@ -184,8 +184,9 @@
   .rh-card {
     background-color: var(--rh-surface);
     border: 1px solid var(--rh-hairline);
-    border-radius: 12px;
+    border-radius: 16px;
     padding: 24px;
+    box-shadow: var(--rh-shadow-soft);
   }
 
   .rh-input {
