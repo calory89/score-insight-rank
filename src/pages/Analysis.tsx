@@ -968,30 +968,8 @@ const Analysis = () => {
 
 
 
-      {/* AI Chat Assistant */}
-      <AIChatBubble context={{
-        address: d.address,
-        city: d.city,
-        country: d.country,
-        price: d.price,
-        currency: d.currency,
-        global_score: d.global_score,
-        roi_potential: d.roi_potential,
-        demand_strength: d.demand_strength,
-        risk_level: d.risk_level,
-        market_stability: d.market_stability,
-        liquidity_outlook: d.liquidity_outlook,
-        verdict: d.verdict,
-        ai_summary: d.ai_summary,
-        primary_insight: d.primary_insight,
-        pros: d.pros,
-        cons: d.cons,
-        red_flags: d.red_flags,
-        property_type: d.property_type,
-        bedrooms: d.bedrooms,
-        bathrooms: d.bathrooms,
-        size_sqm: d.size_sqm,
-      }} />
+      {/* Floating AI Chat bubble removed per request */}
+
       <RHFooter />
     </div>
   );
