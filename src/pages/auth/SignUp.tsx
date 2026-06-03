@@ -129,8 +129,8 @@ const SignUp = () => {
             </button>
             <p className="text-xs text-rh-ink-soft text-center">
               By continuing you accept our{" "}
-              <Link to="/terms" className="underline hover:text-rh-ink">Terms</Link> and{" "}
-              <Link to="/privacy" className="underline hover:text-rh-ink">Privacy</Link>.
+              <Link to="/legal/terms" className="underline hover:text-rh-ink">Terms</Link> and{" "}
+              <Link to="/legal/privacy" className="underline hover:text-rh-ink">Privacy</Link>.
             </p>
           </form>
 
