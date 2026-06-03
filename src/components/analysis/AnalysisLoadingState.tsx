@@ -370,6 +370,35 @@ export const FomoLoader = ({ step, readyReportId, onViewReady }: { step: number;
                   </div>
                   <p className="text-[10px] text-muted-foreground">Step {step + 1} of {fomoSteps.length}</p>
                 </div>
+
+                {/* Forensic 5-dimension scanner */}
+                <div className="mt-8 w-full max-w-md">
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-3 text-center">Forensic scan</p>
+                  <div className="grid grid-cols-1 gap-2">
+                    {["Developer", "Delivery", "Legal", "Location", "Economics"].map((dim, i) => {
+                      const active = step >= i;
+                      const filling = step === i;
+                      return (
+                        <div key={dim} className="flex items-center gap-3">
+                          <span className={`text-[11px] w-20 text-left tabular-nums ${active ? "text-foreground" : "text-muted-foreground/60"}`}>{dim}</span>
+                          <div className="flex-1 h-1.5 rounded-full bg-border/60 overflow-hidden relative">
+                            <div
+                              className={`h-full rounded-full transition-all duration-700 ${active ? "bg-primary" : "bg-transparent"}`}
+                              style={{ width: active ? (filling ? "70%" : "100%") : "0%" }}
+                            />
+                            {filling && (
+                              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[hero-scan_1.4s_ease-in-out_infinite]" />
+                            )}
+                          </div>
+                          <span className={`text-[10px] w-10 text-right tabular-nums ${active ? "text-primary" : "text-muted-foreground/50"}`}>
+                            {active ? (filling ? "…" : "✓") : "—"}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
               </>
             )}
             
