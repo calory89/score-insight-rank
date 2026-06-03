@@ -52,6 +52,8 @@ const Portfolio = React.lazy(() => import("./pages/Portfolio"));
 const MarketDirectory = React.lazy(() => import("./pages/MarketDirectory"));
 const MarketPulse = React.lazy(() => import("./pages/MarketPulse"));
 const Heatmap = React.lazy(() => import("./pages/Heatmap"));
+const BestDealsCountry = React.lazy(() => import("./pages/BestDealsCountry"));
+const MarketCity = React.lazy(() => import("./pages/MarketCity"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -143,6 +145,8 @@ const AnimatedRoutes = () => {
           <Route path="/portfolio" element={<PageTransition><Portfolio /></PageTransition>} />
           <Route path="/market" element={<PageTransition><MarketDirectory /></PageTransition>} />
           <Route path="/market/:country/:city" element={<PageTransition><MarketPulse /></PageTransition>} />
+          <Route path="/market/:city" element={<PageTransition><MarketCity /></PageTransition>} />
+          <Route path="/best-deals/:country" element={<PageTransition><BestDealsCountry /></PageTransition>} />
           <Route path="/heatmap" element={<PageTransition><Heatmap /></PageTransition>} />
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
