@@ -7,6 +7,8 @@ import HeroLiveDemo from "@/components/realhunt/HeroLiveDemo";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { detectListingSource, isLikelyListingUrl } from "@/lib/source-detect";
 import { useAuth } from "@/contexts/AuthContext";
+import { fbLead } from "@/lib/fbpixel";
+
 
 const EXAMPLES = [
   { label: "Dubai off-plan", url: "https://www.propertyfinder.ae/en/plp/buy/apartment-for-sale-dubai-business-bay.html" },
