@@ -6,6 +6,7 @@ import RHFooter from "@/components/realhunt/RHFooter";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
 import StripeCheckoutOverlay from "@/components/StripeCheckoutOverlay";
 import { useAuth } from "@/contexts/AuthContext";
+import { fbLead } from "@/lib/fbpixel";
 
 const PLANS = [
   {
@@ -69,12 +70,14 @@ const Pricing = () => {
   });
 
   const start = (plan: typeof PLANS[0]) => {
+    fbLead({ content_name: "pricing_choose_plan", plan: plan.id });
     if (!user) {
       navigate(`/auth/sign-up?redirect=${encodeURIComponent(`/pricing?plan=${plan.id}`)}`);
       return;
     }
     setCheckoutPlan(plan);
   };
+
 
   // Auto-open checkout when arriving with ?plan=pro|agent_pro|investor and logged in.
   useEffect(() => {

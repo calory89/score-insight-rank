@@ -7,6 +7,8 @@ import HeroLiveDemo from "@/components/realhunt/HeroLiveDemo";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { detectListingSource, isLikelyListingUrl } from "@/lib/source-detect";
 import { useAuth } from "@/contexts/AuthContext";
+import { fbLead } from "@/lib/fbpixel";
+
 
 const EXAMPLES = [
   { label: "Dubai off-plan", url: "https://www.propertyfinder.ae/en/plp/buy/apartment-for-sale-dubai-business-bay.html" },
@@ -51,8 +53,10 @@ const PasteInput = ({
       inputRef.current?.focus();
       return;
     }
+    fbLead({ content_name: "analyze_property", source: "home_hero" });
     navigate(`/app/analyze?u=${encodeURIComponent(u)}`);
   };
+
 
   return (
     <div className="w-full">
@@ -337,6 +341,8 @@ const IndexNew = () => {
 
   // Pricing handlers — preserve chosen plan through sign-in if needed.
   const goPro = () => {
+    fbLead({ content_name: "go_pro", source: "home_pricing" });
+
     if (!PRO_PRICE_ID) {
       navigate("/auth/sign-up?plan=pro&redirect=/pricing");
       return;
