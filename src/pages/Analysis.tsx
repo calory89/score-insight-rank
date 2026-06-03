@@ -955,20 +955,28 @@ const Analysis = () => {
         )}
       </AnimatePresence>
 
-      {/* Floating Visit Property CTA */}
+      {/* Floating Visit Property CTA — high-contrast near-black */}
       {d?.url && d.url !== "manual-entry" && (
         <motion.button
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 1 }}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          whileHover={{ y: -2 }}
           onClick={() => {
             let url = d.url;
             if (url && !url.startsWith("http")) url = "https://" + url;
-            window.open(url, "_blank");
+            window.open(url, "_blank", "noopener,noreferrer");
           }}
-          className="fixed bottom-20 sm:bottom-6 left-4 sm:left-6 z-40 bg-gradient-cta text-primary-foreground px-5 py-3 rounded-full shadow-xl hover:shadow-2xl hover:brightness-110 transition-all flex items-center gap-2 text-sm font-semibold"
+          aria-label="Visit original property listing"
+          className="fixed bottom-24 sm:bottom-8 left-4 sm:left-8 z-40 group flex items-center gap-2.5 pl-5 pr-4 py-3.5 rounded-full bg-[#16150F] text-white text-sm font-semibold tracking-tight ring-1 ring-black/10 shadow-[0_10px_30px_rgba(20,18,10,0.25)] hover:shadow-[0_14px_40px_rgba(20,18,10,0.35)] hover:bg-black transition-all"
         >
-          <Eye className="h-4 w-4" /> Visit Property
+          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#B8893B] text-[#16150F]">
+            <ExternalLink className="h-3 w-3" strokeWidth={2.5} />
+          </span>
+          <span>Visit Property</span>
+          <span className="hidden sm:inline text-[11px] font-normal text-white/60 border-l border-white/15 pl-2 ml-1">
+            Original listing
+          </span>
         </motion.button>
       )}
 
