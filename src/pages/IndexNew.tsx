@@ -654,7 +654,7 @@ const IndexNew = () => {
                 "Read receipts on shared reports",
                 "Priority queue",
               ]}
-              cta={{ label: "Go Pro", to: "/auth/sign-up?plan=pro" }}
+              cta={{ label: "Go Pro", onClick: goPro }}
             />
             <PriceCard
               name="Agency"
