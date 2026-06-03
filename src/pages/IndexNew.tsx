@@ -668,7 +668,7 @@ const IndexNew = () => {
                 "API access (2,000 calls/mo)",
                 "White-label domain",
               ]}
-              cta={{ label: "Talk to us", to: "/contact" }}
+              cta={{ label: "Talk to us", onClick: goAgency }}
             />
           </div>
           <p className="mt-6 text-[13px] text-ink-soft">
