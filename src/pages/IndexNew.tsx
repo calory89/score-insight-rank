@@ -341,6 +341,8 @@ const IndexNew = () => {
 
   // Pricing handlers — preserve chosen plan through sign-in if needed.
   const goPro = () => {
+    fbLead({ content_name: "go_pro", source: "home_pricing" });
+
     if (!PRO_PRICE_ID) {
       navigate("/auth/sign-up?plan=pro&redirect=/pricing");
       return;
