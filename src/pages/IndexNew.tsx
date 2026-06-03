@@ -29,7 +29,9 @@ const PasteInput = ({
   const navigate = useNavigate();
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const localRef = useRef<HTMLInputElement>(null);
+  const inputRef = extRef ?? localRef;
+
 
   const detected = useMemo(() => (value ? detectListingSource(value) : null), [value]);
   const valid = isLikelyListingUrl(value);
