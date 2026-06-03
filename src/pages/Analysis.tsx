@@ -483,6 +483,21 @@ const Analysis = () => {
               slug={d.slug}
               verdict={d.verdict}
             />
+            <ShareScoreCard
+              scoreOutOf10={Math.round(((d.global_score || 0) / 10) * 10) / 10}
+              grade={d.verdict || undefined}
+              title={d.address || d.city || "Property"}
+              location={[d.city, d.country].filter(Boolean).join(", ") || undefined}
+              verdict={d.primary_insight || d.verdict || undefined}
+              dims={radarData.map((r) => {
+                const v = Math.max(0, Math.min(10, ((r.value ?? 50) / 10)));
+                const status: "good" | "warn" | "bad" = v >= 7 ? "good" : v >= 5 ? "warn" : "bad";
+                return { label: r.metric, value: v, status };
+              })}
+              variant="secondary"
+              label="Score card"
+            />
+
             <Button variant="outline" size="sm" className="text-xs print:hidden" onClick={() => window.print()}>
               <Eye className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Print</span>
             </Button>
