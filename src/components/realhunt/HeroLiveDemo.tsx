@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import ShareScoreCard from "@/components/ShareScoreCard";
+
 
 type Status = "good" | "warn" | "bad";
 
@@ -137,6 +139,29 @@ export default function HeroLiveDemo({ runKey }: { runKey: number }) {
           ))}
         </AnimatePresence>
       </div>
+
+      {score >= TARGET && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+          className="mt-6 pt-5 hairline-t flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+        >
+          <span className="text-[13px] text-ink-soft">
+            Like what you see? Share this score card.
+          </span>
+          <ShareScoreCard
+            scoreOutOf10={TARGET}
+            grade="Strong"
+            title="Villa with sea view — Sierra Blanca"
+            location="Marbella, ES · Idealista"
+            dims={DIMS.map((d) => ({ label: d.l, value: d.v, status: d.status }))}
+            verdict="Decent yield, weak developer track record — negotiate 8% off list."
+            variant="secondary"
+          />
+        </motion.div>
+      )}
     </motion.div>
   );
 }
+
