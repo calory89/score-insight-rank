@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Menu, X } from "lucide-react";
+import { fbLead } from "@/lib/fbpixel";
 
 const NAV_ITEMS = [
   { to: "/", label: "Score a property" },
