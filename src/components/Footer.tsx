@@ -25,6 +25,7 @@ const Footer = () => {
           throw error;
         }
       }
+      fbLead({ content_name: "newsletter_subscribe", source: "footer" });
       setSubscribed(true);
       setEmail("");
     } catch {
