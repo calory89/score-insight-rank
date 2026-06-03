@@ -7,6 +7,7 @@ import RHNav from "@/components/realhunt/RHNav";
 import RHFooter from "@/components/realhunt/RHFooter";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { toast } from "@/hooks/use-toast";
+import { fbLead } from "@/lib/fbpixel";
 import { Loader2, Check } from "lucide-react";
 
 const SignUp = () => {
