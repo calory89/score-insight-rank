@@ -305,7 +305,7 @@ const GlobalRanking = () => {
                           </div>
                           <div className="text-right flex-shrink-0">
                             <div className="text-[15px] font-mono font-semibold text-ink tabular-nums leading-tight">
-                              {p.price ? `${curr(p.currency)}${p.price.replace(/^[€$£]/, "")}` : "—"}
+                              {formatPrice(p.price, p.currency)}
                             </div>
                             {ppsm && (
                               <div className="text-[10px] font-mono text-ink-soft tabular-nums">
