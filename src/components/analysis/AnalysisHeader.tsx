@@ -2,6 +2,7 @@ import { MapPin, Building2, Calendar, Ruler, BedDouble, Bath, Home } from "lucid
 import { Badge } from "@/components/ui/badge";
 import { scoreColor, classificationColor, verdictColor } from "@/lib/score-utils";
 import { ConfidenceBadge } from "./AnalysisHelpers";
+import { formatPrice } from "@/lib/grade";
 import type { Tables } from "@/integrations/supabase/types";
 
 type AnalysisData = Tables<"analyses">;
@@ -56,7 +57,7 @@ const AnalysisHeader = ({ data: d, forensic: f, globalScore, confidenceLevel }: 
         <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
           <MapPin className="h-3.5 w-3.5" /> {d.city}, {d.country}
         </div>
-        <p className="text-2xl md:text-3xl font-bold font-mono text-foreground mb-3">{d.price}</p>
+        <p className="text-2xl md:text-3xl font-bold font-mono text-foreground mb-3">{formatPrice(d.price, d.currency)}</p>
 
         <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
           {d.property_type && <span className="flex items-center gap-1"><Building2 className="h-3.5 w-3.5" /> {d.property_type}</span>}

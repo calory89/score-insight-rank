@@ -4,7 +4,7 @@ import { ArrowRight, Search, Mail, Check, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginGateModal from "@/components/LoginGateModal";
-import { scoreToGrade, gradeColor } from "@/lib/grade";
+import { scoreToGrade, gradeColor, formatPrice } from "@/lib/grade";
 import { useToast } from "@/hooks/use-toast";
 
 type RankedProperty = {
@@ -305,7 +305,7 @@ const GlobalRanking = () => {
                           </div>
                           <div className="text-right flex-shrink-0">
                             <div className="text-[15px] font-mono font-semibold text-ink tabular-nums leading-tight">
-                              {p.price ? `${curr(p.currency)}${p.price.replace(/^[€$£]/, "")}` : "—"}
+                              {formatPrice(p.price, p.currency)}
                             </div>
                             {ppsm && (
                               <div className="text-[10px] font-mono text-ink-soft tabular-nums">
@@ -354,7 +354,7 @@ const GlobalRanking = () => {
                       <span className="font-semibold">{p.global_score}</span>
                     </div>
                     <div className={`text-center font-display text-[16px] ${gradeColor(p.global_score)}`}>{grade}</div>
-                    <div className="text-right text-[13px] font-mono text-ink tabular-nums">{p.price || "—"}</div>
+                    <div className="text-right text-[13px] font-mono text-ink tabular-nums">{formatPrice(p.price, p.currency)}</div>
                     <div className="text-right text-[13px] font-mono text-ink-muted tabular-nums">
                       {ppsm ? `${curr(p.currency)}${ppsm.toLocaleString()}` : "—"}
                     </div>
