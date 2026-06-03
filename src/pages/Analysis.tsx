@@ -964,30 +964,9 @@ const Analysis = () => {
         )}
       </AnimatePresence>
 
-      {/* Floating Visit Property CTA — high-contrast near-black */}
-      {d?.url && d.url !== "manual-entry" && (
-        <motion.button
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          whileHover={{ y: -2 }}
-          onClick={() => {
-            let url = d.url;
-            if (url && !url.startsWith("http")) url = "https://" + url;
-            window.open(url, "_blank", "noopener,noreferrer");
-          }}
-          aria-label="Visit original property listing"
-          className="fixed bottom-24 sm:bottom-8 left-4 sm:left-8 z-40 group flex items-center gap-2.5 pl-5 pr-4 py-3.5 rounded-full bg-[#16150F] text-white text-sm font-semibold tracking-tight ring-1 ring-black/10 shadow-[0_10px_30px_rgba(20,18,10,0.25)] hover:shadow-[0_14px_40px_rgba(20,18,10,0.35)] hover:bg-black transition-all"
-        >
-          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#B8893B] text-[#16150F]">
-            <ExternalLink className="h-3 w-3" strokeWidth={2.5} />
-          </span>
-          <span>Visit Property</span>
-          <span className="hidden sm:inline text-[11px] font-normal text-white/60 border-l border-white/15 pl-2 ml-1">
-            Original listing
-          </span>
-        </motion.button>
-      )}
+      {/* Floating Visit Property CTA removed per request */}
+
+
 
       {/* AI Chat Assistant */}
       <AIChatBubble context={{
