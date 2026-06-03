@@ -4,6 +4,7 @@ import {
   Heart, GitCompare, MapPin, Calendar, TrendingUp, Shield, BarChart3, Building2,
 } from "lucide-react";
 import { scoreColor, verdictColorSimple as verdictColor, riskLabel } from "@/lib/score-utils";
+import { formatPrice } from "@/lib/grade";
 import { RedFlagBadgeList } from "@/components/RedFlagBadges";
 import LazyImage from "@/components/LazyImage";
 
