@@ -852,8 +852,11 @@ const Analysis = () => {
               <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate(`/compare?ids=${id}`)}>
                 <GitCompare className="h-3.5 w-3.5 mr-1.5" /> Compare
               </Button>
-              <Button variant="outline" size="sm" className="text-xs print:hidden" onClick={() => window.print()}>
-                <FileText className="h-3.5 w-3.5 mr-1.5" /> Print
+              <Button variant="outline" size="sm" className="text-xs print:hidden" onClick={() => {
+                if (!user) { navigate(`/auth/sign-up?redirect=${encodeURIComponent(window.location.pathname)}`); return; }
+                window.print();
+              }}>
+                <FileText className="h-3.5 w-3.5 mr-1.5" /> {user ? "Print / PDF" : "PDF (sign up)"}
               </Button>
               <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowNegotiationLetter(true)}>
                 <FileText className="h-3.5 w-3.5 mr-1.5" /> Negotiate
@@ -861,7 +864,10 @@ const Analysis = () => {
               <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowPortfolioModal(true)}>
                 <Briefcase className="h-3.5 w-3.5 mr-1.5" /> Portfolio
               </Button>
-              <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowMemoModal(true)}>
+              <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => {
+                if (!user) { navigate(`/auth/sign-up?redirect=${encodeURIComponent(window.location.pathname)}`); return; }
+                setShowMemoModal(true);
+              }}>
                 <Sparkles className="h-3.5 w-3.5 mr-1.5" /> AI Memo
               </Button>
               {d.url && d.url !== "manual-entry" && (
