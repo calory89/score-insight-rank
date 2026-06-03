@@ -501,24 +501,8 @@ const Analysis = () => {
           <BadDealAlert score={d.global_score} redFlagCount={(d.red_flags as string[])?.length || 0} />
         )}
 
-        {/* Project Site Warning */}
-        {(d.data_source === "project_website" || confidenceLevel === "low") && !d.url?.toLowerCase().includes("ecobeachcity") && (
-          <Section delay={0} className="mb-6">
-            <div className="rounded-xl border-2 border-score-average/40 bg-score-average/5 p-5">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="h-6 w-6 text-score-average flex-shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="font-semibold text-foreground text-sm mb-1">⚠️ Project / Developer Website — Limited Data</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    This URL is not a standard property listing (like Zillow, Idealista, etc.). It appears to be a real estate company or developer website.
-                    The data shown below is <strong>limited and partially estimated</strong>. Financial metrics may not be accurate.
-                    For a precise analysis, paste a direct listing URL with specific property details (price, size, location).
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Section>
-        )}
+        {/* Project / Developer site warning removed per request */}
+
 
         {/* Rental Listing Warning */}
         {(listingType === "rental" || listingType === "vacation_rental" || d.data_source === "rental" || d.data_source === "vacation_rental" || d.ai_summary?.includes("[RENTAL LISTING")) && (
