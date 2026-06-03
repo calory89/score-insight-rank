@@ -41,12 +41,15 @@ const SignUp = () => {
       toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
       return;
     }
+    fbLead({ content_name: "sign_up", method: "email" });
     toast({ title: "Check your inbox", description: "Confirm your email to activate sending reports to clients." });
     navigate(redirectTo);
   };
 
   const handleGoogle = async () => {
     setLoading(true);
+    fbLead({ content_name: "sign_up", method: "google" });
+
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: `${window.location.origin}/auth/callback`,
     });
