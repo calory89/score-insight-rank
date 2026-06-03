@@ -306,10 +306,12 @@ const IndexNew = () => {
     title: "RealHunt — Is this listing actually a good deal?",
     description:
       "Paste any Zillow, Rightmove, Idealista, Redfin, Airbnb or PropertyFinder URL. Get a forensic real-estate score in under 10 seconds. Every number sourced.",
+    ogImage: "https://score-insight-rank.lovable.app/og-default.jpg",
   });
 
   const [scrolled, setScrolled] = useState(false);
   const [demoRun, setDemoRun] = useState(0);
+  const heroInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
@@ -318,6 +320,10 @@ const IndexNew = () => {
   }, []);
 
   const runDemo = () => setDemoRun((n) => n + 1);
+  const focusHero = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setTimeout(() => heroInputRef.current?.focus(), 350);
+  };
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -330,20 +336,23 @@ const IndexNew = () => {
       </div>
 
       {/* HERO */}
-      <Section className="!pt-16 md:!pt-24 !pb-16">
+      <section className="max-w-[1140px] mx-auto px-5 sm:px-6 pt-8 sm:pt-16 md:pt-24 pb-12 md:pb-16">
         <div className="max-w-[820px]">
-          <div className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] text-ink-soft mb-6">
+          <div className="inline-flex items-center gap-2 text-[10px] sm:text-[11px] uppercase tracking-[0.2em] sm:tracking-[0.22em] text-ink-soft mb-4 sm:mb-6">
             <span className="w-6 h-px bg-[#B8893B]" />
             The trust score for property deals
           </div>
-          <h1 className="font-display text-[44px] sm:text-[58px] md:text-[72px] text-ink leading-[1.02] tracking-[-0.02em]">
+          <h1
+            className="font-display text-ink leading-[1.03] tracking-[-0.02em]"
+            style={{ fontSize: "clamp(34px, 8.5vw, 72px)" }}
+          >
             Is this listing <span className="italic text-[#B8893B]">actually</span> a good deal?
           </h1>
-          <p className="mt-6 text-ink-muted text-[18px] sm:text-[20px] leading-relaxed max-w-[640px]">
+          <p className="mt-4 sm:mt-6 text-ink-muted text-[16px] sm:text-[20px] leading-relaxed max-w-[640px]">
             Paste any listing. Forensic score in 10 seconds. Every number sourced.
           </p>
-          <div className="mt-10 max-w-[760px]">
-            <PasteInput onTryDemo={runDemo} />
+          <div className="mt-6 sm:mt-10 max-w-[760px]">
+            <PasteInput onTryDemo={runDemo} inputRef={heroInputRef} />
           </div>
           {demoRun > 0 && (
             <div className="max-w-[820px]">
@@ -351,7 +360,8 @@ const IndexNew = () => {
             </div>
           )}
         </div>
-      </Section>
+      </section>
+
 
       {/* WORKS WITH */}
       <div className="border-y border-hairline bg-[#F8F5EE]">
