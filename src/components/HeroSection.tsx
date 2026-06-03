@@ -77,15 +77,21 @@ const HeroSection = () => {
     });
   }, []);
 
+  const [launching, setLaunching] = useState(false);
+
   const handleAnalyze = () => {
-    if (!url.trim()) return;
+    if (!url.trim() || launching) return;
     import("@/lib/fbpixel").then(({ fbLead }) => fbLead({ content_name: "analyze_property", source: "hero_section" })).catch(() => {});
     if (!user) {
       pendingUrlRef.current = url.trim();
       setShowLoginGate(true);
       return;
     }
-    navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
+    setLaunching(true);
+    // Short premium pre-launch animation, then navigate to the full forensic loader.
+    setTimeout(() => {
+      navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
+    }, 900);
   };
 
 
