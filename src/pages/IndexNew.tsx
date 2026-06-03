@@ -6,6 +6,7 @@ import RHFooter from "@/components/realhunt/RHFooter";
 import HeroLiveDemo from "@/components/realhunt/HeroLiveDemo";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { detectListingSource, isLikelyListingUrl } from "@/lib/source-detect";
+import { useAuth } from "@/contexts/AuthContext";
 
 const EXAMPLES = [
   { label: "Dubai off-plan", url: "https://www.propertyfinder.ae/en/plp/buy/apartment-for-sale-dubai-business-bay.html" },
@@ -190,39 +191,41 @@ const PriceCard = ({
   price: string;
   cadence?: string;
   features: string[];
-  cta: { label: string; to: string };
+  cta: { label: string; to?: string; onClick?: () => void };
   highlight?: boolean;
   badge?: string;
-}) => (
-  <div
-    className={`rh-card flex flex-col h-full relative ${highlight ? "ring-2 ring-[#16150F] shadow-[0_14px_40px_rgba(20,18,10,0.12)]" : ""}`}
-  >
-    {badge && (
-      <div className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-[#16150F] text-white text-[11px] font-medium tracking-wide uppercase">
-        {badge}
-      </div>
-    )}
-    <div className="font-display text-[20px] text-ink">{name}</div>
-    <div className="mt-3 flex items-baseline gap-1">
-      <span className="font-display text-[44px] tabular text-ink leading-none">{price}</span>
-      {cadence && <span className="text-ink-soft text-[14px]">/{cadence}</span>}
-    </div>
-    <ul className="mt-6 space-y-2.5 text-[14px] text-ink-muted flex-1">
-      {features.map((f) => (
-        <li key={f} className="flex items-start gap-2">
-          <Check size={15} className="text-accent-gold mt-0.5 shrink-0" />
-          <span>{f}</span>
-        </li>
-      ))}
-    </ul>
-    <Link
-      to={cta.to}
-      className={highlight ? "rh-btn-primary mt-6" : "rh-btn-secondary mt-6 justify-center"}
+}) => {
+  const btnClass = highlight ? "rh-btn-primary mt-6" : "rh-btn-secondary mt-6 justify-center";
+  return (
+    <div
+      className={`rh-card flex flex-col h-full relative ${highlight ? "ring-2 ring-[#16150F] shadow-[0_14px_40px_rgba(20,18,10,0.12)]" : ""}`}
     >
-      {cta.label}
-    </Link>
-  </div>
-);
+      {badge && (
+        <div className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-[#16150F] text-white text-[11px] font-medium tracking-wide uppercase">
+          {badge}
+        </div>
+      )}
+      <div className="font-display text-[20px] text-ink">{name}</div>
+      <div className="mt-3 flex items-baseline gap-1">
+        <span className="font-display text-[44px] tabular text-ink leading-none">{price}</span>
+        {cadence && <span className="text-ink-soft text-[14px]">/{cadence}</span>}
+      </div>
+      <ul className="mt-6 space-y-2.5 text-[14px] text-ink-muted flex-1">
+        {features.map((f) => (
+          <li key={f} className="flex items-start gap-2">
+            <Check size={15} className="text-accent-gold mt-0.5 shrink-0" />
+            <span>{f}</span>
+          </li>
+        ))}
+      </ul>
+      {cta.onClick ? (
+        <button onClick={cta.onClick} className={btnClass}>{cta.label}</button>
+      ) : (
+        <Link to={cta.to || "#"} className={btnClass}>{cta.label}</Link>
+      )}
+    </div>
+  );
+};
 
 const SOURCE_LOGOS = ["Zillow", "Rightmove", "Idealista", "Redfin", "Airbnb", "PropertyFinder"];
 
@@ -301,6 +304,11 @@ const FAQItem = ({ q, a }: { q: string; a: string }) => {
   );
 };
 
+// Stripe price IDs. Pro uses existing live €19 price.
+// TODO: add Agency price ID here once created in Stripe.
+const PRO_PRICE_ID = "price_1TdzpNJ3dZ2FxAKF4TrhJCIH"; // €19/mo
+const AGENCY_PRICE_ID: string | null = null; // not yet configured — Agency CTA stays as "Talk to us"
+
 const IndexNew = () => {
   useDocumentMeta({
     title: "RealHunt — Is this listing actually a good deal?",
@@ -309,6 +317,8 @@ const IndexNew = () => {
     ogImage: "https://score-insight-rank.lovable.app/og-default.jpg",
   });
 
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [demoRun, setDemoRun] = useState(0);
   const heroInputRef = useRef<HTMLInputElement>(null);
@@ -323,6 +333,26 @@ const IndexNew = () => {
   const focusHero = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     setTimeout(() => heroInputRef.current?.focus(), 350);
+  };
+
+  // Pricing handlers — preserve chosen plan through sign-in if needed.
+  const goPro = () => {
+    if (!PRO_PRICE_ID) {
+      navigate("/auth/sign-up?plan=pro&redirect=/pricing");
+      return;
+    }
+    if (!user) {
+      navigate(`/auth/sign-up?plan=pro&redirect=${encodeURIComponent("/pricing?plan=pro")}`);
+      return;
+    }
+    navigate("/pricing?plan=pro");
+  };
+  const goAgency = () => {
+    if (AGENCY_PRICE_ID && user) {
+      navigate("/pricing?plan=agency");
+      return;
+    }
+    navigate("/contact");
   };
 
   return (
@@ -455,9 +485,9 @@ const IndexNew = () => {
                       <div className="col-span-3 text-[12px] uppercase tracking-wider text-ink-soft">
                         {d.l}
                       </div>
-                      <div className="col-span-7 h-2 rounded-full bg-[#F0EBDE] overflow-hidden">
+                      <div className="col-span-7 h-3 rounded-full bg-[#E8E1D0] overflow-hidden ring-1 ring-black/[0.04]">
                         <div
-                          className="h-full rounded-full transition-all"
+                          className="h-full rounded-full transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]"
                           style={{
                             width: `${(d.v / 10) * 100}%`,
                             backgroundColor: statusColor(d.status),
@@ -624,7 +654,7 @@ const IndexNew = () => {
                 "Read receipts on shared reports",
                 "Priority queue",
               ]}
-              cta={{ label: "Go Pro", to: "/auth/sign-up?plan=pro" }}
+              cta={{ label: "Go Pro", onClick: goPro }}
             />
             <PriceCard
               name="Agency"
@@ -638,7 +668,7 @@ const IndexNew = () => {
                 "API access (2,000 calls/mo)",
                 "White-label domain",
               ]}
-              cta={{ label: "Talk to us", to: "/contact" }}
+              cta={{ label: "Talk to us", onClick: goAgency }}
             />
           </div>
           <p className="mt-6 text-[13px] text-ink-soft">

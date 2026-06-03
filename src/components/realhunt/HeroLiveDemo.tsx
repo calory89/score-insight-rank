@@ -94,9 +94,9 @@ export default function HeroLiveDemo({ runKey }: { runKey: number }) {
                 <div className="col-span-3 text-[11px] uppercase tracking-wider text-ink-soft">
                   {d.l}
                 </div>
-                <div className="col-span-7 h-2 rounded-full bg-[#F0EBDE] overflow-hidden">
+                <div className="col-span-7 h-3 rounded-full bg-[#E8E1D0] overflow-hidden ring-1 ring-black/[0.04]">
                   <motion.div
-                    className="h-full rounded-full"
+                    className="h-full rounded-full shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]"
                     initial={{ width: "0%" }}
                     animate={{ width: `${(d.v / 10) * 100}%` }}
                     transition={{

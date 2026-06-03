@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,7 +18,8 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const redirectTo = (location.state as any)?.from || "/app";
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || (location.state as any)?.from || "/app";
 
   useEffect(() => {
     if (user) navigate(redirectTo, { replace: true });

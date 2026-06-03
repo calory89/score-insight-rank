@@ -43,6 +43,9 @@ const Game = React.lazy(() => import("./pages/Game"));
 const SearchPage = React.lazy(() => import("./pages/Search"));
 const Privacy = React.lazy(() => import("./pages/Privacy"));
 const Terms = React.lazy(() => import("./pages/Terms"));
+const LegalPrivacy = React.lazy(() => import("./pages/legal/Privacy"));
+const LegalTerms = React.lazy(() => import("./pages/legal/Terms"));
+const Contact = React.lazy(() => import("./pages/Contact"));
 const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
 const InvestorQuiz = React.lazy(() => import("./pages/InvestorQuiz"));
 const Portfolio = React.lazy(() => import("./pages/Portfolio"));
@@ -132,6 +135,9 @@ const AnimatedRoutes = () => {
           <Route path="/search" element={<PageTransition><SearchPage /></PageTransition>} />
           <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
           <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
+          <Route path="/legal/privacy" element={<PageTransition><LegalPrivacy /></PageTransition>} />
+          <Route path="/legal/terms" element={<PageTransition><LegalTerms /></PageTransition>} />
+          <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
           <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
           <Route path="/quiz" element={<PageTransition><InvestorQuiz /></PageTransition>} />
           <Route path="/portfolio" element={<PageTransition><Portfolio /></PageTransition>} />

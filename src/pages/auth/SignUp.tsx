@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,13 +13,15 @@ const SignUp = () => {
   useDocumentMeta({ title: "Create account — RealHunt", description: "Free agent workspace. 5 forensic analyses per month, no card required." });
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || "/app";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) navigate("/app", { replace: true });
-  }, [user, navigate]);
+    if (user) navigate(redirectTo, { replace: true });
+  }, [user, navigate, redirectTo]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,7 +41,7 @@ const SignUp = () => {
       return;
     }
     toast({ title: "Check your inbox", description: "Confirm your email to activate sending reports to clients." });
-    navigate("/app");
+    navigate(redirectTo);
   };
 
   const handleGoogle = async () => {
@@ -129,8 +131,8 @@ const SignUp = () => {
             </button>
             <p className="text-xs text-rh-ink-soft text-center">
               By continuing you accept our{" "}
-              <Link to="/terms" className="underline hover:text-rh-ink">Terms</Link> and{" "}
-              <Link to="/privacy" className="underline hover:text-rh-ink">Privacy</Link>.
+              <Link to="/legal/terms" className="underline hover:text-rh-ink">Terms</Link> and{" "}
+              <Link to="/legal/privacy" className="underline hover:text-rh-ink">Privacy</Link>.
             </p>
           </form>
 

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, ArrowRight, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import RHNav from "@/components/realhunt/RHNav";
 import RHFooter from "@/components/realhunt/RHFooter";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
@@ -59,6 +59,7 @@ const PLANS = [
 const Pricing = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [checkoutPlan, setCheckoutPlan] = useState<typeof PLANS[0] | null>(null);
 
   useDocumentMeta({
@@ -69,11 +70,23 @@ const Pricing = () => {
 
   const start = (plan: typeof PLANS[0]) => {
     if (!user) {
-      navigate(`/auth/sign-up?redirect=${encodeURIComponent("/pricing")}`);
+      navigate(`/auth/sign-up?redirect=${encodeURIComponent(`/pricing?plan=${plan.id}`)}`);
       return;
     }
     setCheckoutPlan(plan);
   };
+
+  // Auto-open checkout when arriving with ?plan=pro|agent_pro|investor and logged in.
+  useEffect(() => {
+    const planParam = searchParams.get("plan");
+    if (!planParam || !user) return;
+    // Map landing-page plan names → /pricing PLANS ids.
+    const alias: Record<string, string> = { pro: "investor", agency: "agent_pro" };
+    const targetId = alias[planParam] ?? planParam;
+    const match = PLANS.find((p) => p.id === targetId);
+    if (match) setCheckoutPlan(match);
+  }, [searchParams, user]);
+
 
   return (
     <div className="min-h-screen bg-paper text-ink">
