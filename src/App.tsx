@@ -135,6 +135,9 @@ const AnimatedRoutes = () => {
           <Route path="/search" element={<PageTransition><SearchPage /></PageTransition>} />
           <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
           <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
+          <Route path="/legal/privacy" element={<PageTransition><LegalPrivacy /></PageTransition>} />
+          <Route path="/legal/terms" element={<PageTransition><LegalTerms /></PageTransition>} />
+          <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
           <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
           <Route path="/quiz" element={<PageTransition><InvestorQuiz /></PageTransition>} />
           <Route path="/portfolio" element={<PageTransition><Portfolio /></PageTransition>} />
