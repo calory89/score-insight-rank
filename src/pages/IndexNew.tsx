@@ -686,8 +686,19 @@ const IndexNew = () => {
       </div>
 
       <RHFooter />
+
+      {/* Mobile sticky CTA — focuses hero input */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+12px)] bg-paper/95 backdrop-blur-md border-t border-hairline">
+        <button onClick={focusHero} className="rh-btn-primary w-full justify-center !py-3.5 text-[15px]">
+          Analyze a listing
+          <ArrowRight size={16} />
+        </button>
+      </div>
+      {/* Spacer to prevent overlap with sticky bar on mobile */}
+      <div className="md:hidden h-20" aria-hidden />
     </div>
   );
 };
 
 export default IndexNew;
+
