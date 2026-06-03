@@ -77,15 +77,21 @@ const HeroSection = () => {
     });
   }, []);
 
+  const [launching, setLaunching] = useState(false);
+
   const handleAnalyze = () => {
-    if (!url.trim()) return;
+    if (!url.trim() || launching) return;
     import("@/lib/fbpixel").then(({ fbLead }) => fbLead({ content_name: "analyze_property", source: "hero_section" })).catch(() => {});
     if (!user) {
       pendingUrlRef.current = url.trim();
       setShowLoginGate(true);
       return;
     }
-    navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
+    setLaunching(true);
+    // Short premium pre-launch animation, then navigate to the full forensic loader.
+    setTimeout(() => {
+      navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
+    }, 900);
   };
 
 
@@ -158,14 +164,32 @@ const HeroSection = () => {
                   />
                   <kbd className="hidden md:inline-flex items-center gap-0.5 rounded-md border border-border bg-secondary px-1.5 py-0.5 text-[10px] font-mono text-muted-foreground mr-2">⌘K</kbd>
                 </div>
-                <Button variant="hero" size="lg" className="rounded-lg h-12 sm:h-14 px-4 sm:px-6 text-sm sm:text-base flex-shrink-0 group" onClick={handleAnalyze}>
-                  Analyze Property — Free <ArrowRight className="ml-1 h-4 w-4 hidden sm:inline transition-transform group-hover:translate-x-0.5" />
+                <Button variant="hero" size="lg" disabled={launching} className="rounded-lg h-12 sm:h-14 px-4 sm:px-6 text-sm sm:text-base flex-shrink-0 group relative overflow-hidden disabled:opacity-100" onClick={handleAnalyze}>
+                  {launching ? (
+                    <span className="inline-flex items-center gap-2">
+                      <span className="relative inline-flex h-2.5 w-2.5">
+                        <span className="absolute inline-flex h-full w-full rounded-full bg-white/70 opacity-75 animate-ping" />
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white" />
+                      </span>
+                      <span>Scanning listing…</span>
+                    </span>
+                  ) : (
+                    <>Analyze Property — Free <ArrowRight className="ml-1 h-4 w-4 hidden sm:inline transition-transform group-hover:translate-x-0.5" /></>
+                  )}
+                  {launching && (
+                    <span className="pointer-events-none absolute inset-x-0 bottom-0 h-[3px] overflow-hidden">
+                      <span className="block h-full w-1/3 bg-white/80 animate-[hero-scan_1.2s_ease-in-out_infinite]" />
+                    </span>
+                  )}
                 </Button>
               </div>
             </div>
           </motion.div>
 
-          <p className="text-xs text-muted-foreground mb-3">
+          <p className="text-xs text-foreground/80 mb-1 font-medium">
+            We read the listing, pull comparables, and score it in ~10 seconds.
+          </p>
+          <p className="text-[11px] text-muted-foreground mb-3">
             5 free analyses · No credit card · 50+ platforms supported
           </p>
 

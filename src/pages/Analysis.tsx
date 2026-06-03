@@ -450,20 +450,6 @@ const Analysis = () => {
             <ArrowLeft className="h-4 w-4 mr-1" /> {fromBulk ? "Back to Bulk Results" : "Back"}
           </Button>
           <div className="flex items-center gap-1.5 flex-wrap">
-            {d?.url && d.url !== "manual-entry" && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs"
-                onClick={() => {
-                  let url = d.url;
-                  if (url && !url.startsWith("http")) url = "https://" + url;
-                  window.open(url, "_blank");
-                }}
-              >
-                <Eye className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Visit Website</span>
-              </Button>
-            )}
             <Button
               variant="outline"
               size="sm"
@@ -472,10 +458,6 @@ const Analysis = () => {
             >
               <Heart className={`h-3.5 w-3.5 sm:mr-1 ${isFavorited ? "fill-current" : ""}`} />
               <span className="hidden sm:inline">{isFavorited ? "Saved" : "Favorite"}</span>
-            </Button>
-            <WatchButton analysisId={id!} url={d.url} price={d.price} score={d.global_score} />
-            <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate(`/compare?ids=${id}`)}>
-              <GitCompare className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Compare</span>
             </Button>
             <SharePanel
               address={d.address || d.city || "Property"}
@@ -497,36 +479,6 @@ const Analysis = () => {
               variant="secondary"
               label="Score card"
             />
-
-            <Button variant="outline" size="sm" className="text-xs print:hidden" onClick={() => window.print()}>
-              <Eye className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Print</span>
-            </Button>
-            <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowNegotiationLetter(true)}>
-              <FileText className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Negotiate</span>
-            </Button>
-            <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowPortfolioModal(true)}>
-              <Briefcase className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Portfolio</span>
-            </Button>
-            <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowMemoModal(true)}>
-              <Sparkles className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">AI Memo</span>
-            </Button>
-            <Button variant="outline" size="sm" className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setShowReportError(true)}>
-              <Flag className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Report Error</span>
-            </Button>
-            {d.url && d.url !== "manual-entry" && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs border-primary/30 text-primary hover:bg-primary/10"
-                onClick={() => {
-                  if (confirm("Re-analyze this property with fresh data? This will use 1 credit.")) {
-                    navigate(`/analysis/loading?url=${encodeURIComponent(d.url)}`);
-                  }
-                }}
-              >
-                <RefreshCw className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Re-Analyze</span>
-              </Button>
-            )}
           </div>
           {d.created_at && (
             <div className="text-[10px] text-muted-foreground mt-1 sm:mt-0 sm:ml-auto flex items-center gap-1">
@@ -549,24 +501,8 @@ const Analysis = () => {
           <BadDealAlert score={d.global_score} redFlagCount={(d.red_flags as string[])?.length || 0} />
         )}
 
-        {/* Project Site Warning */}
-        {(d.data_source === "project_website" || confidenceLevel === "low") && !d.url?.toLowerCase().includes("ecobeachcity") && (
-          <Section delay={0} className="mb-6">
-            <div className="rounded-xl border-2 border-score-average/40 bg-score-average/5 p-5">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="h-6 w-6 text-score-average flex-shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="font-semibold text-foreground text-sm mb-1">⚠️ Project / Developer Website — Limited Data</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    This URL is not a standard property listing (like Zillow, Idealista, etc.). It appears to be a real estate company or developer website.
-                    The data shown below is <strong>limited and partially estimated</strong>. Financial metrics may not be accurate.
-                    For a precise analysis, paste a direct listing URL with specific property details (price, size, location).
-                  </p>
-                </div>
-              </div>
-            </div>
-          </Section>
-        )}
+        {/* Project / Developer site warning removed per request */}
+
 
         {/* Rental Listing Warning */}
         {(listingType === "rental" || listingType === "vacation_rental" || d.data_source === "rental" || d.data_source === "vacation_rental" || d.ai_summary?.includes("[RENTAL LISTING")) && (
@@ -878,6 +814,62 @@ const Analysis = () => {
             <PropertyReviews analysisId={id} />
           </Section>
         )}
+
+        {/* ===== BOTTOM ACTIONS ROW ===== */}
+        <Section delay={0.72} className="mt-10 mb-4">
+          <div className="rounded-2xl border border-border bg-card/60 p-5">
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">Actions</p>
+            <div className="flex flex-wrap items-center gap-2">
+              {d?.url && d.url !== "manual-entry" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => {
+                    let url = d.url;
+                    if (url && !url.startsWith("http")) url = "https://" + url;
+                    window.open(url, "_blank", "noopener,noreferrer");
+                  }}
+                >
+                  <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Visit Website
+                </Button>
+              )}
+              <WatchButton analysisId={id!} url={d.url} price={d.price} score={d.global_score} />
+              <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate(`/compare?ids=${id}`)}>
+                <GitCompare className="h-3.5 w-3.5 mr-1.5" /> Compare
+              </Button>
+              <Button variant="outline" size="sm" className="text-xs print:hidden" onClick={() => window.print()}>
+                <FileText className="h-3.5 w-3.5 mr-1.5" /> Print
+              </Button>
+              <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowNegotiationLetter(true)}>
+                <FileText className="h-3.5 w-3.5 mr-1.5" /> Negotiate
+              </Button>
+              <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowPortfolioModal(true)}>
+                <Briefcase className="h-3.5 w-3.5 mr-1.5" /> Portfolio
+              </Button>
+              <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowMemoModal(true)}>
+                <Sparkles className="h-3.5 w-3.5 mr-1.5" /> AI Memo
+              </Button>
+              {d.url && d.url !== "manual-entry" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs border-primary/30 text-primary hover:bg-primary/10"
+                  onClick={() => {
+                    if (confirm("Re-analyze this property with fresh data? This will use 1 credit.")) {
+                      navigate(`/analysis/loading?url=${encodeURIComponent(d.url)}`);
+                    }
+                  }}
+                >
+                  <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Re-Analyze
+                </Button>
+              )}
+              <Button variant="outline" size="sm" className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10 ml-auto" onClick={() => setShowReportError(true)}>
+                <Flag className="h-3.5 w-3.5 mr-1.5" /> Report Error
+              </Button>
+            </div>
+          </div>
+        </Section>
       </div>
 
       {/* Report Error Modal */}
@@ -972,55 +964,12 @@ const Analysis = () => {
         )}
       </AnimatePresence>
 
-      {/* Floating Visit Property CTA — high-contrast near-black */}
-      {d?.url && d.url !== "manual-entry" && (
-        <motion.button
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          whileHover={{ y: -2 }}
-          onClick={() => {
-            let url = d.url;
-            if (url && !url.startsWith("http")) url = "https://" + url;
-            window.open(url, "_blank", "noopener,noreferrer");
-          }}
-          aria-label="Visit original property listing"
-          className="fixed bottom-24 sm:bottom-8 left-4 sm:left-8 z-40 group flex items-center gap-2.5 pl-5 pr-4 py-3.5 rounded-full bg-[#16150F] text-white text-sm font-semibold tracking-tight ring-1 ring-black/10 shadow-[0_10px_30px_rgba(20,18,10,0.25)] hover:shadow-[0_14px_40px_rgba(20,18,10,0.35)] hover:bg-black transition-all"
-        >
-          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-[#B8893B] text-[#16150F]">
-            <ExternalLink className="h-3 w-3" strokeWidth={2.5} />
-          </span>
-          <span>Visit Property</span>
-          <span className="hidden sm:inline text-[11px] font-normal text-white/60 border-l border-white/15 pl-2 ml-1">
-            Original listing
-          </span>
-        </motion.button>
-      )}
+      {/* Floating Visit Property CTA removed per request */}
 
-      {/* AI Chat Assistant */}
-      <AIChatBubble context={{
-        address: d.address,
-        city: d.city,
-        country: d.country,
-        price: d.price,
-        currency: d.currency,
-        global_score: d.global_score,
-        roi_potential: d.roi_potential,
-        demand_strength: d.demand_strength,
-        risk_level: d.risk_level,
-        market_stability: d.market_stability,
-        liquidity_outlook: d.liquidity_outlook,
-        verdict: d.verdict,
-        ai_summary: d.ai_summary,
-        primary_insight: d.primary_insight,
-        pros: d.pros,
-        cons: d.cons,
-        red_flags: d.red_flags,
-        property_type: d.property_type,
-        bedrooms: d.bedrooms,
-        bathrooms: d.bathrooms,
-        size_sqm: d.size_sqm,
-      }} />
+
+
+      {/* Floating AI Chat bubble removed per request */}
+
       <RHFooter />
     </div>
   );

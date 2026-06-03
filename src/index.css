@@ -271,3 +271,9 @@
     color: black !important;
   }
 }
+
+/* Hero Analyze scanning bar */
+@keyframes hero-scan {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
