@@ -15,10 +15,20 @@ export const usePageTracking = () => {
   const location = useLocation();
   const visitIdRef = useRef<string | null>(null);
   const startTimeRef = useRef<number>(Date.now());
+  const isFirstLoadRef = useRef<boolean>(true);
 
   useEffect(() => {
     const sessionId = getSessionId();
     startTimeRef.current = Date.now();
+
+    // Meta Pixel: fire PageView on SPA route changes. Skip the very first
+    // load because the base pixel in index.html already fired one.
+    if (isFirstLoadRef.current) {
+      isFirstLoadRef.current = false;
+    } else if (typeof window !== "undefined" && window.fbq) {
+      try { window.fbq("track", "PageView"); } catch { /* noop */ }
+    }
+
 
     // Insert visit record
     const trackVisit = async () => {
