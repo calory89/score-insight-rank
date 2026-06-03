@@ -79,6 +79,7 @@ const HeroSection = () => {
 
   const handleAnalyze = () => {
     if (!url.trim()) return;
+    import("@/lib/fbpixel").then(({ fbLead }) => fbLead({ content_name: "analyze_property", source: "hero_section" })).catch(() => {});
     if (!user) {
       pendingUrlRef.current = url.trim();
       setShowLoginGate(true);
@@ -86,6 +87,7 @@ const HeroSection = () => {
     }
     navigate(`/analysis/loading?url=${encodeURIComponent(url.trim())}`);
   };
+
 
   const handleLoginClose = () => setShowLoginGate(false);
   const handleLoginSuccess = () => setShowLoginGate(false);
