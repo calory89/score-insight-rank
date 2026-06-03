@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Check, ChevronDown, Star, ShieldCheck, FileSearch, Sparkles } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, Star, ShieldCheck, FileSearch, Sparkles, Play } from "lucide-react";
 import RHNav from "@/components/realhunt/RHNav";
 import RHFooter from "@/components/realhunt/RHFooter";
+import HeroLiveDemo from "@/components/realhunt/HeroLiveDemo";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { detectListingSource, isLikelyListingUrl } from "@/lib/source-detect";
 
