@@ -304,12 +304,15 @@ const IndexNew = () => {
   });
 
   const [scrolled, setScrolled] = useState(false);
+  const [demoRun, setDemoRun] = useState(0);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const runDemo = () => setDemoRun((n) => n + 1);
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -334,9 +337,14 @@ const IndexNew = () => {
           <p className="mt-6 text-ink-muted text-[18px] sm:text-[20px] leading-relaxed max-w-[640px]">
             Paste any listing. Forensic score in 10 seconds. Every number sourced.
           </p>
-          <div className="mt-10 max-w-[680px]">
-            <PasteInput />
+          <div className="mt-10 max-w-[760px]">
+            <PasteInput onTryDemo={runDemo} />
           </div>
+          {demoRun > 0 && (
+            <div className="max-w-[820px]">
+              <HeroLiveDemo runKey={demoRun} />
+            </div>
+          )}
         </div>
       </Section>
 
