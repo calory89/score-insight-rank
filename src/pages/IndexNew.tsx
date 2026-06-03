@@ -14,7 +14,15 @@ const EXAMPLES = [
   { label: "Miami new build", url: "https://www.zillow.com/homedetails/sample-miami" },
 ];
 
-const PasteInput = ({ size = "lg" }: { size?: "lg" | "md" }) => {
+const SAMPLE_URL = "https://www.idealista.com/inmueble/sample-marbella";
+
+const PasteInput = ({
+  size = "lg",
+  onTryDemo,
+}: {
+  size?: "lg" | "md";
+  onTryDemo?: () => void;
+}) => {
   const navigate = useNavigate();
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
@@ -25,7 +33,18 @@ const PasteInput = ({ size = "lg" }: { size?: "lg" | "md" }) => {
 
   const submit = (url?: string) => {
     const u = (url ?? value).trim();
-    if (!isLikelyListingUrl(u)) return;
+    if (!u) {
+      inputRef.current?.focus();
+      return;
+    }
+    if (u === SAMPLE_URL && onTryDemo) {
+      onTryDemo();
+      return;
+    }
+    if (!isLikelyListingUrl(u)) {
+      inputRef.current?.focus();
+      return;
+    }
     navigate(`/app/analyze?u=${encodeURIComponent(u)}`);
   };
 
@@ -65,13 +84,23 @@ const PasteInput = ({ size = "lg" }: { size?: "lg" | "md" }) => {
         </div>
         <button
           type="submit"
-          disabled={!valid}
-          className="rh-btn-primary sm:min-w-[160px]"
+          className="rh-btn-primary sm:min-w-[140px]"
           style={size === "lg" ? { padding: "20px 28px", fontSize: 16 } : undefined}
         >
           Analyze
           <ArrowRight size={16} />
         </button>
+        {onTryDemo && (
+          <button
+            type="button"
+            onClick={onTryDemo}
+            className="rh-btn-secondary sm:min-w-[140px] justify-center"
+            style={size === "lg" ? { padding: "20px 22px", fontSize: 15 } : undefined}
+          >
+            <Play size={14} />
+            Try a sample
+          </button>
+        )}
       </form>
 
       {focused && !value && (
