@@ -8,6 +8,7 @@ import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { detectListingSource, isLikelyListingUrl } from "@/lib/source-detect";
 import { useAuth } from "@/contexts/AuthContext";
 import { fbLead } from "@/lib/fbpixel";
+import LiveCounter from "@/components/LiveCounter";
 
 
 const EXAMPLES = [
@@ -133,8 +134,10 @@ const PasteInput = ({
         </div>
       )}
 
-      <p className="mt-4 text-[13px] text-ink-soft">
-        5 free · No credit card · Trusted by 2,400+ agents · 50+ countries
+      <p className="mt-4 text-[13px] text-ink-soft flex items-center gap-2 flex-wrap">
+        <LiveCounter />
+        <span className="text-ink-soft">·</span>
+        <span>5 free · No credit card · 50+ countries</span>
       </p>
     </div>
   );

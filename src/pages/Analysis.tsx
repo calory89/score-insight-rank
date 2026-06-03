@@ -103,32 +103,46 @@ const Analysis = () => {
       : undefined;
 
   useDocumentMeta({
-    title: data ? `${data.address || data.city || "Property"} — Score ${data.global_score || ""}/100 | RealHunt` : "Analyzing Property… | RealHunt",
-    description: data ? `AI analysis of ${data.address || data.city || "property"}${data.country ? ` in ${data.country}` : ""}. Score: ${data.global_score}/100. ${data.primary_insight || ""}` : "Running AI-powered real estate analysis…",
+    title: data ? `Is ${data.address || data.city || "this listing"} a good deal? — RealHunt Score ${data.global_score ?? "—"}/100` : "Analyzing Property… | RealHunt",
+    description: data ? `Forensic analysis of ${data.address || data.city || "property"}${data.country ? ` in ${data.country}` : ""}. RealHunt score ${data.global_score}/100. ${data.primary_insight || data.verdict || ""}`.slice(0, 240) : "Running AI-powered real estate analysis…",
     ogImage: ogImageUrl,
+    canonicalUrl: data?.slug ? `https://realhunt.co/r/${data.slug}` : undefined,
   });
 
-  // JSON-LD structured data for analysis pages
+  // JSON-LD structured data for analysis pages — uses score/100 so Google
+  // can render ★ stars from the AggregateRating.
   useEffect(() => {
     if (!data) return;
-    const jsonLd = {
+    const place = data.address || `${data.city || "Property"}${data.country ? `, ${data.country}` : ""}`;
+    const score = data.global_score || 0;
+    const jsonLd: any = {
       "@context": "https://schema.org",
       "@type": "Product",
-      "name": data.address || `${data.city || "Property"}${data.country ? `, ${data.country}` : ""}`,
+      "name": place,
       "description": data.primary_insight || data.ai_summary || "AI-powered property analysis",
       ...(data.image_url && { "image": data.image_url }),
+      "brand": { "@type": "Brand", "name": "RealHunt" },
       "aggregateRating": {
         "@type": "AggregateRating",
-        "ratingValue": String(((data.global_score || 0) / 20).toFixed(1)),
-        "bestRating": "5",
-        "worstRating": "1",
+        "ratingValue": String(score),
+        "bestRating": "100",
+        "worstRating": "0",
         "ratingCount": "1",
+        "reviewCount": "1",
+      },
+      "review": {
+        "@type": "Review",
+        "author": { "@type": "Organization", "name": "RealHunt" },
+        "reviewRating": { "@type": "Rating", "ratingValue": String(score), "bestRating": "100", "worstRating": "0" },
+        "reviewBody": data.primary_insight || data.ai_summary || "",
+        "name": data.verdict || "RealHunt forensic verdict",
       },
       ...(data.price && {
         "offers": {
           "@type": "Offer",
-          "price": data.price,
+          "price": String(data.price).replace(/[^\d.]/g, "") || "0",
           "priceCurrency": data.currency === "GBP" ? "GBP" : data.currency === "USD" ? "USD" : "EUR",
+          "url": data.slug ? `https://realhunt.co/r/${data.slug}` : undefined,
         },
       }),
     };
@@ -535,7 +549,7 @@ const Analysis = () => {
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
             <AnalysisHeader data={d} forensic={f} globalScore={globalScore} confidenceLevel={confidenceLevel} />
             <div className="border-t border-border" />
-            <AnalysisScoreCard data={d} explanations={explanations} globalScore={globalScore} />
+            <AnalysisScoreCard data={d} explanations={explanations} globalScore={globalScore} gated={!user} />
           </div>
         </Section>
 
@@ -838,8 +852,11 @@ const Analysis = () => {
               <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate(`/compare?ids=${id}`)}>
                 <GitCompare className="h-3.5 w-3.5 mr-1.5" /> Compare
               </Button>
-              <Button variant="outline" size="sm" className="text-xs print:hidden" onClick={() => window.print()}>
-                <FileText className="h-3.5 w-3.5 mr-1.5" /> Print
+              <Button variant="outline" size="sm" className="text-xs print:hidden" onClick={() => {
+                if (!user) { navigate(`/auth/sign-up?redirect=${encodeURIComponent(window.location.pathname)}`); return; }
+                window.print();
+              }}>
+                <FileText className="h-3.5 w-3.5 mr-1.5" /> {user ? "Print / PDF" : "PDF (sign up)"}
               </Button>
               <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowNegotiationLetter(true)}>
                 <FileText className="h-3.5 w-3.5 mr-1.5" /> Negotiate
@@ -847,7 +864,10 @@ const Analysis = () => {
               <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowPortfolioModal(true)}>
                 <Briefcase className="h-3.5 w-3.5 mr-1.5" /> Portfolio
               </Button>
-              <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowMemoModal(true)}>
+              <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => {
+                if (!user) { navigate(`/auth/sign-up?redirect=${encodeURIComponent(window.location.pathname)}`); return; }
+                setShowMemoModal(true);
+              }}>
                 <Sparkles className="h-3.5 w-3.5 mr-1.5" /> AI Memo
               </Button>
               {d.url && d.url !== "manual-entry" && (
