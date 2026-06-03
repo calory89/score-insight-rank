@@ -53,8 +53,10 @@ const PasteInput = ({
       inputRef.current?.focus();
       return;
     }
+    fbLead({ content_name: "analyze_property", source: "home_hero" });
     navigate(`/app/analyze?u=${encodeURIComponent(u)}`);
   };
+
 
   return (
     <div className="w-full">
