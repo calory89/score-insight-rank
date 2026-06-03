@@ -224,7 +224,7 @@
   }
   .rh-btn-primary:hover { background-color: #2A2820; box-shadow: 0 10px 28px rgba(20, 18, 10, 0.28); }
   .rh-btn-primary:active { transform: translateY(1px); }
-  .rh-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+  .rh-btn-primary:disabled { background-color: #2A2820; color: rgba(255,255,255,0.7); cursor: not-allowed; box-shadow: 0 6px 20px rgba(20, 18, 10, 0.18); }
 
   .rh-btn-secondary {
     background-color: transparent;

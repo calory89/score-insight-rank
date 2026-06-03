@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Check, ChevronDown, Star, ShieldCheck, FileSearch, Sparkles } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, Star, ShieldCheck, FileSearch, Sparkles, Play } from "lucide-react";
 import RHNav from "@/components/realhunt/RHNav";
 import RHFooter from "@/components/realhunt/RHFooter";
+import HeroLiveDemo from "@/components/realhunt/HeroLiveDemo";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { detectListingSource, isLikelyListingUrl } from "@/lib/source-detect";
 
@@ -13,7 +14,15 @@ const EXAMPLES = [
   { label: "Miami new build", url: "https://www.zillow.com/homedetails/sample-miami" },
 ];
 
-const PasteInput = ({ size = "lg" }: { size?: "lg" | "md" }) => {
+const SAMPLE_URL = "https://www.idealista.com/inmueble/sample-marbella";
+
+const PasteInput = ({
+  size = "lg",
+  onTryDemo,
+}: {
+  size?: "lg" | "md";
+  onTryDemo?: () => void;
+}) => {
   const navigate = useNavigate();
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
@@ -24,7 +33,18 @@ const PasteInput = ({ size = "lg" }: { size?: "lg" | "md" }) => {
 
   const submit = (url?: string) => {
     const u = (url ?? value).trim();
-    if (!isLikelyListingUrl(u)) return;
+    if (!u) {
+      inputRef.current?.focus();
+      return;
+    }
+    if (u === SAMPLE_URL && onTryDemo) {
+      onTryDemo();
+      return;
+    }
+    if (!isLikelyListingUrl(u)) {
+      inputRef.current?.focus();
+      return;
+    }
     navigate(`/app/analyze?u=${encodeURIComponent(u)}`);
   };
 
@@ -64,13 +84,23 @@ const PasteInput = ({ size = "lg" }: { size?: "lg" | "md" }) => {
         </div>
         <button
           type="submit"
-          disabled={!valid}
-          className="rh-btn-primary sm:min-w-[160px]"
+          className="rh-btn-primary sm:min-w-[140px]"
           style={size === "lg" ? { padding: "20px 28px", fontSize: 16 } : undefined}
         >
           Analyze
           <ArrowRight size={16} />
         </button>
+        {onTryDemo && (
+          <button
+            type="button"
+            onClick={onTryDemo}
+            className="rh-btn-secondary sm:min-w-[140px] justify-center"
+            style={size === "lg" ? { padding: "20px 22px", fontSize: 15 } : undefined}
+          >
+            <Play size={14} />
+            Try a sample
+          </button>
+        )}
       </form>
 
       {focused && !value && (
@@ -274,12 +304,15 @@ const IndexNew = () => {
   });
 
   const [scrolled, setScrolled] = useState(false);
+  const [demoRun, setDemoRun] = useState(0);
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  const runDemo = () => setDemoRun((n) => n + 1);
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -304,9 +337,14 @@ const IndexNew = () => {
           <p className="mt-6 text-ink-muted text-[18px] sm:text-[20px] leading-relaxed max-w-[640px]">
             Paste any listing. Forensic score in 10 seconds. Every number sourced.
           </p>
-          <div className="mt-10 max-w-[680px]">
-            <PasteInput />
+          <div className="mt-10 max-w-[760px]">
+            <PasteInput onTryDemo={runDemo} />
           </div>
+          {demoRun > 0 && (
+            <div className="max-w-[820px]">
+              <HeroLiveDemo runKey={demoRun} />
+            </div>
+          )}
         </div>
       </Section>
 
