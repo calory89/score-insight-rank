@@ -814,6 +814,62 @@ const Analysis = () => {
             <PropertyReviews analysisId={id} />
           </Section>
         )}
+
+        {/* ===== BOTTOM ACTIONS ROW ===== */}
+        <Section delay={0.72} className="mt-10 mb-4">
+          <div className="rounded-2xl border border-border bg-card/60 p-5">
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-3">Actions</p>
+            <div className="flex flex-wrap items-center gap-2">
+              {d?.url && d.url !== "manual-entry" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => {
+                    let url = d.url;
+                    if (url && !url.startsWith("http")) url = "https://" + url;
+                    window.open(url, "_blank", "noopener,noreferrer");
+                  }}
+                >
+                  <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Visit Website
+                </Button>
+              )}
+              <WatchButton analysisId={id!} url={d.url} price={d.price} score={d.global_score} />
+              <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate(`/compare?ids=${id}`)}>
+                <GitCompare className="h-3.5 w-3.5 mr-1.5" /> Compare
+              </Button>
+              <Button variant="outline" size="sm" className="text-xs print:hidden" onClick={() => window.print()}>
+                <FileText className="h-3.5 w-3.5 mr-1.5" /> Print
+              </Button>
+              <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowNegotiationLetter(true)}>
+                <FileText className="h-3.5 w-3.5 mr-1.5" /> Negotiate
+              </Button>
+              <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowPortfolioModal(true)}>
+                <Briefcase className="h-3.5 w-3.5 mr-1.5" /> Portfolio
+              </Button>
+              <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowMemoModal(true)}>
+                <Sparkles className="h-3.5 w-3.5 mr-1.5" /> AI Memo
+              </Button>
+              {d.url && d.url !== "manual-entry" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs border-primary/30 text-primary hover:bg-primary/10"
+                  onClick={() => {
+                    if (confirm("Re-analyze this property with fresh data? This will use 1 credit.")) {
+                      navigate(`/analysis/loading?url=${encodeURIComponent(d.url)}`);
+                    }
+                  }}
+                >
+                  <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Re-Analyze
+                </Button>
+              )}
+              <Button variant="outline" size="sm" className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10 ml-auto" onClick={() => setShowReportError(true)}>
+                <Flag className="h-3.5 w-3.5 mr-1.5" /> Report Error
+              </Button>
+            </div>
+          </div>
+        </Section>
       </div>
 
       {/* Report Error Modal */}
