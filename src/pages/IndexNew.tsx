@@ -303,6 +303,11 @@ const FAQItem = ({ q, a }: { q: string; a: string }) => {
   );
 };
 
+// Stripe price IDs. Pro uses existing live €19 price.
+// TODO: add Agency price ID here once created in Stripe.
+const PRO_PRICE_ID = "price_1TdzpNJ3dZ2FxAKF4TrhJCIH"; // €19/mo
+const AGENCY_PRICE_ID: string | null = null; // not yet configured — Agency CTA stays as "Talk to us"
+
 const IndexNew = () => {
   useDocumentMeta({
     title: "RealHunt — Is this listing actually a good deal?",
@@ -311,6 +316,8 @@ const IndexNew = () => {
     ogImage: "https://score-insight-rank.lovable.app/og-default.jpg",
   });
 
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [demoRun, setDemoRun] = useState(0);
   const heroInputRef = useRef<HTMLInputElement>(null);
@@ -325,6 +332,26 @@ const IndexNew = () => {
   const focusHero = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     setTimeout(() => heroInputRef.current?.focus(), 350);
+  };
+
+  // Pricing handlers — preserve chosen plan through sign-in if needed.
+  const goPro = () => {
+    if (!PRO_PRICE_ID) {
+      navigate("/auth/sign-up?plan=pro&redirect=/pricing");
+      return;
+    }
+    if (!user) {
+      navigate(`/auth/sign-up?plan=pro&redirect=${encodeURIComponent("/pricing?plan=pro")}`);
+      return;
+    }
+    navigate("/pricing?plan=pro");
+  };
+  const goAgency = () => {
+    if (AGENCY_PRICE_ID && user) {
+      navigate("/pricing?plan=agency");
+      return;
+    }
+    navigate("/contact");
   };
 
   return (
