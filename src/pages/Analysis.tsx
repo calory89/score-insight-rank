@@ -18,7 +18,7 @@ import FreeLimitPricingModal from "@/components/FreeLimitPricingModal";
 import {
   ArrowLeft, AlertTriangle, ChevronDown, ChevronUp,
   Info, DollarSign, BarChart3, Home,
-  Clock, Zap, CheckCircle2, XCircle, Eye,
+  Clock, Zap, CheckCircle2, XCircle, Eye, ExternalLink,
   Percent, ArrowUpRight, ArrowDownRight, GitCompare, Flag, X, Send, Heart, FileText, RefreshCw, Briefcase, Target, Sparkles,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
