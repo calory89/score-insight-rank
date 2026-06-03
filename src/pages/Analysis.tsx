@@ -450,20 +450,6 @@ const Analysis = () => {
             <ArrowLeft className="h-4 w-4 mr-1" /> {fromBulk ? "Back to Bulk Results" : "Back"}
           </Button>
           <div className="flex items-center gap-1.5 flex-wrap">
-            {d?.url && d.url !== "manual-entry" && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs"
-                onClick={() => {
-                  let url = d.url;
-                  if (url && !url.startsWith("http")) url = "https://" + url;
-                  window.open(url, "_blank");
-                }}
-              >
-                <Eye className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Visit Website</span>
-              </Button>
-            )}
             <Button
               variant="outline"
               size="sm"
@@ -472,10 +458,6 @@ const Analysis = () => {
             >
               <Heart className={`h-3.5 w-3.5 sm:mr-1 ${isFavorited ? "fill-current" : ""}`} />
               <span className="hidden sm:inline">{isFavorited ? "Saved" : "Favorite"}</span>
-            </Button>
-            <WatchButton analysisId={id!} url={d.url} price={d.price} score={d.global_score} />
-            <Button variant="outline" size="sm" className="text-xs" onClick={() => navigate(`/compare?ids=${id}`)}>
-              <GitCompare className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Compare</span>
             </Button>
             <SharePanel
               address={d.address || d.city || "Property"}
@@ -497,36 +479,6 @@ const Analysis = () => {
               variant="secondary"
               label="Score card"
             />
-
-            <Button variant="outline" size="sm" className="text-xs print:hidden" onClick={() => window.print()}>
-              <Eye className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Print</span>
-            </Button>
-            <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowNegotiationLetter(true)}>
-              <FileText className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Negotiate</span>
-            </Button>
-            <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowPortfolioModal(true)}>
-              <Briefcase className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Portfolio</span>
-            </Button>
-            <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowMemoModal(true)}>
-              <Sparkles className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">AI Memo</span>
-            </Button>
-            <Button variant="outline" size="sm" className="text-xs text-destructive border-destructive/30 hover:bg-destructive/10" onClick={() => setShowReportError(true)}>
-              <Flag className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Report Error</span>
-            </Button>
-            {d.url && d.url !== "manual-entry" && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-xs border-primary/30 text-primary hover:bg-primary/10"
-                onClick={() => {
-                  if (confirm("Re-analyze this property with fresh data? This will use 1 credit.")) {
-                    navigate(`/analysis/loading?url=${encodeURIComponent(d.url)}`);
-                  }
-                }}
-              >
-                <RefreshCw className="h-3.5 w-3.5 sm:mr-1" /> <span className="hidden sm:inline">Re-Analyze</span>
-              </Button>
-            )}
           </div>
           {d.created_at && (
             <div className="text-[10px] text-muted-foreground mt-1 sm:mt-0 sm:ml-auto flex items-center gap-1">
