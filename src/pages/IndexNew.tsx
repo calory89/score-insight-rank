@@ -19,10 +19,13 @@ const SAMPLE_URL = "https://www.idealista.com/inmueble/sample-marbella";
 const PasteInput = ({
   size = "lg",
   onTryDemo,
+  inputRef: extRef,
 }: {
   size?: "lg" | "md";
   onTryDemo?: () => void;
+  inputRef?: React.RefObject<HTMLInputElement>;
 }) => {
+
   const navigate = useNavigate();
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
