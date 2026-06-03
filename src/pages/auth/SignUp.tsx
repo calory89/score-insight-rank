@@ -41,7 +41,7 @@ const SignUp = () => {
       return;
     }
     toast({ title: "Check your inbox", description: "Confirm your email to activate sending reports to clients." });
-    navigate("/app");
+    navigate(redirectTo);
   };
 
   const handleGoogle = async () => {
