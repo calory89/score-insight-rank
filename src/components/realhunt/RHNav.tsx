@@ -49,6 +49,7 @@ const RHNav = () => {
           )}
           <Link
             to={user ? "/app" : "/auth/sign-up"}
+            onClick={() => { if (!user) fbLead({ content_name: "open_the_app", source: "nav_desktop" }); }}
             className="rh-btn-primary !px-5 !py-2.5 !text-[14px]"
           >
             {user ? "Open the app →" : "Open the app →"}
