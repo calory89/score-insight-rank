@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Mail, ExternalLink, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { fbLead } from "@/lib/fbpixel";
 import { toast } from "sonner";
 
 const Footer = () => {
