@@ -4,7 +4,7 @@ import { ArrowRight, Search, Mail, Check, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginGateModal from "@/components/LoginGateModal";
-import { scoreToGrade, gradeColor } from "@/lib/grade";
+import { scoreToGrade, gradeColor, formatPrice } from "@/lib/grade";
 import { useToast } from "@/hooks/use-toast";
 
 type RankedProperty = {
