@@ -13,4 +13,5 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://score-insight-rank.lovable.app/sitemap.xml
+Sitemap: https://realhunt.co/sitemap.xml
+Sitemap: https://nylmhdtlshhtjkuvfbms.supabase.co/functions/v1/sitemap
