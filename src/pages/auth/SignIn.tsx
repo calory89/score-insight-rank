@@ -18,7 +18,8 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const redirectTo = (location.state as any)?.from || "/app";
+  const [searchParams] = useSearchParams();
+  const redirectTo = searchParams.get("redirect") || (location.state as any)?.from || "/app";
 
   useEffect(() => {
     if (user) navigate(redirectTo, { replace: true });
