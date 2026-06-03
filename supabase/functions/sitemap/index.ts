@@ -35,10 +35,10 @@ Deno.serve(async (req) => {
 
     const { data: analyses } = await supabase
       .from("analyses")
-      .select("slug, updated_at, city, country, global_score")
+      .select("slug, created_at, city, country, global_score")
       .not("slug", "is", null)
       .not("global_score", "is", null)
-      .order("updated_at", { ascending: false })
+      .order("created_at", { ascending: false })
       .limit(5000);
 
     const entries: Entry[] = [...STATIC];
@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     for (const a of analyses || []) {
       entries.push({
         loc: `${SITE}/r/${a.slug}`,
-        lastmod: (a.updated_at as string)?.slice(0, 10),
+        lastmod: (a.created_at as string)?.slice(0, 10),
         changefreq: "weekly",
         priority: "0.7",
       });
