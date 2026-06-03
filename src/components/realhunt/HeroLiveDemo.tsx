@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import ShareScoreCard from "@/components/ShareScoreCard";
+
 
 type Status = "good" | "warn" | "bad";
 
