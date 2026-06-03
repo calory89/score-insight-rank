@@ -40,6 +40,8 @@ import confetti from "canvas-confetti";
 import { scoreColor } from "@/lib/score-utils";
 import AIChatBubble from "@/components/AIChatBubble";
 import SharePanel from "@/components/SharePanel";
+import ShareScoreCard from "@/components/ShareScoreCard";
+
 import InvestmentCalculator from "@/components/InvestmentCalculator";
 import NegotiationLetterModal from "@/components/NegotiationLetterModal";
 import { WatchButton } from "@/components/Watchlist";
