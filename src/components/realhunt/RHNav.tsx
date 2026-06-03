@@ -89,6 +89,7 @@ const RHNav = () => {
             )}
             <Link
               to={user ? "/app" : "/auth/sign-up"}
+              onClick={() => { if (!user) fbLead({ content_name: "open_the_app", source: "nav_mobile" }); }}
               className="rh-btn-primary mt-3 w-full"
             >
               Open the app →
