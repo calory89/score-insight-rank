@@ -2,6 +2,7 @@ import { MapPin, Building2, Calendar, Ruler, BedDouble, Bath, Home } from "lucid
 import { Badge } from "@/components/ui/badge";
 import { scoreColor, classificationColor, verdictColor } from "@/lib/score-utils";
 import { ConfidenceBadge } from "./AnalysisHelpers";
+import { formatPrice } from "@/lib/grade";
 import type { Tables } from "@/integrations/supabase/types";
 
 type AnalysisData = Tables<"analyses">;
