@@ -6,6 +6,7 @@ import RHFooter from "@/components/realhunt/RHFooter";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
 import StripeCheckoutOverlay from "@/components/StripeCheckoutOverlay";
 import { useAuth } from "@/contexts/AuthContext";
+import { fbLead } from "@/lib/fbpixel";
 
 const PLANS = [
   {
