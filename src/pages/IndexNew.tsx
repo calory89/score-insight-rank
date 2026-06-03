@@ -190,39 +190,41 @@ const PriceCard = ({
   price: string;
   cadence?: string;
   features: string[];
-  cta: { label: string; to: string };
+  cta: { label: string; to?: string; onClick?: () => void };
   highlight?: boolean;
   badge?: string;
-}) => (
-  <div
-    className={`rh-card flex flex-col h-full relative ${highlight ? "ring-2 ring-[#16150F] shadow-[0_14px_40px_rgba(20,18,10,0.12)]" : ""}`}
-  >
-    {badge && (
-      <div className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-[#16150F] text-white text-[11px] font-medium tracking-wide uppercase">
-        {badge}
-      </div>
-    )}
-    <div className="font-display text-[20px] text-ink">{name}</div>
-    <div className="mt-3 flex items-baseline gap-1">
-      <span className="font-display text-[44px] tabular text-ink leading-none">{price}</span>
-      {cadence && <span className="text-ink-soft text-[14px]">/{cadence}</span>}
-    </div>
-    <ul className="mt-6 space-y-2.5 text-[14px] text-ink-muted flex-1">
-      {features.map((f) => (
-        <li key={f} className="flex items-start gap-2">
-          <Check size={15} className="text-accent-gold mt-0.5 shrink-0" />
-          <span>{f}</span>
-        </li>
-      ))}
-    </ul>
-    <Link
-      to={cta.to}
-      className={highlight ? "rh-btn-primary mt-6" : "rh-btn-secondary mt-6 justify-center"}
+}) => {
+  const btnClass = highlight ? "rh-btn-primary mt-6" : "rh-btn-secondary mt-6 justify-center";
+  return (
+    <div
+      className={`rh-card flex flex-col h-full relative ${highlight ? "ring-2 ring-[#16150F] shadow-[0_14px_40px_rgba(20,18,10,0.12)]" : ""}`}
     >
-      {cta.label}
-    </Link>
-  </div>
-);
+      {badge && (
+        <div className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-[#16150F] text-white text-[11px] font-medium tracking-wide uppercase">
+          {badge}
+        </div>
+      )}
+      <div className="font-display text-[20px] text-ink">{name}</div>
+      <div className="mt-3 flex items-baseline gap-1">
+        <span className="font-display text-[44px] tabular text-ink leading-none">{price}</span>
+        {cadence && <span className="text-ink-soft text-[14px]">/{cadence}</span>}
+      </div>
+      <ul className="mt-6 space-y-2.5 text-[14px] text-ink-muted flex-1">
+        {features.map((f) => (
+          <li key={f} className="flex items-start gap-2">
+            <Check size={15} className="text-accent-gold mt-0.5 shrink-0" />
+            <span>{f}</span>
+          </li>
+        ))}
+      </ul>
+      {cta.onClick ? (
+        <button onClick={cta.onClick} className={btnClass}>{cta.label}</button>
+      ) : (
+        <Link to={cta.to || "#"} className={btnClass}>{cta.label}</Link>
+      )}
+    </div>
+  );
+};
 
 const SOURCE_LOGOS = ["Zillow", "Rightmove", "Idealista", "Redfin", "Airbnb", "PropertyFinder"];
 
