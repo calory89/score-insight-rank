@@ -35,26 +35,28 @@
     <meta name="twitter:image" content="https://score-insight-rank.lovable.app/og-default.jpg" />
 
 
-    <!-- Structured Data -->
+    <!-- Structured Data: Organization + WebSite (sitewide) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "WebApplication",
+      "@type": "Organization",
       "name": "RealHunt",
-      "url": "https://score-insight-rank.lovable.app",
-      "description": "AI-powered real estate intelligence platform. Paste any listing URL and get instant forensic analysis of risk, ROI, demand, and liquidity.",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD",
-        "description": "5 free analyses per month"
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.8",
-        "ratingCount": "150"
+      "url": "https://realhunt.co",
+      "logo": "https://realhunt.co/favicon.png",
+      "sameAs": ["https://twitter.com/RealHuntApp"],
+      "description": "Forensic real-estate analysis. Paste any listing URL — get a sourced RealHunt score in under 10 seconds."
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "RealHunt",
+      "url": "https://realhunt.co",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://realhunt.co/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
       }
     }
     </script>

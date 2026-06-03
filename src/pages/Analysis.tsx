@@ -103,32 +103,46 @@ const Analysis = () => {
       : undefined;
 
   useDocumentMeta({
-    title: data ? `${data.address || data.city || "Property"} — Score ${data.global_score || ""}/100 | RealHunt` : "Analyzing Property… | RealHunt",
-    description: data ? `AI analysis of ${data.address || data.city || "property"}${data.country ? ` in ${data.country}` : ""}. Score: ${data.global_score}/100. ${data.primary_insight || ""}` : "Running AI-powered real estate analysis…",
+    title: data ? `Is ${data.address || data.city || "this listing"} a good deal? — RealHunt Score ${data.global_score ?? "—"}/100` : "Analyzing Property… | RealHunt",
+    description: data ? `Forensic analysis of ${data.address || data.city || "property"}${data.country ? ` in ${data.country}` : ""}. RealHunt score ${data.global_score}/100. ${data.primary_insight || data.verdict || ""}`.slice(0, 240) : "Running AI-powered real estate analysis…",
     ogImage: ogImageUrl,
+    canonicalUrl: data?.slug ? `https://realhunt.co/r/${data.slug}` : undefined,
   });
 
-  // JSON-LD structured data for analysis pages
+  // JSON-LD structured data for analysis pages — uses score/100 so Google
+  // can render ★ stars from the AggregateRating.
   useEffect(() => {
     if (!data) return;
-    const jsonLd = {
+    const place = data.address || `${data.city || "Property"}${data.country ? `, ${data.country}` : ""}`;
+    const score = data.global_score || 0;
+    const jsonLd: any = {
       "@context": "https://schema.org",
       "@type": "Product",
-      "name": data.address || `${data.city || "Property"}${data.country ? `, ${data.country}` : ""}`,
+      "name": place,
       "description": data.primary_insight || data.ai_summary || "AI-powered property analysis",
       ...(data.image_url && { "image": data.image_url }),
+      "brand": { "@type": "Brand", "name": "RealHunt" },
       "aggregateRating": {
         "@type": "AggregateRating",
-        "ratingValue": String(((data.global_score || 0) / 20).toFixed(1)),
-        "bestRating": "5",
-        "worstRating": "1",
+        "ratingValue": String(score),
+        "bestRating": "100",
+        "worstRating": "0",
         "ratingCount": "1",
+        "reviewCount": "1",
+      },
+      "review": {
+        "@type": "Review",
+        "author": { "@type": "Organization", "name": "RealHunt" },
+        "reviewRating": { "@type": "Rating", "ratingValue": String(score), "bestRating": "100", "worstRating": "0" },
+        "reviewBody": data.primary_insight || data.ai_summary || "",
+        "name": data.verdict || "RealHunt forensic verdict",
       },
       ...(data.price && {
         "offers": {
           "@type": "Offer",
-          "price": data.price,
+          "price": String(data.price).replace(/[^\d.]/g, "") || "0",
           "priceCurrency": data.currency === "GBP" ? "GBP" : data.currency === "USD" ? "USD" : "EUR",
+          "url": data.slug ? `https://realhunt.co/r/${data.slug}` : undefined,
         },
       }),
     };

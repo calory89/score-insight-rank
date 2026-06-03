@@ -1,46 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://score-insight-rank.lovable.app/</loc>
-    <lastmod>2026-03-08</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://score-insight-rank.lovable.app/rankings</loc>
-    <lastmod>2026-03-08</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://score-insight-rank.lovable.app/discover</loc>
-    <lastmod>2026-03-08</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://score-insight-rank.lovable.app/compare</loc>
-    <lastmod>2026-03-08</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://score-insight-rank.lovable.app/market</loc>
-    <lastmod>2026-03-08</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://score-insight-rank.lovable.app/privacy</loc>
-    <lastmod>2026-03-08</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://score-insight-rank.lovable.app/terms</loc>
-    <lastmod>2026-03-08</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <!-- Dynamic /r/:slug analysis pages are generated server-side and not included in this static sitemap -->
-</urlset>
+<!-- The authoritative sitemap is generated dynamically and includes every
+     public /r/:slug analysis page, every /market/:city and
+     /best-deals/:country hub. -->
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://nylmhdtlshhtjkuvfbms.supabase.co/functions/v1/sitemap</loc>
+  </sitemap>
+</sitemapindex>
