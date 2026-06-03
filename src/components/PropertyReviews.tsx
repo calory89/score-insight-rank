@@ -108,8 +108,8 @@ const PropertyReviews = ({ analysisId }: { analysisId: string }) => {
     return `${days}d ago`;
   };
 
-  // Hide the section entirely when no real reviews exist (and no signed-in user to write one)
-  if (!loading && reviews.length === 0 && !user) return null;
+  // Hide the section entirely when no real reviews exist
+  if (!loading && reviews.length === 0) return null;
 
   return (
     <div className="rounded-2xl border border-border bg-card p-6">
