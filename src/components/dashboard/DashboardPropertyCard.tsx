@@ -58,7 +58,7 @@ const DashboardPropertyCard = ({
                 {a.address || `${a.city}, ${a.country}`}
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
-                <MapPin className="h-3 w-3" /> {a.city}, {a.country} · {a.price} · {a.property_type}
+                <MapPin className="h-3 w-3" /> {a.city}, {a.country} · {formatPrice(a.price, a.currency)} · {a.property_type}
               </p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
