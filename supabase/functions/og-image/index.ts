@@ -112,11 +112,11 @@ serve(async (req) => {
     if (error || !data) return new Response("Analysis not found", { status: 404, headers: corsHeaders });
 
     const bars = [
-      { label: "Developer", value: Number(data.roi_potential) || 0 },
-      { label: "Delivery",  value: Number(data.market_stability) || 0 },
-      { label: "Legal",     value: Number(data.demand_strength) || 0 },
-      { label: "Location",  value: Number(data.risk_level) || 0 },
-      { label: "Economics", value: Number(data.liquidity_outlook) || 0 },
+      { label: "ROI Potential",     value: Number(data.roi_potential) || 0 },
+      { label: "Market Stability",  value: Number(data.market_stability) || 0 },
+      { label: "Demand Strength",   value: Number(data.demand_strength) || 0 },
+      { label: "Safety Score",      value: Number(data.risk_level) || 0 },
+      { label: "Liquidity Outlook", value: Number(data.liquidity_outlook) || 0 },
     ];
 
     const svg = generateOGSvg({
