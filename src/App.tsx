@@ -7,6 +7,7 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { usePageTracking } from "@/hooks/usePageTracking";
+import { useReferralCapture } from "@/hooks/useReferralCapture";
 import { AnimatePresence, motion } from "framer-motion";
 import React, { Suspense } from "react";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -69,6 +70,7 @@ const queryClient = new QueryClient({
 
 const PageTracker = ({ children }: { children: React.ReactNode }) => {
   usePageTracking();
+  useReferralCapture();
   return <>{children}</>;
 };
 
