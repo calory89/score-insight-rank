@@ -192,6 +192,12 @@ const Dashboard = () => {
         <ScoutAlertSetup />
         {!isPro && analyses.length > 0 && <SavingsCalculator analyses={analyses} />}
 
+        {referralCode && (
+          <div className="mb-6">
+            <ReferralCard referralCode={referralCode} referralCount={referralCount} />
+          </div>
+        )}
+
         {/* Stats bar */}
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
