@@ -509,6 +509,21 @@ const Analysis = () => {
         <NegotiationLetterModal analysis={d} open={showNegotiationLetter} onClose={() => setShowNegotiationLetter(false)} />
         {id && <AddToPortfolioModal open={showPortfolioModal} onClose={() => setShowPortfolioModal(false)} analysisId={id} suggestedPrice={d.price || undefined} currency={d.currency || "€"} />}
         {id && <InvestmentMemoModal open={showMemoModal} onClose={() => setShowMemoModal(false)} analysisId={id} propertyName={d.address || d.city || "Property"} />}
+        {d.slug && (
+          <BadgeEmbedDialog
+            open={showEmbedDialog}
+            onClose={() => setShowEmbedDialog(false)}
+            slug={d.slug}
+            address={d.address || d.city || "Property"}
+            score={globalScore}
+          />
+        )}
+
+        {/* Print-only watermark footer: shown on every printed page. */}
+        <div className="hidden print:block fixed bottom-0 left-0 right-0 border-t border-[#16150F]/10 bg-[#FAF8F3] py-2 px-6 text-[10px] tracking-[2px] uppercase text-[#5C5848] flex items-center justify-between print-footer">
+          <span><strong className="text-[#16150F] font-semibold">Powered by RealHunt</strong> · realhunt.co</span>
+          <span>Forensic property analysis</span>
+        </div>
 
         {/* Report Expiry Banner for free users */}
         {!isPro && d.created_at && <ReportExpiryBanner createdAt={d.created_at} />}
@@ -861,6 +876,12 @@ const Analysis = () => {
               }}>
                 <FileText className="h-3.5 w-3.5 mr-1.5" /> {user ? "Print / PDF" : "PDF (sign up)"}
               </Button>
+              {d.slug && (
+                <Button variant="outline" size="sm" className="text-xs print:hidden" onClick={() => setShowEmbedDialog(true)}>
+                  <Code2 className="h-3.5 w-3.5 mr-1.5" /> Get the badge
+                </Button>
+              )}
+              <span className="hidden">
               <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowNegotiationLetter(true)}>
                 <FileText className="h-3.5 w-3.5 mr-1.5" /> Negotiate
               </Button>
