@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- The authoritative sitemap is generated dynamically and includes every
-     public /r/:slug analysis page, every /market/:city and
-     /best-deals/:country hub. -->
-<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <sitemap>
-    <loc>https://nylmhdtlshhtjkuvfbms.supabase.co/functions/v1/sitemap</loc>
-  </sitemap>
-</sitemapindex>

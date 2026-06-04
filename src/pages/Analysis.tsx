@@ -46,6 +46,8 @@ import InvestmentCalculator from "@/components/InvestmentCalculator";
 import NegotiationLetterModal from "@/components/NegotiationLetterModal";
 import { WatchButton } from "@/components/Watchlist";
 import InvestmentMemoModal from "@/components/InvestmentMemoModal";
+import BadgeEmbedDialog from "@/components/analysis/BadgeEmbedDialog";
+import { Code2 } from "lucide-react";
 
 // Extracted sub-components
 import { FomoLoader, fomoSteps } from "@/components/analysis/AnalysisLoadingState";
@@ -92,6 +94,7 @@ const Analysis = () => {
   const [showPortfolioModal, setShowPortfolioModal] = useState(false);
   const [showMemoModal, setShowMemoModal] = useState(false);
   const [showFreeLimitModal, setShowFreeLimitModal] = useState(false);
+  const [showEmbedDialog, setShowEmbedDialog] = useState(false);
   const [userAnalysesCount, setUserAnalysesCount] = useState(0);
   const { toast } = useToast();
 
@@ -506,6 +509,21 @@ const Analysis = () => {
         <NegotiationLetterModal analysis={d} open={showNegotiationLetter} onClose={() => setShowNegotiationLetter(false)} />
         {id && <AddToPortfolioModal open={showPortfolioModal} onClose={() => setShowPortfolioModal(false)} analysisId={id} suggestedPrice={d.price || undefined} currency={d.currency || "€"} />}
         {id && <InvestmentMemoModal open={showMemoModal} onClose={() => setShowMemoModal(false)} analysisId={id} propertyName={d.address || d.city || "Property"} />}
+        {d.slug && (
+          <BadgeEmbedDialog
+            open={showEmbedDialog}
+            onClose={() => setShowEmbedDialog(false)}
+            slug={d.slug}
+            address={d.address || d.city || "Property"}
+            score={globalScore}
+          />
+        )}
+
+        {/* Print-only watermark footer: shown on every printed page. */}
+        <div className="rh-print-footer hidden print:flex fixed bottom-0 left-0 right-0 border-t border-[#16150F]/10 bg-[#FAF8F3] py-2 px-6 text-[10px] tracking-[2px] uppercase text-[#5C5848] items-center justify-between">
+          <span><strong className="text-[#16150F] font-semibold not-italic">Powered by RealHunt</strong> · realhunt.co</span>
+          <span>Forensic property analysis</span>
+        </div>
 
         {/* Report Expiry Banner for free users */}
         {!isPro && d.created_at && <ReportExpiryBanner createdAt={d.created_at} />}
@@ -858,6 +876,12 @@ const Analysis = () => {
               }}>
                 <FileText className="h-3.5 w-3.5 mr-1.5" /> {user ? "Print / PDF" : "PDF (sign up)"}
               </Button>
+              {d.slug && (
+                <Button variant="outline" size="sm" className="text-xs print:hidden" onClick={() => setShowEmbedDialog(true)}>
+                  <Code2 className="h-3.5 w-3.5 mr-1.5" /> Get the badge
+                </Button>
+              )}
+              
               <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowNegotiationLetter(true)}>
                 <FileText className="h-3.5 w-3.5 mr-1.5" /> Negotiate
               </Button>

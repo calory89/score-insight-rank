@@ -11,8 +11,8 @@ interface ReferralCardProps {
 }
 
 const REWARD_TIERS = [
-  { count: 1, reward: "+3 analyses" },
-  { count: 5, reward: "+10 analyses" },
+  { count: 1, reward: "+5 analyses" },
+  { count: 5, reward: "+25 analyses" },
   { count: 10, reward: "Pro for 1 month" },
 ];
 
@@ -22,8 +22,8 @@ const ReferralCard = ({ referralCode, referralCount }: ReferralCardProps) => {
 
   if (!referralCode) return null;
 
-  const referralLink = `${window.location.origin}/?ref=${referralCode}`;
-  const shareText = `🏠 I use RealHunt to find the best real estate deals with AI scoring. Join me and get 2 bonus analyses!`;
+  const referralLink = `https://realhunt.co/?ref=${referralCode}`;
+  const shareText = `🏠 I use RealHunt to find the best real estate deals with AI scoring. Sign up with my link and we both get +5 free analyses.`;
 
   const nextTier = REWARD_TIERS.find(t => referralCount < t.count) || REWARD_TIERS[REWARD_TIERS.length - 1];
   const progressToNext = Math.min((referralCount / nextTier.count) * 100, 100);
@@ -77,7 +77,7 @@ const ReferralCard = ({ referralCode, referralCount }: ReferralCardProps) => {
       </div>
 
       <p className="text-xs text-muted-foreground mb-4">
-        Share your link — you get <strong className="text-foreground">+3 analyses</strong> per signup, they get <strong className="text-foreground">+2 bonus</strong>.
+        Share your link — when a friend signs up, <strong className="text-foreground">you both get +5 analyses</strong>, free. Idempotent, anti-abuse, no double-credit.
       </p>
 
       {/* Referral link */}

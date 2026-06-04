@@ -27,6 +27,7 @@ import { usePropertyNotes } from "@/components/PropertyNotes";
 import { SavedFilters, type DashboardFilter } from "@/components/SavedFilters";
 import UpgradeModal from "@/components/dashboard/UpgradeModal";
 import BulkAnalyzeModal from "@/components/dashboard/BulkAnalyzeModal";
+import ReferralCard from "@/components/ReferralCard";
 
 import { scoreColor } from "@/lib/score-utils";
 
@@ -40,6 +41,8 @@ const Dashboard = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [analyses, setAnalyses] = useState<any[]>([]);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralCount, setReferralCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [url, setUrl] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
@@ -85,9 +88,13 @@ const Dashboard = () => {
     Promise.all([
       supabase.from("analyses").select("id, url, address, city, country, price, global_score, verdict, risk_level, projected_roi_low, projected_roi_high, market_classification, property_type, image_url, ai_summary, confidence_level, data_source, created_at, currency, slug, red_flags, roi_potential, score_explanations").order("created_at", { ascending: false }),
       supabase.from("favorites").select("analysis_id").eq("user_id", user.id),
-    ]).then(([{ data: analysesData }, { data: favData }]) => {
+      supabase.from("profiles").select("referral_code").eq("user_id", user.id).maybeSingle(),
+      supabase.from("referrals").select("id", { count: "exact", head: true }).eq("referrer_id", user.id),
+    ]).then(([{ data: analysesData }, { data: favData }, { data: profileData }, { count: refCount }]) => {
       setAnalyses(analysesData || []);
       setFavoriteIds(new Set((favData || []).map((f: any) => f.analysis_id)));
+      setReferralCode((profileData as any)?.referral_code ?? null);
+      setReferralCount(refCount ?? 0);
       setLoading(false);
     });
     // Open bulk modal if came from hero CTA or returning from bulk analysis
@@ -184,6 +191,12 @@ const Dashboard = () => {
         <WatchlistSection />
         <ScoutAlertSetup />
         {!isPro && analyses.length > 0 && <SavingsCalculator analyses={analyses} />}
+
+        {referralCode && (
+          <div className="mb-6">
+            <ReferralCard referralCode={referralCode} referralCount={referralCount} />
+          </div>
+        )}
 
         {/* Stats bar */}
         {loading ? (

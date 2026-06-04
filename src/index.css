@@ -270,6 +270,19 @@
     background: white !important;
     color: black !important;
   }
+  /* Reserve room for the brand watermark on every printed page. */
+  @page { margin: 14mm 12mm 22mm 12mm; }
+  .rh-print-footer {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #FAF8F3 !important;
+    color: #5C5848 !important;
+    border-top: 1px solid rgba(22,21,15,0.12) !important;
+    z-index: 9999;
+  }
+  .rh-print-footer strong { color: #16150F !important; }
 }
 
 /* Hero Analyze scanning bar */
