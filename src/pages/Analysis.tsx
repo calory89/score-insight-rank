@@ -881,7 +881,7 @@ const Analysis = () => {
                   <Code2 className="h-3.5 w-3.5 mr-1.5" /> Get the badge
                 </Button>
               )}
-              <span className="hidden">
+              
               <Button variant="outline" size="sm" className="text-xs border-primary/30 text-primary hover:bg-primary/10" onClick={() => setShowNegotiationLetter(true)}>
                 <FileText className="h-3.5 w-3.5 mr-1.5" /> Negotiate
               </Button>
