@@ -46,6 +46,8 @@ import InvestmentCalculator from "@/components/InvestmentCalculator";
 import NegotiationLetterModal from "@/components/NegotiationLetterModal";
 import { WatchButton } from "@/components/Watchlist";
 import InvestmentMemoModal from "@/components/InvestmentMemoModal";
+import BadgeEmbedDialog from "@/components/analysis/BadgeEmbedDialog";
+import { Code2 } from "lucide-react";
 
 // Extracted sub-components
 import { FomoLoader, fomoSteps } from "@/components/analysis/AnalysisLoadingState";
@@ -92,6 +94,7 @@ const Analysis = () => {
   const [showPortfolioModal, setShowPortfolioModal] = useState(false);
   const [showMemoModal, setShowMemoModal] = useState(false);
   const [showFreeLimitModal, setShowFreeLimitModal] = useState(false);
+  const [showEmbedDialog, setShowEmbedDialog] = useState(false);
   const [userAnalysesCount, setUserAnalysesCount] = useState(0);
   const { toast } = useToast();
 
