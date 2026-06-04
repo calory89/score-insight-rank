@@ -22,7 +22,7 @@ const ReferralCard = ({ referralCode, referralCount }: ReferralCardProps) => {
 
   if (!referralCode) return null;
 
-  const referralLink = `${window.location.origin}/?ref=${referralCode}`;
+  const referralLink = `https://realhunt.co/?ref=${referralCode}`;
   const shareText = `🏠 I use RealHunt to find the best real estate deals with AI scoring. Sign up with my link and we both get +5 free analyses.`;
 
   const nextTier = REWARD_TIERS.find(t => referralCount < t.count) || REWARD_TIERS[REWARD_TIERS.length - 1];
