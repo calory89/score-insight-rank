@@ -24,6 +24,7 @@ type RankedProperty = {
   currency: string | null;
   property_type: string | null;
   url: string | null;
+  base_votes: number | null;
 };
 
 const CATEGORIES = [
