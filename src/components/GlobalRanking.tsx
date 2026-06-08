@@ -284,7 +284,6 @@ const GlobalRanking = () => {
   const [voteCounts, setVoteCounts] = useState<Record<string, number>>({});
   const [baseVotes, setBaseVotes] = useState<Record<string, number>>({});
   const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
-  const [totalVotes, setTotalVotes] = useState<number>(0);
   const [sortMode, setSortMode] = useState<"score" | "votes">("score");
   const category = params.get("cat") || "all";
 
