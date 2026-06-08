@@ -282,8 +282,9 @@ const GlobalRanking = () => {
   const [search, setSearch] = useState("");
   const [selectedCountry, setSelectedCountry] = useState<string>("All");
   const [voteCounts, setVoteCounts] = useState<Record<string, number>>({});
+  const [baseVotes, setBaseVotes] = useState<Record<string, number>>({});
   const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
-  const [weeklyVotes, setWeeklyVotes] = useState<number>(0);
+  const [totalVotes, setTotalVotes] = useState<number>(0);
   const [sortMode, setSortMode] = useState<"score" | "votes">("score");
   const category = params.get("cat") || "all";
 
@@ -291,39 +292,54 @@ const GlobalRanking = () => {
     (async () => {
       const { data } = await supabase
         .from("analyses")
-        .select("id, slug, city, country, address, global_score, roi_potential, verdict, price, size_sqm, currency, property_type, url")
+        .select("id, slug, city, country, address, global_score, roi_potential, verdict, price, size_sqm, currency, property_type, url, base_votes")
         .not("global_score", "is", null)
         .order("global_score", { ascending: false })
         .limit(300);
-      if (data) setRankings(data as RankedProperty[]);
+      if (data) {
+        const rows = data as RankedProperty[];
+        setRankings(rows);
+        const bv: Record<string, number> = {};
+        for (const r of rows) bv[r.id] = r.base_votes || 0;
+        setBaseVotes(bv);
+      }
       setLoading(false);
     })();
 
     setVotedIds(getVotedIds());
 
-    // Aggregate vote counts
+    // Aggregate real vote counts (all-time)
     (async () => {
       const { data: voteRows } = await (supabase as any)
         .from("votes")
-        .select("analysis_id, created_at");
+        .select("analysis_id");
       if (voteRows) {
         const counts: Record<string, number> = {};
-        const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-        let week = 0;
-        for (const r of voteRows as { analysis_id: string; created_at: string }[]) {
+        for (const r of voteRows as { analysis_id: string }[]) {
           counts[r.analysis_id] = (counts[r.analysis_id] || 0) + 1;
-          if (new Date(r.created_at).getTime() >= weekAgo) week += 1;
         }
         setVoteCounts(counts);
-        setWeeklyVotes(week);
       }
     })();
   }, []);
 
+  // Combined display vote = seeded base + real votes
+  const displayVotes = useMemo(() => {
+    const out: Record<string, number> = {};
+    const ids = new Set([...Object.keys(baseVotes), ...Object.keys(voteCounts)]);
+    let total = 0;
+    ids.forEach((id) => {
+      const n = (baseVotes[id] || 0) + (voteCounts[id] || 0);
+      out[id] = n;
+      total += n;
+    });
+    setTimeout(() => setTotalVotes(total), 0);
+    return out;
+  }, [baseVotes, voteCounts]);
+
   const handleVoted = (id: string) => {
     setVoteCounts((c) => ({ ...c, [id]: (c[id] || 0) + 1 }));
     setVotedIds((s) => new Set(s).add(id));
-    setWeeklyVotes((w) => w + 1);
   };
 
   const countries = useMemo(
