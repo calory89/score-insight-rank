@@ -225,29 +225,20 @@ const HeroCard = ({
             </div>
 
             <div className="mt-5 flex flex-wrap items-center gap-2">
-              {ecbc ? (
-                <a
-                  href="https://ecobeachcity.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rh-btn-primary !px-5 !py-2.5 !text-[13px] inline-flex items-center gap-1.5"
-                >
-                  Reserve plot <ArrowRight className="h-3.5 w-3.5" />
-                </a>
-              ) : webUrl ? (
+              {webUrl && (
                 <a
                   href={webUrl}
                   target="_blank"
                   rel="noopener noreferrer nofollow"
-                  className="rh-btn-primary !px-5 !py-2.5 !text-[13px] inline-flex items-center gap-1.5"
+                  className="rh-btn-secondary !px-4 !py-2.5 !text-[13px] inline-flex items-center gap-1.5"
                 >
-                  Visit listing <ExternalLink className="h-3.5 w-3.5" />
+                  Visit site <ExternalLink className="h-3.5 w-3.5" />
                 </a>
-              ) : null}
+              )}
 
               <button
                 onClick={onOpen}
-                className="rh-btn-secondary !px-4 !py-2.5 !text-[13px]"
+                className="rh-btn-primary !px-5 !py-2.5 !text-[13px]"
               >
                 See full report
               </button>
