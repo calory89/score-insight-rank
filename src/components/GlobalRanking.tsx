@@ -324,17 +324,13 @@ const GlobalRanking = () => {
   }, []);
 
   // Combined display vote = seeded base + real votes
-  const displayVotes = useMemo(() => {
-    const out: Record<string, number> = {};
+  const getDisplayVotes = (id: string) => (baseVotes[id] || 0) + (voteCounts[id] || 0);
+
+  const totalVotes = useMemo(() => {
     const ids = new Set([...Object.keys(baseVotes), ...Object.keys(voteCounts)]);
     let total = 0;
-    ids.forEach((id) => {
-      const n = (baseVotes[id] || 0) + (voteCounts[id] || 0);
-      out[id] = n;
-      total += n;
-    });
-    setTimeout(() => setTotalVotes(total), 0);
-    return out;
+    ids.forEach((id) => { total += (baseVotes[id] || 0) + (voteCounts[id] || 0); });
+    return total;
   }, [baseVotes, voteCounts]);
 
   const handleVoted = (id: string) => {
