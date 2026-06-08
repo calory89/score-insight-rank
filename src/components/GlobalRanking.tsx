@@ -492,7 +492,7 @@ const GlobalRanking = () => {
           <div className="mt-6">
             <HeroCard
               p={hero}
-              voteCount={voteCounts[hero.id] || 0}
+              voteCount={getDisplayVotes(hero.id)}
               voted={votedIds.has(hero.id)}
               onVote={handleVoted}
               onOpen={() => navigate(hero.slug ? `/r/${hero.slug}` : `/analysis/${hero.id}`)}
