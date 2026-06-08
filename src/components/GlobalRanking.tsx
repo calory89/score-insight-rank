@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowRight, Search, Mail, Check, ExternalLink, Share2, Crown, Sparkles } from "lucide-react";
+import { ArrowRight, Search, Mail, Check, ExternalLink, Share2, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginGateModal from "@/components/LoginGateModal";
