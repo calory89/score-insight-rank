@@ -406,11 +406,19 @@ const GlobalRanking = () => {
           <a href="/method" className="rh-btn-tertiary">/method</a>.
         </p>
 
-        {/* Quick stats */}
+        {/* Quick stats + live indicator */}
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-ink-soft">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="relative inline-flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-good opacity-60 animate-ping" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-good" />
+            </span>
+            <span className="text-ink-muted">Live · updated in real time</span>
+          </span>
+          <span className="hidden sm:inline">·</span>
           <span className="tabular-nums"><span className="text-ink font-medium">{totalListings.toLocaleString()}</span> listings scored</span>
           <span className="hidden sm:inline">·</span>
-          <span className="tabular-nums"><span className="text-accent-gold font-medium">{weeklyVotes.toLocaleString()}</span> votes this week</span>
+          <span className="tabular-nums"><span className="text-accent-gold font-medium">{totalVotes.toLocaleString()}</span> votes</span>
         </div>
 
         <div className="mt-6 max-w-2xl"><RankingSearchBar /></div>
