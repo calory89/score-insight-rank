@@ -614,17 +614,7 @@ const GlobalRanking = () => {
                       <VoteButton analysisId={p.id} count={vc} voted={voted} onVoted={handleVoted} />
                     </div>
                     <div className="text-right" onClick={(e) => e.stopPropagation()}>
-                      {ecbc ? (
-                        <a
-                          href="https://ecobeachcity.com"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-[11px] text-accent-gold border border-accent-gold/40 bg-accent-gold/10 hover:bg-accent-gold/20 px-2 py-1 rounded-md transition-colors whitespace-nowrap"
-                          title="Reserve a plot at Eco Beach City"
-                        >
-                          Reserve →
-                        </a>
-                      ) : webUrl ? (
+                      {webUrl ? (
                         <a
                           href={webUrl}
                           target="_blank"
@@ -632,7 +622,7 @@ const GlobalRanking = () => {
                           className="inline-flex items-center gap-1 text-[11px] text-ink-muted hover:text-ink px-2 py-1 rounded-md border border-hairline hover:border-hairline-strong transition-colors"
                           title="Open the original listing"
                         >
-                          <ExternalLink className="h-3 w-3" /> Web
+                          <ExternalLink className="h-3 w-3" /> Visit site
                         </a>
                       ) : (
                         <span className="text-[11px] text-ink-soft">—</span>
