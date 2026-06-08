@@ -177,6 +177,7 @@ export type Database = {
           address: string | null
           ai_summary: string | null
           alternatives: Json | null
+          base_votes: number
           bathrooms: number | null
           bedrooms: number | null
           city: string | null
@@ -223,6 +224,7 @@ export type Database = {
           address?: string | null
           ai_summary?: string | null
           alternatives?: Json | null
+          base_votes?: number
           bathrooms?: number | null
           bedrooms?: number | null
           city?: string | null
@@ -269,6 +271,7 @@ export type Database = {
           address?: string | null
           ai_summary?: string | null
           alternatives?: Json | null
+          base_votes?: number
           bathrooms?: number | null
           bedrooms?: number | null
           city?: string | null

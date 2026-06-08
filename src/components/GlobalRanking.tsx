@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowRight, Search, Mail, Check, ExternalLink, Share2, Crown, Sparkles } from "lucide-react";
+import { ArrowRight, Search, Mail, Check, ExternalLink, Share2, Crown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginGateModal from "@/components/LoginGateModal";
@@ -24,6 +24,7 @@ type RankedProperty = {
   currency: string | null;
   property_type: string | null;
   url: string | null;
+  base_votes: number | null;
 };
 
 const CATEGORIES = [
@@ -173,24 +174,18 @@ const HeroCard = ({
 }) => {
   const { toast } = useToast();
   const ppsm = computePpsm(p);
-  const ecbc = isEcoBeachCity(p);
   const reportUrl = `https://realhunt.co${p.slug ? `/r/${p.slug}` : `/analysis/${p.id}`}`;
-  const shareTitle = `#1 on RealHunt this week — ${p.address || p.city} (RH score ${p.global_score}/100)`;
+  const shareTitle = `#1 worldwide on RealHunt — ${p.address || p.city} (RH score ${p.global_score}/100)`;
   const webUrl = p.url && p.url !== "manual-entry" ? (p.url.startsWith("http") ? p.url : `https://${p.url}`) : null;
 
   return (
-    <article className="relative rounded-2xl border-2 border-accent-gold/60 bg-gradient-to-br from-[#FBF6E9] via-paper to-paper shadow-[0_8px_30px_rgba(184,137,59,0.10)] overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent-gold/40 via-accent-gold to-accent-gold/40" />
+    <article className="relative rounded-2xl border border-hairline-strong bg-paper overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent-gold/50 to-transparent" />
       <div className="p-5 md:p-7">
         <div className="flex flex-wrap items-center gap-2 mb-4">
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-accent-gold bg-accent-gold/10 border border-accent-gold/30 px-2.5 py-1 rounded-full">
-            <Crown className="h-3 w-3" /> #1 on RealHunt this week
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-ink bg-paper border border-hairline-strong px-2.5 py-1 rounded-full">
+            <Crown className="h-3 w-3 text-accent-gold" /> #1 worldwide
           </span>
-          {ecbc && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-bad bg-bad/10 border border-bad/20 px-2.5 py-1 rounded-full">
-              <Sparkles className="h-3 w-3" /> Only 5 plots
-            </span>
-          )}
         </div>
 
         <div className="flex flex-col md:flex-row gap-5 md:gap-7 md:items-start">
@@ -230,29 +225,20 @@ const HeroCard = ({
             </div>
 
             <div className="mt-5 flex flex-wrap items-center gap-2">
-              {ecbc ? (
-                <a
-                  href="https://ecobeachcity.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rh-btn-primary !px-5 !py-2.5 !text-[13px] inline-flex items-center gap-1.5"
-                >
-                  Reserve plot <ArrowRight className="h-3.5 w-3.5" />
-                </a>
-              ) : webUrl ? (
+              {webUrl && (
                 <a
                   href={webUrl}
                   target="_blank"
                   rel="noopener noreferrer nofollow"
-                  className="rh-btn-primary !px-5 !py-2.5 !text-[13px] inline-flex items-center gap-1.5"
+                  className="rh-btn-secondary !px-4 !py-2.5 !text-[13px] inline-flex items-center gap-1.5"
                 >
-                  Visit listing <ExternalLink className="h-3.5 w-3.5" />
+                  Visit site <ExternalLink className="h-3.5 w-3.5" />
                 </a>
-              ) : null}
+              )}
 
               <button
                 onClick={onOpen}
-                className="rh-btn-secondary !px-4 !py-2.5 !text-[13px]"
+                className="rh-btn-primary !px-5 !py-2.5 !text-[13px]"
               >
                 See full report
               </button>
@@ -296,8 +282,8 @@ const GlobalRanking = () => {
   const [search, setSearch] = useState("");
   const [selectedCountry, setSelectedCountry] = useState<string>("All");
   const [voteCounts, setVoteCounts] = useState<Record<string, number>>({});
+  const [baseVotes, setBaseVotes] = useState<Record<string, number>>({});
   const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
-  const [weeklyVotes, setWeeklyVotes] = useState<number>(0);
   const [sortMode, setSortMode] = useState<"score" | "votes">("score");
   const category = params.get("cat") || "all";
 
@@ -305,39 +291,50 @@ const GlobalRanking = () => {
     (async () => {
       const { data } = await supabase
         .from("analyses")
-        .select("id, slug, city, country, address, global_score, roi_potential, verdict, price, size_sqm, currency, property_type, url")
+        .select("id, slug, city, country, address, global_score, roi_potential, verdict, price, size_sqm, currency, property_type, url, base_votes")
         .not("global_score", "is", null)
         .order("global_score", { ascending: false })
         .limit(300);
-      if (data) setRankings(data as RankedProperty[]);
+      if (data) {
+        const rows = data as RankedProperty[];
+        setRankings(rows);
+        const bv: Record<string, number> = {};
+        for (const r of rows) bv[r.id] = r.base_votes || 0;
+        setBaseVotes(bv);
+      }
       setLoading(false);
     })();
 
     setVotedIds(getVotedIds());
 
-    // Aggregate vote counts
+    // Aggregate real vote counts (all-time)
     (async () => {
       const { data: voteRows } = await (supabase as any)
         .from("votes")
-        .select("analysis_id, created_at");
+        .select("analysis_id");
       if (voteRows) {
         const counts: Record<string, number> = {};
-        const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-        let week = 0;
-        for (const r of voteRows as { analysis_id: string; created_at: string }[]) {
+        for (const r of voteRows as { analysis_id: string }[]) {
           counts[r.analysis_id] = (counts[r.analysis_id] || 0) + 1;
-          if (new Date(r.created_at).getTime() >= weekAgo) week += 1;
         }
         setVoteCounts(counts);
-        setWeeklyVotes(week);
       }
     })();
   }, []);
 
+  // Combined display vote = seeded base + real votes
+  const getDisplayVotes = (id: string) => (baseVotes[id] || 0) + (voteCounts[id] || 0);
+
+  const totalVotes = useMemo(() => {
+    const ids = new Set([...Object.keys(baseVotes), ...Object.keys(voteCounts)]);
+    let total = 0;
+    ids.forEach((id) => { total += (baseVotes[id] || 0) + (voteCounts[id] || 0); });
+    return total;
+  }, [baseVotes, voteCounts]);
+
   const handleVoted = (id: string) => {
     setVoteCounts((c) => ({ ...c, [id]: (c[id] || 0) + 1 }));
     setVotedIds((s) => new Set(s).add(id));
-    setWeeklyVotes((w) => w + 1);
   };
 
   const countries = useMemo(
@@ -365,8 +362,9 @@ const GlobalRanking = () => {
 
   const processed = useMemo(() => {
     const rows = [...filtered];
+    const dv = (id: string) => (baseVotes[id] || 0) + (voteCounts[id] || 0);
     if (sortMode === "votes") {
-      rows.sort((a, b) => (voteCounts[b.id] || 0) - (voteCounts[a.id] || 0) || (b.global_score || 0) - (a.global_score || 0));
+      rows.sort((a, b) => dv(b.id) - dv(a.id) || (b.global_score || 0) - (a.global_score || 0));
       return rows;
     }
     // sortMode === score — apply category-specific score sort
@@ -383,7 +381,7 @@ const GlobalRanking = () => {
     else if (category === "roi") rows.sort((a, b) => (b.roi_potential || 0) - (a.roi_potential || 0));
     else rows.sort((a, b) => (b.global_score || 0) - (a.global_score || 0));
     return rows;
-  }, [filtered, sortMode, voteCounts, category]);
+  }, [filtered, sortMode, voteCounts, baseVotes, category]);
 
   const setCategory = (id: string) => {
     const p = new URLSearchParams(params);
@@ -408,11 +406,19 @@ const GlobalRanking = () => {
           <a href="/method" className="rh-btn-tertiary">/method</a>.
         </p>
 
-        {/* Quick stats */}
+        {/* Quick stats + live indicator */}
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-ink-soft">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="relative inline-flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-good opacity-60 animate-ping" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-good" />
+            </span>
+            <span className="text-ink-muted">Live · updated in real time</span>
+          </span>
+          <span className="hidden sm:inline">·</span>
           <span className="tabular-nums"><span className="text-ink font-medium">{totalListings.toLocaleString()}</span> listings scored</span>
           <span className="hidden sm:inline">·</span>
-          <span className="tabular-nums"><span className="text-accent-gold font-medium">{weeklyVotes.toLocaleString()}</span> votes this week</span>
+          <span className="tabular-nums"><span className="text-accent-gold font-medium">{totalVotes.toLocaleString()}</span> votes</span>
         </div>
 
         <div className="mt-6 max-w-2xl"><RankingSearchBar /></div>
@@ -486,7 +492,7 @@ const GlobalRanking = () => {
           <div className="mt-6">
             <HeroCard
               p={hero}
-              voteCount={voteCounts[hero.id] || 0}
+              voteCount={getDisplayVotes(hero.id)}
               voted={votedIds.has(hero.id)}
               onVote={handleVoted}
               onOpen={() => navigate(hero.slug ? `/r/${hero.slug}` : `/analysis/${hero.id}`)}
@@ -517,12 +523,11 @@ const GlobalRanking = () => {
               const rank = i + 2; // hero is #1
               const ppsm = computePpsm(p);
               const webUrl = p.url && p.url !== "manual-entry" ? (p.url.startsWith("http") ? p.url : `https://${p.url}`) : null;
-              const ecbc = isEcoBeachCity(p);
               const verdictClass =
                 p.verdict === "Exceptional" || p.verdict === "Strong" ? "text-good bg-good/10" :
                 p.verdict === "Moderate" ? "text-warn bg-warn/10" : "text-bad bg-bad/10";
               const onOpen = () => navigate(p.slug ? `/r/${p.slug}` : `/analysis/${p.id}`);
-              const vc = voteCounts[p.id] || 0;
+              const vc = getDisplayVotes(p.id);
               const voted = votedIds.has(p.id);
 
               return (
@@ -559,18 +564,7 @@ const GlobalRanking = () => {
                             <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${verdictClass}`}>
                               {p.verdict || "—"}
                             </span>
-                            {ecbc && (
-                              <a
-                                href="https://ecobeachcity.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center gap-1 text-[10px] text-accent-gold border border-accent-gold/40 bg-accent-gold/10 px-2 py-0.5 rounded-full"
-                              >
-                                Reserve plot →
-                              </a>
-                            )}
-                            {!ecbc && webUrl && (
+                            {webUrl && (
                               <a
                                 href={webUrl}
                                 target="_blank"
@@ -578,7 +572,7 @@ const GlobalRanking = () => {
                                 onClick={(e) => e.stopPropagation()}
                                 className="inline-flex items-center gap-1 text-[10px] text-ink-muted hover:text-ink px-2 py-0.5 rounded-full border border-hairline"
                               >
-                                <ExternalLink className="h-2.5 w-2.5" /> Listing
+                                <ExternalLink className="h-2.5 w-2.5" /> Visit site
                               </a>
                             )}
                           </div>
@@ -620,17 +614,7 @@ const GlobalRanking = () => {
                       <VoteButton analysisId={p.id} count={vc} voted={voted} onVoted={handleVoted} />
                     </div>
                     <div className="text-right" onClick={(e) => e.stopPropagation()}>
-                      {ecbc ? (
-                        <a
-                          href="https://ecobeachcity.com"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-[11px] text-accent-gold border border-accent-gold/40 bg-accent-gold/10 hover:bg-accent-gold/20 px-2 py-1 rounded-md transition-colors whitespace-nowrap"
-                          title="Reserve a plot at Eco Beach City"
-                        >
-                          Reserve →
-                        </a>
-                      ) : webUrl ? (
+                      {webUrl ? (
                         <a
                           href={webUrl}
                           target="_blank"
@@ -638,7 +622,7 @@ const GlobalRanking = () => {
                           className="inline-flex items-center gap-1 text-[11px] text-ink-muted hover:text-ink px-2 py-1 rounded-md border border-hairline hover:border-hairline-strong transition-colors"
                           title="Open the original listing"
                         >
-                          <ExternalLink className="h-3 w-3" /> Web
+                          <ExternalLink className="h-3 w-3" /> Visit site
                         </a>
                       ) : (
                         <span className="text-[11px] text-ink-soft">—</span>
