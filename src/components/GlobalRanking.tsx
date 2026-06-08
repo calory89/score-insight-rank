@@ -174,24 +174,18 @@ const HeroCard = ({
 }) => {
   const { toast } = useToast();
   const ppsm = computePpsm(p);
-  const ecbc = isEcoBeachCity(p);
   const reportUrl = `https://realhunt.co${p.slug ? `/r/${p.slug}` : `/analysis/${p.id}`}`;
-  const shareTitle = `#1 on RealHunt this week — ${p.address || p.city} (RH score ${p.global_score}/100)`;
+  const shareTitle = `#1 worldwide on RealHunt — ${p.address || p.city} (RH score ${p.global_score}/100)`;
   const webUrl = p.url && p.url !== "manual-entry" ? (p.url.startsWith("http") ? p.url : `https://${p.url}`) : null;
 
   return (
-    <article className="relative rounded-2xl border-2 border-accent-gold/60 bg-gradient-to-br from-[#FBF6E9] via-paper to-paper shadow-[0_8px_30px_rgba(184,137,59,0.10)] overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent-gold/40 via-accent-gold to-accent-gold/40" />
+    <article className="relative rounded-2xl border border-hairline-strong bg-paper overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent-gold/50 to-transparent" />
       <div className="p-5 md:p-7">
         <div className="flex flex-wrap items-center gap-2 mb-4">
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-accent-gold bg-accent-gold/10 border border-accent-gold/30 px-2.5 py-1 rounded-full">
-            <Crown className="h-3 w-3" /> #1 on RealHunt this week
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-ink bg-paper border border-hairline-strong px-2.5 py-1 rounded-full">
+            <Crown className="h-3 w-3 text-accent-gold" /> #1 worldwide
           </span>
-          {ecbc && (
-            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-bad bg-bad/10 border border-bad/20 px-2.5 py-1 rounded-full">
-              <Sparkles className="h-3 w-3" /> Only 5 plots
-            </span>
-          )}
         </div>
 
         <div className="flex flex-col md:flex-row gap-5 md:gap-7 md:items-start">
