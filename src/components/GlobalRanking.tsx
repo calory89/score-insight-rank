@@ -523,12 +523,11 @@ const GlobalRanking = () => {
               const rank = i + 2; // hero is #1
               const ppsm = computePpsm(p);
               const webUrl = p.url && p.url !== "manual-entry" ? (p.url.startsWith("http") ? p.url : `https://${p.url}`) : null;
-              const ecbc = isEcoBeachCity(p);
               const verdictClass =
                 p.verdict === "Exceptional" || p.verdict === "Strong" ? "text-good bg-good/10" :
                 p.verdict === "Moderate" ? "text-warn bg-warn/10" : "text-bad bg-bad/10";
               const onOpen = () => navigate(p.slug ? `/r/${p.slug}` : `/analysis/${p.id}`);
-              const vc = voteCounts[p.id] || 0;
+              const vc = getDisplayVotes(p.id);
               const voted = votedIds.has(p.id);
 
               return (
