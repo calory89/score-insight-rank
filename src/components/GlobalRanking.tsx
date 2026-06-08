@@ -564,18 +564,7 @@ const GlobalRanking = () => {
                             <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${verdictClass}`}>
                               {p.verdict || "—"}
                             </span>
-                            {ecbc && (
-                              <a
-                                href="https://ecobeachcity.com"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center gap-1 text-[10px] text-accent-gold border border-accent-gold/40 bg-accent-gold/10 px-2 py-0.5 rounded-full"
-                              >
-                                Reserve plot →
-                              </a>
-                            )}
-                            {!ecbc && webUrl && (
+                            {webUrl && (
                               <a
                                 href={webUrl}
                                 target="_blank"
@@ -583,7 +572,7 @@ const GlobalRanking = () => {
                                 onClick={(e) => e.stopPropagation()}
                                 className="inline-flex items-center gap-1 text-[10px] text-ink-muted hover:text-ink px-2 py-0.5 rounded-full border border-hairline"
                               >
-                                <ExternalLink className="h-2.5 w-2.5" /> Listing
+                                <ExternalLink className="h-2.5 w-2.5" /> Visit site
                               </a>
                             )}
                           </div>
