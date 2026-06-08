@@ -1560,6 +1560,38 @@ export type Database = {
         }
         Relationships: []
       }
+      votes: {
+        Row: {
+          analysis_id: string
+          created_at: string
+          id: string
+          user_id: string | null
+          voter_fingerprint: string
+        }
+        Insert: {
+          analysis_id: string
+          created_at?: string
+          id?: string
+          user_id?: string | null
+          voter_fingerprint: string
+        }
+        Update: {
+          analysis_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string | null
+          voter_fingerprint?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "votes_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       watchlist: {
         Row: {
           analysis_id: string

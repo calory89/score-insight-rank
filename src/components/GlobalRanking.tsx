@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowRight, Search, Mail, Check, ExternalLink } from "lucide-react";
+import { ArrowRight, Search, Mail, Check, ExternalLink, Share2, Crown, Sparkles } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import LoginGateModal from "@/components/LoginGateModal";
-import { scoreToGrade, gradeColor, formatPrice } from "@/lib/grade";
+import { scoreToGrade, formatPrice } from "@/lib/grade";
 import { useToast } from "@/hooks/use-toast";
+import VoteButton from "@/components/rankings/VoteButton";
+import ScoreVisual from "@/components/rankings/ScoreVisual";
+import { getVotedIds } from "@/lib/voteFingerprint";
 
 type RankedProperty = {
   id: string;
@@ -47,6 +50,11 @@ const isBeachfront = (p: RankedProperty): boolean => {
   const hay = `${p.address || ""} ${p.city || ""} ${p.property_type || ""}`.toLowerCase();
   return /\b(beach|beachfront|playa|seafront|oceanfront|coast|costa|frente al mar)\b/.test(hay) ||
     /ecobeachcity|eco beach/i.test(hay);
+};
+
+const isEcoBeachCity = (p: RankedProperty): boolean => {
+  const hay = `${p.address || ""} ${p.city || ""} ${p.url || ""}`.toLowerCase();
+  return /ecobeachcity|eco beach city/.test(hay);
 };
 
 const RankingSearchBar = () => {
@@ -131,6 +139,155 @@ const WeeklyEmailCapture = () => {
   );
 };
 
+const shareTo = async (
+  url: string,
+  title: string,
+  toast: ReturnType<typeof useToast>["toast"],
+  channel: "whatsapp" | "copy"
+) => {
+  if (channel === "whatsapp") {
+    const wa = `https://wa.me/?text=${encodeURIComponent(`${title} — ${url}`)}`;
+    window.open(wa, "_blank", "noopener,noreferrer");
+    return;
+  }
+  try {
+    await navigator.clipboard.writeText(url);
+    toast({ title: "Link copied" });
+  } catch {
+    toast({ title: "Copy failed", description: url });
+  }
+};
+
+const HeroCard = ({
+  p,
+  voteCount,
+  voted,
+  onVote,
+  onOpen,
+}: {
+  p: RankedProperty;
+  voteCount: number;
+  voted: boolean;
+  onVote: (id: string) => void;
+  onOpen: () => void;
+}) => {
+  const { toast } = useToast();
+  const ppsm = computePpsm(p);
+  const ecbc = isEcoBeachCity(p);
+  const reportUrl = `https://realhunt.co${p.slug ? `/r/${p.slug}` : `/analysis/${p.id}`}`;
+  const shareTitle = `#1 on RealHunt this week — ${p.address || p.city} (RH score ${p.global_score}/100)`;
+  const webUrl = p.url && p.url !== "manual-entry" ? (p.url.startsWith("http") ? p.url : `https://${p.url}`) : null;
+
+  return (
+    <article className="relative rounded-2xl border-2 border-accent-gold/60 bg-gradient-to-br from-[#FBF6E9] via-paper to-paper shadow-[0_8px_30px_rgba(184,137,59,0.10)] overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent-gold/40 via-accent-gold to-accent-gold/40" />
+      <div className="p-5 md:p-7">
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.16em] text-accent-gold bg-accent-gold/10 border border-accent-gold/30 px-2.5 py-1 rounded-full">
+            <Crown className="h-3 w-3" /> #1 on RealHunt this week
+          </span>
+          {ecbc && (
+            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-bad bg-bad/10 border border-bad/20 px-2.5 py-1 rounded-full">
+              <Sparkles className="h-3 w-3" /> Only 5 plots
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-5 md:gap-7 md:items-start">
+          <div className="flex-shrink-0 flex md:block items-center gap-4">
+            <ScoreVisual score={p.global_score} size="lg" />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <button onClick={onOpen} className="text-left block group">
+              <h2 className="font-display text-[22px] md:text-[28px] leading-[1.15] text-ink group-hover:text-accent-gold transition-colors">
+                {p.address || `${p.city}, ${p.country}`}
+              </h2>
+              <p className="text-[13px] text-ink-soft mt-1">
+                {p.city}{p.country ? `, ${p.country}` : ""}
+                {p.property_type ? ` · ${p.property_type}` : ""}
+                {p.size_sqm ? ` · ${p.size_sqm} m²` : ""}
+              </p>
+            </button>
+
+            <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-[13px]">
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.14em] text-ink-soft">Price</div>
+                <div className="font-mono text-[16px] text-ink tabular-nums">{formatPrice(p.price, p.currency)}</div>
+              </div>
+              {ppsm && (
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.14em] text-ink-soft">€/m²</div>
+                  <div className="font-mono text-[16px] text-ink tabular-nums">{ppsm.toLocaleString()}</div>
+                </div>
+              )}
+              {p.verdict && (
+                <div>
+                  <div className="text-[10px] uppercase tracking-[0.14em] text-ink-soft">Verdict</div>
+                  <div className="text-[14px] text-ink font-medium">{p.verdict}</div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-5 flex flex-wrap items-center gap-2">
+              {ecbc ? (
+                <a
+                  href="https://ecobeachcity.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rh-btn-primary !px-5 !py-2.5 !text-[13px] inline-flex items-center gap-1.5"
+                >
+                  Reserve plot <ArrowRight className="h-3.5 w-3.5" />
+                </a>
+              ) : webUrl ? (
+                <a
+                  href={webUrl}
+                  target="_blank"
+                  rel="noopener noreferrer nofollow"
+                  className="rh-btn-primary !px-5 !py-2.5 !text-[13px] inline-flex items-center gap-1.5"
+                >
+                  Visit listing <ExternalLink className="h-3.5 w-3.5" />
+                </a>
+              ) : null}
+
+              <button
+                onClick={onOpen}
+                className="rh-btn-secondary !px-4 !py-2.5 !text-[13px]"
+              >
+                See full report
+              </button>
+
+              <VoteButton
+                analysisId={p.id}
+                count={voteCount}
+                voted={voted}
+                size="lg"
+                onVoted={onVote}
+              />
+
+              <div className="inline-flex items-center gap-1 ml-auto">
+                <button
+                  onClick={() => shareTo(reportUrl, shareTitle, toast, "whatsapp")}
+                  aria-label="Share on WhatsApp"
+                  className="inline-flex items-center gap-1.5 text-[12px] text-ink-muted hover:text-ink px-3 py-1.5 rounded-full border border-hairline hover:border-hairline-strong"
+                >
+                  <Share2 className="h-3.5 w-3.5" /> WhatsApp
+                </button>
+                <button
+                  onClick={() => shareTo(reportUrl, shareTitle, toast, "copy")}
+                  className="inline-flex items-center gap-1.5 text-[12px] text-ink-muted hover:text-ink px-3 py-1.5 rounded-full border border-hairline hover:border-hairline-strong"
+                >
+                  Copy link
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  );
+};
+
 const GlobalRanking = () => {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
@@ -138,6 +295,10 @@ const GlobalRanking = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCountry, setSelectedCountry] = useState<string>("All");
+  const [voteCounts, setVoteCounts] = useState<Record<string, number>>({});
+  const [votedIds, setVotedIds] = useState<Set<string>>(new Set());
+  const [weeklyVotes, setWeeklyVotes] = useState<number>(0);
+  const [sortMode, setSortMode] = useState<"score" | "votes">("score");
   const category = params.get("cat") || "all";
 
   useEffect(() => {
@@ -151,14 +312,40 @@ const GlobalRanking = () => {
       if (data) setRankings(data as RankedProperty[]);
       setLoading(false);
     })();
+
+    setVotedIds(getVotedIds());
+
+    // Aggregate vote counts
+    (async () => {
+      const { data: voteRows } = await (supabase as any)
+        .from("votes")
+        .select("analysis_id, created_at");
+      if (voteRows) {
+        const counts: Record<string, number> = {};
+        const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        let week = 0;
+        for (const r of voteRows as { analysis_id: string; created_at: string }[]) {
+          counts[r.analysis_id] = (counts[r.analysis_id] || 0) + 1;
+          if (new Date(r.created_at).getTime() >= weekAgo) week += 1;
+        }
+        setVoteCounts(counts);
+        setWeeklyVotes(week);
+      }
+    })();
   }, []);
+
+  const handleVoted = (id: string) => {
+    setVoteCounts((c) => ({ ...c, [id]: (c[id] || 0) + 1 }));
+    setVotedIds((s) => new Set(s).add(id));
+    setWeeklyVotes((w) => w + 1);
+  };
 
   const countries = useMemo(
     () => [...new Set(rankings.map((r) => r.country).filter(Boolean))].sort() as string[],
     [rankings]
   );
 
-  const processed = useMemo(() => {
+  const filtered = useMemo(() => {
     let rows = [...rankings];
     if (selectedCountry !== "All") rows = rows.filter((r) => r.country === selectedCountry);
     if (search.trim()) {
@@ -168,22 +355,35 @@ const GlobalRanking = () => {
       );
     }
     if (category === "beachfront") {
-      // Strict: real beachfront only, sorted by €/m² asc (best value first), tiebreak by score desc
-      rows = rows.filter(isBeachfront).sort((a, b) => {
-        const pa = computePpsm(a);
-        const pb = computePpsm(b);
+      rows = rows.filter(isBeachfront);
+    }
+    if (category === "ppsm") rows = rows.filter((r) => computePpsm(r) != null);
+    if (category === "price") rows = rows.filter((r) => parsePrice(r.price) != null);
+    if (category === "roi") rows = rows.filter((r) => r.roi_potential != null);
+    return rows;
+  }, [rankings, selectedCountry, search, category]);
+
+  const processed = useMemo(() => {
+    const rows = [...filtered];
+    if (sortMode === "votes") {
+      rows.sort((a, b) => (voteCounts[b.id] || 0) - (voteCounts[a.id] || 0) || (b.global_score || 0) - (a.global_score || 0));
+      return rows;
+    }
+    // sortMode === score — apply category-specific score sort
+    if (category === "beachfront") {
+      rows.sort((a, b) => {
+        const pa = computePpsm(a), pb = computePpsm(b);
         if (pa != null && pb != null && pa !== pb) return pa - pb;
         if (pa != null && pb == null) return -1;
         if (pb != null && pa == null) return 1;
         return (b.global_score || 0) - (a.global_score || 0);
       });
-    }
-    if (category === "ppsm") rows = rows.filter((r) => computePpsm(r) != null).sort((a, b) => (computePpsm(a)! - computePpsm(b)!));
-    if (category === "price") rows = rows.filter((r) => parsePrice(r.price) != null).sort((a, b) => parsePrice(a.price)! - parsePrice(b.price)!);
-    if (category === "roi") rows = rows.filter((r) => r.roi_potential != null).sort((a, b) => (b.roi_potential || 0) - (a.roi_potential || 0));
-
+    } else if (category === "ppsm") rows.sort((a, b) => (computePpsm(a)! - computePpsm(b)!));
+    else if (category === "price") rows.sort((a, b) => parsePrice(a.price)! - parsePrice(b.price)!);
+    else if (category === "roi") rows.sort((a, b) => (b.roi_potential || 0) - (a.roi_potential || 0));
+    else rows.sort((a, b) => (b.global_score || 0) - (a.global_score || 0));
     return rows;
-  }, [rankings, selectedCountry, search, category]);
+  }, [filtered, sortMode, voteCounts, category]);
 
   const setCategory = (id: string) => {
     const p = new URLSearchParams(params);
@@ -192,6 +392,9 @@ const GlobalRanking = () => {
   };
 
   const curr = (c: string | null | undefined) => (c === "GBP" ? "£" : c === "USD" ? "$" : "€");
+  const hero = processed[0];
+  const rest = processed.slice(1);
+  const totalListings = rankings.length;
 
   return (
     <section id="rankings" className="py-10 md:py-16">
@@ -205,7 +408,14 @@ const GlobalRanking = () => {
           <a href="/method" className="rh-btn-tertiary">/method</a>.
         </p>
 
-        <div className="mt-8 max-w-2xl"><RankingSearchBar /></div>
+        {/* Quick stats */}
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-ink-soft">
+          <span className="tabular-nums"><span className="text-ink font-medium">{totalListings.toLocaleString()}</span> listings scored</span>
+          <span className="hidden sm:inline">·</span>
+          <span className="tabular-nums"><span className="text-accent-gold font-medium">{weeklyVotes.toLocaleString()}</span> votes this week</span>
+        </div>
+
+        <div className="mt-6 max-w-2xl"><RankingSearchBar /></div>
 
         {/* Category tabs */}
         <div className="mt-8 flex items-center gap-2 flex-wrap">
@@ -227,9 +437,9 @@ const GlobalRanking = () => {
           })}
         </div>
 
-        {/* Filters */}
+        {/* Filters + sort toggle */}
         <div className="mt-4 flex items-center gap-3 flex-wrap">
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 max-w-md min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-soft" />
             <input
               value={search}
@@ -246,100 +456,147 @@ const GlobalRanking = () => {
             <option value="All">🌍 All countries</option>
             {countries.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
+
+          <div className="inline-flex rounded-full border border-hairline bg-surface p-0.5">
+            <button
+              onClick={() => setSortMode("score")}
+              className={`text-[12px] px-3 py-1.5 rounded-full transition-colors ${
+                sortMode === "score" ? "bg-ink text-paper" : "text-ink-muted hover:text-ink"
+              }`}
+            >
+              Top score
+            </button>
+            <button
+              onClick={() => setSortMode("votes")}
+              className={`text-[12px] px-3 py-1.5 rounded-full transition-colors ${
+                sortMode === "votes" ? "bg-ink text-paper" : "text-ink-muted hover:text-ink"
+              }`}
+            >
+              Most voted
+            </button>
+          </div>
+
           <span className="text-[12px] text-ink-soft ml-auto tabular-nums">
             {processed.length} {processed.length === 1 ? "listing" : "listings"}
           </span>
         </div>
 
-        {/* Leaderboard */}
+        {/* Hero #1 */}
+        {!loading && hero && (
+          <div className="mt-6">
+            <HeroCard
+              p={hero}
+              voteCount={voteCounts[hero.id] || 0}
+              voted={votedIds.has(hero.id)}
+              onVote={handleVoted}
+              onOpen={() => navigate(hero.slug ? `/r/${hero.slug}` : `/analysis/${hero.id}`)}
+            />
+          </div>
+        )}
+
+        {/* Leaderboard list */}
         <div className="mt-6 rounded-2xl border border-hairline bg-surface overflow-hidden">
           {/* Desktop header */}
-          <div className="hidden md:grid grid-cols-[3rem_1fr_5rem_4rem_7rem_6rem_6rem_5rem] gap-3 px-5 py-3 border-b border-hairline text-[10px] font-medium text-ink-soft uppercase tracking-[0.14em]">
+          <div className="hidden md:grid grid-cols-[3rem_5rem_1fr_7rem_6rem_6rem_6rem_5rem] gap-3 px-5 py-3 border-b border-hairline text-[10px] font-medium text-ink-soft uppercase tracking-[0.14em]">
             <div>#</div>
-            <div>Location</div>
             <div className="text-center">Score</div>
-            <div className="text-center">Grade</div>
+            <div>Location</div>
             <div className="text-right">Price</div>
             <div className="text-right">€/m²</div>
             <div className="text-right">Verdict</div>
+            <div className="text-center">Votes</div>
             <div className="text-right">Web</div>
           </div>
 
           {loading ? (
             <div className="p-10 text-center text-ink-soft text-sm">Loading the leaderboard…</div>
-          ) : processed.length === 0 ? (
-            <div className="p-10 text-center text-ink-soft text-sm">No listings match this filter yet.</div>
+          ) : rest.length === 0 ? (
+            <div className="p-10 text-center text-ink-soft text-sm">No more listings match this filter.</div>
           ) : (
-            processed.slice(0, 50).map((p, i) => {
+            rest.slice(0, 50).map((p, i) => {
+              const rank = i + 2; // hero is #1
               const ppsm = computePpsm(p);
-              const grade = scoreToGrade(p.global_score);
               const webUrl = p.url && p.url !== "manual-entry" ? (p.url.startsWith("http") ? p.url : `https://${p.url}`) : null;
+              const ecbc = isEcoBeachCity(p);
               const verdictClass =
                 p.verdict === "Exceptional" || p.verdict === "Strong" ? "text-good bg-good/10" :
                 p.verdict === "Moderate" ? "text-warn bg-warn/10" : "text-bad bg-bad/10";
               const onOpen = () => navigate(p.slug ? `/r/${p.slug}` : `/analysis/${p.id}`);
+              const vc = voteCounts[p.id] || 0;
+              const voted = votedIds.has(p.id);
 
               return (
                 <div key={p.id} className="border-b border-hairline last:border-0">
                   {/* MOBILE CARD */}
-                  <button
-                    onClick={onOpen}
-                    className="md:hidden w-full text-left px-4 py-4 hover:bg-[#FBF8F1] transition-colors block"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`flex-shrink-0 w-12 h-12 rounded-xl border border-hairline bg-paper flex flex-col items-center justify-center ${gradeColor(p.global_score)}`}>
-                        <span className="font-mono text-[14px] font-semibold leading-none">{p.global_score}</span>
-                        <span className="font-display text-[10px] mt-0.5 leading-none">{grade}</span>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="min-w-0">
-                            <div className="text-[14px] text-ink font-medium truncate">
-                              {p.address || `${p.city}, ${p.country}`}
+                  <div className="md:hidden px-4 py-4 hover:bg-[#FBF8F1] transition-colors">
+                    <button onClick={onOpen} className="w-full text-left block">
+                      <div className="flex items-start gap-3">
+                        <ScoreVisual score={p.global_score} size="sm" />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <div className="text-[14px] text-ink font-medium truncate">
+                                {p.address || `${p.city}, ${p.country}`}
+                              </div>
+                              <div className="text-[11px] text-ink-soft truncate">
+                                <span className="font-mono">#{rank}</span>
+                                {p.city ? ` · ${p.city}` : ""}{p.country ? `, ${p.country}` : ""}
+                                {p.property_type ? ` · ${p.property_type}` : ""}
+                              </div>
                             </div>
-                            <div className="text-[11px] text-ink-soft truncate">
-                              <span className="font-mono">#{i + 1}</span>
-                              {p.city ? ` · ${p.city}` : ""}{p.country ? `, ${p.country}` : ""}
-                              {p.property_type ? ` · ${p.property_type}` : ""}
+                            <div className="text-right flex-shrink-0">
+                              <div className="text-[15px] font-mono font-semibold text-ink tabular-nums leading-tight">
+                                {formatPrice(p.price, p.currency)}
+                              </div>
+                              {ppsm && (
+                                <div className="text-[10px] font-mono text-ink-soft tabular-nums">
+                                  {curr(p.currency)}{ppsm.toLocaleString()}/m²
+                                </div>
+                              )}
                             </div>
                           </div>
-                          <div className="text-right flex-shrink-0">
-                            <div className="text-[15px] font-mono font-semibold text-ink tabular-nums leading-tight">
-                              {formatPrice(p.price, p.currency)}
-                            </div>
-                            {ppsm && (
-                              <div className="text-[10px] font-mono text-ink-soft tabular-nums">
-                                {curr(p.currency)}{ppsm.toLocaleString()}/m²
-                              </div>
+                          <div className="mt-2 flex items-center gap-2 flex-wrap">
+                            <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${verdictClass}`}>
+                              {p.verdict || "—"}
+                            </span>
+                            {ecbc && (
+                              <a
+                                href="https://ecobeachcity.com"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 text-[10px] text-accent-gold border border-accent-gold/40 bg-accent-gold/10 px-2 py-0.5 rounded-full"
+                              >
+                                Reserve plot →
+                              </a>
+                            )}
+                            {!ecbc && webUrl && (
+                              <a
+                                href={webUrl}
+                                target="_blank"
+                                rel="noopener noreferrer nofollow"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 text-[10px] text-ink-muted hover:text-ink px-2 py-0.5 rounded-full border border-hairline"
+                              >
+                                <ExternalLink className="h-2.5 w-2.5" /> Listing
+                              </a>
                             )}
                           </div>
                         </div>
-                        <div className="mt-2 flex items-center gap-2 flex-wrap">
-                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${verdictClass}`}>
-                            {p.verdict || "—"}
-                          </span>
-                          {webUrl && (
-                            <a
-                              href={webUrl}
-                              target="_blank"
-                              rel="noopener noreferrer nofollow"
-                              onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1 text-[10px] text-ink-muted hover:text-ink px-2 py-0.5 rounded-full border border-hairline"
-                            >
-                              <ExternalLink className="h-2.5 w-2.5" /> Listing
-                            </a>
-                          )}
-                        </div>
                       </div>
+                    </button>
+                    <div className="mt-2 flex justify-end">
+                      <VoteButton analysisId={p.id} count={vc} voted={voted} onVoted={handleVoted} />
                     </div>
-                  </button>
+                  </div>
 
                   {/* DESKTOP ROW */}
                   <div
                     onClick={onOpen}
-                    className="hidden md:grid grid-cols-[3rem_1fr_5rem_4rem_7rem_6rem_6rem_5rem] gap-3 px-5 py-3 hover:bg-[#FBF8F1] transition-colors items-center cursor-pointer"
+                    className="hidden md:grid grid-cols-[3rem_5rem_1fr_7rem_6rem_6rem_6rem_5rem] gap-3 px-5 py-3 hover:bg-[#FBF8F1] transition-colors items-center cursor-pointer"
                   >
-                    <div className="font-mono text-[12px] text-ink-soft">{i + 1}</div>
+                    <div className="font-mono text-[12px] text-ink-soft">{rank}</div>
+                    <div className="flex justify-center"><ScoreVisual score={p.global_score} size="sm" /></div>
                     <div className="min-w-0">
                       <div className="text-[14px] text-ink truncate font-medium">
                         {p.address || `${p.city}, ${p.country}`}
@@ -350,10 +607,6 @@ const GlobalRanking = () => {
                         {p.size_sqm ? ` · ${p.size_sqm} m²` : ""}
                       </div>
                     </div>
-                    <div className="text-center text-[13px] font-mono text-ink tabular-nums">
-                      <span className="font-semibold">{p.global_score}</span>
-                    </div>
-                    <div className={`text-center font-display text-[16px] ${gradeColor(p.global_score)}`}>{grade}</div>
                     <div className="text-right text-[13px] font-mono text-ink tabular-nums">{formatPrice(p.price, p.currency)}</div>
                     <div className="text-right text-[13px] font-mono text-ink-muted tabular-nums">
                       {ppsm ? `${curr(p.currency)}${ppsm.toLocaleString()}` : "—"}
@@ -363,8 +616,21 @@ const GlobalRanking = () => {
                         {p.verdict || "—"}
                       </span>
                     </div>
+                    <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+                      <VoteButton analysisId={p.id} count={vc} voted={voted} onVoted={handleVoted} />
+                    </div>
                     <div className="text-right" onClick={(e) => e.stopPropagation()}>
-                      {webUrl ? (
+                      {ecbc ? (
+                        <a
+                          href="https://ecobeachcity.com"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] text-accent-gold border border-accent-gold/40 bg-accent-gold/10 hover:bg-accent-gold/20 px-2 py-1 rounded-md transition-colors whitespace-nowrap"
+                          title="Reserve a plot at Eco Beach City"
+                        >
+                          Reserve →
+                        </a>
+                      ) : webUrl ? (
                         <a
                           href={webUrl}
                           target="_blank"
@@ -384,7 +650,6 @@ const GlobalRanking = () => {
             })
           )}
         </div>
-
 
         <WeeklyEmailCapture />
       </div>
