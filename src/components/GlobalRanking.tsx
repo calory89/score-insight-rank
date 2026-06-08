@@ -367,8 +367,9 @@ const GlobalRanking = () => {
 
   const processed = useMemo(() => {
     const rows = [...filtered];
+    const dv = (id: string) => (baseVotes[id] || 0) + (voteCounts[id] || 0);
     if (sortMode === "votes") {
-      rows.sort((a, b) => (voteCounts[b.id] || 0) - (voteCounts[a.id] || 0) || (b.global_score || 0) - (a.global_score || 0));
+      rows.sort((a, b) => dv(b.id) - dv(a.id) || (b.global_score || 0) - (a.global_score || 0));
       return rows;
     }
     // sortMode === score — apply category-specific score sort
@@ -385,7 +386,7 @@ const GlobalRanking = () => {
     else if (category === "roi") rows.sort((a, b) => (b.roi_potential || 0) - (a.roi_potential || 0));
     else rows.sort((a, b) => (b.global_score || 0) - (a.global_score || 0));
     return rows;
-  }, [filtered, sortMode, voteCounts, category]);
+  }, [filtered, sortMode, voteCounts, baseVotes, category]);
 
   const setCategory = (id: string) => {
     const p = new URLSearchParams(params);
