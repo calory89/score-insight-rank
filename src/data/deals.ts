@@ -1,0 +1,256 @@
+/* ============================================================================
+   REALHUNT — DEALS
+   ----------------------------------------------------------------------------
+   THIS FILE IS THE CONTROL PANEL FOR THE /deals PAGE.
+   To add a deal: copy one block, paste it at the TOP of the DEALS array,
+   change the fields, save. Nothing else to touch.
+   To remove a deal: delete its block (or set published: false).
+   To feature a deal on the homepage: set featured: true (first 3 are shown).
+
+   RULES WE KEEP:
+   - Only listings that were open and priced on the portal on `verifiedOn`.
+   - `angle` = why it is a deal, in numbers. `risk` = the catch, honestly.
+   - No affiliate links, no paid placements. If a link dies, delete the block.
+   ============================================================================ */
+
+export type DealType = "house" | "apartment" | "villa" | "land" | "building";
+
+export interface Deal {
+  id: string;
+  title: string;
+  city: string;
+  country: string;
+  countryCode: string;      // ISO2 lowercase — drives the flag
+  price: number;            // EUR
+  localPrice?: string;      // original currency, if not EUR
+  type: DealType;
+  beds?: number | null;
+  sqm?: number | null;
+  pricePerSqm?: number | null;
+  grossYieldPct?: number | null;
+  url: string;              // the live listing
+  source: string;           // portal name
+  verifiedOn: string;       // YYYY-MM-DD
+  angle: string;
+  risk: string;
+  tags?: string[];
+  featured?: boolean;
+  published?: boolean;
+}
+
+export const DEALS: Deal[] = [
+  {
+    id: "it-mussomeli-townhouse",
+    title: "5-room townhouse, Mussomeli",
+    city: "Mussomeli", country: "Italy", countryCode: "it",
+    price: 11900, type: "house", beds: null, sqm: 90,
+    pricePerSqm: 132, grossYieldPct: null,
+    url: "https://www.immobiliare.it/annunci/129498612/",
+    source: "Immobiliare.it", verifiedOn: "2026-08-18",
+    angle: "132 EUR/sqm — about a tenth of the Sicilian average. Mussomeli has run its cheap-house scheme for years, so notaries, builders and foreign buyers are already a pipeline.",
+    risk: "Inland Sicilian renovation runs 600-1,000 EUR/sqm, several times the purchase price, and the nearest airport is 80 km away.",
+    tags: ["Renovation", "Sub-15k"], featured: true, published: true,
+  },
+  {
+    id: "jp-ayabe-akiya",
+    title: "Thatched farmhouse, Ayabe",
+    city: "Ayabe", country: "Japan", countryCode: "jp",
+    price: 4334, localPrice: "800,000 JPY", type: "house", beds: null, sqm: 113,
+    pricePerSqm: 38, grossYieldPct: null,
+    url: "https://www.akiyajapan.com/property/53616c7465645f5ff479b4af07f3f90404c006beb5f7387b66712d6b6f38e8e9",
+    source: "Akiya Japan", verifiedOn: "2026-08-18",
+    angle: "113 sqm traditional farmhouse on 608 sqm of land inside Kyoto Prefecture, 1h40 from Kyoto city by JR, for less than a used scooter costs in Tokyo.",
+    risk: "Re-thatching a kayabuki roof costs millions of yen, the house predates modern earthquake code, and akiya-bank sales often require proof of intent to live there.",
+    tags: ["Akiya", "Cheapest"], featured: true, published: true,
+  },
+  {
+    id: "us-cleveland-larchmont",
+    title: "3-bed cash-flow house, Cleveland",
+    city: "Cleveland, OH", country: "United States", countryCode: "us",
+    price: 81997, localPrice: "95,000 USD", type: "house", beds: 3, sqm: 129,
+    pricePerSqm: 636, grossYieldPct: 18.5,
+    url: "https://www.zillow.com/homedetails/1474-Larchmont-Rd-Cleveland-OH-44110/33403982_zpid/",
+    source: "Zillow", verifiedOn: "2026-08-18",
+    angle: "Zillow's own rent estimate is 1,464 USD/month against a 95,000 USD ask. The expensive items are already done: kitchen, bath, vinyl windows, hardwoods.",
+    risk: "Collinwood is a high-vacancy submarket — the gap between estimated rent and collected rent is where these deals die. 1929 stock means lead paint exposure.",
+    tags: ["Cash flow", "Highest yield"], featured: true, published: true,
+  },
+  {
+    id: "it-ostuni-trullo",
+    title: "Restored trullo + 4,000 sqm, Ostuni",
+    city: "Ostuni", country: "Italy", countryCode: "it",
+    price: 59000, type: "house", beds: 1, sqm: 50,
+    pricePerSqm: 1180, grossYieldPct: 10,
+    url: "https://www.immobiliare.it/annunci/130517204/",
+    source: "Immobiliare.it", verifiedOn: "2026-08-18",
+    angle: "Renovated and furnished, with land, in one of Puglia's strongest short-let markets. It can go on the rental market with zero capex — rare at this price in the Valle d'Itria.",
+    risk: "One bedroom and 50 sqm caps the nightly rate; countryside contrada means a car, and a pool, to compete with the surrounding trullo stock.",
+    tags: ["Turnkey", "Short-let"], published: true,
+  },
+  {
+    id: "it-scalea-apartment",
+    title: "Furnished 2-bed with garage, Scalea",
+    city: "Scalea", country: "Italy", countryCode: "it",
+    price: 59000, type: "apartment", beds: 2, sqm: 55,
+    pricePerSqm: 1073, grossYieldPct: 8,
+    url: "https://www.immobiliare.it/annunci/127439974/",
+    source: "Immobiliare.it", verifiedOn: "2026-08-18",
+    angle: "1,073 EUR/sqm for a furnished, move-in 2-bed with lift and private garage in a Calabrian beach town. No renovation risk, no condominium fee listed.",
+    risk: "The season is June to September, so income is concentrated, and the town is full of near-identical 1970s holiday flats, which caps capital growth.",
+    tags: ["Turnkey", "Coastal"], published: true,
+  },
+  {
+    id: "pt-santa-comba-dao",
+    title: "Stone T4, Santa Comba Dao",
+    city: "Santa Comba Dao", country: "Portugal", countryCode: "pt",
+    price: 47000, type: "house", beds: 4, sqm: 104,
+    pricePerSqm: 452, grossYieldPct: 6,
+    url: "https://www.imovirtual.com/pt/anuncio/moradia-em-pedra-localizada-em-santa-comba-dao-ID1fwcu",
+    source: "Imovirtual", verifiedOn: "2026-08-18",
+    angle: "452 EUR/sqm against a national average above 1,900. It sits inside a town on the Dao river, not an isolated hamlet, so after works there is a real long-let tenant pool.",
+    risk: "Listed as unrenovated — budget 50-80k. In interior Portugal the binding constraint is builder availability, not money.",
+    tags: ["Renovation", "Long-let"], published: true,
+  },
+  {
+    id: "es-paderne-allariz",
+    title: "Granite house with garage, Paderne de Allariz",
+    city: "Paderne de Allariz", country: "Spain", countryCode: "es",
+    price: 28000, type: "house", beds: 2, sqm: 110,
+    pricePerSqm: 255, grossYieldPct: null,
+    url: "https://www.milanuncios.com/venta-de-casas-en-paderne-de-allariz-ourense/paderne-de-allariz-530636372.htm",
+    source: "Milanuncios", verifiedOn: "2026-08-18",
+    angle: "255 EUR/sqm for Galician granite with two cellars and a two-car closed garage, 15 km from Ourense. Restored stone houses in the same comarca list at three to five times this.",
+    risk: "The listing states the property is not registered, which means a registry regularisation before any mortgage or clean resale.",
+    tags: ["Renovation", "Sub-30k"], published: true,
+  },
+  {
+    id: "bg-sarnevets",
+    title: "Village house + 2,580 sqm plot, Sarnevets",
+    city: "Sarnevets", country: "Bulgaria", countryCode: "bg",
+    price: 33000, type: "house", beds: 2, sqm: 80,
+    pricePerSqm: 413, grossYieldPct: null,
+    url: "https://www.bulgarianproperties.com/Houses_in_Bulgaria/AD89637BG_House_for_sale_near_Stara_Zagora.html",
+    source: "BulgarianProperties", verifiedOn: "2026-08-18",
+    angle: "Already cut from 42,000 to 33,000 (-21%). The 2,580 sqm plot near Stara Zagora is the real asset — land this size close to a regional city rarely comes with a habitable footprint attached.",
+    risk: "The agency itself says the building needs major repair, and Bulgarian village stock is illiquid with a shrinking local buyer pool.",
+    tags: ["Price cut", "Land"], published: true,
+  },
+  {
+    id: "ro-hanu-conachi",
+    title: "Unfinished house + 1,600 sqm, Hanu Conachi",
+    city: "Hanu Conachi", country: "Romania", countryCode: "ro",
+    price: 20000, type: "house", beds: null, sqm: 75,
+    pricePerSqm: 267, grossYieldPct: null,
+    url: "https://www.romimo.ro/anunturi/imobiliare/de-vanzare/case/case-vile/anunt/vand-casa-hanu-conachi/4015ie2600d57f84ehf2egfigd5g23ee.html",
+    source: "Romimo.ro", verifiedOn: "2026-08-18",
+    angle: "267 EUR/sqm for a 2006 structure with gas at the house, mains electricity, borehole and sewer at the boundary, plus a double-frontage plot. The utilities alone usually cost more than this.",
+    risk: "Two of the four rooms are shells, so it is a build-out, not a move-in. Galati county villages have thin resale demand.",
+    tags: ["Build-out", "Sub-25k"], published: true,
+  },
+  {
+    id: "it-cefalu-seaview",
+    title: "Sea-view house + 3,000 sqm, Cefalu",
+    city: "Cefalu", country: "Italy", countryCode: "it",
+    price: 255000, type: "house", beds: 3, sqm: 182,
+    pricePerSqm: 1401, grossYieldPct: 5,
+    url: "https://www.immobiliare.it/annunci/126620531/",
+    source: "Immobiliare.it", verifiedOn: "2026-08-18",
+    angle: "Reduced from 275,000. At 1,401 EUR/sqm it is roughly half what renovated property inside Cefalu's historic centre commands, and it comes with a sea-view terrace and land the centre never includes.",
+    risk: "Needs renovation, energy class F, and it is 5 km outside the centre — guests will need a car and you will need six figures of works.",
+    tags: ["Price cut", "Sea view"], published: true,
+  },
+  {
+    id: "tr-mersin-1plus1",
+    title: "Furnished 1+1 on the Turkish Med, Mersin",
+    city: "Mersin", country: "Turkey", countryCode: "tr",
+    price: 22169, localPrice: "1,230,000 TRY", type: "apartment", beds: 1, sqm: 65,
+    pricePerSqm: 341, grossYieldPct: null,
+    url: "https://www.hepsiemlak.com/en/mersin-akdeniz-cankaya-satilik/daire/171071-3",
+    source: "Hepsiemlak", verifiedOn: "2026-08-18",
+    angle: "341 EUR/sqm for a furnished flat with lift, 32 m from a bus stop and walking distance to the metro line. Mersin is the cheapest big coastal city in Turkey — about a third of Alanya pricing.",
+    risk: "31-year-old building in a first-degree seismic zone with no stated retrofit, and lira depreciation can erase nominal gains.",
+    tags: ["Coastal", "Sub-25k"], published: true,
+  },
+  {
+    id: "th-phuket-centrio",
+    title: "Freehold studio next to Central, Phuket",
+    city: "Kathu, Phuket", country: "Thailand", countryCode: "th",
+    price: 52001, localPrice: "1,990,000 THB", type: "apartment", beds: 1, sqm: 32,
+    pricePerSqm: 1651, grossYieldPct: null,
+    url: "https://www.ddproperty.com/en/property/centrio-condominium-for-sale-500316194",
+    source: "DDproperty", verifiedOn: "2026-08-18",
+    angle: "Furnished, move-in, freehold title minutes from Central Phuket — roughly half the per-sqm price asked in Bang Tao and Cherngtalay new-builds on the same portal.",
+    risk: "Foreigners can only buy inside the 49% foreign quota of the building. Confirm quota availability before paying, or you end up in a leasehold workaround.",
+    tags: ["Freehold", "Turnkey"], published: true,
+  },
+  {
+    id: "br-recife-encruzilhada",
+    title: "2-bed, zero condo fee, Recife",
+    city: "Recife", country: "Brazil", countryCode: "br",
+    price: 72865, localPrice: "440,000 BRL", type: "apartment", beds: 2, sqm: 53,
+    pricePerSqm: 1375, grossYieldPct: null,
+    url: "https://www.zapimoveis.com.br/imovel/venda-apartamento-2-quartos-com-piscina-encruzilhada-recife-53m2-id-2905819636/",
+    source: "ZAP Imoveis", verifiedOn: "2026-08-18",
+    angle: "Condo fee and IPTU both listed as exempt, on a 2-bed with parking, pool, gym and coworking. The two costs that normally kill Brazilian yield are zero.",
+    risk: "Encruzilhada is mid-tier inland Recife, not Boa Viagem, so resale is thinner — and those exemptions are usually promotional. Check the expiry in the paperwork.",
+    tags: ["Low carry", "City"], published: true,
+  },
+  {
+    id: "ma-tangier-boukhalef",
+    title: "Ground-floor 2-bed with garden, Tangier",
+    city: "Tangier", country: "Morocco", countryCode: "ma",
+    price: 74371, localPrice: "800,000 MAD", type: "apartment", beds: 2, sqm: 58,
+    pricePerSqm: 1282, grossYieldPct: null,
+    url: "https://www.mubawab.ma/en/a/8390547/beautiful-apartment-in-tangier-on-the-ground-floor",
+    source: "Mubawab", verifiedOn: "2026-08-18",
+    angle: "Equipped 2-bed with private garden, terrace, free parking and surveillance in the Tanger Med / Renault industrial belt, where the tenant demand actually is.",
+    risk: "Boukhalef is a mass-built peripheral estate with a history of unsold stock and syndic problems. Verify the title is a titre foncier, not a melkia.",
+    tags: ["Industrial demand"], published: true,
+  },
+  {
+    id: "ar-ituzaingo-firenze",
+    title: "New-build 2-amb with garage, Buenos Aires",
+    city: "Ituzaingo, Buenos Aires", country: "Argentina", countryCode: "ar",
+    price: 78890, localPrice: "91,400 USD", type: "apartment", beds: 1, sqm: 50,
+    pricePerSqm: 1578, grossYieldPct: null,
+    url: "https://www.zonaprop.com.ar/propiedades/clasificado/veclapin-departamento-de-2-ambientes-en-venta-en-ituzaingo-sur-57662527.html",
+    source: "Zonaprop", verifiedOn: "2026-08-18",
+    angle: "Never-lived-in unit with balcony and its own parking space for 91.4k USD — under half the 185k asked for a 3-amb a few blocks away, and Argentine rents re-priced sharply after the 2023 rental-law repeal.",
+    risk: "Transacted in physical dollars with capital controls on repatriation, and a new suburban build has weak comps until the development sells out.",
+    tags: ["New build", "Rent reset"], published: true,
+  },
+  {
+    id: "co-cartagena-serena",
+    title: "2-bed beach-rental play, Cartagena",
+    city: "Cartagena", country: "Colombia", countryCode: "co",
+    price: 145714, localPrice: "530,000,000 COP", type: "apartment", beds: 2, sqm: 64,
+    pricePerSqm: 2277, grossYieldPct: null,
+    url: "https://www.fincaraiz.com.co/apartamento-en-venta-en-2-localidad-de-la-virgen-y-turistica-cartagena/194030735",
+    source: "Fincaraiz", verifiedOn: "2026-08-18",
+    angle: "2,277 EUR/sqm inside the master-planned Serena del Mar, against 5,000-9,000 for Bocagrande and El Laguito on the same search page. The listing is pitched at short-term beach rental.",
+    risk: "Still-filling greenfield 15 km north of the historic centre, so nightly rates are unproven, and the peso is the volatile part of the return.",
+    tags: ["Short-let", "Coastal"], published: true,
+  },
+  {
+    id: "mx-merida-conkal",
+    title: "House with private pool, Merida",
+    city: "Conkal, Merida", country: "Mexico", countryCode: "mx",
+    price: 134340, localPrice: "2,650,000 MXN", type: "house", beds: null, sqm: 120,
+    pricePerSqm: 1120, grossYieldPct: null,
+    url: "https://www.inmuebles24.com/propiedades/clasificado/veclcain-casa-en-venta-fracc.-cumbres-novonorte-149352044.html",
+    source: "Inmuebles24", verifiedOn: "2026-08-18",
+    angle: "120 sqm of build on 225 sqm of land with a private pool, in the north-Merida corridor that has absorbed most of Yucatan's internal migration.",
+    risk: "Merida's new-build supply is heavy and largely identical, so differentiation on resale is hard and the pool is a running cost from day one.",
+    tags: ["New build", "Pool"], published: true,
+  },
+];
+
+export const publishedDeals = () => DEALS.filter((d) => d.published !== false);
+export const featuredDeals = (n = 3) =>
+  publishedDeals().filter((d) => d.featured).slice(0, n);
+
+export const flagOf = (cc: string) =>
+  cc.toUpperCase().replace(/./g, (c) => String.fromCodePoint(127397 + c.charCodeAt(0)));
+
+export const formatEUR = (n: number) =>
+  new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
