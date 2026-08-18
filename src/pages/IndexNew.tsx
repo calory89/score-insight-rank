@@ -4,6 +4,7 @@ import { ArrowRight, Check, ChevronDown, Star, ShieldCheck, FileSearch, Sparkles
 import RHNav from "@/components/realhunt/RHNav";
 import RHFooter from "@/components/realhunt/RHFooter";
 import HeroLiveDemo from "@/components/realhunt/HeroLiveDemo";
+import DealsTeaser from "@/components/realhunt/DealsTeaser";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { detectListingSource, isLikelyListingUrl } from "@/lib/source-detect";
 import { useAuth } from "@/contexts/AuthContext";
@@ -447,6 +448,9 @@ const IndexNew = () => {
           />
         </div>
       </Section>
+
+      {/* DEALS */}
+      <DealsTeaser />
 
       {/* LIVE DEMO TEASER */}
       <div className="bg-surface-2 border-y border-hairline">

@@ -39,6 +39,7 @@ const Rankings = React.lazy(() => import("./pages/Rankings"));
 const Leads = React.lazy(() => import("./pages/Leads"));
 const Tickets = React.lazy(() => import("./pages/Tickets"));
 const Discover = React.lazy(() => import("./pages/Discover"));
+const Deals = React.lazy(() => import("./pages/Deals"));
 const Profile = React.lazy(() => import("./pages/Profile"));
 const Game = React.lazy(() => import("./pages/Game"));
 const SearchPage = React.lazy(() => import("./pages/Search"));
@@ -133,6 +134,7 @@ const AnimatedRoutes = () => {
           <Route path="/leads" element={<PageTransition><Leads /></PageTransition>} />
           <Route path="/tickets" element={<PageTransition><Tickets /></PageTransition>} />
           <Route path="/discover" element={<PageTransition><Discover /></PageTransition>} />
+          <Route path="/deals" element={<PageTransition><Deals /></PageTransition>} />
           <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
           <Route path="/profile/:userId" element={<PageTransition><Profile /></PageTransition>} />
           <Route path="/game" element={<PageTransition><Game /></PageTransition>} />
