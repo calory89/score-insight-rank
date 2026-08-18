@@ -25,6 +25,7 @@ const DealCard = ({ deal }: { deal: Deal }) => {
           src={deal.image}
           alt={`${deal.title} — ${deal.city}, ${deal.country}`}
           loading="lazy"
+          referrerPolicy="no-referrer"
           className="w-full h-[200px] object-cover"
         />
       </a>

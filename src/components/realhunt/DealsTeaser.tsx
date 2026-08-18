@@ -31,6 +31,7 @@ const DealsTeaser = () => {
                 src={d.image}
                 alt={`${d.title} — ${d.city}, ${d.country}`}
                 loading="lazy"
+                referrerPolicy="no-referrer"
                 className="w-full h-[180px] object-cover"
               />
             </div>
