@@ -10,6 +10,8 @@
    RULES WE KEEP:
    - Only listings that were open and priced on the portal on `verifiedOn`.
    - `angle` = why it is a deal, in numbers. `risk` = the catch, honestly.
+   - Every deal MUST carry a real photo of that property and a link that opens
+     that exact listing. No photo, no board: it will not be shown.
    - No affiliate links, no paid placements. If a link dies, delete the block.
    ============================================================================ */
 
@@ -28,6 +30,7 @@ export interface Deal {
   sqm?: number | null;
   pricePerSqm?: number | null;
   grossYieldPct?: number | null;
+  image: string;            // real photo OF THIS LISTING, from the portal. Mandatory.
   url: string;              // the live listing
   source: string;           // portal name
   verifiedOn: string;       // YYYY-MM-DD
@@ -41,6 +44,7 @@ export interface Deal {
 export const DEALS: Deal[] = [
   {
     id: "it-mussomeli-townhouse",
+    image: "https://pwm.im-cdn.it/image/1934659166/xl-c.jpg",
     title: "5-room townhouse, Mussomeli",
     city: "Mussomeli", country: "Italy", countryCode: "it",
     price: 11900, type: "house", beds: null, sqm: 90,
@@ -52,7 +56,9 @@ export const DEALS: Deal[] = [
     tags: ["Renovation", "Sub-15k"], featured: true, published: true,
   },
   {
+    // No photo: akiyajapan paywalls the gallery. Rule is photo-or-nothing, so it stays hidden.
     id: "jp-ayabe-akiya",
+    image: "",
     title: "Thatched farmhouse, Ayabe",
     city: "Ayabe", country: "Japan", countryCode: "jp",
     price: 4334, localPrice: "800,000 JPY", type: "house", beds: null, sqm: 113,
@@ -61,10 +67,11 @@ export const DEALS: Deal[] = [
     source: "Akiya Japan", verifiedOn: "2026-08-18",
     angle: "113 sqm traditional farmhouse on 608 sqm of land inside Kyoto Prefecture, 1h40 from Kyoto city by JR, for less than a used scooter costs in Tokyo.",
     risk: "Re-thatching a kayabuki roof costs millions of yen, the house predates modern earthquake code, and akiya-bank sales often require proof of intent to live there.",
-    tags: ["Akiya", "Cheapest"], featured: true, published: true,
+    tags: ["Akiya", "Cheapest"], featured: false, published: false,
   },
   {
     id: "us-cleveland-larchmont",
+    image: "https://photos.zillowstatic.com/fp/1108448e020d6253f567c85b6c2e4e4b-cc_ft_1536.jpg",
     title: "3-bed cash-flow house, Cleveland",
     city: "Cleveland, OH", country: "United States", countryCode: "us",
     price: 81997, localPrice: "95,000 USD", type: "house", beds: 3, sqm: 129,
@@ -77,6 +84,7 @@ export const DEALS: Deal[] = [
   },
   {
     id: "it-ostuni-trullo",
+    image: "https://pwm.im-cdn.it/image/1959676272/xl-c.jpg",
     title: "Restored trullo + 4,000 sqm, Ostuni",
     city: "Ostuni", country: "Italy", countryCode: "it",
     price: 59000, type: "house", beds: 1, sqm: 50,
@@ -89,6 +97,7 @@ export const DEALS: Deal[] = [
   },
   {
     id: "it-scalea-apartment",
+    image: "https://pwm.im-cdn.it/image/1884415998/xl-c.jpg",
     title: "Furnished 2-bed with garage, Scalea",
     city: "Scalea", country: "Italy", countryCode: "it",
     price: 59000, type: "apartment", beds: 2, sqm: 55,
@@ -101,6 +110,7 @@ export const DEALS: Deal[] = [
   },
   {
     id: "pt-santa-comba-dao",
+    image: "https://ireland.apollo.olxcdn.com/v1/files/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmbiI6InRxazMycHRheGEybC1FQ09TWVNURU0iLCJ3IjpbeyJmbiI6IjY5bmxwYTdlY3FtNzEtQVBUIiwicyI6IjE2IiwiYSI6IjAiLCJwIjoiMTAsLTEwIn1dfQ.ngSox8dWJWxobFxJlnByss-pWkEVKFWcI4VsHBjwOEk/image;s=1200x0;q=80",
     title: "Stone T4, Santa Comba Dao",
     city: "Santa Comba Dao", country: "Portugal", countryCode: "pt",
     price: 47000, type: "house", beds: 4, sqm: 104,
@@ -113,6 +123,7 @@ export const DEALS: Deal[] = [
   },
   {
     id: "es-paderne-allariz",
+    image: "https://images-re.milanuncios.com/images/ads/4295b78e-3e5e-4feb-91bd-dbb9b4576cfa?rule=hw396",
     title: "Granite house with garage, Paderne de Allariz",
     city: "Paderne de Allariz", country: "Spain", countryCode: "es",
     price: 28000, type: "house", beds: 2, sqm: 110,
@@ -121,10 +132,11 @@ export const DEALS: Deal[] = [
     source: "Milanuncios", verifiedOn: "2026-08-18",
     angle: "255 EUR/sqm for Galician granite with two cellars and a two-car closed garage, 15 km from Ourense. Restored stone houses in the same comarca list at three to five times this.",
     risk: "The listing states the property is not registered, which means a registry regularisation before any mortgage or clean resale.",
-    tags: ["Renovation", "Sub-30k"], published: true,
+    tags: ["Renovation", "Sub-30k"], featured: true, published: true,
   },
   {
     id: "bg-sarnevets",
+    image: "https://static.bulgarianproperties.com/property-images/big/89637_5.jpg",
     title: "Village house + 2,580 sqm plot, Sarnevets",
     city: "Sarnevets", country: "Bulgaria", countryCode: "bg",
     price: 33000, type: "house", beds: 2, sqm: 80,
@@ -137,6 +149,7 @@ export const DEALS: Deal[] = [
   },
   {
     id: "ro-hanu-conachi",
+    image: "https://s3.publi24.ro/vertical-ro-f646bd5a/large/20260402/1936/c695dac6c07ebe86b878a04c292d5b07.webp",
     title: "Unfinished house + 1,600 sqm, Hanu Conachi",
     city: "Hanu Conachi", country: "Romania", countryCode: "ro",
     price: 20000, type: "house", beds: null, sqm: 75,
@@ -149,6 +162,7 @@ export const DEALS: Deal[] = [
   },
   {
     id: "it-cefalu-seaview",
+    image: "https://pwm.im-cdn.it/image/1865158791/xl-c.jpg",
     title: "Sea-view house + 3,000 sqm, Cefalu",
     city: "Cefalu", country: "Italy", countryCode: "it",
     price: 255000, type: "house", beds: 3, sqm: 182,
@@ -161,6 +175,7 @@ export const DEALS: Deal[] = [
   },
   {
     id: "tr-mersin-1plus1",
+    image: "https://hecdn01.hemlak.com/mnresize/882/526/ds01/7/3/2/7/3/1/7/4/e8193dfd-1b29-40b9-98c9-38b92e83e110.jpg",
     title: "Furnished 1+1 on the Turkish Med, Mersin",
     city: "Mersin", country: "Turkey", countryCode: "tr",
     price: 22169, localPrice: "1,230,000 TRY", type: "apartment", beds: 1, sqm: 65,
@@ -173,6 +188,7 @@ export const DEALS: Deal[] = [
   },
   {
     id: "th-phuket-centrio",
+    image: "https://th1-cdn.pgimgs.com/listing/500316194/UPHO.136241640.V800/Centrio-Condominium-Kathu-Thailand.jpg",
     title: "Freehold studio next to Central, Phuket",
     city: "Kathu, Phuket", country: "Thailand", countryCode: "th",
     price: 52001, localPrice: "1,990,000 THB", type: "apartment", beds: 1, sqm: 32,
@@ -185,6 +201,7 @@ export const DEALS: Deal[] = [
   },
   {
     id: "br-recife-encruzilhada",
+    image: "https://resizedimgs.zapimoveis.com.br/img/vr-listing/a1902b9a004e1d9f4abf5a89a441f754/apartamento-com-2-quartos-a-venda-53m-no-encruzilhada-recife.webp?action=fit-in&dimension=800x600",
     title: "2-bed, zero condo fee, Recife",
     city: "Recife", country: "Brazil", countryCode: "br",
     price: 72865, localPrice: "440,000 BRL", type: "apartment", beds: 2, sqm: 53,
@@ -197,6 +214,7 @@ export const DEALS: Deal[] = [
   },
   {
     id: "ma-tangier-boukhalef",
+    image: "https://www.mubawab-media.com/ad/8/390/547F/h/1000072471_82947653.avif",
     title: "Ground-floor 2-bed with garden, Tangier",
     city: "Tangier", country: "Morocco", countryCode: "ma",
     price: 74371, localPrice: "800,000 MAD", type: "apartment", beds: 2, sqm: 58,
@@ -209,6 +227,7 @@ export const DEALS: Deal[] = [
   },
   {
     id: "ar-ituzaingo-firenze",
+    image: "https://imgar.zonapropcdn.com/avisos/resize/1/00/57/66/25/27/1200x1200/2013838598.jpg?isFirstImage=true",
     title: "New-build 2-amb with garage, Buenos Aires",
     city: "Ituzaingo, Buenos Aires", country: "Argentina", countryCode: "ar",
     price: 78890, localPrice: "91,400 USD", type: "apartment", beds: 1, sqm: 50,
@@ -221,6 +240,7 @@ export const DEALS: Deal[] = [
   },
   {
     id: "co-cartagena-serena",
+    image: "https://cdn2.infocasas.com.uy/repo/img/6a67fe1ba0713_infocdn__picture-f5fd2f367c4f46b8ab3ec176beedc00bjpg.jpg",
     title: "2-bed beach-rental play, Cartagena",
     city: "Cartagena", country: "Colombia", countryCode: "co",
     price: 145714, localPrice: "530,000,000 COP", type: "apartment", beds: 2, sqm: 64,
@@ -233,6 +253,7 @@ export const DEALS: Deal[] = [
   },
   {
     id: "mx-merida-conkal",
+    image: "https://img10.naventcdn.com/avisos/resize/18/01/49/35/20/44/1200x1200/1595681427.jpg?isFirstImage=true",
     title: "House with private pool, Merida",
     city: "Conkal, Merida", country: "Mexico", countryCode: "mx",
     price: 134340, localPrice: "2,650,000 MXN", type: "house", beds: null, sqm: 120,
@@ -245,7 +266,8 @@ export const DEALS: Deal[] = [
   },
 ];
 
-export const publishedDeals = () => DEALS.filter((d) => d.published !== false);
+export const publishedDeals = () =>
+  DEALS.filter((d) => d.published !== false && Boolean(d.image));
 export const featuredDeals = (n = 3) =>
   publishedDeals().filter((d) => d.featured).slice(0, n);
 
