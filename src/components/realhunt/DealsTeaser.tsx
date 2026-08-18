@@ -8,24 +8,33 @@ const DealsTeaser = () => {
 
   return (
     <section className="max-w-[1140px] mx-auto px-6 py-16 md:py-24">
-        <div className="mb-10 max-w-[680px]">
-          <div className="text-[12px] uppercase tracking-[0.2em] text-ink-soft">Deals</div>
-          <h2 className="font-display text-[34px] md:text-[46px] text-ink mt-3 leading-[1.05] tracking-[-0.02em]">
-            The best listings on earth, this week.
-          </h2>
-          <p className="mt-4 text-ink-muted text-[16px] leading-relaxed">
-            We read the portals so you don't. Every deal below was open and priced when we checked it,
-            with the numbers that make it interesting — and the catch that might kill it.
-          </p>
-        </div>
+      <div className="mb-10 max-w-[680px]">
+        <div className="text-[12px] uppercase tracking-[0.2em] text-ink-soft">Deals</div>
+        <h2 className="font-display text-[34px] md:text-[46px] text-ink mt-3 leading-[1.05] tracking-[-0.02em]">
+          The best listings on earth, this week.
+        </h2>
+        <p className="mt-4 text-ink-muted text-[16px] leading-relaxed">
+          We read the portals so you don't. Every deal below was open and priced when we checked it,
+          with the numbers that make it interesting — and the catch that might kill it.
+        </p>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {deals.map((d) => (
-            <Link
-              key={d.id}
-              to="/deals"
-              className="rh-card flex flex-col h-full hover:border-hairline-strong transition-colors"
-            >
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {deals.map((d) => (
+          <Link
+            key={d.id}
+            to="/deals"
+            className="rh-card flex flex-col h-full !p-0 overflow-hidden hover:border-hairline-strong transition-colors"
+          >
+            <div className="bg-[#F4F0E6]">
+              <img
+                src={d.image}
+                alt={`${d.title} — ${d.city}, ${d.country}`}
+                loading="lazy"
+                className="w-full h-[180px] object-cover"
+              />
+            </div>
+            <div className="p-6 flex flex-col flex-1">
               <div className="text-[12px] uppercase tracking-[0.2em] text-ink-soft">
                 {flagOf(d.countryCode)} {d.city}
               </div>
@@ -37,16 +46,17 @@ const DealsTeaser = () => {
               <div className="mt-5 pt-4 hairline-t text-[13px] text-ink flex items-center gap-1.5">
                 See the full deal <ArrowRight size={14} />
               </div>
-            </Link>
-          ))}
-        </div>
-
-        <div className="mt-8">
-          <Link to="/deals" className="rh-btn-primary">
-            Open the deals board
-            <ArrowRight size={16} />
+            </div>
           </Link>
-        </div>
+        ))}
+      </div>
+
+      <div className="mt-8">
+        <Link to="/deals" className="rh-btn-primary">
+          Open the deals board
+          <ArrowRight size={16} />
+        </Link>
+      </div>
     </section>
   );
 };
