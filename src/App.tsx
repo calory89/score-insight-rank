@@ -57,6 +57,7 @@ const Heatmap = React.lazy(() => import("./pages/Heatmap"));
 const BestDealsCountry = React.lazy(() => import("./pages/BestDealsCountry"));
 const MarketCity = React.lazy(() => import("./pages/MarketCity"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
+const Fit = React.lazy(() => import("./pages/Fit"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -152,6 +153,7 @@ const AnimatedRoutes = () => {
           <Route path="/market/:city" element={<PageTransition><MarketCity /></PageTransition>} />
           <Route path="/best-deals/:country" element={<PageTransition><BestDealsCountry /></PageTransition>} />
           <Route path="/heatmap" element={<PageTransition><Heatmap /></PageTransition>} />
+          <Route path="/fit" element={<PageTransition><Fit /></PageTransition>} />
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
       </AnimatePresence>
