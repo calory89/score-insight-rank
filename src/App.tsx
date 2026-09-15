@@ -58,6 +58,8 @@ const BestDealsCountry = React.lazy(() => import("./pages/BestDealsCountry"));
 const MarketCity = React.lazy(() => import("./pages/MarketCity"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 const Fit = React.lazy(() => import("./pages/Fit"));
+const Home = React.lazy(() => import("./pages/Home"));
+const Network = React.lazy(() => import("./pages/Network"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -110,7 +112,8 @@ const AnimatedRoutes = () => {
     <Suspense fallback={<SuspenseFallback />}>
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<PageTransition><IndexNew /></PageTransition>} />
+          <Route path="/" element={<PageTransition><Home /></PageTransition>} />
+          <Route path="/score" element={<PageTransition><IndexNew /></PageTransition>} />
           <Route path="/homescoring" element={<PageTransition><HomeScoring /></PageTransition>} />
           <Route path="/apply" element={<PageTransition><Apply /></PageTransition>} />
           <Route path="/projects/:slug" element={<PageTransition><ProjectDetail /></PageTransition>} />
@@ -154,6 +157,7 @@ const AnimatedRoutes = () => {
           <Route path="/best-deals/:country" element={<PageTransition><BestDealsCountry /></PageTransition>} />
           <Route path="/heatmap" element={<PageTransition><Heatmap /></PageTransition>} />
           <Route path="/fit" element={<PageTransition><Fit /></PageTransition>} />
+          <Route path="/network" element={<PageTransition><Network /></PageTransition>} />
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
       </AnimatePresence>
