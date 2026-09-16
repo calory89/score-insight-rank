@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
 import { Heart, Share2, ExternalLink, Lock, ArrowLeft, Check, MapPin, Calendar, Eye, MessageCircle, Phone } from "lucide-react";
-import { db, eur, FLAG, norm, cleanCap, IG, track, srcSet, EBC } from "@/lib/rh";
+import { db, eur, FLAG, norm, cleanCap, IG, track, srcSet, EBC, COSTS, totalCost, slug } from "@/lib/rh";
 
 const loadLeaflet = () => new Promise<any>((res) => {
   if ((window as any).L) return res((window as any).L);
@@ -21,6 +21,8 @@ const FindDetail = () => {
   const [idx, setIdx] = useState(0);
   const [auth, setAuth] = useState(false);
   const [views, setViews] = useState<number | null>(null);
+  const [social, setSocial] = useState<{ saves: number; asks: number } | null>(null);
+  const [hist, setHist] = useState<{ price_eur: number; created_at: string }[]>([]);
   const [similar, setSimilar] = useState<IG[]>([]);
   const [want, setWant] = useState(false);
   const [wantF, setWantF] = useState({ name: "", email: "", phone: "", message: "" });
@@ -38,6 +40,8 @@ const FindDetail = () => {
       if (!data) return;
       track("find_view", { find: shortcode });
       db.rpc("find_view_counts", { codes: [shortcode] }).then(({ data: v }: any) => setViews(v && v[0] ? Number(v[0].views) : 0));
+      db.rpc("find_social", { codes: [shortcode] }).then(({ data: v }: any) => v && v[0] && setSocial({ saves: Number(v[0].saves), asks: Number(v[0].asks) }));
+      db.from("price_history").select("price_eur,created_at").eq("find_id", data.id).order("created_at", { ascending: true }).then(({ data: h }: any) => setHist(h || []));
       const c = data.country_guess;
       db.from("ig_finds").select("id,shortcode,image_urls,price_eur,price_in_image,location_name,country_guess,is_beach,caption,posted_at,likes,source_account").neq("status", "hidden").neq("id", data.id).eq("country_guess", c).order("rank_score", { ascending: false }).limit(60).then(({ data: s }: any) => {
         let l: IG[] = (s || []).filter((x: IG) => x.image_urls?.length && (x.price_eur == null || x.price_eur <= 100000));
@@ -119,6 +123,10 @@ const FindDetail = () => {
               {f.sqm && <span>{f.sqm} m²</span>}{f.bedrooms && <span>{f.bedrooms} bedrooms</span>}
               {when && <span className="inline-flex items-center gap-1.5"><Calendar size={14} /> {when}</span>}
               {views != null && views > 0 && <span className="inline-flex items-center gap-1.5"><Eye size={14} /> {views.toLocaleString("en-GB")} viewed this week</span>}
+              {social && social.saves > 0 && <span className="inline-flex items-center gap-1.5"><Heart size={14} /> {social.saves} saved it</span>}
+              {social && social.asks > 0 && <span className="inline-flex items-center gap-1.5"><MessageCircle size={14} /> {social.asks} asked about it</span>}
+              {(f as any).verified && <span className="inline-flex items-center gap-1.5 text-ink font-medium">✓ Verified by RealHunt</span>}
+              {((f as any).status === "sold" || (f as any).status === "reserved") && <span className="px-2 py-0.5 rounded-full bg-red-600 text-white text-[12px] uppercase">{(f as any).status}</span>}
             </div>
 
             <div className="mt-8">
@@ -161,6 +169,15 @@ const FindDetail = () => {
                 </form>
               )}
             </div>
+
+            {hist.length > 1 && <div className="mt-6 text-[13px] text-ink-muted">Price history: {hist.map((h, i) => <span key={i}>{i > 0 && " → "}{eur(h.price_eur)} <span className="opacity-70">({new Date(h.created_at).toLocaleDateString("en-GB", { month: "short", year: "2-digit" })})</span></span>)}{hist[hist.length - 1].price_eur < Math.max(...hist.map((h) => h.price_eur)) && <span className="ml-2 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Price drop</span>}</div>}
+
+            {f.price_eur && COSTS[c] && (
+              <div className="mt-6 border border-hairline rounded-2xl bg-white p-5">
+                <div className="flex items-baseline justify-between gap-4 flex-wrap"><p className="font-display text-[17px] tracking-tight">What it really costs to buy</p><p className="font-display text-[26px] tabular-nums">~{eur(totalCost(f.price_eur, c)!)}</p></div>
+                <p className="text-[13px] text-ink-muted mt-1">Price {eur(f.price_eur)} + about {COSTS[c].pct}% taxes and fees{COSTS[c].fixed ? ` + ${eur(COSTS[c].fixed)} notary and registry` : ""}. {COSTS[c].note} Estimate for a foreign buyer, before any renovation. <Link to={`/guide/${slug(c)}`} className="underline text-ink">How to buy in {c} as a foreigner</Link></p>
+              </div>
+            )}
 
             {f.price_eur && (
               <div className="mt-6 border border-hairline rounded-2xl bg-white p-5 flex items-center justify-between gap-4 flex-wrap">

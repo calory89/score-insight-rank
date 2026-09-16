@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Menu, X, Heart, Bell, MessageSquare, User, LogOut, ChevronDown } from "lucide-react";
 import { fbLead } from "@/lib/fbpixel";
 import AuthModal from "@/components/realhunt/AuthModal";
+import CookieBanner from "@/components/realhunt/CookieBanner";
 
 const NAV_ITEMS = [
   { to: "/", label: "Deals" },
@@ -72,6 +73,7 @@ const RHNav = () => {
           </div>
         </div>
       )}
+      <CookieBanner />
       <AuthModal open={auth} onClose={() => setAuth(false)} title="Sign in to RealHunt" subtitle="Free. Save homes, set alerts and get everything about any home by email." />
     </header>
   );

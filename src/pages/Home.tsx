@@ -3,7 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
-import { Waves, Check, Heart, Search, Bell } from "lucide-react";
+import Onboarding from "@/components/realhunt/Onboarding";
+import { Waves, Check, Heart, Search, Bell, BadgeCheck, TrendingDown, Map as MapIcon, Layers } from "lucide-react";
 import { db, eur, FLAG, norm, slug, unslug, isNew, cleanCap, IG, EBC, MAX_PRICE, track, srcSet, score } from "@/lib/rh";
 
 const PRICE_CHIPS: [string, number][] = [["< €10k", 10000], ["< €25k", 25000], ["< €50k", 50000], ["< €100k", 100000]];
@@ -26,14 +27,19 @@ const Home = () => {
   const [alert, setAlert] = useState({ email: "", country: "Any", max: 50000 });
   const [alertSent, setAlertSent] = useState(false);
   const sentinel = useRef<HTMLDivElement>(null);
+  const [pref, setPref] = useState<{ country?: string | null; budget?: number | null }>({});
+  const [drops, setDrops] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    db.from("ig_finds").select("id,source_account,shortcode,caption,image_urls,posted_at,location_name,country_guess,price_eur,price_raw,likes,is_beach,price_in_image,sqm,bedrooms,hook,rank_score").neq("status", "hidden").order("posted_at", { ascending: false }).limit(600)
+    db.from("ig_finds").select("id,source_account,shortcode,caption,image_urls,posted_at,location_name,country_guess,price_eur,price_raw,likes,is_beach,price_in_image,sqm,bedrooms,hook,rank_score,verified,status").neq("status", "hidden").order("posted_at", { ascending: false }).limit(600)
       .then(({ data }: any) => setFinds((data || []).filter((f: IG) => f.image_urls && f.image_urls.length && (f.price_eur == null || f.price_eur <= MAX_PRICE)).sort((a: IG, b: IG) => score(b) - score(a))));
     track("home_view");
+    try { const ref = new URLSearchParams(location.search).get("ref"); if (ref) localStorage.setItem("rh_ref", ref); } catch {}
+    db.from("price_history").select("find_id,price_eur,created_at").order("created_at", { ascending: false }).limit(2000).then(({ data }: any) => { const by: Record<string, number[]> = {}; (data || []).forEach((r: any) => { (by[r.find_id] = by[r.find_id] || []).push(r.price_eur); }); setDrops(new Set(Object.entries(by).filter(([, v]) => v.length > 1 && v[0] < Math.max(...v)).map(([k]) => k))); });
   }, []);
   useEffect(() => {
-    if (!user) { setFavs(new Set()); return; }
+    if (!user) { setFavs(new Set()); setPref({}); return; }
+    db.from("profiles").select("interest_country,budget_max,referred_by").eq("user_id", user.id).maybeSingle().then(({ data }: any) => { if (!data) return; setPref({ country: data.interest_country, budget: data.budget_max }); try { const ref = localStorage.getItem("rh_ref"); if (ref && !data.referred_by) db.from("profiles").update({ referred_by: ref }).eq("user_id", user.id).then(() => {}); } catch {} });
     db.from("find_events").select("find_id").eq("user_id", user.id).eq("event", "favorite").then(({ data }: any) => setFavs(new Set((data || []).map((r: any) => r.find_id))));
   }, [user]);
 
@@ -47,11 +53,13 @@ const Home = () => {
 
   const shown = useMemo(() => {
     const qq = q.trim().toLowerCase();
+    const boost = (f: IG) => (pref.country && pref.country !== "Any" && norm(f.country_guess) === pref.country ? 1 : 0) + (pref.budget && f.price_eur && f.price_eur <= pref.budget ? 0.5 : 0);
     let l = finds.filter((f) => (country === "All" || norm(f.country_guess) === country) && (!beach || f.is_beach) && (!maxP || (f.price_eur != null && f.price_eur <= maxP)) && (!aParam || f.source_account === aParam) && (!qq || `${f.caption || ""} ${f.location_name || ""} ${f.country_guess || ""}`.toLowerCase().includes(qq)));
     const ebcOk = !aParam && (country === "All" || country === "Indonesia") && (!maxP || EBC.price_eur! <= maxP) && (!qq || "sumba indonesia beach cabin ecobeachcity".includes(qq));
+    if (pref.country || pref.budget) l = [...l].sort((a, b) => boost(b) - boost(a) || score(b) - score(a));
     if (ebcOk) l = l.length >= 2 ? [...l.slice(0, 2), EBC, ...l.slice(2)] : [...l, EBC];
     return l;
-  }, [finds, country, beach, maxP, q, aParam]);
+  }, [finds, country, beach, maxP, q, aParam, pref]);
   useEffect(() => { setLimit(PAGE); }, [country, beach, maxP, q, aParam]);
   useEffect(() => {
     const el = sentinel.current; if (!el) return;
@@ -87,6 +95,8 @@ const Home = () => {
           <button onClick={() => setShowSearch((v) => !v)} aria-label="Search" className={chip(showSearch || !!q)}><Search size={14} />{q ? q : ""}</button>
           <button onClick={() => setBeach((v) => !v)} aria-pressed={beach} className={chip(beach)}><Waves size={14} /> Beach</button>
           {PRICE_CHIPS.map(([l, v]) => <button key={v} onClick={() => setMaxP(maxP === v ? 0 : v)} aria-pressed={maxP === v} className={chip(maxP === v)}>{l}</button>)}
+          <Link to="/map" className={chip(false)}><MapIcon size={14} /> Map</Link>
+          <Link to="/swipe" className={chip(false) + " md:hidden"}><Layers size={14} /> Swipe</Link>
           <span className="w-px bg-hairline shrink-0 self-stretch my-1" />
           {["All", ...allCountries].map((k) => (
             <Link key={k} to={k === "All" ? "/" : `/country/${slug(k)}`} onClick={() => setCountry(k)} aria-pressed={country === k} className={chip(country === k)}>{k !== "All" && <span>{FLAG[k] || "🌍"}</span>}{k}</Link>
@@ -110,6 +120,9 @@ const Home = () => {
                   {f.price_eur && <span className="px-2 py-1 rounded-full bg-white text-ink text-[12px] font-semibold tabular-nums shadow">{eur(f.price_eur)}</span>}
                   {f.is_beach && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-sky-500/90 text-white text-[11px] font-medium shadow"><Waves size={11} /> Beach</span>}
                   {isNew(f.posted_at) && <span className="px-2 py-1 rounded-full bg-emerald-500/90 text-white text-[11px] font-medium shadow">New</span>}
+                  {drops.has(f.id) && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/90 text-white text-[11px] font-medium shadow"><TrendingDown size={11} /> Price drop</span>}
+                  {(f as any).verified && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-ink/90 text-white text-[11px] font-medium shadow"><BadgeCheck size={11} /> Verified</span>}
+                  {((f as any).status === "sold" || (f as any).status === "reserved") && <span className="px-2 py-1 rounded-full bg-red-600/90 text-white text-[11px] font-medium shadow uppercase">{(f as any).status}</span>}
                 </div>
                 {f.id !== "ebc" && <button onClick={(e) => toggleFav(e, f)} aria-label="Save" className={`absolute bottom-3 right-3 h-9 w-9 rounded-full bg-white/90 shadow inline-flex items-center justify-center ${favs.has(f.id) ? "text-red-500" : "text-ink"}`}><Heart size={16} fill={favs.has(f.id) ? "currentColor" : "none"} /></button>}
                 <div className="absolute inset-x-0 bottom-0 p-3 md:p-4 pr-14 text-white">
@@ -150,7 +163,8 @@ const Home = () => {
         <span>Browse by country:</span>{allCountries.map((c) => <Link key={c} to={`/country/${slug(c)}`} className="underline hover:text-ink">{c}</Link>)}
       </section>
 
-      <footer className="border-t border-hairline"><div className="max-w-[1240px] mx-auto px-4 md:px-6 py-8 flex flex-wrap gap-x-8 gap-y-3 text-[13px] text-ink-muted"><Link to="/network" className="hover:text-ink">For developers</Link><Link to="/fit" className="hover:text-ink">Can I afford it?</Link><Link to="/score" className="hover:text-ink">Score a listing</Link><Link to="/method" className="hover:text-ink">Method</Link><Link to="/legal/terms" className="hover:text-ink">Terms</Link><span className="ml-auto">Listings belong to their original posters. We link, we do not sell.</span></div></footer>
+      <footer className="border-t border-hairline"><div className="max-w-[1240px] mx-auto px-4 md:px-6 py-8 flex flex-wrap gap-x-8 gap-y-3 text-[13px] text-ink-muted"><Link to="/sell" className="hover:text-ink">Sell your home here</Link><Link to="/map" className="hover:text-ink">Map</Link><Link to="/network" className="hover:text-ink">For developers</Link><Link to="/fit" className="hover:text-ink">Can I afford it?</Link><Link to="/score" className="hover:text-ink">Score a listing</Link><Link to="/method" className="hover:text-ink">Method</Link><Link to="/legal/terms" className="hover:text-ink">Terms</Link><Link to="/legal/privacy" className="hover:text-ink">Privacy</Link><Link to="/legal/cookies" className="hover:text-ink">Cookies</Link><Link to="/legal/takedown" className="hover:text-ink">Content removal</Link><span className="ml-auto">© Equinox Investment Group LLC. Listings belong to their original posters. We link, we do not sell.</span></div></footer>
+      <Onboarding />
       <AuthModal open={auth} onClose={() => setAuth(false)} title="Save this home" subtitle="Free. Sign in and we email you everything about the homes you save." />
     </div>
   );

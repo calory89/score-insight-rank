@@ -21,6 +21,10 @@ const AdminActivity = () => {
   const [reqs, setReqs] = useState<R[]>([]);
   const [alerts, setAlerts] = useState<A[]>([]);
   const [funnel, setFunnel] = useState<Record<string, number>>({});
+  const [daily, setDaily] = useState<{ d: string; n: number }[]>([]);
+  const [subs, setSubs] = useState<any[]>([]);
+  const [findQ, setFindQ] = useState("");
+  const [findHit, setFindHit] = useState<any | null>(null);
   const fmt = (s: string | null) => (s ? new Date(s).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "");
 
   useEffect(() => { document.title = "Admin · Activity"; }, []);
@@ -32,8 +36,10 @@ const AdminActivity = () => {
       db.from("admin_user_activity").select("*").order("last_event", { ascending: false, nullsFirst: false }).limit(500).then(({ data }: any) => setUsers(data || []));
       db.from("find_events").select("id,user_id,event,created_at,ig_finds(source_account,caption,post_url,price_eur)").order("created_at", { ascending: false }).limit(200).then(({ data }: any) => setEvents(data || []));
       db.from("contact_requests").select("id,email,company,message,source,created_at").in("source", ["network", "network_analyze"]).order("created_at", { ascending: false }).limit(200).then(({ data }: any) => setLeads(data || []));
-      db.from("home_requests").select("id,name,email,phone,message,find_shortcode,created_at,ig_finds(location_name,country_guess,price_eur)").order("created_at", { ascending: false }).limit(200).then(({ data }: any) => setReqs(data || []));
+      db.from("home_requests").select("id,name,email,phone,message,find_shortcode,created_at,contacted,sold,ig_finds(location_name,country_guess,price_eur)").order("created_at", { ascending: false }).limit(200).then(({ data }: any) => setReqs(data || []));
       db.from("alerts").select("*").order("created_at", { ascending: false }).limit(200).then(({ data }: any) => setAlerts(data || []));
+      db.from("submissions").select("*").order("created_at", { ascending: false }).limit(100).then(({ data }: any) => setSubs(data || []));
+      db.from("rh_events").select("created_at,sid").eq("event", "home_view").gte("created_at", new Date(Date.now() - 14 * 86400000).toISOString()).limit(20000).then(({ data }: any) => { const m: Record<string, Set<string>> = {}; (data || []).forEach((e: any) => { const d = e.created_at.slice(5, 10); (m[d] = m[d] || new Set()).add(e.sid); }); setDaily(Object.entries(m).sort().map(([d, v]) => ({ d, n: v.size }))); });
       db.from("rh_events").select("event,sid").gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()).limit(5000).then(({ data }: any) => { const m: Record<string, Set<string>> = {}; (data || []).forEach((e: any) => { (m[e.event] = m[e.event] || new Set()).add(e.sid); }); const o: Record<string, number> = {}; Object.entries(m).forEach(([k, v]) => (o[k] = v.size)); setFunnel(o); });
       db.from("ig_finds").select("source_account").then(({ data }: any) => setFinds({ n: (data || []).length, accounts: new Set((data || []).map((x: any) => x.source_account)).size }));
     });
@@ -64,14 +70,33 @@ const AdminActivity = () => {
         </div>
 
         <section>
+          <h2 className="font-display text-[20px] tracking-tight mb-3">Visitors per day, last 14 days</h2>
+          <div className="flex items-end gap-1 h-28 border border-hairline rounded-xl bg-white p-3">{daily.map((x) => { const mx = Math.max(1, ...daily.map((y) => y.n)); return <div key={x.d} className="flex-1 flex flex-col items-center gap-1" title={`${x.d}: ${x.n}`}><div className="w-full bg-sky-500 rounded-t" style={{ height: `${Math.max(4, (x.n / mx) * 80)}px` }} /><span className="text-[9px] text-ink-muted">{x.d.slice(3)}</span></div>; })}</div>
+        </section>
+
+        <section>
+          <h2 className="font-display text-[20px] tracking-tight mb-3">Mark a home: verified / reserved / sold</h2>
+          <div className="flex flex-wrap gap-2 items-center"><input value={findQ} onChange={(e) => setFindQ(e.target.value)} placeholder="shortcode or /find/xxx" className="border border-hairline rounded-full px-4 py-2 text-[14px] bg-white" /><button onClick={() => { const sc = findQ.trim().split("/").pop(); db.from("ig_finds").select("id,shortcode,location_name,price_eur,status,verified").eq("shortcode", sc).maybeSingle().then(({ data }: any) => setFindHit(data)); }} className="rh-btn-primary !px-4 !py-2 !text-[13px]">Find</button>
+            {findHit && <span className="text-[13px]">{findHit.location_name} · €{findHit.price_eur} · {findHit.status} · {findHit.verified ? "verified" : "not verified"}</span>}
+            {findHit && ["new", "reserved", "sold", "hidden"].map((st) => <button key={st} onClick={async () => { await db.rpc("admin_set_find", { p_id: findHit.id, p_status: st, p_verified: null }); setFindHit({ ...findHit, status: st }); }} className={`px-3 py-1.5 rounded-full border text-[12px] ${findHit.status === st ? "bg-ink text-paper border-ink" : "border-hairline"}`}>{st}</button>)}
+            {findHit && <button onClick={async () => { await db.rpc("admin_set_find", { p_id: findHit.id, p_status: null, p_verified: !findHit.verified }); setFindHit({ ...findHit, verified: !findHit.verified }); }} className="px-3 py-1.5 rounded-full border border-hairline text-[12px]">{findHit.verified ? "Unverify" : "Mark verified"}</button>}
+          </div>
+        </section>
+
+        <section>
+          <h2 className="font-display text-[20px] tracking-tight mb-3">Seller submissions ({subs.filter((x) => x.status === "pending").length} pending)</h2>
+          <div className="flex flex-col gap-2">{subs.map((x) => <div key={x.id} className="border border-hairline rounded-xl bg-white p-3 text-[13px] flex flex-wrap gap-3 items-start"><div className="flex gap-1">{(x.image_urls || []).slice(0, 3).map((u: string) => <a key={u} href={u} target="_blank" rel="noreferrer"><img src={u} alt="" className="h-16 w-16 object-cover rounded-lg" /></a>)}</div><div className="flex-1 min-w-[200px]"><b>€{x.price_eur} · {x.location}, {x.country}</b> · <span className={x.status === "pending" ? "text-amber-600" : x.status === "approved" ? "text-emerald-600" : "text-ink-muted"}>{x.status}</span><br />{x.name} · {x.email} · {x.contact}<br /><span className="text-ink-muted">{(x.description || "").slice(0, 200)}</span></div>{x.status === "pending" && <div className="flex gap-1"><button onClick={async () => { const sc = "rh" + x.id.slice(0, 8); await db.from("ig_finds").insert({ source_account: "realhunt", post_url: "https://realhunt.co/sell", shortcode: sc, caption: x.description, caption_en: x.description, image_urls: x.image_urls, posted_at: new Date().toISOString(), location_name: x.location, country_guess: x.country, price_eur: x.price_eur, status: "new", verified: true, hook: `${x.location}: direct from the owner`, rank_score: 0.9 }); await db.from("submissions").update({ status: "approved" }).eq("id", x.id); setSubs(subs.map((y) => (y.id === x.id ? { ...y, status: "approved" } : y))); }} className="px-3 py-1.5 rounded-full bg-ink text-paper text-[12px]">Approve</button><button onClick={async () => { await db.from("submissions").update({ status: "rejected" }).eq("id", x.id); setSubs(subs.map((y) => (y.id === x.id ? { ...y, status: "rejected" } : y))); }} className="px-3 py-1.5 rounded-full border border-hairline text-[12px]">Reject</button></div>}</div>)}{subs.length === 0 && <p className="text-ink-muted text-[13px]">No submissions yet.</p>}</div>
+        </section>
+
+        <section>
           <h2 className="font-display text-[20px] tracking-tight mb-3">Funnel, last 7 days (unique visitors)</h2>
           <div className="flex flex-wrap gap-2">{[["home_view", "Home"], ["card_click", "Opened a home"], ["find_view", "Viewed a home"], ["gate_click", "Hit the login gate"], ["auth_google", "Google"], ["auth_magic", "Email link"], ["favorite", "Saved"], ["want_open", "Opened ask form"], ["want_this", "Asked about a home"], ["ebc_view", "EBC page"], ["ebc_call", "EBC call click"], ["alert", "Alert set"], ["newsletter", "Newsletter"]].map(([k, l]) => <span key={k} className="border border-hairline rounded-xl bg-white px-3 py-2 text-[13px]"><b className="font-display text-[18px]">{funnel[k] || 0}</b> <span className="text-ink-muted">{l}</span></span>)}</div>
         </section>
 
         <section>
-          <h2 className="font-display text-[20px] tracking-tight mb-3">"I want this" requests</h2>
-          <div className="overflow-x-auto border border-hairline rounded-xl bg-white"><table className="w-full border-collapse"><thead><tr><Th c="When" /><Th c="Name" /><Th c="Email" /><Th c="Phone" /><Th c="Home" /><Th c="Message" /></tr></thead><tbody>
-            {reqs.map((r) => <tr key={r.id}><Td c={fmt(r.created_at)} m /><Td c={r.name || ""} /><Td c={r.email} /><Td c={r.phone || ""} /><Td c={r.find_shortcode ? <Link to={`/find/${r.find_shortcode}`} className="underline">{r.ig_finds?.location_name || r.ig_finds?.country_guess || r.find_shortcode}{r.ig_finds?.price_eur ? " · €" + r.ig_finds.price_eur.toLocaleString("en-GB") : ""}</Link> : ""} /><Td c={r.message || ""} m /></tr>)}
+          <div className="flex items-center justify-between mb-3"><h2 className="font-display text-[20px] tracking-tight">"I want this" requests</h2><button onClick={() => { const rows = [["when", "name", "email", "phone", "home", "message", "contacted", "sold"], ...reqs.map((r) => [r.created_at, r.name, r.email, r.phone, r.find_shortcode, (r.message || "").replace(/\n/g, " "), (r as any).contacted, (r as any).sold])]; const csv = rows.map((r) => r.map((v) => `"${String(v ?? "").replace(/"/g, "''")}"`).join(",")).join("\n"); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "realhunt-leads.csv"; a.click(); }} className="px-3 py-1.5 rounded-full border border-hairline text-[12px]">Export CSV</button></div>
+          <div className="overflow-x-auto border border-hairline rounded-xl bg-white"><table className="w-full border-collapse"><thead><tr><Th c="When" /><Th c="Name" /><Th c="Email" /><Th c="Phone" /><Th c="Home" /><Th c="Message" /><Th c="Status" /></tr></thead><tbody>
+            {reqs.map((r: any) => <tr key={r.id}><Td c={fmt(r.created_at)} m /><Td c={r.name || ""} /><Td c={r.email} /><Td c={r.phone || ""} /><Td c={r.find_shortcode ? <Link to={`/find/${r.find_shortcode}`} className="underline">{r.ig_finds?.location_name || r.ig_finds?.country_guess || r.find_shortcode}{r.ig_finds?.price_eur ? " · €" + r.ig_finds.price_eur.toLocaleString("en-GB") : ""}</Link> : ""} /><Td c={r.message || ""} m /><Td c={<span className="flex gap-1"><button onClick={async () => { await db.from("home_requests").update({ contacted: !r.contacted }).eq("id", r.id); setReqs(reqs.map((x: any) => (x.id === r.id ? { ...x, contacted: !r.contacted } : x))); }} className={`px-2 py-1 rounded-full border text-[11px] ${r.contacted ? "bg-ink text-paper border-ink" : "border-hairline"}`}>contacted</button><button onClick={async () => { await db.from("home_requests").update({ sold: !r.sold }).eq("id", r.id); setReqs(reqs.map((x: any) => (x.id === r.id ? { ...x, sold: !r.sold } : x))); }} className={`px-2 py-1 rounded-full border text-[11px] ${r.sold ? "bg-emerald-600 text-white border-emerald-600" : "border-hairline"}`}>sold</button></span>} /></tr>)}
             {reqs.length === 0 && <tr><Td c="No requests yet." m /></tr>}
           </tbody></table></div>
         </section>

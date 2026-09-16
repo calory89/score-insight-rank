@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
-import { Heart, Bell, MessageSquare, User, LogOut, Check, Trash2 } from "lucide-react";
+import { Heart, Bell, MessageSquare, User, LogOut, Check, Trash2, Share2, Gift, Columns } from "lucide-react";
 import { db, eur, FLAG, norm, IG, srcSet, track } from "@/lib/rh";
 
 const TABS = [["profile", "Profile", User], ["saved", "Saved homes", Heart], ["alerts", "Alerts", Bell], ["requests", "My requests", MessageSquare]] as const;
@@ -21,18 +21,21 @@ const Account = () => {
   const [reqs, setReqs] = useState<any[]>([]);
   const [ok, setOk] = useState(false);
   const [na, setNa] = useState({ country: "Any", max: 50000, beach: false });
+  const [sel, setSel] = useState<string[]>([]);
+  const [copied, setCopied] = useState("");
+  const copy = (t: string, k: string) => { navigator.clipboard?.writeText(t).then(() => { setCopied(k); setTimeout(() => setCopied(""), 1600); }); };
 
   useEffect(() => { document.title = "Your account · RealHunt"; }, []);
   useEffect(() => {
     if (!user) { setAuth(true); return; }
     setAuth(false);
-    db.from("profiles").select("email,username,phone,interest_country,budget_max").eq("user_id", user.id).maybeSingle().then(({ data }: any) => setP(data || { email: user.email }));
+    db.from("profiles").select("email,username,phone,interest_country,budget_max,referral_code,saved_public").eq("user_id", user.id).maybeSingle().then(({ data }: any) => setP(data || { email: user.email }));
     db.from("find_events").select("created_at, ig_finds(id,shortcode,image_urls,price_eur,price_in_image,location_name,country_guess,hook)").eq("user_id", user.id).eq("event", "favorite").order("created_at", { ascending: false }).then(({ data }: any) => setSaved((data || []).map((r: any) => r.ig_finds).filter(Boolean)));
     db.from("alerts").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).then(({ data }: any) => setAlerts(data || []));
     db.from("home_requests").select("id,created_at,message,find_shortcode,ig_finds(location_name,country_guess,price_eur,hook)").eq("user_id", user.id).order("created_at", { ascending: false }).then(({ data }: any) => setReqs(data || []));
   }, [user]);
 
-  const save = async (e: React.FormEvent) => { e.preventDefault(); if (!user) return; await db.from("profiles").update({ username: p.username, phone: p.phone, interest_country: p.interest_country, budget_max: p.budget_max }).eq("user_id", user.id); setOk(true); setTimeout(() => setOk(false), 1800); track("profile_saved"); };
+  const save = async (e: React.FormEvent) => { e.preventDefault(); if (!user) return; await db.from("profiles").update({ username: p.username, phone: p.phone, interest_country: p.interest_country, budget_max: p.budget_max, onboarded: true }).eq("user_id", user.id); setOk(true); setTimeout(() => setOk(false), 1800); track("profile_saved"); };
   const signOut = async () => { track("sign_out"); await supabase.auth.signOut(); nav("/"); };
   const addAlert = async (e: React.FormEvent) => { e.preventDefault(); if (!user) return; const row = { email: p?.email || user.email, country: na.country === "Any" ? null : na.country, max_price: na.max, beach: na.beach, user_id: user.id }; const { data } = await db.from("alerts").insert(row).select().single(); setAlerts([data, ...alerts]); track("alert"); };
   const delAlert = async (id: string) => { setAlerts(alerts.filter((a) => a.id !== id)); await db.from("alerts").delete().eq("id", id); };
@@ -66,12 +69,14 @@ const Account = () => {
                 <label className="text-[12px] text-ink-muted">Max budget<select value={p.budget_max || 50000} onChange={(e) => setP({ ...p, budget_max: Number(e.target.value) })} className={inp + " w-full mt-1"}>{[10000, 25000, 50000, 100000].map((v) => <option key={v} value={v}>{eur(v)}</option>)}</select></label>
               </div>
               <button className="rh-btn-primary self-start inline-flex items-center gap-2 mt-2">{ok ? <><Check size={15} /> Saved</> : "Save"}</button>
+              {p.referral_code && <div className="mt-6 border border-hairline rounded-2xl bg-white p-5"><p className="font-display text-[18px] inline-flex items-center gap-2"><Gift size={16} /> Invite a friend</p><p className="text-[13px] text-ink-muted mt-1">Both of you get new homes 24 hours before everyone else.</p><div className="mt-3 flex gap-2"><input readOnly value={`https://realhunt.co/?ref=${p.referral_code}`} className={inp + " flex-1 text-[13px]"} /><button type="button" onClick={() => copy(`https://realhunt.co/?ref=${p.referral_code}`, "ref")} className="rh-btn-primary !px-4 !py-2.5 !text-[13px]">{copied === "ref" ? "Copied" : "Copy"}</button></div></div>}
             </form>
           )}
 
           {user && tab === "saved" && (
             <div>
-              <h1 className="font-display text-[30px] tracking-tight mb-4">Saved homes</h1>
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4"><h1 className="font-display text-[30px] tracking-tight">Saved homes</h1><div className="flex gap-2">{sel.length >= 2 && <Link to={`/compare?ids=${sel.join(",")}`} className="rh-btn-primary !px-4 !py-2 !text-[13px] inline-flex items-center gap-1.5"><Columns size={14} /> Compare {sel.length}</Link>}{p?.username && <button onClick={async () => { const v = !p.saved_public; setP({ ...p, saved_public: v }); await db.from("profiles").update({ saved_public: v }).eq("user_id", user!.id); if (v) copy(`https://realhunt.co/c/${p.username}`, "col"); track("share_list", { meta: { v } }); }} className="px-4 py-2 rounded-full border border-hairline text-[13px] hover:border-ink inline-flex items-center gap-1.5"><Share2 size={14} /> {p.saved_public ? (copied === "col" ? "Link copied" : "Public, copy link") : "Share my list"}</button>}</div></div>
+              {saved.length > 1 && <p className="text-[12px] text-ink-muted mb-3">Tick 2 or 3 homes to compare them side by side.{!p?.username && " Add a name in your profile to share your list."}</p>}
               {saved.length === 0 && <p className="text-ink-muted">Nothing saved yet. Tap the heart on any home. <Link to="/" className="underline text-ink">Browse deals</Link></p>}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-5">
                 {saved.map((f) => { const c = norm(f.country_guess); return (
@@ -80,6 +85,7 @@ const Account = () => {
                     <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/70 to-transparent" />
                     <span className="absolute top-2.5 right-2.5 px-2 py-1 rounded-full bg-white/90 text-ink text-[11px] font-medium shadow">{FLAG[c] || "🌍"} {c}</span>
                     {f.price_eur && <span className="absolute top-2.5 left-2.5 px-2 py-1 rounded-full bg-white text-ink text-[12px] font-semibold tabular-nums shadow">{eur(f.price_eur)}</span>}
+                    <label onClick={(e) => e.stopPropagation()} className="absolute bottom-3 left-3 h-9 w-9 rounded-full bg-white/90 shadow inline-flex items-center justify-center"><input type="checkbox" checked={sel.includes(f.shortcode)} onChange={(e) => { e.stopPropagation(); setSel(e.target.checked ? [...sel, f.shortcode].slice(-3) : sel.filter((x) => x !== f.shortcode)); }} /></label>
                     <button onClick={(e) => { e.preventDefault(); unsave(f); }} aria-label="Remove" className="absolute bottom-3 right-3 h-9 w-9 rounded-full bg-white/90 shadow inline-flex items-center justify-center text-red-500"><Heart size={16} fill="currentColor" /></button>
                     <div className="absolute inset-x-0 bottom-0 p-3 pr-14 text-white"><p className="text-[12px] line-clamp-2">{f.hook || f.location_name || c}</p></div>
                   </Link>); })}

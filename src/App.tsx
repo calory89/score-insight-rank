@@ -61,6 +61,13 @@ const Fit = React.lazy(() => import("./pages/Fit"));
 const Ebc = React.lazy(() => import("./pages/Ebc"));
 const Saved = React.lazy(() => import("./pages/Saved"));
 const Account = React.lazy(() => import("./pages/Account"));
+const MapPage = React.lazy(() => import("./pages/MapPage"));
+const Swipe = React.lazy(() => import("./pages/Swipe"));
+const Compare = React.lazy(() => import("./pages/Compare"));
+const Guide = React.lazy(() => import("./pages/Guide"));
+const Sell = React.lazy(() => import("./pages/Sell"));
+const Collection = React.lazy(() => import("./pages/Collection"));
+const LegalPage = React.lazy(() => import("./pages/legal/Legal"));
 const Home = React.lazy(() => import("./pages/Home"));
 const Network = React.lazy(() => import("./pages/Network"));
 const Finds = React.lazy(() => import("./pages/Finds"));
@@ -169,6 +176,14 @@ const AnimatedRoutes = () => {
         <Route path="/from/:account" element={<Home />} />
         <Route path="/account" element={<Account />} />
         <Route path="/account/:tab" element={<Account />} />
+        <Route path="/map" element={<MapPage />} />
+        <Route path="/swipe" element={<Swipe />} />
+        <Route path="/compare" element={<Compare />} />
+        <Route path="/guide/:country" element={<Guide />} />
+        <Route path="/sell" element={<Sell />} />
+        <Route path="/c/:username" element={<Collection />} />
+        <Route path="/legal/cookies" element={<LegalPage page="cookies" />} />
+        <Route path="/legal/takedown" element={<LegalPage page="takedown" />} />
         <Route path="/network" element={<PageTransition><Network /></PageTransition>} />
           <Route path="/finds" element={<PageTransition><Finds /></PageTransition>} />
           <Route path="/find/:shortcode" element={<PageTransition><FindDetail /></PageTransition>} />

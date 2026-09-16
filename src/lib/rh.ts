@@ -27,3 +27,27 @@ export const srcSet = (u: string) => (u.endsWith(".webp") ? `${u.replace(/\.webp
 
 // score = recency + engagement, used for default sort
 export const score = (f: IG) => { if (f.rank_score != null) return f.rank_score * 10; const age = f.posted_at ? (Date.now() - new Date(f.posted_at).getTime()) / 86400000 : 60; const likes = Math.log10((f.likes || 0) + 10); return likes * 2 - age / 10; };
+
+// Estimated purchase costs on top of the price, by country (transfer tax, notary, registry, agent when the buyer pays). Rough, for orientation only.
+export const COSTS: Record<string, { pct: number; fixed: number; note: string }> = {
+  Italy: { pct: 10, fixed: 2500, note: "9% registration tax on cadastral value for a second home (2% as main residence), notary and registry about €2,500, agent 3% plus VAT if there is one." },
+  Spain: { pct: 9, fixed: 1500, note: "Transfer tax 6 to 10% depending on the region, notary and registry about €1,500, agent usually paid by the seller. Add a lawyer, about €1,500." },
+  Portugal: { pct: 7, fixed: 1200, note: "IMT 0 to 8% on a sliding scale, stamp duty 0.8%, notary and registry about €1,200. Non-resident needs a NIF." },
+  France: { pct: 8, fixed: 0, note: "Notaire fees and taxes 7 to 8% on older homes. No separate agent fee if the listing says FAI." },
+  Greece: { pct: 5, fixed: 1500, note: "Transfer tax 3%, notary about 1.5%, lawyer about 1.5%, registry 0.5%. Add a tax number (AFM)." },
+  Croatia: { pct: 4, fixed: 1000, note: "Transfer tax 3%, notary and court about €1,000. Non-EU buyers need ministry approval." },
+  Bulgaria: { pct: 4, fixed: 800, note: "Local transfer tax 2 to 3%, notary about 1%. Foreigners cannot own land directly, apartments are fine." },
+  Romania: { pct: 3, fixed: 800, note: "Notary about 1 to 2%, registration 0.15%. EU citizens can buy land, others need a company." },
+  Japan: { pct: 8, fixed: 1500, note: "Acquisition tax 3 to 4%, registration about 2%, agent 3% plus ¥60,000, stamp duty. Foreigners can own freehold." },
+  Sweden: { pct: 2, fixed: 800, note: "Stamp duty 1.5% plus mortgage registration if any. No notary. Anyone can buy." },
+  Norway: { pct: 3, fixed: 500, note: "Document fee 2.5%. No notary. Anyone can buy." },
+  Denmark: { pct: 1, fixed: 1500, note: "Registration 0.6% plus about DKK 1,850. Non-residents need Ministry of Justice permission unless from the EU and moving in." },
+  Finland: { pct: 3, fixed: 500, note: "Transfer tax 3% for real estate, 1.5% for housing company shares. No notary." },
+  Germany: { pct: 10, fixed: 1500, note: "Transfer tax 3.5 to 6.5%, notary and registry about 2%, agent up to 3.57% if any." },
+  Turkey: { pct: 5, fixed: 1000, note: "Title deed fee 4%, agent 2%, plus valuation and insurance. Some military zones are off limits to foreigners." },
+  Albania: { pct: 3, fixed: 700, note: "Notary and registration about 2 to 3%. Foreigners can buy apartments, land needs a company." },
+  Indonesia: { pct: 0, fixed: 0, note: "Leasehold in an eco village. Land and connections are itemised on the page." },
+};
+export const totalCost = (price: number, country: string | null | undefined) => { const c = COSTS[country || ""]; return c ? Math.round(price * (1 + c.pct / 100) + c.fixed) : null; };
+export const COMPANY = { name: "Equinox Investment Group LLC", address: "30 N Gould St Ste N, Sheridan, WY 82801, United States", email: "hello@realhunt.co" };
+export const consent = () => { try { return localStorage.getItem("rh_consent"); } catch { return null; } };
