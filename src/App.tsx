@@ -60,6 +60,8 @@ const NotFound = React.lazy(() => import("./pages/NotFound"));
 const Fit = React.lazy(() => import("./pages/Fit"));
 const Home = React.lazy(() => import("./pages/Home"));
 const Network = React.lazy(() => import("./pages/Network"));
+const Finds = React.lazy(() => import("./pages/Finds"));
+const AdminActivity = React.lazy(() => import("./pages/AdminActivity"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -158,6 +160,8 @@ const AnimatedRoutes = () => {
           <Route path="/heatmap" element={<PageTransition><Heatmap /></PageTransition>} />
           <Route path="/fit" element={<PageTransition><Fit /></PageTransition>} />
           <Route path="/network" element={<PageTransition><Network /></PageTransition>} />
+          <Route path="/finds" element={<PageTransition><Finds /></PageTransition>} />
+          <Route path="/admin/activity" element={<PageTransition><AdminActivity /></PageTransition>} />
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>
       </AnimatePresence>

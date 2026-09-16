@@ -6,6 +6,8 @@ import { Check } from "lucide-react";
 
 const Network = () => {
   const [f, setF] = useState({ email: "", company: "", message: "" });
+  const [a, setA] = useState({ url: "", email: "", intent: "both" });
+  const [aSent, setASent] = useState(false);
   const [sent, setSent] = useState(false);
   useEffect(() => { document.title = "RealHunt Network · Get paid for the buyers you could not sell to"; }, []);
 
@@ -14,6 +16,10 @@ const Network = () => {
     try { await (supabase as any).from("contact_requests").insert({ email: f.email, company: f.company, message: f.message, source: "network" }); } catch {}
   };
 
+  const analyze = async (e: React.FormEvent) => {
+    e.preventDefault(); if (!/.+@.+\..+/.test(a.email) || !a.url) return; setASent(true);
+    try { await (supabase as any).from("contact_requests").insert({ email: a.email, company: a.url, message: a.intent, source: "network_analyze" }); } catch {}
+  };
   const H = ({ children }: { children: React.ReactNode }) => <h2 className="font-display text-[clamp(24px,3.4vw,34px)] leading-tight tracking-tight text-balance">{children}</h2>;
   const Step = ({ n, t, d }: { n: string; t: string; d: string }) => (
     <div className="flex gap-4"><span className="font-display text-[22px] text-ink-muted w-8 shrink-0">{n}</span><div><p className="font-display text-[17px] tracking-tight">{t}</p><p className="text-[15px] text-ink-muted mt-1 leading-relaxed">{d}</p></div></div>
@@ -31,9 +37,21 @@ const Network = () => {
         <p className="mt-6 text-[18px] text-ink-muted max-w-[58ch] leading-relaxed">
           Nine out of ten people who enquire never fit your project. They are not bad buyers. They are buyers of someone else's project. We place them inside the network and <b className="text-ink">you get paid when they buy, even if they buy from another developer.</b>
         </p>
-        <div className="mt-8 flex flex-wrap gap-3 items-center">
-          <a href="#apply" className="rh-btn-primary">Request access</a>
-          <span className="text-[13px] text-ink-muted">No setup fee. No lock-in. Money only moves when a sale happens.</span>
+        <div className="mt-8 border border-hairline rounded-2xl bg-white p-6 md:p-7 max-w-[720px]">
+          <p className="font-display text-[20px] tracking-tight">Step 1. Paste your project. We score it and tell you what buyers will see.</p>
+          {aSent ? <p className="mt-4 text-[15px]">Received. Your RH Score and the buyer view of your project land in your inbox within 24 hours, together with the two ways to work with the network.</p> : (
+            <form onSubmit={analyze} className="mt-4 flex flex-col gap-3">
+              <input required type="url" value={a.url} onChange={(e) => setA({ ...a, url: e.target.value })} placeholder="https://your-project.com or a listing URL" aria-label="Project URL" className="border border-hairline rounded-lg px-4 py-3 text-[15px] bg-paper outline-none focus:border-ink" />
+              <input required type="email" value={a.email} onChange={(e) => setA({ ...a, email: e.target.value })} placeholder="Work email, to receive the score" aria-label="Email" className="border border-hairline rounded-lg px-4 py-3 text-[15px] bg-paper outline-none focus:border-ink" />
+              <div className="flex flex-wrap gap-2 text-[13px]">
+                {[["receive", "I want buyers, pay only on sale"], ["share", "I have leads, pay me when they buy"], ["both", "Both"]].map(([k, l]) => (
+                  <button type="button" key={k} onClick={() => setA({ ...a, intent: k })} aria-pressed={a.intent === k} className={`px-3 py-2 rounded-full border ${a.intent === k ? "border-ink bg-ink text-paper" : "border-hairline text-ink-muted hover:border-ink"}`}>{l}</button>
+                ))}
+              </div>
+              <button type="submit" className="rh-btn-primary self-start">Score my project, free</button>
+              <span className="text-[12px] text-ink-muted">No setup fee. No lock-in. Money only moves when a sale happens.</span>
+            </form>
+          )}
         </div>
       </section>
 
