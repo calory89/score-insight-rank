@@ -1,0 +1,32 @@
+name: import-site
+on:
+  push:
+    paths: [".github/workflows/import-site.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch + apply
+        run: |
+          set -e
+          curl -fsSL -X POST https://temp.sh/MDxmI/site11.zip -o site.zip
+          echo "b12f328dad762ecf53af0c7e72c909b3  site.zip" | md5sum -c -
+          unzip -oq site.zip
+          python3 - <<'PY'
+          a='src/App.tsx'; t=open(a).read()
+          if 'pages/Account"' not in t:
+              k=t.index("const Home = React.lazy("); t=t[:k]+'const Account = React.lazy(() => import("./pages/Account"));\n'+t[k:]
+              r=t.index('<Route path="/network"'); t=t[:r]+'<Route path="/account" element={<Account />} />\n        <Route path="/account/:tab" element={<Account />} />\n        '+t[r:]
+          assert '/account/:tab' in t
+          open(a,'w').write(t); print('app ok')
+          PY
+          rm -f site.zip .github/workflows/import-site.yml
+          git config user.name "realhunt-import"
+          git config user.email "import@realhunt.co"
+          git add -A
+          git commit -m "feat: account area (profile, saved, alerts, requests, sign out), profile menu in nav, URL without https on network"
+          git push
