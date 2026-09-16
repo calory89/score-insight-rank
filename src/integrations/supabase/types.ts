@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -172,6 +172,36 @@ export type Database = {
           },
         ]
       }
+      alerts: {
+        Row: {
+          beach: boolean | null
+          country: string | null
+          created_at: string | null
+          email: string
+          id: string
+          max_price: number | null
+          user_id: string | null
+        }
+        Insert: {
+          beach?: boolean | null
+          country?: string | null
+          created_at?: string | null
+          email: string
+          id?: string
+          max_price?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          beach?: boolean | null
+          country?: string | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          max_price?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       analyses: {
         Row: {
           address: string | null
@@ -313,6 +343,21 @@ export type Database = {
           why_not_90?: Json | null
           year_built?: number | null
           yield_trend?: Json | null
+        }
+        Relationships: []
+      }
+      app_secrets: {
+        Row: {
+          key: string
+          value: string | null
+        }
+        Insert: {
+          key: string
+          value?: string | null
+        }
+        Update: {
+          key?: string
+          value?: string | null
         }
         Relationships: []
       }
@@ -550,6 +595,54 @@ export type Database = {
           },
         ]
       }
+      email_send_log: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          id: number
+          message_id: string | null
+          recipient_email: string | null
+          status: string | null
+          template_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: never
+          message_id?: string | null
+          recipient_email?: string | null
+          status?: string | null
+          template_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          id?: never
+          message_id?: string | null
+          recipient_email?: string | null
+          status?: string | null
+          template_name?: string | null
+        }
+        Relationships: []
+      }
+      email_unsubscribe_tokens: {
+        Row: {
+          created_at: string | null
+          email: string
+          token: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          token: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          token?: string
+        }
+        Relationships: []
+      }
       error_logs: {
         Row: {
           created_at: string
@@ -636,6 +729,38 @@ export type Database = {
         }
         Relationships: []
       }
+      find_events: {
+        Row: {
+          created_at: string | null
+          event: string
+          find_id: string | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event: string
+          find_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event?: string
+          find_id?: string | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "find_events_find_id_fkey"
+            columns: ["find_id"]
+            isOneToOne: false
+            referencedRelation: "ig_finds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_scores: {
         Row: {
           id: string
@@ -657,6 +782,134 @@ export type Database = {
           score?: number
           total_rounds?: number
           user_id?: string
+        }
+        Relationships: []
+      }
+      home_requests: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          find_id: string | null
+          find_shortcode: string | null
+          id: string
+          message: string | null
+          name: string | null
+          phone: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          find_id?: string | null
+          find_shortcode?: string | null
+          id?: string
+          message?: string | null
+          name?: string | null
+          phone?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          find_id?: string | null
+          find_shortcode?: string | null
+          id?: string
+          message?: string | null
+          name?: string | null
+          phone?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "home_requests_find_id_fkey"
+            columns: ["find_id"]
+            isOneToOne: false
+            referencedRelation: "ig_finds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ig_finds: {
+        Row: {
+          bedrooms: number | null
+          caption: string | null
+          caption_en: string | null
+          country_guess: string | null
+          created_at: string | null
+          external_url: string | null
+          hook: string | null
+          id: string
+          image_urls: string[] | null
+          is_beach: boolean
+          lat: number | null
+          likes: number | null
+          lng: number | null
+          location_name: string | null
+          photo_score: number | null
+          post_url: string
+          posted_at: string | null
+          price_eur: number | null
+          price_in_image: boolean
+          price_raw: string | null
+          rank_score: number | null
+          shortcode: string | null
+          source_account: string
+          sqm: number | null
+          status: string | null
+        }
+        Insert: {
+          bedrooms?: number | null
+          caption?: string | null
+          caption_en?: string | null
+          country_guess?: string | null
+          created_at?: string | null
+          external_url?: string | null
+          hook?: string | null
+          id?: string
+          image_urls?: string[] | null
+          is_beach?: boolean
+          lat?: number | null
+          likes?: number | null
+          lng?: number | null
+          location_name?: string | null
+          photo_score?: number | null
+          post_url: string
+          posted_at?: string | null
+          price_eur?: number | null
+          price_in_image?: boolean
+          price_raw?: string | null
+          rank_score?: number | null
+          shortcode?: string | null
+          source_account: string
+          sqm?: number | null
+          status?: string | null
+        }
+        Update: {
+          bedrooms?: number | null
+          caption?: string | null
+          caption_en?: string | null
+          country_guess?: string | null
+          created_at?: string | null
+          external_url?: string | null
+          hook?: string | null
+          id?: string
+          image_urls?: string[] | null
+          is_beach?: boolean
+          lat?: number | null
+          likes?: number | null
+          lng?: number | null
+          location_name?: string | null
+          photo_score?: number | null
+          post_url?: string
+          posted_at?: string | null
+          price_eur?: number | null
+          price_in_image?: boolean
+          price_raw?: string | null
+          rank_score?: number | null
+          shortcode?: string | null
+          source_account?: string
+          sqm?: number | null
+          status?: string | null
         }
         Relationships: []
       }
@@ -758,16 +1011,19 @@ export type Database = {
           created_at: string
           email: string
           id: string
+          source: string | null
         }
         Insert: {
           created_at?: string
           email: string
           id?: string
+          source?: string | null
         }
         Update: {
           created_at?: string
           email?: string
           id?: string
+          source?: string | null
         }
         Relationships: []
       }
@@ -954,6 +1210,7 @@ export type Database = {
           id: string
           last_login_at: string | null
           login_count: number | null
+          phone: string | null
           referral_code: string | null
           user_id: string
           username: string | null
@@ -967,6 +1224,7 @@ export type Database = {
           id?: string
           last_login_at?: string | null
           login_count?: number | null
+          phone?: string | null
           referral_code?: string | null
           user_id: string
           username?: string | null
@@ -980,6 +1238,7 @@ export type Database = {
           id?: string
           last_login_at?: string | null
           login_count?: number | null
+          phone?: string | null
           referral_code?: string | null
           user_id?: string
           username?: string | null
@@ -1041,14 +1300,18 @@ export type Database = {
       }
       projects: {
         Row: {
+          accepts_custom_plan: boolean | null
           active: boolean | null
           asset_tags: string[] | null
+          balloon_pct: number | null
+          caveats: string | null
           city: string | null
           conflict_disclosure: string | null
           construction_pct: number | null
           country_id: string
           created_at: string
           delivery_quarter: string | null
+          deposit_pct: number | null
           description: string | null
           developer_id: string
           district: string | null
@@ -1056,8 +1319,12 @@ export type Database = {
           golden_visa_eligible: boolean | null
           hero_image_url: string | null
           id: string
+          is_deal_of_week: boolean | null
           is_owned_by_realhunt: boolean | null
           name: string
+          payment_terms_source: string | null
+          plan_months: number | null
+          rejection_reason: string | null
           risk_flags: string[] | null
           slug: string
           status: string | null
@@ -1066,16 +1333,21 @@ export type Database = {
           unit_types: string[] | null
           updated_at: string
           video_url: string | null
+          why_cheap: string | null
         }
         Insert: {
+          accepts_custom_plan?: boolean | null
           active?: boolean | null
           asset_tags?: string[] | null
+          balloon_pct?: number | null
+          caveats?: string | null
           city?: string | null
           conflict_disclosure?: string | null
           construction_pct?: number | null
           country_id: string
           created_at?: string
           delivery_quarter?: string | null
+          deposit_pct?: number | null
           description?: string | null
           developer_id: string
           district?: string | null
@@ -1083,8 +1355,12 @@ export type Database = {
           golden_visa_eligible?: boolean | null
           hero_image_url?: string | null
           id?: string
+          is_deal_of_week?: boolean | null
           is_owned_by_realhunt?: boolean | null
           name: string
+          payment_terms_source?: string | null
+          plan_months?: number | null
+          rejection_reason?: string | null
           risk_flags?: string[] | null
           slug: string
           status?: string | null
@@ -1093,16 +1369,21 @@ export type Database = {
           unit_types?: string[] | null
           updated_at?: string
           video_url?: string | null
+          why_cheap?: string | null
         }
         Update: {
+          accepts_custom_plan?: boolean | null
           active?: boolean | null
           asset_tags?: string[] | null
+          balloon_pct?: number | null
+          caveats?: string | null
           city?: string | null
           conflict_disclosure?: string | null
           construction_pct?: number | null
           country_id?: string
           created_at?: string
           delivery_quarter?: string | null
+          deposit_pct?: number | null
           description?: string | null
           developer_id?: string
           district?: string | null
@@ -1110,8 +1391,12 @@ export type Database = {
           golden_visa_eligible?: boolean | null
           hero_image_url?: string | null
           id?: string
+          is_deal_of_week?: boolean | null
           is_owned_by_realhunt?: boolean | null
           name?: string
+          payment_terms_source?: string | null
+          plan_months?: number | null
+          rejection_reason?: string | null
           risk_flags?: string[] | null
           slug?: string
           status?: string | null
@@ -1120,6 +1405,7 @@ export type Database = {
           unit_types?: string[] | null
           updated_at?: string
           video_url?: string | null
+          why_cheap?: string | null
         }
         Relationships: [
           {
@@ -1241,6 +1527,39 @@ export type Database = {
           referral_code?: string
           referred_id?: string
           referrer_id?: string
+        }
+        Relationships: []
+      }
+      rh_events: {
+        Row: {
+          created_at: string | null
+          event: string
+          find_shortcode: string | null
+          id: number
+          meta: Json | null
+          path: string | null
+          sid: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event: string
+          find_shortcode?: string | null
+          id?: never
+          meta?: Json | null
+          path?: string | null
+          sid?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event?: string
+          find_shortcode?: string | null
+          id?: never
+          meta?: Json | null
+          path?: string | null
+          sid?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -1420,6 +1739,21 @@ export type Database = {
           stripe_subscription_id?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      suppressed_emails: {
+        Row: {
+          created_at: string | null
+          email: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
         }
         Relationships: []
       }
@@ -1650,9 +1984,31 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      admin_user_activity: {
+        Row: {
+          clicks: number | null
+          email: string | null
+          favorites: number | null
+          first_event: string | null
+          first_find: string | null
+          first_shortcode: string | null
+          last_event: string | null
+          last_login_at: string | null
+          user_id: string | null
+          username: string | null
+          views: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      find_view_counts: {
+        Args: { codes: string[] }
+        Returns: {
+          shortcode: string
+          views: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1662,6 +2018,10 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_realhunt_admin: { Args: { _user_id: string }; Returns: boolean }
+      send_brevo: {
+        Args: { p_html: string; p_subject: string; p_to: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"
@@ -1680,12 +2040,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1709,11 +2069,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1734,11 +2094,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1759,11 +2119,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1776,11 +2136,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
