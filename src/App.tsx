@@ -60,6 +60,7 @@ const NotFound = React.lazy(() => import("./pages/NotFound"));
 const Fit = React.lazy(() => import("./pages/Fit"));
 const Ebc = React.lazy(() => import("./pages/Ebc"));
 const Saved = React.lazy(() => import("./pages/Saved"));
+const Account = React.lazy(() => import("./pages/Account"));
 const Home = React.lazy(() => import("./pages/Home"));
 const Network = React.lazy(() => import("./pages/Network"));
 const Finds = React.lazy(() => import("./pages/Finds"));
@@ -166,6 +167,8 @@ const AnimatedRoutes = () => {
         <Route path="/saved" element={<Saved />} />
         <Route path="/country/:country" element={<Home />} />
         <Route path="/from/:account" element={<Home />} />
+        <Route path="/account" element={<Account />} />
+        <Route path="/account/:tab" element={<Account />} />
         <Route path="/network" element={<PageTransition><Network /></PageTransition>} />
           <Route path="/finds" element={<PageTransition><Finds /></PageTransition>} />
           <Route path="/find/:shortcode" element={<PageTransition><FindDetail /></PageTransition>} />

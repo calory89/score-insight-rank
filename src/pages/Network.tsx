@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import RHNav from "@/components/realhunt/RHNav";
 import { Check, Search, Users, Handshake, Coins, Lock, Phone, Mail } from "lucide-react";
+import { track } from "@/lib/rh";
 
 const db = supabase as any;
 const STEPS = ["Reading your project page", "Scoring price, location and payment plan", "Looking for buyers in the network who fit", "Preparing your matches"];
@@ -23,7 +24,7 @@ const Network = () => {
     return () => { t.forEach(clearTimeout); clearTimeout(end); };
   }, [stage]);
 
-  const start = (e: React.FormEvent) => { e.preventDefault(); if (!url) return; setStage("loading"); };
+  const start = (e: React.FormEvent) => { e.preventDefault(); let u = url.trim(); if (!u) return; if (!/^https?:\/\//i.test(u)) u = "https://" + u.replace(/^\/+/, ""); setUrl(u); track("network_analyze", { meta: { url: u } }); setStage("loading"); };
   const sendEmail = async (e: React.FormEvent) => {
     e.preventDefault(); if (!/.+@.+\..+/.test(email)) return; setStage("share");
     try { await db.from("contact_requests").insert({ email, company: url, message: `receive${phone ? " | phone: " + phone : ""}`, source: "network_analyze" }); } catch {}
@@ -50,7 +51,7 @@ const Network = () => {
           <div id="analyze" className="mt-7 border border-hairline rounded-2xl bg-white p-5 md:p-6 shadow-sm">
             {stage === "idle" && (
               <form onSubmit={start} className="flex flex-col sm:flex-row gap-2">
-                <input required type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://your-project.com" aria-label="Project URL" className="flex-1 border border-hairline rounded-full px-5 py-3.5 text-[15px] bg-paper outline-none focus:border-ink" />
+                <input required type="text" inputMode="url" autoCapitalize="none" autoCorrect="off" spellCheck={false} value={url} onChange={(e) => setUrl(e.target.value)} placeholder="your-project.com" aria-label="Project URL" className="flex-1 border border-hairline rounded-full px-5 py-3.5 text-[15px] bg-paper outline-none focus:border-ink" />
                 <button type="submit" className="rh-btn-primary !px-6 inline-flex items-center justify-center gap-2"><Search size={16} /> Find me buyers, free</button>
               </form>
             )}
