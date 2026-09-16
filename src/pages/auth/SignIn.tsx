@@ -19,7 +19,7 @@ const SignIn = () => {
   const [loading, setLoading] = useState(false);
 
   const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || (location.state as any)?.from || "/app";
+  const redirectTo = searchParams.get("redirect") || (location.state as any)?.from || (() => { try { return sessionStorage.getItem("rh_redirect") || localStorage.getItem("rh_redirect") || "/"; } catch { return "/"; } })();
 
   useEffect(() => {
     if (user) navigate(redirectTo, { replace: true });

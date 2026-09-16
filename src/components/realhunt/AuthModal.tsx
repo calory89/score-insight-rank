@@ -17,13 +17,13 @@ const AuthModal = ({ open, onClose, title = "Sign in and we email you everything
 
   const google = async () => {
     setBusy(true); track("auth_google", { find });
-    try { sessionStorage.setItem("rh_redirect", to); } catch {}
+    try { sessionStorage.setItem("rh_redirect", to); localStorage.setItem("rh_redirect", to); } catch {}
     const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: `${location.origin}/auth/callback` });
     if (r.error) { setBusy(false); setErr(r.error.message); }
   };
   const magic = async (e: React.FormEvent) => {
     e.preventDefault(); if (!/.+@.+\..+/.test(email)) return; setBusy(true); setErr(""); track("auth_magic", { find });
-    try { sessionStorage.setItem("rh_redirect", to); } catch {}
+    try { sessionStorage.setItem("rh_redirect", to); localStorage.setItem("rh_redirect", to); } catch {}
     const { error } = await supabase.auth.signInWithOtp({ email, options: { emailRedirectTo: `${location.origin}/auth/callback` } });
     setBusy(false);
     if (error) setErr(error.message); else setSent(true);

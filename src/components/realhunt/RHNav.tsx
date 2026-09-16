@@ -11,7 +11,7 @@ const NAV_ITEMS = [
   { to: "/", label: "Deals" },
   { to: "/network", label: "For developers" },
 ];
-const DEALS_PATHS = ["/", "/find", "/ecobeachcity", "/account", "/saved", "/country", "/from", "/fit"];
+const DEALS_PATHS = ["/", "/find", "/ecobeachcity", "/account", "/saved", "/country", "/from", "/fit", "/map", "/swipe", "/guide", "/sell", "/legal", "/compare-homes", "/c/", "/network"];
 const MENU = [["/account/profile", "Profile", User], ["/account/saved", "Saved homes", Heart], ["/account/alerts", "Alerts", Bell], ["/account/requests", "My requests", MessageSquare]] as const;
 
 const RHNav = () => {
