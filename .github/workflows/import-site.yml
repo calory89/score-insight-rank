@@ -1,0 +1,41 @@
+name: import-site
+on:
+  push:
+    paths: [".github/workflows/import-site.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch + apply
+        run: |
+          set -e
+          curl -fsSL -X POST https://temp.sh/myfso/site9.zip -o site.zip
+          echo "c09812db827012c4fcd5b63cb79d8add  site.zip" | md5sum -c -
+          unzip -oq site.zip
+          python3 - <<'PY'
+          import re
+          h='index.html'; t=open(h).read()
+          t=re.sub(r'<title>.*?</title>', '<title>RealHunt: real homes under â¬100,000</title>', t, flags=re.S)
+          t=re.sub(r'<meta name="description" content="[^"]*">', '<meta name="description" content="Real homes under â¬100,000 across Europe, Japan and Asia. Beach, countryside and villages, checked every week. Sign in and we send you everything about any home, free.">', t)
+          t=t.replace('https://score-insight-rank.lovable.app/', 'https://realhunt.co/')
+          t=re.sub(r'<meta property="og:title" content="[^"]*" />', '<meta property="og:title" content="Real homes under â¬100,000" />', t)
+          t=re.sub(r'<meta property="og:description" content="[^"]*" />', '<meta property="og:description" content="Beach, countryside and villages across Europe, Japan and Asia. Checked every week." />', t)
+          t=t.replace('<meta property="og:image:width" content="1200" />\n    <meta property="og:image:height" content="1200" />', '<meta property="og:image:width" content="1200" />\n    <meta property="og:image:height" content="630" />')
+          t=re.sub(r'<meta name="twitter:title" content="[^"]*" />', '<meta name="twitter:title" content="Real homes under â¬100,000" />', t)
+          t=re.sub(r'<meta name="twitter:description" content="[^"]*" />', '<meta name="twitter:description" content="Beach, countryside and villages across Europe, Japan and Asia. Checked every week." />', t)
+          t=t.replace('<link rel="icon" href="/favicon.png" type="image/png" />', '<link rel="icon" href="/favicon.png" type="image/png" sizes="512x512" />\n    <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />')
+          t=t.replace('<link rel="apple-touch-icon" href="/favicon.png" />', '<link rel="apple-touch-icon" href="/apple-touch-icon.png" />')
+          t=t.replace('"description": "Forensic real-estate analysis. Paste any listing URL â get a sourced RealHunt score in under 10 seconds."', '"description": "Real homes under â¬100,000 across Europe, Japan and Asia."')
+          assert 'og-default.jpg' in t and 'realhunt.co/' in t and 'apple-touch-icon.png' in t
+          open(h,'w').write(t); print('patched')
+          PY
+          rm -f site.zip .github/workflows/import-site.yml
+          git config user.name "realhunt-import"
+          git config user.email "import@realhunt.co"
+          git add -A
+          git commit -m "feat: new logo, favicons and OG image, price pill top-left on cards, EBC third, site meta for realhunt.co"
+          git push
