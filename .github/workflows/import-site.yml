@@ -1,0 +1,39 @@
+name: import-site
+on:
+  push:
+    paths: [".github/workflows/import-site.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch + apply
+        run: |
+          set -e
+          curl -fsSL -X POST https://temp.sh/hLXQb/site7.zip -o site.zip
+          echo "fdeed767151d7ebb3f33d51778c4a805  site.zip" | md5sum -c -
+          unzip -oq site.zip
+          git rm -q --cached public/finds/*.jpg && rm -f public/finds/*.jpg
+          python3 - <<'PY'
+          a='src/App.tsx'; t=open(a).read()
+          if 'pages/Saved"' not in t:
+              k=t.index("const Home = React.lazy("); t=t[:k]+'const Saved = React.lazy(() => import("./pages/Saved"));\n'+t[k:]
+              r=t.index('<Route path="/network"'); t=t[:r]+'<Route path="/saved" element={<Saved />} />\n        <Route path="/country/:country" element={<Home />} />\n        <Route path="/from/:account" element={<Home />} />\n        '+t[r:]
+          assert '/saved' in t and '/country/:country' in t
+          open(a,'w').write(t)
+          h='index.html'; t=open(h).read()
+          if 'manifest.webmanifest' not in t:
+              t=t.replace('<link rel="icon"', '<link rel="manifest" href="/manifest.webmanifest" />\n    <link rel="icon"',1)
+              t=t.replace('<script type="module" src="/src/main.tsx"></script>', '<script type="module" src="/src/main.tsx"></script>\n    <script>if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))</script>',1)
+          assert 'sw.js' in t
+          open(h,'w').write(t); print('patched')
+          PY
+          rm -f site.zip public/sync.txt .github/workflows/import-site.yml
+          git config user.name "realhunt-import"
+          git config user.email "import@realhunt.co"
+          git add -A
+          git commit -m "feat: auth modal (google + magic link), favorites + /saved, search, price chips, country and account pages, map, similar homes, want-this leads, alerts, PWA, webp photos, admin funnel"
+          git push
