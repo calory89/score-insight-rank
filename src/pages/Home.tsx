@@ -6,7 +6,7 @@ import AuthModal from "@/components/realhunt/AuthModal";
 import { Waves, Check, Heart, Search, Bell } from "lucide-react";
 import { db, eur, FLAG, norm, slug, unslug, isNew, cleanCap, IG, EBC, MAX_PRICE, track, srcSet, score } from "@/lib/rh";
 
-const PRICE_CHIPS: [string, number][] = [["< €25k", 25000], ["< €50k", 50000], ["< €100k", 100000], ["< €200k", 200000]];
+const PRICE_CHIPS: [string, number][] = [["< €10k", 10000], ["< €25k", 25000], ["< €50k", 50000], ["< €100k", 100000]];
 const PAGE = 40;
 
 const Home = () => {
@@ -28,7 +28,7 @@ const Home = () => {
   const sentinel = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    db.from("ig_finds").select("id,source_account,shortcode,caption,image_urls,posted_at,location_name,country_guess,price_eur,price_raw,likes,is_beach,price_in_image,sqm,bedrooms").neq("status", "hidden").order("posted_at", { ascending: false }).limit(600)
+    db.from("ig_finds").select("id,source_account,shortcode,caption,image_urls,posted_at,location_name,country_guess,price_eur,price_raw,likes,is_beach,price_in_image,sqm,bedrooms,hook,rank_score").neq("status", "hidden").order("posted_at", { ascending: false }).limit(600)
       .then(({ data }: any) => setFinds((data || []).filter((f: IG) => f.image_urls && f.image_urls.length && (f.price_eur == null || f.price_eur <= MAX_PRICE)).sort((a: IG, b: IG) => score(b) - score(a))));
     track("home_view");
   }, []);
@@ -40,9 +40,9 @@ const Home = () => {
   const allCountries = useMemo(() => { const m: Record<string, number> = { Indonesia: 1 }; finds.forEach((f) => { const c = norm(f.country_guess); m[c] = (m[c] || 0) + 1; }); return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([c]) => c); }, [finds]);
   useEffect(() => { if (cParam) setCountry(unslug(cParam, allCountries)); }, [cParam, allCountries]);
   useEffect(() => {
-    const t = aParam ? `Cheap homes spotted by @${aParam}` : country !== "All" ? `Cheap houses in ${country} under €200,000` : "Real homes under €200,000";
+    const t = aParam ? `Cheap homes spotted by @${aParam}` : country !== "All" ? `Cheap houses in ${country} under €100,000` : "Real homes under €100,000";
     document.title = `${t} · RealHunt`;
-    const m = document.querySelector('meta[name="description"]'); if (m) m.setAttribute("content", `${t}. Real listings under €200k, checked and updated. Beach, countryside, villages.`);
+    const m = document.querySelector('meta[name="description"]'); if (m) m.setAttribute("content", `${t}. Real listings under €100k, ranked by how cheap they are for where they are. Beach, countryside, villages.`);
   }, [country, aParam]);
 
   const shown = useMemo(() => {
@@ -78,7 +78,7 @@ const Home = () => {
       <RHNav />
 
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pt-8 md:pt-12 pb-4">
-        <h1 className="font-display text-[clamp(30px,5vw,54px)] leading-[1.02] tracking-tight max-w-[22ch]">{aParam ? <>Spotted by <span className="text-ink-muted">@{aParam}</span></> : country !== "All" ? <>Cheap homes in {country}.</> : <>Real homes under €200,000.</>}</h1>
+        <h1 className="font-display text-[clamp(30px,5vw,54px)] leading-[1.02] tracking-tight max-w-[22ch]">{aParam ? <>Spotted by <span className="text-ink-muted">@{aParam}</span></> : country !== "All" ? <>Cheap homes in {country}.</> : <>Real homes under €100,000.</>}</h1>
         <p className="mt-3 text-[15px] md:text-[17px] text-ink-muted">{shown.length} homes{isFinite(min) && <> · cheapest <b className="text-ink">{eur(min)}</b></>}{aParam && <> · <a href={`https://instagram.com/${aParam}`} target="_blank" rel="noreferrer" className="underline">follow them on Instagram</a></>}</p>
       </section>
 
@@ -113,7 +113,7 @@ const Home = () => {
                 {f.id !== "ebc" && <button onClick={(e) => toggleFav(e, f)} aria-label="Save" className={`absolute bottom-3 right-3 h-9 w-9 rounded-full bg-white/90 shadow inline-flex items-center justify-center ${favs.has(f.id) ? "text-red-500" : "text-ink"}`}><Heart size={16} fill={favs.has(f.id) ? "currentColor" : "none"} /></button>}
                 <div className="absolute inset-x-0 bottom-0 p-3 md:p-4 pr-14 text-white">
                   {f.price_eur && !f.price_in_image && <p className="font-display text-[22px] md:text-[28px] leading-none tabular-nums drop-shadow">{eur(f.price_eur)}</p>}
-                  <p className="text-[12px] md:text-[13px] mt-1 opacity-90 truncate">{f.location_name || cleanCap(f.caption).slice(0, 48) || c}{f.sqm ? ` · ${f.sqm} m²` : ""}{f.bedrooms ? ` · ${f.bedrooms} bed` : ""}</p>
+                  <p className="text-[12px] md:text-[13px] mt-1 opacity-90 truncate">{f.hook || f.location_name || cleanCap(f.caption).slice(0, 48) || c}</p>
                 </div>
               </Link>
             );
@@ -139,7 +139,7 @@ const Home = () => {
         </div>
         <div className="border border-hairline rounded-2xl bg-white p-6 md:p-8 flex flex-col gap-3">
           <p className="font-display text-[22px] tracking-tight">Get the best deals we find, in your inbox.</p>
-          <p className="text-[14px] text-ink-muted -mt-2">Free. Only homes under €200k worth talking about.</p>
+          <p className="text-[14px] text-ink-muted -mt-2">Free. Only homes under €100k worth talking about.</p>
           {sent ? <p className="inline-flex items-center gap-2 text-[15px]"><Check size={18} /> Done. First deals coming your way.</p> : (
             <form onSubmit={subscribe} className="flex gap-2"><input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" aria-label="Email" className="flex-1 border border-hairline rounded-full px-4 py-3 text-[15px] bg-paper outline-none focus:border-ink" /><button type="submit" className="rh-btn-primary !px-5">Send</button></form>
           )}
@@ -151,7 +151,7 @@ const Home = () => {
       </section>
 
       <footer className="border-t border-hairline"><div className="max-w-[1240px] mx-auto px-4 md:px-6 py-8 flex flex-wrap gap-x-8 gap-y-3 text-[13px] text-ink-muted"><Link to="/network" className="hover:text-ink">For developers</Link><Link to="/fit" className="hover:text-ink">Can I afford it?</Link><Link to="/score" className="hover:text-ink">Score a listing</Link><Link to="/method" className="hover:text-ink">Method</Link><Link to="/legal/terms" className="hover:text-ink">Terms</Link><span className="ml-auto">Listings belong to their original posters. We link, we do not sell.</span></div></footer>
-      <AuthModal open={auth} onClose={() => setAuth(false)} title="Save this home" subtitle="Free. Heart the homes you like, we tell you when similar ones appear." />
+      <AuthModal open={auth} onClose={() => setAuth(false)} title="Save this home" subtitle="Free. Sign in and we email you everything about the homes you save." />
     </div>
   );
 };

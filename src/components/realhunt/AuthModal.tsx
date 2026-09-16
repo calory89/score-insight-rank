@@ -6,7 +6,7 @@ import { track } from "@/lib/rh";
 
 type Props = { open: boolean; onClose: () => void; title?: string; subtitle?: string; redirect?: string; find?: string };
 
-const AuthModal = ({ open, onClose, title = "Sign in to see where it is and how to get it", subtitle = "Free. Exact location, full description, the original listing, and you can save it.", redirect, find }: Props) => {
+const AuthModal = ({ open, onClose, title = "Sign in and we email you everything about this home, free", subtitle = "Exact location, map, full description, the original listing and the real cost of buying as a foreigner.", redirect, find }: Props) => {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);

@@ -39,8 +39,8 @@ const FindDetail = () => {
       track("find_view", { find: shortcode });
       db.rpc("find_view_counts", { codes: [shortcode] }).then(({ data: v }: any) => setViews(v && v[0] ? Number(v[0].views) : 0));
       const c = data.country_guess;
-      db.from("ig_finds").select("id,shortcode,image_urls,price_eur,price_in_image,location_name,country_guess,is_beach,caption,posted_at,likes,source_account").neq("status", "hidden").neq("id", data.id).eq("country_guess", c).limit(60).then(({ data: s }: any) => {
-        let l: IG[] = (s || []).filter((x: IG) => x.image_urls?.length && (x.price_eur == null || x.price_eur <= 200000));
+      db.from("ig_finds").select("id,shortcode,image_urls,price_eur,price_in_image,location_name,country_guess,is_beach,caption,posted_at,likes,source_account").neq("status", "hidden").neq("id", data.id).eq("country_guess", c).order("rank_score", { ascending: false }).limit(60).then(({ data: s }: any) => {
+        let l: IG[] = (s || []).filter((x: IG) => x.image_urls?.length && (x.price_eur == null || x.price_eur <= 100000));
         if (data.price_eur) { const near = l.filter((x) => x.price_eur && Math.abs(x.price_eur - data.price_eur) / data.price_eur <= 0.3); if (near.length >= 3) l = near; }
         setSimilar([...l.slice(0, 3), EBC]);
       });
@@ -89,7 +89,7 @@ const FindDetail = () => {
   const cap = cleanCap(f.caption);
   const c = norm(f.country_guess);
   const when = f.posted_at ? new Date(f.posted_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "";
-  const Gate = () => <button onClick={() => { track("gate_click", { find: shortcode }); setAuth(true); }} className="rh-btn-primary inline-flex items-center justify-center gap-2"><Lock size={15} /> Sign in to see where it is</button>;
+  const Gate = () => <button onClick={() => { track("gate_click", { find: shortcode }); setAuth(true); }} className="rh-btn-primary inline-flex items-center justify-center gap-2"><Lock size={15} /> Sign in, get all the info free</button>;
 
   return (
     <div className="min-h-screen bg-paper text-ink pb-24 md:pb-0">
@@ -112,6 +112,7 @@ const FindDetail = () => {
           <div>
             <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted">Spotted by <Link to={`/from/${f.source_account}`} className="underline">@{f.source_account}</Link>{when ? " · " + when : ""}</p>
             <h1 className="font-display text-[clamp(38px,7vw,64px)] leading-none tracking-tight mt-3 tabular-nums">{f.price_eur ? eur(f.price_eur) : "Price in the listing"}</h1>
+            {f.hook && <p className="text-[17px] mt-3 text-ink">{f.hook}</p>}
             {f.price_raw && f.price_eur && f.price_raw !== "seen in image" && <p className="text-[13px] text-ink-muted mt-1">Listed as {f.price_raw}, converted approximately.</p>}
             <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[14px] text-ink-muted">
               <span className="inline-flex items-center gap-1.5"><MapPin size={14} /> {FLAG[c]} {user ? (f.location_name || c) : c}{!user && <Lock size={12} className="ml-1" />}</span>
@@ -124,14 +125,14 @@ const FindDetail = () => {
               <h2 className="font-display text-[20px] tracking-tight mb-3">About this home</h2>
               {user ? (
                 <>
-                  <p className="text-[16px] leading-relaxed whitespace-pre-line">{cap || "The original post has no text. Open it to see the details."}</p>
+                  <p className="text-[16px] leading-relaxed whitespace-pre-line">{f.caption_en || cap || "The original post has no text. Open it to see the details."}</p>
                   {f.lat && <div ref={mapRef} className="mt-5 h-[260px] rounded-2xl overflow-hidden border border-hairline z-0" />}
                   {f.lat && <p className="text-[12px] text-ink-muted mt-2">Approximate area. The exact address is in the original listing.</p>}
                 </>
               ) : (
                 <div className="border border-hairline rounded-2xl bg-white p-6 flex flex-col gap-3">
-                  <p className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><Lock size={18} /> Where it is, the full description and the link</p>
-                  <p className="text-[14px] text-ink-muted">Free account. Map, full text, the original listing, and you can save it. Ten seconds with Google or an email link.</p>
+                  <p className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><Lock size={18} /> Sign in and we send you everything about this home, free, to your email</p>
+                  <p className="text-[14px] text-ink-muted">Exact location, map, full description, the original listing and what it really costs to buy as a foreigner. Ten seconds with Google or an email link.</p>
                   <div><Gate /></div>
                 </div>
               )}
@@ -201,7 +202,7 @@ const FindDetail = () => {
       <div className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur border-t border-hairline px-4 py-3 flex items-center gap-3">
         <button onClick={toggleFav} aria-label="Save" className={`h-11 w-11 rounded-full border inline-flex items-center justify-center ${fav ? "border-red-500 text-red-500" : "border-hairline"}`}><Heart size={16} fill={fav ? "currentColor" : "none"} /></button>
         <button onClick={share} aria-label="Share" className="h-11 w-11 rounded-full border border-hairline inline-flex items-center justify-center">{copied ? <Check size={16} /> : <Share2 size={16} />}</button>
-        {user ? <button onClick={open} className="rh-btn-primary flex-1 !py-3 inline-flex items-center justify-center gap-2">Open listing <ExternalLink size={15} /></button> : <button onClick={() => setAuth(true)} className="rh-btn-primary flex-1 !py-3 inline-flex items-center justify-center gap-2"><Lock size={15} /> See where it is</button>}
+        {user ? <button onClick={open} className="rh-btn-primary flex-1 !py-3 inline-flex items-center justify-center gap-2">Open listing <ExternalLink size={15} /></button> : <button onClick={() => setAuth(true)} className="rh-btn-primary flex-1 !py-3 inline-flex items-center justify-center gap-2"><Lock size={15} /> Get all the info, free</button>}
       </div>
       <AuthModal open={auth} onClose={() => setAuth(false)} redirect={next} find={shortcode} />
     </div>
