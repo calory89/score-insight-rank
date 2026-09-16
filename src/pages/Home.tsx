@@ -25,6 +25,8 @@ const CHIPS: { k: string; l: string; f: (p: P) => boolean }[] = [
   { k: "plan", l: "Payment plan", f: (p) => p.deposit_pct != null && p.plan_months != null },
 ];
 
+const EBC: IG = { id: "ebc", shortcode: "ebc", source_account: "ecobeachcity", caption: null, image_urls: null, posted_at: null, location_name: "Sumba", country_guess: "Indonesia", price_eur: 21500 };
+
 const Home = () => {
   const [rows, setRows] = useState<P[] | null>(null);
   const [scores, setScores] = useState<Record<string, number>>({});
@@ -37,7 +39,7 @@ const Home = () => {
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
-  useEffect(() => { document.title = "RealHunt · Verified property deals under €200k, worldwide"; }, []);
+  useEffect(() => { document.title = "RealHunt · Homes under €200k worth talking about, worldwide"; }, []);
 
   useEffect(() => {
     (async () => {
@@ -56,6 +58,8 @@ const Home = () => {
     })();
   }, []);
 
+  const igShown = useMemo(() => (ig || []).filter((f) => f.price_eur == null || f.price_eur <= 200000), [ig]);
+  const igMin = useMemo(() => { const v = igShown.filter((f) => f.price_eur).map((f) => f.price_eur as number); return v.length ? Math.min(...v) : 0; }, [igShown]);
   const list = useMemo(() => (rows || []).filter(CHIPS.find((c) => c.k === chip)!.f), [rows, chip]);
   const deal = useMemo(() => {
     if (!rows?.length) return null;
@@ -124,29 +128,38 @@ const Home = () => {
           Homes that look too cheap to be real. We check whether they are.
         </h1>
         <p className="mt-5 text-[17px] text-ink-muted max-w-[56ch] leading-relaxed">
-          Zillow and Idealista show you everything. We show you only the international projects that pass a five-point check, and we tell you why each one is cheap and what you will not like about it.
+          Zillow and Idealista show you everything. We show you only homes under €200,000 worth talking about, spotted across Europe, Japan and Asia, and we tell you what you will not like about each one.
         </p>
         <div className="mt-6 flex flex-wrap gap-x-8 gap-y-2 text-[14px]">
-          <span><b className="font-display text-[22px] tabular-nums">{rows ? rows.length : "—"}</b> <span className="text-ink-muted">verified deals in the feed</span></span>
-          <span><b className="font-display text-[22px] tabular-nums">{cheapest ? eur(cheapest) : "—"}</b> <span className="text-ink-muted">cheapest right now</span></span>
+          <span><b className="font-display text-[22px] tabular-nums">{igShown ? igShown.length : "—"}</b> <span className="text-ink-muted">homes under €200k this month</span></span>
+          <span><b className="font-display text-[22px] tabular-nums">{igMin ? eur(igMin) : "—"}</b> <span className="text-ink-muted">cheapest right now</span></span>
         </div>
         <div className="mt-8 flex flex-wrap gap-2">
-          {CHIPS.map((c) => (
-            <button key={c.k} onClick={() => setChip(c.k)} aria-pressed={chip === c.k}
-              className={`px-4 py-2 text-[14px] rounded-full border transition-colors ${chip === c.k ? "border-ink bg-ink text-paper" : "border-hairline text-ink-muted hover:border-ink hover:text-ink"}`}>{c.l}</button>
-          ))}
           <Link to="/fit" className="px-4 py-2 text-[14px] rounded-full border border-hairline text-ink-muted hover:border-ink hover:text-ink">What can I afford?</Link>
         </div>
       </section>
 
-      {ig && ig.length > 0 && chip === "all" && (
+      {ig && igShown.length > 0 && (
         <section className="max-w-[1140px] mx-auto px-6 pb-14">
           <div className="flex items-baseline justify-between gap-4 mb-5 flex-wrap">
             <div><h2 className="font-display text-[22px] tracking-tight">Spotted this month</h2><p className="text-[13px] text-ink-muted mt-1">Cheap homes the internet is talking about right now. Curated from the best cheap-house accounts in Europe and Japan.</p></div>
-            <p className="text-[13px] text-ink-muted">{ig.length} homes · last 30 days</p>
+            <p className="text-[13px] text-ink-muted">{igShown.length} homes · last 30 days · nothing over €200k</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-            {(igAll ? ig : ig.slice(0, 12)).map((f) => {
+            {(igAll ? igShown : igShown.slice(0, 12)).flatMap((f, i) => i === 1 ? [EBC, f] : [f]).map((f) => {
+              if (f.id === "ebc") return (
+                <a key="ebc" href="https://ecobeachcity.com" target="_blank" rel="noreferrer" className="group block border border-hairline rounded-2xl bg-white overflow-hidden">
+                  <div className="relative aspect-[4/5] bg-hairline/40 overflow-hidden">
+                    <img src="/images/ecobeachcity-hero.png" alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
+                    <span className="absolute top-2.5 left-2.5 text-[10px] uppercase tracking-[0.12em] bg-red-600 text-white px-2 py-1 rounded-full">Our project</span>
+                    <span className="absolute bottom-2.5 left-2.5 font-display text-[17px] md:text-[20px] bg-white/95 px-2.5 py-1 rounded-full tabular-nums">€21,500</span>
+                  </div>
+                  <div className="p-3 md:p-4">
+                    <p className="text-[12px] text-ink-muted truncate">Sumba, Indonesia · beachfront</p>
+                    <p className="text-[13px] md:text-[14px] leading-snug mt-1 line-clamp-2">Beachfront cabin on an 80-year lease, in a new eco village. Payable in instalments.</p>
+                  </div>
+                </a>
+              );
               const cap = (f.caption || "").replace(/#\w+/g, "").trim();
               return (
                 <Link key={f.id} to={`/find/${f.shortcode}`} className="group block border border-hairline rounded-2xl bg-white overflow-hidden">
@@ -162,46 +175,11 @@ const Home = () => {
               );
             })}
           </div>
-          {!igAll && ig.length > 12 && <button onClick={() => setIgAll(true)} className="mt-6 border border-hairline rounded-lg px-6 py-3 text-[14px] hover:border-ink">Show all {ig.length}</button>}
+          {!igAll && igShown.length > 12 && <button onClick={() => setIgAll(true)} className="mt-6 border border-hairline rounded-lg px-6 py-3 text-[14px] hover:border-ink">Show all {igShown.length}</button>}
         </section>
       )}
 
-      {deal && chip === "all" && (
-        <section className="max-w-[1140px] mx-auto px-6 pb-10">
-          <div className="flex items-baseline gap-3 mb-4"><h2 className="font-display text-[22px] tracking-tight">Deal of the week</h2><span className="text-[12px] text-ink-muted">Highest score among the cheapest forty</span></div>
-          <Card p={deal} big />
-        </section>
-      )}
 
-      <section className="max-w-[1140px] mx-auto px-6 pb-16">
-        <div className="flex items-baseline justify-between gap-4 mb-5 flex-wrap">
-          <h2 className="font-display text-[22px] tracking-tight">Verified projects, cheapest first</h2>
-          <p className="text-[13px] text-ink-muted">{list.length} deals · every price is the developer's starting price in EUR</p>
-        </div>
-        {!rows ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="aspect-[4/5] rounded-2xl bg-hairline/50 animate-pulse" />)}</div>
-        ) : list.length === 0 ? (
-          <p className="text-ink-muted">Nothing matches that filter this week. New deals land on Tuesday.</p>
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">{list.map((p) => <Card key={p.id} p={p} />)}</div>
-        )}
-      </section>
-
-      {rej.length > 0 && (
-        <section className="max-w-[1140px] mx-auto px-6 pb-16">
-          <h2 className="font-display text-[22px] tracking-tight mb-2">Rejected this week</h2>
-          <p className="text-[14px] text-ink-muted mb-5 max-w-[60ch]">Projects that asked to be listed and did not pass. We publish the reason so you know what the filter actually does.</p>
-          <div className="grid md:grid-cols-3 gap-4">
-            {rej.map((r) => (
-              <div key={r.id} className="border border-hairline rounded-xl p-5 bg-white">
-                <p className="font-display text-[16px] tracking-tight">{r.name}</p>
-                <p className="text-[12px] text-ink-muted mt-0.5">{[r.city, ctry[r.country_id || ""]?.name].filter(Boolean).join(", ")}</p>
-                <p className="text-[14px] mt-3 text-red-700">{r.rejection_reason}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
 
       <section className="max-w-[1140px] mx-auto px-6 pb-20">
         <div className="border border-hairline rounded-2xl bg-white p-8 grid md:grid-cols-[1.2fr_1fr] gap-8 items-center">

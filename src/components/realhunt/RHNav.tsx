@@ -6,11 +6,6 @@ import { fbLead } from "@/lib/fbpixel";
 
 const NAV_ITEMS = [
   { to: "/", label: "Deals" },
-  { to: "/score", label: "Score a listing" },
-  { to: "/rankings", label: "Rankings" },
-  { to: "/for-agents", label: "For Agents" },
-  { to: "/method", label: "Method" },
-  { to: "/pricing", label: "Pricing" },
   { to: "/network", label: "For developers" },
 ];
 
