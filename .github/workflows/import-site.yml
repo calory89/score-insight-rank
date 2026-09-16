@@ -1,0 +1,40 @@
+name: import-site
+on:
+  push:
+    paths: [".github/workflows/import-site.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch + apply
+        run: |
+          set -e
+          curl -fsSL -X POST https://temp.sh/OzoCj/site12.zip -o site.zip
+          echo "96bb7a3765a6612dbc8829141ca36ed7  site.zip" | md5sum -c -
+          unzip -oq site.zip
+          python3 - <<'PY'
+          a='src/App.tsx'; t=open(a).read()
+          if 'pages/MapPage"' not in t:
+              k=t.index("const Home = React.lazy(")
+              t=t[:k]+'const MapPage = React.lazy(() => import("./pages/MapPage"));\nconst Swipe = React.lazy(() => import("./pages/Swipe"));\nconst Compare = React.lazy(() => import("./pages/Compare"));\nconst Guide = React.lazy(() => import("./pages/Guide"));\nconst Sell = React.lazy(() => import("./pages/Sell"));\nconst Collection = React.lazy(() => import("./pages/Collection"));\nconst LegalPage = React.lazy(() => import("./pages/legal/Legal"));\n'+t[k:]
+              r=t.index('<Route path="/network"')
+              t=t[:r]+'<Route path="/map" element={<MapPage />} />\n        <Route path="/swipe" element={<Swipe />} />\n        <Route path="/compare" element={<Compare />} />\n        <Route path="/guide/:country" element={<Guide />} />\n        <Route path="/sell" element={<Sell />} />\n        <Route path="/c/:username" element={<Collection />} />\n        <Route path="/legal/cookies" element={<LegalPage page="cookies" />} />\n        <Route path="/legal/takedown" element={<LegalPage page="takedown" />} />\n        '+t[r:]
+          assert '/guide/:country' in t and '/legal/takedown' in t
+          open(a,'w').write(t); print('app ok')
+          h='index.html'; t=open(h).read()
+          old="fbq('init', '774992015604419');\n    fbq('track', 'PageView');"
+          assert old in t, 'pixel block not found'
+          t=t.replace(old, "window.rhEnablePixel=function(){if(window.__rhpx)return;window.__rhpx=1;fbq('init', '774992015604419');fbq('track', 'PageView');};\n    try{if(localStorage.getItem('rh_consent')==='all')window.rhEnablePixel();}catch(e){}")
+          t=t.replace('<noscript><img height="1" width="1" style="display:none"\n    src="https://www.facebook.com/tr?id=774992015604419&ev=PageView&noscript=1"\n    /></noscript>', '')
+          open(h,'w').write(t); print('pixel gated')
+          PY
+          rm -f site.zip .github/workflows/import-site.yml
+          git config user.name "realhunt-import"
+          git config user.email "import@realhunt.co"
+          git add -A
+          git commit -m "feat: onboarding, personalised feed, real cost, price history, map, swipe, compare, guides, sell, public lists, referrals, verified/sold, cookie consent, legal pages (Equinox Investment Group LLC), admin tools"
+          git push
