@@ -11,6 +11,7 @@ type P = {
   plan_months: number | null; why_cheap: string | null; caveats: string | null;
   is_owned_by_realhunt: boolean | null; is_deal_of_week: boolean | null; created_at: string;
 };
+type IG = { id: string; shortcode: string; source_account: string; caption: string | null; image_urls: string[] | null; posted_at: string | null; location_name: string | null; country_guess: string | null; price_eur: number | null };
 type Rej = { id: string; name: string; city: string | null; country_id: string | null; rejection_reason: string | null };
 
 const eur = (n: number) => "€" + Math.round(n).toLocaleString("en-GB");
@@ -29,6 +30,8 @@ const Home = () => {
   const [scores, setScores] = useState<Record<string, number>>({});
   const [ctry, setCtry] = useState<Record<string, { name: string; flag: string }>>({});
   const [rej, setRej] = useState<Rej[]>([]);
+  const [ig, setIg] = useState<IG[] | null>(null);
+  const [igAll, setIgAll] = useState(false);
   const [chip, setChip] = useState("all");
   const [email, setEmail] = useState("");
   const [saved, setSaved] = useState(false);
@@ -38,6 +41,7 @@ const Home = () => {
 
   useEffect(() => {
     (async () => {
+      db.from("ig_finds").select("id,shortcode,source_account,caption,image_urls,posted_at,location_name,country_guess,price_eur").order("posted_at", { ascending: false }).limit(120).then(({ data }: any) => setIg(data || []));
       const [{ data: p }, { data: s }, { data: c }, { data: r }] = await Promise.all([
         db.from("projects").select("id,name,slug,city,country_id,ticket_min_eur,delivery_quarter,construction_pct,hero_image_url,asset_tags,deposit_pct,plan_months,why_cheap,caveats,is_owned_by_realhunt,is_deal_of_week,created_at")
           .eq("active", true).not("ticket_min_eur", "is", null).not("hero_image_url", "is", null)
@@ -135,6 +139,33 @@ const Home = () => {
         </div>
       </section>
 
+      {ig && ig.length > 0 && chip === "all" && (
+        <section className="max-w-[1140px] mx-auto px-6 pb-14">
+          <div className="flex items-baseline justify-between gap-4 mb-5 flex-wrap">
+            <div><h2 className="font-display text-[22px] tracking-tight">Spotted this month</h2><p className="text-[13px] text-ink-muted mt-1">Cheap homes the internet is talking about right now. Curated from the best cheap-house accounts in Europe and Japan.</p></div>
+            <p className="text-[13px] text-ink-muted">{ig.length} homes · last 30 days</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+            {(igAll ? ig : ig.slice(0, 12)).map((f) => {
+              const cap = (f.caption || "").replace(/#\w+/g, "").trim();
+              return (
+                <Link key={f.id} to={`/find/${f.shortcode}`} className="group block border border-hairline rounded-2xl bg-white overflow-hidden">
+                  <div className="relative aspect-[4/5] bg-hairline/40 overflow-hidden">
+                    {f.image_urls?.[0] && <img src={f.image_urls[0]} alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />}
+                    {f.price_eur != null && <span className="absolute bottom-2.5 left-2.5 font-display text-[17px] md:text-[20px] bg-white/95 px-2.5 py-1 rounded-full tabular-nums">{eur(f.price_eur)}</span>}
+                  </div>
+                  <div className="p-3 md:p-4">
+                    <p className="text-[12px] text-ink-muted truncate">{f.location_name || f.country_guess || "@" + f.source_account}</p>
+                    <p className="text-[13px] md:text-[14px] leading-snug mt-1 line-clamp-2">{cap || "Open to see the details"}</p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+          {!igAll && ig.length > 12 && <button onClick={() => setIgAll(true)} className="mt-6 border border-hairline rounded-lg px-6 py-3 text-[14px] hover:border-ink">Show all {ig.length}</button>}
+        </section>
+      )}
+
       {deal && chip === "all" && (
         <section className="max-w-[1140px] mx-auto px-6 pb-10">
           <div className="flex items-baseline gap-3 mb-4"><h2 className="font-display text-[22px] tracking-tight">Deal of the week</h2><span className="text-[12px] text-ink-muted">Highest score among the cheapest forty</span></div>
@@ -144,7 +175,7 @@ const Home = () => {
 
       <section className="max-w-[1140px] mx-auto px-6 pb-16">
         <div className="flex items-baseline justify-between gap-4 mb-5 flex-wrap">
-          <h2 className="font-display text-[22px] tracking-tight">Cheapest first</h2>
+          <h2 className="font-display text-[22px] tracking-tight">Verified projects, cheapest first</h2>
           <p className="text-[13px] text-ink-muted">{list.length} deals · every price is the developer's starting price in EUR</p>
         </div>
         {!rows ? (

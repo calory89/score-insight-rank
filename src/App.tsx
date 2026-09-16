@@ -62,6 +62,7 @@ const Home = React.lazy(() => import("./pages/Home"));
 const Network = React.lazy(() => import("./pages/Network"));
 const Finds = React.lazy(() => import("./pages/Finds"));
 const AdminActivity = React.lazy(() => import("./pages/AdminActivity"));
+const FindDetail = React.lazy(() => import("./pages/FindDetail"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -161,6 +162,7 @@ const AnimatedRoutes = () => {
           <Route path="/fit" element={<PageTransition><Fit /></PageTransition>} />
           <Route path="/network" element={<PageTransition><Network /></PageTransition>} />
           <Route path="/finds" element={<PageTransition><Finds /></PageTransition>} />
+          <Route path="/find/:shortcode" element={<PageTransition><FindDetail /></PageTransition>} />
           <Route path="/admin/activity" element={<PageTransition><AdminActivity /></PageTransition>} />
           <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
         </Routes>

@@ -8,7 +8,8 @@ const Callback = () => {
   useEffect(() => {
     const t = setTimeout(async () => {
       const { data } = await supabase.auth.getSession();
-      navigate(data.session ? "/app" : "/auth/sign-in", { replace: true });
+      let to = "/app"; try { to = sessionStorage.getItem("rh_redirect") || "/app"; sessionStorage.removeItem("rh_redirect"); } catch {}
+      navigate(data.session ? to : "/auth/sign-in", { replace: true });
     }, 400);
     return () => clearTimeout(t);
   }, [navigate]);
