@@ -58,6 +58,7 @@ const BestDealsCountry = React.lazy(() => import("./pages/BestDealsCountry"));
 const MarketCity = React.lazy(() => import("./pages/MarketCity"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 const Fit = React.lazy(() => import("./pages/Fit"));
+const Ebc = React.lazy(() => import("./pages/Ebc"));
 const Home = React.lazy(() => import("./pages/Home"));
 const Network = React.lazy(() => import("./pages/Network"));
 const Finds = React.lazy(() => import("./pages/Finds"));
@@ -160,7 +161,8 @@ const AnimatedRoutes = () => {
           <Route path="/best-deals/:country" element={<PageTransition><BestDealsCountry /></PageTransition>} />
           <Route path="/heatmap" element={<PageTransition><Heatmap /></PageTransition>} />
           <Route path="/fit" element={<PageTransition><Fit /></PageTransition>} />
-          <Route path="/network" element={<PageTransition><Network /></PageTransition>} />
+          <Route path="/ecobeachcity" element={<Ebc />} />
+        <Route path="/network" element={<PageTransition><Network /></PageTransition>} />
           <Route path="/finds" element={<PageTransition><Finds /></PageTransition>} />
           <Route path="/find/:shortcode" element={<PageTransition><FindDetail /></PageTransition>} />
           <Route path="/admin/activity" element={<PageTransition><AdminActivity /></PageTransition>} />

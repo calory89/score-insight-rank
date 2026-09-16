@@ -2,134 +2,157 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import RHNav from "@/components/realhunt/RHNav";
-import { Check } from "lucide-react";
+import { Check, Search, Users, Handshake, Coins, Lock, Phone, Mail } from "lucide-react";
+
+const db = supabase as any;
+const STEPS = ["Reading your project page", "Scoring price, location and payment plan", "Looking for buyers in the network who fit", "Preparing your matches"];
 
 const Network = () => {
-  const [f, setF] = useState({ email: "", company: "", message: "" });
-  const [a, setA] = useState({ url: "", email: "", intent: "both" });
-  const [aSent, setASent] = useState(false);
-  const [sent, setSent] = useState(false);
-  useEffect(() => { document.title = "RealHunt Network · Get paid for the buyers you could not sell to"; }, []);
+  const [url, setUrl] = useState("");
+  const [stage, setStage] = useState<"idle" | "loading" | "email" | "share" | "done">("idle");
+  const [step, setStep] = useState(0);
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [share, setShare] = useState<null | boolean>(null);
+  useEffect(() => { document.title = "RealHunt Network · Free buyers for your project"; }, []);
+  useEffect(() => {
+    if (stage !== "loading") return;
+    setStep(0);
+    const t = STEPS.map((_, i) => setTimeout(() => setStep(i + 1), 900 * (i + 1)));
+    const end = setTimeout(() => { setStage("email"); document.getElementById("gate")?.scrollIntoView({ behavior: "smooth", block: "center" }); }, 900 * STEPS.length + 400);
+    return () => { t.forEach(clearTimeout); clearTimeout(end); };
+  }, [stage]);
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault(); if (!/.+@.+\..+/.test(f.email)) return; setSent(true);
-    try { await (supabase as any).from("contact_requests").insert({ email: f.email, company: f.company, message: f.message, source: "network" }); } catch {}
+  const start = (e: React.FormEvent) => { e.preventDefault(); if (!url) return; setStage("loading"); };
+  const sendEmail = async (e: React.FormEvent) => {
+    e.preventDefault(); if (!/.+@.+\..+/.test(email)) return; setStage("share");
+    try { await db.from("contact_requests").insert({ email, company: url, message: `receive${phone ? " | phone: " + phone : ""}`, source: "network_analyze" }); } catch {}
+  };
+  const answerShare = async (yes: boolean) => {
+    setShare(yes); setStage("done");
+    if (yes) { try { await db.from("contact_requests").insert({ email, company: url, message: `share${phone ? " | phone: " + phone : ""}`, source: "network_share" }); } catch {} }
   };
 
-  const analyze = async (e: React.FormEvent) => {
-    e.preventDefault(); if (!/.+@.+\..+/.test(a.email) || !a.url) return; setASent(true);
-    try { await (supabase as any).from("contact_requests").insert({ email: a.email, company: a.url, message: a.intent, source: "network_analyze" }); } catch {}
-  };
-  const H = ({ children }: { children: React.ReactNode }) => <h2 className="font-display text-[clamp(24px,3.4vw,34px)] leading-tight tracking-tight text-balance">{children}</h2>;
-  const Step = ({ n, t, d }: { n: string; t: string; d: string }) => (
-    <div className="flex gap-4"><span className="font-display text-[22px] text-ink-muted w-8 shrink-0">{n}</span><div><p className="font-display text-[17px] tracking-tight">{t}</p><p className="text-[15px] text-ink-muted mt-1 leading-relaxed">{d}</p></div></div>
-  );
+  const H = ({ children }: { children: React.ReactNode }) => <h2 className="font-display text-[clamp(26px,3.6vw,38px)] leading-tight tracking-tight text-balance">{children}</h2>;
+  const Big = ({ n, t }: { n: string; t: string }) => <div><p className="font-display text-[clamp(34px,5vw,56px)] leading-none tracking-tight tabular-nums">{n}</p><p className="text-[13px] text-ink-muted mt-1">{t}</p></div>;
 
   return (
     <div className="min-h-screen bg-paper text-ink">
       <RHNav />
 
-      <section className="max-w-[1140px] mx-auto px-6 pt-14 pb-12">
-        <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-4">RealHunt Network · for developers and agencies</p>
-        <h1 className="font-display text-[clamp(34px,6vw,62px)] leading-[1.0] tracking-tight max-w-[20ch] text-balance">
-          Every month you bin buyers who would have bought. Somewhere else.
-        </h1>
-        <p className="mt-6 text-[18px] text-ink-muted max-w-[58ch] leading-relaxed">
-          Nine out of ten people who enquire never fit your project. They are not bad buyers. They are buyers of someone else's project. We place them inside the network and <b className="text-ink">you get paid when they buy, even if they buy from another developer.</b>
-        </p>
-        <div className="mt-8 border border-hairline rounded-2xl bg-white p-6 md:p-7 max-w-[720px]">
-          <p className="font-display text-[20px] tracking-tight">Step 1. Paste your project. We score it and tell you what buyers will see.</p>
-          {aSent ? <p className="mt-4 text-[15px]">Received. Your RH Score and the buyer view of your project land in your inbox within 24 hours, together with the two ways to work with the network.</p> : (
-            <form onSubmit={analyze} className="mt-4 flex flex-col gap-3">
-              <input required type="url" value={a.url} onChange={(e) => setA({ ...a, url: e.target.value })} placeholder="https://your-project.com or a listing URL" aria-label="Project URL" className="border border-hairline rounded-lg px-4 py-3 text-[15px] bg-paper outline-none focus:border-ink" />
-              <input required type="email" value={a.email} onChange={(e) => setA({ ...a, email: e.target.value })} placeholder="Work email, to receive the score" aria-label="Email" className="border border-hairline rounded-lg px-4 py-3 text-[15px] bg-paper outline-none focus:border-ink" />
-              <div className="flex flex-wrap gap-2 text-[13px]">
-                {[["receive", "I want buyers, pay only on sale"], ["share", "I have leads, pay me when they buy"], ["both", "Both"]].map(([k, l]) => (
-                  <button type="button" key={k} onClick={() => setA({ ...a, intent: k })} aria-pressed={a.intent === k} className={`px-3 py-2 rounded-full border ${a.intent === k ? "border-ink bg-ink text-paper" : "border-hairline text-ink-muted hover:border-ink"}`}>{l}</button>
-                ))}
+      {/* Hero with photos */}
+      <section className="max-w-[1240px] mx-auto px-4 md:px-6 pt-8 md:pt-14 pb-10 grid md:grid-cols-[1.1fr_1fr] gap-8 items-center">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-4">RealHunt Network · developers and agencies</p>
+          <h1 className="font-display text-[clamp(34px,5.6vw,60px)] leading-[1.0] tracking-tight text-balance">Free buyers for your project. You pay only when one buys.</h1>
+          <p className="mt-5 text-[17px] text-ink-muted max-w-[52ch] leading-relaxed">Paste your project. We score it and look for buyers already in the network who fit your price, country and payment plan.</p>
+
+          <div id="analyze" className="mt-7 border border-hairline rounded-2xl bg-white p-5 md:p-6 shadow-sm">
+            {stage === "idle" && (
+              <form onSubmit={start} className="flex flex-col sm:flex-row gap-2">
+                <input required type="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://your-project.com" aria-label="Project URL" className="flex-1 border border-hairline rounded-full px-5 py-3.5 text-[15px] bg-paper outline-none focus:border-ink" />
+                <button type="submit" className="rh-btn-primary !px-6 inline-flex items-center justify-center gap-2"><Search size={16} /> Find me buyers, free</button>
+              </form>
+            )}
+            {stage === "loading" && (
+              <div className="flex flex-col gap-3">
+                <p className="text-[13px] text-ink-muted truncate">{url}</p>
+                {STEPS.map((s, i) => <p key={s} className={`inline-flex items-center gap-3 text-[15px] transition-opacity ${i < step ? "opacity-100" : i === step ? "opacity-100" : "opacity-30"}`}><span className={`h-5 w-5 rounded-full border inline-flex items-center justify-center shrink-0 ${i < step ? "bg-ink border-ink text-paper" : i === step ? "border-ink animate-pulse" : "border-hairline"}`}>{i < step && <Check size={12} />}</span>{s}</p>)}
               </div>
-              <button type="submit" className="rh-btn-primary self-start">Score my project, free</button>
-              <span className="text-[12px] text-ink-muted">No setup fee. No lock-in. Money only moves when a sale happens.</span>
-            </form>
-          )}
+            )}
+            {stage === "email" && (
+              <form id="gate" onSubmit={sendEmail} className="flex flex-col gap-3">
+                <p className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><Check size={18} /> Analysis ready</p>
+                <div className="relative rounded-xl overflow-hidden border border-hairline">
+                  {[["Couple, 40s", "€25k deposit", "Wants beach, 2027"], ["Single buyer", "€60k cash", "Payment plan ok"], ["Family", "€18k deposit", "Europe or Asia"]].map(([a, b, c]) => <div key={a} className="grid grid-cols-3 text-[13px] px-4 py-2.5 border-b border-hairline last:border-b-0 blur-[5px] select-none"><span>{a}</span><span>{b}</span><span>{c}</span></div>)}
+                  <div className="absolute inset-0 flex items-center justify-center"><span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/95 text-[13px] shadow"><Lock size={13} /> Matches are sent by email</span></div>
+                </div>
+                <label className="relative"><Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted" /><input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Work email, to receive your buyers" aria-label="Email" className="w-full border border-hairline rounded-full pl-11 pr-4 py-3.5 text-[15px] bg-paper outline-none focus:border-ink" /></label>
+                <label className="relative"><Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted" /><input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone, optional. Recommended: we call before sending a buyer" aria-label="Phone" className="w-full border border-hairline rounded-full pl-11 pr-4 py-3.5 text-[15px] bg-paper outline-none focus:border-ink" /></label>
+                <button type="submit" className="rh-btn-primary inline-flex items-center justify-center gap-2"><Users size={16} /> Send me the buyers, €0</button>
+                <p className="text-[12px] text-ink-muted">Zero cost to receive. Commission only if one of them buys, agreed in writing first.</p>
+              </form>
+            )}
+            {stage === "share" && (
+              <div className="flex flex-col gap-3">
+                <p className="inline-flex items-center gap-2 text-[15px]"><Check size={18} /> Done. Your buyers and RH Score land in {email} within 24 hours.</p>
+                <div className="border-t border-hairline pt-4">
+                  <p className="font-display text-[20px] tracking-tight">One more thing. Do you have leads you could not sell to?</p>
+                  <p className="text-[15px] text-ink-muted mt-1">Share them with the network and you earn on average <b className="text-ink">€15 per lead</b>, because a share of them end up buying someone else's project. Only leads who say yes to being contacted.</p>
+                  <div className="flex gap-2 mt-4"><button onClick={() => answerShare(true)} className="rh-btn-primary inline-flex items-center gap-2"><Coins size={16} /> Yes, I want to earn from my leads</button><button onClick={() => answerShare(false)} className="px-5 py-2.5 rounded-full border border-hairline text-[14px] hover:border-ink">Not now</button></div>
+                </div>
+              </div>
+            )}
+            {stage === "done" && (
+              <div className="flex flex-col gap-2">
+                <p className="inline-flex items-center gap-2 text-[15px]"><Check size={18} /> {share ? "Great. We reply with the one-page agreement and the upload link." : "Noted. Your buyers are on the way."}</p>
+                <p className="text-[13px] text-ink-muted">Questions? Reply to the email you receive.</p>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2 md:gap-3">
+          <img src="/images/ebc/ebc-founder.jpg" alt="Beachfront project" className="rounded-2xl object-cover w-full aspect-[4/5] col-span-1 row-span-2 h-full" loading="eager" />
+          <img src="/images/ebc/ebc-deck.jpg" alt="" className="rounded-2xl object-cover w-full aspect-[4/3]" />
+          <img src="/images/ebc/ebc-coast.jpg" alt="" className="rounded-2xl object-cover w-full aspect-[4/3]" />
         </div>
       </section>
 
-      <section className="max-w-[1140px] mx-auto px-6 pb-16">
-        <div className="border border-hairline rounded-2xl bg-white p-8 md:p-10 grid md:grid-cols-[1fr_auto] gap-8 items-center">
-          <div className="text-[16px] leading-relaxed text-ink-muted">
-            <p>You spent €100,000 on ads. You got 5,000 contacts. You sold 20.</p>
-            <p className="mt-2 text-ink font-medium">The other 4,980 are dead in your CRM right now.</p>
-            <p className="mt-4">If just 1% of them buy inside the network, on a €200,000 average ticket and a 5% commission:</p>
-          </div>
-          <div className="text-center md:text-right">
-            <p className="font-display text-[clamp(40px,6vw,64px)] leading-none tracking-tight tabular-nums">€100,000</p>
-            <p className="text-[13px] text-ink-muted mt-2">recovered, without selling one more unit of your own</p>
-          </div>
+      {/* Numbers */}
+      <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-14">
+        <div className="border border-hairline rounded-2xl bg-white p-6 md:p-10 grid sm:grid-cols-4 gap-6">
+          <Big n="9 of 10" t="enquiries never fit your project" />
+          <Big n="€0" t="to receive buyers from the network" />
+          <Big n="€15" t="average you earn per lead you share" />
+          <Big n="20%" t="of the commission if your lead buys elsewhere" />
         </div>
       </section>
 
-      <section className="max-w-[1140px] mx-auto px-6 pb-16 grid md:grid-cols-2 gap-12">
-        <div className="flex flex-col gap-6">
-          <H>How it works</H>
-          <Step n="1" t="We revive them, not you." d="We contact your dormant buyers, get their explicit permission and re-qualify budget and timing. Only people who say yes and are still looking enter the network." />
-          <Step n="2" t="We match on what matters." d="Deposit available, country, handover date and payment plan. We never send lists. We send matches." />
-          <Step n="3" t="Another developer closes." d="They receive the contact with a unique introduction ID. Nobody can ever download your database." />
-          <Step n="4" t="It settles itself." d="The commission is deducted from the reservation deposit before anyone is paid. 65% to whoever closes, 20% to whoever brought the buyer, 15% to RealHunt." />
+      {/* How it works, visual */}
+      <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-14">
+        <H>How it works</H>
+        <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[[Search, "1. Paste your project", "We score it and tell you what buyers will see."], [Users, "2. We find buyers who fit", "Deposit, country, handover date, payment plan. Matches, never lists."], [Handshake, "3. You close", "Each contact comes with an introduction ID. Nobody downloads anyone's database."], [Coins, "4. It settles itself", "Commission comes out of the reservation deposit. 65% to who closes, 20% to who brought the buyer, 15% to RealHunt."]].map(([I, t, d]: any) => (
+            <div key={t} className="border border-hairline rounded-2xl bg-white p-6"><I size={22} className="text-ink-muted" /><p className="font-display text-[19px] tracking-tight mt-4">{t}</p><p className="text-[14px] text-ink-muted mt-2 leading-relaxed">{d}</p></div>
+          ))}
         </div>
-        <div className="border border-hairline rounded-2xl bg-white p-8 flex flex-col gap-4 self-start">
-          <p className="font-display text-[22px] tracking-tight leading-snug">"I am not handing my database to a competitor."</p>
-          <p className="text-[15px] text-ink-muted">Good. We will not ask you to.</p>
-          <ul className="flex flex-col gap-3 text-[15px] leading-relaxed">
-            <li><b>You upload fingerprints, not contacts.</b> Your CRM becomes a list of unreadable strings. No names, no emails, no phones. It cannot be reversed.</li>
-            <li><b>It exists to protect you.</b> We compare fingerprints before introducing anyone. If a buyer was already yours, we do not introduce them and you pay nothing.</li>
-            <li><b>We can only check overlap with people already in the network.</b> We cannot extract a single contact of yours that we do not already hold.</li>
-            <li><b>Uploading fingerprints is not sharing leads.</b> Two separate decisions. The second one you make contact by contact.</li>
+      </section>
+
+      {/* Math */}
+      <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-14">
+        <div className="rounded-2xl bg-ink text-paper p-8 md:p-12 grid md:grid-cols-[1fr_auto] gap-8 items-center">
+          <div className="text-[17px] leading-relaxed"><p className="opacity-80">You spent €100,000 on ads. 5,000 contacts. You sold 20.</p><p className="mt-2 font-medium">The other 4,980 are dead in your CRM right now.</p><p className="mt-4 opacity-80">If 1% of them buy inside the network, at a €200,000 ticket and 5% commission, your 20% is:</p></div>
+          <div className="text-center md:text-right"><p className="font-display text-[clamp(44px,7vw,80px)] leading-none tracking-tight tabular-nums">€100,000</p><p className="text-[13px] opacity-70 mt-2">without selling one more unit of your own</p></div>
+        </div>
+      </section>
+
+      {/* Safety */}
+      <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-14 grid md:grid-cols-2 gap-6">
+        <div className="border border-hairline rounded-2xl bg-white p-8">
+          <p className="font-display text-[24px] tracking-tight leading-snug">"I am not handing my database to a competitor."</p>
+          <p className="text-[15px] text-ink-muted mt-2">Good. We will not ask you to.</p>
+          <ul className="mt-5 flex flex-col gap-3 text-[15px] leading-relaxed">
+            {["You upload fingerprints, not contacts. No names, emails or phones. It cannot be reversed.", "If a buyer was already yours, we do not introduce them and you pay nothing.", "Uploading fingerprints is not sharing leads. Sharing is a second decision, contact by contact."].map((t) => <li key={t} className="flex gap-3"><Lock size={16} className="shrink-0 mt-1 text-ink-muted" />{t}</li>)}
+          </ul>
+        </div>
+        <div className="border border-hairline rounded-2xl bg-white p-8">
+          <p className="font-display text-[24px] tracking-tight leading-snug">The rule, said plainly</p>
+          <ul className="mt-5 flex flex-col gap-3 text-[15px] leading-relaxed">
+            <li className="flex gap-3"><Check size={16} className="shrink-0 mt-1 text-ink-muted" /><span><b>What you declare pays you.</b> Your contact buys another project in the network, you get 20%.</span></li>
+            <li className="flex gap-3"><Check size={16} className="shrink-0 mt-1 text-ink-muted" /><span><b>What you do not declare does not protect you.</b> We send you someone you had but never declared, that commission goes to RealHunt.</span></li>
+            <li className="flex gap-3"><Check size={16} className="shrink-0 mt-1 text-ink-muted" /><span>One developer per segment and city for the first 90 days. Commission agreed in writing before any contact is revealed. Every introduction logged.</span></li>
           </ul>
         </div>
       </section>
 
-      <section className="max-w-[1140px] mx-auto px-6 pb-16">
-        <H>The rule, said plainly</H>
-        <div className="mt-6 grid md:grid-cols-2 gap-5">
-          <div className="border border-hairline rounded-xl p-6 bg-white"><p className="font-display text-[18px] tracking-tight">What you declare protects you and pays you.</p><p className="text-[15px] text-ink-muted mt-2">If a contact of yours ends up buying another project in the network, you receive 20%.</p></div>
-          <div className="border border-hairline rounded-xl p-6 bg-white"><p className="font-display text-[18px] tracking-tight">What you do not declare does not protect you.</p><p className="text-[15px] text-ink-muted mt-2">If we send you someone you already had but never declared, that sale's commission goes entirely to RealHunt.</p></div>
-        </div>
-        <p className="mt-4 text-[14px] text-ink-muted">Declaring is free, shares nothing and only benefits you. There is no reason not to.</p>
+      <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-24 text-center">
+        <H>You already paid for those buyers. Collect.</H>
+        <p className="mt-3 text-[15px] text-ink-muted">Opening market by market. Right now: Bali, Dubai, Albania and Costa del Sol.</p>
+        <a href="#analyze" className="rh-btn-primary inline-flex mt-6">Find me buyers, free</a>
       </section>
 
-      <section className="max-w-[1140px] mx-auto px-6 pb-16">
-        <H>What you can count on</H>
-        <ul className="mt-6 grid sm:grid-cols-2 gap-x-10 gap-y-3 text-[15px] leading-relaxed">
-          {["One developer per segment and city for the first 90 days.", "Commission agreed in writing before any contact is revealed.", "Deducted from the deposit, so nobody has to trust anyone's word.", "Every introduction logged with date, time and project.", "Every project in the network is scored on RealHunt. You know who you are sending your buyer to.", "Never a full database export. Not for you, not for anyone."].map((t) => (
-            <li key={t} className="flex gap-3"><Check size={18} className="shrink-0 mt-1 text-ink-muted" />{t}</li>
-          ))}
-        </ul>
-      </section>
-
-      <section id="apply" className="max-w-[1140px] mx-auto px-6 pb-24">
-        <div className="border border-hairline rounded-2xl bg-white p-8 md:p-10 max-w-[720px]">
-          <H>You already paid for those buyers. Collect.</H>
-          <p className="mt-3 text-[15px] text-ink-muted">Opening market by market. Right now: Bali, Dubai, Albania and Costa del Sol.</p>
-          {sent ? <p className="mt-6 inline-flex items-center gap-2 text-[15px]"><Check size={18} /> Received. We reply within two working days.</p> : (
-            <form onSubmit={submit} className="mt-6 flex flex-col gap-3">
-              <input required type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} placeholder="Work email" aria-label="Work email" className="border border-hairline rounded-lg px-4 py-3 text-[15px] bg-paper outline-none focus:border-ink" />
-              <input value={f.company} onChange={(e) => setF({ ...f, company: e.target.value })} placeholder="Company and market (e.g. Sumba Villas, Bali)" aria-label="Company" className="border border-hairline rounded-lg px-4 py-3 text-[15px] bg-paper outline-none focus:border-ink" />
-              <textarea value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} placeholder="Roughly how many unconverted contacts do you have, and what do you sell?" aria-label="Message" rows={3} className="border border-hairline rounded-lg px-4 py-3 text-[15px] bg-paper outline-none focus:border-ink resize-none" />
-              <button type="submit" className="rh-btn-primary self-start">Request access to the network</button>
-            </form>
-          )}
-        </div>
-      </section>
-
-      <footer className="border-t border-hairline">
-        <div className="max-w-[1140px] mx-auto px-6 py-10 flex flex-wrap gap-x-8 gap-y-3 text-[13px] text-ink-muted">
-          <Link to="/" className="hover:text-ink">Deals</Link><Link to="/score" className="hover:text-ink">Score a listing</Link><Link to="/method" className="hover:text-ink">Method</Link><Link to="/legal/terms" className="hover:text-ink">Terms</Link>
-          <span className="ml-auto">Referral payouts subject to local licensing rules in each market.</span>
-        </div>
-      </footer>
+      <footer className="border-t border-hairline"><div className="max-w-[1240px] mx-auto px-4 md:px-6 py-8 flex flex-wrap gap-x-8 gap-y-3 text-[13px] text-ink-muted"><Link to="/" className="hover:text-ink">Deals</Link><Link to="/score" className="hover:text-ink">Score a listing</Link><Link to="/legal/terms" className="hover:text-ink">Terms</Link><span className="ml-auto">Referral payouts subject to local licensing rules in each market.</span></div></footer>
     </div>
   );
 };
-
 export default Network;
