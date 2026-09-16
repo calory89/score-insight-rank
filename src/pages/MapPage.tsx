@@ -20,7 +20,7 @@ const MapPage = () => {
     Promise.all([load(), db.from("ig_finds").select("shortcode,lat,lng,price_eur,location_name,hook,image_urls").neq("status", "hidden").not("lat", "is", null).lte("price_eur", 100000)]).then(([L, { data }]: any) => {
       if (!ref.current) return;
       map = L.map(ref.current, { worldCopyJump: true }).setView([45, 20], 3);
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", { attribution: "© OpenStreetMap © CARTO", maxZoom: 18 }).addTo(map);
+      L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap", maxZoom: 18 }).addTo(map);
       const g = L.markerClusterGroup({ maxClusterRadius: 40 });
       const items: IG[] = data || []; setN(items.length);
       items.forEach((f) => {

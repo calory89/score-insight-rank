@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { db, eur, track, FLAG } from "@/lib/rh";
 import { Check } from "lucide-react";
@@ -23,7 +24,7 @@ const Onboarding = () => {
     track("onboarding_done", { meta: { c, budget } }); setDone(true); setTimeout(() => setOpen(false), 1400);
   };
   const skip = async () => { await db.from("profiles").update({ onboarded: true }).eq("user_id", user.id); track("onboarding_skip"); setOpen(false); };
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/50 backdrop-blur-[2px]">
       <div className="w-full md:max-w-[460px] bg-white rounded-t-3xl md:rounded-3xl p-6 md:p-8 shadow-2xl">
         {done ? <p className="font-display text-[24px] inline-flex items-center gap-2"><Check size={22} /> Done. We only send you what fits.</p> : !country ? (
@@ -42,7 +43,8 @@ const Onboarding = () => {
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 export default Onboarding;

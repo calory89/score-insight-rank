@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { X, Mail, Check, Loader2 } from "lucide-react";
@@ -28,7 +29,7 @@ const AuthModal = ({ open, onClose, title = "Sign in and we email you everything
     if (error) setErr(error.message); else setSent(true);
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center bg-black/50 backdrop-blur-[2px]" onClick={onClose}>
       <div className="w-full md:max-w-[440px] bg-white rounded-t-3xl md:rounded-3xl p-6 md:p-8 shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-4"><p className="font-display text-[24px] leading-tight tracking-tight">{title}</p><button onClick={onClose} aria-label="Close" className="p-1 -mr-1 text-ink-muted hover:text-ink"><X size={20} /></button></div>
@@ -51,7 +52,8 @@ const AuthModal = ({ open, onClose, title = "Sign in and we email you everything
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 export default AuthModal;
