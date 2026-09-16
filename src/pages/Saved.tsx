@@ -31,8 +31,9 @@ const Saved = () => {
               <img src={f.image_urls![0]} srcSet={srcSet(f.image_urls![0])} sizes="(min-width:1024px) 300px, 50vw" alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover" />
               <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent ${f.price_in_image ? "h-1/4" : "h-1/2"}`} />
               <span className="absolute top-2.5 right-2.5 px-2 py-1 rounded-full bg-white/90 text-ink text-[11px] font-medium shadow">{FLAG[c] || "🌍"} {c}</span>
+              {f.price_eur && <span className="absolute top-2.5 left-2.5 px-2 py-1 rounded-full bg-white text-ink text-[12px] font-semibold tabular-nums shadow">{eur(f.price_eur)}</span>}
               <button onClick={(e) => { e.preventDefault(); remove(f); }} aria-label="Remove" className="absolute bottom-3 right-3 h-9 w-9 rounded-full bg-white/90 shadow inline-flex items-center justify-center text-red-500"><Heart size={16} fill="currentColor" /></button>
-              <div className="absolute inset-x-0 bottom-0 p-3 pr-14 text-white">{f.price_eur && !f.price_in_image && <p className="font-display text-[22px] leading-none tabular-nums">{eur(f.price_eur)}</p>}<p className="text-[12px] mt-1 opacity-90 truncate">{f.location_name || c}</p></div>
+              <div className="absolute inset-x-0 bottom-0 p-3 pr-14 text-white"><p className="text-[12px] opacity-90 truncate">{f.location_name || c}</p></div>
             </Link>); })}
         </div>
       </section>

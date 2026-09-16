@@ -30,7 +30,7 @@ const RHNav = () => {
   return (
     <header className="sticky top-0 z-40 bg-paper/85 backdrop-blur-md border-b border-hairline">
       <nav className="max-w-[1240px] mx-auto flex items-center justify-between px-4 md:px-6 h-16">
-        <Link to="/" className="font-display text-[22px] tracking-tight text-ink leading-none">RealHunt</Link>
+        <Link to="/" className="inline-flex items-center gap-2.5 font-display text-[22px] tracking-tight text-ink leading-none"><svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#141414" /><path d="M14 35 L32 17 L50 35" fill="none" stroke="#FFFFFF" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" /><circle cx="32" cy="43.5" r="6.5" fill="#0EA5E9" /></svg>RealHunt</Link>
 
         <div className="hidden md:flex items-center gap-8 text-[14px]">
           {NAV_ITEMS.map((item) => <Link key={item.to} to={item.to} className="text-ink-muted hover:text-ink transition-colors">{item.label}</Link>)}

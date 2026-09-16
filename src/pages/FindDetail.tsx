@@ -192,7 +192,8 @@ const FindDetail = () => {
                   <img src={s.image_urls![0]} srcSet={srcSet(s.image_urls![0])} sizes="(min-width:768px) 25vw, 50vw" alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500" />
                   <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent ${s.price_in_image ? "h-1/4" : "h-1/2"}`} />
                   <span className="absolute top-2.5 right-2.5 px-2 py-1 rounded-full bg-white/90 text-ink text-[11px] font-medium shadow">{FLAG[sc] || "🌍"} {sc}</span>
-                  <div className="absolute inset-x-0 bottom-0 p-3 text-white">{s.price_eur && !s.price_in_image && <p className="font-display text-[22px] leading-none tabular-nums">{eur(s.price_eur)}</p>}<p className="text-[12px] mt-1 opacity-90 truncate">{s.location_name || sc}</p></div>
+                  {s.price_eur && <span className="absolute top-2.5 left-2.5 px-2 py-1 rounded-full bg-white text-ink text-[12px] font-semibold tabular-nums shadow">{eur(s.price_eur)}</span>}
+                  <div className="absolute inset-x-0 bottom-0 p-3 text-white"><p className="text-[12px] mt-1 opacity-90 truncate">{s.location_name || sc}</p></div>
                 </Link>); })}
             </div>
           </div>

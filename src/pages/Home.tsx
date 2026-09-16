@@ -49,7 +49,7 @@ const Home = () => {
     const qq = q.trim().toLowerCase();
     let l = finds.filter((f) => (country === "All" || norm(f.country_guess) === country) && (!beach || f.is_beach) && (!maxP || (f.price_eur != null && f.price_eur <= maxP)) && (!aParam || f.source_account === aParam) && (!qq || `${f.caption || ""} ${f.location_name || ""} ${f.country_guess || ""}`.toLowerCase().includes(qq)));
     const ebcOk = !aParam && (country === "All" || country === "Indonesia") && (!maxP || EBC.price_eur! <= maxP) && (!qq || "sumba indonesia beach cabin ecobeachcity".includes(qq));
-    if (ebcOk) l = [EBC, ...l];
+    if (ebcOk) l = l.length >= 2 ? [...l.slice(0, 2), EBC, ...l.slice(2)] : [...l, EBC];
     return l;
   }, [finds, country, beach, maxP, q, aParam]);
   useEffect(() => { setLimit(PAGE); }, [country, beach, maxP, q, aParam]);
@@ -104,16 +104,16 @@ const Home = () => {
             return (
               <Link key={f.id} to={to} onClick={() => track("card_click", { find: f.shortcode })} className="group relative block rounded-2xl overflow-hidden bg-hairline/30 aspect-[4/5] shadow-sm hover:shadow-xl transition-shadow">
                 <img src={u} srcSet={srcSet(u)} sizes="(min-width:1024px) 300px, (min-width:768px) 33vw, 50vw" alt="" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
-                <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent ${f.price_in_image ? "h-1/4" : "h-1/2"}`} />
+                <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/70 to-transparent" />
                 <span className="absolute top-2.5 right-2.5 px-2 py-1 rounded-full bg-white/90 text-ink text-[11px] font-medium shadow">{FLAG[c] || "🌍"} {c}</span>
-                <div className="absolute top-2.5 left-2.5 flex gap-1">
+                <div className="absolute top-2.5 left-2.5 flex gap-1 flex-wrap max-w-[60%]">
+                  {f.price_eur && <span className="px-2 py-1 rounded-full bg-white text-ink text-[12px] font-semibold tabular-nums shadow">{eur(f.price_eur)}</span>}
                   {f.is_beach && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-sky-500/90 text-white text-[11px] font-medium shadow"><Waves size={11} /> Beach</span>}
                   {isNew(f.posted_at) && <span className="px-2 py-1 rounded-full bg-emerald-500/90 text-white text-[11px] font-medium shadow">New</span>}
                 </div>
                 {f.id !== "ebc" && <button onClick={(e) => toggleFav(e, f)} aria-label="Save" className={`absolute bottom-3 right-3 h-9 w-9 rounded-full bg-white/90 shadow inline-flex items-center justify-center ${favs.has(f.id) ? "text-red-500" : "text-ink"}`}><Heart size={16} fill={favs.has(f.id) ? "currentColor" : "none"} /></button>}
                 <div className="absolute inset-x-0 bottom-0 p-3 md:p-4 pr-14 text-white">
-                  {f.price_eur && !f.price_in_image && <p className="font-display text-[22px] md:text-[28px] leading-none tabular-nums drop-shadow">{eur(f.price_eur)}</p>}
-                  <p className="text-[12px] md:text-[13px] mt-1 opacity-90 truncate">{f.hook || f.location_name || cleanCap(f.caption).slice(0, 48) || c}</p>
+                  <p className="text-[12px] md:text-[13px] opacity-95 line-clamp-2 leading-snug">{f.hook || f.location_name || cleanCap(f.caption).slice(0, 48) || c}</p>
                 </div>
               </Link>
             );
