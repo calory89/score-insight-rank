@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import RHNav from "@/components/realhunt/RHNav";
 
 const db = supabase as any;
-type U = { user_id: string; email: string | null; username: string | null; last_login_at: string | null; clicks: number; favorites: number; last_event: string | null };
+type U = { user_id: string; email: string | null; username: string | null; last_login_at: string | null; clicks: number; favorites: number; views: number; last_event: string | null; first_find: string | null; first_shortcode: string | null };
 type E = { id: string; user_id: string; event: string; created_at: string; ig_finds: { source_account: string; caption: string | null; post_url: string; price_eur: number | null } | null };
 type L = { id: string; email: string; company: string | null; message: string | null; source: string | null; created_at: string };
 
@@ -63,8 +63,8 @@ const AdminActivity = () => {
 
         <section>
           <h2 className="font-display text-[20px] tracking-tight mb-3">Users</h2>
-          <div className="overflow-x-auto border border-hairline rounded-xl bg-white"><table className="w-full border-collapse"><thead><tr><Th c="Email" /><Th c="Username" /><Th c="Clicks" /><Th c="Favorites" /><Th c="Last event" /><Th c="Last login" /></tr></thead><tbody>
-            {users.map((u) => <tr key={u.user_id}><Td c={u.email || ""} /><Td c={u.username || ""} m /><Td c={u.clicks} /><Td c={u.favorites} /><Td c={fmt(u.last_event)} m /><Td c={fmt(u.last_login_at)} m /></tr>)}
+          <div className="overflow-x-auto border border-hairline rounded-xl bg-white"><table className="w-full border-collapse"><thead><tr><Th c="Email" /><Th c="Came in via" /><Th c="Views" /><Th c="Clicks" /><Th c="Favorites" /><Th c="Last event" /><Th c="Last login" /></tr></thead><tbody>
+            {users.map((u) => <tr key={u.user_id}><Td c={u.email || ""} /><Td c={u.first_shortcode ? <Link to={`/find/${u.first_shortcode}`} className="underline">{u.first_find}</Link> : ""} m /><Td c={u.views || 0} /><Td c={u.clicks} /><Td c={u.favorites} /><Td c={fmt(u.last_event)} m /><Td c={fmt(u.last_login_at)} m /></tr>)}
           </tbody></table></div>
         </section>
 

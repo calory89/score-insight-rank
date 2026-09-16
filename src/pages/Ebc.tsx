@@ -4,6 +4,7 @@ import RHNav from "@/components/realhunt/RHNav";
 import { ArrowLeft, ExternalLink, MapPin, Waves, Plane, Check, Share2 } from "lucide-react";
 
 const IMGS = [
+  ["/images/ebc/ebc-hero.jpg", "The cabin, steps from the beach"],
   ["/images/ebc/ebc-card.jpg", "Beachfront cabins on the north coast of Sumba"],
   ["/images/ebc/ebc-cabin.jpg", "The €11,500 cabin, 100% off-site built"],
   ["/images/ebc/ebc-interior.jpg", "Studio interior, kitchen and living"],

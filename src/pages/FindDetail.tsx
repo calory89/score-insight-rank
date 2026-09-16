@@ -79,11 +79,11 @@ const FindDetail = () => {
           <div>
             <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted">Spotted by @{f.source_account}{when ? " · " + when : ""}</p>
             <h1 className="font-display text-[clamp(38px,7vw,64px)] leading-none tracking-tight mt-3 tabular-nums">{f.price_eur ? eur(f.price_eur) : f.price_raw || "Price on request"}</h1>
-            {f.price_raw && f.price_eur && <p className="text-[13px] text-ink-muted mt-1">Listed as {f.price_raw}, converted approximately.</p>}
+            {f.price_raw && f.price_eur && f.price_raw !== "seen in image" && <p className="text-[13px] text-ink-muted mt-1">Listed as {f.price_raw}, converted approximately.</p>}
             <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[14px] text-ink-muted">
-              {where && <span className="inline-flex items-center gap-1.5"><MapPin size={14} /> {where}</span>}
+              <span className="inline-flex items-center gap-1.5"><MapPin size={14} /> {user ? where : (f.country_guess || "")}{!user && <Lock size={12} className="ml-1" />}</span>
               {when && <span className="inline-flex items-center gap-1.5"><Calendar size={14} /> {when}</span>}
-              {f.likes != null && <span>{f.likes.toLocaleString("en-GB")} people liked this</span>}
+              {user && f.likes != null && <span>{f.likes.toLocaleString("en-GB")} people liked this</span>}
             </div>
 
             <div className="mt-8">
@@ -92,10 +92,9 @@ const FindDetail = () => {
                 <p className="text-[16px] leading-relaxed whitespace-pre-line">{cap || "The original post has no text. Open it to see the details."}</p>
               ) : (
                 <div className="relative">
-                  <p className="text-[16px] leading-relaxed">{cap.slice(0, 160)}{cap.length > 160 ? "…" : ""}</p>
-                  <div className="mt-5 border border-hairline rounded-2xl bg-white p-6 flex flex-col gap-3">
-                    <p className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><Lock size={18} /> Sign in to see the full listing</p>
-                    <p className="text-[14px] text-ink-muted">Free account. You get the full description, the link to the original post, and you can save it. Ten seconds with Google.</p>
+                  <div className="border border-hairline rounded-2xl bg-white p-6 flex flex-col gap-3">
+                    <p className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><Lock size={18} /> Sign in to see where it is and how to get it</p>
+                    <p className="text-[14px] text-ink-muted">Free. Exact location, full description, the link to the original listing, and you can save it. Ten seconds with Google.</p>
                     <div className="flex flex-wrap gap-3 mt-1">
                       <Link to={signIn} className="rh-btn-primary">Sign in</Link>
                       <Link to={`/auth/sign-up?redirect=${encodeURIComponent(next)}`} className="px-5 py-2.5 rounded-full border border-hairline text-[14px] hover:border-ink">Create account</Link>
