@@ -63,7 +63,7 @@ const Saved = React.lazy(() => import("./pages/Saved"));
 const Account = React.lazy(() => import("./pages/Account"));
 const MapPage = React.lazy(() => import("./pages/MapPage"));
 const Swipe = React.lazy(() => import("./pages/Swipe"));
-const Compare = React.lazy(() => import("./pages/Compare"));
+const CompareHomes = React.lazy(() => import("./pages/CompareHomes"));
 const Guide = React.lazy(() => import("./pages/Guide"));
 const Sell = React.lazy(() => import("./pages/Sell"));
 const Collection = React.lazy(() => import("./pages/Collection"));
@@ -178,7 +178,7 @@ const AnimatedRoutes = () => {
         <Route path="/account/:tab" element={<Account />} />
         <Route path="/map" element={<MapPage />} />
         <Route path="/swipe" element={<Swipe />} />
-        <Route path="/compare" element={<Compare />} />
+        <Route path="/compare-homes" element={<CompareHomes />} />
         <Route path="/guide/:country" element={<Guide />} />
         <Route path="/sell" element={<Sell />} />
         <Route path="/c/:username" element={<Collection />} />
