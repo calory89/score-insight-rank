@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import RHNav from "@/components/realhunt/RHNav";
-import { ArrowLeft, ExternalLink, MapPin, Waves, Plane, Check, Share2 } from "lucide-react";
+import { ArrowLeft, ExternalLink, MapPin, Waves, Plane, Check, Share2, CalendarCheck } from "lucide-react";
+import { CALENDLY, track } from "@/lib/rh";
+const BUILD: [string, string][] = [["/images/ebc/ebc-build-1.jpg", "The beach and first plots, drone, on site"], ["/images/ebc/ebc-build-2.jpg", "Studio under construction, on site"], ["/images/ebc/ebc-build-3.jpg", "Glamping interior, delivered unit"]];
 
 const IMGS = [
   ["/images/ebc/ebc-hero.jpg", "The cabin, steps from the beach"],
@@ -30,6 +32,8 @@ const PRICES: [string, string, string][] = [
 const Ebc = () => {
   const [i, setI] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [months, setMonths] = useState(24);
+  useEffect(() => { track("ebc_view", { find: "ecobeachcity" }); }, []);
   useEffect(() => { document.title = "€11,500 beachfront cabin · Sumba, Indonesia · RealHunt"; window.scrollTo(0, 0); }, []);
   const share = () => { const url = location.href; if (navigator.share) { navigator.share({ title: "€11,500 beachfront cabin in Sumba", url }).catch(() => {}); return; } navigator.clipboard?.writeText(url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); }); };
 
@@ -74,6 +78,18 @@ const Ebc = () => {
               <p className="text-[13px] text-ink-muted mt-2">Cabin, connections and furniture together come to about €28,000, and that part can be paid in instalments. Land is paid separately, first.</p>
             </div>
 
+            <div className="mt-8 border border-hairline rounded-2xl bg-white p-5">
+              <p className="font-display text-[18px] tracking-tight">What it costs per month</p>
+              <p className="text-[13px] text-ink-muted">Cabin + connections, €18,000, spread over {months} months. Land paid first, separately.</p>
+              <input type="range" min={6} max={36} step={6} value={months} onChange={(e) => setMonths(Number(e.target.value))} className="w-full mt-3 accent-sky-500" />
+              <div className="flex items-baseline justify-between mt-2"><span className="text-[13px] text-ink-muted">{months} months</span><span className="font-display text-[30px] tabular-nums">€{Math.round(18000 / months).toLocaleString("en-GB")}<span className="text-[14px] text-ink-muted"> / month</span></span></div>
+            </div>
+
+            <div className="mt-8">
+              <h2 className="font-display text-[20px] tracking-tight mb-3">Built, not rendered</h2>
+              <div className="grid grid-cols-3 gap-2">{BUILD.map(([u, a]) => <figure key={u}><img src={u} alt={a} loading="lazy" className="w-full aspect-[4/3] object-cover rounded-xl" /><figcaption className="text-[11px] text-ink-muted mt-1">{a}</figcaption></figure>)}</div>
+            </div>
+
             <div className="mt-8">
               <h2 className="font-display text-[20px] tracking-tight mb-3">100 facilities planned. Some of them:</h2>
               <ul className="grid grid-cols-2 gap-x-6 gap-y-2 text-[14px]">{FACILITIES.map((f) => <li key={f} className="flex gap-2"><Check size={15} className="shrink-0 mt-0.5 text-ink-muted" />{f}</li>)}</ul>
@@ -93,8 +109,9 @@ const Ebc = () => {
 
           <aside className="hidden md:block">
             <div className="sticky top-24 border border-hairline rounded-2xl bg-white p-6 flex flex-col gap-3">
-              <p className="font-display text-[18px] tracking-tight">See the village and book a call</p>
-              <a href="https://ecobeachcity.com" target="_blank" rel="noreferrer" className="rh-btn-primary inline-flex items-center justify-center gap-2">Open ecobeachcity.com <ExternalLink size={15} /></a>
+              <p className="font-display text-[18px] tracking-tight">15-minute call with the founder</p>
+              <a href={CALENDLY} target="_blank" rel="noreferrer" onClick={() => track("ebc_call")} className="rh-btn-primary inline-flex items-center justify-center gap-2"><CalendarCheck size={15} /> Book a call, free</a>
+              <a href="https://ecobeachcity.com" target="_blank" rel="noreferrer" className="h-11 rounded-xl border border-hairline hover:border-ink inline-flex items-center justify-center gap-2 text-[14px]">See the village <ExternalLink size={15} /></a>
               <button onClick={share} className="h-11 rounded-xl border border-hairline hover:border-ink inline-flex items-center justify-center gap-2 text-[14px]">{copied ? <Check size={15} /> : <Share2 size={15} />} {copied ? "Copied" : "Share"}</button>
               <Link to="/fit?d=2300&m=500&t=24" className="text-[13px] underline text-ink-muted text-center">Can I afford it?</Link>
               <p className="text-[12px] text-ink-muted leading-relaxed">Eco Beach City is developed by the team behind RealHunt. We say so here so you know where the commission goes.</p>
@@ -105,7 +122,7 @@ const Ebc = () => {
 
       <div className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur border-t border-hairline px-4 py-3 flex items-center gap-3">
         <button onClick={share} aria-label="Share" className="h-11 w-11 rounded-full border border-hairline inline-flex items-center justify-center">{copied ? <Check size={16} /> : <Share2 size={16} />}</button>
-        <a href="https://ecobeachcity.com" target="_blank" rel="noreferrer" className="rh-btn-primary flex-1 !py-3 inline-flex items-center justify-center gap-2">See the village <ExternalLink size={15} /></a>
+        <a href={CALENDLY} target="_blank" rel="noreferrer" onClick={() => track("ebc_call")} className="rh-btn-primary flex-1 !py-3 inline-flex items-center justify-center gap-2"><CalendarCheck size={15} /> Book a free call</a>
       </div>
     </div>
   );

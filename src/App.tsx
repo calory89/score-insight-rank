@@ -59,6 +59,7 @@ const MarketCity = React.lazy(() => import("./pages/MarketCity"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 const Fit = React.lazy(() => import("./pages/Fit"));
 const Ebc = React.lazy(() => import("./pages/Ebc"));
+const Saved = React.lazy(() => import("./pages/Saved"));
 const Home = React.lazy(() => import("./pages/Home"));
 const Network = React.lazy(() => import("./pages/Network"));
 const Finds = React.lazy(() => import("./pages/Finds"));
@@ -162,6 +163,9 @@ const AnimatedRoutes = () => {
           <Route path="/heatmap" element={<PageTransition><Heatmap /></PageTransition>} />
           <Route path="/fit" element={<PageTransition><Fit /></PageTransition>} />
           <Route path="/ecobeachcity" element={<Ebc />} />
+        <Route path="/saved" element={<Saved />} />
+        <Route path="/country/:country" element={<Home />} />
+        <Route path="/from/:account" element={<Home />} />
         <Route path="/network" element={<PageTransition><Network /></PageTransition>} />
           <Route path="/finds" element={<PageTransition><Finds /></PageTransition>} />
           <Route path="/find/:shortcode" element={<PageTransition><FindDetail /></PageTransition>} />
