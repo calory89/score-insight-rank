@@ -1,0 +1,26 @@
+name: import-site
+on:
+  push:
+    paths: [".github/workflows/import-site.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch + apply
+        run: |
+          set -e
+          curl -fsSL -X POST https://temp.sh/RZqZK/site16.zip -o site.zip
+          echo "25fac42c19e24e7a26abc645d576d1bf  site.zip" | md5sum -c -
+          unzip -oq site.zip
+          test -f src/pages/NetworkApp.tsx && test -f src/components/realhunt/AdminNetwork.tsx
+          grep -q "NetworkApp" src/App.tsx
+          rm -f site.zip .github/workflows/import-site.yml
+          git config user.name "realhunt-import"
+          git config user.email "import@realhunt.co"
+          git add -A
+          git commit -m "perf: lazy routes, instant feed cache, consent-gated pixel, working SW; feat: RealHunt Network developer CRM (fingerprints) + admin"
+          git push
