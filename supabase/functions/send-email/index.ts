@@ -42,7 +42,8 @@ Deno.serve(async (req) => {
     const id = crypto.randomUUID();
     const html = String(body.html || "").replace("</body>", `<p style="font-size:11px;color:#a8a293;text-align:center;margin-top:24px;"><a href="${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email?unsubscribe=${token}" style="color:#8a8578;">Unsubscribe</a></p></body>`);
     const text = String(body.text || html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()) + `\n\nUnsubscribe: ${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email?unsubscribe=${token}`;
-    await sendLovableEmail({ to, from: FROM, sender_domain: SENDER_DOMAIN, subject: String(body.subject || "RealHunt"), html, text, purpose: "transactional", label: String(body.label || "realhunt"), idempotency_key: `rh-${to}-${id}`, message_id: id, unsubscribe_token: token }, { apiKey });
+    const replyTo = String(body.reply_to || DEFAULT_REPLY_TO);
+    await sendLovableEmail({ to, from: FROM, sender_domain: SENDER_DOMAIN, subject: String(body.subject || "RealHunt"), html, text, purpose: "transactional", label: String(body.label || "realhunt"), idempotency_key: `rh-${to}-${id}`, message_id: id, unsubscribe_token: token, reply_to: replyTo, replyTo: replyTo }, { apiKey });
     await supabase.from("email_send_log").insert({ message_id: id, recipient_email: to, template_name: String(body.label || "realhunt"), status: "sent" });
     return json({ ok: true, id });
   } catch (e: any) {
