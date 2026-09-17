@@ -2,223 +2,186 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { usePageTracking } from "@/hooks/usePageTracking";
 import { useReferralCapture } from "@/hooks/useReferralCapture";
-import { AnimatePresence, motion } from "framer-motion";
-import React, { Suspense } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import CommandPalette from "@/components/CommandPalette";
-import KeyboardShortcutsModal from "@/components/KeyboardShortcutsModal";
-import OnboardingWizard from "@/components/OnboardingWizard";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import OfflineBanner from "@/components/OfflineBanner";
-import IndexNew from "./pages/IndexNew";
-import HomeScoring from "./pages/HomeScoring";
-import Apply from "./pages/Apply";
-import ProjectDetail from "./pages/ProjectDetail";
-import Method from "./pages/Method";
-import Pricing from "./pages/Pricing";
-import ForAgents from "./pages/ForAgents";
-import SignIn from "./pages/auth/SignIn";
-import SignUp from "./pages/auth/SignUp";
-import Callback from "./pages/auth/Callback";
-import Brand from "./pages/app/Brand";
-import ShortLinkRedirect from "./pages/ShortLinkRedirect";
 
-// Lazy-loaded routes for code splitting
-const Dashboard = React.lazy(() => import("./pages/Dashboard"));
-const Analysis = React.lazy(() => import("./pages/Analysis"));
-const Compare = React.lazy(() => import("./pages/Compare"));
-const Settings = React.lazy(() => import("./pages/Settings"));
-const Admin = React.lazy(() => import("./pages/Admin"));
-const Rankings = React.lazy(() => import("./pages/Rankings"));
-const Leads = React.lazy(() => import("./pages/Leads"));
-const Tickets = React.lazy(() => import("./pages/Tickets"));
-const Discover = React.lazy(() => import("./pages/Discover"));
-const Deals = React.lazy(() => import("./pages/Deals"));
-const Profile = React.lazy(() => import("./pages/Profile"));
-const Game = React.lazy(() => import("./pages/Game"));
-const SearchPage = React.lazy(() => import("./pages/Search"));
-const Privacy = React.lazy(() => import("./pages/Privacy"));
-const Terms = React.lazy(() => import("./pages/Terms"));
-const LegalPrivacy = React.lazy(() => import("./pages/legal/Privacy"));
-const LegalTerms = React.lazy(() => import("./pages/legal/Terms"));
-const Contact = React.lazy(() => import("./pages/Contact"));
-const ResetPassword = React.lazy(() => import("./pages/ResetPassword"));
-const InvestorQuiz = React.lazy(() => import("./pages/InvestorQuiz"));
-const Portfolio = React.lazy(() => import("./pages/Portfolio"));
-const MarketDirectory = React.lazy(() => import("./pages/MarketDirectory"));
-const MarketPulse = React.lazy(() => import("./pages/MarketPulse"));
-const Heatmap = React.lazy(() => import("./pages/Heatmap"));
-const BestDealsCountry = React.lazy(() => import("./pages/BestDealsCountry"));
-const MarketCity = React.lazy(() => import("./pages/MarketCity"));
-const NotFound = React.lazy(() => import("./pages/NotFound"));
-const Fit = React.lazy(() => import("./pages/Fit"));
-const Ebc = React.lazy(() => import("./pages/Ebc"));
-const Saved = React.lazy(() => import("./pages/Saved"));
-const Account = React.lazy(() => import("./pages/Account"));
-const MapPage = React.lazy(() => import("./pages/MapPage"));
-const Swipe = React.lazy(() => import("./pages/Swipe"));
-const CompareHomes = React.lazy(() => import("./pages/CompareHomes"));
-const Guide = React.lazy(() => import("./pages/Guide"));
-const Sell = React.lazy(() => import("./pages/Sell"));
-const Collection = React.lazy(() => import("./pages/Collection"));
-const LegalPage = React.lazy(() => import("./pages/legal/Legal"));
-const Home = React.lazy(() => import("./pages/Home"));
-const Network = React.lazy(() => import("./pages/Network"));
-const Finds = React.lazy(() => import("./pages/Finds"));
-const AdminActivity = React.lazy(() => import("./pages/AdminActivity"));
-const FindDetail = React.lazy(() => import("./pages/FindDetail"));
+// Everything is lazy: the first paint only ships React, the router, auth and the page you asked for.
+const L = (f: () => Promise<any>) => React.lazy(f);
+const Home = L(() => import("./pages/Home"));
+const IndexNew = L(() => import("./pages/IndexNew"));
+const HomeScoring = L(() => import("./pages/HomeScoring"));
+const Apply = L(() => import("./pages/Apply"));
+const ProjectDetail = L(() => import("./pages/ProjectDetail"));
+const Method = L(() => import("./pages/Method"));
+const Pricing = L(() => import("./pages/Pricing"));
+const ForAgents = L(() => import("./pages/ForAgents"));
+const SignIn = L(() => import("./pages/auth/SignIn"));
+const SignUp = L(() => import("./pages/auth/SignUp"));
+const Callback = L(() => import("./pages/auth/Callback"));
+const Brand = L(() => import("./pages/app/Brand"));
+const ShortLinkRedirect = L(() => import("./pages/ShortLinkRedirect"));
+const Dashboard = L(() => import("./pages/Dashboard"));
+const Analysis = L(() => import("./pages/Analysis"));
+const Compare = L(() => import("./pages/Compare"));
+const Settings = L(() => import("./pages/Settings"));
+const Admin = L(() => import("./pages/Admin"));
+const Rankings = L(() => import("./pages/Rankings"));
+const Leads = L(() => import("./pages/Leads"));
+const Tickets = L(() => import("./pages/Tickets"));
+const Discover = L(() => import("./pages/Discover"));
+const Deals = L(() => import("./pages/Deals"));
+const Profile = L(() => import("./pages/Profile"));
+const Game = L(() => import("./pages/Game"));
+const SearchPage = L(() => import("./pages/Search"));
+const Privacy = L(() => import("./pages/Privacy"));
+const Terms = L(() => import("./pages/Terms"));
+const LegalPrivacy = L(() => import("./pages/legal/Privacy"));
+const LegalTerms = L(() => import("./pages/legal/Terms"));
+const Contact = L(() => import("./pages/Contact"));
+const ResetPassword = L(() => import("./pages/ResetPassword"));
+const InvestorQuiz = L(() => import("./pages/InvestorQuiz"));
+const Portfolio = L(() => import("./pages/Portfolio"));
+const MarketDirectory = L(() => import("./pages/MarketDirectory"));
+const MarketPulse = L(() => import("./pages/MarketPulse"));
+const Heatmap = L(() => import("./pages/Heatmap"));
+const BestDealsCountry = L(() => import("./pages/BestDealsCountry"));
+const MarketCity = L(() => import("./pages/MarketCity"));
+const NotFound = L(() => import("./pages/NotFound"));
+const Fit = L(() => import("./pages/Fit"));
+const Ebc = L(() => import("./pages/Ebc"));
+const Saved = L(() => import("./pages/Saved"));
+const Account = L(() => import("./pages/Account"));
+const MapPage = L(() => import("./pages/MapPage"));
+const Swipe = L(() => import("./pages/Swipe"));
+const CompareHomes = L(() => import("./pages/CompareHomes"));
+const Guide = L(() => import("./pages/Guide"));
+const Sell = L(() => import("./pages/Sell"));
+const Collection = L(() => import("./pages/Collection"));
+const LegalPage = L(() => import("./pages/legal/Legal"));
+const Network = L(() => import("./pages/Network"));
+const NetworkApp = L(() => import("./pages/NetworkApp"));
+const Finds = L(() => import("./pages/Finds"));
+const AdminActivity = L(() => import("./pages/AdminActivity"));
+const FindDetail = L(() => import("./pages/FindDetail"));
+const CommandPalette = L(() => import("@/components/CommandPalette"));
+const KeyboardShortcutsModal = L(() => import("@/components/KeyboardShortcutsModal"));
+const OnboardingWizard = L(() => import("@/components/OnboardingWizard"));
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000,      // 5 min — avoid redundant fetches
-      gcTime: 15 * 60 * 1000,         // 15 min garbage collection
-      retry: 2,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 5 * 60 * 1000, gcTime: 15 * 60 * 1000, retry: 2, refetchOnWindowFocus: false } } });
 
-const PageTracker = ({ children }: { children: React.ReactNode }) => {
-  usePageTracking();
-  useReferralCapture();
-  return <>{children}</>;
-};
+const PageTracker = ({ children }: { children: React.ReactNode }) => { usePageTracking(); useReferralCapture(); return <>{children}</>; };
 
-const PageTransition = ({ children }: { children: React.ReactNode }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 6 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0, y: -4 }}
-    transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
-  >
-    {children}
-  </motion.div>
-);
+const SuspenseFallback = () => <div className="min-h-[60vh] bg-paper" aria-busy="true" />;
 
-const SuspenseFallback = () => (
-  <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4">
-    <div className="relative">
-      <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-        <div className="h-5 w-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    </div>
-    <p className="text-xs text-muted-foreground animate-pulse">Loading…</p>
-  </div>
-);
-
-const FeatureGatedOnboarding = () => {
+// Power-user extras load only once the browser is idle, never before the page you came for.
+const Extras = () => {
+  const [on, setOn] = useState(false);
   const { enabled } = useFeatureFlag("onboarding_tour");
-  if (!enabled) return null;
-  return <OnboardingWizard />;
+  useEffect(() => { const idle = (window as any).requestIdleCallback || ((cb: () => void) => setTimeout(cb, 2500)); idle(() => setOn(true)); }, []);
+  if (!on) return null;
+  return <Suspense fallback={null}><CommandPalette /><KeyboardShortcutsModal />{enabled && <OnboardingWizard />}</Suspense>;
 };
 
-const AnimatedRoutes = () => {
-  const location = useLocation();
-  return (
-    <Suspense fallback={<SuspenseFallback />}>
-      <AnimatePresence mode="wait">
-        <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<PageTransition><Home /></PageTransition>} />
-          <Route path="/score" element={<PageTransition><IndexNew /></PageTransition>} />
-          <Route path="/homescoring" element={<PageTransition><HomeScoring /></PageTransition>} />
-          <Route path="/apply" element={<PageTransition><Apply /></PageTransition>} />
-          <Route path="/projects/:slug" element={<PageTransition><ProjectDetail /></PageTransition>} />
-          <Route path="/method" element={<PageTransition><Method /></PageTransition>} />
-          <Route path="/pricing" element={<PageTransition><Pricing /></PageTransition>} />
-          <Route path="/for-agents" element={<PageTransition><ForAgents /></PageTransition>} />
-          <Route path="/auth/sign-in" element={<PageTransition><SignIn /></PageTransition>} />
-          <Route path="/auth/sign-up" element={<PageTransition><SignUp /></PageTransition>} />
-          <Route path="/auth/callback" element={<PageTransition><Callback /></PageTransition>} />
-          <Route path="/auth/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
-          <Route path="/app" element={<PageTransition><Dashboard /></PageTransition>} />
-          <Route path="/app/brand" element={<PageTransition><Brand /></PageTransition>} />
-          <Route path="/s/:slug" element={<ShortLinkRedirect />} />
-          <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
-          <Route path="/analysis/loading" element={<PageTransition><Analysis /></PageTransition>} />
-          <Route path="/analysis/:id" element={<PageTransition><Analysis /></PageTransition>} />
-          <Route path="/r/:slug" element={<PageTransition><Analysis /></PageTransition>} />
-          <Route path="/compare" element={<PageTransition><Compare /></PageTransition>} />
-          <Route path="/settings" element={<PageTransition><Settings /></PageTransition>} />
-          <Route path="/admin" element={<PageTransition><Admin /></PageTransition>} />
-          <Route path="/rankings" element={<PageTransition><Rankings /></PageTransition>} />
-          <Route path="/leads" element={<PageTransition><Leads /></PageTransition>} />
-          <Route path="/tickets" element={<PageTransition><Tickets /></PageTransition>} />
-          <Route path="/discover" element={<PageTransition><Discover /></PageTransition>} />
-          <Route path="/deals" element={<PageTransition><Deals /></PageTransition>} />
-          <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
-          <Route path="/profile/:userId" element={<PageTransition><Profile /></PageTransition>} />
-          <Route path="/game" element={<PageTransition><Game /></PageTransition>} />
-          <Route path="/search" element={<PageTransition><SearchPage /></PageTransition>} />
-          <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
-          <Route path="/terms" element={<PageTransition><Terms /></PageTransition>} />
-          <Route path="/legal/privacy" element={<PageTransition><LegalPrivacy /></PageTransition>} />
-          <Route path="/legal/terms" element={<PageTransition><LegalTerms /></PageTransition>} />
-          <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
-          <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
-          <Route path="/quiz" element={<PageTransition><InvestorQuiz /></PageTransition>} />
-          <Route path="/portfolio" element={<PageTransition><Portfolio /></PageTransition>} />
-          <Route path="/market" element={<PageTransition><MarketDirectory /></PageTransition>} />
-          <Route path="/market/:country/:city" element={<PageTransition><MarketPulse /></PageTransition>} />
-          <Route path="/market/:city" element={<PageTransition><MarketCity /></PageTransition>} />
-          <Route path="/best-deals/:country" element={<PageTransition><BestDealsCountry /></PageTransition>} />
-          <Route path="/heatmap" element={<PageTransition><Heatmap /></PageTransition>} />
-          <Route path="/fit" element={<PageTransition><Fit /></PageTransition>} />
-          <Route path="/ecobeachcity" element={<Ebc />} />
-        <Route path="/saved" element={<Saved />} />
-        <Route path="/country/:country" element={<Home />} />
-        <Route path="/from/:account" element={<Home />} />
-        <Route path="/account" element={<Account />} />
-        <Route path="/account/:tab" element={<Account />} />
-        <Route path="/map" element={<MapPage />} />
-        <Route path="/swipe" element={<Swipe />} />
-        <Route path="/compare-homes" element={<CompareHomes />} />
-        <Route path="/guide/:country" element={<Guide />} />
-        <Route path="/sell" element={<Sell />} />
-        <Route path="/c/:username" element={<Collection />} />
-        <Route path="/legal/cookies" element={<LegalPage page="cookies" />} />
-        <Route path="/legal/takedown" element={<LegalPage page="takedown" />} />
-        <Route path="/network" element={<PageTransition><Network /></PageTransition>} />
-          <Route path="/finds" element={<PageTransition><Finds /></PageTransition>} />
-          <Route path="/find/:shortcode" element={<PageTransition><FindDetail /></PageTransition>} />
-          <Route path="/admin/activity" element={<PageTransition><AdminActivity /></PageTransition>} />
-          <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
-        </Routes>
-      </AnimatePresence>
-    </Suspense>
-  );
-};
+const AppRoutes = () => (
+  <Suspense fallback={<SuspenseFallback />}>
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/score" element={<IndexNew />} />
+      <Route path="/homescoring" element={<HomeScoring />} />
+      <Route path="/apply" element={<Apply />} />
+      <Route path="/projects/:slug" element={<ProjectDetail />} />
+      <Route path="/method" element={<Method />} />
+      <Route path="/pricing" element={<Pricing />} />
+      <Route path="/for-agents" element={<ForAgents />} />
+      <Route path="/auth/sign-in" element={<SignIn />} />
+      <Route path="/auth/sign-up" element={<SignUp />} />
+      <Route path="/auth/callback" element={<Callback />} />
+      <Route path="/auth/reset-password" element={<ResetPassword />} />
+      <Route path="/app" element={<Dashboard />} />
+      <Route path="/app/brand" element={<Brand />} />
+      <Route path="/s/:slug" element={<ShortLinkRedirect />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/analysis/loading" element={<Analysis />} />
+      <Route path="/analysis/:id" element={<Analysis />} />
+      <Route path="/r/:slug" element={<Analysis />} />
+      <Route path="/compare" element={<Compare />} />
+      <Route path="/settings" element={<Settings />} />
+      <Route path="/admin" element={<Admin />} />
+      <Route path="/rankings" element={<Rankings />} />
+      <Route path="/leads" element={<Leads />} />
+      <Route path="/tickets" element={<Tickets />} />
+      <Route path="/discover" element={<Discover />} />
+      <Route path="/deals" element={<Deals />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/profile/:userId" element={<Profile />} />
+      <Route path="/game" element={<Game />} />
+      <Route path="/search" element={<SearchPage />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/legal/privacy" element={<LegalPrivacy />} />
+      <Route path="/legal/terms" element={<LegalTerms />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/quiz" element={<InvestorQuiz />} />
+      <Route path="/portfolio" element={<Portfolio />} />
+      <Route path="/market" element={<MarketDirectory />} />
+      <Route path="/market/:country/:city" element={<MarketPulse />} />
+      <Route path="/market/:city" element={<MarketCity />} />
+      <Route path="/best-deals/:country" element={<BestDealsCountry />} />
+      <Route path="/heatmap" element={<Heatmap />} />
+      <Route path="/fit" element={<Fit />} />
+      <Route path="/ecobeachcity" element={<Ebc />} />
+      <Route path="/saved" element={<Saved />} />
+      <Route path="/country/:country" element={<Home />} />
+      <Route path="/from/:account" element={<Home />} />
+      <Route path="/account" element={<Account />} />
+      <Route path="/account/:tab" element={<Account />} />
+      <Route path="/map" element={<MapPage />} />
+      <Route path="/swipe" element={<Swipe />} />
+      <Route path="/compare-homes" element={<CompareHomes />} />
+      <Route path="/guide/:country" element={<Guide />} />
+      <Route path="/sell" element={<Sell />} />
+      <Route path="/c/:username" element={<Collection />} />
+      <Route path="/legal/cookies" element={<LegalPage page="cookies" />} />
+      <Route path="/legal/takedown" element={<LegalPage page="takedown" />} />
+      <Route path="/network" element={<Network />} />
+      <Route path="/network/app" element={<NetworkApp />} />
+      <Route path="/network/app/:tab" element={<NetworkApp />} />
+      <Route path="/finds" element={<Finds />} />
+      <Route path="/find/:shortcode" element={<FindDetail />} />
+      <Route path="/admin/activity" element={<AdminActivity />} />
+      <Route path="/admin/activity/:tab" element={<AdminActivity />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </Suspense>
+);
 
 const App = () => (
   <ErrorBoundary>
-    <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium focus:shadow-lg">
-      Skip to content
-    </a>
+    <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-lg focus:text-sm focus:font-medium focus:shadow-lg">Skip to content</a>
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light" enableSystem={false} storageKey="realhunt-theme">
         <AuthProvider>
           <SubscriptionProvider>
-          <TooltipProvider delayDuration={300}>
-            <OfflineBanner />
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <CommandPalette />
-              <KeyboardShortcutsModal />
-              <FeatureGatedOnboarding />
-              <PageTracker>
-                <main id="main-content">
-                  <AnimatedRoutes />
-                </main>
-              </PageTracker>
-            </BrowserRouter>
-          </TooltipProvider>
+            <TooltipProvider delayDuration={300}>
+              <OfflineBanner />
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Extras />
+                <PageTracker>
+                  <main id="main-content"><AppRoutes /></main>
+                </PageTracker>
+              </BrowserRouter>
+            </TooltipProvider>
           </SubscriptionProvider>
         </AuthProvider>
       </ThemeProvider>

@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Menu, X, Heart, Bell, MessageSquare, User, LogOut, ChevronDown } from "lucide-react";
+import { Menu, X, Heart, Bell, MessageSquare, User, LogOut, ChevronDown, Briefcase } from "lucide-react";
 import { fbLead } from "@/lib/fbpixel";
 import AuthModal from "@/components/realhunt/AuthModal";
 import CookieBanner from "@/components/realhunt/CookieBanner";
@@ -12,7 +12,7 @@ const NAV_ITEMS = [
   { to: "/network", label: "For developers" },
 ];
 const DEALS_PATHS = ["/", "/find", "/ecobeachcity", "/account", "/saved", "/country", "/from", "/fit", "/map", "/swipe", "/guide", "/sell", "/legal", "/compare-homes", "/c/", "/network"];
-const MENU = [["/account/profile", "Profile", User], ["/account/saved", "Saved homes", Heart], ["/account/alerts", "Alerts", Bell], ["/account/requests", "My requests", MessageSquare]] as const;
+const MENU = [["/account/profile", "Profile", User], ["/account/saved", "Saved homes", Heart], ["/account/alerts", "Alerts", Bell], ["/account/requests", "My requests", MessageSquare], ["/network/app", "Developer panel", Briefcase]] as const;
 
 const RHNav = () => {
   const { user } = useAuth();

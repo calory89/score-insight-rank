@@ -3,9 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://nylmhdtlshhtjkuvfbms.supabase.co" crossorigin />
+    <link rel="dns-prefetch" href="https://nylmhdtlshhtjkuvfbms.supabase.co" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://nylmhdtlshhtjkuvfbms.supabase.co" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/favicon.png" type="image/png" sizes="512x512" />
     <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
@@ -35,47 +36,25 @@
     <meta name="twitter:description" content="Beach, countryside and villages across Europe, Japan and Asia. Checked every week." />
     <meta name="twitter:image" content="https://realhunt.co/og-default.jpg" />
 
-
-    <!-- Structured Data: Organization + WebSite (sitewide) -->
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Organization",
-      "name": "RealHunt",
-      "url": "https://realhunt.co",
-      "logo": "https://realhunt.co/favicon.png",
-      "sameAs": ["https://twitter.com/RealHuntApp"],
-      "description": "Real homes under €100,000 across Europe, Japan and Asia."
-    }
+    {"@context":"https://schema.org","@type":"Organization","name":"RealHunt","url":"https://realhunt.co","logo":"https://realhunt.co/favicon.png","sameAs":["https://twitter.com/RealHuntApp"],"description":"Real homes under €100,000 across Europe, Japan and Asia."}
     </script>
     <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "name": "RealHunt",
-      "url": "https://realhunt.co"
-    }
+    {"@context":"https://schema.org","@type":"WebSite","name":"RealHunt","url":"https://realhunt.co"}
     </script>
-    <!-- Meta Pixel Code -->
+    <style>html{background:#FAFAF7}#root:empty{min-height:100vh}</style>
+    <!-- Meta Pixel: the script is only downloaded after the visitor accepts cookies -->
     <script>
-    !function(f,b,e,v,n,t,s)
-    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-    n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t,s)}(window, document,'script',
-    'https://connect.facebook.net/en_US/fbevents.js');
-    window.rhEnablePixel=function(){if(window.__rhpx)return;window.__rhpx=1;fbq('init', '774992015604419');fbq('track', 'PageView');};
+    window.rhEnablePixel=function(){if(window.__rhpx)return;window.__rhpx=1;
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init','774992015604419');fbq('track','PageView');};
     try{if(localStorage.getItem('rh_consent')==='all')window.rhEnablePixel();}catch(e){}
     </script>
-    <!-- End Meta Pixel Code -->
   </head>
 
   <body>
-    
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    <script>if("serviceWorker" in navigator)addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}))</script>
+    <script>if("serviceWorker" in navigator)addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){})})</script>
   </body>
 </html>

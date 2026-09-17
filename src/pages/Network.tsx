@@ -86,8 +86,9 @@ const Network = () => {
             )}
             {stage === "done" && (
               <div className="flex flex-col gap-2">
-                <p className="inline-flex items-center gap-2 text-[15px]"><Check size={18} /> {share ? "Great. We reply with the one-page agreement and the upload link." : "Noted. Your buyers are on the way."}</p>
-                <p className="text-[13px] text-ink-muted">Questions? Reply to the email you receive.</p>
+                <p className="inline-flex items-center gap-2 text-[15px]"><Check size={18} /> {share ? "Great. Open your panel: upload your leads as fingerprints, never as contacts." : "Noted. Your buyers are on the way."}</p>
+                <Link to="/network/app" onClick={() => { try { sessionStorage.setItem("rh_dev_prefill", JSON.stringify({ email, phone, project_url: url })); } catch {} }} className="rh-btn-primary self-start inline-flex items-center gap-2 mt-1"><Lock size={16} /> Open your developer panel →</Link>
+                <p className="text-[13px] text-ink-muted">Free. Your contacts are hashed in your browser before anything is sent.</p>
               </div>
             )}
           </div>

@@ -19,4 +19,19 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    target: "es2020",
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 900,
+    rollupOptions: {
+      output: {
+        // Long-lived vendor chunks: the browser keeps React and Supabase cached across deploys.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) return "react";
+          if (id.includes("@supabase")) return "supabase";
+        },
+      },
+    },
+  },
 }));

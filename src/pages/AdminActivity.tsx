@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import AdminNetwork from "@/components/realhunt/AdminNetwork";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import RHNav from "@/components/realhunt/RHNav";
@@ -13,6 +14,7 @@ type A = { id: string; email: string; country: string | null; max_price: number 
 
 const AdminActivity = () => {
   const { user } = useAuth();
+  const { tab } = useParams();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [users, setUsers] = useState<U[]>([]);
   const [events, setEvents] = useState<E[]>([]);
@@ -57,8 +59,10 @@ const AdminActivity = () => {
       <div className="max-w-[1140px] mx-auto px-6 py-10 flex flex-col gap-10">
         <div>
           <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-2">Admin</p>
-          <h1 className="font-display text-[34px] tracking-tight">Who is doing what</h1>
-          <div className="mt-4 flex flex-wrap gap-x-8 gap-y-2 text-[14px]">
+          <h1 className="font-display text-[34px] tracking-tight">{tab === "network" ? "RealHunt Network" : "Who is doing what"}</h1>
+          <div className="mt-3 flex gap-1 border-b border-hairline">{[["", "Activity"], ["network", "Network CRM"]].map(([k, l]) => <Link key={k} to={`/admin/activity${k ? "/" + k : ""}`} className={`px-4 py-2 text-[14px] border-b-2 -mb-px ${(tab || "") === k ? "border-ink font-medium" : "border-transparent text-ink-muted"}`}>{l}</Link>)}</div>
+          {tab === "network" && <div className="mt-6"><AdminNetwork /></div>}
+          {tab !== "network" && <div className="mt-4 flex flex-wrap gap-x-8 gap-y-2 text-[14px]">
             <span><b className="font-display text-[22px]">{users.length}</b> <span className="text-ink-muted">users</span></span>
             <span><b className="font-display text-[22px]">{users.reduce((a, u) => a + Number(u.clicks || 0), 0)}</b> <span className="text-ink-muted">clicks</span></span>
             <span><b className="font-display text-[22px]">{users.reduce((a, u) => a + Number(u.favorites || 0), 0)}</b> <span className="text-ink-muted">favorites</span></span>
@@ -66,8 +70,9 @@ const AdminActivity = () => {
             <span><b className="font-display text-[22px]">{leads.length}</b> <span className="text-ink-muted">developer leads</span></span>
             <span><b className="font-display text-[22px]">{reqs.length}</b> <span className="text-ink-muted">home requests</span></span>
             <span><b className="font-display text-[22px]">{alerts.length}</b> <span className="text-ink-muted">alerts</span></span>
-          </div>
+          </div>}
         </div>
+        {tab !== "network" && <>
 
         <section>
           <h2 className="font-display text-[20px] tracking-tight mb-3">Visitors per day, last 14 days</h2>
@@ -131,6 +136,7 @@ const AdminActivity = () => {
             {events.length === 0 && <tr><Td c="No activity yet." m /></tr>}
           </tbody></table></div>
         </section>
+        </>}
       </div>
     </div>
   );
