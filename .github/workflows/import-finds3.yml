@@ -1,0 +1,26 @@
+name: import-finds3
+on:
+  push:
+    paths:
+      - '.github/workflows/import-finds3.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: download and apply
+        run: |
+          set -e
+          curl -sSL -X POST -o payload.zip https://temp.sh/Bddce/finds_upload.zip
+          echo "a1821a8387c861d223318e7c03be2ce3  payload.zip" | md5sum -c -
+          unzip -o payload.zip -d .
+          rm -f payload.zip
+          rm -f .github/workflows/import-finds3.yml
+          git config user.name "realhunt-bot"
+          git config user.email "bot@realhunt.co"
+          git add -A
+          git commit -m "import finds batch 2" || echo "nothing to commit"
+          git push
