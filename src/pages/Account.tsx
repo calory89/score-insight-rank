@@ -4,14 +4,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
-import { Heart, Bell, MessageSquare, User, LogOut, Check, Trash2, Share2, Gift, Columns } from "lucide-react";
-import { db, eur, FLAG, norm, IG, srcSet, track } from "@/lib/rh";
+import { Heart, Bell, MessageSquare, User, LogOut, Check, Trash2, Share2, Gift, Columns, LayoutDashboard, Sparkles, Clock, ChevronRight, Map } from "lucide-react";
+import { db, eur, FLAG, norm, IG, srcSet, track, MAX_PRICE } from "@/lib/rh";
 
-const TABS = [["profile", "Profile", User], ["saved", "Saved homes", Heart], ["alerts", "Alerts", Bell], ["requests", "My requests", MessageSquare]] as const;
+const TABS = [["home", "Overview", LayoutDashboard], ["saved", "Saved homes", Heart], ["alerts", "Alerts", Bell], ["requests", "My requests", MessageSquare], ["profile", "Profile", User]] as const;
 const COUNTRIES = ["Any", "Italy", "Spain", "Portugal", "France", "Greece", "Japan", "Sweden", "Norway", "Denmark", "Finland", "Indonesia"];
 
+// small photo card reused across the overview
+const Card = ({ f, badge }: { f: IG; badge?: string }) => { const c = norm(f.country_guess); return (
+  <Link to={`/find/${f.shortcode}`} className="group relative block rounded-2xl overflow-hidden bg-hairline/30 aspect-[4/5]">
+    <img src={f.image_urls![0]} srcSet={srcSet(f.image_urls![0])} sizes="(min-width:768px) 22vw, 45vw" alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform" />
+    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" />
+    <span className="absolute top-2.5 right-2.5 px-2 py-1 rounded-full bg-white/90 text-ink text-[11px] font-medium shadow">{FLAG[c] || "🌍"} {c}</span>
+    {f.price_eur && <span className="absolute top-2.5 left-2.5 px-2 py-1 rounded-full bg-white text-ink text-[12px] font-semibold tabular-nums shadow">{eur(f.price_eur)}</span>}
+    {badge && <span className="absolute top-10 left-2.5 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-medium">{badge}</span>}
+    <div className="absolute inset-x-0 bottom-0 p-3 text-white"><p className="text-[12px] line-clamp-2">{f.hook || f.location_name || c}</p></div>
+  </Link>); };
+
 const Account = () => {
-  const { tab = "profile" } = useParams();
+  const { tab = "home" } = useParams();
   const nav = useNavigate();
   const { user } = useAuth();
   const [auth, setAuth] = useState(false);
@@ -19,6 +30,8 @@ const Account = () => {
   const [saved, setSaved] = useState<IG[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [reqs, setReqs] = useState<any[]>([]);
+  const [fresh, setFresh] = useState<IG[]>([]);
+  const [recent, setRecent] = useState<IG[]>([]);
   const [ok, setOk] = useState(false);
   const [na, setNa] = useState({ country: "Any", max: 50000, beach: false });
   const [sel, setSel] = useState<string[]>([]);
@@ -29,8 +42,16 @@ const Account = () => {
   useEffect(() => {
     if (!user) { setAuth(true); return; }
     setAuth(false);
-    db.from("profiles").select("email,username,phone,interest_country,budget_max,referral_code,saved_public").eq("user_id", user.id).maybeSingle().then(({ data }: any) => setP(data || { email: user.email }));
+    db.from("profiles").select("email,username,phone,interest_country,budget_max,referral_code,saved_public").eq("user_id", user.id).maybeSingle().then(({ data }: any) => {
+      const prof = data || { email: user.email }; setP(prof);
+      // new this week, matching what they told us
+      let q = db.from("ig_finds").select("id,shortcode,image_urls,price_eur,price_in_image,location_name,country_guess,hook,posted_at,created_at").eq("status", "new").not("image_urls", "is", null).gte("created_at", new Date(Date.now() - 7 * 86400000).toISOString()).order("created_at", { ascending: false }).limit(8);
+      if (prof.interest_country && prof.interest_country !== "Any") q = q.eq("country_guess", prof.interest_country);
+      if (prof.budget_max) q = q.or(`price_eur.lte.${prof.budget_max},price_eur.is.null`);
+      q.then(({ data }: any) => setFresh(data || []));
+    });
     db.from("find_events").select("created_at, ig_finds(id,shortcode,image_urls,price_eur,price_in_image,location_name,country_guess,hook)").eq("user_id", user.id).eq("event", "favorite").order("created_at", { ascending: false }).then(({ data }: any) => setSaved((data || []).map((r: any) => r.ig_finds).filter(Boolean)));
+    db.from("find_events").select("created_at, find_id, ig_finds(id,shortcode,image_urls,price_eur,price_in_image,location_name,country_guess,hook)").eq("user_id", user.id).in("event", ["click", "view"]).order("created_at", { ascending: false }).limit(30).then(({ data }: any) => { const seen = new Set<string>(); const out: IG[] = []; (data || []).forEach((r: any) => { if (r.ig_finds && !seen.has(r.ig_finds.id)) { seen.add(r.ig_finds.id); out.push(r.ig_finds); } }); setRecent(out.slice(0, 8)); });
     db.from("alerts").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).then(({ data }: any) => setAlerts(data || []));
     db.from("home_requests").select("id,created_at,message,find_shortcode,ig_finds(location_name,country_guess,price_eur,hook)").eq("user_id", user.id).order("created_at", { ascending: false }).then(({ data }: any) => setReqs(data || []));
   }, [user]);
@@ -41,6 +62,8 @@ const Account = () => {
   const delAlert = async (id: string) => { setAlerts(alerts.filter((a) => a.id !== id)); await db.from("alerts").delete().eq("id", id); };
   const unsave = async (f: IG) => { if (!user) return; setSaved(saved.filter((x) => x.id !== f.id)); await db.from("find_events").delete().eq("user_id", user.id).eq("find_id", f.id).eq("event", "favorite"); };
   const inp = "border border-hairline rounded-full px-4 py-3 text-[15px] bg-paper outline-none focus:border-ink";
+  const savedIds = new Set(saved.map((s) => s.id));
+  const cheapestSaved = saved.filter((s) => s.price_eur).sort((a, b) => a.price_eur! - b.price_eur!)[0];
 
   return (
     <div className="min-h-screen bg-paper text-ink">
@@ -49,13 +72,51 @@ const Account = () => {
         <aside>
           <div className="flex items-center gap-3 mb-6"><span className="h-11 w-11 rounded-full bg-ink text-paper inline-flex items-center justify-center font-display text-[18px]">{(p?.username || user?.email || "?").slice(0, 1).toUpperCase()}</span><div className="min-w-0"><p className="font-medium truncate">{p?.username || "Your account"}</p><p className="text-[12px] text-ink-muted truncate">{user?.email}</p></div></div>
           <nav className="flex md:flex-col gap-1 overflow-x-auto scrollbar-none">
-            {TABS.map(([k, l, I]) => <Link key={k} to={`/account/${k}`} className={`shrink-0 inline-flex items-center gap-2 px-3 py-2.5 rounded-xl text-[14px] ${tab === k ? "bg-white border border-hairline" : "text-ink-muted hover:text-ink"}`}><I size={15} /> {l}</Link>)}
+            {TABS.map(([k, l, I]) => <Link key={k} to={`/account/${k}`} className={`shrink-0 inline-flex items-center gap-2 px-3 py-2.5 rounded-xl text-[14px] ${tab === k ? "bg-white border border-hairline" : "text-ink-muted hover:text-ink"}`}><I size={15} /> {l}{k === "saved" && saved.length > 0 && <span className="ml-auto text-[11px] text-ink-muted tabular-nums">{saved.length}</span>}</Link>)}
             <button onClick={signOut} className="shrink-0 inline-flex items-center gap-2 px-3 py-2.5 rounded-xl text-[14px] text-ink-muted hover:text-ink text-left"><LogOut size={15} /> Sign out</button>
           </nav>
         </aside>
 
         <div>
           {!user && <p className="text-ink-muted">Sign in to see your account. <button onClick={() => setAuth(true)} className="underline text-ink">Sign in</button></p>}
+
+          {user && tab === "home" && (
+            <div className="flex flex-col gap-8">
+              <div>
+                <h1 className="font-display text-[30px] tracking-tight">{p?.username ? `Hi ${p.username.split(" ")[0]}.` : "Your homes."}</h1>
+                <p className="text-[14px] text-ink-muted mt-1">{p?.interest_country && p.interest_country !== "Any" ? `Watching ${p.interest_country} under ${eur(p.budget_max || MAX_PRICE)}.` : `Watching everywhere under ${eur(p?.budget_max || MAX_PRICE)}.`} <Link to="/account/profile" className="underline">Change</Link></p>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                {[[saved.length, "saved", "/account/saved"], [alerts.length, alerts.length === 1 ? "alert" : "alerts", "/account/alerts"], [reqs.length, reqs.length === 1 ? "request" : "requests", "/account/requests"]].map(([n, t, to]: any) => <Link key={t} to={to} className="border border-hairline rounded-2xl bg-white p-4 hover:border-ink"><p className="font-display text-[28px] leading-none tabular-nums">{n}</p><p className="text-[12px] text-ink-muted mt-1.5">{t}</p></Link>)}
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-3"><h2 className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><Sparkles size={17} /> New this week for you</h2><Link to="/" className="text-[13px] underline text-ink-muted hover:text-ink">All homes</Link></div>
+                {fresh.length === 0 ? <div className="border border-hairline rounded-2xl bg-white p-6 text-[14px] text-ink-muted">Nothing new in your filter this week. <Link to="/account/alerts" className="underline text-ink">Set an alert</Link> and we email you the moment one lands.</div> : <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{fresh.slice(0, 8).map((f) => <Card key={f.id} f={f} badge={savedIds.has(f.id) ? "saved" : undefined} />)}</div>}
+              </div>
+
+              {saved.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-3"><h2 className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><Heart size={17} /> Your saved homes</h2><Link to="/account/saved" className="text-[13px] underline text-ink-muted hover:text-ink inline-flex items-center gap-1">All {saved.length} <ChevronRight size={13} /></Link></div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{saved.slice(0, 4).map((f) => <Card key={f.id} f={f} />)}</div>
+                  {cheapestSaved && <p className="text-[13px] text-ink-muted mt-3">Cheapest on your list: <Link to={`/find/${cheapestSaved.shortcode}`} className="underline text-ink">{eur(cheapestSaved.price_eur!)} in {norm(cheapestSaved.country_guess)}</Link>. {saved.length >= 2 && <Link to="/account/saved" className="underline">Compare them side by side.</Link>}</p>}
+                </div>
+              )}
+
+              {recent.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-3"><h2 className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><Clock size={17} /> Recently viewed</h2></div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">{recent.slice(0, 4).map((f) => <Card key={f.id} f={f} badge={savedIds.has(f.id) ? "saved" : undefined} />)}</div>
+                </div>
+              )}
+
+              <div className="grid sm:grid-cols-3 gap-3">
+                <Link to="/map" className="border border-hairline rounded-2xl bg-white p-5 hover:border-ink flex items-center justify-between"><span className="inline-flex items-center gap-3"><Map size={18} /> <span><b>Map</b><br /><span className="text-[13px] text-ink-muted">every home by place</span></span></span><ChevronRight size={16} /></Link>
+                <Link to="/swipe" className="border border-hairline rounded-2xl bg-white p-5 hover:border-ink flex items-center justify-between"><span className="inline-flex items-center gap-3"><Heart size={18} /> <span><b>Swipe</b><br /><span className="text-[13px] text-ink-muted">save fast, one by one</span></span></span><ChevronRight size={16} /></Link>
+                <Link to="/fit" className="border border-hairline rounded-2xl bg-white p-5 hover:border-ink flex items-center justify-between"><span className="inline-flex items-center gap-3"><Columns size={18} /> <span><b>Can I afford it?</b><br /><span className="text-[13px] text-ink-muted">real cost by country</span></span></span><ChevronRight size={16} /></Link>
+              </div>
+            </div>
+          )}
 
           {user && tab === "profile" && p && (
             <form onSubmit={save} className="flex flex-col gap-3 max-w-[520px]">

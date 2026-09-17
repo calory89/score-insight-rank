@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import RHNav from "@/components/realhunt/RHNav";
-import { Check, Search, Users, Handshake, Coins, Lock, Phone, Mail } from "lucide-react";
+import { Check, Search, Users, Handshake, Coins, Lock, Phone, Mail, FileSignature } from "lucide-react";
 import { track } from "@/lib/rh";
+import { COMMISSION_PCT, SOURCE_SHARE_PCT, PAYMENT_DAYS } from "@/lib/agreement";
 
 const db = supabase as any;
 const STEPS = ["Reading your project page", "Scoring price, location and payment plan", "Looking for buyers in the network who fit", "Preparing your matches"];
@@ -45,7 +46,7 @@ const Network = () => {
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pt-8 md:pt-14 pb-10 grid md:grid-cols-[1.1fr_1fr] gap-8 items-center">
         <div>
           <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-4">RealHunt Network · developers and agencies</p>
-          <h1 className="font-display text-[clamp(34px,5.6vw,60px)] leading-[1.0] tracking-tight text-balance">Free buyers for your project. You pay only when one buys.</h1>
+          <h1 className="font-display text-[clamp(34px,5.6vw,60px)] leading-[1.0] tracking-tight text-balance">Free buyers for your project. You pay {COMMISSION_PCT}% only when one buys.</h1>
           <p className="mt-5 text-[17px] text-ink-muted max-w-[52ch] leading-relaxed">Paste your project. We score it and look for buyers already in the network who fit your price, country and payment plan.</p>
 
           <div id="analyze" className="mt-7 border border-hairline rounded-2xl bg-white p-5 md:p-6 shadow-sm">
@@ -71,7 +72,7 @@ const Network = () => {
                 <label className="relative"><Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted" /><input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Work email, to receive your buyers" aria-label="Email" className="w-full border border-hairline rounded-full pl-11 pr-4 py-3.5 text-[15px] bg-paper outline-none focus:border-ink" /></label>
                 <label className="relative"><Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted" /><input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Phone, optional. Recommended: we call before sending a buyer" aria-label="Phone" className="w-full border border-hairline rounded-full pl-11 pr-4 py-3.5 text-[15px] bg-paper outline-none focus:border-ink" /></label>
                 <button type="submit" className="rh-btn-primary inline-flex items-center justify-center gap-2"><Users size={16} /> Send me the buyers, €0</button>
-                <p className="text-[12px] text-ink-muted">Zero cost to receive. Commission only if one of them buys, agreed in writing first.</p>
+                <p className="text-[12px] text-ink-muted">Zero cost to receive. {COMMISSION_PCT}% only if one of them buys, signed in writing first.</p>
               </form>
             )}
             {stage === "share" && (
@@ -79,7 +80,7 @@ const Network = () => {
                 <p className="inline-flex items-center gap-2 text-[15px]"><Check size={18} /> Done. Your buyers and RH Score land in {email} within 24 hours.</p>
                 <div className="border-t border-hairline pt-4">
                   <p className="font-display text-[20px] tracking-tight">One more thing. Do you have leads you could not sell to?</p>
-                  <p className="text-[15px] text-ink-muted mt-1">Share them with the network and you earn on average <b className="text-ink">€15 per lead</b>, because a share of them end up buying someone else's project. Only leads who say yes to being contacted.</p>
+                  <p className="text-[15px] text-ink-muted mt-1">Share them with the network and you earn <b className="text-ink">{SOURCE_SHARE_PCT}% of the sale</b> every time one of them buys someone else's project. Leads you already paid for and wrote off.</p>
                   <div className="flex gap-2 mt-4"><button onClick={() => answerShare(true)} className="rh-btn-primary inline-flex items-center gap-2"><Coins size={16} /> Yes, I want to earn from my leads</button><button onClick={() => answerShare(false)} className="px-5 py-2.5 rounded-full border border-hairline text-[14px] hover:border-ink">Not now</button></div>
                 </div>
               </div>
@@ -103,10 +104,10 @@ const Network = () => {
       {/* Numbers */}
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-14">
         <div className="border border-hairline rounded-2xl bg-white p-6 md:p-10 grid sm:grid-cols-4 gap-6">
-          <Big n="9 of 10" t="enquiries never fit your project" />
           <Big n="€0" t="to receive buyers from the network" />
-          <Big n="€15" t="average you earn per lead you share" />
-          <Big n="20%" t="of the commission if your lead buys elsewhere" />
+          <Big n={`${COMMISSION_PCT}%`} t="of the sale, only when a buyer we introduce buys" />
+          <Big n={`${SOURCE_SHARE_PCT}%`} t="of the sale to you when a lead you share buys elsewhere" />
+          <Big n="0%" t="on buyers you already had and uploaded first" />
         </div>
       </section>
 
@@ -114,7 +115,7 @@ const Network = () => {
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-14">
         <H>How it works</H>
         <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[[Search, "1. Paste your project", "We score it and tell you what buyers will see."], [Users, "2. We find buyers who fit", "Deposit, country, handover date, payment plan. Matches, never lists."], [Handshake, "3. You close", "Each contact comes with an introduction ID. Nobody downloads anyone's database."], [Coins, "4. It settles itself", "Commission comes out of the reservation deposit. 65% to who closes, 20% to who brought the buyer, 15% to RealHunt."]].map(([I, t, d]: any) => (
+          {[[Search, "1. Paste your project", "We score it and tell you what buyers will see."], [FileSignature, "2. Sign one page, upload your contacts", "The agreement is signed inside your panel. Your contacts are hashed in your browser; whatever is in your list before we introduce it stays yours at 0%."], [Users, "3. We send buyers, you close", "Each buyer arrives with an introduction ID and a pipeline card. Accept, call, visit, reserve, sell."], [Coins, "4. You report the sale", `Enter the price in your panel. ${COMMISSION_PCT}% to RealHunt, invoiced, ${PAYMENT_DAYS} days to pay. If the buyer came from another developer's shared list, they get ${SOURCE_SHARE_PCT}%.`]].map(([I, t, d]: any) => (
             <div key={t} className="border border-hairline rounded-2xl bg-white p-6"><I size={22} className="text-ink-muted" /><p className="font-display text-[19px] tracking-tight mt-4">{t}</p><p className="text-[14px] text-ink-muted mt-2 leading-relaxed">{d}</p></div>
           ))}
         </div>
@@ -123,8 +124,8 @@ const Network = () => {
       {/* Math */}
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-14">
         <div className="rounded-2xl bg-ink text-paper p-8 md:p-12 grid md:grid-cols-[1fr_auto] gap-8 items-center">
-          <div className="text-[17px] leading-relaxed"><p className="opacity-80">You spent €100,000 on ads. 5,000 contacts. You sold 20.</p><p className="mt-2 font-medium">The other 4,980 are dead in your CRM right now.</p><p className="mt-4 opacity-80">If 1% of them buy inside the network, at a €200,000 ticket and 5% commission, your 20% is:</p></div>
-          <div className="text-center md:text-right"><p className="font-display text-[clamp(44px,7vw,80px)] leading-none tracking-tight tabular-nums">€100,000</p><p className="text-[13px] opacity-70 mt-2">without selling one more unit of your own</p></div>
+          <div className="text-[17px] leading-relaxed"><p className="opacity-80">You spent €100,000 on ads. 5,000 contacts. You sold 20.</p><p className="mt-2 font-medium">The other 4,980 are dead in your CRM right now.</p><p className="mt-4 opacity-80">If 1% of them buy inside the network at a €200,000 ticket, your {SOURCE_SHARE_PCT}% is:</p></div>
+          <div className="text-center md:text-right"><p className="font-display text-[clamp(44px,7vw,80px)] leading-none tracking-tight tabular-nums">€300,000</p><p className="text-[13px] opacity-70 mt-2">without selling one more unit of your own</p></div>
         </div>
       </section>
 
@@ -134,15 +135,16 @@ const Network = () => {
           <p className="font-display text-[24px] tracking-tight leading-snug">"I am not handing my database to a competitor."</p>
           <p className="text-[15px] text-ink-muted mt-2">Good. We will not ask you to.</p>
           <ul className="mt-5 flex flex-col gap-3 text-[15px] leading-relaxed">
-            {["You upload fingerprints, not contacts. No names, emails or phones. It cannot be reversed.", "If a buyer was already yours, we do not introduce them and you pay nothing.", "Uploading fingerprints is not sharing leads. Sharing is a second decision, contact by contact."].map((t) => <li key={t} className="flex gap-3"><Lock size={16} className="shrink-0 mt-1 text-ink-muted" />{t}</li>)}
+            {["You upload fingerprints, not contacts. No names, emails or phones. It cannot be reversed.", "If a buyer was already in your list before we introduced them, the sale is exempt automatically and you pay nothing.", "Uploading fingerprints is not sharing leads. Sharing is a second decision, contact by contact."].map((t) => <li key={t} className="flex gap-3"><Lock size={16} className="shrink-0 mt-1 text-ink-muted" />{t}</li>)}
           </ul>
         </div>
         <div className="border border-hairline rounded-2xl bg-white p-8">
           <p className="font-display text-[24px] tracking-tight leading-snug">The rule, said plainly</p>
           <ul className="mt-5 flex flex-col gap-3 text-[15px] leading-relaxed">
-            <li className="flex gap-3"><Check size={16} className="shrink-0 mt-1 text-ink-muted" /><span><b>What you declare pays you.</b> Your contact buys another project in the network, you get 20%.</span></li>
-            <li className="flex gap-3"><Check size={16} className="shrink-0 mt-1 text-ink-muted" /><span><b>What you do not declare does not protect you.</b> We send you someone you had but never declared, that commission goes to RealHunt.</span></li>
-            <li className="flex gap-3"><Check size={16} className="shrink-0 mt-1 text-ink-muted" /><span>One developer per segment and city for the first 90 days. Commission agreed in writing before any contact is revealed. Every introduction logged.</span></li>
+            <li className="flex gap-3"><Check size={16} className="shrink-0 mt-1 text-ink-muted" /><span><b>What you upload protects you.</b> A buyer in your list before the introduction is yours. 0%.</span></li>
+            <li className="flex gap-3"><Check size={16} className="shrink-0 mt-1 text-ink-muted" /><span><b>What you do not upload does not protect you.</b> We send you someone you had but never uploaded, and they buy: that is our {COMMISSION_PCT}%.</span></li>
+            <li className="flex gap-3"><Check size={16} className="shrink-0 mt-1 text-ink-muted" /><span><b>What you share pays you.</b> Your contact buys another project in the network, you get {SOURCE_SHARE_PCT}% of that sale.</span></li>
+            <li className="flex gap-3"><Check size={16} className="shrink-0 mt-1 text-ink-muted" /><span>One page, signed before any contact is revealed. Every introduction logged. <Link to="/network/agreement" className="underline">Read the agreement</Link>.</span></li>
           </ul>
         </div>
       </section>
@@ -153,7 +155,7 @@ const Network = () => {
         <a href="#analyze" className="rh-btn-primary inline-flex mt-6">Find me buyers, free</a>
       </section>
 
-      <footer className="border-t border-hairline"><div className="max-w-[1240px] mx-auto px-4 md:px-6 py-8 flex flex-wrap gap-x-8 gap-y-3 text-[13px] text-ink-muted"><Link to="/" className="hover:text-ink">Deals</Link><Link to="/score" className="hover:text-ink">Score a listing</Link><Link to="/legal/terms" className="hover:text-ink">Terms</Link><span className="ml-auto">Referral payouts subject to local licensing rules in each market.</span></div></footer>
+      <footer className="border-t border-hairline"><div className="max-w-[1240px] mx-auto px-4 md:px-6 py-8 flex flex-wrap gap-x-8 gap-y-3 text-[13px] text-ink-muted"><Link to="/" className="hover:text-ink">Deals</Link><Link to="/score" className="hover:text-ink">Score a listing</Link><Link to="/network/agreement" className="hover:text-ink">Network agreement</Link><Link to="/legal/terms" className="hover:text-ink">Terms</Link><span className="ml-auto">Referral payouts subject to local licensing rules in each market.</span></div></footer>
     </div>
   );
 };

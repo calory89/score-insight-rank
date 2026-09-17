@@ -68,6 +68,7 @@ const Collection = L(() => import("./pages/Collection"));
 const LegalPage = L(() => import("./pages/legal/Legal"));
 const Network = L(() => import("./pages/Network"));
 const NetworkApp = L(() => import("./pages/NetworkApp"));
+const NetworkAgreement = L(() => import("./pages/NetworkAgreement"));
 const Finds = L(() => import("./pages/Finds"));
 const AdminActivity = L(() => import("./pages/AdminActivity"));
 const FindDetail = L(() => import("./pages/FindDetail"));
@@ -153,6 +154,7 @@ const AppRoutes = () => (
       <Route path="/legal/cookies" element={<LegalPage page="cookies" />} />
       <Route path="/legal/takedown" element={<LegalPage page="takedown" />} />
       <Route path="/network" element={<Network />} />
+      <Route path="/network/agreement" element={<NetworkAgreement />} />
       <Route path="/network/app" element={<NetworkApp />} />
       <Route path="/network/app/:tab" element={<NetworkApp />} />
       <Route path="/finds" element={<Finds />} />

@@ -1,0 +1,60 @@
+// RealHunt Network Agreement. One source of truth for the page, the panel and the signature record.
+// Bump AGREEMENT_VERSION whenever the text changes: developers who signed an older version are asked to sign again.
+export const AGREEMENT_VERSION = "2026-09-17";
+export const COMMISSION_PCT = 5;
+export const SOURCE_SHARE_PCT = 3;
+export const PRIOR_CONTACT_MONTHS = 3;
+export const PAYMENT_DAYS = 30;
+
+export type Clause = { title: string; body: string };
+
+export const AGREEMENT: Clause[] = [
+  {
+    title: "1. Who this is between",
+    body: "This agreement is between Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, United States, operating RealHunt and the RealHunt Network (\"RealHunt\"), and the developer or agency that signs it inside its developer panel (\"the Developer\"). It starts the day the Developer signs and runs until either side ends it with 30 days written notice. Ending it does not cancel commissions on buyers already introduced.",
+  },
+  {
+    title: "2. What RealHunt does",
+    body: "RealHunt introduces buyers to the Developer. A buyer is introduced the moment an introduction appears in the Developer's panel with an introduction ID. RealHunt introduces buyers at its own discretion, in its own time, and gives no guarantee of volume, quality or sales. Receiving buyers costs the Developer nothing.",
+  },
+  {
+    title: "3. The commission",
+    body: `When a buyer introduced by RealHunt buys, reserves, or signs any purchase, lease, membership or reservation for any unit, plot or product of the Developer or of any company connected to the Developer, the Developer pays RealHunt ${COMMISSION_PCT}% of the total price paid by that buyer, before taxes, fees and discounts. This applies to the first purchase and to any further purchase by the same buyer or by a company, spouse or family member acting for them, for 24 months after the introduction. It applies whether the sale happens through the Developer, through one of its sales agents, or through any third party.`,
+  },
+  {
+    title: "4. Buyers the Developer already had",
+    body: `The Developer does not owe a commission on a buyer it already had. To prove it, the Developer uploads its contacts to its panel as fingerprints (one-way hashes made in the Developer's own browser; RealHunt never receives a name, email or phone). A buyer is considered the Developer's own only if the buyer's fingerprint was in the Developer's panel before the introduction date. Uploading fingerprints is free, takes minutes, and is the only accepted proof. A buyer the Developer had but never uploaded is treated as introduced by RealHunt, and the commission in clause 3 applies in full. The Developer may also prove, within 7 days of the introduction, that it had a written conversation with that buyer in the ${PRIOR_CONTACT_MONTHS} months before the introduction; RealHunt reviews it in good faith and marks the buyer exempt if the proof is clear.`,
+  },
+  {
+    title: "5. Sharing leads and earning from them",
+    body: `The Developer may mark some of its fingerprints as shared. A shared lead that buys another project inside the RealHunt Network through an introduction earns the Developer ${SOURCE_SHARE_PCT}% of that sale price, paid by RealHunt within ${PAYMENT_DAYS} days of RealHunt receiving its own commission from the selling developer. Marking a lead as shared does not reveal the contact to anyone: RealHunt only ever contacts a buyer it already has a direct relationship with, or asks the Developer to pass an introduction along with the buyer's consent. Private (unshared) fingerprints are never introduced to anyone and are used only to protect the Developer under clause 4.`,
+  },
+  {
+    title: "6. Reporting a sale, invoices and payment",
+    body: `The Developer reports every sale to an introduced buyer in its panel within 7 days of reservation or contract, with the price paid. RealHunt may also mark a sale when it learns of it from the buyer. RealHunt issues an invoice for the commission; the Developer pays it within ${PAYMENT_DAYS} days by bank transfer. Late amounts carry 1% interest per month. If a buyer cancels and receives a full refund within 60 days of reservation, the commission is refunded or credited.`,
+  },
+  {
+    title: "7. Keeping the pipeline honest",
+    body: "The Developer keeps the status of every introduced buyer updated in its panel (accepted, contacted, visited, reserved, sold, lost). RealHunt may ask the Developer for written confirmation of the status of any introduced buyer, and may contact the buyer directly to confirm it. Trying to close an introduced buyer outside this agreement, under another company, or by asking the buyer to say they came from elsewhere, is a material breach: the commission is owed in full, the Developer is removed from the network, and RealHunt may publish the breach on realhunt.co and on its partner platforms.",
+  },
+  {
+    title: "8. Data and privacy",
+    body: "RealHunt stores fingerprints, countries, budgets and tags, and the introduction and deal records. It never stores the Developer's raw contacts. Buyer contact details revealed to the Developer after accepting an introduction may be used only to sell the Developer's own projects to that buyer and may not be sold, shared or added to third-party lists. Each side complies with the data protection laws that apply to it.",
+  },
+  {
+    title: "9. Exclusivity, territory and licensing",
+    body: "There is no exclusivity either way unless agreed in writing. RealHunt may work with other developers in the same market. The Developer is responsible for holding any licence required to sell real estate in its market, and for any tax on the commission it pays. RealHunt acts as an introducer, not as a broker, agent or advisor to the buyer.",
+  },
+  {
+    title: "10. Law and disputes",
+    body: "This agreement is governed by the laws of the State of Wyoming, United States. Before any legal step, both sides talk for 30 days to solve the issue. Signing is done electronically inside the developer panel by typing the signer's full name; that signature, with its timestamp and version number, is a valid record of acceptance.",
+  },
+];
+
+export const AGREEMENT_SUMMARY = [
+  `You pay ${COMMISSION_PCT}% only when a buyer we introduced buys. Nothing before.`,
+  "Upload your own contacts as fingerprints. Anything already in your list before we introduce it is yours, no commission.",
+  `Buyers you had but never uploaded count as ours. That is the whole reason to upload.`,
+  `Share a dead lead, it buys another project in the network, you get ${SOURCE_SHARE_PCT}% of that sale.`,
+  `Report each sale in the panel. We invoice, you pay in ${PAYMENT_DAYS} days.`,
+];
