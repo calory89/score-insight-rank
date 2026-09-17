@@ -70,7 +70,7 @@ const FindDetail = () => {
   };
   const share = () => {
     if (!f) return; track("share", { find: shortcode });
-    const url = `${location.origin}${next}`; const text = `${f.price_eur ? eur(f.price_eur) + " · " : ""}${f.location_name || f.country_guess || ""}\n${url}`;
+    const url = `https://go.realhunt.co/find/${shortcode}`; const text = `${f.price_eur ? eur(f.price_eur) + " · " : ""}${f.location_name || f.country_guess || ""}`;
     if (navigator.share) { navigator.share({ title: "RealHunt", text, url }).catch(() => {}); return; }
     navigator.clipboard?.writeText(url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); });
   };
