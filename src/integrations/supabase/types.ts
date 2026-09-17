@@ -595,6 +595,45 @@ export type Database = {
           },
         ]
       }
+      email_outbox: {
+        Row: {
+          attempts: number
+          created_at: string | null
+          html: string
+          id: number
+          label: string | null
+          last_error: string | null
+          sent_at: string | null
+          status: string
+          subject: string
+          to_email: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string | null
+          html: string
+          id?: never
+          label?: string | null
+          last_error?: string | null
+          sent_at?: string | null
+          status?: string
+          subject: string
+          to_email: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string | null
+          html?: string
+          id?: never
+          label?: string | null
+          last_error?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          to_email?: string
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string | null
@@ -787,6 +826,7 @@ export type Database = {
       }
       home_requests: {
         Row: {
+          contacted: boolean
           created_at: string | null
           email: string | null
           find_id: string | null
@@ -795,9 +835,11 @@ export type Database = {
           message: string | null
           name: string | null
           phone: string | null
+          sold: boolean
           user_id: string | null
         }
         Insert: {
+          contacted?: boolean
           created_at?: string | null
           email?: string | null
           find_id?: string | null
@@ -806,9 +848,11 @@ export type Database = {
           message?: string | null
           name?: string | null
           phone?: string | null
+          sold?: boolean
           user_id?: string | null
         }
         Update: {
+          contacted?: boolean
           created_at?: string | null
           email?: string | null
           find_id?: string | null
@@ -817,6 +861,7 @@ export type Database = {
           message?: string | null
           name?: string | null
           phone?: string | null
+          sold?: boolean
           user_id?: string | null
         }
         Relationships: [
@@ -852,10 +897,12 @@ export type Database = {
           price_in_image: boolean
           price_raw: string | null
           rank_score: number | null
+          saves_count: number
           shortcode: string | null
           source_account: string
           sqm: number | null
           status: string | null
+          verified: boolean
         }
         Insert: {
           bedrooms?: number | null
@@ -879,10 +926,12 @@ export type Database = {
           price_in_image?: boolean
           price_raw?: string | null
           rank_score?: number | null
+          saves_count?: number
           shortcode?: string | null
           source_account: string
           sqm?: number | null
           status?: string | null
+          verified?: boolean
         }
         Update: {
           bedrooms?: number | null
@@ -906,12 +955,115 @@ export type Database = {
           price_in_image?: boolean
           price_raw?: string | null
           rank_score?: number | null
+          saves_count?: number
           shortcode?: string | null
           source_account?: string
           sqm?: number | null
           status?: string | null
+          verified?: boolean
         }
         Relationships: []
+      }
+      introductions: {
+        Row: {
+          buyer_fp: string
+          created_at: string
+          created_by: string | null
+          fee_eur: number
+          from_developer: string | null
+          id: string
+          note: string | null
+          status: string
+          to_developer: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_fp: string
+          created_at?: string
+          created_by?: string | null
+          fee_eur?: number
+          from_developer?: string | null
+          id?: string
+          note?: string | null
+          status?: string
+          to_developer: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_fp?: string
+          created_at?: string
+          created_by?: string | null
+          fee_eur?: number
+          from_developer?: string | null
+          id?: string
+          note?: string | null
+          status?: string
+          to_developer?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "introductions_from_developer_fkey"
+            columns: ["from_developer"]
+            isOneToOne: false
+            referencedRelation: "network_developers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "introductions_to_developer_fkey"
+            columns: ["to_developer"]
+            isOneToOne: false
+            referencedRelation: "network_developers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_fingerprints: {
+        Row: {
+          budget: number | null
+          country: string | null
+          developer_id: string
+          fp: string
+          id: number
+          kind: string
+          shared: boolean
+          source: string | null
+          tag: string | null
+          uploaded_at: string
+        }
+        Insert: {
+          budget?: number | null
+          country?: string | null
+          developer_id: string
+          fp: string
+          id?: number
+          kind?: string
+          shared?: boolean
+          source?: string | null
+          tag?: string | null
+          uploaded_at?: string
+        }
+        Update: {
+          budget?: number | null
+          country?: string | null
+          developer_id?: string
+          fp?: string
+          id?: number
+          kind?: string
+          shared?: boolean
+          source?: string | null
+          tag?: string | null
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_fingerprints_developer_id_fkey"
+            columns: ["developer_id"]
+            isOneToOne: false
+            referencedRelation: "network_developers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       leads: {
         Row: {
@@ -1000,6 +1152,69 @@ export type Database = {
           status?: string | null
           tags?: Json | null
           twitter_url?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      network_developers: {
+        Row: {
+          avg_ticket: number | null
+          company: string | null
+          contact_name: string | null
+          country: string | null
+          created_at: string
+          email: string | null
+          fee_eur: number
+          id: string
+          notes: string | null
+          phone: string | null
+          price_from: number | null
+          project_name: string | null
+          project_url: string | null
+          share_default: boolean
+          status: string
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          avg_ticket?: number | null
+          company?: string | null
+          contact_name?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          fee_eur?: number
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          price_from?: number | null
+          project_name?: string | null
+          project_url?: string | null
+          share_default?: boolean
+          status?: string
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          avg_ticket?: number | null
+          company?: string | null
+          contact_name?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          fee_eur?: number
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          price_from?: number | null
+          project_name?: string | null
+          project_url?: string | null
+          share_default?: boolean
+          status?: string
           updated_at?: string
           user_id?: string
           website?: string | null
@@ -1200,46 +1415,90 @@ export type Database = {
           },
         ]
       }
+      price_history: {
+        Row: {
+          created_at: string | null
+          find_id: string | null
+          id: number
+          price_eur: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          find_id?: string | null
+          id?: never
+          price_eur?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          find_id?: string | null
+          id?: never
+          price_eur?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "price_history_find_id_fkey"
+            columns: ["find_id"]
+            isOneToOne: false
+            referencedRelation: "ig_finds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           bio: string | null
+          budget_max: number | null
           created_at: string
           detected_country: string | null
           email: string | null
           id: string
+          interest_country: string | null
           last_login_at: string | null
           login_count: number | null
+          onboarded: boolean
           phone: string | null
           referral_code: string | null
+          referred_by: string | null
+          saved_public: boolean
           user_id: string
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          budget_max?: number | null
           created_at?: string
           detected_country?: string | null
           email?: string | null
           id?: string
+          interest_country?: string | null
           last_login_at?: string | null
           login_count?: number | null
+          onboarded?: boolean
           phone?: string | null
           referral_code?: string | null
+          referred_by?: string | null
+          saved_public?: boolean
           user_id: string
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          budget_max?: number | null
           created_at?: string
           detected_country?: string | null
           email?: string | null
           id?: string
+          interest_country?: string | null
           last_login_at?: string | null
           login_count?: number | null
+          onboarded?: boolean
           phone?: string | null
           referral_code?: string | null
+          referred_by?: string | null
+          saved_public?: boolean
           user_id?: string
           username?: string | null
         }
@@ -1563,6 +1822,30 @@ export type Database = {
         }
         Relationships: []
       }
+      rh_fingerprints: {
+        Row: {
+          budget: number | null
+          country: string | null
+          fp: string
+          kind: string
+          last_seen: string
+        }
+        Insert: {
+          budget?: number | null
+          country?: string | null
+          fp: string
+          kind?: string
+          last_seen?: string
+        }
+        Update: {
+          budget?: number | null
+          country?: string | null
+          fp?: string
+          kind?: string
+          last_seen?: string
+        }
+        Relationships: []
+      }
       saved_searches: {
         Row: {
           agent_id: string
@@ -1699,6 +1982,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      submissions: {
+        Row: {
+          contact: string | null
+          country: string | null
+          created_at: string | null
+          description: string | null
+          email: string
+          id: string
+          image_urls: string[] | null
+          location: string | null
+          name: string | null
+          price_eur: number | null
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          contact?: string | null
+          country?: string | null
+          created_at?: string | null
+          description?: string | null
+          email: string
+          id?: string
+          image_urls?: string[] | null
+          location?: string | null
+          name?: string | null
+          price_eur?: number | null
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          contact?: string | null
+          country?: string | null
+          created_at?: string | null
+          description?: string | null
+          email?: string
+          id?: string
+          image_urls?: string[] | null
+          location?: string | null
+          name?: string | null
+          price_eur?: number | null
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       subscriptions: {
         Row: {
@@ -2002,6 +2330,31 @@ export type Database = {
       }
     }
     Functions: {
+      admin_introduce: {
+        Args: { p_fp: string; p_from: string; p_note: string; p_to: string }
+        Returns: Json
+      }
+      admin_network: { Args: never; Returns: Json }
+      admin_set_find: {
+        Args: { p_id: string; p_status: string; p_verified: boolean }
+        Returns: undefined
+      }
+      dev_check_fp: { Args: { p_fp: string }; Returns: Json }
+      dev_overview: { Args: never; Returns: Json }
+      dev_upload_fps: { Args: { p_rows: Json }; Returns: Json }
+      find_card_html: {
+        Args: { f: Database["public"]["Tables"]["ig_finds"]["Row"] }
+        Returns: string
+      }
+      find_social: {
+        Args: { codes: string[] }
+        Returns: {
+          asks: number
+          saves: number
+          shortcode: string
+          views7: number
+        }[]
+      }
       find_view_counts: {
         Args: { codes: string[] }
         Returns: {
@@ -2018,10 +2371,25 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_realhunt_admin: { Args: { _user_id: string }; Returns: boolean }
+      process_email_outbox: { Args: never; Returns: number }
+      public_saved: {
+        Args: { uname: string }
+        Returns: {
+          country_guess: string
+          hook: string
+          image_urls: string[]
+          location_name: string
+          price_eur: number
+          price_in_image: boolean
+          shortcode: string
+        }[]
+      }
+      rh_fp: { Args: { p: string }; Returns: string }
       send_brevo: {
         Args: { p_html: string; p_subject: string; p_to: string }
         Returns: undefined
       }
+      send_weekly_digest: { Args: never; Returns: number }
     }
     Enums: {
       app_role: "admin" | "user"
