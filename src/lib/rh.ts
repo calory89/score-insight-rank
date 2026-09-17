@@ -15,11 +15,16 @@ export type IG = { id: string; source_account: string; shortcode: string; captio
 export const EBC: IG = { id: "ebc", source_account: "ecobeachcity", shortcode: "ecobeachcity", caption: "Beachfront cabin in a new eco village. 80-year lease that extends. Payable in instalments.", image_urls: ["/images/ebc/ebc-card.webp"], posted_at: null, location_name: "Mamboro, Sumba", country_guess: "Indonesia", price_eur: 11500, price_raw: null, likes: null, is_beach: true, lat: -9.4, lng: 119.6 };
 export const CALENDLY = "https://calendly.com/equinoxinvestmentgroup/eco-beach-city-info-call";
 
-const sid = () => { try { let s = localStorage.getItem("rh_sid"); if (!s) { s = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem("rh_sid", s); } return s; } catch { return "anon"; } };
+export const sid = () => { try { let s = localStorage.getItem("rh_sid"); if (!s) { s = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem("rh_sid", s); } return s; } catch { return "anon"; } };
 export const track = async (event: string, extra: { find?: string; meta?: any } = {}) => {
   try {
     const { data } = await supabase.auth.getSession();
-    await db.from("rh_events").insert({ sid: sid(), user_id: data.session?.user.id || null, event, path: location.pathname, find_shortcode: extra.find || null, meta: extra.meta || null });
+    let exp: any = null, tz: string | null = null, internal = false;
+    try { exp = JSON.parse(sessionStorage.getItem("rh_exp_assign") || "null"); } catch {}
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch {}
+    try { if (new URLSearchParams(location.search).get("rh_me") === "1") localStorage.setItem("rh_internal", "1"); internal = localStorage.getItem("rh_internal") === "1"; } catch {}
+    const meta = { ...(extra.meta || {}), ...(exp ? { exp } : {}), ...(tz ? { tz } : {}), ...(internal ? { internal: true } : {}) };
+    await db.from("rh_events").insert({ sid: sid(), user_id: data.session?.user.id || null, event, path: location.pathname, find_shortcode: extra.find || null, meta });
   } catch {}
 };
 

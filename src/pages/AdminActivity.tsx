@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import AdminNetwork from "@/components/realhunt/AdminNetwork";
+import AdminExperiments from "@/components/realhunt/AdminExperiments";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import RHNav from "@/components/realhunt/RHNav";
@@ -59,10 +60,11 @@ const AdminActivity = () => {
       <div className="max-w-[1140px] mx-auto px-6 py-10 flex flex-col gap-10">
         <div>
           <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-2">Admin</p>
-          <h1 className="font-display text-[34px] tracking-tight">{tab === "network" ? "RealHunt Network" : "Who is doing what"}</h1>
-          <div className="mt-3 flex gap-1 border-b border-hairline">{[["", "Activity"], ["network", "Network CRM"]].map(([k, l]) => <Link key={k} to={`/admin/activity${k ? "/" + k : ""}`} className={`px-4 py-2 text-[14px] border-b-2 -mb-px ${(tab || "") === k ? "border-ink font-medium" : "border-transparent text-ink-muted"}`}>{l}</Link>)}</div>
+          <h1 className="font-display text-[34px] tracking-tight">{tab === "network" ? "RealHunt Network" : tab === "experiments" ? "Experiments" : "Who is doing what"}</h1>
+          <div className="mt-3 flex gap-1 border-b border-hairline">{[["", "Activity"], ["network", "Network CRM"], ["experiments", "Experiments"]].map(([k, l]) => <Link key={k} to={`/admin/activity${k ? "/" + k : ""}`} className={`px-4 py-2 text-[14px] border-b-2 -mb-px ${(tab || "") === k ? "border-ink font-medium" : "border-transparent text-ink-muted"}`}>{l}</Link>)}</div>
           {tab === "network" && <div className="mt-6"><AdminNetwork /></div>}
-          {tab !== "network" && <div className="mt-4 flex flex-wrap gap-x-8 gap-y-2 text-[14px]">
+          {tab === "experiments" && <div className="mt-6"><AdminExperiments /></div>}
+          {tab !== "network" && tab !== "experiments" && <div className="mt-4 flex flex-wrap gap-x-8 gap-y-2 text-[14px]">
             <span><b className="font-display text-[22px]">{users.length}</b> <span className="text-ink-muted">users</span></span>
             <span><b className="font-display text-[22px]">{users.reduce((a, u) => a + Number(u.clicks || 0), 0)}</b> <span className="text-ink-muted">clicks</span></span>
             <span><b className="font-display text-[22px]">{users.reduce((a, u) => a + Number(u.favorites || 0), 0)}</b> <span className="text-ink-muted">favorites</span></span>
@@ -72,7 +74,7 @@ const AdminActivity = () => {
             <span><b className="font-display text-[22px]">{alerts.length}</b> <span className="text-ink-muted">alerts</span></span>
           </div>}
         </div>
-        {tab !== "network" && <>
+        {tab !== "network" && tab !== "experiments" && <>
 
         <section>
           <h2 className="font-display text-[20px] tracking-tight mb-3">Visitors per day, last 14 days</h2>

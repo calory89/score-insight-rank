@@ -6,6 +6,7 @@ import AuthModal from "@/components/realhunt/AuthModal";
 const Onboarding = lazy(() => import("@/components/realhunt/Onboarding"));
 import { Waves, Check, Heart, Search, Bell, BadgeCheck, TrendingDown, Map as MapIcon, Layers } from "lucide-react";
 import { db, eur, FLAG, norm, slug, unslug, isNew, cleanCap, IG, EBC, MAX_PRICE, track, srcSet, score } from "@/lib/rh";
+import { useExperiment } from "@/lib/experiments";
 
 const PRICE_CHIPS: [string, number][] = [["< €10k", 10000], ["< €25k", 25000], ["< €50k", 50000], ["< €100k", 100000]];
 const PAGE = 40;
@@ -32,6 +33,7 @@ const Home = () => {
   const [pref, setPref] = useState<{ country?: string | null; budget?: number | null }>({});
   const [drops, setDrops] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState(false);
+  const headline = useExperiment("home_headline", [{ id: "A", text: "Real homes under €100,000." }]);
 
   useEffect(() => {
     // 1. Instant paint from the last feed we saw (stale-while-revalidate), then refresh from the DB.
@@ -99,7 +101,7 @@ const Home = () => {
       <RHNav />
 
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pt-8 md:pt-12 pb-4">
-        <h1 className="font-display text-[clamp(30px,5vw,54px)] leading-[1.02] tracking-tight max-w-[22ch]">{aParam ? <>Spotted by <span className="text-ink-muted">@{aParam}</span></> : country !== "All" ? <>Cheap homes in {country}.</> : <>Real homes under €100,000.</>}</h1>
+        <h1 className="font-display text-[clamp(30px,5vw,54px)] leading-[1.02] tracking-tight max-w-[22ch]">{aParam ? <>Spotted by <span className="text-ink-muted">@{aParam}</span></> : country !== "All" ? <>Cheap homes in {country}.</> : <>{headline.text || "Real homes under €100,000."}</>}</h1>
         <p className="mt-3 text-[15px] md:text-[17px] text-ink-muted">{loaded ? shown.length : "…"} homes{isFinite(min) && <> · cheapest <b className="text-ink">{eur(min)}</b></>}{aParam && <> · <a href={`https://instagram.com/${aParam}`} target="_blank" rel="noreferrer" className="underline">follow them on Instagram</a></>}</p>
       </section>
 
