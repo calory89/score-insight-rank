@@ -6,6 +6,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 // Sender: RealHunt <hello@realhunt.co> through the verified subdomain below.
 const SENDER_DOMAIN = "notify.realhunt.co";
 const FROM = "RealHunt <hello@realhunt.co>";
+const DEFAULT_REPLY_TO = "carlos@equinoxinvestmentgroup.com";
 const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 
