@@ -50,7 +50,7 @@ const AdminNetwork = () => {
           {devs.map((x: any) => <tr key={x.id}>
             <Td c={<><b>{x.project_name || x.company}</b>{x.project_url && <><br /><a href={x.project_url} target="_blank" rel="noreferrer" className="text-[12px] text-ink-muted underline break-all">{x.project_url.replace(/^https?:\/\//, "")}</a></>}<br /><span className="text-[12px] text-ink-muted">{x.company} · {fmt(x.created_at)}</span></>} />
             <Td c={<>{x.contact_name}<br /><a href={`mailto:${x.email}`} className="underline text-[12px]">{x.email}</a>{x.phone && <><br /><a href={`https://wa.me/${String(x.phone).replace(/\D/g, "")}`} className="text-[12px] underline" target="_blank" rel="noreferrer">{x.phone}</a></>}</>} />
-            <Td c={<>{x.country || "—"}<br /><span className="text-ink-muted">{x.price_from ? eur(x.price_from) : ""}</span></>} />
+            <Td c={<>{x.country || "—"}<br /><span className="text-ink-muted">{x.price_from ? eur(x.price_from) : ""}</span>{x.mode && <><br /><span className="px-1.5 py-0.5 rounded-full bg-hairline text-[11px]">{x.mode === "receive" ? "receive only" : x.mode === "share" ? "share only" : "receive + share"}</span></>}</>} />
             <Td c={x.signed_at ? <span className="text-emerald-700 inline-flex items-center gap-1 text-[12px]"><FileSignature size={12} /> {fmt(x.signed_at)}<br /><span className="text-ink-muted">{x.signer} · v{x.agreement_version}</span></span> : <span className="text-amber-700 text-[12px]">not signed</span>} />
             <Td c={x.leads} /><Td c={x.shared} /><Td c={<b className={Number(x.overlap_rh) ? "text-emerald-700" : ""}>{x.overlap_rh}</b>} /><Td c={x.overlap_net} />
             <Td c={`${x.intros_in} / ${x.intros_out} / ${x.sold}`} />

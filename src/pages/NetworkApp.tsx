@@ -59,6 +59,7 @@ const NetworkApp = () => {
   const [saleNote, setSaleNote] = useState("");
   const [saleRes, setSaleRes] = useState<any | null>(null);
   const [copied, setCopied] = useState("");
+  const setMode = async (mode: string) => { setOv((o: any) => o ? { ...o, developer: { ...o.developer, mode } } : o); await db.from("network_developers").update({ mode, share_default: mode !== "receive", updated_at: new Date().toISOString() }).eq("id", ov.developer.id); track("devapp_mode", { meta: { mode } }); };
 
   const load = async () => { const { data } = await db.rpc("dev_overview"); setOv(data ?? null); if (data) { const f = data.developer; setForm({ company: f.company || "", contact_name: f.contact_name || "", email: f.email || "", phone: f.phone || "", website: f.website || "", country: f.country || "", project_name: f.project_name || "", project_url: f.project_url || "", price_from: f.price_from || "", share_default: !!f.share_default }); } };
   useEffect(() => { document.title = "Developer panel · RealHunt Network"; track("devapp_view", { meta: { tab } }); }, [tab]);
@@ -115,12 +116,34 @@ const NetworkApp = () => {
 
   if (!user) return (
     <div className="min-h-screen bg-paper text-ink"><RHNav />
-      <div className="max-w-[720px] mx-auto px-6 py-20 text-center">
-        <Fingerprint size={40} className="mx-auto text-ink-muted" />
-        <h1 className="font-display text-[34px] tracking-tight mt-4">Your developer panel</h1>
-        <p className="text-[16px] text-ink-muted mt-3 max-w-[46ch] mx-auto">Receive buyers, track every one to the sale, protect the contacts you already have, and earn from the ones you share. Your contacts never leave your browser.</p>
-        <button onClick={() => setAuth(true)} className="rh-btn-primary mt-6 inline-flex items-center gap-2"><Lock size={16} /> Sign in to open it</button>
-        {!authLoading && <p className="text-[13px] text-ink-muted mt-4">New here? <Link to="/network" className="underline">See how the network works</Link></p>}
+      <div className="max-w-[1140px] mx-auto px-4 md:px-6 py-10 md:py-16 grid lg:grid-cols-[1.1fr_1fr] gap-10 items-start">
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-3">RealHunt Network · developer panel</p>
+          <h1 className="font-display text-[clamp(32px,4.5vw,46px)] leading-tight tracking-tight">Get set up in five minutes. Then the buyers start.</h1>
+          <p className="text-[16px] text-ink-muted mt-3 max-w-[54ch]">No cost to join. You pay {COMMISSION_PCT}% only when a buyer we introduce actually buys, and you can earn {SOURCE_SHARE_PCT}% from leads you never managed to close. Here is exactly what happens, in order.</p>
+          <ol className="mt-7 flex flex-col gap-3">
+            {[["Sign in", "Free. A link by email or Google, no password to remember."], ["Tell us about your project", "Company, project name, page, country, price from. One minute."], ["Sign the one-page agreement", "You type your name. It says in plain English: 5% only on buyers we bring you who buy, 3% to you when a shared lead of yours buys elsewhere, 0% on buyers you already had."], ["Upload the contacts you already have", "Your CRM export, any format. They are turned into fingerprints in your browser: we never see a name, email or phone. Anything in your list before we introduce it is yours, no commission, ever. This is what protects you, so do it before accepting buyers."], ["Choose what you want", "Only receive buyers, only earn from the leads you share, or both. Separate switches, you can change them any time."], ["Accept buyers and close", "Each buyer arrives in your pipeline with an introduction ID. Accept, get the contact, sell. Report the sale with the price and we settle the rest."]].map(([t, d], i) => (
+              <li key={t} className="flex gap-4 border border-hairline rounded-2xl bg-white p-4"><span className="h-8 w-8 shrink-0 rounded-full bg-ink text-paper font-display text-[15px] inline-flex items-center justify-center">{i + 1}</span><span><p className="font-medium text-[15px]">{t}</p><p className="text-[14px] text-ink-muted mt-0.5 leading-relaxed">{d}</p></span></li>
+            ))}
+          </ol>
+        </div>
+        <div className="lg:sticky lg:top-24 flex flex-col gap-4">
+          <div className="border-2 border-ink rounded-2xl bg-white p-6">
+            <p className="font-display text-[24px] tracking-tight">Open your panel</p>
+            <p className="text-[14px] text-ink-muted mt-1">Step 1 of 6. Free, no card, no password.</p>
+            <button onClick={() => setAuth(true)} className="rh-btn-primary mt-4 w-full inline-flex items-center justify-center gap-2"><Lock size={16} /> Sign in and start</button>
+            <p className="text-[12px] text-ink-muted mt-3">Already have a panel? Same button.</p>
+          </div>
+          <div className="border border-hairline rounded-2xl bg-white p-6">
+            <p className="font-display text-[19px] tracking-tight">Two ways to use it. Pick one, or both.</p>
+            <div className="mt-3 flex flex-col gap-3 text-[14px]">
+              <div className="rounded-xl bg-paper border border-hairline p-4"><p className="font-medium">Receive buyers</p><p className="text-ink-muted mt-0.5">We send you buyers. You pay {COMMISSION_PCT}% of the sale only if one buys. €0 if nobody does.</p></div>
+              <div className="rounded-xl bg-paper border border-hairline p-4"><p className="font-medium">Earn from leads you could not sell to</p><p className="text-ink-muted mt-0.5">Mark old contacts as shared. If one buys another project in the network, you get {SOURCE_SHARE_PCT}% of that sale. You pay nothing.</p></div>
+              <div className="rounded-xl bg-paper border border-hairline p-4"><p className="font-medium">Just protect my contacts</p><p className="text-ink-muted mt-0.5">Upload without sharing. Nobody sees them, nobody gets introduced to them. It only proves they were yours, so they stay at 0%.</p></div>
+            </div>
+            <p className="text-[12px] text-ink-muted mt-3"><Link to="/network/agreement" className="underline">Read the full agreement</Link> · <Link to="/network" className="underline">How the network works</Link></p>
+          </div>
+        </div>
       </div>
       <AuthModal open={auth} onClose={() => setAuth(false)} title="Sign in to your developer panel" subtitle="Free. No password, a link by email or Google." redirect="/network/app" />
     </div>
@@ -197,11 +220,22 @@ const NetworkApp = () => {
             </div>
 
             {/* onboarding checklist */}
-            {(!signed || !ov.leads || !approved) && (
+            {!ov.developer.mode && (
+              <div className="border-2 border-ink rounded-2xl bg-white p-5 md:p-6">
+                <p className="font-display text-[20px] tracking-tight">How do you want to use the network?</p>
+                <p className="text-[14px] text-ink-muted mt-1">Pick one. You can change it later in Settings. Uploading your contacts is separate and always a good idea: it is what proves a buyer was already yours.</p>
+                <div className="mt-4 grid md:grid-cols-3 gap-3">
+                  {[["receive", "Receive buyers only", `We send you buyers. You pay ${COMMISSION_PCT}% only when one buys. Your uploaded contacts stay private.`], ["share", "Earn from my leads only", `You share contacts you could not sell to and earn ${SOURCE_SHARE_PCT}% when one buys elsewhere. You do not receive buyers.`], ["both", "Both (recommended)", `Receive buyers and earn from shared leads. Most developers earn more from sharing than they pay in commission.`]].map(([k, t, d]) => (
+                    <button key={k} onClick={() => setMode(k)} className={`text-left rounded-2xl border p-4 hover:border-ink ${k === "both" ? "border-ink" : "border-hairline"}`}><p className="font-medium text-[15px]">{t}</p><p className="text-[13px] text-ink-muted mt-1 leading-relaxed">{d}</p></button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {(!signed || !ov.leads || !approved || !ov.developer.mode) && (
               <div className="border border-hairline rounded-2xl bg-white p-5 md:p-6">
                 <p className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><Sparkles size={18} /> Get set up</p>
-                <ol className="mt-4 grid md:grid-cols-4 gap-3">
-                  {[[true, "Project registered", "Done.", ""], [signed, "Sign the agreement", signed ? `v${ov.developer.agreement_version} · ${ov.developer.agreement_signer}` : "One page, typed signature.", "/network/agreement"], [ov.leads > 0, "Upload your contacts", ov.leads > 0 ? `${ov.leads} fingerprints protect your own buyers` : "Anything not uploaded counts as ours if it buys.", "/network/app/upload"], [approved, "Get approved", approved ? "Receiving buyers." : "We review by hand, usually within a day.", ""]].map(([ok, t, d, to]: any, n) => (
+                <ol className="mt-4 grid md:grid-cols-5 gap-3">
+                  {[[true, "Project registered", "Done.", ""], [signed, "Sign the agreement", signed ? `v${ov.developer.agreement_version} · ${ov.developer.agreement_signer}` : "One page, typed signature.", "/network/agreement"], [ov.leads > 0, "Upload your contacts", ov.leads > 0 ? `${ov.leads} fingerprints protect your own buyers` : "Anything not uploaded counts as ours if it buys.", "/network/app/upload"], [!!ov.developer.mode, "Choose what you want", ov.developer.mode === "receive" ? "Receive buyers only" : ov.developer.mode === "share" ? "Earn from shared leads only" : ov.developer.mode === "both" ? "Receive and share" : "Receive, share, or both.", ""], [approved, "Get approved", approved ? "Receiving buyers." : "We review by hand, usually within a day.", ""]].map(([ok, t, d, to]: any, n) => (
                     <li key={t} className={`rounded-xl border p-4 ${ok ? "border-emerald-500/40 bg-emerald-500/5" : "border-hairline"}`}><p className="text-[13px] font-medium inline-flex items-center gap-2">{ok ? <Check size={14} className="text-emerald-600" /> : <span className="h-4 w-4 rounded-full border border-ink-muted inline-flex items-center justify-center text-[10px]">{n + 1}</span>}{t}</p><p className="text-[12px] text-ink-muted mt-1">{d}</p>{!ok && to && <Link to={to} className="text-[12px] underline text-ink mt-1 inline-block">Do it →</Link>}</li>
                   ))}
                 </ol>
@@ -265,7 +299,10 @@ const NetworkApp = () => {
                     <Field l="Typical budget (€)"><input type="number" className={inp} placeholder="150000" value={upOpts.budget} onChange={(e) => setUpOpts({ ...upOpts, budget: e.target.value })} /></Field>
                     <Field l="Tag"><input className={inp} placeholder="expo-2025, cold, visited…" value={upOpts.tag} onChange={(e) => setUpOpts({ ...upOpts, tag: e.target.value })} /></Field>
                   </div>
-                  <label className="mt-4 flex items-start gap-3 text-[14px] cursor-pointer" onClick={() => setUpOpts({ ...upOpts, shared: !upOpts.shared })}>{upOpts.shared ? <ToggleRight size={26} className="text-emerald-600 shrink-0" /> : <ToggleLeft size={26} className="text-ink-muted shrink-0" />}<span><b>Share this batch with the network</b><br /><span className="text-ink-muted">RealHunt may introduce these buyers to other projects. You earn {SOURCE_SHARE_PCT}% of the sale when one of them buys elsewhere. Private batches are only used to protect you and to tell you the overlap.</span></span></label>
+                  <div className="mt-4 grid sm:grid-cols-2 gap-3">
+                    <button type="button" onClick={() => setUpOpts({ ...upOpts, shared: false })} className={`text-left rounded-2xl border-2 p-4 ${!upOpts.shared ? "border-ink bg-paper" : "border-hairline"}`}><p className="font-medium text-[15px] inline-flex items-center gap-2"><ShieldCheck size={16} /> Just protect these contacts</p><p className="text-[13px] text-ink-muted mt-1 leading-relaxed">Private. Nobody sees them, nobody gets introduced to them. If we ever send you one of these people, the sale is exempt: 0%.</p></button>
+                    <button type="button" onClick={() => setUpOpts({ ...upOpts, shared: true })} className={`text-left rounded-2xl border-2 p-4 ${upOpts.shared ? "border-ink bg-paper" : "border-hairline"}`}><p className="font-medium text-[15px] inline-flex items-center gap-2"><BadgeEuro size={16} /> Protect and share, earn {SOURCE_SHARE_PCT}%</p><p className="text-[13px] text-ink-muted mt-1 leading-relaxed">Same protection, plus: if one of them buys another project in the network, you get {SOURCE_SHARE_PCT}% of that sale. Still nobody sees the contact. You can un-share any contact later.</p></button>
+                  </div>
                   <div className="mt-4 flex items-center gap-3"><button onClick={send} disabled={busy} className="rh-btn-primary inline-flex items-center gap-2">{busy ? <Loader2 size={16} className="animate-spin" /> : <Fingerprint size={16} />} Send {rows.length} fingerprints</button><button onClick={() => { setRows([]); setRaw(""); }} className="text-[13px] text-ink-muted underline">Clear</button></div>
                 </div>
               )}
@@ -328,6 +365,7 @@ const NetworkApp = () => {
         {tab === "settings" && (
           <div className="mt-6 flex flex-col gap-4">
             {RegisterForm}
+            <div className="border border-hairline rounded-2xl bg-white p-5 md:p-6"><p className="font-medium text-[15px]">What you want from the network</p><p className="text-[13px] text-ink-muted mt-0.5">Separate from uploading: uploading always protects you. This only decides whether we send you buyers and whether your new uploads are shared by default.</p><div className="mt-3 flex flex-wrap gap-2">{[["receive", "Receive buyers only"], ["share", "Earn from my leads only"], ["both", "Both"]].map(([k, l]) => <button key={k} onClick={() => setMode(k)} className={`px-4 py-2 rounded-full border text-[13px] ${ov.developer.mode === k ? "bg-ink text-paper border-ink" : "border-hairline bg-white hover:border-ink"}`}>{l}</button>)}</div></div>
             <div className="border border-hairline rounded-2xl bg-white p-5 md:p-6 flex flex-col md:flex-row md:items-center gap-3"><div className="flex-1"><p className="font-medium text-[15px] inline-flex items-center gap-2"><FileSignature size={15} /> Network agreement</p><p className="text-[13px] text-ink-muted">{signed ? `Signed v${ov.developer.agreement_version} by ${ov.developer.agreement_signer} on ${new Date(ov.developer.agreement_accepted_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}.` : "Not signed yet. Needed before you can accept buyers."}</p></div><Link to="/network/agreement" className="px-4 py-2 rounded-full border border-ink text-[13px] font-medium">{signed ? "Read my copy" : "Read and sign"}</Link></div>
             <div className="border border-hairline rounded-2xl bg-white p-5 md:p-6 flex flex-col md:flex-row md:items-center gap-3"><div className="flex-1"><p className="font-medium text-[15px]">Delete all my fingerprints</p><p className="text-[13px] text-ink-muted">Removes every fingerprint you uploaded. Introductions already made are kept for accounting, and buyers you had stop being exempt.</p></div><button onClick={wipe} className="px-4 py-2 rounded-full border border-red-600 text-red-600 text-[13px] font-medium inline-flex items-center gap-1.5"><Trash2 size={14} /> Delete all</button></div>
           </div>
