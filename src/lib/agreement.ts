@@ -19,7 +19,7 @@ export const AGREEMENT: Clause[] = [
   },
   {
     title: "3. The commission",
-    body: `When a buyer introduced by RealHunt buys, reserves, or signs any purchase, lease, membership or reservation for any unit, plot or product of the Developer or of any company connected to the Developer, the Developer pays RealHunt ${COMMISSION_PCT}% of the total price paid by that buyer, before taxes, fees and discounts. This applies to the first purchase and to any further purchase by the same buyer or by a company, spouse or family member acting for them, for 24 months after the introduction. It applies whether the sale happens through the Developer, through one of its sales agents, or through any third party.`,
+    body: `When a buyer introduced by RealHunt buys, reserves, or signs any purchase, lease, membership or reservation for any unit, plot or product of the Developer or of any company connected to the Developer, the Developer pays RealHunt ${COMMISSION_PCT}% of the total price paid by that buyer, before taxes, fees and discounts. This applies to the first purchase and to any further purchase by the same buyer or by a company, spouse or family member acting for them, for 24 months after the introduction. It applies whether the sale happens through the Developer, through one of its sales agents, or through any third party. That ${COMMISSION_PCT}% is the only money that moves: out of it, ${SOURCE_SHARE_PCT}% of the sale goes to the developer who brought the lead into the network (clause 5) and ${COMMISSION_PCT - SOURCE_SHARE_PCT}% stays with RealHunt; when the buyer came from RealHunt directly, RealHunt keeps the full ${COMMISSION_PCT}%. The Developer never pays more than ${COMMISSION_PCT}%.`,
   },
   {
     title: "4. Buyers the Developer already had",
@@ -55,6 +55,7 @@ export const AGREEMENT_SUMMARY = [
   `You pay ${COMMISSION_PCT}% only when a buyer we introduced buys. Nothing before.`,
   "Upload your own contacts as fingerprints. Anything already in your list before we introduce it is yours, no commission.",
   `Buyers you had but never uploaded count as ours. That is the whole reason to upload.`,
-  `Share a dead lead, it buys another project in the network, you get ${SOURCE_SHARE_PCT}% of that sale.`,
+  `Share a dead lead, it buys another project in the network, you get ${SOURCE_SHARE_PCT}% of that sale. RealHunt keeps ${COMMISSION_PCT - SOURCE_SHARE_PCT}%. The other developer paid ${COMMISSION_PCT}% in total, nothing more.`,
+  "Receive buyers, share leads, or both. Each one is a separate choice, and you can change your mind any time.",
   `Report each sale in the panel. We invoice, you pay in ${PAYMENT_DAYS} days.`,
 ];
