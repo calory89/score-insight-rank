@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const db = supabase as any;
 export const MAX_PRICE = 100000;
+export const HOME_MAX_PRICE = 60000;
 export const eur = (n: number) => "€" + Math.round(n).toLocaleString("en-GB");
 export const FLAG: Record<string, string> = { Italy: "🇮🇹", Spain: "🇪🇸", Portugal: "🇵🇹", France: "🇫🇷", Greece: "🇬🇷", Croatia: "🇭🇷", Bulgaria: "🇧🇬", Romania: "🇷🇴", Japan: "🇯🇵", Sweden: "🇸🇪", Norway: "🇳🇴", Denmark: "🇩🇰", Finland: "🇫🇮", Germany: "🇩🇪", Turkey: "🇹🇷", Albania: "🇦🇱", Indonesia: "🇮🇩", Nordics: "❄️", Asia: "🌏", Other: "🌍" };
 export const norm = (c: string | null | undefined) => { if (!c) return "Other"; if (c === "Scandinavia") return "Nordics"; if (c === "International" || c === "Europe") return "Other"; return c; };
@@ -58,17 +59,21 @@ export const COMPANY = { name: "Equinox Investment Group LLC", address: "30 N Go
 export const consent = () => { try { return localStorage.getItem("rh_consent"); } catch { return null; } };
 
 // Shared "join the list" write, used by every email-capture surface (bottom bar, 30s popup, grid card,
-// home page cards). Collection only for now: no automatic welcome email is sent on insert (disabled
-// 18-sep-2026); the top 10 goes out manually until the real send flow is ready. Any backend error
-// (duplicate email, RLS hiccup, etc.) is swallowed on purpose so a visitor never sees a false "error" —
-// the email is validated client-side before this is called.
+// home page cards, the gated card). Collection only for now: no automatic welcome email is sent on
+// insert (disabled 18-sep-2026); the top 10 goes out manually until the real send flow is ready. Any
+// backend error (duplicate email, RLS hiccup, etc.) is swallowed on purpose so a visitor never sees a
+// false "error" — the email is validated client-side before this is called. Also remembers the last
+// email used (rh_last_email) so a returning visitor is never asked twice in the same browser.
 export const subscribeEmail = async (email: string, source: string, userId?: string | null) => {
   let tz: string | null = null; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch {}
   let exp: any = null; try { exp = JSON.parse(sessionStorage.getItem("rh_exp_assign") || "null"); } catch {}
-  const row = { email: email.trim().toLowerCase(), source, path: typeof location !== "undefined" ? location.pathname : null, sid: sid(), tz, user_id: userId || null, meta: { ref: typeof document !== "undefined" ? document.referrer || null : null, ua: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 160) : null, exp, w: typeof window !== "undefined" ? window.innerWidth : null } };
+  const clean = email.trim().toLowerCase();
+  const row = { email: clean, source, path: typeof location !== "undefined" ? location.pathname : null, sid: sid(), tz, user_id: userId || null, meta: { ref: typeof document !== "undefined" ? document.referrer || null : null, ua: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 160) : null, exp, w: typeof window !== "undefined" ? window.innerWidth : null } };
   const { error } = await db.from("newsletter_subscribers").upsert(row, { onConflict: "email", ignoreDuplicates: true });
   if (error) console.warn("newsletter upsert", error.message);
-  try { localStorage.setItem("rh_sub", "1"); } catch {}
+  try { localStorage.setItem("rh_sub", "1"); localStorage.setItem("rh_last_email", clean); } catch {}
   track("newsletter", { meta: { source } });
   return { ok: true };
 };
+
+export const lastEmail = () => { try { return localStorage.getItem("rh_last_email") || ""; } catch { return ""; } };

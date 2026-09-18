@@ -4,15 +4,19 @@ import { useAuth } from "@/contexts/AuthContext";
 import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
 const Onboarding = lazy(() => import("@/components/realhunt/Onboarding"));
-import { Waves, Check, Heart, Search, Bell, BadgeCheck, TrendingDown, Map as MapIcon, Layers, Sparkles, ArrowRight, Mail } from "lucide-react";
-import { db, eur, FLAG, norm, slug, unslug, isNew, cleanCap, IG, EBC, MAX_PRICE, track, srcSet, score, subscribeEmail } from "@/lib/rh";
+import { Waves, Check, Heart, Search, Bell, BadgeCheck, TrendingDown, Map as MapIcon, Layers, Sparkles, ArrowRight, Mail, Lock, MessageCircle, Share2, X } from "lucide-react";
+import { db, eur, FLAG, norm, slug, unslug, isNew, cleanCap, IG, EBC, MAX_PRICE, HOME_MAX_PRICE, track, srcSet, score, subscribeEmail, lastEmail } from "@/lib/rh";
 import { useExperiment } from "@/lib/experiments";
 
-const PRICE_CHIPS: [string, number][] = [["< €10k", 10000], ["< €25k", 25000], ["< €50k", 50000], ["< €100k", 100000]];
+const PRICE_CHIPS: [string, number][] = [["< €10k", 10000], ["< €25k", 25000], ["< €50k", 50000], ["< €60k", 60000]];
 const PAGE = 40;
 const FEED_KEY = "rh_feed_v2";
 const FEED_COLS = "id,source_account,shortcode,image_urls,posted_at,location_name,country_guess,price_eur,is_beach,price_in_image,sqm,bedrooms,hook,rank_score,verified,status";
 const VALID_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+// A real, already-verified find (Sellano, Umbria, €46,000) reused as the "members only" gated card
+// right after the EBC hero. Real photo we already host, real price and likes — nothing invented.
+const GATED: IG = { id: "gated-1", source_account: "", shortcode: "DcndWlcGwtG", caption: null, image_urls: ["/finds/DcndWlcGwtG-0.webp"], posted_at: null, location_name: "Sellano, Umbria, Italy", country_guess: "Italy", price_eur: 46000, price_raw: null, likes: 1572, is_beach: false };
 
 // An in-grid "leave your email, get the top 10" card. Same size/shape as a listing card so it sits
 // naturally in the feed instead of looking like an ad. Uses the shared subscribeEmail() write (collection
@@ -46,7 +50,7 @@ const CaptureCard = () => {
       <div>
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-[11px] font-medium"><Sparkles size={11} /> Free</span>
         <p className="mt-3 font-display text-[19px] md:text-[21px] leading-[1.15] tracking-tight">{head.text || "Get the top 10 homes. Free, by email."}</p>
-        <p className="mt-1.5 text-[12.5px] text-white/60">Real listings under €100k, picked by hand.</p>
+        <p className="mt-1.5 text-[12.5px] text-white/60">Real listings under €60k, picked by hand.</p>
       </div>
       {mode === "done" ? (
         <p className="text-[13.5px] inline-flex items-start gap-2"><Check size={16} className="shrink-0 mt-0.5" /> Received. Your top 10 lands in your inbox by the end of this week.</p>
@@ -61,6 +65,98 @@ const CaptureCard = () => {
         </form>
       )}
     </div>
+  );
+};
+
+// A real listing styled like a social feed card (heart / comment / share), gated behind a "members
+// only, sign up free" modal. Clicking it never navigates to the real find — it always asks for an
+// email first, so every click is a lead. On submit we don't fabricate a "here's the listing" reveal;
+// we're honest that it, and the rest of the top 10 with the exact addresses/links, goes out by email
+// at the end of the week (same promise as every other capture surface on the site).
+const GatedCard = ({ f }: { f: IG }) => {
+  const { user } = useAuth();
+  const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const ref = useRef<HTMLDivElement>(null);
+  const [seen, setSeen] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current; if (!el) return;
+    const io = new IntersectionObserver((e) => { if (e[0].isIntersecting && !seen) { setSeen(true); track("capture_show", { meta: { kind: "gated_card" } }); } }, { threshold: 0.5 });
+    io.observe(el); return () => io.disconnect();
+  }, [seen]);
+
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow; document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    track("capture_show", { meta: { kind: "gated_modal" } });
+    return () => { document.body.style.overflow = prev; window.removeEventListener("keydown", onKey); };
+  }, [open]);
+
+  const openGate = (e: React.MouseEvent) => { e.preventDefault(); setMode("idle"); setOpen(true); };
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const el = e.currentTarget.querySelector<HTMLInputElement>("input[type=email]");
+    const v = (el?.value ?? "").trim();
+    if (!VALID_EMAIL.test(v)) { setMode("error"); return; }
+    setMode("sending");
+    await subscribeEmail(v, "gated_card", user?.id);
+    setMode("done");
+  };
+
+  const u = f.image_urls![0];
+  return (
+    <>
+      <div ref={ref}>
+        <a href={`/find/${f.shortcode}`} onClick={openGate} className="group relative block rounded-2xl overflow-hidden bg-hairline/30 aspect-[4/5] shadow-sm hover:shadow-xl transition-shadow cursor-pointer [content-visibility:auto]">
+          <img src={u} srcSet={srcSet(u)} sizes="(min-width:1024px) 300px, (min-width:768px) 33vw, 50vw" alt="" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-black/10" />
+          <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 text-white text-[11px] font-medium backdrop-blur-sm"><Lock size={11} /> Members only</span>
+          <div className="absolute right-2.5 bottom-16 flex flex-col items-center gap-3.5 text-white drop-shadow">
+            <span className="flex flex-col items-center gap-0.5"><Heart size={20} /><span className="text-[10.5px] font-medium">{f.likes ? f.likes.toLocaleString() : ""}</span></span>
+            <span className="flex flex-col items-center gap-0.5"><MessageCircle size={20} /></span>
+            <span className="flex flex-col items-center gap-0.5"><Share2 size={20} /></span>
+          </div>
+          <div className="absolute inset-x-0 bottom-0 p-3 md:p-4 pr-12 text-white">
+            <p className="text-[16px] md:text-[18px] font-semibold tabular-nums">{eur(f.price_eur!)}</p>
+            <p className="text-[12px] md:text-[13px] opacity-90 line-clamp-1">{f.location_name}</p>
+          </div>
+        </a>
+      </div>
+
+      {open && (
+        <div className="fixed inset-0 z-[70] bg-ink/60 backdrop-blur-[3px] flex items-end sm:items-center justify-center sm:p-6" onMouseDown={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
+          <div role="dialog" aria-modal="true" aria-labelledby="gate-title" className="relative w-full sm:max-w-[440px] bg-paper text-ink rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
+            <button onClick={() => setOpen(false)} aria-label="Close" className="absolute top-3 right-3 z-10 h-10 w-10 inline-flex items-center justify-center rounded-full bg-hairline/60 text-ink hover:bg-hairline transition-colors"><X size={18} /></button>
+            <div className="p-6 sm:p-8">
+              {mode === "done" ? (
+                <div className="flex flex-col gap-3">
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500 text-white"><Check size={20} strokeWidth={3} /></span>
+                  <p className="font-display text-[22px] tracking-tight">Sent.</p>
+                  <p className="text-[14.5px] text-ink-muted">This home, plus your full top 10 for this week, lands in your inbox by the end of this week — with the exact addresses and links where we found them.</p>
+                  <button onClick={() => setOpen(false)} className="rh-btn-primary !mt-2 self-start !px-5">Done</button>
+                </div>
+              ) : (
+                <>
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-ink text-white"><Lock size={18} /></span>
+                  <p id="gate-title" className="mt-3 font-display text-[22px] leading-[1.15] tracking-tight">Members only</p>
+                  <p className="mt-1.5 text-[14.5px] text-ink-muted">This home is reserved for registered users. Sign up free — it takes five seconds.</p>
+                  <form onSubmit={submit} className="mt-5 flex flex-col gap-2">
+                    <input type="email" inputMode="email" autoComplete="email" name="email" defaultValue={lastEmail()} placeholder="you@email.com" aria-invalid={mode === "error"} autoFocus
+                      className={`w-full border rounded-full px-4 py-3 text-[15px] bg-white outline-none transition-[border,box-shadow] ${mode === "error" ? "border-red-500 ring-2 ring-red-100" : "border-hairline focus:border-ink focus:ring-2 focus:ring-ink/10"}`} />
+                    <button type="submit" disabled={mode === "sending"} className="rh-btn-primary !py-3 disabled:opacity-70">{mode === "sending" ? "Unlocking…" : "Unlock free"}</button>
+                    {mode === "error" && <span className="text-[12.5px] text-red-600">That email does not look right.</span>}
+                  </form>
+                  <p className="mt-3 text-[12px] text-ink-muted">We'll send this home, and your top 10 with addresses and links, this week.</p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
@@ -84,13 +180,13 @@ const Home = () => {
   const [pref, setPref] = useState<{ country?: string | null; budget?: number | null }>({});
   const [drops, setDrops] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState(false);
-  const headline = useExperiment("home_headline", [{ id: "A", text: "Real homes under €100,000." }]);
+  const headline = useExperiment("home_headline", [{ id: "A", text: "Real homes under €60,000." }]);
   const ebcCta = useExperiment("ebc_hero_cta", [{ id: "A", text: "Featured" }]);
 
   useEffect(() => {
     // 1. Instant paint from the last feed we saw (stale-while-revalidate), then refresh from the DB.
     try { const c = JSON.parse(localStorage.getItem(FEED_KEY) || "null"); if (c && Array.isArray(c.rows) && c.rows.length && Date.now() - c.t < 7 * 86400e3) { setFinds(c.rows); setLoaded(true); } } catch {}
-    db.from("ig_finds").select(FEED_COLS).neq("status", "hidden").or(`price_eur.is.null,price_eur.lte.${MAX_PRICE}`).order("rank_score", { ascending: false, nullsFirst: false }).limit(400)
+    db.from("ig_finds").select(FEED_COLS).neq("status", "hidden").lte("price_eur", HOME_MAX_PRICE).order("rank_score", { ascending: false, nullsFirst: false }).limit(400)
       .then(({ data, error }: any) => {
         if (error && !data) { setLoaded(true); return; }
         const rows = (data || []).filter((f: IG) => f.image_urls && f.image_urls.length).map((f: IG) => ({ ...f, image_urls: [f.image_urls![0]] })).sort((a: IG, b: IG) => score(b) - score(a));
@@ -112,24 +208,26 @@ const Home = () => {
   const allCountries = useMemo(() => { const m: Record<string, number> = { Indonesia: 1 }; finds.forEach((f) => { const c = norm(f.country_guess); m[c] = (m[c] || 0) + 1; }); return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([c]) => c); }, [finds]);
   useEffect(() => { if (cParam) setCountry(unslug(cParam, allCountries)); }, [cParam, allCountries]);
   useEffect(() => {
-    const t = aParam ? `Cheap homes spotted by @${aParam}` : country !== "All" ? `Cheap houses in ${country} under €100,000` : "Real homes under €100,000";
+    const t = aParam ? `Cheap homes spotted by @${aParam}` : country !== "All" ? `Cheap houses in ${country} under €60,000` : "Real homes under €60,000";
     document.title = `${t} · RealHunt`;
-    const m = document.querySelector('meta[name="description"]'); if (m) m.setAttribute("content", `${t}. Real listings under €100k, ranked by how cheap they are for where they are. Beach, countryside, villages.`);
+    const m = document.querySelector('meta[name="description"]'); if (m) m.setAttribute("content", `${t}. Real listings under €60k, ranked by how cheap they are for where they are. Beach, countryside, villages.`);
   }, [country, aParam]);
 
   const shown = useMemo(() => {
     const qq = q.trim().toLowerCase();
     const boost = (f: IG) => (pref.country && pref.country !== "Any" && norm(f.country_guess) === pref.country ? 1 : 0) + (pref.budget && f.price_eur && f.price_eur <= pref.budget ? 0.5 : 0);
-    let l = finds.filter((f) => (country === "All" || norm(f.country_guess) === country) && (!beach || f.is_beach) && (!maxP || (f.price_eur != null && f.price_eur <= maxP)) && (!aParam || f.source_account === aParam) && (!qq || `${f.hook || ""} ${f.location_name || ""} ${f.country_guess || ""}`.toLowerCase().includes(qq)));
+    let l = finds.filter((f) => (country === "All" || norm(f.country_guess) === country) && (!beach || f.is_beach) && f.price_eur != null && f.price_eur <= HOME_MAX_PRICE && (!maxP || f.price_eur <= maxP) && (!aParam || f.source_account === aParam) && (!qq || `${f.hook || ""} ${f.location_name || ""} ${f.country_guess || ""}`.toLowerCase().includes(qq)));
     const ebcOk = !aParam && (country === "All" || country === "Indonesia") && (!maxP || EBC.price_eur! <= maxP) && (!qq || "sumba indonesia beach cabin ecobeachcity".includes(qq));
     if (pref.country || pref.budget) l = [...l].sort((a, b) => boost(b) - boost(a) || score(b) - score(a));
     if (!loaded) return [];
     // Feature EBC (Mamboro, Sumba, €11,500) as a big hero card up top, and again further down as
-    // traffic scrolls through the feed — high-traffic days deserve more than one shot at it.
+    // traffic scrolls through the feed — high-traffic days deserve more than one shot at it. Right
+    // after the hero, a gated "members only" card that turns a click into an email.
     if (ebcOk) {
       const hero = { ...EBC, id: "ebc-hero" } as IG;
       const repeat = { ...EBC, id: "ebc-2" } as IG;
-      l = l.length >= 16 ? [hero, ...l.slice(0, 16), repeat, ...l.slice(16)] : [hero, ...l, repeat];
+      const gated = { ...GATED } as IG;
+      l = l.length >= 16 ? [hero, gated, ...l.slice(0, 16), repeat, ...l.slice(16)] : [hero, gated, ...l, repeat];
     }
     // One "leave your email" card woven into the grid, wherever there is enough of a feed for it to feel earned.
     const capture = { id: "capture" } as unknown as IG;
@@ -168,7 +266,7 @@ const Home = () => {
       <RHNav />
 
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pt-8 md:pt-12 pb-4">
-        <h1 className="font-display text-[clamp(30px,5vw,54px)] leading-[1.02] tracking-tight max-w-[22ch]">{aParam ? <>Spotted by <span className="text-ink-muted">@{aParam}</span></> : country !== "All" ? <>Cheap homes in {country}.</> : <>{headline.text || "Real homes under €100,000."}</>}</h1>
+        <h1 className="font-display text-[clamp(30px,5vw,54px)] leading-[1.02] tracking-tight max-w-[22ch]">{aParam ? <>Spotted by <span className="text-ink-muted">@{aParam}</span></> : country !== "All" ? <>Cheap homes in {country}.</> : <>{headline.text || "Real homes under €60,000."}</>}</h1>
         <p className="mt-3 text-[15px] md:text-[17px] text-ink-muted">{loaded ? shown.length : "…"} homes{isFinite(min) && <> · cheapest <b className="text-ink">{eur(min)}</b></>}{aParam && <> · <a href={`https://instagram.com/${aParam}`} target="_blank" rel="noreferrer" className="underline">follow them on Instagram</a></>}</p>
       </section>
 
@@ -191,6 +289,7 @@ const Home = () => {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
           {shown.slice(0, limit).map((f, i) => {
             if (f.id === "capture") return <CaptureCard key="capture" />;
+            if (f.id === "gated-1") return <GatedCard key="gated-1" f={f} />;
             const c = norm(f.country_guess);
             const hero = f.id === "ebc-hero";
             const to = f.id.startsWith("ebc") ? "/ecobeachcity" : `/find/${f.shortcode}`;
@@ -238,7 +337,7 @@ const Home = () => {
         </div>
         <div className="border border-hairline rounded-2xl bg-white p-6 md:p-8 flex flex-col gap-3">
           <p className="font-display text-[22px] tracking-tight inline-flex items-center gap-2"><Mail size={18} /> Get the best deals we find, in your inbox.</p>
-          <p className="text-[14px] text-ink-muted -mt-2">Free. Only homes under €100k worth talking about.</p>
+          <p className="text-[14px] text-ink-muted -mt-2">Free. Only homes under €60k worth talking about.</p>
           {sent ? <p className="inline-flex items-center gap-2 text-[15px]"><Check size={18} /> Received. Your top 10 lands in your inbox by the end of this week.</p> : (
             <form onSubmit={subscribe} className="flex gap-2"><input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" aria-label="Email" className="flex-1 border border-hairline rounded-full px-4 py-3 text-[15px] bg-paper outline-none focus:border-ink" /><button type="submit" className="rh-btn-primary !px-5">Send</button></form>
           )}
