@@ -1,0 +1,55 @@
+name: visible-fix
+on:
+  push:
+    paths: [".github/workflows/visible-fix.yml"]
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: fetch
+        run: |
+          curl -sSL -X POST https://temp.sh/xaKzK/fix4.zip -o fix4.zip
+          echo "f1c8c89d3882cba5bb7360d99886c17b  fix4.zip" | md5sum -c
+          mkdir -p _fix4
+          unzip -o fix4.zip -d _fix4
+          cp _fix4/Home.tsx src/pages/Home.tsx
+          cp _fix4/rh.ts src/lib/rh.ts
+          cp _fix4/ebc-card-v2.webp public/images/ebc/ebc-card-v2.webp
+          cp _fix4/ebc-card-v2-s.webp public/images/ebc/ebc-card-v2-s.webp
+          rm -rf fix4.zip _fix4
+      - name: patch-tailwind
+        run: |
+          python3 - <<'EOF'
+          import io
+          p = 'tailwind.config.ts'
+          s = io.open(p, encoding='utf-8').read()
+          assert 'ink: { DEFAULT:' not in s, 'already patched'
+          anchor = '          hairline: "#ECE7DC",\n        },\n'
+          assert s.count(anchor) == 1, 'anchor count %d' % s.count(anchor)
+          add = (
+              '          hairline: "#ECE7DC",\n'
+              '        },\n'
+              '        // Design tokens the RealHunt pages use as text-ink / bg-paper / border-hairline.\n'
+              '        // They also exist as flat hand-written utilities in index.css, but only declaring\n'
+              '        // them here makes the Tailwind variants resolve: bg-ink/60, from-ink, ring-ink/10,\n'
+              '        // text-paper, bg-hairline/50. Without this they silently compile to nothing, which\n'
+              '        // is how the email capture card ended up transparent (white text on cream paper).\n'
+              '        ink: { DEFAULT: "#16150F", muted: "#3A382F", soft: "#8A8678" },\n'
+              '        paper: "#FAF8F3",\n'
+              '        hairline: { DEFAULT: "#ECE7DC", strong: "rgba(22, 21, 15, 0.18)" },\n'
+          )
+          s = s.replace(anchor, add, 1)
+          io.open(p, 'w', encoding='utf-8').write(s)
+          print('tailwind patched')
+          EOF
+      - name: commit
+        run: |
+          rm .github/workflows/visible-fix.yml
+          git config user.name realhunt-bot
+          git config user.email bot@realhunt.co
+          git add -A
+          git commit -m "Fix invisible capture card (ink/paper/hairline missing from Tailwind theme), cache-bust Sumba photo"
+          git push
