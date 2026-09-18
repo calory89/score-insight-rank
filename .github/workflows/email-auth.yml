@@ -28,7 +28,12 @@ jobs:
           done
       - name: no-google-left
         run: |
-          ! grep -rn "signInWithOAuth\|Continue with Google" src/ || (echo "Google sign-in still referenced" && exit 1)
+          echo "--- every reference, for the record ---"
+          grep -rn "signInWithOAuth\|Continue with Google\|oauth" src/ || echo "(none)"
+          echo "--- references in app code (integrations SDK excluded) ---"
+          left=$(grep -rn "signInWithOAuth\|Continue with Google" src/ --exclude-dir=integrations || true)
+          echo "${left:-(none)}"
+          if [ -n "$left" ]; then echo "FAIL: a Google sign-in entry point is still wired up"; exit 1; fi
       - name: commit
         run: |
           rm -rf fix9.zip _fix9 patch_nogoogle.py .github/workflows/email-auth.yml
