@@ -16,6 +16,7 @@ const AuthModal = ({ open, onClose, title = "Sign in and we email you everything
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [sent, setSent] = useState(false);
+  const [resent, setResent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   if (!open) return null;
@@ -42,6 +43,13 @@ const AuthModal = ({ open, onClose, title = "Sign in and we email you everything
     if (error) setErr(error.message); else setSent(true);
   };
 
+  const resend = async () => {
+    setBusy(true); setErr(""); track("auth_resend", { find });
+    const { error } = await supabase.auth.signInWithOtp({ email: email.trim().toLowerCase(), options: { emailRedirectTo: `${location.origin}/auth/callback`, shouldCreateUser: true } });
+    setBusy(false);
+    if (error) setErr(error.message); else setResent(true);
+  };
+
   const field = "w-full h-12 border border-hairline rounded-full pl-11 pr-4 text-[15px] bg-paper outline-none focus:border-ink";
 
   return createPortal(
@@ -54,10 +62,23 @@ const AuthModal = ({ open, onClose, title = "Sign in and we email you everything
         <p className="text-[14px] text-ink-muted mt-2">{subtitle}</p>
 
         {sent ? (
+          // Roughly half the people who reach this screen never confirm, and the single biggest
+          // reason is that the message is sitting in spam. Say so, and give them a way out of the
+          // dead end without starting over.
           <div className="mt-6 flex flex-col gap-2">
             <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500 text-white"><Check size={20} strokeWidth={3} /></span>
             <p className="font-display text-[20px] tracking-tight">Check {email}</p>
             <p className="text-[14px] text-ink-muted">Click the link to confirm your email. Then you pick a password and you are in. The link is good for one hour.</p>
+            <div className="mt-2 rounded-2xl bg-paper border border-hairline p-3.5">
+              <p className="text-[13.5px]"><b>Not there?</b> Look in spam or promotions — it often lands there. The sender is RealHunt.</p>
+              <div className="mt-2.5 flex flex-wrap items-center gap-3">
+                <button onClick={resend} disabled={busy || resent} className="text-[13.5px] underline disabled:no-underline disabled:text-ink-muted inline-flex items-center gap-1.5">
+                  {busy && <Loader2 size={13} className="animate-spin" />}{resent ? "Sent again" : "Send it again"}
+                </button>
+                <button onClick={() => { setSent(false); setResent(false); setErr(""); }} className="text-[13.5px] underline">Use a different email</button>
+              </div>
+              {err && <p className="text-[12.5px] text-red-600 mt-2">{err}</p>}
+            </div>
           </div>
         ) : mode === "in" ? (
           <>

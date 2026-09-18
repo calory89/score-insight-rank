@@ -38,8 +38,8 @@ const Ebc = () => {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [i]);
-  useEffect(() => { document.title = "€11,500 beachfront cabin · Sumba, Indonesia · RealHunt"; window.scrollTo(0, 0); }, []);
-  const share = () => { const url = location.href; if (navigator.share) { navigator.share({ title: "€11,500 beachfront cabin in Sumba", url }).catch(() => {}); return; } navigator.clipboard?.writeText(url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); }); };
+  useEffect(() => { document.title = "€18,000 beachfront cabin and plot · Sumba, Indonesia · RealHunt"; window.scrollTo(0, 0); }, []);
+  const share = () => { const url = location.href; if (navigator.share) { navigator.share({ title: "€18,000 beachfront cabin and plot in Sumba", url }).catch(() => {}); return; } navigator.clipboard?.writeText(url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); }); };
 
   return (
     <div className="min-h-screen bg-paper text-ink pb-24 md:pb-0">
@@ -81,8 +81,8 @@ const Ebc = () => {
         <div className="px-4 md:px-0 grid md:grid-cols-[1.4fr_1fr] gap-10 mt-6">
           <div>
             <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted">Eco Beach City · new eco village</p>
-            <h1 className="font-display text-[clamp(38px,7vw,64px)] leading-none tracking-tight mt-3 tabular-nums">€11,500</h1>
-            <p className="text-[15px] text-ink-muted mt-1">for the cabin. Land from €6,500 on top. Payable in instalments.</p>
+            <h1 className="font-display text-[clamp(38px,7vw,64px)] leading-none tracking-tight mt-3 tabular-nums">€18,000</h1>
+            <p className="text-[15px] text-ink-muted mt-1">the €11,500 cabin plus your €6,500 plot, second line. Beachfront plots are €9,950. Connections €6,500 when the time comes. Payable in instalments.</p>
             <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[14px] text-ink-muted">
               <span className="inline-flex items-center gap-1.5"><MapPin size={14} /> Mamboro, Sumba, Indonesia</span>
               <span className="inline-flex items-center gap-1.5"><Waves size={14} /> Beachfront, 2 km of beach</span>

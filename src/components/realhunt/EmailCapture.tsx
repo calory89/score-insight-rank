@@ -112,15 +112,36 @@ const EmailCapture = () => {
     if (get(sessionStorage, "rh_pop_seen") === "1") return;
     if (Date.now() - Number(get(localStorage, K_POP) || 0) < 3 * 86400e3) return;
     let t: any;
+    let exitFired = false;
     const fire = () => {
       if (document.visibilityState !== "visible" || get(localStorage, K_SUB) === "1") { t = setTimeout(fire, 8000); return; }
       const ae = document.activeElement as HTMLElement | null;
       if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) { t = setTimeout(fire, 10000); return; }
       if (document.querySelector("[role=dialog]")) { t = setTimeout(fire, 10000); return; }
       set(sessionStorage, "rh_pop_seen", "1"); set(localStorage, K_POP, String(Date.now()));
-      setPeek(feedPeek()); setPop(true); track("capture_show", { meta: { kind: "popup" } });
+      setPeek(feedPeek()); setPop(true); track("capture_show", { meta: { kind: "popup", exit: exitFired } });
     };
     t = setTimeout(fire, 30000);
+
+    // Exit intent, desktop only. A coarse pointer means a finger, and a finger leaving the top of
+    // the screen means nothing at all, so we only listen where there is a real mouse.
+    let onLeave: ((e: MouseEvent) => void) | null = null;
+    const fine = typeof matchMedia === "function" && matchMedia("(pointer: fine)").matches;
+    if (fine) {
+      const armed = setTimeout(() => {
+        onLeave = (e: MouseEvent) => {
+          if (e.clientY > 0 || (e as any).relatedTarget) return;
+          if (get(localStorage, K_SUB) === "1") return;
+          document.removeEventListener("mouseout", onLeave!);
+          clearTimeout(t);
+          exitFired = true;
+          fire();
+        };
+        document.addEventListener("mouseout", onLeave);
+      }, 8000);
+      const clearArmed = armed;
+      return () => { clearTimeout(t); clearTimeout(clearArmed); if (onLeave) document.removeEventListener("mouseout", onLeave); };
+    }
     return () => clearTimeout(t);
   }, [skip]);
 

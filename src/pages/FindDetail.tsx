@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
+import CaptureInline from "@/components/realhunt/CaptureInline";
 import { Heart, Share2, ExternalLink, Lock, ArrowLeft, Check, MapPin, Calendar, Eye, MessageCircle, Phone } from "lucide-react";
 import { db, eur, FLAG, norm, cleanCap, IG, track, srcSet, EBC, COSTS, totalCost, slug } from "@/lib/rh";
 
@@ -106,9 +107,9 @@ const FindDetail = () => {
             {imgs.map((u, i) => <img key={i} src={u} srcSet={srcSet(u)} sizes="100vw" alt="" className="w-full aspect-[4/5] object-cover snap-start shrink-0" loading={i ? "lazy" : "eager"} />)}
           </div>
           {imgs.length > 1 && <div className="md:hidden flex justify-center gap-1.5 py-2">{imgs.map((_, i) => <span key={i} className={`h-1.5 rounded-full transition-all ${i === idx ? "w-4 bg-ink" : "w-1.5 bg-ink/30"}`} />)}</div>}
-          <div className={`hidden md:grid gap-2 ${imgs.length > 1 ? "grid-cols-[2fr_1fr]" : "grid-cols-1"} max-h-[560px]`}>
-            {imgs[0] && <img src={imgs[0]} alt="" className="w-full h-full object-cover max-h-[560px]" />}
-            {imgs.length > 1 && <div className="grid gap-2 grid-rows-2">{imgs.slice(1, 3).map((u, i) => <img key={i} src={u} alt="" className="w-full h-full object-cover" />)}</div>}
+          <div className={`hidden md:grid gap-2 ${imgs.length > 1 ? "grid-cols-[2fr_1fr]" : "grid-cols-1"}`}>
+            {imgs[0] && <img src={imgs[0]} srcSet={srcSet(imgs[0])} sizes="(min-width:1024px) 720px, 60vw" alt="" className={`w-full object-cover rounded-l-none ${imgs.length > 1 ? "aspect-[4/3]" : "aspect-[16/9]"}`} />}
+            {imgs.length > 1 && <div className="grid gap-2 grid-rows-2">{imgs.slice(1, 3).map((u, i) => <img key={i} src={u} srcSet={srcSet(u)} sizes="(min-width:1024px) 360px, 30vw" alt="" className="w-full object-cover aspect-[16/9]" loading="lazy" />)}</div>}
           </div>
         </div>
 
@@ -140,7 +141,7 @@ const FindDetail = () => {
               ) : (
                 <div className="border border-hairline rounded-2xl bg-white p-6 flex flex-col gap-3">
                   <p className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><Lock size={18} /> Sign in and we send you everything about this home, free, to your email</p>
-                  <p className="text-[14px] text-ink-muted">Exact location, map, full description, the original listing and what it really costs to buy as a foreigner. Ten seconds with Google or an email link.</p>
+                  <p className="text-[14px] text-ink-muted">Exact location, map, full description, the original listing and what it really costs to buy as a foreigner. Ten seconds, just your email.</p>
                   <div><Gate /></div>
                 </div>
               )}
@@ -185,6 +186,14 @@ const FindDetail = () => {
                 <Link to={`/fit?d=${Math.round(f.price_eur * 0.2)}&m=800&t=36`} className="rh-btn-primary !px-5 !py-2.5 !text-[14px]">Check the fit</Link>
               </div>
             )}
+
+            <div className="mt-8">
+              <CaptureInline
+                source="find_page"
+                title="More like this one, every week"
+                subtitle={`We hunt homes like this ${f.price_eur ? "around " + eur(f.price_eur) : ""} and send the 10 best every week, with the address and the original link.`}
+                cta="Send me the top 10" />
+            </div>
 
             <p className="mt-6 text-[12px] text-ink-muted leading-relaxed">Published by @{f.source_account}{when ? ` on ${when}` : ""}. Price as shown that day, it may have changed or sold. RealHunt links to listings, it does not sell them. Verify ownership, taxes and condition before paying anyone.</p>
           </div>

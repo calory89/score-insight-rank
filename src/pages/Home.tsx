@@ -3,8 +3,9 @@ import { Link, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
+import CaptureInline from "@/components/realhunt/CaptureInline";
 const Onboarding = lazy(() => import("@/components/realhunt/Onboarding"));
-import { Waves, Check, Heart, Search, Bell, BadgeCheck, TrendingDown, Map as MapIcon, Layers, Sparkles, ArrowRight, Mail, Lock, MessageCircle, Share2, X } from "lucide-react";
+import { Waves, Check, Heart, Search, Bell, BadgeCheck, TrendingDown, Map as MapIcon, Layers, Sparkles, ArrowRight, Lock, MessageCircle, Share2, X, ArrowDownWideNarrow } from "lucide-react";
 import { db, eur, FLAG, norm, slug, unslug, isNew, cleanCap, IG, EBC, MAX_PRICE, HOME_MAX_PRICE, track, srcSet, score, subscribeEmail, lastEmail } from "@/lib/rh";
 import { useExperiment } from "@/lib/experiments";
 
@@ -185,11 +186,9 @@ const Home = () => {
   const [q, setQ] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [limit, setLimit] = useState(PAGE);
+  const [sort, setSort] = useState<"best" | "cheap" | "new">(() => { try { return (sessionStorage.getItem("rh_sort") as any) || "best"; } catch { return "best"; } });
   const [favs, setFavs] = useState<Set<string>>(new Set());
   const [auth, setAuth] = useState(false);
-  const [email, setEmail] = useState("");
-  const [sent, setSent] = useState(false);
-  const [sendErr, setSendErr] = useState(false);
   const [alert, setAlert] = useState({ email: "", country: "Any", max: 50000 });
   const [alertSent, setAlertSent] = useState(false);
   const sentinel = useRef<HTMLDivElement>(null);
@@ -248,7 +247,11 @@ const Home = () => {
     const boost = (f: IG) => (pref.country && pref.country !== "Any" && norm(f.country_guess) === pref.country ? 1 : 0) + (pref.budget && f.price_eur && f.price_eur <= pref.budget ? 0.5 : 0);
     let l = finds.filter((f) => (country === "All" || norm(f.country_guess) === country) && (!beach || f.is_beach) && f.price_eur != null && f.price_eur <= HOME_MAX_PRICE && (!maxP || f.price_eur <= maxP) && (!aParam || f.source_account === aParam) && (!qq || `${f.hook || ""} ${f.location_name || ""} ${f.country_guess || ""}`.toLowerCase().includes(qq)));
     const ebcOk = !aParam && (country === "All" || country === "Indonesia") && (!maxP || EBC.price_eur! <= maxP) && (!qq || "sumba indonesia beach cabin ecobeachcity".includes(qq));
-    if (pref.country || pref.budget) l = [...l].sort((a, b) => boost(b) - boost(a) || score(b) - score(a));
+    // Explicit ordering always wins over the personalised one: if someone asked for "cheapest",
+    // showing them our idea of "best" instead is just ignoring them.
+    if (sort === "cheap") l = [...l].sort((a, b) => (a.price_eur ?? Infinity) - (b.price_eur ?? Infinity));
+    else if (sort === "new") l = [...l].sort((a, b) => new Date(b.posted_at || 0).getTime() - new Date(a.posted_at || 0).getTime());
+    else if (pref.country || pref.budget) l = [...l].sort((a, b) => boost(b) - boost(a) || score(b) - score(a));
     if (!loaded) return [];
     // EBC (Mamboro, Sumba, €11,500) appears ONCE, as an ordinary card at the top, followed by the
     // gated "members only" card that turns a click into an email. No home is ever repeated in the
@@ -260,8 +263,26 @@ const Home = () => {
     const capture = { id: "capture" } as unknown as IG;
     l = l.length > 7 ? [...l.slice(0, 7), capture, ...l.slice(7)] : [...l, capture];
     return l;
-  }, [finds, country, beach, maxP, q, aParam, pref, loaded]);
-  useEffect(() => { setLimit(PAGE); }, [country, beach, maxP, q, aParam]);
+  }, [finds, country, beach, maxP, q, aParam, pref, loaded, sort]);
+  useEffect(() => { setLimit(PAGE); }, [country, beach, maxP, q, aParam, sort]);
+  useEffect(() => { try { sessionStorage.setItem("rh_sort", sort); } catch {} }, [sort]);
+  // Opening a home and coming back used to dump you at the top of an infinite feed, having lost
+  // everything you had scrolled past. Remember the position and how much had loaded, put it back
+  // once, and then forget it so a fresh visit still starts at the top.
+  useEffect(() => {
+    const save = () => { try { sessionStorage.setItem("rh_pos", JSON.stringify({ y: window.scrollY, n: limit, t: Date.now() })); } catch {} };
+    window.addEventListener("pagehide", save);
+    return () => { save(); window.removeEventListener("pagehide", save); };
+  }, [limit]);
+  useEffect(() => {
+    if (!loaded) return;
+    let pos: any = null;
+    try { pos = JSON.parse(sessionStorage.getItem("rh_pos") || "null"); sessionStorage.removeItem("rh_pos"); } catch {}
+    if (!pos || !pos.y || Date.now() - pos.t > 30 * 60000) return;
+    setLimit((n) => Math.max(n, pos.n || PAGE));
+    requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, pos.y)));
+  }, [loaded]);
+
   useEffect(() => {
     const el = sentinel.current; if (!el) return;
     const io = new IntersectionObserver((e) => { if (e[0].isIntersecting) setLimit((n) => n + PAGE); }, { rootMargin: "600px" });
@@ -277,16 +298,25 @@ const Home = () => {
     if (on) await db.from("find_events").delete().eq("user_id", user.id).eq("find_id", f.id).eq("event", "favorite");
     else { await db.from("find_events").insert({ user_id: user.id, find_id: f.id, event: "favorite" }); track("favorite", { find: f.shortcode }); }
   };
-  const subscribe = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const el = e.currentTarget.querySelector<HTMLInputElement>("input[type=email]");
-    const v = (el?.value ?? email).trim();
-    if (!VALID_EMAIL.test(v)) return;
-    setSendErr(false);
-    const { ok } = await subscribeEmail(v, "home_bottom", user?.id);
-    if (ok) setSent(true); else setSendErr(true);
-  };
   const saveAlert = async (e: React.FormEvent) => { e.preventDefault(); if (!/.+@.+\..+/.test(alert.email)) return; setAlertSent(true); track("alert", { meta: alert }); try { await db.from("alerts").insert({ email: alert.email, country: alert.country === "Any" ? null : alert.country, max_price: alert.max, beach, user_id: user?.id || null }); } catch {} };
+
+  // Suggestions come from the feed that is already in memory, so typing costs nothing and never
+  // proposes a place with no homes behind it.
+  const suggestions = useMemo(() => {
+    const qq = q.trim().toLowerCase();
+    if (qq.length < 2) return [];
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const f of finds) {
+      for (const cand of [f.location_name, norm(f.country_guess)]) {
+        if (!cand) continue;
+        const k = cand.toLowerCase();
+        if (k.includes(qq) && !seen.has(k)) { seen.add(k); out.push(cand); }
+        if (out.length >= 6) return out;
+      }
+    }
+    return out;
+  }, [q, finds]);
 
   const chip = (on: boolean) => `shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-[13px] transition-colors ${on ? "bg-sky-500 text-white border-sky-500" : "border-hairline hover:border-ink bg-white"}`;
 
@@ -304,6 +334,10 @@ const Home = () => {
           <button onClick={() => setShowSearch((v) => !v)} aria-label="Search" className={chip(showSearch || !!q)}><Search size={14} />{q ? q : ""}</button>
           <button onClick={() => setBeach((v) => !v)} aria-pressed={beach} className={chip(beach)}><Waves size={14} /> Beach</button>
           {PRICE_CHIPS.map(([l, v]) => <button key={v} onClick={() => setMaxP(maxP === v ? 0 : v)} aria-pressed={maxP === v} className={chip(maxP === v)}>{l}</button>)}
+          <span className="w-px bg-hairline shrink-0 self-stretch my-1" />
+          {([["best", "Best"], ["cheap", "Cheapest"], ["new", "Newest"]] as [typeof sort, string][]).map(([k, l]) => (
+            <button key={k} onClick={() => setSort(k)} aria-pressed={sort === k} className={chip(sort === k)}>{k === "best" && <ArrowDownWideNarrow size={14} />}{l}</button>
+          ))}
           <Link to="/map" className={chip(false)}><MapIcon size={14} /> Map</Link>
           <Link to="/swipe" className={chip(false) + " md:hidden"}><Layers size={14} /> Swipe</Link>
           <span className="w-px bg-hairline shrink-0 self-stretch my-1" />
@@ -311,7 +345,16 @@ const Home = () => {
             <Link key={k} to={k === "All" ? "/" : `/country/${slug(k)}`} onClick={() => setCountry(k)} aria-pressed={country === k} className={chip(country === k)}>{k !== "All" && <span>{FLAG[k] || "🌍"}</span>}{k}</Link>
           ))}
         </div>
-        {showSearch && <div className="max-w-[1240px] mx-auto px-4 md:px-6 pb-3"><input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="castle, lake, ocean, Tuscany, land…" className="w-full md:w-96 border border-hairline rounded-full px-4 py-2.5 text-[14px] bg-white outline-none focus:border-ink" /></div>}
+        {showSearch && (
+          <div className="max-w-[1240px] mx-auto px-4 md:px-6 pb-3">
+            <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="castle, lake, ocean, Tuscany, land…" className="w-full md:w-96 border border-hairline rounded-full px-4 py-2.5 text-[14px] bg-white outline-none focus:border-ink" />
+            {suggestions.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {suggestions.map((sg) => <button key={sg} onClick={() => setQ(sg)} className="px-3 py-1.5 rounded-full border border-hairline bg-white text-[12.5px] hover:border-ink transition-colors">{sg}</button>)}
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 py-6">
@@ -362,14 +405,7 @@ const Home = () => {
             </form>
           )}
         </div>
-        <div className="border border-hairline rounded-2xl bg-white p-6 md:p-8 flex flex-col gap-3">
-          <p className="font-display text-[22px] tracking-tight inline-flex items-center gap-2"><Mail size={18} /> Get the best deals we find, in your inbox.</p>
-          <p className="text-[14px] text-ink-muted -mt-2">Free. Only homes under €60k worth talking about.</p>
-          {sent ? <p className="inline-flex items-center gap-2 text-[15px]"><Check size={18} /> Received. Your top 10 lands in your inbox by the end of this week.</p> : (
-            <form onSubmit={subscribe} className="flex gap-2"><input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" aria-label="Email" className="flex-1 border border-hairline rounded-full px-4 py-3 text-[15px] bg-paper outline-none focus:border-ink" /><button type="submit" className="rh-btn-primary !px-5">Send</button></form>
-          )}
-          {sendErr && !sent && <p className="text-[13px] text-amber-700">We could not save that just now. Try once more.</p>}
-        </div>
+        <CaptureInline source="home_bottom" title="Get the best deals we find, in your inbox" subtitle="Free. Only homes under €60k worth talking about — with the address and the original link." />
       </section>
 
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-10 text-[13px] text-ink-muted flex flex-wrap gap-x-4 gap-y-1">
