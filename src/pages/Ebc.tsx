@@ -31,9 +31,9 @@ const PRICES: [string, string, string][] = [
 
 const Ebc = () => {
   const [i, setI] = useState(0);
-  const track = useRef<HTMLDivElement>(null);
+  const rail = useRef<HTMLDivElement>(null);
   const goTo = (n: number) => {
-    const el = track.current; if (!el) return;
+    const el = rail.current; if (!el) return;
     const k = Math.max(0, Math.min(IMGS.length - 1, n));
     el.scrollTo({ left: k * el.clientWidth, behavior: "smooth" });
     setI(k);
@@ -61,7 +61,7 @@ const Ebc = () => {
         <Link to="/" className="hidden md:inline-flex items-center gap-2 text-[13px] text-ink-muted hover:text-ink mb-4"><ArrowLeft size={14} /> All deals</Link>
 
         <div className="relative md:rounded-2xl md:overflow-hidden bg-hairline/30">
-          <div ref={track} onScroll={(e) => { const el = e.currentTarget; setI(Math.round(el.scrollLeft / el.clientWidth)); }}
+          <div ref={rail} onScroll={(e) => { const el = e.currentTarget; setI(Math.round(el.scrollLeft / el.clientWidth)); }}
             className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none">
             {IMGS.map(([u, a], k) => (
               <img key={k} src={u} alt={a} loading={k ? "lazy" : "eager"} decoding="async"
