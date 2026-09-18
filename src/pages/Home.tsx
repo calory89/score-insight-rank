@@ -4,14 +4,65 @@ import { useAuth } from "@/contexts/AuthContext";
 import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
 const Onboarding = lazy(() => import("@/components/realhunt/Onboarding"));
-import { Waves, Check, Heart, Search, Bell, BadgeCheck, TrendingDown, Map as MapIcon, Layers } from "lucide-react";
-import { db, eur, FLAG, norm, slug, unslug, isNew, cleanCap, IG, EBC, MAX_PRICE, track, srcSet, score } from "@/lib/rh";
+import { Waves, Check, Heart, Search, Bell, BadgeCheck, TrendingDown, Map as MapIcon, Layers, Sparkles, ArrowRight, Mail } from "lucide-react";
+import { db, eur, FLAG, norm, slug, unslug, isNew, cleanCap, IG, EBC, MAX_PRICE, track, srcSet, score, subscribeEmail } from "@/lib/rh";
 import { useExperiment } from "@/lib/experiments";
 
 const PRICE_CHIPS: [string, number][] = [["< €10k", 10000], ["< €25k", 25000], ["< €50k", 50000], ["< €100k", 100000]];
 const PAGE = 40;
 const FEED_KEY = "rh_feed_v2";
 const FEED_COLS = "id,source_account,shortcode,image_urls,posted_at,location_name,country_guess,price_eur,is_beach,price_in_image,sqm,bedrooms,hook,rank_score,verified,status";
+const VALID_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+// An in-grid "leave your email, get the top 10" card. Same size/shape as a listing card so it sits
+// naturally in the feed instead of looking like an ad. Uses the shared subscribeEmail() write (collection
+// only, no auto-send) and reads the input straight from the DOM on submit so autofill never gets
+// flagged as an invalid email (see EmailCapture.tsx for the same fix).
+const CaptureCard = () => {
+  const { user } = useAuth();
+  const [mode, setMode] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [seen, setSeen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const head = useExperiment("capture_card_headline", [{ id: "A", text: "Get the top 10 homes. Free, by email." }]);
+
+  useEffect(() => {
+    const el = ref.current; if (!el) return;
+    const io = new IntersectionObserver((e) => { if (e[0].isIntersecting && !seen) { setSeen(true); track("capture_show", { meta: { kind: "grid_card" } }); } }, { threshold: 0.5 });
+    io.observe(el); return () => io.disconnect();
+  }, [seen]);
+
+  const submit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const el = e.currentTarget.querySelector<HTMLInputElement>("input[type=email]");
+    const v = (el?.value ?? "").trim();
+    if (!VALID_EMAIL.test(v)) { setMode("error"); return; }
+    setMode("sending");
+    await subscribeEmail(v, "grid_card", user?.id);
+    setMode("done");
+  };
+
+  return (
+    <div ref={ref} className="relative rounded-2xl overflow-hidden aspect-[4/5] bg-gradient-to-br from-ink via-[#232220] to-[#141414] text-white p-4 md:p-5 flex flex-col justify-between shadow-sm [content-visibility:auto]">
+      <div>
+        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-[11px] font-medium"><Sparkles size={11} /> Free</span>
+        <p className="mt-3 font-display text-[19px] md:text-[21px] leading-[1.15] tracking-tight">{head.text || "Get the top 10 homes. Free, by email."}</p>
+        <p className="mt-1.5 text-[12.5px] text-white/60">Real listings under €100k, picked by hand.</p>
+      </div>
+      {mode === "done" ? (
+        <p className="text-[13.5px] inline-flex items-start gap-2"><Check size={16} className="shrink-0 mt-0.5" /> Received. Your top 10 lands in your inbox by the end of this week.</p>
+      ) : (
+        <form onSubmit={submit} className="flex flex-col gap-2">
+          <input type="email" inputMode="email" autoComplete="email" name="email" placeholder="you@email.com" aria-invalid={mode === "error"}
+            className={`w-full rounded-full px-3.5 py-2.5 text-[13.5px] text-ink bg-white outline-none border ${mode === "error" ? "border-red-400 ring-2 ring-red-400/30" : "border-transparent focus:ring-2 focus:ring-white/40"}`} />
+          <button type="submit" disabled={mode === "sending"} className="rh-btn-primary !py-2.5 !text-[13px] inline-flex items-center justify-center gap-1.5 disabled:opacity-70">
+            {mode === "sending" ? "Sending…" : "Send me the top 10"} {mode !== "sending" && <ArrowRight size={14} />}
+          </button>
+          {mode === "error" && <span className="text-[11.5px] text-red-300">That email does not look right.</span>}
+        </form>
+      )}
+    </div>
+  );
+};
 
 const Home = () => {
   const { country: cParam, account: aParam } = useParams();
@@ -34,6 +85,7 @@ const Home = () => {
   const [drops, setDrops] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState(false);
   const headline = useExperiment("home_headline", [{ id: "A", text: "Real homes under €100,000." }]);
+  const ebcCta = useExperiment("ebc_hero_cta", [{ id: "A", text: "Featured" }]);
 
   useEffect(() => {
     // 1. Instant paint from the last feed we saw (stale-while-revalidate), then refresh from the DB.
@@ -72,7 +124,16 @@ const Home = () => {
     const ebcOk = !aParam && (country === "All" || country === "Indonesia") && (!maxP || EBC.price_eur! <= maxP) && (!qq || "sumba indonesia beach cabin ecobeachcity".includes(qq));
     if (pref.country || pref.budget) l = [...l].sort((a, b) => boost(b) - boost(a) || score(b) - score(a));
     if (!loaded) return [];
-    if (ebcOk) l = l.length >= 2 ? [...l.slice(0, 2), EBC, ...l.slice(2)] : [...l, EBC];
+    // Feature EBC (Mamboro, Sumba, €11,500) as a big hero card up top, and again further down as
+    // traffic scrolls through the feed — high-traffic days deserve more than one shot at it.
+    if (ebcOk) {
+      const hero = { ...EBC, id: "ebc-hero" } as IG;
+      const repeat = { ...EBC, id: "ebc-2" } as IG;
+      l = l.length >= 16 ? [hero, ...l.slice(0, 16), repeat, ...l.slice(16)] : [hero, ...l, repeat];
+    }
+    // One "leave your email" card woven into the grid, wherever there is enough of a feed for it to feel earned.
+    const capture = { id: "capture" } as unknown as IG;
+    l = l.length > 7 ? [...l.slice(0, 7), capture, ...l.slice(7)] : [...l, capture];
     return l;
   }, [finds, country, beach, maxP, q, aParam, pref, loaded]);
   useEffect(() => { setLimit(PAGE); }, [country, beach, maxP, q, aParam]);
@@ -86,12 +147,18 @@ const Home = () => {
   const toggleFav = async (e: React.MouseEvent, f: IG) => {
     e.preventDefault(); e.stopPropagation();
     if (!user) { track("fav_gate", { find: f.shortcode }); setAuth(true); return; }
-    if (f.id === "ebc") return;
+    if (f.id.startsWith("ebc")) return;
     const on = favs.has(f.id); const n = new Set(favs); on ? n.delete(f.id) : n.add(f.id); setFavs(n);
     if (on) await db.from("find_events").delete().eq("user_id", user.id).eq("find_id", f.id).eq("event", "favorite");
     else { await db.from("find_events").insert({ user_id: user.id, find_id: f.id, event: "favorite" }); track("favorite", { find: f.shortcode }); }
   };
-  const subscribe = async (e: React.FormEvent) => { e.preventDefault(); if (!/.+@.+\..+/.test(email)) return; setSent(true); track("newsletter"); try { await db.from("newsletter_subscribers").insert({ email, source: "home_bottom" }); } catch {} };
+  const subscribe = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const el = e.currentTarget.querySelector<HTMLInputElement>("input[type=email]");
+    const v = (el?.value ?? email).trim();
+    if (!VALID_EMAIL.test(v)) return;
+    setSent(true); await subscribeEmail(v, "home_bottom", user?.id);
+  };
   const saveAlert = async (e: React.FormEvent) => { e.preventDefault(); if (!/.+@.+\..+/.test(alert.email)) return; setAlertSent(true); track("alert", { meta: alert }); try { await db.from("alerts").insert({ email: alert.email, country: alert.country === "Any" ? null : alert.country, max_price: alert.max, beach, user_id: user?.id || null }); } catch {} };
 
   const chip = (on: boolean) => `shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-[13px] transition-colors ${on ? "bg-sky-500 text-white border-sky-500" : "border-hairline hover:border-ink bg-white"}`;
@@ -123,25 +190,29 @@ const Home = () => {
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 py-6">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
           {shown.slice(0, limit).map((f, i) => {
+            if (f.id === "capture") return <CaptureCard key="capture" />;
             const c = norm(f.country_guess);
-            const to = f.id === "ebc" ? "/ecobeachcity" : `/find/${f.shortcode}`;
+            const hero = f.id === "ebc-hero";
+            const to = f.id.startsWith("ebc") ? "/ecobeachcity" : `/find/${f.shortcode}`;
             const u = f.image_urls![0];
             return (
-              <Link key={f.id} to={to} onClick={() => track("card_click", { find: f.shortcode })} className="group relative block rounded-2xl overflow-hidden bg-hairline/30 aspect-[4/5] shadow-sm hover:shadow-xl transition-shadow [content-visibility:auto]">
-                <img src={u} srcSet={srcSet(u)} sizes="(min-width:1024px) 300px, (min-width:768px) 33vw, 50vw" alt="" loading={i < 8 ? "eager" : "lazy"} {...((i < 4 ? { fetchpriority: "high" } : {}) as any)} decoding="async" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
-                <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/70 to-transparent" />
-                <span className="absolute top-2.5 right-2.5 px-2 py-1 rounded-full bg-white/90 text-ink text-[11px] font-medium shadow">{FLAG[c] || "🌍"} {c}</span>
-                <div className="absolute top-2.5 left-2.5 flex gap-1 flex-wrap max-w-[60%]">
-                  {f.price_eur && <span className="px-2 py-1 rounded-full bg-white text-ink text-[12px] font-semibold tabular-nums shadow">{eur(f.price_eur)}</span>}
-                  {f.is_beach && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-sky-500/90 text-white text-[11px] font-medium shadow"><Waves size={11} /> Beach</span>}
+              <Link key={f.id} to={to} onClick={() => track("card_click", { find: f.shortcode })}
+                className={`group relative block rounded-2xl overflow-hidden bg-hairline/30 shadow-sm hover:shadow-xl transition-shadow [content-visibility:auto] ${hero ? "col-span-2 aspect-[8/5]" : "aspect-[4/5]"}`}>
+                <img src={u} srcSet={srcSet(u)} sizes={hero ? "(min-width:1024px) 620px, 100vw" : "(min-width:1024px) 300px, (min-width:768px) 33vw, 50vw"} alt="" loading={i < 8 ? "eager" : "lazy"} {...((i < 4 ? { fetchpriority: "high" } : {}) as any)} decoding="async" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
+                <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent ${hero ? "h-1/2" : "h-1/3"}`} />
+                {hero && <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500 text-white text-[12px] md:text-[13px] font-semibold shadow"><Sparkles size={13} /> {ebcCta.text || "Featured"}</span>}
+                <span className={`absolute top-2.5 right-2.5 px-2 py-1 rounded-full bg-white/90 text-ink font-medium shadow ${hero ? "text-[13px]" : "text-[11px]"}`}>{FLAG[c] || "🌍"} {c}</span>
+                <div className={`absolute left-2.5 flex gap-1 flex-wrap max-w-[70%] ${hero ? "top-[52px] md:top-14" : "top-2.5"}`}>
+                  {f.price_eur && <span className={`px-2 py-1 rounded-full bg-white text-ink font-semibold tabular-nums shadow ${hero ? "text-[16px] md:text-[18px]" : "text-[12px]"}`}>{eur(f.price_eur)}</span>}
+                  {f.is_beach && <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full bg-sky-500/90 text-white font-medium shadow ${hero ? "text-[12px]" : "text-[11px]"}`}><Waves size={hero ? 13 : 11} /> Beach</span>}
                   {isNew(f.posted_at) && <span className="px-2 py-1 rounded-full bg-emerald-500/90 text-white text-[11px] font-medium shadow">New</span>}
                   {drops.has(f.id) && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/90 text-white text-[11px] font-medium shadow"><TrendingDown size={11} /> Price drop</span>}
                   {(f as any).verified && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-ink/90 text-white text-[11px] font-medium shadow"><BadgeCheck size={11} /> Verified</span>}
                   {((f as any).status === "sold" || (f as any).status === "reserved") && <span className="px-2 py-1 rounded-full bg-red-600/90 text-white text-[11px] font-medium shadow uppercase">{(f as any).status}</span>}
                 </div>
-                {f.id !== "ebc" && <button onClick={(e) => toggleFav(e, f)} aria-label="Save" className={`absolute bottom-3 right-3 h-9 w-9 rounded-full bg-white/90 shadow inline-flex items-center justify-center ${favs.has(f.id) ? "text-red-500" : "text-ink"}`}><Heart size={16} fill={favs.has(f.id) ? "currentColor" : "none"} /></button>}
-                <div className="absolute inset-x-0 bottom-0 p-3 md:p-4 pr-14 text-white">
-                  <p className="text-[12px] md:text-[13px] opacity-95 line-clamp-2 leading-snug">{f.hook || f.location_name || (f.caption ? cleanCap(f.caption).slice(0, 48) : "") || c}</p>
+                {!f.id.startsWith("ebc") && <button onClick={(e) => toggleFav(e, f)} aria-label="Save" className={`absolute bottom-3 right-3 h-9 w-9 rounded-full bg-white/90 shadow inline-flex items-center justify-center ${favs.has(f.id) ? "text-red-500" : "text-ink"}`}><Heart size={16} fill={favs.has(f.id) ? "currentColor" : "none"} /></button>}
+                <div className={`absolute inset-x-0 bottom-0 text-white ${hero ? "p-4 md:p-5 pr-16 md:max-w-[70%]" : "p-3 md:p-4 pr-14"}`}>
+                  <p className={`opacity-95 leading-snug ${hero ? "text-[15px] md:text-[19px] line-clamp-2 font-medium" : "text-[12px] md:text-[13px] line-clamp-2"}`}>{f.hook || f.location_name || (f.caption ? cleanCap(f.caption).slice(0, 48) : "") || c}</p>
                 </div>
               </Link>
             );
@@ -166,9 +237,9 @@ const Home = () => {
           )}
         </div>
         <div className="border border-hairline rounded-2xl bg-white p-6 md:p-8 flex flex-col gap-3">
-          <p className="font-display text-[22px] tracking-tight">Get the best deals we find, in your inbox.</p>
+          <p className="font-display text-[22px] tracking-tight inline-flex items-center gap-2"><Mail size={18} /> Get the best deals we find, in your inbox.</p>
           <p className="text-[14px] text-ink-muted -mt-2">Free. Only homes under €100k worth talking about.</p>
-          {sent ? <p className="inline-flex items-center gap-2 text-[15px]"><Check size={18} /> Done. First deals coming your way.</p> : (
+          {sent ? <p className="inline-flex items-center gap-2 text-[15px]"><Check size={18} /> Received. Your top 10 lands in your inbox by the end of this week.</p> : (
             <form onSubmit={subscribe} className="flex gap-2"><input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" aria-label="Email" className="flex-1 border border-hairline rounded-full px-4 py-3 text-[15px] bg-paper outline-none focus:border-ink" /><button type="submit" className="rh-btn-primary !px-5">Send</button></form>
           )}
         </div>
