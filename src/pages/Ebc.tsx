@@ -3,22 +3,9 @@ import { Link } from "react-router-dom";
 import RHNav from "@/components/realhunt/RHNav";
 import { ArrowLeft, ExternalLink, MapPin, Waves, Plane, Check, Share2, CalendarCheck, ChevronLeft, ChevronRight } from "lucide-react";
 import { CALENDLY, track } from "@/lib/rh";
-const BUILD: [string, string][] = [["/images/ebc/ebc-build-1.jpg", "The beach and first plots, drone, on site"], ["/images/ebc/ebc-build-2.jpg", "Studio under construction, on site"], ["/images/ebc/ebc-build-3.jpg", "Glamping interior, delivered unit"]];
-
 const IMGS = [
-  ["/images/ebc/ebc-hero.jpg", "The cabin, steps from the beach"],
-  ["/images/ebc/ebc-card.jpg", "Beachfront cabins on the north coast of Sumba"],
-  ["/images/ebc/ebc-cabin.jpg", "The €11,500 cabin, 100% off-site built"],
-  ["/images/ebc/ebc-interior.jpg", "Studio interior, kitchen and living"],
-  ["/images/ebc/ebc-bedroom.jpg", "Bedroom, sunset over the Savu Sea"],
-  ["/images/ebc/ebc-founder.jpg", "First line, straight onto the sand"],
-  ["/images/ebc/ebc-deck.jpg", "Beach deck"],
-  ["/images/ebc/ebc-beach.jpg", "The beach, 2 km of it"],
-  ["/images/ebc/ebc-cowork.jpg", "Coworking with ocean view"],
-  ["/images/ebc/ebc-restaurant.jpg", "Beach restaurant"],
-  ["/images/ebc/ebc-masterplan.jpg", "300 ha masterplan, 100 facilities"],
-  ["/images/ebc/ebc-cove.jpg", "Coves nearby"],
-  ["/images/ebc/ebc-coast.jpg", "Sumba's coast"],
+  ["/images/ebc/ebc-cabin-ext.webp", "The cabin at dusk, in the village"],
+  ["/images/ebc/ebc-cabin-int.webp", "Inside the cabin"],
 ];
 const FACILITIES = ["Beach club", "Beach restaurant", "Coworking", "Padel courts", "Beach volley", "Gym", "Yoga deck", "Pools", "Surf school", "Kids club", "Wellness and spa", "Organic farm", "Plaza and shops", "Medical point", "Coliving", "Nature reserve", "Horse trails", "Sunset bar", "Water sports", "Event lawn"];
 const PRICES: [string, string, string][] = [
@@ -123,11 +110,6 @@ const Ebc = () => {
             </div>
 
             <div className="mt-8">
-              <h2 className="font-display text-[20px] tracking-tight mb-3">Built, not rendered</h2>
-              <div className="grid grid-cols-3 gap-2">{BUILD.map(([u, a]) => <figure key={u}><img src={u} alt={a} loading="lazy" className="w-full aspect-[4/3] object-cover rounded-xl" /><figcaption className="text-[11px] text-ink-muted mt-1">{a}</figcaption></figure>)}</div>
-            </div>
-
-            <div className="mt-8">
               <h2 className="font-display text-[20px] tracking-tight mb-3">100 facilities planned. Some of them:</h2>
               <ul className="grid grid-cols-2 gap-x-6 gap-y-2 text-[14px]">{FACILITIES.map((f) => <li key={f} className="flex gap-2"><Check size={15} className="shrink-0 mt-0.5 text-ink-muted" />{f}</li>)}</ul>
             </div>
@@ -141,7 +123,6 @@ const Ebc = () => {
               </ul>
             </div>
 
-            <div className="mt-8 hidden md:grid grid-cols-3 gap-2">{IMGS.slice(4).map(([u, a]) => <img key={u} src={u} alt={a} loading="lazy" className="w-full aspect-[4/3] object-cover rounded-xl" />)}</div>
           </div>
 
           <aside className="hidden md:block">

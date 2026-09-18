@@ -20,6 +20,30 @@ export const EBC: IG = { id: "ebc", source_account: "ecobeachcity", shortcode: "
 export const CALENDLY = "https://calendly.com/equinoxinvestmentgroup/eco-beach-city-info-call";
 
 export const sid = () => { try { let s = localStorage.getItem("rh_sid"); if (!s) { s = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem("rh_sid", s); } return s; } catch { return "anon"; } };
+// Events are queued and flushed as ONE multi-row insert instead of a request per event. A home page
+// view used to fire about seven separate inserts, and with a few hundred people on the site at once
+// those requests were a large part of what exhausted the connection pool and pushed first paint past
+// 20 seconds. Nothing is lost: the queue is also flushed when the page is hidden or unloaded.
+const QUEUE: any[] = [];
+let flushTimer: any = null;
+
+const flush = async () => {
+  flushTimer = null;
+  if (!QUEUE.length) return;
+  const rows = QUEUE.splice(0, QUEUE.length);
+  try {
+    const { error } = await db.from("rh_events").insert(rows);
+    if (error) console.warn("rh_events", error.message);
+  } catch {}
+};
+
+if (typeof document !== "undefined") {
+  // Best effort on the way out — never block the unload.
+  const bail = () => { if (QUEUE.length) { clearTimeout(flushTimer); flushTimer = null; flush(); } };
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") bail(); });
+  window.addEventListener("pagehide", bail);
+}
+
 export const track = async (event: string, extra: { find?: string; meta?: any } = {}) => {
   try {
     const { data } = await supabase.auth.getSession();
@@ -28,7 +52,9 @@ export const track = async (event: string, extra: { find?: string; meta?: any } 
     try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch {}
     try { if (new URLSearchParams(location.search).get("rh_me") === "1") localStorage.setItem("rh_internal", "1"); internal = localStorage.getItem("rh_internal") === "1"; } catch {}
     const meta = { ...(extra.meta || {}), ...(exp ? { exp } : {}), ...(tz ? { tz } : {}), ...(internal ? { internal: true } : {}) };
-    await db.from("rh_events").insert({ sid: sid(), user_id: data.session?.user.id || null, event, path: location.pathname, find_shortcode: extra.find || null, meta });
+    QUEUE.push({ sid: sid(), user_id: data.session?.user.id || null, event, path: location.pathname, find_shortcode: extra.find || null, meta });
+    if (QUEUE.length >= 20) { clearTimeout(flushTimer); flushTimer = null; flush(); return; }
+    if (!flushTimer) flushTimer = setTimeout(flush, 2500);
   } catch {}
 };
 

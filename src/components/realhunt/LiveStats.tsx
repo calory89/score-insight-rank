@@ -18,32 +18,64 @@ const CSS = `
 @media (prefers-reduced-motion:reduce){.rh-live-dot:before{animation:none}}
 `;
 
-const POLL_MS = 45000;
+const POLL_MS = 90000;
+const TTL_MS = 60000;
+const CACHE_KEY = "rh_live_cache";
 const nf = (n: number) => n.toLocaleString("en-GB");
 
 type Stats = { live: number; today: number };
 
+// The nav renders two LiveStats (desktop and the compact mobile one), so a naive implementation
+// fired the RPC twice per page view. Everything below is shared at module level: one in-flight
+// request at a time, and the result cached in localStorage for a minute so extra tabs and quick
+// navigations reuse it instead of hitting the database again.
+let inflight: Promise<Stats | null> | null = null;
+const subs = new Set<(s: Stats) => void>();
+
+const readCache = (): Stats | null => {
+  try {
+    const c = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+    if (c && typeof c.live === "number" && Date.now() - c.t < TTL_MS) return { live: c.live, today: c.today };
+  } catch {}
+  return null;
+};
+
+const fetchStats = (): Promise<Stats | null> => {
+  const cached = readCache();
+  if (cached) return Promise.resolve(cached);
+  if (inflight) return inflight;
+  inflight = (async () => {
+    try {
+      const { data, error } = await db.rpc("rh_live_stats");
+      if (error) return null;
+      const r = Array.isArray(data) ? data[0] : data;
+      if (!r || typeof r.live !== "number" || typeof r.today !== "number") return null;
+      const s: Stats = { live: r.live, today: r.today };
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ...s, t: Date.now() })); } catch {}
+      subs.forEach((fn) => fn(s));
+      return s;
+    } catch { return null; } finally { inflight = null; }
+  })();
+  return inflight;
+};
+
 export const useLiveStats = () => {
-  const [s, setS] = useState<Stats | null>(null);
+  const [s, setS] = useState<Stats | null>(readCache);
   const timer = useRef<any>(null);
 
   useEffect(() => {
     let dead = false;
-    const load = async () => {
+    const apply = (v: Stats) => { if (!dead) setS(v); };
+    subs.add(apply);
+    const load = () => {
       if (document.visibilityState !== "visible") return;
-      try {
-        const { data, error } = await db.rpc("rh_live_stats");
-        if (dead || error) return;
-        const r = Array.isArray(data) ? data[0] : data;
-        if (!r || typeof r.live !== "number" || typeof r.today !== "number") return;
-        setS({ live: r.live, today: r.today });
-      } catch {}
+      fetchStats().then((v) => { if (v) apply(v); });
     };
     load();
     timer.current = setInterval(load, POLL_MS);
     const onVis = () => { if (document.visibilityState === "visible") load(); };
     document.addEventListener("visibilitychange", onVis);
-    return () => { dead = true; clearInterval(timer.current); document.removeEventListener("visibilitychange", onVis); };
+    return () => { dead = true; subs.delete(apply); clearInterval(timer.current); document.removeEventListener("visibilitychange", onVis); };
   }, []);
 
   return s;

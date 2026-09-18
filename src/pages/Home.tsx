@@ -11,6 +11,7 @@ import { useExperiment } from "@/lib/experiments";
 const PRICE_CHIPS: [string, number][] = [["< €10k", 10000], ["< €25k", 25000], ["< €50k", 50000], ["< €60k", 60000]];
 const PAGE = 40;
 const FEED_KEY = "rh_feed_v2";
+const DROPS_KEY = "rh_drops_v1";
 const FEED_COLS = "id,source_account,shortcode,image_urls,posted_at,location_name,country_guess,price_eur,is_beach,price_in_image,sqm,bedrooms,hook,rank_score,verified,status";
 const VALID_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -208,8 +209,23 @@ const Home = () => {
     track("home_view");
     try { const ref = new URLSearchParams(location.search).get("ref"); if (ref) localStorage.setItem("rh_ref", ref); } catch {}
     // 2. Non-critical data after first paint.
+    // "Price drop" badges used to pull 2,000 price_history rows on EVERY page view — by far the
+    // heaviest request on the page, for a handful of badges that barely change day to day. Now it is
+    // cached per browser for 6 hours, so a visitor fetches it once instead of on every visit.
     const idle = (window as any).requestIdleCallback || ((cb: () => void) => setTimeout(cb, 1200));
-    idle(() => { db.from("price_history").select("find_id,price_eur,created_at").order("created_at", { ascending: false }).limit(2000).then(({ data }: any) => { const by: Record<string, number[]> = {}; (data || []).forEach((r: any) => { (by[r.find_id] = by[r.find_id] || []).push(r.price_eur); }); setDrops(new Set(Object.entries(by).filter(([, v]) => v.length > 1 && v[0] < Math.max(...v)).map(([k]) => k))); }); });
+    idle(() => {
+      try {
+        const c = JSON.parse(localStorage.getItem(DROPS_KEY) || "null");
+        if (c && Array.isArray(c.ids) && Date.now() - c.t < 6 * 3600e3) { setDrops(new Set(c.ids)); return; }
+      } catch {}
+      db.from("price_history").select("find_id,price_eur,created_at").order("created_at", { ascending: false }).limit(2000).then(({ data }: any) => {
+        const by: Record<string, number[]> = {};
+        (data || []).forEach((r: any) => { (by[r.find_id] = by[r.find_id] || []).push(r.price_eur); });
+        const ids = Object.entries(by).filter(([, v]) => v.length > 1 && v[0] < Math.max(...v)).map(([k]) => k);
+        setDrops(new Set(ids));
+        try { localStorage.setItem(DROPS_KEY, JSON.stringify({ t: Date.now(), ids })); } catch {}
+      });
+    });
   }, []);
   useEffect(() => {
     if (!user) { setFavs(new Set()); setPref({}); return; }
@@ -232,15 +248,12 @@ const Home = () => {
     const ebcOk = !aParam && (country === "All" || country === "Indonesia") && (!maxP || EBC.price_eur! <= maxP) && (!qq || "sumba indonesia beach cabin ecobeachcity".includes(qq));
     if (pref.country || pref.budget) l = [...l].sort((a, b) => boost(b) - boost(a) || score(b) - score(a));
     if (!loaded) return [];
-    // Place EBC (Mamboro, Sumba, €11,500) as an ordinary card up top, and again further down as
-    // traffic scrolls through the feed — high-traffic days deserve more than one shot at it. Right
-    // right after it, a gated "members only" card that turns a click into an email.
-    if (ebcOk) {
-      const first = { ...EBC, id: "ebc-1" } as IG;
-      const repeat = { ...EBC, id: "ebc-2" } as IG;
-      const gated = { ...GATED } as IG;
-      l = l.length >= 16 ? [first, gated, ...l.slice(0, 16), repeat, ...l.slice(16)] : [first, gated, ...l, repeat];
-    }
+    // EBC (Mamboro, Sumba, €11,500) appears ONCE, as an ordinary card at the top, followed by the
+    // gated "members only" card that turns a click into an email. No home is ever repeated in the
+    // feed — the dedupe below enforces that for scraped finds too.
+    if (ebcOk) l = [{ ...EBC, id: "ebc-1" } as IG, { ...GATED } as IG, ...l];
+    const seen = new Set<string>();
+    l = l.filter((f) => (seen.has(f.id) ? false : (seen.add(f.id), true)));
     // One "leave your email" card woven into the grid, wherever there is enough of a feed for it to feel earned.
     const capture = { id: "capture" } as unknown as IG;
     l = l.length > 7 ? [...l.slice(0, 7), capture, ...l.slice(7)] : [...l, capture];
