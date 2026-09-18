@@ -1,0 +1,88 @@
+// Public social proof in the nav: how many people are on the site right now, and how many have
+// come through today. The numbers are real — they come from our own rh_events tracking through the
+// rh_live_stats() RPC, which is security definer so a visitor gets the two aggregates without being
+// able to read raw events. Our own browsing (the rh_internal flag) is excluded server-side.
+//
+// Lovable's analytics cannot be used here: those live behind the Lovable API, not in the browser.
+// rh_events counts the same visits anyway, since track() fires on every page view.
+//
+// If the call fails, or nobody is around, the component renders nothing at all. An empty nav slot
+// is better than advertising "0 online".
+import { useEffect, useRef, useState } from "react";
+import { db } from "@/lib/rh";
+
+const CSS = `
+@keyframes rhLiveRing{0%{transform:scale(1);opacity:.7}70%{transform:scale(2.6);opacity:0}100%{transform:scale(2.6);opacity:0}}
+.rh-live-dot{position:relative;display:inline-block;height:7px;width:7px;border-radius:9999px;background:#10b981;flex:none}
+.rh-live-dot:before{content:"";position:absolute;inset:0;border-radius:9999px;background:#10b981;animation:rhLiveRing 2.2s cubic-bezier(.2,.8,.2,1) infinite}
+@media (prefers-reduced-motion:reduce){.rh-live-dot:before{animation:none}}
+`;
+
+const POLL_MS = 45000;
+const nf = (n: number) => n.toLocaleString("en-GB");
+
+type Stats = { live: number; today: number };
+
+export const useLiveStats = () => {
+  const [s, setS] = useState<Stats | null>(null);
+  const timer = useRef<any>(null);
+
+  useEffect(() => {
+    let dead = false;
+    const load = async () => {
+      if (document.visibilityState !== "visible") return;
+      try {
+        const { data, error } = await db.rpc("rh_live_stats");
+        if (dead || error) return;
+        const r = Array.isArray(data) ? data[0] : data;
+        if (!r || typeof r.live !== "number" || typeof r.today !== "number") return;
+        setS({ live: r.live, today: r.today });
+      } catch {}
+    };
+    load();
+    timer.current = setInterval(load, POLL_MS);
+    const onVis = () => { if (document.visibilityState === "visible") load(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => { dead = true; clearInterval(timer.current); document.removeEventListener("visibilitychange", onVis); };
+  }, []);
+
+  return s;
+};
+
+const LiveStats = ({ compact }: { compact?: boolean }) => {
+  const s = useLiveStats();
+  if (!s || s.today < 1) return null;
+
+  if (compact) {
+    return (
+      <>
+        <style>{CSS}</style>
+        <span title={`${nf(s.live)} online now · ${nf(s.today)} today`}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-hairline bg-white text-[12px] font-medium tabular-nums text-ink">
+          <span className="rh-live-dot" />{nf(s.live)}
+        </span>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <style>{CSS}</style>
+      <div aria-live="polite"
+        className="inline-flex items-center gap-2.5 pl-3 pr-3.5 py-1.5 rounded-full border border-hairline bg-white shadow-[0_1px_3px_rgba(20,18,10,.06)]">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="rh-live-dot" />
+          <span className="text-[13px] font-semibold tabular-nums text-ink">{nf(s.live)}</span>
+          <span className="text-[12.5px] text-ink-muted">online</span>
+        </span>
+        <span className="h-3.5 w-px bg-hairline" />
+        <span className="inline-flex items-center gap-1.5">
+          <span className="text-[13px] font-semibold tabular-nums text-ink">{nf(s.today)}</span>
+          <span className="text-[12.5px] text-ink-muted">today</span>
+        </span>
+      </div>
+    </>
+  );
+};
+
+export default LiveStats;

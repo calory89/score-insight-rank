@@ -15,7 +15,7 @@ const FEED_COLS = "id,source_account,shortcode,image_urls,posted_at,location_nam
 const VALID_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 // A real, already-verified find (Sellano, Umbria, €46,000) reused as the "members only" gated card
-// right after the EBC hero. Real photo we already host, real price and likes — nothing invented.
+// right after the EBC card. Real photo we already host, real price and likes — nothing invented.
 const GATED: IG = { id: "gated-1", source_account: "", shortcode: "DcndWlcGwtG", caption: null, image_urls: ["/finds/DcndWlcGwtG-0.webp"], posted_at: null, location_name: "Sellano, Umbria, Italy", country_guess: "Italy", price_eur: 46000, price_raw: null, likes: 1572, is_beach: false };
 
 // An in-grid "leave your email, get the top 10" card. Same size/shape as a listing card so it sits
@@ -194,7 +194,6 @@ const Home = () => {
   const [drops, setDrops] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState(false);
   const headline = useExperiment("home_headline", [{ id: "A", text: "Real homes under €60,000." }]);
-  const ebcCta = useExperiment("ebc_hero_cta", [{ id: "A", text: "Featured" }]);
 
   useEffect(() => {
     // 1. Instant paint from the last feed we saw (stale-while-revalidate), then refresh from the DB.
@@ -233,14 +232,14 @@ const Home = () => {
     const ebcOk = !aParam && (country === "All" || country === "Indonesia") && (!maxP || EBC.price_eur! <= maxP) && (!qq || "sumba indonesia beach cabin ecobeachcity".includes(qq));
     if (pref.country || pref.budget) l = [...l].sort((a, b) => boost(b) - boost(a) || score(b) - score(a));
     if (!loaded) return [];
-    // Feature EBC (Mamboro, Sumba, €11,500) as a big hero card up top, and again further down as
+    // Place EBC (Mamboro, Sumba, €11,500) as an ordinary card up top, and again further down as
     // traffic scrolls through the feed — high-traffic days deserve more than one shot at it. Right
-    // after the hero, a gated "members only" card that turns a click into an email.
+    // right after it, a gated "members only" card that turns a click into an email.
     if (ebcOk) {
-      const hero = { ...EBC, id: "ebc-hero" } as IG;
+      const first = { ...EBC, id: "ebc-1" } as IG;
       const repeat = { ...EBC, id: "ebc-2" } as IG;
       const gated = { ...GATED } as IG;
-      l = l.length >= 16 ? [hero, gated, ...l.slice(0, 16), repeat, ...l.slice(16)] : [hero, gated, ...l, repeat];
+      l = l.length >= 16 ? [first, gated, ...l.slice(0, 16), repeat, ...l.slice(16)] : [first, gated, ...l, repeat];
     }
     // One "leave your email" card woven into the grid, wherever there is enough of a feed for it to feel earned.
     const capture = { id: "capture" } as unknown as IG;
@@ -304,27 +303,25 @@ const Home = () => {
             if (f.id === "capture") return <CaptureCard key="capture" />;
             if (f.id === "gated-1") return <GatedCard key="gated-1" f={f} />;
             const c = norm(f.country_guess);
-            const hero = f.id === "ebc-hero";
             const to = f.id.startsWith("ebc") ? "/ecobeachcity" : `/find/${f.shortcode}`;
             const u = f.image_urls![0];
             return (
               <Link key={f.id} to={to} onClick={() => track("card_click", { find: f.shortcode })}
-                className={`group relative block rounded-2xl overflow-hidden bg-hairline/30 shadow-sm hover:shadow-xl transition-shadow [content-visibility:auto] ${hero ? "col-span-2 aspect-[8/5]" : "aspect-[4/5]"}`}>
-                <img src={u} srcSet={srcSet(u)} sizes={hero ? "(min-width:1024px) 620px, 100vw" : "(min-width:1024px) 300px, (min-width:768px) 33vw, 50vw"} alt="" loading={i < 8 ? "eager" : "lazy"} {...((i < 4 ? { fetchpriority: "high" } : {}) as any)} decoding="async" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
-                <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent ${hero ? "h-1/2" : "h-1/3"}`} />
-                {hero && <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500 text-white text-[12px] md:text-[13px] font-semibold shadow"><Sparkles size={13} /> {ebcCta.text || "Featured"}</span>}
-                <span className={`absolute top-2.5 right-2.5 px-2 py-1 rounded-full bg-white/90 text-ink font-medium shadow ${hero ? "text-[13px]" : "text-[11px]"}`}>{FLAG[c] || "🌍"} {c}</span>
-                <div className={`absolute left-2.5 flex gap-1 flex-wrap max-w-[70%] ${hero ? "top-[52px] md:top-14" : "top-2.5"}`}>
-                  {f.price_eur && <span className={`px-2 py-1 rounded-full bg-white text-ink font-semibold tabular-nums shadow ${hero ? "text-[16px] md:text-[18px]" : "text-[12px]"}`}>{eur(f.price_eur)}</span>}
-                  {f.is_beach && <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full bg-sky-500/90 text-white font-medium shadow ${hero ? "text-[12px]" : "text-[11px]"}`}><Waves size={hero ? 13 : 11} /> Beach</span>}
+                className={`group relative block rounded-2xl overflow-hidden bg-hairline/30 shadow-sm hover:shadow-xl transition-shadow [content-visibility:auto] aspect-[4/5]`}>
+                <img src={u} srcSet={srcSet(u)} sizes="(min-width:1024px) 300px, (min-width:768px) 33vw, 50vw" alt="" loading={i < 8 ? "eager" : "lazy"} {...((i < 4 ? { fetchpriority: "high" } : {}) as any)} decoding="async" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
+                <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent h-1/3`} />
+                <span className={`absolute top-2.5 right-2.5 px-2 py-1 rounded-full bg-white/90 text-ink font-medium shadow text-[11px]`}>{FLAG[c] || "🌍"} {c}</span>
+                <div className={`absolute left-2.5 flex gap-1 flex-wrap max-w-[70%] top-2.5`}>
+                  {f.price_eur && <span className={`px-2 py-1 rounded-full bg-white text-ink font-semibold tabular-nums shadow text-[12px]`}>{eur(f.price_eur)}</span>}
+                  {f.is_beach && <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full bg-sky-500/90 text-white font-medium shadow text-[11px]`}><Waves size={11} /> Beach</span>}
                   {isNew(f.posted_at) && <span className="px-2 py-1 rounded-full bg-emerald-500/90 text-white text-[11px] font-medium shadow">New</span>}
                   {drops.has(f.id) && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/90 text-white text-[11px] font-medium shadow"><TrendingDown size={11} /> Price drop</span>}
                   {(f as any).verified && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-ink/90 text-white text-[11px] font-medium shadow"><BadgeCheck size={11} /> Verified</span>}
                   {((f as any).status === "sold" || (f as any).status === "reserved") && <span className="px-2 py-1 rounded-full bg-red-600/90 text-white text-[11px] font-medium shadow uppercase">{(f as any).status}</span>}
                 </div>
                 {!f.id.startsWith("ebc") && <button onClick={(e) => toggleFav(e, f)} aria-label="Save" className={`absolute bottom-3 right-3 h-9 w-9 rounded-full bg-white/90 shadow inline-flex items-center justify-center ${favs.has(f.id) ? "text-red-500" : "text-ink"}`}><Heart size={16} fill={favs.has(f.id) ? "currentColor" : "none"} /></button>}
-                <div className={`absolute inset-x-0 bottom-0 text-white ${hero ? "p-4 md:p-5 pr-16 md:max-w-[70%]" : "p-3 md:p-4 pr-14"}`}>
-                  <p className={`opacity-95 leading-snug ${hero ? "text-[15px] md:text-[19px] line-clamp-2 font-medium" : "text-[12px] md:text-[13px] line-clamp-2"}`}>{f.hook || f.location_name || (f.caption ? cleanCap(f.caption).slice(0, 48) : "") || c}</p>
+                <div className={`absolute inset-x-0 bottom-0 text-white p-3 md:p-4 pr-14`}>
+                  <p className={`opacity-95 leading-snug text-[12px] md:text-[13px] line-clamp-2`}>{f.hook || f.location_name || (f.caption ? cleanCap(f.caption).slice(0, 48) : "") || c}</p>
                 </div>
               </Link>
             );

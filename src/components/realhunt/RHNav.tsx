@@ -6,6 +6,7 @@ import { Menu, X, Heart, Bell, MessageSquare, User, LogOut, ChevronDown, Briefca
 import { fbLead } from "@/lib/fbpixel";
 import AuthModal from "@/components/realhunt/AuthModal";
 import CookieBanner from "@/components/realhunt/CookieBanner";
+import LiveStats from "@/components/realhunt/LiveStats";
 
 const NAV_ITEMS = [
   { to: "/", label: "Deals" },
@@ -37,6 +38,7 @@ const RHNav = () => {
 
         <div className="hidden md:flex items-center gap-7 text-[14px]">
           {NAV_ITEMS.map((item) => <Link key={item.to} to={item.to} className="text-ink-muted hover:text-ink transition-colors">{item.label}</Link>)}
+          <LiveStats />
           {!onDeals && <Link to={user ? "/app" : "/auth/sign-up"} onClick={() => { if (!user) fbLead({ content_name: "open_the_app", source: "nav_desktop" }); }} className="rh-btn-primary !px-5 !py-2.5 !text-[14px]">Open the app →</Link>}
           {user ? (
             <div className="relative" ref={menuRef}>
@@ -57,7 +59,8 @@ const RHNav = () => {
           )}
         </div>
 
-        <div className="md:hidden flex items-center gap-1">
+        <div className="md:hidden flex items-center gap-1.5">
+          <LiveStats compact />
           {user ? <Link to="/account/saved" aria-label="Account" className="p-1">{avatar ? <img src={avatar} alt="" className="h-8 w-8 rounded-full object-cover" referrerPolicy="no-referrer" /> : <span className="h-8 w-8 rounded-full bg-ink text-paper inline-flex items-center justify-center text-[13px]">{initial}</span>}</Link> : <button onClick={() => setAuth(true)} className="px-3 py-1.5 rounded-full border border-ink text-[13px] font-medium">Sign in</button>}
           <button className="p-2 -mr-2 text-ink" onClick={() => setOpen((v) => !v)} aria-label={open ? "Close menu" : "Open menu"}>{open ? <X size={20} /> : <Menu size={20} />}</button>
         </div>

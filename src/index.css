@@ -255,6 +255,10 @@
   }
   .rh-btn-tertiary:hover { border-color: var(--rh-accent); }
 
+  /* Used by every horizontal carousel. Was never defined, so the scrollbar showed. */
+  .scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+
   .hairline-t { border-top: 1px solid var(--rh-hairline); }
   .hairline-b { border-bottom: 1px solid var(--rh-hairline); }
   .hairline-l { border-left: 1px solid var(--rh-hairline); }
