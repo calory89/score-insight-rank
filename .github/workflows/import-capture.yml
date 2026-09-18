@@ -33,7 +33,7 @@ jobs:
           s=s.replace('tab === "experiments" ? "Experiments" : "Who is doing what"','tab === "experiments" ? "Experiments" : tab === "subscribers" ? "Subscribers" : "Who is doing what"',1)
           s=s.replace('["experiments", "Experiments"]].map','["experiments", "Experiments"], ["subscribers", "Subscribers"]].map',1)
           s=s.replace('{tab === "experiments" && <div className="mt-6"><AdminExperiments /></div>}','{tab === "experiments" && <div className="mt-6"><AdminExperiments /></div>}\n          {tab === "subscribers" && <div className="mt-6"><AdminSubscribers /></div>}',1)
-          n=s.count('tab !== "network" && tab !== "experiments"'); assert n==3, n
+          n=s.count('tab !== "network" && tab !== "experiments"'); assert n==2, n
           s=s.replace('tab !== "network" && tab !== "experiments"','!["network", "experiments", "subscribers"].includes(tab || "")')
           open(p,'w').write(s)
           EOF
