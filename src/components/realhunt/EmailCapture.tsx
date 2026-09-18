@@ -63,10 +63,17 @@ const useSubscribe = (source: string) => {
   return { mode, setMode, submit };
 };
 
-const Field = ({ value, onChange, onSubmit, mode, cta, big }: { value: string; onChange: (v: string) => void; onSubmit: () => void; mode: Mode; cta: string; big?: boolean }) => (
-  <form onSubmit={(e) => { e.preventDefault(); onSubmit(); }} className={`flex ${big ? "flex-col sm:flex-row" : "flex-row"} gap-2 w-full`}>
+const Field = ({ value, onChange, onSubmit, mode, cta, big }: { value: string; onChange: (v: string) => void; onSubmit: (v: string) => void; mode: Mode; cta: string; big?: boolean }) => (
+  <form onSubmit={(e) => {
+    e.preventDefault();
+    // Chrome/Safari autofill can paint a value into the input without ever firing the
+    // change event React listens to, leaving `value` stale (often empty). Read the DOM
+    // directly at submit time so an autofilled email never gets flagged as invalid.
+    const el = e.currentTarget.querySelector<HTMLInputElement>("input[type=email]");
+    onSubmit((el?.value ?? value).trim());
+  }} className={`flex ${big ? "flex-col sm:flex-row" : "flex-row"} gap-2 w-full`}>
     <label className="sr-only" htmlFor={big ? "rh-pop-email" : "rh-bar-email"}>Email</label>
-    <input id={big ? "rh-pop-email" : "rh-bar-email"} type="email" inputMode="email" autoComplete="email" enterKeyHint="send" value={value} onChange={(e) => onChange(e.target.value)} placeholder="you@email.com" aria-invalid={mode === "error"}
+    <input id={big ? "rh-pop-email" : "rh-bar-email"} type="email" inputMode="email" autoComplete="email" enterKeyHint="send" value={value} onChange={(e) => onChange(e.target.value)} onBlur={(e) => onChange(e.target.value)} placeholder="you@email.com" aria-invalid={mode === "error"}
       className={`flex-1 min-w-0 border rounded-full bg-white outline-none transition-[border,box-shadow] ${mode === "error" ? "border-red-500 ring-2 ring-red-100" : "border-hairline focus:border-ink focus:ring-2 focus:ring-ink/10"} ${big ? "px-5 py-3.5 text-[16px]" : "px-4 py-2.5 text-[15px]"}`} />
     <button type="submit" disabled={mode === "sending"} className={`rh-btn-primary rh-shine shrink-0 inline-flex items-center justify-center gap-2 whitespace-nowrap ${big ? "!px-6 !py-3.5 !text-[16px]" : "!px-4 !py-2.5 !text-[14px]"} disabled:opacity-70`}>
       {mode === "sending" ? "Sending…" : cta} {mode !== "sending" && <ArrowRight size={16} />}
@@ -132,8 +139,8 @@ const EmailCapture = () => {
 
   const closeBar = () => { setBar(false); set(localStorage, K_BAR, String(Date.now())); track("capture_dismiss", { meta: { kind: "banner" } }); };
   const closePop = () => { setPop(false); if (popS.mode !== "done") track("capture_dismiss", { meta: { kind: "popup" } }); };
-  const onBar = async () => { if (await barS.submit(email)) { setTimeout(() => setBar(false), 3200); } };
-  const onPop = async () => { if (await popS.submit(email)) { setBar(false); setTimeout(() => setPop(false), 2600); } };
+  const onBar = async (v: string) => { if (await barS.submit(v)) { setTimeout(() => setBar(false), 3200); } };
+  const onPop = async (v: string) => { if (await popS.submit(v)) { setBar(false); setTimeout(() => setPop(false), 2600); } };
 
   if (skip && !pop && !bar) return null;
   const sub = peek.min ? <>Cheapest right now: <b className="text-ink">{eur(peek.min)}</b>. Real listings, ranked by how cheap they are for where they are.</> : <>Real listings under €100k, ranked by how cheap they are for where they are.</>;
