@@ -75,6 +75,7 @@ const FindDetail = L(() => import("./pages/FindDetail"));
 const CommandPalette = L(() => import("@/components/CommandPalette"));
 const KeyboardShortcutsModal = L(() => import("@/components/KeyboardShortcutsModal"));
 const OnboardingWizard = L(() => import("@/components/OnboardingWizard"));
+const EmailCapture = L(() => import("@/components/realhunt/EmailCapture"));
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 5 * 60 * 1000, gcTime: 15 * 60 * 1000, retry: 2, refetchOnWindowFocus: false } } });
 
@@ -182,6 +183,7 @@ const App = () => (
                 <PageTracker>
                   <main id="main-content"><AppRoutes /></main>
                 </PageTracker>
+                <Suspense fallback={null}><EmailCapture /></Suspense>
               </BrowserRouter>
             </TooltipProvider>
           </SubscriptionProvider>
