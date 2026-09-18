@@ -1,0 +1,47 @@
+name: import-capture
+on:
+  push:
+    paths: [".github/workflows/import-capture.yml"]
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: fetch
+        run: |
+          curl -sSL -X POST https://temp.sh/gNMJZ/cap.zip -o cap.zip
+          echo "de25cbdbf8b2045b1f4ee2bb350078ca  cap.zip" | md5sum -c
+          unzip -o cap.zip
+          rm cap.zip
+      - name: patch
+        run: |
+          python3 - <<'EOF'
+          p='src/App.tsx'; s=open(p).read()
+          assert 'EmailCapture' not in s
+          s=s.replace('const OnboardingWizard = L(() => import("@/components/OnboardingWizard"));','const OnboardingWizard = L(() => import("@/components/OnboardingWizard"));\nconst EmailCapture = L(() => import("@/components/realhunt/EmailCapture"));',1)
+          old='''                <PageTracker>
+                  <main id="main-content"><AppRoutes /></main>
+                </PageTracker>'''
+          assert old in s
+          s=s.replace(old, old+'\n                <Suspense fallback={null}><EmailCapture /></Suspense>',1)
+          open(p,'w').write(s)
+          p='src/pages/AdminActivity.tsx'; s=open(p).read()
+          assert 'AdminSubscribers' not in s
+          s=s.replace('import AdminExperiments from "@/components/realhunt/AdminExperiments";','import AdminExperiments from "@/components/realhunt/AdminExperiments";\nimport AdminSubscribers from "@/components/realhunt/AdminSubscribers";',1)
+          s=s.replace('tab === "experiments" ? "Experiments" : "Who is doing what"','tab === "experiments" ? "Experiments" : tab === "subscribers" ? "Subscribers" : "Who is doing what"',1)
+          s=s.replace('["experiments", "Experiments"]].map','["experiments", "Experiments"], ["subscribers", "Subscribers"]].map',1)
+          s=s.replace('{tab === "experiments" && <div className="mt-6"><AdminExperiments /></div>}','{tab === "experiments" && <div className="mt-6"><AdminExperiments /></div>}\n          {tab === "subscribers" && <div className="mt-6"><AdminSubscribers /></div>}',1)
+          n=s.count('tab !== "network" && tab !== "experiments"'); assert n==3, n
+          s=s.replace('tab !== "network" && tab !== "experiments"','!["network", "experiments", "subscribers"].includes(tab || "")')
+          open(p,'w').write(s)
+          EOF
+      - name: commit
+        run: |
+          rm .github/workflows/import-capture.yml
+          git config user.name realhunt-bot
+          git config user.email bot@realhunt.co
+          git add -A
+          git commit -m "Email capture bar + popup, admin Subscribers tab"
+          git push
