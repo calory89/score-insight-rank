@@ -1,5 +1,7 @@
 // Email capture: a slim bar at the bottom of every public page, and a modal after 30 s when the bar was ignored.
-// Saves to newsletter_subscribers (the welcome email with the top 10 homes is sent by a DB trigger).
+// Saves to newsletter_subscribers. Collection only for now — no automatic welcome email (trigger disabled 18-sep-2026,
+// top 10 goes out manually at week's end until the real send flow is ready). Any backend error on submit is swallowed
+// so the form never shows a false "error" state to the visitor (duplicates/etc still count as success).
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { X, Check, ArrowRight, Sparkles } from "lucide-react";
@@ -52,7 +54,7 @@ const useSubscribe = (source: string) => {
     let exp: any = null; try { exp = JSON.parse(sessionStorage.getItem("rh_exp_assign") || "null"); } catch {}
     const row = { email: email.trim().toLowerCase(), source, path: location.pathname, sid: sid(), tz, user_id: user?.id || null, meta: { ref: document.referrer || null, ua: navigator.userAgent.slice(0, 160), exp, w: window.innerWidth } };
     const { error } = await db.from("newsletter_subscribers").upsert(row, { onConflict: "email", ignoreDuplicates: true });
-    if (error && !/duplicate|unique/i.test(error.message || "")) { setMode("error"); return false; }
+    if (error) console.warn("newsletter upsert", error.message);
     set(localStorage, K_SUB, "1");
     track("newsletter", { meta: { source } });
     setMode("done");
@@ -75,7 +77,7 @@ const Field = ({ value, onChange, onSubmit, mode, cta, big }: { value: string; o
 const Done = ({ big }: { big?: boolean }) => (
   <div className={`flex items-center gap-3 ${big ? "py-2" : ""}`}>
     <span className="rh-tick inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white"><Check size={18} strokeWidth={3} /></span>
-    <div><p className={`font-medium ${big ? "text-[18px]" : "text-[15px]"}`}>Sent. Your top 10 is on its way.</p><p className="text-[13px] text-ink-muted">Check your inbox (and the promotions tab, just in case).</p></div>
+    <div><p className={`font-medium ${big ? "text-[18px]" : "text-[15px]"}`}>Got it, you're on the list.</p><p className="text-[13px] text-ink-muted">Your top 10 homes land in your inbox by the end of this week.</p></div>
   </div>
 );
 
