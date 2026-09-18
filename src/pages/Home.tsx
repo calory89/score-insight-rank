@@ -5,7 +5,7 @@ import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
 import CaptureInline from "@/components/realhunt/CaptureInline";
 const Onboarding = lazy(() => import("@/components/realhunt/Onboarding"));
-import { Waves, Check, Heart, Search, Bell, BadgeCheck, TrendingDown, Map as MapIcon, Layers, Sparkles, ArrowRight, Lock, MessageCircle, Share2, X, ArrowDownWideNarrow } from "lucide-react";
+import { Waves, Check, Heart, Search, Bell, BadgeCheck, TrendingDown, Map as MapIcon, Layers, Sparkles, ArrowRight, Lock, MessageCircle, Share2, X, ArrowDownWideNarrow, ExternalLink } from "lucide-react";
 import { db, eur, FLAG, norm, slug, unslug, isNew, cleanCap, IG, EBC, MAX_PRICE, HOME_MAX_PRICE, track, srcSet, score, subscribeEmail, lastEmail } from "@/lib/rh";
 import { useExperiment } from "@/lib/experiments";
 
@@ -15,6 +15,11 @@ const FEED_KEY = "rh_feed_v2";
 const DROPS_KEY = "rh_drops_v1";
 const FEED_COLS = "id,source_account,shortcode,image_urls,posted_at,location_name,country_guess,price_eur,is_beach,price_in_image,sqm,bedrooms,hook,rank_score,verified,status";
 const VALID_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+// A promoted listing that lives on Instagram, not on RealHunt. It is always the last card in the
+// feed and clicking it opens the original post in a new tab — we never pretend to host it.
+const COMO_URL = "https://www.instagram.com/p/DdZTNrQjBvc/?stkn=OWkzMjNjeWE3dDY=";
+const COMO: IG = { id: "como-1", source_account: "", shortcode: "como-1", caption: null, image_urls: ["/finds/como-1.webp"], posted_at: null, location_name: "Lake Como, Italy", country_guess: "Italy", price_eur: 46000, price_raw: null, likes: 4752, is_beach: false };
 
 // A real, already-verified find (Sellano, Umbria, €46,000) reused as the "members only" gated card
 // right after the EBC card. Real photo we already host, real price and likes — nothing invented.
@@ -253,15 +258,24 @@ const Home = () => {
     else if (sort === "new") l = [...l].sort((a, b) => new Date(b.posted_at || 0).getTime() - new Date(a.posted_at || 0).getTime());
     else if (pref.country || pref.budget) l = [...l].sort((a, b) => boost(b) - boost(a) || score(b) - score(a));
     if (!loaded) return [];
-    // EBC (Mamboro, Sumba, €11,500) appears ONCE, as an ordinary card at the top, followed by the
-    // gated "members only" card that turns a click into an email. No home is ever repeated in the
-    // feed — the dedupe below enforces that for scraped finds too.
-    if (ebcOk) l = [{ ...EBC, id: "ebc-1" } as IG, { ...GATED } as IG, ...l];
+    // EBC and the gated card are pinned to the top ONLY on the default ordering. The moment someone
+    // asks for "cheapest" or "newest", pinning a €46,000 card above cheaper homes makes the sort look
+    // broken — which is exactly what it looked like. Under an explicit sort they take their honest
+    // place in the order like any other home.
+    if (ebcOk) {
+      const pinned = [{ ...EBC, id: "ebc-1" } as IG, { ...GATED } as IG];
+      if (sort === "best") l = [...pinned, ...l];
+      else if (sort === "cheap") l = [...pinned, ...l].sort((a, b) => (a.price_eur ?? Infinity) - (b.price_eur ?? Infinity));
+      else l = [...pinned, ...l].sort((a, b) => new Date(b.posted_at || 0).getTime() - new Date(a.posted_at || 0).getTime());
+    }
     const seen = new Set<string>();
     l = l.filter((f) => (seen.has(f.id) ? false : (seen.add(f.id), true)));
     // One "leave your email" card woven into the grid, wherever there is enough of a feed for it to feel earned.
     const capture = { id: "capture" } as unknown as IG;
     l = l.length > 7 ? [...l.slice(0, 7), capture, ...l.slice(7)] : [...l, capture];
+    // Always the very last card, whatever the filters and ordering say. It is a promoted post that
+    // opens the original listing on Instagram rather than a page of ours.
+    if (!aParam) l = [...l, { ...COMO } as IG];
     return l;
   }, [finds, country, beach, maxP, q, aParam, pref, loaded, sort]);
   useEffect(() => { setLimit(PAGE); }, [country, beach, maxP, q, aParam, sort]);
@@ -362,6 +376,14 @@ const Home = () => {
           {shown.slice(0, limit).map((f, i) => {
             if (f.id === "capture") return <CaptureCard key="capture" />;
             if (f.id === "gated-1") return <GatedCard key="gated-1" f={f} />;
+            if (f.id === "como-1") return (
+              <a key="como-1" href={COMO_URL} target="_blank" rel="noopener noreferrer" onClick={() => track("card_click", { find: "como-1", meta: { promoted: true } })}
+                className="group relative block rounded-2xl overflow-hidden bg-hairline/30 aspect-[4/5] shadow-sm hover:shadow-xl transition-shadow [content-visibility:auto]">
+                <img src={f.image_urls![0]} srcSet={srcSet(f.image_urls![0])} sizes="(min-width:1024px) 300px, (min-width:768px) 33vw, 50vw" alt="" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
+                <span className="absolute top-2.5 right-2.5 px-2 py-1 rounded-full bg-white/90 text-ink text-[11px] font-medium shadow">🇮🇹 Italy</span>
+                <span className="absolute top-2.5 left-2.5 px-2 py-1 rounded-full bg-white/90 text-ink text-[11px] font-medium shadow inline-flex items-center gap-1">On Instagram <ExternalLink size={10} /></span>
+              </a>
+            );
             const c = norm(f.country_guess);
             const to = f.id.startsWith("ebc") ? "/ecobeachcity" : `/find/${f.shortcode}`;
             const u = f.image_urls![0];
