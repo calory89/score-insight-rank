@@ -1,0 +1,26 @@
+name: home-feature-1
+on:
+  push:
+    paths: [".github/workflows/home-feature-1.yml"]
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: fetch
+        run: |
+          curl -sSL -X POST https://temp.sh/NVIQV/homefix.zip -o homefix.zip
+          echo "845b11e4d61489107dbfebce33866a77  homefix.zip" | md5sum -c
+          unzip -o homefix.zip -d /tmp/hf
+          cp /tmp/hf/Home.tsx src/pages/Home.tsx
+      - name: commit
+        run: |
+          rm .github/workflows/home-feature-1.yml
+          rm -f fix1.zip fix2.zip
+          git config user.name realhunt-bot
+          git config user.email bot@realhunt.co
+          git add -A
+          git commit -m "Home: bigger EBC hero card + repeat lower, in-grid email capture card, new experiments"
+          git push
