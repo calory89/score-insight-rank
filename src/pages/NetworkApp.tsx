@@ -37,6 +37,7 @@ const NetworkApp = () => {
   const tab: Tab = (TABS.find(([k]) => k === tParam)?.[0] || "overview") as Tab;
   const [ov, setOv] = useState<any | null | undefined>(undefined); // undefined = loading, null = no profile
   const [auth, setAuth] = useState(false);
+  const [loadErr, setLoadErr] = useState(false);
   const [form, setForm] = useState<any>({ company: "", contact_name: "", email: "", phone: "", website: "", country: "", project_name: "", project_url: "", price_from: "", share_default: false });
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
@@ -61,7 +62,19 @@ const NetworkApp = () => {
   const [copied, setCopied] = useState("");
   const setMode = async (mode: string) => { setOv((o: any) => o ? { ...o, developer: { ...o.developer, mode } } : o); await db.from("network_developers").update({ mode, share_default: mode !== "receive", updated_at: new Date().toISOString() }).eq("id", ov.developer.id); track("devapp_mode", { meta: { mode } }); };
 
-  const load = async () => { const { data } = await db.rpc("dev_overview"); setOv(data ?? null); if (data) { const f = data.developer; setForm({ company: f.company || "", contact_name: f.contact_name || "", email: f.email || "", phone: f.phone || "", website: f.website || "", country: f.country || "", project_name: f.project_name || "", project_url: f.project_url || "", price_from: f.price_from || "", share_default: !!f.share_default }); } };
+  const load = async () => {
+    setLoadErr(false);
+    try {
+      const res: any = await Promise.race([
+        db.rpc("dev_overview"),
+        new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 20000)),
+      ]);
+      if (res?.error) { setLoadErr(true); return; }
+      const data = res?.data;
+      setOv(data ?? null);
+      if (data) { const f = data.developer; setForm({ company: f.company || "", contact_name: f.contact_name || "", email: f.email || "", phone: f.phone || "", website: f.website || "", country: f.country || "", project_name: f.project_name || "", project_url: f.project_url || "", price_from: f.price_from || "", share_default: !!f.share_default }); }
+    } catch { setLoadErr(true); }
+  };
   useEffect(() => { document.title = "Developer panel · RealHunt Network"; track("devapp_view", { meta: { tab } }); }, [tab]);
   useEffect(() => { if (!user) { setOv(undefined); return; } load(); try { const p = JSON.parse(sessionStorage.getItem("rh_dev_prefill") || "null"); if (p) setForm((f: any) => ({ ...f, email: p.email || user.email || "", phone: p.phone || "", project_url: p.project_url || "" })); else setForm((f: any) => ({ ...f, email: user.email || "" })); } catch {} }, [user]);
   useEffect(() => { if (!ov || tab !== "leads") return; db.from("lead_fingerprints").select("id,fp,kind,shared,country,budget,tag,uploaded_at").eq("developer_id", ov.developer.id).order("uploaded_at", { ascending: false }).limit(2000).then(({ data }: any) => setLeads(data || [])); }, [ov, tab]);
@@ -121,6 +134,24 @@ const NetworkApp = () => {
           <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-3">RealHunt Network · developer panel</p>
           <h1 className="font-display text-[clamp(32px,4.5vw,46px)] leading-tight tracking-tight">Get set up in five minutes. Then the buyers start.</h1>
           <p className="text-[16px] text-ink-muted mt-3 max-w-[54ch]">No cost to join. You pay {COMMISSION_PCT}% only when a buyer we introduce actually buys, and you can earn {SOURCE_SHARE_PCT}% from leads you never managed to close. Here is exactly what happens, in order.</p>
+          <div className="mt-6 grid sm:grid-cols-2 gap-3">
+            <div className="border border-hairline rounded-2xl bg-white p-4">
+              <p className="font-medium text-[15px]">This is for you if</p>
+              <ul className="mt-2 flex flex-col gap-1.5 text-[14px] text-ink-muted">
+                <li>You have homes, plots or a development for sale.</li>
+                <li>Or you have a list of buyer contacts you never closed.</li>
+                <li>You are an agency, a developer or a broker.</li>
+              </ul>
+            </div>
+            <div className="border border-hairline rounded-2xl bg-paper p-4">
+              <p className="font-medium text-[15px]">This is not for you if</p>
+              <ul className="mt-2 flex flex-col gap-1.5 text-[14px] text-ink-muted">
+                <li>You are looking to buy a home for yourself.</li>
+                <li>You have nothing to sell and no contacts to share.</li>
+              </ul>
+              <Link to="/" className="inline-block mt-2 text-[13px] underline">Looking for a home? Start here instead →</Link>
+            </div>
+          </div>
           <ol className="mt-7 flex flex-col gap-3">
             {[["Sign in", "Free. A link by email or Google, no password to remember."], ["Tell us about your project", "Company, project name, page, country, price from. One minute."], ["Sign the one-page agreement", "You type your name. It says in plain English: 5% only on buyers we bring you who buy, 3% to you when a shared lead of yours buys elsewhere, 0% on buyers you already had."], ["Upload the contacts you already have", "Your CRM export, any format. They are turned into fingerprints in your browser: we never see a name, email or phone. Anything in your list before we introduce it is yours, no commission, ever. This is what protects you, so do it before accepting buyers."], ["Choose what you want", "Only receive buyers, only earn from the leads you share, or both. Separate switches, you can change them any time."], ["Accept buyers and close", "Each buyer arrives in your pipeline with an introduction ID. Accept, get the contact, sell. Report the sale with the price and we settle the rest."]].map(([t, d], i) => (
               <li key={t} className="flex gap-4 border border-hairline rounded-2xl bg-white p-4"><span className="h-8 w-8 shrink-0 rounded-full bg-ink text-paper font-display text-[15px] inline-flex items-center justify-center">{i + 1}</span><span><p className="font-medium text-[15px]">{t}</p><p className="text-[14px] text-ink-muted mt-0.5 leading-relaxed">{d}</p></span></li>
@@ -149,7 +180,21 @@ const NetworkApp = () => {
     </div>
   );
 
-  if (ov === undefined) return <div className="min-h-screen bg-paper text-ink"><RHNav /><div className="max-w-[1140px] mx-auto px-6 py-16 text-ink-muted inline-flex items-center gap-2"><Loader2 size={16} className="animate-spin" /> Opening your panel…</div></div>;
+  if (ov === undefined) return (
+    <div className="min-h-screen bg-paper text-ink"><RHNav />
+      <div className="max-w-[1140px] mx-auto px-6 py-16">
+        {loadErr ? (
+          <div className="border border-hairline rounded-2xl bg-white p-6 max-w-[440px]">
+            <p className="font-display text-[20px] tracking-tight">We could not open your panel</p>
+            <p className="text-[14px] text-ink-muted mt-1">The connection timed out. Your data is safe — nothing was lost.</p>
+            <button onClick={load} className="rh-btn-primary mt-4">Try again</button>
+          </div>
+        ) : (
+          <p className="text-ink-muted inline-flex items-center gap-2"><Loader2 size={16} className="animate-spin" /> Opening your panel…</p>
+        )}
+      </div>
+    </div>
+  );
 
   const RegisterForm = (
     <form onSubmit={register} className="border border-hairline rounded-2xl bg-white p-6 md:p-8 grid md:grid-cols-2 gap-4">

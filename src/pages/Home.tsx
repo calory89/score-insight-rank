@@ -322,7 +322,7 @@ const Home = () => {
               <Link key={f.id} to={to} onClick={() => track("card_click", { find: f.shortcode })}
                 className={`group relative block rounded-2xl overflow-hidden bg-hairline/30 shadow-sm hover:shadow-xl transition-shadow [content-visibility:auto] aspect-[4/5]`}>
                 <img src={u} srcSet={srcSet(u)} sizes="(min-width:1024px) 300px, (min-width:768px) 33vw, 50vw" alt="" loading={i < 8 ? "eager" : "lazy"} {...((i < 4 ? { fetchpriority: "high" } : {}) as any)} decoding="async" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
-                <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent h-1/3`} />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent h-1/3 pointer-events-none" />
                 <span className={`absolute top-2.5 right-2.5 px-2 py-1 rounded-full bg-white/90 text-ink font-medium shadow text-[11px]`}>{FLAG[c] || "🌍"} {c}</span>
                 <div className={`absolute left-2.5 flex gap-1 flex-wrap max-w-[70%] top-2.5`}>
                   {f.price_eur && <span className={`px-2 py-1 rounded-full bg-white text-ink font-semibold tabular-nums shadow text-[12px]`}>{eur(f.price_eur)}</span>}
@@ -332,8 +332,8 @@ const Home = () => {
                   {(f as any).verified && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-ink/90 text-white text-[11px] font-medium shadow"><BadgeCheck size={11} /> Verified</span>}
                   {((f as any).status === "sold" || (f as any).status === "reserved") && <span className="px-2 py-1 rounded-full bg-red-600/90 text-white text-[11px] font-medium shadow uppercase">{(f as any).status}</span>}
                 </div>
-                {!f.id.startsWith("ebc") && <button onClick={(e) => toggleFav(e, f)} aria-label="Save" className={`absolute bottom-3 right-3 h-9 w-9 rounded-full bg-white/90 shadow inline-flex items-center justify-center ${favs.has(f.id) ? "text-red-500" : "text-ink"}`}><Heart size={16} fill={favs.has(f.id) ? "currentColor" : "none"} /></button>}
-                <div className={`absolute inset-x-0 bottom-0 text-white p-3 md:p-4 pr-14`}>
+                {!f.id.startsWith("ebc") && <button onClick={(e) => toggleFav(e, f)} aria-label="Save" className={`absolute bottom-3 right-3 z-10 h-9 w-9 rounded-full bg-white/90 shadow inline-flex items-center justify-center transition-transform hover:scale-110 active:scale-95 ${favs.has(f.id) ? "text-red-500" : "text-ink"}`}><Heart size={16} fill={favs.has(f.id) ? "currentColor" : "none"} /></button>}
+                <div className="absolute inset-x-0 bottom-0 text-white p-3 md:p-4 pr-14 pointer-events-none">
                   <p className={`opacity-95 leading-snug text-[12px] md:text-[13px] line-clamp-2`}>{f.hook || f.location_name || (f.caption ? cleanCap(f.caption).slice(0, 48) : "") || c}</p>
                 </div>
               </Link>
