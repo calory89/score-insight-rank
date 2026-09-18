@@ -46,14 +46,27 @@ const CaptureCard = () => {
   };
 
   return (
-    <div ref={ref} className="relative rounded-2xl overflow-hidden aspect-[4/5] bg-gradient-to-br from-ink via-[#232220] to-[#141414] text-white p-4 md:p-5 flex flex-col justify-between shadow-sm [content-visibility:auto]">
+    // The dark background is set inline on purpose. It used to be `bg-gradient-to-br from-ink ...`,
+    // but `ink` is not a Tailwind theme colour in this project (only the hand-written .text-ink /
+    // .bg-paper utilities in index.css), so `from-ink` produced no CSS, the whole gradient was
+    // invalid, and the card rendered transparent — white text on cream paper, i.e. invisible.
+    // tailwind.config.ts now declares ink/paper/hairline, but this stays inline so the card can
+    // never silently disappear again.
+    <div ref={ref} style={{ background: "linear-gradient(140deg,#16150F 0%,#232220 55%,#141414 100%)" }}
+      className="relative rounded-2xl overflow-hidden aspect-[4/5] text-white p-4 md:p-5 flex flex-col justify-between shadow-sm [content-visibility:auto]">
       <div>
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-[11px] font-medium"><Sparkles size={11} /> Free</span>
         <p className="mt-3 font-display text-[19px] md:text-[21px] leading-[1.15] tracking-tight">{head.text || "Get the top 10 homes. Free, by email."}</p>
-        <p className="mt-1.5 text-[12.5px] text-white/60">Real listings under €60k, picked by hand.</p>
+        <p className="mt-1.5 text-[12.5px] text-white/70">Real listings under €60k, picked by hand.</p>
       </div>
       {mode === "done" ? (
-        <p className="text-[13.5px] inline-flex items-start gap-2"><Check size={16} className="shrink-0 mt-0.5" /> Received. Your top 10 lands in your inbox by the end of this week.</p>
+        <div className="flex items-start gap-2.5">
+          <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white"><Check size={16} strokeWidth={3} /></span>
+          <div>
+            <p className="text-[14px] font-medium">Received.</p>
+            <p className="text-[12.5px] text-white/70">Your top 10 lands in your inbox by the end of this week.</p>
+          </div>
+        </div>
       ) : (
         <form onSubmit={submit} className="flex flex-col gap-2">
           <input type="email" inputMode="email" autoComplete="email" name="email" placeholder="you@email.com" aria-invalid={mode === "error"}
@@ -127,7 +140,7 @@ const GatedCard = ({ f }: { f: IG }) => {
       </div>
 
       {open && (
-        <div className="fixed inset-0 z-[70] bg-ink/60 backdrop-blur-[3px] flex items-end sm:items-center justify-center sm:p-6" onMouseDown={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
+        <div style={{ background: "rgba(22,21,15,.6)" }} className="fixed inset-0 z-[70] backdrop-blur-[3px] flex items-end sm:items-center justify-center sm:p-6" onMouseDown={(e) => { if (e.target === e.currentTarget) setOpen(false); }}>
           <div role="dialog" aria-modal="true" aria-labelledby="gate-title" className="relative w-full sm:max-w-[440px] bg-paper text-ink rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
             <button onClick={() => setOpen(false)} aria-label="Close" className="absolute top-3 right-3 z-10 h-10 w-10 inline-flex items-center justify-center rounded-full bg-hairline/60 text-ink hover:bg-hairline transition-colors"><X size={18} /></button>
             <div className="p-6 sm:p-8">
@@ -140,7 +153,7 @@ const GatedCard = ({ f }: { f: IG }) => {
                 </div>
               ) : (
                 <>
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-ink text-white"><Lock size={18} /></span>
+                  <span style={{ background: "#16150F" }} className="inline-flex h-11 w-11 items-center justify-center rounded-full text-white"><Lock size={18} /></span>
                   <p id="gate-title" className="mt-3 font-display text-[22px] leading-[1.15] tracking-tight">Members only</p>
                   <p className="mt-1.5 text-[14.5px] text-ink-muted">This home is reserved for registered users. Sign up free — it takes five seconds.</p>
                   <form onSubmit={submit} className="mt-5 flex flex-col gap-2">

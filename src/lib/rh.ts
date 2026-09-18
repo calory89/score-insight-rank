@@ -13,7 +13,7 @@ export const cleanCap = (c: string | null) => (c || "").replace(/🏠?\s*Listing
 
 export type IG = { id: string; source_account: string; shortcode: string; caption: string | null; image_urls: string[] | null; posted_at: string | null; location_name: string | null; country_guess: string | null; price_eur: number | null; price_raw: string | null; likes: number | null; is_beach: boolean | null; price_in_image?: boolean; lat?: number | null; lng?: number | null; sqm?: number | null; bedrooms?: number | null; post_url?: string; caption_en?: string | null; hook?: string | null; rank_score?: number | null };
 
-export const EBC: IG = { id: "ebc", source_account: "ecobeachcity", shortcode: "ecobeachcity", caption: "Beachfront cabin in a new eco village. 80-year lease that extends. Payable in instalments.", image_urls: ["/images/ebc/ebc-card.webp"], posted_at: null, location_name: "Mamboro, Sumba", country_guess: "Indonesia", price_eur: 11500, price_raw: null, likes: null, is_beach: true, lat: -9.4, lng: 119.6 };
+export const EBC: IG = { id: "ebc", source_account: "ecobeachcity", shortcode: "ecobeachcity", caption: "Beachfront cabin in a new eco village. 80-year lease that extends. Payable in instalments.", image_urls: ["/images/ebc/ebc-card-v2.webp"], posted_at: null, location_name: "Mamboro, Sumba", country_guess: "Indonesia", price_eur: 11500, price_raw: null, likes: null, is_beach: true, lat: -9.4, lng: 119.6 };
 export const CALENDLY = "https://calendly.com/equinoxinvestmentgroup/eco-beach-city-info-call";
 
 export const sid = () => { try { let s = localStorage.getItem("rh_sid"); if (!s) { s = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem("rh_sid", s); } return s; } catch { return "anon"; } };

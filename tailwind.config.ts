@@ -34,6 +34,14 @@ export default {
           bad: "#B23A3A",
           hairline: "#ECE7DC",
         },
+        // Design tokens the RealHunt pages use as text-ink / bg-paper / border-hairline.
+        // They also exist as flat hand-written utilities in index.css, but only declaring
+        // them here makes the Tailwind variants resolve: bg-ink/60, from-ink, ring-ink/10,
+        // text-paper, bg-hairline/50. Without this they silently compile to nothing, which
+        // is how the email capture card ended up transparent (white text on cream paper).
+        ink: { DEFAULT: "#16150F", muted: "#3A382F", soft: "#8A8678" },
+        paper: "#FAF8F3",
+        hairline: { DEFAULT: "#ECE7DC", strong: "rgba(22, 21, 15, 0.18)" },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
