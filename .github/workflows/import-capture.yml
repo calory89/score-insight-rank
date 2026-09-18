@@ -21,11 +21,8 @@ jobs:
           p='src/App.tsx'; s=open(p).read()
           assert 'EmailCapture' not in s
           s=s.replace('const OnboardingWizard = L(() => import("@/components/OnboardingWizard"));','const OnboardingWizard = L(() => import("@/components/OnboardingWizard"));\nconst EmailCapture = L(() => import("@/components/realhunt/EmailCapture"));',1)
-          old='''                <PageTracker>
-                  <main id="main-content"><AppRoutes /></main>
-                </PageTracker>'''
-          assert old in s
-          s=s.replace(old, old+'\n                <Suspense fallback={null}><EmailCapture /></Suspense>',1)
+          assert s.count('</PageTracker>')==1
+          s=s.replace('</PageTracker>','</PageTracker>\n                <Suspense fallback={null}><EmailCapture /></Suspense>',1)
           open(p,'w').write(s)
           p='src/pages/AdminActivity.tsx'; s=open(p).read()
           assert 'AdminSubscribers' not in s
