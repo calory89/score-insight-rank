@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/contexts/AuthContext";
 import RHNav from "@/components/realhunt/RHNav";
 import RHFooter from "@/components/realhunt/RHFooter";
@@ -46,18 +45,6 @@ const SignUp = () => {
     navigate(redirectTo);
   };
 
-  const handleGoogle = async () => {
-    setLoading(true);
-    fbLead({ content_name: "sign_up", method: "google" });
-
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: `${window.location.origin}/auth/callback`,
-    });
-    if (result.error) {
-      setLoading(false);
-      toast({ title: "Google sign in failed", description: result.error.message, variant: "destructive" });
-    }
-  };
 
   return (
     <div className="min-h-screen bg-rh-bg text-rh-ink flex flex-col">
@@ -85,21 +72,6 @@ const SignUp = () => {
           <div className="mb-10">
             <h1 className="font-display text-4xl mb-2">Create account</h1>
             <p className="text-rh-ink-muted text-sm">No credit card. Cancel anytime.</p>
-          </div>
-
-          <button
-            onClick={handleGoogle}
-            disabled={loading}
-            className="w-full h-12 rounded-xl bg-rh-accent text-white font-medium hover:bg-rh-accent/90 transition flex items-center justify-center gap-3 mb-4 disabled:opacity-50"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#fff" d="M21.35 11.1H12v3.2h5.35c-.23 1.4-1.65 4.1-5.35 4.1-3.22 0-5.85-2.66-5.85-5.95s2.63-5.95 5.85-5.95c1.83 0 3.06.78 3.76 1.45l2.56-2.46C16.7 3.97 14.55 3 12 3 6.98 3 3 6.98 3 12s3.98 9 9 9c5.2 0 8.65-3.65 8.65-8.78 0-.6-.07-1.05-.15-1.42z"/></svg>
-            Continue with Google
-          </button>
-
-          <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-rh-hairline" />
-            <span className="text-xs text-rh-ink-soft uppercase tracking-wider">or email</span>
-            <div className="flex-1 h-px bg-rh-hairline" />
           </div>
 
           <form onSubmit={handleSignUp} className="space-y-4">
