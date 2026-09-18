@@ -89,20 +89,32 @@ export const consent = () => { try { return localStorage.getItem("rh_consent"); 
 
 // Shared "join the list" write, used by every email-capture surface (bottom bar, 30s popup, grid card,
 // home page cards, the gated card). Collection only for now: no automatic welcome email is sent on
-// insert (disabled 18-sep-2026); the top 10 goes out manually until the real send flow is ready. Any
-// backend error (duplicate email, RLS hiccup, etc.) is swallowed on purpose so a visitor never sees a
-// false "error" — the email is validated client-side before this is called. Also remembers the last
-// email used (rh_last_email) so a returning visitor is never asked twice in the same browser.
+// insert (disabled 18-sep-2026); the top 10 goes out manually until the real send flow is ready.
+//
+// This MUST be a plain insert, never an upsert. PostgREST implements upsert as INSERT ... ON CONFLICT,
+// which it will only run if the caller also passes the table's UPDATE policy — and newsletter_subscribers
+// only grants UPDATE to admins. So every anonymous upsert came back 401 / 42501 "new row violates
+// row-level security policy", the error was swallowed, and the visitor was shown "Received" while the
+// address was dropped on the floor. 83 people subscribed that way and only 4 were saved. A duplicate
+// address (23505) is a success: they are already on the list.
+//
+// Failures are no longer hidden either. The caller gets ok:false so it can ask the visitor to try
+// again, instead of promising an email we cannot send.
 export const subscribeEmail = async (email: string, source: string, userId?: string | null) => {
   let tz: string | null = null; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch {}
   let exp: any = null; try { exp = JSON.parse(sessionStorage.getItem("rh_exp_assign") || "null"); } catch {}
   const clean = email.trim().toLowerCase();
   const row = { email: clean, source, path: typeof location !== "undefined" ? location.pathname : null, sid: sid(), tz, user_id: userId || null, meta: { ref: typeof document !== "undefined" ? document.referrer || null : null, ua: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 160) : null, exp, w: typeof window !== "undefined" ? window.innerWidth : null } };
-  const { error } = await db.from("newsletter_subscribers").upsert(row, { onConflict: "email", ignoreDuplicates: true });
-  if (error) console.warn("newsletter upsert", error.message);
-  try { localStorage.setItem("rh_sub", "1"); localStorage.setItem("rh_last_email", clean); } catch {}
-  track("newsletter", { meta: { source } });
-  return { ok: true };
+
+  const save = async () => { try { return (await db.from("newsletter_subscribers").insert(row)).error; } catch (e: any) { return e || new Error("network"); } };
+  let error = await save();
+  if (error && error.code !== "23505") { await new Promise((r) => setTimeout(r, 900)); error = await save(); }
+
+  const ok = !error || error.code === "23505";
+  if (!ok) console.warn("newsletter insert failed", error?.message || error);
+  if (ok) { try { localStorage.setItem("rh_sub", "1"); localStorage.setItem("rh_last_email", clean); } catch {} }
+  track("newsletter", { meta: { source, ok } });
+  return { ok };
 };
 
 export const lastEmail = () => { try { return localStorage.getItem("rh_last_email") || ""; } catch { return ""; } };

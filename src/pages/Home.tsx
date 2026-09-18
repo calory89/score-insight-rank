@@ -25,7 +25,7 @@ const GATED: IG = { id: "gated-1", source_account: "", shortcode: "DcndWlcGwtG",
 // flagged as an invalid email (see EmailCapture.tsx for the same fix).
 const CaptureCard = () => {
   const { user } = useAuth();
-  const [mode, setMode] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [mode, setMode] = useState<"idle" | "sending" | "done" | "error" | "failed">("idle");
   const [seen, setSeen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const head = useExperiment("capture_card_headline", [{ id: "A", text: "Get the top 10 homes. Free, by email." }]);
@@ -42,8 +42,8 @@ const CaptureCard = () => {
     const v = (el?.value ?? "").trim();
     if (!VALID_EMAIL.test(v)) { setMode("error"); return; }
     setMode("sending");
-    await subscribeEmail(v, "grid_card", user?.id);
-    setMode("done");
+    const { ok } = await subscribeEmail(v, "grid_card", user?.id);
+    setMode(ok ? "done" : "failed");
   };
 
   return (
@@ -76,6 +76,7 @@ const CaptureCard = () => {
             {mode === "sending" ? "Sending…" : "Send me the top 10"} {mode !== "sending" && <ArrowRight size={14} />}
           </button>
           {mode === "error" && <span className="text-[11.5px] text-red-300">That email does not look right.</span>}
+          {mode === "failed" && <span className="text-[11.5px] text-amber-300">We could not save that just now. Try once more.</span>}
         </form>
       )}
     </div>
@@ -90,7 +91,7 @@ const CaptureCard = () => {
 const GatedCard = ({ f }: { f: IG }) => {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [mode, setMode] = useState<"idle" | "sending" | "done" | "error" | "failed">("idle");
   const ref = useRef<HTMLDivElement>(null);
   const [seen, setSeen] = useState(false);
 
@@ -116,8 +117,8 @@ const GatedCard = ({ f }: { f: IG }) => {
     const v = (el?.value ?? "").trim();
     if (!VALID_EMAIL.test(v)) { setMode("error"); return; }
     setMode("sending");
-    await subscribeEmail(v, "gated_card", user?.id);
-    setMode("done");
+    const { ok } = await subscribeEmail(v, "gated_card", user?.id);
+    setMode(ok ? "done" : "failed");
   };
 
   const u = f.image_urls![0];
@@ -188,6 +189,7 @@ const Home = () => {
   const [auth, setAuth] = useState(false);
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [sendErr, setSendErr] = useState(false);
   const [alert, setAlert] = useState({ email: "", country: "Any", max: 50000 });
   const [alertSent, setAlertSent] = useState(false);
   const sentinel = useRef<HTMLDivElement>(null);
@@ -280,7 +282,9 @@ const Home = () => {
     const el = e.currentTarget.querySelector<HTMLInputElement>("input[type=email]");
     const v = (el?.value ?? email).trim();
     if (!VALID_EMAIL.test(v)) return;
-    setSent(true); await subscribeEmail(v, "home_bottom", user?.id);
+    setSendErr(false);
+    const { ok } = await subscribeEmail(v, "home_bottom", user?.id);
+    if (ok) setSent(true); else setSendErr(true);
   };
   const saveAlert = async (e: React.FormEvent) => { e.preventDefault(); if (!/.+@.+\..+/.test(alert.email)) return; setAlertSent(true); track("alert", { meta: alert }); try { await db.from("alerts").insert({ email: alert.email, country: alert.country === "Any" ? null : alert.country, max_price: alert.max, beach, user_id: user?.id || null }); } catch {} };
 
@@ -364,6 +368,7 @@ const Home = () => {
           {sent ? <p className="inline-flex items-center gap-2 text-[15px]"><Check size={18} /> Received. Your top 10 lands in your inbox by the end of this week.</p> : (
             <form onSubmit={subscribe} className="flex gap-2"><input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" aria-label="Email" className="flex-1 border border-hairline rounded-full px-4 py-3 text-[15px] bg-paper outline-none focus:border-ink" /><button type="submit" className="rh-btn-primary !px-5">Send</button></form>
           )}
+          {sendErr && !sent && <p className="text-[13px] text-amber-700">We could not save that just now. Try once more.</p>}
         </div>
       </section>
 

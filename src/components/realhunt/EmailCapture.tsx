@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { X, Check, ArrowRight, Sparkles } from "lucide-react";
-import { db, track, sid, eur } from "@/lib/rh";
+import { track, eur, subscribeEmail } from "@/lib/rh";
 import { useAuth } from "@/contexts/AuthContext";
 import { useExperiment } from "@/lib/experiments";
 
@@ -42,7 +42,7 @@ const CSS = `
 @media (prefers-reduced-motion:reduce){.rh-bar,.rh-pop,.rh-veil,.rh-tick{animation:none}.rh-shine:after{display:none}}
 `;
 
-type Mode = "idle" | "sending" | "done" | "error";
+type Mode = "idle" | "sending" | "done" | "error" | "failed";
 
 const useSubscribe = (source: string) => {
   const { user } = useAuth();
@@ -50,13 +50,10 @@ const useSubscribe = (source: string) => {
   const submit = async (email: string) => {
     if (!valid(email)) { setMode("error"); return false; }
     setMode("sending");
-    let tz: string | null = null; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch {}
-    let exp: any = null; try { exp = JSON.parse(sessionStorage.getItem("rh_exp_assign") || "null"); } catch {}
-    const row = { email: email.trim().toLowerCase(), source, path: location.pathname, sid: sid(), tz, user_id: user?.id || null, meta: { ref: document.referrer || null, ua: navigator.userAgent.slice(0, 160), exp, w: window.innerWidth } };
-    const { error } = await db.from("newsletter_subscribers").upsert(row, { onConflict: "email", ignoreDuplicates: true });
-    if (error) console.warn("newsletter upsert", error.message);
-    set(localStorage, K_SUB, "1");
-    track("newsletter", { meta: { source } });
+    // One shared write for the whole site. This used to be its own upsert here, which RLS rejected
+    // for anonymous visitors, so the bar and the popup never saved a single address.
+    const { ok } = await subscribeEmail(email, source, user?.id);
+    if (!ok) { setMode("failed"); return false; }
     setMode("done");
     return true;
   };
@@ -139,8 +136,8 @@ const EmailCapture = () => {
 
   const closeBar = () => { setBar(false); set(localStorage, K_BAR, String(Date.now())); track("capture_dismiss", { meta: { kind: "banner" } }); };
   const closePop = () => { setPop(false); if (popS.mode !== "done") track("capture_dismiss", { meta: { kind: "popup" } }); };
-  const onBar = async (v: string) => { if (await barS.submit(v)) { setTimeout(() => setBar(false), 3200); } };
-  const onPop = async (v: string) => { if (await popS.submit(v)) { setBar(false); setTimeout(() => setPop(false), 2600); } };
+  const onBar = async (v: string) => { if (await barS.submit(v)) { setTimeout(() => setBar(false), 7000); } };
+  const onPop = async (v: string) => { if (await popS.submit(v)) { setBar(false); setTimeout(() => setPop(false), 6000); } };
 
   if (skip && !pop && !bar) return null;
   const sub = peek.min ? <>Cheapest right now: <b className="text-ink">{eur(peek.min)}</b>. Real listings, ranked by how cheap they are for where they are.</> : <>Real listings under €60k, ranked by how cheap they are for where they are.</>;
@@ -183,6 +180,7 @@ const EmailCapture = () => {
               <p className="mt-2 text-[14.5px] text-ink-muted">{sub}</p>
               <div className="mt-5">{popS.mode === "done" ? <Done big /> : <Field value={email} onChange={setEmail} onSubmit={onPop} mode={popS.mode} cta="Send me the top 10" big />}</div>
               {popS.mode === "error" && <p className="mt-2 text-[13px] text-red-600">That email does not look right.</p>}
+              {popS.mode === "failed" && <p className="mt-2 text-[13px] text-amber-700">We could not save that just now. Try once more.</p>}
               {popS.mode !== "done" && <div className="mt-4 flex items-center justify-between text-[12.5px] text-ink-muted"><span>One email now, then only homes worth a look.</span><button onClick={closePop} className="underline hover:text-ink">No thanks</button></div>}
             </div>
           </div>
