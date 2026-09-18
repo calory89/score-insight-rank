@@ -14,7 +14,7 @@ const Swipe = () => {
   const [auth, setAuth] = useState(false);
   const start = useRef<number | null>(null);
   useEffect(() => {
-    document.title = "Swipe homes under €100,000 · RealHunt"; track("swipe_view");
+    document.title = "Swipe homes under €60,000 · RealHunt"; track("swipe_view");
     db.from("ig_finds").select("id,shortcode,image_urls,price_eur,price_in_image,location_name,country_guess,hook,posted_at,likes,rank_score,is_beach").neq("status", "hidden").lte("price_eur", 100000).limit(300).then(({ data }: any) => setItems(((data || []) as IG[]).filter((f) => f.image_urls?.length).sort((a, b) => score(b) - score(a))));
   }, []);
   const f = items[i];

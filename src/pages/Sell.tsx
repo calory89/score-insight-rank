@@ -13,10 +13,10 @@ const Sell = () => {
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
   const [err, setErr] = useState("");
-  useEffect(() => { document.title = "Sell your home under €100,000 · RealHunt"; track("sell_view"); }, []);
+  useEffect(() => { document.title = "Sell your home under €60,000 · RealHunt"; track("sell_view"); }, []);
   const inp = "border border-hairline rounded-full px-4 py-3 text-[15px] bg-paper outline-none focus:border-ink w-full";
   const submit = async (e: React.FormEvent) => {
-    e.preventDefault(); const em = user?.email || f.email; if (!/.+@.+\..+/.test(em)) return; if (Number(f.price) > 100000) { setErr("We only list homes under €100,000."); return; } if (!files.length) { setErr("Add at least one photo."); return; }
+    e.preventDefault(); const em = user?.email || f.email; if (!/.+@.+\..+/.test(em)) return; if (Number(f.price) > 100000) { setErr("We only list homes under €60,000."); return; } if (!files.length) { setErr("Add at least one photo."); return; }
     setBusy(true); setErr("");
     try {
       const urls: string[] = [];
@@ -35,7 +35,7 @@ const Sell = () => {
     <div className="min-h-screen bg-paper text-ink">
       <RHNav />
       <div className="max-w-[720px] mx-auto px-4 md:px-6 py-10">
-        <h1 className="font-display text-[clamp(30px,5vw,46px)] leading-[1.05] tracking-tight">Selling a home under €100,000? List it here, free.</h1>
+        <h1 className="font-display text-[clamp(30px,5vw,46px)] leading-[1.05] tracking-tight">Selling a home under €60,000? List it here, free.</h1>
         <p className="mt-3 text-[16px] text-ink-muted">We review every submission by hand. If it is real and the price is right, it goes in front of thousands of buyers looking for exactly this. You pay nothing to list. If a buyer we introduce completes the purchase, we agree a commission with you in writing before any contact is shared.</p>
         {sent ? <p className="mt-8 inline-flex items-center gap-2 text-[16px]"><Check size={20} /> Received. We reply within 48 hours with a yes, a no, or a question.</p> : (
           <form onSubmit={submit} className="mt-8 flex flex-col gap-3">

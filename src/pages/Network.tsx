@@ -125,7 +125,7 @@ const Network = () => {
   const math = () => (
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-14">
         <div className="rounded-2xl bg-ink text-paper p-8 md:p-12 grid md:grid-cols-[1fr_auto] gap-8 items-center">
-          <div className="text-[17px] leading-relaxed"><p className="opacity-80">Say you spent €100,000 on ads. 5,000 contacts. You sold 20.</p><p className="mt-2 font-medium">The other 4,980 are sitting dead in your CRM right now.</p><p className="mt-4 opacity-80">Share them. If just 1 in 100 buys another project in the network at €200,000, your {SOURCE_SHARE_PCT}% on each of those ~50 sales adds up to:</p></div>
+          <div className="text-[17px] leading-relaxed"><p className="opacity-80">Say you spent €60,000 on ads. 5,000 contacts. You sold 20.</p><p className="mt-2 font-medium">The other 4,980 are sitting dead in your CRM right now.</p><p className="mt-4 opacity-80">Share them. If just 1 in 100 buys another project in the network at €200,000, your {SOURCE_SHARE_PCT}% on each of those ~50 sales adds up to:</p></div>
           <div className="text-center md:text-right"><p className="font-display text-[clamp(44px,7vw,80px)] leading-none tracking-tight tabular-nums">€300,000</p><p className="text-[13px] opacity-70 mt-2">without selling one more unit of your own, and without paying a cent</p></div>
         </div>
       </section>
