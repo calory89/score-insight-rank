@@ -29,10 +29,18 @@ export const sid = () => { try { let s = localStorage.getItem("rh_sid"); if (!s)
 const QUEUE: any[] = [];
 let flushTimer: any = null;
 
+// ANALYTICS PAUSED 19-sep-2026. Inserts into rh_events were sitting on a lock for close to a minute
+// and every visitor's page was queuing behind them, which took the whole site down: the shell loaded
+// and no homes ever arrived. Analytics is the one thing here nobody is paying for, so it is the first
+// thing to go. Events are still collected in memory and simply dropped, so no call site changes and
+// turning this back on is a one-line revert once the table is healthy.
+const ANALYTICS_ON = false;
+
 const flush = async () => {
   flushTimer = null;
   if (!QUEUE.length) return;
   const rows = QUEUE.splice(0, QUEUE.length);
+  if (!ANALYTICS_ON) return;
   try {
     const { error } = await db.from("rh_events").insert(rows);
     if (error) console.warn("rh_events", error.message);
@@ -47,6 +55,7 @@ if (typeof document !== "undefined") {
 }
 
 export const track = async (event: string, extra: { find?: string; meta?: any } = {}) => {
+  if (!ANALYTICS_ON) return;
   try {
     const { data } = await supabase.auth.getSession();
     let exp: any = null, tz: string | null = null, internal = false;
