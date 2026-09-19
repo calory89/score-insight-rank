@@ -5,7 +5,7 @@ import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
 import CaptureInline from "@/components/realhunt/CaptureInline";
 const Onboarding = lazy(() => import("@/components/realhunt/Onboarding"));
-import { Waves, Check, Heart, Search, Bell, BadgeCheck, TrendingDown, Map as MapIcon, Layers, Sparkles, ArrowRight, Lock, MessageCircle, Share2, X, ArrowDownWideNarrow, ExternalLink } from "lucide-react";
+import { Waves, Check, Heart, Search, Bell, BadgeCheck, TrendingDown, Map as MapIcon, Layers, Sparkles, ArrowRight, Lock, MessageCircle, Share2, X, ArrowDownWideNarrow } from "lucide-react";
 import { db, eur, FLAG, norm, slug, unslug, isNew, cleanCap, IG, EBC, MAX_PRICE, HOME_MAX_PRICE, track, srcSet, score, subscribeEmail, lastEmail } from "@/lib/rh";
 import { useExperiment } from "@/lib/experiments";
 
@@ -16,9 +16,9 @@ const DROPS_KEY = "rh_drops_v1";
 const FEED_COLS = "id,source_account,shortcode,image_urls,posted_at,location_name,country_guess,price_eur,is_beach,price_in_image,sqm,bedrooms,hook,rank_score,verified,status";
 const VALID_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-// A promoted listing that lives on Instagram, not on RealHunt. It is always the last card in the
-// feed and clicking it opens the original post in a new tab — we never pretend to host it.
-const COMO_URL = "https://www.instagram.com/p/DdZTNrQjBvc/?stkn=OWkzMjNjeWE3dDY=";
+// A promoted listing that lives on idealista, not on RealHunt. It is always the last card in the
+// feed, and like every other home it opens its own page first (/lake-como); the outbound link to the
+// original listing is there. We never pretend to host it.
 const COMO: IG = { id: "como-1", source_account: "", shortcode: "como-1", caption: null, image_urls: ["/finds/como-1.webp"], posted_at: null, location_name: "Lake Como, Italy", country_guess: "Italy", price_eur: 46000, price_raw: null, likes: 4752, is_beach: false };
 
 // A real, already-verified find (Sellano, Umbria, €46,000) reused as the "members only" gated card
@@ -377,12 +377,16 @@ const Home = () => {
             if (f.id === "capture") return <CaptureCard key="capture" />;
             if (f.id === "gated-1") return <GatedCard key="gated-1" f={f} />;
             if (f.id === "como-1") return (
-              <a key="como-1" href={COMO_URL} target="_blank" rel="noopener noreferrer" onClick={() => track("card_click", { find: "como-1", meta: { promoted: true } })}
+              <Link key="como-1" to="/lake-como" onClick={() => track("card_click", { find: "como-1", meta: { promoted: true } })}
                 className="group relative block rounded-2xl overflow-hidden bg-hairline/30 aspect-[4/5] shadow-sm hover:shadow-xl transition-shadow [content-visibility:auto]">
                 <img src={f.image_urls![0]} srcSet={srcSet(f.image_urls![0])} sizes="(min-width:1024px) 300px, (min-width:768px) 33vw, 50vw" alt="" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
                 <span className="absolute top-2.5 right-2.5 px-2 py-1 rounded-full bg-white/90 text-ink text-[11px] font-medium shadow">🇮🇹 Italy</span>
-                <span className="absolute top-2.5 left-2.5 px-2 py-1 rounded-full bg-white/90 text-ink text-[11px] font-medium shadow inline-flex items-center gap-1">On Instagram <ExternalLink size={10} /></span>
-              </a>
+                <span className="absolute top-2.5 left-2.5 px-2 py-1 rounded-full bg-white/90 text-ink text-[11px] font-medium shadow inline-flex items-center gap-1"><Sparkles size={10} /> Featured</span>
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent h-1/3 pointer-events-none" />
+                <div className="absolute inset-x-0 bottom-0 text-white p-3 md:p-4 pointer-events-none">
+                  <p className="font-display text-[15px] md:text-[17px] leading-snug drop-shadow">A home on Lake Como for €46,000</p>
+                </div>
+              </Link>
             );
             const c = norm(f.country_guess);
             const to = f.id.startsWith("ebc") ? "/ecobeachcity" : `/find/${f.shortcode}`;

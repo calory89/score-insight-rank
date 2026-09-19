@@ -57,6 +57,7 @@ const MarketCity = L(() => import("./pages/MarketCity"));
 const NotFound = L(() => import("./pages/NotFound"));
 const Fit = L(() => import("./pages/Fit"));
 const Ebc = L(() => import("./pages/Ebc"));
+const Como = L(() => import("./pages/Como"));
 const Saved = L(() => import("./pages/Saved"));
 const Account = L(() => import("./pages/Account"));
 const MapPage = L(() => import("./pages/MapPage"));
@@ -141,6 +142,7 @@ const AppRoutes = () => (
       <Route path="/heatmap" element={<Heatmap />} />
       <Route path="/fit" element={<Fit />} />
       <Route path="/ecobeachcity" element={<Ebc />} />
+      <Route path="/lake-como" element={<Como />} />
       <Route path="/saved" element={<Saved />} />
       <Route path="/country/:country" element={<Home />} />
       <Route path="/from/:account" element={<Home />} />
