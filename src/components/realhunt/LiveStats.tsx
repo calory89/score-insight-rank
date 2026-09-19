@@ -40,7 +40,15 @@ const readCache = (): Stats | null => {
   return null;
 };
 
+// PAUSED 19-sep-2026. rh_live_stats() recomputed by scanning rh_events (114,000 rows) whenever its
+// cache was more than 30 seconds old, and every visitor asked for it every 90 seconds. Under real
+// traffic that is a permanent aggregate scan of the largest table in the project, and it exhausted
+// the connection pool: the site served its shell and no home ever loaded. The counter is the least
+// important thing on the page, so it is off until the RPC only ever reads its cache.
+const LIVE_STATS_ON = false;
+
 const fetchStats = (): Promise<Stats | null> => {
+  if (!LIVE_STATS_ON) return Promise.resolve(null);
   const cached = readCache();
   if (cached) return Promise.resolve(cached);
   if (inflight) return inflight;
@@ -72,7 +80,7 @@ export const useLiveStats = () => {
       fetchStats().then((v) => { if (v) apply(v); });
     };
     load();
-    timer.current = setInterval(load, POLL_MS);
+    if (LIVE_STATS_ON) timer.current = setInterval(load, POLL_MS);
     const onVis = () => { if (document.visibilityState === "visible") load(); };
     document.addEventListener("visibilitychange", onVis);
     return () => { dead = true; subs.delete(apply); clearInterval(timer.current); document.removeEventListener("visibilitychange", onVis); };
