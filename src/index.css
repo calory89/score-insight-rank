@@ -294,3 +294,10 @@
   0%   { transform: translateX(-100%); }
   100% { transform: translateX(400%); }
 }
+
+
+/* Keep buyer navigation clear of content, consent controls and device safe areas. */
+@media (max-width: 767px) {
+  body:has(.rh-mobile-nav) { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+  body:has(.rh-mobile-nav) .rh-cookie-banner { bottom: calc(64px + env(safe-area-inset-bottom)); }
+}

@@ -32,14 +32,14 @@ export default function PhotoGallery({ images, title, compact = false, href, eag
           onScroll={(e) => { const el = e.currentTarget; if (el.clientWidth) setIndex(Math.round(el.scrollLeft / el.clientWidth)); }}
           className="flex h-full w-full overflow-x-auto snap-x snap-mandatory overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-3px] focus-visible:outline-white">
           {images.map((url, i) => {
-            const photo = <img src={url} srcSet={srcSet(url)} sizes={compact ? "(min-width:1024px) 300px, (min-width:768px) 33vw, 50vw" : "(min-width:1140px) 1092px, 100vw"} alt={`${title} — photo ${i + 1} of ${images.length}`} loading={i === 0 && eager ? "eager" : "lazy"} decoding="async" draggable={false} className={`w-full h-full ${compact ? "object-cover" : "object-contain"}`} />;
+            const photo = <img src={url} srcSet={srcSet(url)} sizes={compact ? "(min-width:1280px) 300px, (min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" : "(min-width:1140px) 1092px, 100vw"} alt={`${title} — photo ${i + 1} of ${images.length}`} loading={i === 0 && eager ? "eager" : "lazy"} decoding="async" draggable={false} className={`w-full h-full ${compact ? "object-cover" : "object-contain"}`} />;
             return <div key={url} role="group" aria-roledescription="slide" aria-label={`${i + 1} of ${images.length}`} className="w-full h-full shrink-0 snap-start snap-always">{href ? <Link to={href} tabIndex={i === index ? 0 : -1} onClick={onOpen} className="block w-full h-full">{photo}</Link> : photo}</div>;
           })}
         </div>
         {images.length > 1 && <>
           <button type="button" aria-label="Previous photo" onClick={() => go(index - 1)} className="absolute z-10 left-1.5 md:left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/95 shadow flex items-center justify-center text-ink hover:bg-white focus-visible:outline-2 focus-visible:outline-ink"><ChevronLeft size={19} /></button>
           <button type="button" aria-label="Next photo" onClick={() => go(index + 1)} className="absolute z-10 right-1.5 md:right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-white/95 shadow flex items-center justify-center text-ink hover:bg-white focus-visible:outline-2 focus-visible:outline-ink"><ChevronRight size={19} /></button>
-          <span aria-live="polite" aria-atomic="true" className={`absolute pointer-events-none rounded-full bg-black/55 backdrop-blur-sm text-white text-[11px] px-2.5 py-1 tabular-nums ${compact ? "bottom-20 left-1/2 -translate-x-1/2" : "bottom-3 right-3"}`}>{index + 1} / {images.length}</span>
+          <span aria-live="polite" aria-atomic="true" className={`absolute pointer-events-none rounded-full bg-black/55 backdrop-blur-sm text-white text-[11px] px-2.5 py-1 tabular-nums ${compact ? "bottom-3 left-1/2 -translate-x-1/2" : "bottom-3 right-3"}`}>{index + 1} / {images.length}</span>
         </>}
       </div>
       {!compact && images.length > 1 && <div className="flex gap-2 overflow-x-auto p-3 bg-white" aria-label="Choose a photo">

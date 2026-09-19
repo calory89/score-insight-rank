@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import ListingInfo from "@/components/realhunt/ListingInfo";
 import PhotoGallery from "@/components/realhunt/PhotoGallery";
 import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
@@ -44,7 +45,7 @@ const FindDetail = () => {
       db.rpc("find_social", { codes: [shortcode] }).then(({ data: v }: any) => v && v[0] && setSocial({ saves: Number(v[0].saves), asks: Number(v[0].asks) }));
       db.from("price_history").select("price_eur,created_at").eq("find_id", data.id).order("created_at", { ascending: true }).then(({ data: h }: any) => setHist(h || []));
       const c = data.country_guess;
-      db.from("ig_finds").select("id,shortcode,image_urls,price_eur,price_in_image,location_name,country_guess,is_beach,caption,posted_at,likes,source_account").neq("status", "hidden").neq("id", data.id).eq("country_guess", c).order("rank_score", { ascending: false }).limit(60).then(({ data: s }: any) => {
+      db.from("ig_finds").select("id,shortcode,image_urls,price_eur,price_in_image,location_name,country_guess,is_beach,sqm,bedrooms,caption,posted_at,likes,source_account").neq("status", "hidden").neq("id", data.id).eq("country_guess", c).order("rank_score", { ascending: false }).limit(60).then(({ data: s }: any) => {
         let l: IG[] = (s || []).filter((x: IG) => x.image_urls?.length && (x.price_eur == null || x.price_eur <= 100000));
         if (data.price_eur) { const near = l.filter((x) => x.price_eur && Math.abs(x.price_eur - data.price_eur) / data.price_eur <= 0.3); if (near.length >= 3) l = near; }
         setSimilar([...l.slice(0, 3), EBC]);
@@ -98,21 +99,22 @@ const FindDetail = () => {
   const Gate = () => <button onClick={() => { track("gate_click", { find: shortcode }); setAuth(true); }} className="rh-btn-primary inline-flex items-center justify-center gap-2"><Lock size={15} /> Sign in, get all the info free</button>;
 
   return (
-    <div className="min-h-screen bg-paper text-ink pb-24 md:pb-0">
+    <div className="min-h-screen bg-paper text-ink pb-10">
       <RHNav />
       <div className="max-w-[1140px] mx-auto md:px-6 md:pt-6">
-        <Link to="/" className="hidden md:inline-flex items-center gap-2 text-[13px] text-ink-muted hover:text-ink mb-4"><ArrowLeft size={14} /> All deals</Link>
+        <Link to="/" className="inline-flex items-center gap-2 text-[13px] text-ink-muted hover:text-ink my-4 mx-4 md:mx-0 md:mt-0"><ArrowLeft size={14} /> All deals</Link>
 
         <PhotoGallery key={f.shortcode} images={imgs} title={f.location_name || c} eager />
 
-        <div className="px-4 md:px-0 grid md:grid-cols-[1.4fr_1fr] gap-10 mt-6">
+        <div className="px-4 md:px-0 grid md:grid-cols-[minmax(0,1fr)_300px] gap-8 lg:gap-12 mt-8">
           <div>
             <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted">{f.source_account === "idealista" ? "A RealHunt find" : <>Spotted by <Link to={`/from/${f.source_account}`} className="underline">{sourceName}</Link></>}{when ? " · " + when : ""}</p>
             <h1 className="font-display text-[clamp(38px,7vw,64px)] leading-none tracking-tight mt-3 tabular-nums">{f.price_eur ? eur(f.price_eur) : "Price in the listing"}</h1>
-            {f.hook && <p className="text-[17px] mt-3 text-ink">{f.hook}</p>}
+            <p className="text-[20px] md:text-[24px] font-medium mt-3 leading-snug">{user ? (f.location_name || c) : c}</p>
+            {f.hook && <p className="text-[15px] mt-2 text-ink-muted">{f.hook}</p>}
             {f.price_raw && f.price_eur && f.price_raw !== "seen in image" && <p className="text-[13px] text-ink-muted mt-1">Listed as {f.price_raw}, converted approximately.</p>}
             <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[14px] text-ink-muted">
-              <span className="inline-flex items-center gap-1.5"><MapPin size={14} /> {FLAG[c]} {user ? (f.location_name || c) : c}{!user && <Lock size={12} className="ml-1" />}</span>
+              {!user && <button onClick={() => setAuth(true)} className="inline-flex items-center gap-1.5 underline underline-offset-4"><MapPin size={14} /><Lock size={12} /> Sign in for the exact location</button>}
               {f.sqm && <span>{f.sqm} m²</span>}{f.bedrooms && <span>{f.bedrooms} {f.bedrooms === 1 ? "bedroom" : "bedrooms"}</span>}
               {when && <span className="inline-flex items-center gap-1.5"><Calendar size={14} /> {when}</span>}
               {views != null && views > 0 && <span className="inline-flex items-center gap-1.5"><Eye size={14} /> {views.toLocaleString("en-GB")} viewed this week</span>}
@@ -122,7 +124,7 @@ const FindDetail = () => {
               {((f as any).status === "sold" || (f as any).status === "reserved") && <span className="px-2 py-0.5 rounded-full bg-red-600 text-white text-[12px] uppercase">{(f as any).status}</span>}
             </div>
 
-            <div className="mt-8">
+            <section className="mt-8 border-t border-hairline pt-7">
               <h2 className="font-display text-[20px] tracking-tight mb-3">About this home</h2>
               {user ? (
                 <>
@@ -132,23 +134,20 @@ const FindDetail = () => {
                 </>
               ) : (
                 <div className="border border-hairline rounded-2xl bg-white p-6 flex flex-col gap-3">
-                  <p className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><Lock size={18} /> Sign in and we send you everything about this home, free, to your email</p>
-                  <p className="text-[14px] text-ink-muted">Exact location, map, full description, the original listing and what it really costs to buy as a foreigner. Ten seconds, just your email.</p>
+                  <p className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><Lock size={18} /> See the full details, free</p>
+                  <p className="text-[14px] text-ink-muted">Sign in for the exact location, full description and original listing.</p>
                   <div><Gate /></div>
                 </div>
               )}
-            </div>
+            </section>
 
-            {user && phone === null && (
-              <form onSubmit={savePhone} className="mt-6 border border-hairline rounded-2xl bg-white p-5 flex flex-col sm:flex-row sm:items-center gap-3">
-                <div className="flex-1"><p className="font-display text-[17px] tracking-tight inline-flex items-center gap-2"><MessageCircle size={16} /> Get a WhatsApp when this drops in price or a similar one appears</p><p className="text-[13px] text-ink-muted">Optional. We do not call unless you ask us to.</p></div>
-                <div className="flex gap-2"><input type="tel" value={phoneIn} onChange={(e) => setPhoneIn(e.target.value)} placeholder="+34 6…" className="w-40 border border-hairline rounded-full px-4 py-2.5 text-[14px] bg-paper outline-none focus:border-ink" /><button className="rh-btn-primary !px-4 !py-2.5 !text-[14px]">Add</button></div>
-              </form>
-            )}
 
-            <div className="mt-8 border border-hairline rounded-2xl bg-white p-5">
+
+            <section id="contact-home" className="mt-8 border-t border-hairline pt-7 scroll-mt-24">
+              <h2 className="font-display text-[22px] mb-4">Interested in this home?</h2>
+              <div className="md:hidden mb-5">{user ? <button onClick={open} className="rh-btn-primary inline-flex items-center gap-2">Open listing <ExternalLink size={15} /></button> : <button onClick={() => setAuth(true)} className="rh-btn-primary inline-flex items-center gap-2"><Lock size={15} /> Get all the info, free</button>}<div className="flex gap-4 mt-4"><button onClick={toggleFav} className="text-[14px] inline-flex items-center gap-1.5"><Heart size={16} fill={fav ? "currentColor" : "none"} />{fav ? "Saved" : "Save"}</button><button onClick={share} className="text-[14px] inline-flex items-center gap-1.5"><Share2 size={16} />{copied ? "Copied" : "Share"}</button></div></div>
               {wantSent ? <p className="inline-flex items-center gap-2 text-[15px]"><Check size={18} /> Got it. A person replies within 24 hours with the next step.</p> : !want ? (
-                <div className="flex items-center justify-between gap-4 flex-wrap"><div><p className="font-display text-[18px] tracking-tight">I want this one</p><p className="text-[13px] text-ink-muted">We check it is still available, contact the seller and tell you what it really costs to buy as a foreigner.</p></div><button onClick={() => { setWant(true); track("want_open", { find: shortcode }); }} className="rh-btn-primary !px-5 !py-2.5 !text-[14px]">Ask about this home</button></div>
+                <div className="flex items-center justify-between gap-4 flex-wrap"><div><p className="font-display text-[18px] tracking-tight">I want this one</p><p className="text-[13px] text-ink-muted">We check it is still available, contact the seller and tell you what it really costs to buy as a foreigner.</p></div><button onClick={() => { setWant(true); track("want_open", { find: shortcode }); }} className="rh-btn-tertiary !px-5 !py-2.5 !text-[14px]">Ask about this home</button></div>
               ) : (
                 <form onSubmit={sendWant} className="flex flex-col gap-2">
                   <p className="font-display text-[18px] tracking-tight">Tell us how to reach you</p>
@@ -161,8 +160,10 @@ const FindDetail = () => {
                   <button className="rh-btn-primary self-start inline-flex items-center gap-2"><Phone size={15} /> Send</button>
                 </form>
               )}
-            </div>
+            </section>
 
+            <details className="mt-7 border-t border-hairline pt-5">
+              <summary className="cursor-pointer text-[15px] font-medium">Buying costs & affordability</summary>
             {hist.length > 1 && <div className="mt-6 text-[13px] text-ink-muted">Price history: {hist.map((h, i) => <span key={i}>{i > 0 && " → "}{eur(h.price_eur)} <span className="opacity-70">({new Date(h.created_at).toLocaleDateString("en-GB", { month: "short", year: "2-digit" })})</span></span>)}{hist[hist.length - 1].price_eur < Math.max(...hist.map((h) => h.price_eur)) && <span className="ml-2 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">Price drop</span>}</div>}
 
             {f.price_eur && COSTS[c] && (
@@ -179,20 +180,26 @@ const FindDetail = () => {
               </div>
             )}
 
-            <div className="mt-8">
-              <CaptureInline
-                source="find_page"
-                title="More like this one, every week"
-                subtitle={`We hunt homes like this ${f.price_eur ? "around " + eur(f.price_eur) : ""} and send the 10 best every week, with the address and the original link.`}
-                cta="Send me the top 10" />
-            </div>
+            </details>
+            <details className="mt-5 border-t border-hairline pt-5">
+              <summary className="cursor-pointer text-[15px] font-medium">Get updates about homes like this</summary>
+            {user && phone === null && (
+              <form onSubmit={savePhone} className="mt-6 border border-hairline rounded-2xl bg-white p-5 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex-1"><p className="font-display text-[17px] tracking-tight inline-flex items-center gap-2"><MessageCircle size={16} /> Get a WhatsApp when this drops in price or a similar one appears</p><p className="text-[13px] text-ink-muted">Optional. We do not call unless you ask us to.</p></div>
+                <div className="flex gap-2"><input type="tel" value={phoneIn} onChange={(e) => setPhoneIn(e.target.value)} placeholder="+34 6…" className="w-40 border border-hairline rounded-full px-4 py-2.5 text-[14px] bg-paper outline-none focus:border-ink" /><button className="rh-btn-primary !px-4 !py-2.5 !text-[14px]">Add</button></div>
+              </form>
+            )}
+              <div className="mt-4"><CaptureInline source="find_page" title="More like this one" subtitle="Get the best homes we find in your inbox." cta="Send me the top 10" /></div>
+            </details>
 
             <p className="mt-6 text-[12px] text-ink-muted leading-relaxed">{f.source_account !== "idealista" && <>Published by {sourceName}{when ? ` on ${when}` : ""}. </>}Price as shown in the source listing; it may have changed or sold. RealHunt links to listings, it does not sell them. Verify ownership, taxes and condition before paying anyone.</p>
           </div>
 
           <aside className="hidden md:block">
             <div className="sticky top-24 border border-hairline rounded-2xl bg-white p-6 flex flex-col gap-3">
+              <p className="text-[13px] text-ink-muted">Take the next step</p>
               {user ? <button onClick={open} className="rh-btn-primary inline-flex items-center justify-center gap-2">Open original listing <ExternalLink size={15} /></button> : <Gate />}
+              <a href="#contact-home" className="text-center text-[13px] underline underline-offset-4 py-2">Ask about this home</a>
               <div className="grid grid-cols-2 gap-2">
                 <button onClick={toggleFav} className={`h-11 rounded-xl border inline-flex items-center justify-center gap-2 text-[14px] ${fav ? "border-red-500 text-red-500" : "border-hairline hover:border-ink"}`}><Heart size={15} fill={fav ? "currentColor" : "none"} /> {fav ? "Saved" : "Save"}</button>
                 <button onClick={share} className="h-11 rounded-xl border border-hairline hover:border-ink inline-flex items-center justify-center gap-2 text-[14px]">{copied ? <Check size={15} /> : <Share2 size={15} />} {copied ? "Copied" : "Share"}</button>
@@ -204,25 +211,17 @@ const FindDetail = () => {
         {similar.length > 0 && (
           <div className="px-4 md:px-0 mt-12 mb-10">
             <h2 className="font-display text-[22px] tracking-tight mb-4">Similar homes</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {similar.map((s) => { const sc = norm(s.country_guess); return (
-                <Link key={s.id} to={s.id === "ebc" ? "/ecobeachcity" : `/find/${s.shortcode}`} onClick={() => track("similar_click", { find: s.shortcode })} className="group relative block rounded-2xl overflow-hidden bg-hairline/30 aspect-[4/5]">
-                  <img src={s.image_urls![0]} srcSet={srcSet(s.image_urls![0])} sizes="(min-width:768px) 25vw, 50vw" alt="" loading="lazy" className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.04] transition-transform duration-500" />
-                  <div className={`absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent ${s.price_in_image ? "h-1/4" : "h-1/2"}`} />
-                  <span className="absolute top-2.5 right-2.5 px-2 py-1 rounded-full bg-white/90 text-ink text-[11px] font-medium shadow">{FLAG[sc] || "🌍"} {sc}</span>
-                  {s.price_eur && <span className="absolute top-2.5 left-2.5 px-2 py-1 rounded-full bg-white text-ink text-[12px] font-semibold tabular-nums shadow">{eur(s.price_eur)}</span>}
-                  <div className="absolute inset-x-0 bottom-0 p-3 text-white"><p className="text-[12px] mt-1 opacity-90 truncate">{s.location_name || sc}</p></div>
+                <Link key={s.id} to={s.id === "ebc" ? "/ecobeachcity" : `/find/${s.shortcode}`} onClick={() => track("similar_click", { find: s.shortcode })} className="group block rounded-2xl overflow-hidden bg-white border border-hairline hover:shadow-md transition-shadow">
+                  <img src={s.image_urls![0]} srcSet={srcSet(s.image_urls![0])} sizes="(min-width:768px) 25vw, (min-width:640px) 50vw, 100vw" alt={s.location_name || sc} loading="lazy" className="w-full aspect-[4/3] object-cover" />
+                  <ListingInfo home={s} />
                 </Link>); })}
             </div>
           </div>
         )}
       </div>
 
-      <div className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur border-t border-hairline px-4 py-3 flex items-center gap-3">
-        <button onClick={toggleFav} aria-label="Save" className={`h-11 w-11 rounded-full border inline-flex items-center justify-center ${fav ? "border-red-500 text-red-500" : "border-hairline"}`}><Heart size={16} fill={fav ? "currentColor" : "none"} /></button>
-        <button onClick={share} aria-label="Share" className="h-11 w-11 rounded-full border border-hairline inline-flex items-center justify-center">{copied ? <Check size={16} /> : <Share2 size={16} />}</button>
-        {user ? <button onClick={open} className="rh-btn-primary flex-1 !py-3 inline-flex items-center justify-center gap-2">Open listing <ExternalLink size={15} /></button> : <button onClick={() => setAuth(true)} className="rh-btn-primary flex-1 !py-3 inline-flex items-center justify-center gap-2"><Lock size={15} /> Get all the info, free</button>}
-      </div>
       <AuthModal open={auth} onClose={() => setAuth(false)} redirect={next} find={shortcode} />
     </div>
   );

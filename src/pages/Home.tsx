@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import ListingInfo from "@/components/realhunt/ListingInfo";
 import PhotoGallery from "@/components/realhunt/PhotoGallery";
 import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
@@ -61,7 +62,7 @@ const CaptureCard = () => {
     // tailwind.config.ts now declares ink/paper/hairline, but this stays inline so the card can
     // never silently disappear again.
     <div ref={ref} style={{ background: "linear-gradient(140deg,#16150F 0%,#232220 55%,#141414 100%)" }}
-      className="relative rounded-2xl overflow-hidden aspect-[4/5] text-white p-4 md:p-5 flex flex-col justify-between shadow-sm [content-visibility:auto]">
+      className="relative rounded-2xl overflow-hidden min-h-[360px] h-full text-white p-5 md:p-6 flex flex-col justify-between shadow-sm [content-visibility:auto]">
       <div>
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-[11px] font-medium"><Sparkles size={11} /> Free</span>
         <p className="mt-3 font-display text-[19px] md:text-[21px] leading-[1.15] tracking-tight">{head.text || "Get the top 10 homes. Free, by email."}</p>
@@ -132,19 +133,12 @@ const GatedCard = ({ f }: { f: IG }) => {
   return (
     <>
       <div ref={ref}>
-        <a href={`/find/${f.shortcode}`} onClick={openGate} className="group relative block rounded-2xl overflow-hidden bg-hairline/30 aspect-[4/5] shadow-sm hover:shadow-xl transition-shadow cursor-pointer [content-visibility:auto]">
-          <img src={u} srcSet={srcSet(u)} sizes="(min-width:1024px) 300px, (min-width:768px) 33vw, 50vw" alt="" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/5 to-black/10" />
-          <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1 px-2 py-1 rounded-full bg-black/60 text-white text-[11px] font-medium backdrop-blur-sm"><Lock size={11} /> Members only</span>
-          <div className="absolute right-2.5 bottom-16 flex flex-col items-center gap-3.5 text-white drop-shadow">
-            <span className="flex flex-col items-center gap-0.5"><Heart size={20} /><span className="text-[10.5px] font-medium">{f.likes ? f.likes.toLocaleString() : ""}</span></span>
-            <span className="flex flex-col items-center gap-0.5"><MessageCircle size={20} /></span>
-            <span className="flex flex-col items-center gap-0.5"><Share2 size={20} /></span>
+        <a href={`/find/${f.shortcode}`} onClick={openGate} className="group relative block h-full rounded-2xl overflow-hidden bg-white border border-hairline shadow-sm hover:shadow-lg transition-shadow cursor-pointer">
+          <div className="relative aspect-[4/3] overflow-hidden bg-hairline/30">
+            <img src={u} srcSet={srcSet(u)} sizes="(min-width:1280px) 300px, (min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" alt={f.location_name || "Home"} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+            <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 text-ink text-[11px] font-medium"><Lock size={11} /> Members only</span>
           </div>
-          <div className="absolute inset-x-0 bottom-0 p-3 md:p-4 pr-12 text-white">
-            <p className="text-[16px] md:text-[18px] font-semibold tabular-nums">{eur(f.price_eur!)}</p>
-            <p className="text-[12px] md:text-[13px] opacity-90 line-clamp-1">{f.location_name}</p>
-          </div>
+          <ListingInfo home={f} />
         </a>
       </div>
 
@@ -190,7 +184,7 @@ const Home = () => {
   const [beach, setBeach] = useState(false);
   const [maxP, setMaxP] = useState<number>(0);
   const [q, setQ] = useState("");
-  const [showSearch, setShowSearch] = useState(false);
+  const navigate = useNavigate();
   const [limit, setLimit] = useState(PAGE);
   const [sort, setSort] = useState<"best" | "cheap" | "new">(() => { try { return (sessionStorage.getItem("rh_sort") as any) || "best"; } catch { return "best"; } });
   const [favs, setFavs] = useState<Set<string>>(new Set());
@@ -241,7 +235,7 @@ const Home = () => {
   }, [user]);
 
   const allCountries = useMemo(() => { const m: Record<string, number> = { Indonesia: 1 }; finds.forEach((f) => { const c = norm(f.country_guess); m[c] = (m[c] || 0) + 1; }); return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([c]) => c); }, [finds]);
-  useEffect(() => { if (cParam) setCountry(unslug(cParam, allCountries)); }, [cParam, allCountries]);
+  useEffect(() => { setCountry(cParam ? unslug(cParam, allCountries) : "All"); }, [cParam, allCountries]);
   useEffect(() => {
     const t = aParam ? `Cheap homes spotted by @${aParam}` : country !== "All" ? `Cheap houses in ${country} under €60,000` : "Real homes under €60,000";
     document.title = `${t} · RealHunt`;
@@ -252,7 +246,7 @@ const Home = () => {
     const qq = q.trim().toLowerCase();
     const boost = (f: IG) => (pref.country && pref.country !== "Any" && norm(f.country_guess) === pref.country ? 1 : 0) + (pref.budget && f.price_eur && f.price_eur <= pref.budget ? 0.5 : 0);
     let l = finds.filter((f) => (country === "All" || norm(f.country_guess) === country) && (!beach || f.is_beach) && f.price_eur != null && f.price_eur <= HOME_MAX_PRICE && (!maxP || f.price_eur <= maxP) && (!aParam || f.source_account === aParam) && (!qq || `${f.hook || ""} ${f.location_name || ""} ${f.country_guess || ""}`.toLowerCase().includes(qq)));
-    const ebcOk = !aParam && (country === "All" || country === "Indonesia") && (!maxP || EBC.price_eur! <= maxP) && (!qq || "sumba indonesia beach cabin ecobeachcity".includes(qq));
+    const ebcOk = (!beach || EBC.is_beach) && !aParam && (country === "All" || country === "Indonesia") && (!maxP || EBC.price_eur! <= maxP) && (!qq || "sumba indonesia beach cabin ecobeachcity".includes(qq));
     // Explicit ordering always wins over the personalised one: if someone asked for "cheapest",
     // showing them our idea of "best" instead is just ignoring them.
     if (sort === "cheap") l = [...l].sort((a, b) => (a.price_eur ?? Infinity) - (b.price_eur ?? Infinity));
@@ -263,8 +257,9 @@ const Home = () => {
     // asks for "cheapest" or "newest", pinning a €46,000 card above cheaper homes makes the sort look
     // broken — which is exactly what it looked like. Under an explicit sort they take their honest
     // place in the order like any other home.
-    if (ebcOk) {
-      const pinned = [{ ...EBC, id: "ebc-1" } as IG, { ...GATED } as IG];
+    const gatedOk = !aParam && !beach && (country === "All" || country === "Italy") && (!maxP || GATED.price_eur! <= maxP) && (!qq || "sellano umbria italy".includes(qq));
+    if (ebcOk || gatedOk) {
+      const pinned = [...(ebcOk ? [{ ...EBC, id: "ebc-1" } as IG] : []), ...(gatedOk ? [{ ...GATED } as IG] : [])];
       if (sort === "best") l = [...pinned, ...l];
       else if (sort === "cheap") l = [...pinned, ...l].sort((a, b) => (a.price_eur ?? Infinity) - (b.price_eur ?? Infinity));
       else l = [...pinned, ...l].sort((a, b) => new Date(b.posted_at || 0).getTime() - new Date(a.posted_at || 0).getTime());
@@ -281,10 +276,9 @@ const Home = () => {
     }
     // One "leave your email" card woven into the grid, wherever there is enough of a feed for it to feel earned.
     const capture = { id: "capture" } as unknown as IG;
-    l = l.length > 7 ? [...l.slice(0, 7), capture, ...l.slice(7)] : [...l, capture];
-    // Always the very last card, whatever the filters and ordering say. It is a promoted post that
-    // opens the original listing on Instagram rather than a page of ours.
-    if (!aParam) l = [...l, { ...COMO } as IG];
+    if (l.length > 0) l = l.length > 7 ? [...l.slice(0, 7), capture, ...l.slice(7)] : [...l, capture];
+    // Keep the promoted card last, and only when it matches the active filters.
+    if (!aParam && !beach && (country === "All" || country === "Italy") && (!maxP || COMO.price_eur! <= maxP) && (!qq || "lake como italy".includes(qq))) l = [...l, { ...COMO } as IG];
     return l;
   }, [finds, country, beach, maxP, q, aParam, pref, loaded, sort]);
   useEffect(() => { setLimit(PAGE); }, [country, beach, maxP, q, aParam, sort]);
@@ -341,87 +335,70 @@ const Home = () => {
     return out;
   }, [q, finds]);
 
-  const chip = (on: boolean) => `shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border text-[13px] transition-colors ${on ? "bg-sky-500 text-white border-sky-500" : "border-hairline hover:border-ink bg-white"}`;
+  const chip = (on: boolean) => `shrink-0 inline-flex items-center gap-1.5 px-2.5 md:px-3.5 py-2 rounded-full border text-[12px] md:text-[13px] transition-colors ${on ? "bg-sky-500 text-white border-sky-500" : "border-hairline hover:border-ink bg-white"}`;
 
   return (
     <div className="min-h-screen bg-paper text-ink">
       <RHNav />
 
-      <section className="max-w-[1240px] mx-auto px-4 md:px-6 pt-8 md:pt-12 pb-4">
+      <section className="max-w-[1240px] mx-auto px-4 md:px-6 pt-6 md:pt-10 pb-3">
         <h1 className="font-display text-[clamp(30px,5vw,54px)] leading-[1.02] tracking-tight max-w-[22ch]">{aParam ? <>Spotted by <span className="text-ink-muted">@{aParam}</span></> : country !== "All" ? <>Cheap homes in {country}.</> : <>{headline.text || "Real homes under €60,000."}</>}</h1>
-        <p className="mt-3 text-[15px] md:text-[17px] text-ink-muted">{loaded ? shown.length : "…"} homes{isFinite(min) && <> · cheapest <b className="text-ink">{eur(min)}</b></>}{aParam && <> · <a href={`https://instagram.com/${aParam}`} target="_blank" rel="noreferrer" className="underline">follow them on Instagram</a></>}</p>
+        <p className="mt-3 text-[15px] md:text-[17px] text-ink-muted">{loaded ? shown.filter((f) => f.id !== "capture").length : "…"} homes{isFinite(min) && <> · cheapest <b className="text-ink">{eur(min)}</b></>}{aParam && <> · <a href={`https://instagram.com/${aParam}`} target="_blank" rel="noreferrer" className="underline">follow them on Instagram</a></>}</p>
       </section>
 
-      <section className="sticky top-16 z-30 bg-paper/90 backdrop-blur border-b border-hairline">
-        <div className="max-w-[1240px] mx-auto px-4 md:px-6 py-3 flex gap-2 overflow-x-auto scrollbar-none items-center">
-          <button onClick={() => setShowSearch((v) => !v)} aria-label="Search" className={chip(showSearch || !!q)}><Search size={14} />{q ? q : ""}</button>
-          <button onClick={() => setBeach((v) => !v)} aria-pressed={beach} className={chip(beach)}><Waves size={14} /> Beach</button>
-          {PRICE_CHIPS.map(([l, v]) => <button key={v} onClick={() => setMaxP(maxP === v ? 0 : v)} aria-pressed={maxP === v} className={chip(maxP === v)}>{l}</button>)}
-          <span className="w-px bg-hairline shrink-0 self-stretch my-1" />
-          {([["best", "Best"], ["cheap", "Cheapest"], ["new", "Newest"]] as [typeof sort, string][]).map(([k, l]) => (
-            <button key={k} onClick={() => setSort(k)} aria-pressed={sort === k} className={chip(sort === k)}>{k === "best" && <ArrowDownWideNarrow size={14} />}{l}</button>
-          ))}
-          <Link to="/map" className={chip(false)}><MapIcon size={14} /> Map</Link>
-          <Link to="/swipe" className={chip(false) + " md:hidden"}><Layers size={14} /> Swipe</Link>
-          <span className="w-px bg-hairline shrink-0 self-stretch my-1" />
-          {["All", ...allCountries].map((k) => (
-            <Link key={k} to={k === "All" ? "/" : `/country/${slug(k)}`} onClick={() => setCountry(k)} aria-pressed={country === k} className={chip(country === k)}>{k !== "All" && <span>{FLAG[k] || "🌍"}</span>}{k}</Link>
-          ))}
-        </div>
-        {showSearch && (
-          <div className="max-w-[1240px] mx-auto px-4 md:px-6 pb-3">
-            <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="castle, lake, ocean, Tuscany, land…" className="w-full md:w-96 border border-hairline rounded-full px-4 py-2.5 text-[14px] bg-white outline-none focus:border-ink" />
-            {suggestions.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {suggestions.map((sg) => <button key={sg} onClick={() => setQ(sg)} className="px-3 py-1.5 rounded-full border border-hairline bg-white text-[12.5px] hover:border-ink transition-colors">{sg}</button>)}
-              </div>
-            )}
+      <section aria-label="Find a home" className="max-w-[1240px] mx-auto px-4 md:px-6 pt-2 pb-5">
+        <div className="rounded-2xl border border-hairline bg-white p-3 md:p-5 shadow-sm">
+          <div className="relative">
+            <Search size={19} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted pointer-events-none" />
+            <input type="search" aria-label="Search homes" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Country, city or type of home" className="w-full rounded-xl border border-hairline bg-paper py-3 pl-11 pr-8 text-[16px] outline-none focus:border-ink focus:ring-2 focus:ring-ink/10" />
+            {q && <button onClick={() => setQ("")} aria-label="Clear search" className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-hairline/40"><X size={16} /></button>}
           </div>
-        )}
+          {suggestions.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{suggestions.map((sg) => <button key={sg} onClick={() => setQ(sg)} className="px-3 py-1.5 rounded-full border border-hairline text-[12px] hover:border-ink">{sg}</button>)}</div>}
+          <div className="mt-3 md:mt-4 grid gap-3 md:gap-4 grid-cols-[minmax(0,1fr)_auto] lg:grid-cols-[200px_1fr_auto]">
+            <label className="col-start-1 row-start-1 flex flex-col gap-2 text-[11px] font-medium uppercase tracking-[0.12em] text-ink-muted">Country
+              <select aria-label="Country" value={country} onChange={(e) => { const value = e.target.value; setCountry(value); navigate(value === "All" ? "/" : `/country/${slug(value)}`); }} className="w-full h-10 rounded-xl border border-hairline bg-white px-3 text-[14px] normal-case tracking-normal text-ink outline-none focus:border-ink">
+                {["All", ...allCountries].map((k) => <option key={k} value={k}>{k === "All" ? "All countries" : `${FLAG[k] || ""} ${k}`}</option>)}
+              </select>
+            </label>
+            <fieldset className="col-span-2 row-start-2 lg:col-span-1 lg:col-start-2 lg:row-start-1 min-w-0"><legend className="mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-ink-muted">Budget</legend><div className="flex flex-wrap gap-1.5 md:gap-2">{PRICE_CHIPS.map(([l, v]) => <button key={v} onClick={() => setMaxP(maxP === v ? 0 : v)} aria-pressed={maxP === v} className={chip(maxP === v)}>{l}</button>)}</div></fieldset>
+            <fieldset className="col-start-2 row-start-1 lg:col-start-3"><legend className="mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-ink-muted">Features</legend><button onClick={() => setBeach((v) => !v)} aria-pressed={beach} className={chip(beach)}><Waves size={14} /> Beach</button></fieldset>
+          </div>
+          {(q || maxP || beach || country !== "All") && <button className="mt-4 text-[13px] underline underline-offset-4 text-ink-muted hover:text-ink" onClick={() => { setQ(""); setMaxP(0); setBeach(false); setCountry("All"); navigate("/"); }}>Reset filters</button>}
+        </div>
+        <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+          <div role="group" aria-label="Sort homes" className="flex flex-wrap items-center gap-1 rounded-xl border border-hairline bg-white p-1">
+            {([["best", "Best"], ["cheap", "Cheapest"], ["new", "Newest"]] as [typeof sort, string][]).map(([k, label]) => <button key={k} onClick={() => setSort(k)} aria-pressed={sort === k} className={`px-3.5 py-2 rounded-lg text-[13px] font-medium transition-colors ${sort === k ? "bg-ink text-white" : "text-ink-muted hover:bg-paper"}`}>{label}</button>)}
+          </div>
+          <div className="hidden sm:flex gap-2"><Link to="/map" className={chip(false)}><MapIcon size={14} /> Map view</Link><Link to="/swipe" className={chip(false)}><Layers size={14} /> Swipe</Link></div>
+        </div>
       </section>
 
-      <section className="max-w-[1240px] mx-auto px-4 md:px-6 py-6">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
+      <section className="max-w-[1240px] mx-auto px-4 md:px-6 pt-1 pb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 items-start">
           {shown.slice(0, limit).map((f, i) => {
             if (f.id === "capture") return <CaptureCard key="capture" />;
             if (f.id === "gated-1") return <GatedCard key="gated-1" f={f} />;
             if (f.id === "como-1") return (
-              <Link key="como-1" to="/lake-como" onClick={() => track("card_click", { find: "como-1", meta: { promoted: true } })}
-                className="group relative block rounded-2xl overflow-hidden bg-hairline/30 aspect-[4/5] shadow-sm hover:shadow-xl transition-shadow [content-visibility:auto]">
-                <img src={f.image_urls![0]} srcSet={srcSet(f.image_urls![0])} sizes="(min-width:1024px) 300px, (min-width:768px) 33vw, 50vw" alt="" loading="lazy" decoding="async" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
-                <span className="absolute top-2.5 right-2.5 px-2 py-1 rounded-full bg-white/90 text-ink text-[11px] font-medium shadow">🇮🇹 Italy</span>
-                <span className="absolute top-2.5 left-2.5 px-2 py-1 rounded-full bg-white/90 text-ink text-[11px] font-medium shadow inline-flex items-center gap-1"><Sparkles size={10} /> Featured</span>
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent h-1/3 pointer-events-none" />
-                <div className="absolute inset-x-0 bottom-0 text-white p-3 md:p-4 pointer-events-none">
-                  <p className="font-display text-[15px] md:text-[17px] leading-snug drop-shadow">A home on Lake Como for €46,000</p>
-                </div>
+              <Link key="como-1" to="/lake-como" onClick={() => track("card_click", { find: "como-1", meta: { promoted: true } })} className="group relative block rounded-2xl overflow-hidden bg-white border border-hairline shadow-sm hover:shadow-lg transition-shadow">
+                <div className="relative aspect-[4/3] overflow-hidden"><img src={f.image_urls![0]} srcSet={srcSet(f.image_urls![0])} sizes="(min-width:1280px) 300px, (min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" alt="Home at Lake Como" loading="lazy" className="w-full h-full object-cover" /><span className="absolute top-3 left-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px]">Featured</span></div>
+                <ListingInfo home={f} />
               </Link>
             );
             const c = norm(f.country_guess);
             const to = f.id.startsWith("ebc") ? "/ecobeachcity" : `/find/${f.shortcode}`;
             return (
-              <article key={f.id} data-listing-href={to}
-                className={`group relative block rounded-2xl overflow-hidden bg-hairline/30 shadow-sm hover:shadow-xl transition-shadow [content-visibility:auto] aspect-[4/5]`}>
-                <PhotoGallery images={f.image_urls!} title={f.location_name || c} compact href={to} eager={i < 8} onOpen={() => track("card_click", { find: f.shortcode })} />
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent h-1/3 pointer-events-none" />
-                <span className={`absolute pointer-events-none top-2.5 right-2.5 px-2 py-1 rounded-full bg-white/90 text-ink font-medium shadow text-[11px]`}>{FLAG[c] || "🌍"} {c}</span>
-                <div className={`absolute pointer-events-none left-2.5 flex gap-1 flex-wrap max-w-[70%] top-2.5`}>
-                  {f.price_eur && <span className={`px-2 py-1 rounded-full bg-white text-ink font-semibold tabular-nums shadow text-[12px]`}>{eur(f.price_eur)}</span>}
-                  {f.is_beach && <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full bg-sky-500/90 text-white font-medium shadow text-[11px]`}><Waves size={11} /> Beach</span>}
-                  {isNew(f.posted_at) && <span className="px-2 py-1 rounded-full bg-emerald-500/90 text-white text-[11px] font-medium shadow">New</span>}
-                  {drops.has(f.id) && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/90 text-white text-[11px] font-medium shadow"><TrendingDown size={11} /> Price drop</span>}
-                  {(f as any).verified && <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-ink/90 text-white text-[11px] font-medium shadow"><BadgeCheck size={11} /> Verified</span>}
-                  {((f as any).status === "sold" || (f as any).status === "reserved") && <span className="px-2 py-1 rounded-full bg-red-600/90 text-white text-[11px] font-medium shadow uppercase">{(f as any).status}</span>}
+              <article key={f.id} data-listing-href={to} className="group relative rounded-2xl overflow-hidden bg-white border border-hairline shadow-sm hover:shadow-lg transition-shadow">
+                <div className="relative aspect-[4/3] overflow-hidden bg-hairline/30">
+                  <PhotoGallery images={f.image_urls!} title={f.location_name || c} compact href={to} eager={i < 8} onOpen={() => track("card_click", { find: f.shortcode })} />
+                  {((f as any).status === "sold" || (f as any).status === "reserved") ? <span className="absolute pointer-events-none top-3 left-3 rounded-full bg-red-600 text-white px-2.5 py-1 text-[11px] uppercase">{(f as any).status}</span> : drops.has(f.id) ? <span className="absolute pointer-events-none top-3 left-3 rounded-full bg-amber-100 text-amber-900 px-2.5 py-1 text-[11px]">Price drop</span> : isNew(f.posted_at) ? <span className="absolute pointer-events-none top-3 left-3 rounded-full bg-white/95 text-ink px-2.5 py-1 text-[11px]">New</span> : null}
+                  {!f.id.startsWith("ebc") && <button onClick={(e) => toggleFav(e, f)} aria-label="Save" aria-pressed={favs.has(f.id)} className={`absolute top-3 right-3 z-10 h-10 w-10 rounded-full bg-white/95 shadow inline-flex items-center justify-center hover:scale-105 transition-transform ${favs.has(f.id) ? "text-red-500" : "text-ink"}`}><Heart size={17} fill={favs.has(f.id) ? "currentColor" : "none"} /></button>}
                 </div>
-                {!f.id.startsWith("ebc") && <button onClick={(e) => toggleFav(e, f)} aria-label="Save" className={`absolute bottom-3 right-3 z-10 h-9 w-9 rounded-full bg-white/90 shadow inline-flex items-center justify-center transition-transform hover:scale-110 active:scale-95 ${favs.has(f.id) ? "text-red-500" : "text-ink"}`}><Heart size={16} fill={favs.has(f.id) ? "currentColor" : "none"} /></button>}
-                <div className="absolute inset-x-0 bottom-0 text-white p-3 md:p-4 pr-14 pointer-events-none">
-                  <p className={`opacity-95 leading-snug text-[12px] md:text-[13px] line-clamp-2`}>{f.hook || f.location_name || (f.caption ? cleanCap(f.caption).slice(0, 48) : "") || c}</p>
-                </div>
+                <Link to={to} onClick={() => track("card_click", { find: f.shortcode })} className="block hover:bg-paper/40"><ListingInfo home={f} /></Link>
               </article>
             );
           })}
         </div>
-        {!loaded && <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">{[...Array(8)].map((_, i) => <div key={i} className="aspect-[4/5] rounded-2xl bg-hairline/50 animate-pulse" />)}</div>}
+        {!loaded && <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 items-start">{[...Array(8)].map((_, i) => <div key={i} className="h-[370px] rounded-2xl bg-hairline/50 animate-pulse" />)}</div>}
         {loaded && shown.length === 0 && <p className="text-ink-muted py-10 text-center">Nothing matches. Try another filter.</p>}
         <div ref={sentinel} className="h-2" />
       </section>
