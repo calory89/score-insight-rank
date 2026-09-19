@@ -24,6 +24,8 @@ const FindDetail = () => {
   const backTo = safeReturnPath(route.state?.catalogUrl || readSession("rh_catalog_url", "/"));
   const { user } = useAuth();
   const [f, setF] = useState<IG | null | undefined>(undefined);
+  const [loadError, setLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [fav, setFav] = useState(false);
   const [copied, setCopied] = useState(false);
   const [auth, setAuth] = useState(false);
@@ -42,9 +44,20 @@ const FindDetail = () => {
 
   useEffect(() => {
     let active = true;
-    setF(undefined); setFav(false); setHist([]); setSimilar([]); setWant(false); setWantSent(false); setViews(null); setSocial(null); window.scrollTo(0, 0);
-    db.from("ig_finds").select("*").eq("shortcode", shortcode).maybeSingle().then(({ data }: any) => {
+    let timedOut = false;
+    const controller = new AbortController();
+    setLoadError(false);
+    const timeout = window.setTimeout(() => {
       if (!active) return;
+      timedOut = true;
+      controller.abort();
+      setLoadError(true);
+    }, 15000);
+    setF(undefined); setFav(false); setHist([]); setSimilar([]); setWant(false); setWantSent(false); setViews(null); setSocial(null); window.scrollTo(0, 0);
+    Promise.resolve(db.from("ig_finds").select("*").eq("shortcode", shortcode).maybeSingle().abortSignal(controller.signal)).then(({ data, error }: any) => {
+      if (!active || timedOut) return;
+      clearTimeout(timeout);
+      if (error) { setLoadError(true); return; }
       setF(data || null);
       document.title = data ? `${data.price_eur ? eur(data.price_eur) + " · " : ""}${data.location_name || data.country_guess || "Cheap home"} · RealHunt` : "Not found · RealHunt";
       if (!data) return;
@@ -58,9 +71,9 @@ const FindDetail = () => {
         if (data.price_eur) { const near = l.filter((x) => x.price_eur && Math.abs(x.price_eur - data.price_eur) / data.price_eur <= 0.3); if (near.length >= 3) l = near; }
         setSimilar([...l.slice(0, 3), EBC]);
       });
-    });
-    return () => { active = false; };
-  }, [shortcode]);
+    }).catch(() => { if (active && !timedOut) setLoadError(true); }).finally(() => clearTimeout(timeout));
+    return () => { active = false; clearTimeout(timeout); controller.abort(); };
+  }, [shortcode, loadAttempt]);
   useEffect(() => {
     if (!user || !f) return;
     db.from("find_events").insert({ user_id: user.id, find_id: f.id, event: "view" }).then(() => {});
@@ -97,7 +110,8 @@ const FindDetail = () => {
   };
   const savePhone = async (e: React.FormEvent) => { e.preventDefault(); if (!user || !phoneIn) return; setPhone(phoneIn); track("phone_added"); try { await db.from("profiles").update({ phone: phoneIn }).eq("user_id", user.id); } catch {} };
 
-  if (f === undefined) return <div className="min-h-screen bg-paper"><RHNav /><div className="max-w-[1140px] mx-auto px-6 py-10"><div className="aspect-[4/3] md:aspect-[21/9] rounded-2xl bg-hairline/50 animate-pulse" /></div></div>;
+  if (loadError) return <div className="min-h-screen bg-paper text-ink"><RHNav /><div role="alert" className="max-w-[720px] mx-auto px-6 py-20"><h1 className="font-display text-[26px]">This home could not load.</h1><p className="mt-3 text-ink-muted">The request took too long or the connection failed. This does not mean the home has been removed.</p><div className="mt-6 flex flex-wrap items-center gap-5"><button onClick={() => setLoadAttempt(value => value + 1)} className="rh-btn-primary">Try again</button><Link to={backTo} className="underline text-ink-muted">Back to results</Link></div></div></div>;
+  if (f === undefined) return <div className="min-h-screen bg-paper"><RHNav /><div role="status" aria-label="Loading home" className="max-w-[1140px] mx-auto px-6 py-10"><Link to={backTo} className="inline-flex mb-5 underline text-ink-muted">Back to results</Link><p className="mb-4 text-sm text-ink-muted">Loading this home…</p><div className="aspect-[4/3] md:aspect-[21/9] rounded-2xl bg-hairline/50 animate-pulse" /></div></div>;
   if (f === null) return <div className="min-h-screen bg-paper text-ink"><RHNav /><div className="max-w-[720px] mx-auto px-6 py-20"><p className="font-display text-[26px]">This one is gone.</p><Link to="/" className="underline text-ink-muted">Back to the deals</Link></div></div>;
 
   const imgs = f.image_urls || [];
