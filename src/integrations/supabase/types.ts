@@ -715,6 +715,45 @@ export type Database = {
         }
         Relationships: []
       }
+      experiments: {
+        Row: {
+          active: boolean
+          created_at: string
+          goals: string[]
+          key: string
+          kind: string
+          name: string
+          notes: string | null
+          page: string
+          updated_at: string
+          variants: Json
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          goals?: string[]
+          key: string
+          kind?: string
+          name: string
+          notes?: string | null
+          page?: string
+          updated_at?: string
+          variants?: Json
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          goals?: string[]
+          key?: string
+          kind?: string
+          name?: string
+          notes?: string | null
+          page?: string
+          updated_at?: string
+          variants?: Json
+        }
+        Relationships: []
+      }
       favorites: {
         Row: {
           analysis_id: string
@@ -966,36 +1005,54 @@ export type Database = {
       }
       introductions: {
         Row: {
+          buyer_budget: number | null
+          buyer_contact: string | null
+          buyer_country: string | null
           buyer_fp: string
+          contact_revealed_at: string | null
           created_at: string
           created_by: string | null
+          dev_notes: string | null
           fee_eur: number
           from_developer: string | null
           id: string
+          next_action_at: string | null
           note: string | null
           status: string
           to_developer: string
           updated_at: string
         }
         Insert: {
+          buyer_budget?: number | null
+          buyer_contact?: string | null
+          buyer_country?: string | null
           buyer_fp: string
+          contact_revealed_at?: string | null
           created_at?: string
           created_by?: string | null
+          dev_notes?: string | null
           fee_eur?: number
           from_developer?: string | null
           id?: string
+          next_action_at?: string | null
           note?: string | null
           status?: string
           to_developer: string
           updated_at?: string
         }
         Update: {
+          buyer_budget?: number | null
+          buyer_contact?: string | null
+          buyer_country?: string | null
           buyer_fp?: string
+          contact_revealed_at?: string | null
           created_at?: string
           created_by?: string | null
+          dev_notes?: string | null
           fee_eur?: number
           from_developer?: string | null
           id?: string
+          next_action_at?: string | null
           note?: string | null
           status?: string
           to_developer?: string
@@ -1158,9 +1215,108 @@ export type Database = {
         }
         Relationships: []
       }
+      network_deals: {
+        Row: {
+          buyer_fp: string | null
+          commission_eur: number
+          commission_pct: number
+          created_by: string | null
+          currency: string
+          developer_id: string
+          exempt: boolean
+          exempt_reason: string | null
+          id: string
+          introduction_id: string | null
+          invoiced_at: string | null
+          notes: string | null
+          paid_at: string | null
+          reported_at: string
+          sale_price: number
+          source_developer_id: string | null
+          source_paid_at: string | null
+          source_share_eur: number
+          source_share_pct: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_fp?: string | null
+          commission_eur?: number
+          commission_pct?: number
+          created_by?: string | null
+          currency?: string
+          developer_id: string
+          exempt?: boolean
+          exempt_reason?: string | null
+          id?: string
+          introduction_id?: string | null
+          invoiced_at?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          reported_at?: string
+          sale_price: number
+          source_developer_id?: string | null
+          source_paid_at?: string | null
+          source_share_eur?: number
+          source_share_pct?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_fp?: string | null
+          commission_eur?: number
+          commission_pct?: number
+          created_by?: string | null
+          currency?: string
+          developer_id?: string
+          exempt?: boolean
+          exempt_reason?: string | null
+          id?: string
+          introduction_id?: string | null
+          invoiced_at?: string | null
+          notes?: string | null
+          paid_at?: string | null
+          reported_at?: string
+          sale_price?: number
+          source_developer_id?: string | null
+          source_paid_at?: string | null
+          source_share_eur?: number
+          source_share_pct?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "network_deals_developer_id_fkey"
+            columns: ["developer_id"]
+            isOneToOne: false
+            referencedRelation: "network_developers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "network_deals_introduction_id_fkey"
+            columns: ["introduction_id"]
+            isOneToOne: false
+            referencedRelation: "introductions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "network_deals_source_developer_id_fkey"
+            columns: ["source_developer_id"]
+            isOneToOne: false
+            referencedRelation: "network_developers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       network_developers: {
         Row: {
+          agreement_accepted_at: string | null
+          agreement_signer: string | null
+          agreement_ua: string | null
+          agreement_version: string | null
           avg_ticket: number | null
+          commission_pct: number
           company: string | null
           contact_name: string | null
           country: string | null
@@ -1168,19 +1324,26 @@ export type Database = {
           email: string | null
           fee_eur: number
           id: string
+          mode: string | null
           notes: string | null
           phone: string | null
           price_from: number | null
           project_name: string | null
           project_url: string | null
           share_default: boolean
+          source_share_pct: number
           status: string
           updated_at: string
           user_id: string
           website: string | null
         }
         Insert: {
+          agreement_accepted_at?: string | null
+          agreement_signer?: string | null
+          agreement_ua?: string | null
+          agreement_version?: string | null
           avg_ticket?: number | null
+          commission_pct?: number
           company?: string | null
           contact_name?: string | null
           country?: string | null
@@ -1188,19 +1351,26 @@ export type Database = {
           email?: string | null
           fee_eur?: number
           id?: string
+          mode?: string | null
           notes?: string | null
           phone?: string | null
           price_from?: number | null
           project_name?: string | null
           project_url?: string | null
           share_default?: boolean
+          source_share_pct?: number
           status?: string
           updated_at?: string
           user_id: string
           website?: string | null
         }
         Update: {
+          agreement_accepted_at?: string | null
+          agreement_signer?: string | null
+          agreement_ua?: string | null
+          agreement_version?: string | null
           avg_ticket?: number | null
+          commission_pct?: number
           company?: string | null
           contact_name?: string | null
           country?: string | null
@@ -1208,12 +1378,14 @@ export type Database = {
           email?: string | null
           fee_eur?: number
           id?: string
+          mode?: string | null
           notes?: string | null
           phone?: string | null
           price_from?: number | null
           project_name?: string | null
           project_url?: string | null
           share_default?: boolean
+          source_share_pct?: number
           status?: string
           updated_at?: string
           user_id?: string
@@ -1223,22 +1395,46 @@ export type Database = {
       }
       newsletter_subscribers: {
         Row: {
+          country: string | null
           created_at: string
           email: string
           id: string
+          meta: Json | null
+          path: string | null
+          sid: string | null
           source: string | null
+          status: string
+          tz: string | null
+          user_id: string | null
+          welcome_sent_at: string | null
         }
         Insert: {
+          country?: string | null
           created_at?: string
           email: string
           id?: string
+          meta?: Json | null
+          path?: string | null
+          sid?: string | null
           source?: string | null
+          status?: string
+          tz?: string | null
+          user_id?: string | null
+          welcome_sent_at?: string | null
         }
         Update: {
+          country?: string | null
           created_at?: string
           email?: string
           id?: string
+          meta?: Json | null
+          path?: string | null
+          sid?: string | null
           source?: string | null
+          status?: string
+          tz?: string | null
+          user_id?: string | null
+          welcome_sent_at?: string | null
         }
         Relationships: []
       }
@@ -1272,6 +1468,108 @@ export type Database = {
           title?: string
           type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      outreach_regions: {
+        Row: {
+          areas: string
+          country: string
+          exhausted_at: string | null
+          language: string
+          notes: string | null
+          ord: number
+          region: string
+          sent: number
+          status: string
+        }
+        Insert: {
+          areas: string
+          country: string
+          exhausted_at?: string | null
+          language: string
+          notes?: string | null
+          ord: number
+          region: string
+          sent?: number
+          status?: string
+        }
+        Update: {
+          areas?: string
+          country?: string
+          exhausted_at?: string | null
+          language?: string
+          notes?: string | null
+          ord?: number
+          region?: string
+          sent?: number
+          status?: string
+        }
+        Relationships: []
+      }
+      outreach_targets: {
+        Row: {
+          area: string | null
+          batch: number | null
+          company: string
+          contact_name: string | null
+          country: string
+          created_at: string | null
+          domain: string
+          email: string
+          error: string | null
+          hook: string | null
+          id: string
+          label: string | null
+          language: string
+          region: string
+          sent_at: string | null
+          source_page: string | null
+          status: string
+          subject: string | null
+          website: string | null
+        }
+        Insert: {
+          area?: string | null
+          batch?: number | null
+          company: string
+          contact_name?: string | null
+          country?: string
+          created_at?: string | null
+          domain: string
+          email: string
+          error?: string | null
+          hook?: string | null
+          id?: string
+          label?: string | null
+          language?: string
+          region?: string
+          sent_at?: string | null
+          source_page?: string | null
+          status?: string
+          subject?: string | null
+          website?: string | null
+        }
+        Update: {
+          area?: string | null
+          batch?: number | null
+          company?: string
+          contact_name?: string | null
+          country?: string
+          created_at?: string | null
+          domain?: string
+          email?: string
+          error?: string | null
+          hook?: string | null
+          id?: string
+          label?: string | null
+          language?: string
+          region?: string
+          sent_at?: string | null
+          source_page?: string | null
+          status?: string
+          subject?: string | null
+          website?: string | null
         }
         Relationships: []
       }
@@ -1846,6 +2144,33 @@ export type Database = {
         }
         Relationships: []
       }
+      rh_stats_cache: {
+        Row: {
+          drops: string[]
+          drops_at: string
+          id: number
+          live: number
+          stats_at: string
+          today: number
+        }
+        Insert: {
+          drops?: string[]
+          drops_at?: string
+          id: number
+          live?: number
+          stats_at?: string
+          today?: number
+        }
+        Update: {
+          drops?: string[]
+          drops_at?: string
+          id?: number
+          live?: number
+          stats_at?: string
+          today?: number
+        }
+        Relationships: []
+      }
       saved_searches: {
         Row: {
           agent_id: string
@@ -2330,17 +2655,43 @@ export type Database = {
       }
     }
     Functions: {
+      admin_experiments: {
+        Args: { p_days?: number; p_exclude_tz?: string[] }
+        Returns: Json
+      }
       admin_introduce: {
         Args: { p_fp: string; p_from: string; p_note: string; p_to: string }
         Returns: Json
       }
+      admin_mark_share_paid: { Args: { p_id: string }; Returns: Json }
       admin_network: { Args: never; Returns: Json }
+      admin_set_deal: {
+        Args: { p_id: string; p_notes: string; p_status: string }
+        Returns: Json
+      }
       admin_set_find: {
         Args: { p_id: string; p_status: string; p_verified: boolean }
         Returns: undefined
       }
+      admin_set_intro_contact: {
+        Args: {
+          p_budget: number
+          p_contact: string
+          p_country: string
+          p_id: string
+        }
+        Returns: Json
+      }
       dev_check_fp: { Args: { p_fp: string }; Returns: Json }
       dev_overview: { Args: never; Returns: Json }
+      dev_report_sale: {
+        Args: { p_intro: string; p_note: string; p_price: number }
+        Returns: Json
+      }
+      dev_sign_agreement: {
+        Args: { p_name: string; p_ua: string; p_version: string }
+        Returns: Json
+      }
       dev_upload_fps: { Args: { p_rows: Json }; Returns: Json }
       find_card_html: {
         Args: { f: Database["public"]["Tables"]["ig_finds"]["Row"] }
@@ -2371,6 +2722,40 @@ export type Database = {
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_realhunt_admin: { Args: { _user_id: string }; Returns: boolean }
+      outreach_check: { Args: { p_secret: string }; Returns: undefined }
+      outreach_exclusions: { Args: { p_secret: string }; Returns: Json }
+      outreach_import: {
+        Args: { p_rows: Json; p_secret: string }
+        Returns: number
+      }
+      outreach_mark: {
+        Args: {
+          p_email: string
+          p_error?: string
+          p_secret: string
+          p_status: string
+          p_subject?: string
+        }
+        Returns: undefined
+      }
+      outreach_queued: {
+        Args: { p_batch?: number; p_secret: string }
+        Returns: Json
+      }
+      outreach_region_update: {
+        Args: {
+          p_notes?: string
+          p_ord: number
+          p_secret: string
+          p_status: string
+        }
+        Returns: undefined
+      }
+      outreach_status: { Args: { p_secret: string }; Returns: Json }
+      outreach_to_outbox: {
+        Args: { p_rows: Json; p_secret: string }
+        Returns: number
+      }
       process_email_outbox: { Args: never; Returns: number }
       public_saved: {
         Args: { uname: string }
@@ -2384,7 +2769,16 @@ export type Database = {
           shortcode: string
         }[]
       }
+      rh_confirm_email_html: { Args: { p_link: string }; Returns: string }
       rh_fp: { Args: { p: string }; Returns: string }
+      rh_live_stats: {
+        Args: never
+        Returns: {
+          live: number
+          today: number
+        }[]
+      }
+      rh_top10_html: { Args: never; Returns: string }
       send_brevo: {
         Args: { p_html: string; p_subject: string; p_to: string }
         Returns: undefined
