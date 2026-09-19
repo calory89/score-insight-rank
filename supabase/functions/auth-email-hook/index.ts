@@ -1,6 +1,7 @@
 import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { parseEmailWebhookPayload } from 'npm:@lovable.dev/email-js'
+import { sendAuthEmail, ResendDeliveryError } from '../_shared/resend-auth.ts'
 import { WebhookError, verifyWebhookRequest } from 'npm:@lovable.dev/webhooks-js'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { SignupEmail } from '../_shared/email-templates/signup.tsx'
@@ -11,6 +12,7 @@ import { EmailChangeEmail } from '../_shared/email-templates/email-change.tsx'
 import { ReauthenticationEmail } from '../_shared/email-templates/reauthentication.tsx'
 
 const corsHeaders = {
+  'X-RealHunt-Auth-Version': 'resend-v1',
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
     'authorization, x-client-info, apikey, content-type, x-lovable-signature, x-lovable-timestamp, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
@@ -37,9 +39,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 
 // Configuration
 const SITE_NAME = "RealHunt Score"
-const SENDER_DOMAIN = "notify.realhunt.co"
 const ROOT_DOMAIN = "realhunt.co"
-const FROM_DOMAIN = "realhunt.co" // Domain shown in From address (may be root or sender subdomain)
 
 function redactEmail(email: string | null | undefined): string {
   if (!email) return '***'
@@ -243,63 +243,59 @@ async function handleWebhook(req: Request): Promise<Response> {
     plainText: true,
   })
 
-  // Enqueue email for async processing by the dispatcher (process-email-queue).
+  // Send directly through Resend. The old queue RPC and
+  // dispatcher do not exist in this project, so enqueueing dropped every email.
+  // Reuse the signed event's run ID: provider retries must not send duplicates.
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
+  const messageId = `auth-${run_id}`
+  const log = async (status: string, errorMessage?: string) => {
+    try {
+      const { error } = await supabase.from('email_send_log').insert({
+        message_id: messageId,
+        template_name: emailType,
+        recipient_email: payload.data.email,
+        status,
+        ...(errorMessage ? { error_message: errorMessage } : {}),
+      })
+      if (error) console.error('Auth email log failed', { code: error.code, run_id })
+    } catch {
+      console.error('Auth email log unavailable', { run_id })
+    }
+  }
 
-  const messageId = crypto.randomUUID()
-
-  // Log pending BEFORE enqueue so we have a record even if enqueue crashes
-  await supabase.from('email_send_log').insert({
-    message_id: messageId,
-    template_name: emailType,
-    recipient_email: payload.data.email,
-    status: 'pending',
-  })
-
-  const { error: enqueueError } = await supabase.rpc('enqueue_email', {
-    queue_name: 'auth_emails',
-    payload: {
-      run_id,
-      message_id: messageId,
+  try {
+    await sendAuthEmail({
+      runId: run_id,
+      actionType: emailType,
       to: payload.data.email,
-      from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-      sender_domain: SENDER_DOMAIN,
       subject: EMAIL_SUBJECTS[emailType] || 'Notification',
       html,
       text,
-      purpose: 'transactional',
-      label: emailType,
-      queued_at: new Date().toISOString(),
-    },
-  })
-
-  if (enqueueError) {
-    console.error('Failed to enqueue auth email', {
-      code: enqueueError.code,
-      message: enqueueError.message,
-      run_id,
-      emailType,
+    }, {
+      apiKey: Deno.env.get('RESEND_API_KEY'),
+      from: Deno.env.get('RESEND_FROM_EMAIL'),
     })
-    await supabase.from('email_send_log').insert({
-      message_id: messageId,
-      template_name: emailType,
-      recipient_email: payload.data.email,
-      status: 'failed',
-      error_message: 'Failed to enqueue email',
-    })
-    return new Response(JSON.stringify({ error: 'Failed to enqueue email' }), {
-      status: 500,
+  } catch (error) {
+    const permanent = error instanceof ResendDeliveryError && !error.retryable
+    const detail = error instanceof ResendDeliveryError
+      ? error.message
+      : 'Email provider unavailable'
+    await log('failed', detail)
+    console.error('Auth email delivery failed', { run_id, emailType, permanent })
+    return new Response(JSON.stringify({ error: 'Failed to send email' }), {
+      status: permanent ? 400 : 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 
-  console.log('Auth email enqueued', { emailType, email_redacted: redactEmail(payload.data.email), run_id })
-
+  // A logging failure must not turn a successful delivery into a failed request.
+  await log('sent')
+  console.log('Auth email accepted', { emailType, run_id })
   return new Response(
-    JSON.stringify({ success: true, queued: true }),
+    JSON.stringify({ success: true, sent: true }),
     { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
   )
 }
