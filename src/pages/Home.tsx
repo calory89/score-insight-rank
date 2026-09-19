@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import PhotoGallery from "@/components/realhunt/PhotoGallery";
 import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
 import CaptureInline from "@/components/realhunt/CaptureInline";
@@ -11,7 +12,7 @@ import { useExperiment } from "@/lib/experiments";
 
 const PRICE_CHIPS: [string, number][] = [["< €10k", 10000], ["< €25k", 25000], ["< €50k", 50000], ["< €60k", 60000]];
 const PAGE = 40;
-const FEED_KEY = "rh_feed_v2";
+const FEED_KEY = "rh_feed_v3";
 const DROPS_KEY = "rh_drops_v1";
 const FEED_COLS = "id,source_account,shortcode,image_urls,posted_at,location_name,country_guess,price_eur,is_beach,price_in_image,sqm,bedrooms,hook,rank_score,verified,status";
 const VALID_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -208,7 +209,7 @@ const Home = () => {
     db.from("ig_finds").select(FEED_COLS).neq("status", "hidden").lte("price_eur", HOME_MAX_PRICE).order("rank_score", { ascending: false, nullsFirst: false }).limit(400)
       .then(({ data, error }: any) => {
         if (error && !data) { setLoaded(true); return; }
-        const rows = (data || []).filter((f: IG) => f.image_urls && f.image_urls.length).map((f: IG) => ({ ...f, image_urls: [f.image_urls![0]] })).sort((a: IG, b: IG) => score(b) - score(a));
+        const rows = (data || []).filter((f: IG) => f.image_urls && f.image_urls.length).sort((a: IG, b: IG) => score(b) - score(a));
         setFinds(rows); setLoaded(true);
         try { localStorage.setItem(FEED_KEY, JSON.stringify({ t: Date.now(), rows })); } catch {}
       });
@@ -398,14 +399,13 @@ const Home = () => {
             );
             const c = norm(f.country_guess);
             const to = f.id.startsWith("ebc") ? "/ecobeachcity" : `/find/${f.shortcode}`;
-            const u = f.image_urls![0];
             return (
-              <Link key={f.id} to={to} onClick={() => track("card_click", { find: f.shortcode })}
+              <article key={f.id} data-listing-href={to}
                 className={`group relative block rounded-2xl overflow-hidden bg-hairline/30 shadow-sm hover:shadow-xl transition-shadow [content-visibility:auto] aspect-[4/5]`}>
-                <img src={u} srcSet={srcSet(u)} sizes="(min-width:1024px) 300px, (min-width:768px) 33vw, 50vw" alt="" loading={i < 8 ? "eager" : "lazy"} {...((i < 4 ? { fetchpriority: "high" } : {}) as any)} decoding="async" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
+                <PhotoGallery images={f.image_urls!} title={f.location_name || c} compact href={to} eager={i < 8} onOpen={() => track("card_click", { find: f.shortcode })} />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent h-1/3 pointer-events-none" />
-                <span className={`absolute top-2.5 right-2.5 px-2 py-1 rounded-full bg-white/90 text-ink font-medium shadow text-[11px]`}>{FLAG[c] || "🌍"} {c}</span>
-                <div className={`absolute left-2.5 flex gap-1 flex-wrap max-w-[70%] top-2.5`}>
+                <span className={`absolute pointer-events-none top-2.5 right-2.5 px-2 py-1 rounded-full bg-white/90 text-ink font-medium shadow text-[11px]`}>{FLAG[c] || "🌍"} {c}</span>
+                <div className={`absolute pointer-events-none left-2.5 flex gap-1 flex-wrap max-w-[70%] top-2.5`}>
                   {f.price_eur && <span className={`px-2 py-1 rounded-full bg-white text-ink font-semibold tabular-nums shadow text-[12px]`}>{eur(f.price_eur)}</span>}
                   {f.is_beach && <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full bg-sky-500/90 text-white font-medium shadow text-[11px]`}><Waves size={11} /> Beach</span>}
                   {isNew(f.posted_at) && <span className="px-2 py-1 rounded-full bg-emerald-500/90 text-white text-[11px] font-medium shadow">New</span>}
@@ -417,7 +417,7 @@ const Home = () => {
                 <div className="absolute inset-x-0 bottom-0 text-white p-3 md:p-4 pr-14 pointer-events-none">
                   <p className={`opacity-95 leading-snug text-[12px] md:text-[13px] line-clamp-2`}>{f.hook || f.location_name || (f.caption ? cleanCap(f.caption).slice(0, 48) : "") || c}</p>
                 </div>
-              </Link>
+              </article>
             );
           })}
         </div>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import PhotoGallery from "@/components/realhunt/PhotoGallery";
 import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
 import CaptureInline from "@/components/realhunt/CaptureInline";
@@ -19,7 +20,6 @@ const FindDetail = () => {
   const [f, setF] = useState<IG | null | undefined>(undefined);
   const [fav, setFav] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [idx, setIdx] = useState(0);
   const [auth, setAuth] = useState(false);
   const [views, setViews] = useState<number | null>(null);
   const [social, setSocial] = useState<{ saves: number; asks: number } | null>(null);
@@ -34,7 +34,7 @@ const FindDetail = () => {
   const next = `/find/${shortcode}`;
 
   useEffect(() => {
-    setF(undefined); setIdx(0); window.scrollTo(0, 0);
+    setF(undefined); window.scrollTo(0, 0);
     db.from("ig_finds").select("*").eq("shortcode", shortcode).maybeSingle().then(({ data }: any) => {
       setF(data || null);
       document.title = data ? `${data.price_eur ? eur(data.price_eur) + " · " : ""}${data.location_name || data.country_guess || "Cheap home"} · RealHunt` : "Not found · RealHunt";
@@ -103,20 +103,11 @@ const FindDetail = () => {
       <div className="max-w-[1140px] mx-auto md:px-6 md:pt-6">
         <Link to="/" className="hidden md:inline-flex items-center gap-2 text-[13px] text-ink-muted hover:text-ink mb-4"><ArrowLeft size={14} /> All deals</Link>
 
-        <div className="md:rounded-2xl md:overflow-hidden bg-hairline/30">
-          <div className="flex md:hidden overflow-x-auto snap-x snap-mandatory scrollbar-none" onScroll={(e) => { const el = e.currentTarget; setIdx(Math.round(el.scrollLeft / el.clientWidth)); }}>
-            {imgs.map((u, i) => <img key={i} src={u} srcSet={srcSet(u)} sizes="100vw" alt="" className="w-full aspect-[4/5] object-cover snap-start shrink-0" loading={i ? "lazy" : "eager"} />)}
-          </div>
-          {imgs.length > 1 && <div className="md:hidden flex justify-center gap-1.5 py-2">{imgs.map((_, i) => <span key={i} className={`h-1.5 rounded-full transition-all ${i === idx ? "w-4 bg-ink" : "w-1.5 bg-ink/30"}`} />)}</div>}
-          <div className={`hidden md:grid gap-2 ${imgs.length > 1 ? "grid-cols-[2fr_1fr]" : "grid-cols-1"}`}>
-            {imgs[0] && <img src={imgs[0]} srcSet={srcSet(imgs[0])} sizes="(min-width:1024px) 720px, 60vw" alt="" className={`w-full object-cover rounded-l-none ${imgs.length > 1 ? "aspect-[4/3]" : "aspect-[16/9]"}`} />}
-            {imgs.length > 1 && <div className="grid gap-2 grid-rows-2">{imgs.slice(1, 3).map((u, i) => <img key={i} src={u} srcSet={srcSet(u)} sizes="(min-width:1024px) 360px, 30vw" alt="" className="w-full object-cover aspect-[16/9]" loading="lazy" />)}</div>}
-          </div>
-        </div>
+        <PhotoGallery key={f.shortcode} images={imgs} title={f.location_name || c} eager />
 
         <div className="px-4 md:px-0 grid md:grid-cols-[1.4fr_1fr] gap-10 mt-6">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted">{f.source_account === "idealista" ? "Found on " : "Spotted by "}<Link to={`/from/${f.source_account}`} className="underline">{sourceName}</Link>{when ? " · " + when : ""}</p>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted">{f.source_account === "idealista" ? "A RealHunt find" : <>Spotted by <Link to={`/from/${f.source_account}`} className="underline">{sourceName}</Link></>}{when ? " · " + when : ""}</p>
             <h1 className="font-display text-[clamp(38px,7vw,64px)] leading-none tracking-tight mt-3 tabular-nums">{f.price_eur ? eur(f.price_eur) : "Price in the listing"}</h1>
             {f.hook && <p className="text-[17px] mt-3 text-ink">{f.hook}</p>}
             {f.price_raw && f.price_eur && f.price_raw !== "seen in image" && <p className="text-[13px] text-ink-muted mt-1">Listed as {f.price_raw}, converted approximately.</p>}
@@ -196,7 +187,7 @@ const FindDetail = () => {
                 cta="Send me the top 10" />
             </div>
 
-            <p className="mt-6 text-[12px] text-ink-muted leading-relaxed">{f.source_account === "idealista" ? "Found on " : "Published by "}{sourceName}{when ? ` on ${when}` : ""}. Price as shown in the source listing; it may have changed or sold. RealHunt links to listings, it does not sell them. Verify ownership, taxes and condition before paying anyone.</p>
+            <p className="mt-6 text-[12px] text-ink-muted leading-relaxed">{f.source_account !== "idealista" && <>Published by {sourceName}{when ? ` on ${when}` : ""}. </>}Price as shown in the source listing; it may have changed or sold. RealHunt links to listings, it does not sell them. Verify ownership, taxes and condition before paying anyone.</p>
           </div>
 
           <aside className="hidden md:block">
