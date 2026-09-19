@@ -270,6 +270,14 @@ const Home = () => {
     }
     const seen = new Set<string>();
     l = l.filter((f) => (seen.has(f.id) ? false : (seen.add(f.id), true)));
+    // Editorial placement in the unfiltered Best feed. Keep explicit sorts and filters intact.
+    if (sort === "best" && country === "All" && !beach && !maxP && !qq && !aParam) {
+      const featured = l.findIndex((f) => f.shortcode === "acquappesa-sea-view-39000");
+      if (featured !== -1) {
+        const [home] = l.splice(featured, 1);
+        l.splice(Math.min(3, l.length), 0, home);
+      }
+    }
     // One "leave your email" card woven into the grid, wherever there is enough of a feed for it to feel earned.
     const capture = { id: "capture" } as unknown as IG;
     l = l.length > 7 ? [...l.slice(0, 7), capture, ...l.slice(7)] : [...l, capture];

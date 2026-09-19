@@ -93,6 +93,7 @@ const FindDetail = () => {
   const imgs = f.image_urls || [];
   const cap = cleanCap(f.caption);
   const c = norm(f.country_guess);
+  const sourceName = f.source_account === "idealista" ? "Idealista" : `@${f.source_account}`;
   const when = f.posted_at ? new Date(f.posted_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "";
   const Gate = () => <button onClick={() => { track("gate_click", { find: shortcode }); setAuth(true); }} className="rh-btn-primary inline-flex items-center justify-center gap-2"><Lock size={15} /> Sign in, get all the info free</button>;
 
@@ -115,13 +116,13 @@ const FindDetail = () => {
 
         <div className="px-4 md:px-0 grid md:grid-cols-[1.4fr_1fr] gap-10 mt-6">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted">Spotted by <Link to={`/from/${f.source_account}`} className="underline">@{f.source_account}</Link>{when ? " · " + when : ""}</p>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted">{f.source_account === "idealista" ? "Found on " : "Spotted by "}<Link to={`/from/${f.source_account}`} className="underline">{sourceName}</Link>{when ? " · " + when : ""}</p>
             <h1 className="font-display text-[clamp(38px,7vw,64px)] leading-none tracking-tight mt-3 tabular-nums">{f.price_eur ? eur(f.price_eur) : "Price in the listing"}</h1>
             {f.hook && <p className="text-[17px] mt-3 text-ink">{f.hook}</p>}
             {f.price_raw && f.price_eur && f.price_raw !== "seen in image" && <p className="text-[13px] text-ink-muted mt-1">Listed as {f.price_raw}, converted approximately.</p>}
             <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[14px] text-ink-muted">
               <span className="inline-flex items-center gap-1.5"><MapPin size={14} /> {FLAG[c]} {user ? (f.location_name || c) : c}{!user && <Lock size={12} className="ml-1" />}</span>
-              {f.sqm && <span>{f.sqm} m²</span>}{f.bedrooms && <span>{f.bedrooms} bedrooms</span>}
+              {f.sqm && <span>{f.sqm} m²</span>}{f.bedrooms && <span>{f.bedrooms} {f.bedrooms === 1 ? "bedroom" : "bedrooms"}</span>}
               {when && <span className="inline-flex items-center gap-1.5"><Calendar size={14} /> {when}</span>}
               {views != null && views > 0 && <span className="inline-flex items-center gap-1.5"><Eye size={14} /> {views.toLocaleString("en-GB")} viewed this week</span>}
               {social && social.saves > 0 && <span className="inline-flex items-center gap-1.5"><Heart size={14} /> {social.saves} saved it</span>}
@@ -195,7 +196,7 @@ const FindDetail = () => {
                 cta="Send me the top 10" />
             </div>
 
-            <p className="mt-6 text-[12px] text-ink-muted leading-relaxed">Published by @{f.source_account}{when ? ` on ${when}` : ""}. Price as shown that day, it may have changed or sold. RealHunt links to listings, it does not sell them. Verify ownership, taxes and condition before paying anyone.</p>
+            <p className="mt-6 text-[12px] text-ink-muted leading-relaxed">{f.source_account === "idealista" ? "Found on " : "Published by "}{sourceName}{when ? ` on ${when}` : ""}. Price as shown in the source listing; it may have changed or sold. RealHunt links to listings, it does not sell them. Verify ownership, taxes and condition before paying anyone.</p>
           </div>
 
           <aside className="hidden md:block">
