@@ -32,6 +32,7 @@ const CSS = `
 @keyframes rhPopMob{from{transform:translateY(100%)}to{transform:none}}
 @keyframes rhTick{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.15);opacity:1}100%{transform:scale(1)}}
 @keyframes rhShine{0%{transform:translateX(-120%) skewX(-18deg)}100%{transform:translateX(220%) skewX(-18deg)}}
+body:has([aria-label="Selected homes to compare"]) .rh-bar{display:none}
 .rh-bar{animation:rhBarIn .55s cubic-bezier(.2,.8,.2,1) both}
 .rh-pop{animation:rhPopIn .45s cubic-bezier(.2,.8,.2,1) both}
 .rh-veil{animation:rhFade .3s ease both}
@@ -117,7 +118,7 @@ const EmailCapture = () => {
       if (document.visibilityState !== "visible" || get(localStorage, K_SUB) === "1") { t = setTimeout(fire, 8000); return; }
       const ae = document.activeElement as HTMLElement | null;
       if (ae && /^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)) { t = setTimeout(fire, 10000); return; }
-      if (document.querySelector("[role=dialog]")) { t = setTimeout(fire, 10000); return; }
+      if (document.querySelector('[role=dialog], [aria-label="Selected homes to compare"]')) { t = setTimeout(fire, 10000); return; }
       set(sessionStorage, "rh_pop_seen", "1"); set(localStorage, K_POP, String(Date.now()));
       setPeek(feedPeek()); setPop(true); track("capture_show", { meta: { kind: "popup", exit: exitFired } });
     };

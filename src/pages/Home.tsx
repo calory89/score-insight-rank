@@ -247,7 +247,7 @@ const Home = () => {
     const io = new IntersectionObserver((e) => { if (e[0].isIntersecting) setLimit((n) => n + PAGE); }, { rootMargin: "600px" });
     io.observe(el); return () => io.disconnect();
   }, []);
-  const min = useMemo(() => finds.reduce((a, f) => (f.price_eur && f.price_eur < a ? f.price_eur : a), EBC.price_eur!), [finds]);
+  const min = useMemo(() => shown.reduce((a, f) => (f.price_eur && f.price_eur > 0 && f.price_eur < a ? f.price_eur : a), Infinity), [shown]);
 
   const toggleFav = async (e: React.MouseEvent, f: IG) => {
     e.preventDefault(); e.stopPropagation();
