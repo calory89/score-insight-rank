@@ -62,7 +62,7 @@ const CaptureCard = () => {
     // tailwind.config.ts now declares ink/paper/hairline, but this stays inline so the card can
     // never silently disappear again.
     <div ref={ref} style={{ background: "linear-gradient(140deg,#16150F 0%,#232220 55%,#141414 100%)" }}
-      className="relative rounded-2xl overflow-hidden min-h-[360px] h-full text-white p-5 md:p-6 flex flex-col justify-between shadow-sm [content-visibility:auto]">
+      className="col-span-2 sm:col-span-1 relative rounded-2xl overflow-hidden min-h-[300px] sm:min-h-[360px] h-full text-white p-5 md:p-6 flex flex-col justify-between shadow-sm [content-visibility:auto]">
       <div>
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-[11px] font-medium"><Sparkles size={11} /> Free</span>
         <p className="mt-3 font-display text-[19px] md:text-[21px] leading-[1.15] tracking-tight">{head.text || "Get the top 10 homes. Free, by email."}</p>
@@ -135,7 +135,7 @@ const GatedCard = ({ f }: { f: IG }) => {
       <div ref={ref}>
         <a href={`/find/${f.shortcode}`} onClick={openGate} className="group relative block h-full rounded-2xl overflow-hidden bg-white border border-hairline shadow-sm hover:shadow-lg transition-shadow cursor-pointer">
           <div className="relative aspect-[4/3] overflow-hidden bg-hairline/30">
-            <img src={u} srcSet={srcSet(u)} sizes="(min-width:1280px) 300px, (min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" alt={f.location_name || "Home"} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+            <img src={u} srcSet={srcSet(u)} sizes="(min-width:1280px) 300px, (min-width:1024px) 33vw, 50vw" alt={f.location_name || "Home"} loading="lazy" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
             <span className="absolute top-3 left-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 text-ink text-[11px] font-medium"><Lock size={11} /> Members only</span>
           </div>
           <ListingInfo home={f} />
@@ -374,13 +374,13 @@ const Home = () => {
       </section>
 
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pt-1 pb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 items-start">
+        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 items-start">
           {shown.slice(0, limit).map((f, i) => {
             if (f.id === "capture") return <CaptureCard key="capture" />;
             if (f.id === "gated-1") return <GatedCard key="gated-1" f={f} />;
             if (f.id === "como-1") return (
               <Link key="como-1" to="/lake-como" onClick={() => track("card_click", { find: "como-1", meta: { promoted: true } })} className="group relative block rounded-2xl overflow-hidden bg-white border border-hairline shadow-sm hover:shadow-lg transition-shadow">
-                <div className="relative aspect-[4/3] overflow-hidden"><img src={f.image_urls![0]} srcSet={srcSet(f.image_urls![0])} sizes="(min-width:1280px) 300px, (min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" alt="Home at Lake Como" loading="lazy" className="w-full h-full object-cover" /><span className="absolute top-3 left-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px]">Featured</span></div>
+                <div className="relative aspect-[4/3] overflow-hidden"><img src={f.image_urls![0]} srcSet={srcSet(f.image_urls![0])} sizes="(min-width:1280px) 300px, (min-width:1024px) 33vw, 50vw" alt="Home at Lake Como" loading="lazy" className="w-full h-full object-cover" /><span className="absolute top-3 left-3 rounded-full bg-white/95 px-2.5 py-1 text-[11px]">Featured</span></div>
                 <ListingInfo home={f} />
               </Link>
             );
@@ -391,28 +391,28 @@ const Home = () => {
                 <div className="relative aspect-[4/3] overflow-hidden bg-hairline/30">
                   <PhotoGallery images={f.image_urls!} title={f.location_name || c} compact href={to} eager={i < 8} onOpen={() => track("card_click", { find: f.shortcode })} />
                   {((f as any).status === "sold" || (f as any).status === "reserved") ? <span className="absolute pointer-events-none top-3 left-3 rounded-full bg-red-600 text-white px-2.5 py-1 text-[11px] uppercase">{(f as any).status}</span> : drops.has(f.id) ? <span className="absolute pointer-events-none top-3 left-3 rounded-full bg-amber-100 text-amber-900 px-2.5 py-1 text-[11px]">Price drop</span> : isNew(f.posted_at) ? <span className="absolute pointer-events-none top-3 left-3 rounded-full bg-white/95 text-ink px-2.5 py-1 text-[11px]">New</span> : null}
-                  {!f.id.startsWith("ebc") && <button onClick={(e) => toggleFav(e, f)} aria-label="Save" aria-pressed={favs.has(f.id)} className={`absolute top-3 right-3 z-10 h-10 w-10 rounded-full bg-white/95 shadow inline-flex items-center justify-center hover:scale-105 transition-transform ${favs.has(f.id) ? "text-red-500" : "text-ink"}`}><Heart size={17} fill={favs.has(f.id) ? "currentColor" : "none"} /></button>}
+                  {!f.id.startsWith("ebc") && <button onClick={(e) => toggleFav(e, f)} aria-label="Save" aria-pressed={favs.has(f.id)} className={`absolute top-2 right-2 sm:top-3 sm:right-3 z-10 h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-white/95 shadow inline-flex items-center justify-center hover:scale-105 transition-transform ${favs.has(f.id) ? "text-red-500" : "text-ink"}`}><Heart size={17} fill={favs.has(f.id) ? "currentColor" : "none"} /></button>}
                 </div>
                 <Link to={to} onClick={() => track("card_click", { find: f.shortcode })} className="block hover:bg-paper/40"><ListingInfo home={f} /></Link>
               </article>
             );
           })}
         </div>
-        {!loaded && <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 items-start">{[...Array(8)].map((_, i) => <div key={i} className="h-[370px] rounded-2xl bg-hairline/50 animate-pulse" />)}</div>}
+        {!loaded && <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5 items-start">{[...Array(8)].map((_, i) => <div key={i} className="h-[370px] rounded-2xl bg-hairline/50 animate-pulse" />)}</div>}
         {loaded && shown.length === 0 && <p className="text-ink-muted py-10 text-center">Nothing matches. Try another filter.</p>}
         <div ref={sentinel} className="h-2" />
       </section>
 
-      <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-6 grid md:grid-cols-2 gap-4">
+      <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="border border-hairline rounded-2xl bg-white p-6 md:p-8 flex flex-col gap-3">
           <p className="font-display text-[22px] tracking-tight inline-flex items-center gap-2"><Bell size={18} /> Tell me when a home like this appears</p>
           {alertSent ? <p className="inline-flex items-center gap-2 text-[15px]"><Check size={18} /> Alert on. We only email when there is a match.</p> : (
             <form onSubmit={saveAlert} className="flex flex-col gap-2">
               <div className="flex gap-2">
-                <select value={alert.country} onChange={(e) => setAlert({ ...alert, country: e.target.value })} className="flex-1 border border-hairline rounded-full px-4 py-3 text-[14px] bg-paper">{["Any", ...allCountries].map((c) => <option key={c}>{c}</option>)}</select>
-                <select value={alert.max} onChange={(e) => setAlert({ ...alert, max: Number(e.target.value) })} className="flex-1 border border-hairline rounded-full px-4 py-3 text-[14px] bg-paper">{PRICE_CHIPS.map(([l, v]) => <option key={v} value={v}>{l}</option>)}</select>
+                <select value={alert.country} onChange={(e) => setAlert({ ...alert, country: e.target.value })} className="min-w-0 flex-1 border border-hairline rounded-full px-4 py-3 text-[14px] bg-paper">{["Any", ...allCountries].map((c) => <option key={c}>{c}</option>)}</select>
+                <select value={alert.max} onChange={(e) => setAlert({ ...alert, max: Number(e.target.value) })} className="min-w-0 flex-1 border border-hairline rounded-full px-4 py-3 text-[14px] bg-paper">{PRICE_CHIPS.map(([l, v]) => <option key={v} value={v}>{l}</option>)}</select>
               </div>
-              <div className="flex gap-2"><input required type="email" value={alert.email} onChange={(e) => setAlert({ ...alert, email: e.target.value })} placeholder="you@email.com" className="flex-1 border border-hairline rounded-full px-4 py-3 text-[15px] bg-paper outline-none focus:border-ink" /><button className="rh-btn-primary !px-5">Alert me</button></div>
+              <div className="flex gap-2"><input required type="email" value={alert.email} onChange={(e) => setAlert({ ...alert, email: e.target.value })} placeholder="you@email.com" className="min-w-0 flex-1 border border-hairline rounded-full px-4 py-3 text-[15px] bg-paper outline-none focus:border-ink" /><button className="rh-btn-primary !px-5">Alert me</button></div>
             </form>
           )}
         </div>

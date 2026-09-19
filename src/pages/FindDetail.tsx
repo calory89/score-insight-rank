@@ -211,10 +211,10 @@ const FindDetail = () => {
         {similar.length > 0 && (
           <div className="px-4 md:px-0 mt-12 mb-10">
             <h2 className="font-display text-[22px] tracking-tight mb-4">Similar homes</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {similar.map((s) => { const sc = norm(s.country_guess); return (
                 <Link key={s.id} to={s.id === "ebc" ? "/ecobeachcity" : `/find/${s.shortcode}`} onClick={() => track("similar_click", { find: s.shortcode })} className="group block rounded-2xl overflow-hidden bg-white border border-hairline hover:shadow-md transition-shadow">
-                  <img src={s.image_urls![0]} srcSet={srcSet(s.image_urls![0])} sizes="(min-width:768px) 25vw, (min-width:640px) 50vw, 100vw" alt={s.location_name || sc} loading="lazy" className="w-full aspect-[4/3] object-cover" />
+                  <img src={s.image_urls![0]} srcSet={srcSet(s.image_urls![0])} sizes="(min-width:768px) 25vw, 50vw" alt={s.location_name || sc} loading="lazy" className="w-full aspect-[4/3] object-cover" />
                   <ListingInfo home={s} />
                 </Link>); })}
             </div>

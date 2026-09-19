@@ -14,7 +14,7 @@ const COUNTRIES = ["Any", "Italy", "Spain", "Portugal", "France", "Greece", "Jap
 // small photo card reused across the overview
 const Card = ({ f, badge }: { f: IG; badge?: string }) => { const c = norm(f.country_guess); return (
   <Link to={`/find/${f.shortcode}`} className="group block rounded-2xl overflow-hidden bg-white border border-hairline hover:shadow-md transition-shadow">
-    <div className="relative aspect-[4/3]"><img src={f.image_urls![0]} srcSet={srcSet(f.image_urls![0])} sizes="(min-width:768px) 22vw, (min-width:640px) 50vw, 100vw" alt={f.location_name || c} loading="lazy" className="w-full h-full object-cover" />{badge && <span className="absolute top-3 left-3 px-2 py-1 rounded-full bg-white/95 text-ink text-[11px]">{badge}</span>}</div>
+    <div className="relative aspect-[4/3]"><img src={f.image_urls![0]} srcSet={srcSet(f.image_urls![0])} sizes="(min-width:768px) 22vw, 50vw" alt={f.location_name || c} loading="lazy" className="w-full h-full object-cover" />{badge && <span className="absolute top-3 left-3 px-2 py-1 rounded-full bg-white/95 text-ink text-[11px]">{badge}</span>}</div>
     <ListingInfo home={f} />
   </Link>); };
 
@@ -89,13 +89,13 @@ const Account = () => {
 
               <div>
                 <div className="flex items-center justify-between mb-3"><h2 className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><Sparkles size={17} /> New this week for you</h2><Link to="/" className="text-[13px] underline text-ink-muted hover:text-ink">All homes</Link></div>
-                {fresh.length === 0 ? <div className="border border-hairline rounded-2xl bg-white p-6 text-[14px] text-ink-muted">Nothing new in your filter this week. <Link to="/account/alerts" className="underline text-ink">Set an alert</Link> and we email you the moment one lands.</div> : <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{fresh.slice(0, 8).map((f) => <Card key={f.id} f={f} badge={savedIds.has(f.id) ? "saved" : undefined} />)}</div>}
+                {fresh.length === 0 ? <div className="border border-hairline rounded-2xl bg-white p-6 text-[14px] text-ink-muted">Nothing new in your filter this week. <Link to="/account/alerts" className="underline text-ink">Set an alert</Link> and we email you the moment one lands.</div> : <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">{fresh.slice(0, 8).map((f) => <Card key={f.id} f={f} badge={savedIds.has(f.id) ? "saved" : undefined} />)}</div>}
               </div>
 
               {saved.length > 0 && (
                 <div>
                   <div className="flex items-center justify-between mb-3"><h2 className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><Heart size={17} /> Your saved homes</h2><Link to="/account/saved" className="text-[13px] underline text-ink-muted hover:text-ink inline-flex items-center gap-1">All {saved.length} <ChevronRight size={13} /></Link></div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{saved.slice(0, 4).map((f) => <Card key={f.id} f={f} />)}</div>
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">{saved.slice(0, 4).map((f) => <Card key={f.id} f={f} />)}</div>
                   {cheapestSaved && <p className="text-[13px] text-ink-muted mt-3">Cheapest on your list: <Link to={`/find/${cheapestSaved.shortcode}`} className="underline text-ink">{eur(cheapestSaved.price_eur!)} in {norm(cheapestSaved.country_guess)}</Link>. {saved.length >= 2 && <Link to="/account/saved" className="underline">Compare them side by side.</Link>}</p>}
                 </div>
               )}
@@ -103,7 +103,7 @@ const Account = () => {
               {recent.length > 0 && (
                 <div>
                   <div className="flex items-center justify-between mb-3"><h2 className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><Clock size={17} /> Recently viewed</h2></div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{recent.slice(0, 4).map((f) => <Card key={f.id} f={f} badge={savedIds.has(f.id) ? "saved" : undefined} />)}</div>
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">{recent.slice(0, 4).map((f) => <Card key={f.id} f={f} badge={savedIds.has(f.id) ? "saved" : undefined} />)}</div>
                 </div>
               )}
 
@@ -136,12 +136,12 @@ const Account = () => {
               <div className="flex flex-wrap items-center justify-between gap-3 mb-4"><h1 className="font-display text-[30px] tracking-tight">Saved homes</h1><div className="flex gap-2">{sel.length >= 2 && <Link to={`/compare-homes?ids=${sel.join(",")}`} className="rh-btn-primary !px-4 !py-2 !text-[13px] inline-flex items-center gap-1.5"><Columns size={14} /> Compare {sel.length}</Link>}{p?.username && <button onClick={async () => { const v = !p.saved_public; setP({ ...p, saved_public: v }); await db.from("profiles").update({ saved_public: v }).eq("user_id", user!.id); if (v) copy(`https://realhunt.co/c/${p.username}`, "col"); track("share_list", { meta: { v } }); }} className="px-4 py-2 rounded-full border border-hairline text-[13px] hover:border-ink inline-flex items-center gap-1.5"><Share2 size={14} /> {p.saved_public ? (copied === "col" ? "Link copied" : "Public, copy link") : "Share my list"}</button>}</div></div>
               {saved.length > 1 && <p className="text-[12px] text-ink-muted mb-3">Tick 2 or 3 homes to compare them side by side.{!p?.username && " Add a name in your profile to share your list."}</p>}
               {saved.length === 0 && <p className="text-ink-muted">Nothing saved yet. Tap the heart on any home. <Link to="/" className="underline text-ink">Browse deals</Link></p>}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {saved.map((f) => { const c = norm(f.country_guess); return (
                   <article key={f.id} className="relative rounded-2xl overflow-hidden bg-white border border-hairline">
-                    <Link to={`/find/${f.shortcode}`} className="block"><img src={f.image_urls![0]} srcSet={srcSet(f.image_urls![0])} sizes="(min-width:768px) 30vw, (min-width:640px) 50vw, 100vw" alt={f.location_name || c} loading="lazy" className="w-full aspect-[4/3] object-cover" /><ListingInfo home={f} /></Link>
-                    <div className="flex items-center justify-between gap-2 border-t border-hairline px-4 py-3">
-                      <label className="inline-flex items-center gap-2 text-[12px] cursor-pointer"><input type="checkbox" checked={sel.includes(f.shortcode)} onChange={(e) => setSel(e.target.checked ? [...sel, f.shortcode].slice(-3) : sel.filter((x) => x !== f.shortcode))} />Compare</label>
+                    <Link to={`/find/${f.shortcode}`} className="block"><img src={f.image_urls![0]} srcSet={srcSet(f.image_urls![0])} sizes="(min-width:768px) 30vw, 50vw" alt={f.location_name || c} loading="lazy" className="w-full aspect-[4/3] object-cover" /><ListingInfo home={f} /></Link>
+                    <div className="flex items-center justify-between gap-1 border-t border-hairline px-3 sm:px-4 py-3">
+                      <label className="inline-flex items-center gap-1.5 text-[11px] sm:text-[12px] cursor-pointer"><input type="checkbox" checked={sel.includes(f.shortcode)} onChange={(e) => setSel(e.target.checked ? [...sel, f.shortcode].slice(-3) : sel.filter((x) => x !== f.shortcode))} />Compare</label>
                       <button onClick={() => unsave(f)} aria-label="Remove" className="h-9 w-9 rounded-full inline-flex items-center justify-center text-red-500 hover:bg-paper"><Heart size={16} fill="currentColor" /></button>
                     </div>
                   </article>); })}
