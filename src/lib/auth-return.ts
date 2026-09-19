@@ -1,6 +1,6 @@
 // Only local destinations are allowed, including when a confirmation link is opened on another device.
 export function safeReturnPath(value: unknown): string {
-  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//") || /[\\\u0000-\u0020]/.test(value)) return "/";
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//") || value.includes("\\") || [...value].some(char => char.charCodeAt(0) <= 32)) return "/";
   try {
     const url = new URL(value, "https://realhunt.co");
     if (url.origin !== "https://realhunt.co" || url.pathname.startsWith("/auth/")) return "/";
@@ -9,7 +9,7 @@ export function safeReturnPath(value: unknown): string {
 }
 export function rememberReturn(to: string) {
   const value = safeReturnPath(to);
-  try { sessionStorage.setItem("rh_redirect", value); localStorage.setItem("rh_redirect", value); } catch {}
+  try { sessionStorage.setItem("rh_redirect", value); localStorage.setItem("rh_redirect", value); } catch { /* The email link also carries the destination. */ }
   return value;
 }
 export function readReturn(search = location.search) {
@@ -18,7 +18,7 @@ export function readReturn(search = location.search) {
   try { return safeReturnPath(sessionStorage.getItem("rh_redirect") || localStorage.getItem("rh_redirect")); } catch { return "/"; }
 }
 export function clearReturn() {
-  try { sessionStorage.removeItem("rh_redirect"); localStorage.removeItem("rh_redirect"); } catch {}
+  try { sessionStorage.removeItem("rh_redirect"); localStorage.removeItem("rh_redirect"); } catch { /* Storage can be unavailable in private browsing. */ }
 }
 export const confirmationUrl = (origin: string, to: string) => `${origin}/auth/callback?next=${encodeURIComponent(safeReturnPath(to))}`;
 export function authError(error: { message?: string; status?: number; code?: string } | null | undefined, signingIn = false) {

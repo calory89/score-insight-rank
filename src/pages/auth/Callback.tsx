@@ -3,7 +3,8 @@
 //
 // Whether a password exists is kept in the auth user's own metadata (has_password), set at the same
 // time as the password itself. No extra table, no extra column, and it travels with the session.
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import AuthModal from "@/components/realhunt/AuthModal";
@@ -15,7 +16,7 @@ const Callback = () => {
   const [phase, setPhase] = useState<"checking" | "password" | "error">("checking");
   const [destination] = useState(() => readReturn());
   const [retry, setRetry] = useState(false);
-  const finish = () => { clearReturn(); navigate(destination, { replace: true }); };
+  const finish = useCallback(() => { clearReturn(); navigate(destination, { replace: true }); }, [destination, navigate]);
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [busy, setBusy] = useState(false);
@@ -26,7 +27,7 @@ const Callback = () => {
     let active = true;
     const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
     if (hash.has("error") || new URLSearchParams(location.search).has("error")) { setPhase("error"); return; }
-    const handle = (session: any) => {
+    const handle = (session: Session | null) => {
       if (done || !active) return;
       done = true;
       if (!session) { setPhase("error"); return; }
@@ -37,7 +38,7 @@ const Callback = () => {
     supabase.auth.getSession().then(({ data }) => { if (data.session) handle(data.session); }).catch(() => { if (active) setPhase("error"); });
     const t = setTimeout(async () => { try { const { data } = await supabase.auth.getSession(); handle(data.session); } catch { if (active) setPhase("error"); } }, 8000);
     return () => { active = false; clearTimeout(t); subscription.unsubscribe(); };
-  }, [navigate]);
+  }, [finish]);
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,4 +86,3 @@ const Callback = () => {
 };
 
 export default Callback;
-
