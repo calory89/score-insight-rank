@@ -13,7 +13,7 @@ export const cleanCap = (c: string | null) => (c || "").replace(/🏠?\s*Listing
 
 export type IG = { id: string; source_account: string; shortcode: string; caption: string | null; image_urls: string[] | null; posted_at: string | null; location_name: string | null; country_guess: string | null; price_eur: number | null; price_raw: string | null; likes: number | null; is_beach: boolean | null; price_in_image?: boolean; lat?: number | null; lng?: number | null; sqm?: number | null; bedrooms?: number | null; post_url?: string; caption_en?: string | null; hook?: string | null; rank_score?: number | null };
 
-export const EBC: IG = { id: "ebc", source_account: "ecobeachcity", shortcode: "ecobeachcity", caption: "Beachfront cabin in a new eco village. 80-year lease that extends. Payable in instalments.", image_urls: ["/images/ebc/ebc-card-v2.webp"], posted_at: null, location_name: "Mamboro, Sumba", country_guess: "Indonesia", // €18,000 = the €11,500 cabin plus the €6,500 second-line plot. The cabin alone was misleading on a
+export const EBC: IG = { id: "ebc", source_account: "ecobeachcity", shortcode: "ecobeachcity", caption: "Beachfront cabin in a new eco village. 80-year lease that extends. Payable in instalments.", image_urls: ["/images/ebc/ebc-card-v2.webp", "/images/ebc/ebc-cabin-ext.webp", "/images/ebc/ebc-cabin-int.webp"], posted_at: null, location_name: "Mamboro, Sumba", country_guess: "Indonesia", // €18,000 = the €11,500 cabin plus the €6,500 second-line plot. The cabin alone was misleading on a
 // feed where every other card shows what you actually pay to own the thing.
   price_eur: 18000, price_raw: null, likes: null, is_beach: true, lat: -9.4, lng: 119.6,
   // The bottom line of a grid card renders `hook`. Every scraped find carries one that names the
@@ -129,3 +129,4 @@ export const subscribeEmail = async (email: string, source: string, userId?: str
 };
 
 export const lastEmail = () => { try { return localStorage.getItem("rh_last_email") || ""; } catch { return ""; } };
+

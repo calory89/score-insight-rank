@@ -1,12 +1,12 @@
-import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import PhotoGallery from "@/components/realhunt/PhotoGallery";
+import DecisionSummary from "@/components/realhunt/DecisionSummary";
+import { readSession } from "@/lib/catalog";
+import { safeReturnPath } from "@/lib/auth-return";
 import RHNav from "@/components/realhunt/RHNav";
 import { ArrowLeft, ExternalLink, MapPin, Waves, Plane, Check, Share2, CalendarCheck, ChevronLeft, ChevronRight } from "lucide-react";
-import { CALENDLY, track } from "@/lib/rh";
-const IMGS = [
-  ["/images/ebc/ebc-cabin-ext.webp", "The cabin at dusk, in the village"],
-  ["/images/ebc/ebc-cabin-int.webp", "Inside the cabin"],
-];
+import { CALENDLY, track, EBC } from "@/lib/rh";
 const FACILITIES = ["Beach club", "Beach restaurant", "Coworking", "Padel courts", "Beach volley", "Gym", "Yoga deck", "Pools", "Surf school", "Kids club", "Wellness and spa", "Organic farm", "Plaza and shops", "Medical point", "Coliving", "Nature reserve", "Horse trails", "Sunset bar", "Water sports", "Event lawn"];
 const PRICES: [string, string, string][] = [
   ["Cabin", "€11,500", "Two payments after the land. Built off-site, placed on your plot."],
@@ -17,27 +17,11 @@ const PRICES: [string, string, string][] = [
 ];
 
 const Ebc = () => {
-  const [i, setI] = useState(0);
-  const rail = useRef<HTMLDivElement>(null);
-  const goTo = (n: number) => {
-    const el = rail.current; if (!el) return;
-    const k = Math.max(0, Math.min(IMGS.length - 1, n));
-    el.scrollTo({ left: k * el.clientWidth, behavior: "smooth" });
-    setI(k);
-  };
+  const route = useLocation();
+  const backTo = safeReturnPath(route.state?.catalogUrl || readSession("rh_catalog_url", "/"));
   const [copied, setCopied] = useState(false);
   const [months, setMonths] = useState(24);
   useEffect(() => { track("ebc_view", { find: "ecobeachcity" }); }, []);
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement | null;
-      if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
-      if (e.key === "ArrowLeft") goTo(i - 1);
-      if (e.key === "ArrowRight") goTo(i + 1);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [i]);
   useEffect(() => { document.title = "€18,000 beachfront cabin and plot · Sumba, Indonesia · RealHunt"; window.scrollTo(0, 0); }, []);
   const share = () => { const url = location.href; if (navigator.share) { navigator.share({ title: "€18,000 beachfront cabin and plot in Sumba", url }).catch(() => {}); return; } navigator.clipboard?.writeText(url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); }); };
 
@@ -45,38 +29,9 @@ const Ebc = () => {
     <div className="min-h-screen bg-paper text-ink pb-24 md:pb-0">
       <RHNav />
       <div className="max-w-[1140px] mx-auto md:px-6 md:pt-6">
-        <Link to="/" className="hidden md:inline-flex items-center gap-2 text-[13px] text-ink-muted hover:text-ink mb-4"><ArrowLeft size={14} /> All deals</Link>
+        <Link to={backTo} className="inline-flex items-center gap-2 text-[13px] text-ink-muted hover:text-ink mb-4"><ArrowLeft size={14} /> Back to results</Link>
 
-        <div className="relative md:rounded-2xl md:overflow-hidden bg-hairline/30">
-          <div ref={rail} onScroll={(e) => { const el = e.currentTarget; setI(Math.round(el.scrollLeft / el.clientWidth)); }}
-            className="flex overflow-x-auto snap-x snap-mandatory scrollbar-none">
-            {IMGS.map(([u, a], k) => (
-              <img key={k} src={u} alt={a} loading={k ? "lazy" : "eager"} decoding="async"
-                className="w-full shrink-0 snap-start object-cover aspect-[4/5] md:aspect-[16/9]" />
-            ))}
-          </div>
-          <button type="button" onClick={() => goTo(i - 1)} disabled={i === 0} aria-label="Previous photo"
-            className="hidden md:inline-flex absolute left-3 top-1/2 -translate-y-1/2 h-11 w-11 items-center justify-center rounded-full bg-white/95 text-ink shadow-lg hover:bg-white transition disabled:opacity-0 disabled:pointer-events-none">
-            <ChevronLeft size={20} />
-          </button>
-          <button type="button" onClick={() => goTo(i + 1)} disabled={i === IMGS.length - 1} aria-label="Next photo"
-            className="hidden md:inline-flex absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 items-center justify-center rounded-full bg-white/95 text-ink shadow-lg hover:bg-white transition disabled:opacity-0 disabled:pointer-events-none">
-            <ChevronRight size={20} />
-          </button>
-          <span style={{ background: "rgba(0,0,0,.6)" }} className="absolute right-3 bottom-3 px-2.5 py-1 rounded-full text-white text-[12px] font-medium tabular-nums">{i + 1} / {IMGS.length}</span>
-        </div>
-        <div className="flex justify-center gap-1.5 py-2 md:hidden">
-          {IMGS.map((_, k) => <span key={k} style={{ background: k === i ? "#16150F" : "rgba(22,21,15,.3)" }} className={`h-1.5 rounded-full transition-all ${k === i ? "w-4" : "w-1.5"}`} />)}
-        </div>
-        <div className="hidden md:flex gap-2 mt-2 overflow-x-auto scrollbar-none">
-          {IMGS.map(([u, a], k) => (
-            <button key={k} type="button" onClick={() => goTo(k)} aria-label={`Photo ${k + 1}: ${a}`}
-              style={{ boxShadow: k === i ? "0 0 0 2px #16150F" : undefined }}
-              className={`shrink-0 h-16 w-24 rounded-lg overflow-hidden transition-opacity ${k === i ? "opacity-100" : "opacity-50 hover:opacity-90"}`}>
-              <img src={u} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
-            </button>
-          ))}
-        </div>
+        <PhotoGallery images={EBC.image_urls || []} title="Mamboro, Sumba" rememberKey="ecobeachcity" eager />
 
         <div className="px-4 md:px-0 grid md:grid-cols-[1.4fr_1fr] gap-10 mt-6">
           <div>
@@ -89,6 +44,7 @@ const Ebc = () => {
               <span className="inline-flex items-center gap-1.5"><Plane size={14} /> 1 hour flight from Bali</span>
             </div>
 
+            <DecisionSummary home={EBC} />
             <div className="mt-8">
               <h2 className="font-display text-[20px] tracking-tight mb-3">What it is</h2>
               <p className="text-[16px] leading-relaxed">A prefab cabin on your own plot, inside a 300-hectare eco village on the north coast of Sumba, with 2 km of beach on the Savu Sea. The village is planned with 100 facilities, from a beach club and coworking to padel courts and an organic farm. Sumba is the quiet island next to Bali: same flight time from Europe, one short hop more, a fraction of the price.</p>
@@ -146,3 +102,4 @@ const Ebc = () => {
   );
 };
 export default Ebc;
+

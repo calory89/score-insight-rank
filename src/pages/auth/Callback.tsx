@@ -6,17 +6,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import AuthModal from "@/components/realhunt/AuthModal";
+import { readReturn, clearReturn, authError } from "@/lib/auth-return";
 import { Loader2, Lock, Check } from "lucide-react";
-
-const readRedirect = () => {
-  let to = "";
-  try { to = sessionStorage.getItem("rh_redirect") || localStorage.getItem("rh_redirect") || ""; sessionStorage.removeItem("rh_redirect"); localStorage.removeItem("rh_redirect"); } catch {}
-  return to && to.startsWith("/") ? to : "/";
-};
 
 const Callback = () => {
   const navigate = useNavigate();
-  const [phase, setPhase] = useState<"checking" | "password">("checking");
+  const [phase, setPhase] = useState<"checking" | "password" | "error">("checking");
+  const [destination] = useState(() => readReturn());
+  const [retry, setRetry] = useState(false);
+  const finish = () => { clearReturn(); navigate(destination, { replace: true }); };
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [busy, setBusy] = useState(false);
@@ -24,17 +23,20 @@ const Callback = () => {
 
   useEffect(() => {
     let done = false;
+    let active = true;
+    const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
+    if (hash.has("error") || new URLSearchParams(location.search).has("error")) { setPhase("error"); return; }
     const handle = (session: any) => {
-      if (done) return;
+      if (done || !active) return;
       done = true;
-      if (!session) { navigate("/auth/sign-in", { replace: true }); return; }
-      if (session.user?.user_metadata?.has_password) { navigate(readRedirect(), { replace: true }); return; }
+      if (!session) { setPhase("error"); return; }
+      if (session.user?.user_metadata?.has_password) { finish(); return; }
       setPhase("password");
     };
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, s) => { if (s) handle(s); });
-    supabase.auth.getSession().then(({ data }) => { if (data.session) handle(data.session); });
-    const t = setTimeout(async () => { const { data } = await supabase.auth.getSession(); handle(data.session); }, 6000);
-    return () => { clearTimeout(t); subscription.unsubscribe(); };
+    supabase.auth.getSession().then(({ data }) => { if (data.session) handle(data.session); }).catch(() => { if (active) setPhase("error"); });
+    const t = setTimeout(async () => { try { const { data } = await supabase.auth.getSession(); handle(data.session); } catch { if (active) setPhase("error"); } }, 8000);
+    return () => { active = false; clearTimeout(t); subscription.unsubscribe(); };
   }, [navigate]);
 
   const save = async (e: React.FormEvent) => {
@@ -42,10 +44,13 @@ const Callback = () => {
     if (pw.length < 8) { setErr("Use at least 8 characters."); return; }
     if (pw !== pw2) { setErr("The two passwords do not match."); return; }
     setBusy(true); setErr("");
-    const { error } = await supabase.auth.updateUser({ password: pw, data: { has_password: true } });
-    setBusy(false);
-    if (error) setErr(error.message); else navigate(readRedirect(), { replace: true });
+    try {
+      const { error } = await supabase.auth.updateUser({ password: pw, data: { has_password: true } });
+      if (error) setErr(error.message); else finish();
+    } catch { setErr(authError(null)); } finally { setBusy(false); }
   };
+
+  if (phase === "error") return <div className="min-h-screen bg-paper text-ink grid place-items-center px-5"><div className="max-w-md py-12"><h1 className="font-display text-3xl">This link could not sign you in.</h1><p className="mt-3 text-ink-muted">It may have expired or already been used, or the connection was interrupted. Request a fresh link to return to the same home.</p><button onClick={() => setRetry(true)} className="rh-btn-primary mt-5">Request a new link</button><a href={destination} className="block mt-4 text-sm underline">Back to the home</a><AuthModal open={retry} onClose={() => setRetry(false)} redirect={destination} initialMode="up" title="Get a fresh sign-in link" subtitle="Your destination is saved. Use your email address to continue." /></div></div>;
 
   if (phase === "password") {
     const field = "w-full h-12 border border-hairline rounded-full pl-11 pr-4 text-[15px] bg-paper outline-none focus:border-ink";
@@ -80,3 +85,4 @@ const Callback = () => {
 };
 
 export default Callback;
+

@@ -1,6 +1,11 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ArrowLeft, ExternalLink, MapPin, BadgeCheck } from "lucide-react";
+import PhotoGallery from "@/components/realhunt/PhotoGallery";
+import DecisionSummary from "@/components/realhunt/DecisionSummary";
+import { readSession } from "@/lib/catalog";
+import { safeReturnPath } from "@/lib/auth-return";
+import { COMO } from "@/lib/catalog";
 import RHNav from "@/components/realhunt/RHNav";
 import CaptureInline from "@/components/realhunt/CaptureInline";
 import { eur, srcSet, track, totalCost, COSTS } from "@/lib/rh";
@@ -14,6 +19,8 @@ const PRICE = 46000;
 const PHOTO = "/finds/como-1.webp";
 
 const Como = () => {
+  const route = useLocation();
+  const backTo = safeReturnPath(route.state?.catalogUrl || readSession("rh_catalog_url", "/"));
   useEffect(() => {
     document.title = "€46,000 home on Lake Como, Italy · RealHunt";
     track("view", { find: "como-1", meta: { promoted: true } });
@@ -27,16 +34,13 @@ const Como = () => {
       <RHNav />
 
       <div className="max-w-[1100px] mx-auto px-4 md:px-6 pt-5">
-        <Link to="/" className="inline-flex items-center gap-1.5 text-[13.5px] text-ink-muted hover:text-ink transition-colors">
-          <ArrowLeft size={15} /> All homes
+        <Link to={backTo} className="inline-flex items-center gap-1.5 text-[13.5px] text-ink-muted hover:text-ink transition-colors">
+          <ArrowLeft size={15} /> Back to results
         </Link>
       </div>
 
       <section className="max-w-[1100px] mx-auto px-4 md:px-6 pt-4 pb-10">
-        <div className="rounded-2xl overflow-hidden bg-hairline/30">
-          <img src={PHOTO} srcSet={srcSet(PHOTO)} sizes="(min-width:1024px) 1060px, 100vw" alt="Home on Lake Como"
-            className="w-full object-cover aspect-[4/5] md:aspect-[16/9]" />
-        </div>
+        <PhotoGallery images={[PHOTO]} title="Lake Como, Italy" rememberKey="como-1" eager />
 
         <div className="grid md:grid-cols-[1fr_320px] gap-8 md:gap-10 mt-7">
           <div>
@@ -46,6 +50,7 @@ const Como = () => {
             <h1 className="font-display text-[clamp(34px,6vw,56px)] leading-none tracking-tight mt-3 tabular-nums">{eur(PRICE)}</h1>
             <p className="text-[15px] text-ink-muted mt-2">A home on Lake Como for the price of a car. Listed by an Italian agency on idealista.</p>
 
+            <DecisionSummary home={COMO} />
             <div className="mt-7 space-y-4 text-[15px] leading-relaxed">
               <p>
                 Lake Como is the part of Italy people put on a moodboard and assume they will never afford.
@@ -116,3 +121,4 @@ const Como = () => {
 };
 
 export default Como;
+

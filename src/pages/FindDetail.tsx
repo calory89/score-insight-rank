@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import ListingInfo from "@/components/realhunt/ListingInfo";
+import DecisionSummary from "@/components/realhunt/DecisionSummary";
+import { readSession } from "@/lib/catalog";
+import { safeReturnPath } from "@/lib/auth-return";
 import PhotoGallery from "@/components/realhunt/PhotoGallery";
 import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
@@ -17,6 +20,8 @@ const loadLeaflet = () => new Promise<any>((res) => {
 
 const FindDetail = () => {
   const { shortcode } = useParams();
+  const route = useLocation();
+  const backTo = safeReturnPath(route.state?.catalogUrl || readSession("rh_catalog_url", "/"));
   const { user } = useAuth();
   const [f, setF] = useState<IG | null | undefined>(undefined);
   const [fav, setFav] = useState(false);
@@ -32,11 +37,14 @@ const FindDetail = () => {
   const [phone, setPhone] = useState<string | null | undefined>(undefined);
   const [phoneIn, setPhoneIn] = useState("");
   const mapRef = useRef<HTMLDivElement>(null);
-  const next = `/find/${shortcode}`;
+  const next = `/find/${shortcode}#original-listing`;
+  useEffect(() => { if (user && f && route.hash === "#original-listing") requestAnimationFrame(() => document.getElementById("original-listing")?.scrollIntoView({ block: "center" })); }, [user, f, route.hash]);
 
   useEffect(() => {
-    setF(undefined); window.scrollTo(0, 0);
+    let active = true;
+    setF(undefined); setFav(false); setHist([]); setSimilar([]); setWant(false); setWantSent(false); setViews(null); setSocial(null); window.scrollTo(0, 0);
     db.from("ig_finds").select("*").eq("shortcode", shortcode).maybeSingle().then(({ data }: any) => {
+      if (!active) return;
       setF(data || null);
       document.title = data ? `${data.price_eur ? eur(data.price_eur) + " · " : ""}${data.location_name || data.country_guess || "Cheap home"} · RealHunt` : "Not found · RealHunt";
       if (!data) return;
@@ -51,6 +59,7 @@ const FindDetail = () => {
         setSimilar([...l.slice(0, 3), EBC]);
       });
     });
+    return () => { active = false; };
   }, [shortcode]);
   useEffect(() => {
     if (!user || !f) return;
@@ -79,7 +88,7 @@ const FindDetail = () => {
   const open = () => {
     if (!f) return; if (!user) { track("open_gate", { find: shortcode }); setAuth(true); return; }
     db.from("find_events").insert({ user_id: user.id, find_id: f.id, event: "click" }).then(() => {}); track("open_post", { find: shortcode });
-    window.open(f.post_url, "_blank", "noopener");
+    if (f.post_url && /^https?:\/\//i.test(f.post_url)) window.open(f.post_url, "_blank", "noopener,noreferrer");
   };
   const sendWant = async (e: React.FormEvent) => {
     e.preventDefault(); if (!f) return; const em = user?.email || wantF.email; if (!/.+@.+\..+/.test(em)) return;
@@ -102,9 +111,9 @@ const FindDetail = () => {
     <div className="min-h-screen bg-paper text-ink pb-10">
       <RHNav />
       <div className="max-w-[1140px] mx-auto md:px-6 md:pt-6">
-        <Link to="/" className="inline-flex items-center gap-2 text-[13px] text-ink-muted hover:text-ink my-4 mx-4 md:mx-0 md:mt-0"><ArrowLeft size={14} /> All deals</Link>
+        <Link to={backTo} className="inline-flex items-center gap-2 text-[13px] text-ink-muted hover:text-ink my-4 mx-4 md:mx-0 md:mt-0"><ArrowLeft size={14} /> Back to results</Link>
 
-        <PhotoGallery key={f.shortcode} images={imgs} title={f.location_name || c} eager />
+        <PhotoGallery key={f.shortcode} images={imgs} title={f.location_name || c} rememberKey={f.shortcode} eager />
 
         <div className="px-4 md:px-0 grid md:grid-cols-[minmax(0,1fr)_300px] gap-8 lg:gap-12 mt-8">
           <div>
@@ -123,6 +132,8 @@ const FindDetail = () => {
               {(f as any).verified && <span className="inline-flex items-center gap-1.5 text-ink font-medium">✓ Verified by RealHunt</span>}
               {((f as any).status === "sold" || (f as any).status === "reserved") && <span className="px-2 py-0.5 rounded-full bg-red-600 text-white text-[12px] uppercase">{(f as any).status}</span>}
             </div>
+
+            <DecisionSummary home={f} />
 
             <section className="mt-8 border-t border-hairline pt-7">
               <h2 className="font-display text-[20px] tracking-tight mb-3">About this home</h2>
@@ -143,6 +154,11 @@ const FindDetail = () => {
 
 
 
+            <section id="original-listing" className="mt-7 rounded-2xl border border-hairline bg-white p-5 scroll-mt-24">
+              <h2 className="text-lg font-medium mb-2">See the source listing</h2>
+              <p className="text-sm text-ink-muted mb-4">Check the latest details and contact the advertiser.</p>
+              {user ? <button onClick={open} disabled={!f.post_url} className="rh-btn-primary inline-flex items-center gap-2 disabled:opacity-50">{f.post_url ? "Open original listing" : "Source link not available"}<ExternalLink size={15} /></button> : <Gate />}
+            </section>
             <section id="contact-home" className="mt-8 border-t border-hairline pt-7 scroll-mt-24">
               <h2 className="font-display text-[22px] mb-4">Interested in this home?</h2>
               <div className="md:hidden mb-5">{user ? <button onClick={open} className="rh-btn-primary inline-flex items-center gap-2">Open listing <ExternalLink size={15} /></button> : <button onClick={() => setAuth(true)} className="rh-btn-primary inline-flex items-center gap-2"><Lock size={15} /> Get all the info, free</button>}<div className="flex gap-4 mt-4"><button onClick={toggleFav} className="text-[14px] inline-flex items-center gap-1.5"><Heart size={16} fill={fav ? "currentColor" : "none"} />{fav ? "Saved" : "Save"}</button><button onClick={share} className="text-[14px] inline-flex items-center gap-1.5"><Share2 size={16} />{copied ? "Copied" : "Share"}</button></div></div>
