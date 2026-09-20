@@ -3,6 +3,7 @@ import {
   screen,
   fireEvent,
   waitFor,
+  within,
   cleanup,
 } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
@@ -265,4 +266,41 @@ test('initial points preserve live voting even on old demo links', async () => {
   await screen.findByText(/Vote counted ✓ Share this find/);
   expect(mocks.rpc.mock.calls.some(([,p])=>p.p_action==='vote' && p.p_payload.value===1)).toBe(true);
   expect(screen.queryByText(/Real voting is disabled/)).toBeNull();
+});
+
+test('submission workspace shows photos, source links, status filters and image fallback', async()=>{
+  mocks.user={id:'signed-in'};
+  const previous=mocks.rpc.getMockImplementation()!;
+  mocks.rpc.mockImplementation((name:string,p:any)=>p.p_action==='dashboard'?Promise.resolve({data:{saved:[],deals:[{...deal,status:'approved',created_at:'2026-09-20'},{...deal,id:'pending',title:'Farm awaiting review',status:'pending',image_urls:[],created_at:'2026-09-20'}]}}):previous(name,p));
+  open('/hunt/mine');
+  const title=await screen.findByRole('heading',{name:'Stone home by the sea'});
+  const card=title.closest('article')!;
+  expect(within(card).getByRole('img')).toHaveAttribute('src',deal.image_urls[0]);
+  expect(within(card).getByRole('link',{name:'example.org'})).toHaveAttribute('href',deal.source_url);
+  fireEvent.error(within(card).getByRole('img'));
+  expect(within(card).getByText('Photo pending')).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Submission status'),{target:{value:'pending'}});
+  expect(screen.queryByRole('heading',{name:'Stone home by the sea'})).toBeNull();
+  expect(screen.getByRole('heading',{name:'Farm awaiting review'})).toBeInTheDocument();
+  fireEvent.change(screen.getByRole('searchbox',{name:'Search my submissions'}),{target:{value:'no matching property'}});
+  expect(screen.getByText('No submissions match your search.')).toBeInTheDocument();
+});
+test('admin workspace previews source photos and retains explicit approval actions',async()=>{
+  mocks.user={id:'admin'};
+  const previous=mocks.rpc.getMockImplementation()!;
+  mocks.rpc.mockImplementation(async(name:string,p:any)=>{
+    if(p.p_action==='session') return {data:{token:'admin-token',admin:true,votes:{},saved:[]}};
+    if(p.p_action==='queue') return {data:{pending:[{...deal,status:'pending',created_at:'2026-09-20'}],approved:[],reports:[]}};
+    return previous(name,p);
+  });
+  open('/hunt/admin');
+  const title=await screen.findByRole('heading',{name:deal.title});
+  const card=title.closest('article')!;
+  expect(within(card).getByRole('img')).toHaveAttribute('src',deal.image_urls[0]);
+  expect(within(card).getByRole('link',{name:'example.org'})).toHaveAttribute('href',deal.source_url);
+  expect(card.querySelector('details')).not.toHaveAttribute('open');
+  fireEvent.click(within(card).getByRole('button',{name:'Approve',exact:true}));
+  await waitFor(()=>expect(mocks.rpc).toHaveBeenCalledWith('community_api',expect.objectContaining({p_action:'moderate',p_payload:{id:deal.id,decision:'approve'}})));
+  fireEvent.change(screen.getByRole('searchbox',{name:'Search admin submissions'}),{target:{value:'unmatched'}});
+  expect(screen.getByText('No pending submissions match your search.')).toBeInTheDocument();
 });

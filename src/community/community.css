@@ -1510,3 +1510,35 @@
 .hunt-upvote strong { font-size: 15px; font-weight: 600; }
 .hunt-demo-caption { margin-left: 8px; font-size: 10px; color: var(--rh-ink-muted); }
 .hunt-card .hunt-card-bottom { justify-content: flex-start; gap: 16px; }
+
+/* Submission workspaces: image, source and review state remain visible together. */
+.hunt-crm-toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0; }
+.hunt-crm-search { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 180px; background: white; border: 1px solid var(--h-line); padding: 0 12px; border-radius: 9px; }
+.hunt-crm-search input { width: 100%; min-width: 0; min-height: 44px; border: 0; background: transparent; font-size: 16px; }
+.hunt-crm-toolbar select, .hunt-crm-toolbar > button { min-height: 44px; padding: 10px 14px; border: 1px solid var(--h-line); border-radius: 9px; background: white; }
+.hunt-crm-admin-search { margin: 18px 0 24px; max-width: 680px; }
+.hunt-crm-list { display: grid; gap: 14px; }
+.hunt-crm-card { display: grid; grid-template-columns: 170px minmax(0,1fr) auto; align-items: start; padding: 16px; border: 1px solid var(--h-line); border-radius: 12px; background: white; gap: 20px; }
+.hunt-crm-photo { width: 100%; position: relative; aspect-ratio: 4/3; border-radius: 9px; overflow: hidden; background: var(--rh-surface-2); }
+.hunt-crm-photo a { display: block; width: 100%; height: 100%; }
+.hunt-crm-photo img { width: 100%; height: 100%; object-fit: cover; }
+.hunt-crm-photo-empty { display: flex; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--rh-ink-muted); font-size: 12px; }
+.hunt-crm-photo-count { position: absolute; bottom: 8px; right: 8px; padding: 4px 7px; border-radius: 5px; background: white; font-size: 10px; pointer-events: none; }
+.hunt-crm-info { min-width: 0; display: block !important; }
+.hunt-crm-info h2, .hunt-crm-info h3 { margin: 8px 0; overflow-wrap: anywhere; font-size: 18px; line-height: 1.35; }
+.hunt-crm-info p { line-height: 1.6; margin: 5px 0; color: var(--rh-ink-muted); font-size: 12px; }
+.hunt-crm-info .hunt-crm-facts { font-size: 14px; color: var(--h-ink); }
+.hunt-crm-source { display: inline-flex; align-items: center; gap: 5px; min-height: 44px; max-width: 100%; overflow-wrap: anywhere; text-decoration: underline !important; font-size: 13px; }
+.hunt-crm-actions { align-self: center; }
+.hunt-crm-actions a, .hunt-crm-actions button { min-height: 44px; display: flex; align-items: center; }
+.hunt-crm-review-head { display: grid; grid-template-columns: 200px minmax(0,1fr); gap: 22px; align-items: start; }
+.hunt-crm-edit { margin: 16px 0; border-top: 1px solid var(--h-line); border-bottom: 1px solid var(--h-line); }
+.hunt-crm-edit summary { min-height: 48px; padding: 14px 0; cursor: pointer; font-weight: 600; }
+.hunt-status.approved { background: #e7ede2; }
+@media(max-width:650px) {
+ .hunt-crm-card { grid-template-columns: 100px minmax(0,1fr); padding: 12px; gap: 12px; }
+ .hunt-crm-card .hunt-crm-actions { grid-column: 1/-1; flex-direction: row !important; flex-wrap: wrap; }
+ .hunt-crm-review-head { grid-template-columns: 100px minmax(0,1fr); gap: 12px; }
+ .hunt-crm-info h2, .hunt-crm-info h3 { font-size: 15px; }
+ .hunt-crm-toolbar .hunt-crm-search { flex-basis: 100%; }
+}
