@@ -14,7 +14,8 @@ await db.exec(`CREATE EXTENSION pgcrypto; CREATE SCHEMA auth; CREATE SCHEMA exte
  CREATE FUNCTION public.update_updated_at_column() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN NEW.updated_at=now(); RETURN NEW; END $$;
  CREATE TABLE public.app_secrets(key text PRIMARY KEY,value text);
  CREATE TABLE public.ig_finds(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),shortcode text,hook text,external_url text,post_url text,image_urls text[],price_eur int,country_guess text,location_name text,sqm int,bedrooms int,status text,is_beach boolean);
- INSERT INTO ig_finds(shortcode,hook,external_url,image_urls,price_eur,country_guess,location_name,status) VALUES('test-house','A real test listing','https://example.com/listing/1',ARRAY['https://example.com/photo.jpg'],45000,'Italy','Test town','published');`);
+ INSERT INTO ig_finds(shortcode,hook,external_url,image_urls,price_eur,country_guess,location_name,status) VALUES('test-house','A real test listing','https://example.com/listing/1',ARRAY['https://example.com/photo.jpg'],45000,'Italy','Test town','published');
+ INSERT INTO ig_finds(shortcode,hook,external_url,image_urls,country_guess,status) VALUES('price-on-request','Price on request home','https://example.com/listing/unknown',ARRAY['https://example.com/unknown.jpg'],'Italy','published');`);
 for (const file of [
   "20260920201911_3adec968-398e-425e-bb1d-c3abd340640d.sql",
   "20260920201934_54f2bca1-90b9-44ad-942f-a897994e56a3.sql",
@@ -41,9 +42,11 @@ const admin = "00000000-0000-0000-0000-000000000001";
 let visitor, deal, account, submitted;
 await test("existing catalog seeds approved discoveries without fake engagement", async () => {
   const f = await one("select community_rankings()");
-  assert.equal(f.global_deals, 1);
+  assert.equal(f.global_deals, 2);
   assert.equal(f.global_votes, 0);
-  deal = f.rows[0];
+  deal = f.rows.find(d => d.slug === "test-house");
+  assert.equal(f.rows.find(d => d.slug === "price-on-request").price_eur, null);
+  await db.exec("DELETE FROM community_deals WHERE slug='price-on-request'");
   assert.equal(deal.slug, "test-house");
   assert.equal(deal.week_net, 0);
   assert.ok(!("submitted_by" in deal));
@@ -257,5 +260,33 @@ await test("launch homes break ties without overriding actual votes", async () =
     assert.equal((await one('select community_rankings()')).rows[0].id,deal.id);
     assert.equal((await one("select community_rankings('all')")).rows[0].id,deal.id);
   } finally { await db.exec("ROLLBACK"); }
+});
+await test("anonymous source URLs are gated in rankings, picks and deep detail pages", async () => {
+  await db.exec('BEGIN');
+  try {
+    await login(null);
+    const anonymous = await api('session',null);
+    await db.exec(`INSERT INTO community_deals(slug,title,source_url,source_key,image_urls,country,status,approved_at)
+      SELECT 'catalog-'||n,'Catalog home '||n,'https://example.org/catalog/'||n,'',ARRAY['https://example.org/photo.jpg'],'Italy','approved',now() FROM generate_series(1,175) n`);
+    const ids = new Set(); let offset=0, total=0;
+    do {
+      const page = await one("select community_rankings('week',null,null,null,24,$1)",[offset]);
+      total=page.total;
+      for(const row of [...page.rows,...page.picks]) {assert.equal(row.source_url,null);assert.equal(row.has_source,true);}
+      for(const row of page.rows) ids.add(row.id);
+      offset+=page.rows.length;
+    } while(offset<total);
+    assert.equal(ids.size,total);
+    assert.ok(total>175);
+    const last=(await one("select community_rankings('week',null,null,null,24,$1)",[total-1])).rows[0];
+    assert.ok(last.rank>100);
+    const detail=await api('detail',anonymous.token,{slug:last.slug});
+    assert.equal(detail.deal.source_url,undefined);
+    assert.equal(detail.deal.has_source,true);
+    await login(user);
+    const signedIn=await api('detail',account.token,{slug:last.slug});
+    assert.equal(signedIn.deal.source_url,await one('select source_url from community_deals where id=$1',[last.id]));
+    assert.ok((await one('select community_rankings()')).rows.every(d=>d.source_url));
+  } finally {await db.exec('ROLLBACK');}
 });
 await db.close();
