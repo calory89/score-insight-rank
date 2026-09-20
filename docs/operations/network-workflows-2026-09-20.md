@@ -33,3 +33,9 @@ UI/logic: 47 tests pass, including eight network workflow tests. Existing email 
 Prior-contact backfill uses existing timestamped fingerprints. It does not reconstruct proof that was already deleted before this release. Existing recorded sales remain unchanged. Contact matching is per normalized email/phone fingerprint, not a claim that different identifiers have been resolved to the same human.
 
 This release does not add bank transfers, invoicing automation, team assignment, bulk email campaigns or new paid integrations. The separately documented Edge Function/email-delivery activation remains outside this release; these workflows do not depend on it. Real users must still provide genuine contact-sharing authority and truthful sales/payment information.
+
+## Rollout checkpoints
+
+Application commit `c9eb9964f26ee3e1ee19a3612f52da902c7f7cc9` passed GitHub Actions run `35508584128` (clean install, type checks, all tracked tests, email tests, build and size budget). The migration committed and is recorded in the production ledger. Postconditions confirm task storage exists, public contact handoff is blocked, and direct browser sharing updates are blocked. No synthetic developer records remain.
+
+Website publication is requested after GitHub synchronization; verify the public network page contains “Only want to protect your existing contacts?” and that the project reports this release or a descendant before declaring the frontend live.
