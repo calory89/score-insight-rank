@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
@@ -17,6 +17,7 @@ import OfflineBanner from "@/components/OfflineBanner";
 // Everything is lazy: the first paint only ships React, the router, auth and the page you asked for.
 const L = (f: () => Promise<any>) => React.lazy(f);
 const Home = L(() => import("./pages/Home"));
+const Community = L(() => import("./community/Community"));
 const IndexNew = L(() => import("./pages/IndexNew"));
 const HomeScoring = L(() => import("./pages/HomeScoring"));
 const Apply = L(() => import("./pages/Apply"));
@@ -94,10 +95,29 @@ const Extras = () => {
   return <Suspense fallback={null}><CommandPalette /><KeyboardShortcutsModal />{enabled && <OnboardingWizard />}</Suspense>;
 };
 
+const CommunityEmailCapture = () => {
+  const { pathname } = useLocation();
+  if (pathname === "/" || /^\/(deal|hunter|hunt|submit|winners)(\/|$)/.test(pathname)) return null;
+  return <EmailCapture />;
+};
+
+const CommunityRoot = () => {
+  const { search } = useLocation();
+  const p = new URLSearchParams(search);
+  return ["beach", "max", "q", "sort"].some(k => p.has(k))
+    ? <Navigate to={"/browse" + search} replace /> : <Community />;
+};
+
 const AppRoutes = () => (
   <Suspense fallback={<SuspenseFallback />}>
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<CommunityRoot />} />
+      <Route path="/browse" element={<Home />} />
+      <Route path="/submit" element={<Community />} />
+      <Route path="/deal/:slug" element={<Community />} />
+      <Route path="/hunter/:handle" element={<Community />} />
+      <Route path="/winners" element={<Community />} />
+      <Route path="/hunt/:section" element={<Community />} />
       <Route path="/score" element={<IndexNew />} />
       <Route path="/homescoring" element={<HomeScoring />} />
       <Route path="/apply" element={<Apply />} />
@@ -186,7 +206,7 @@ const App = () => (
                 <PageTracker>
                   <main id="main-content"><AppRoutes /></main>
                 </PageTracker>
-                <Suspense fallback={null}><EmailCapture /></Suspense>
+                <Suspense fallback={null}><CommunityEmailCapture /></Suspense>
               </BrowserRouter>
             </TooltipProvider>
           </SubscriptionProvider>
