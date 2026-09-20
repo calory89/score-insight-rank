@@ -3,11 +3,12 @@ export type Deal = {
   id: string;
   slug: string;
   title: string;
-  source_url: string;
+  source_url?: string | null;
+  has_source?: boolean;
   source_domain: string;
   image_urls: string[];
   video_url?: string;
-  price_eur: number;
+  price_eur: number | null;
   country: string;
   location_name: string;
   sqm?: number;
@@ -56,7 +57,7 @@ export const categories = [
   ["new_build", "New builds"],
   ["other", "Other discoveries"],
 ];
-export const money = (n?: number) =>
+export const money = (n?: number | null) =>
   n == null
     ? "Price on request"
     : new Intl.NumberFormat("en-IE", {
@@ -64,7 +65,7 @@ export const money = (n?: number) =>
         currency: "EUR",
         maximumFractionDigits: 0,
       }).format(n);
-export const safeUrl = (url?: string) => !!url && /^https?:\/\//i.test(url);
+export const safeUrl = (url?: string | null) => !!url && /^https?:\/\//i.test(url);
 export function readToken() {
   try {
     return (
