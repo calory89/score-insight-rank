@@ -1503,3 +1503,10 @@
 
 .hunt-demo-notice { padding: 10px 0; font-size: 12px; color: var(--rh-ink-muted); border-bottom: 1px solid var(--h-line); }
 .hunt-demo-notice button { text-decoration: underline; min-height: 32px; margin-left: 8px; }
+
+.hunt-upvote { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-width: 80px; min-height: 44px; padding: 10px 16px; border: 1px solid var(--h-line); border-radius: 9px; background: var(--rh-bg); color: var(--h-ink); }
+.hunt-upvote:hover, .hunt-upvote[aria-pressed="true"] { background: var(--h-ink); color: white; }
+.hunt-upvote:disabled { opacity: 1; cursor: default; }
+.hunt-upvote strong { font-size: 15px; font-weight: 600; }
+.hunt-demo-caption { margin-left: 8px; font-size: 10px; color: var(--rh-ink-muted); }
+.hunt-card .hunt-card-bottom { justify-content: flex-start; gap: 16px; }
