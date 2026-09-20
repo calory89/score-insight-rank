@@ -1,53 +1,50 @@
-import { sendLovableEmail } from "npm:@lovable.dev/email-js";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { sendAuthEmail, ResendDeliveryError } from "../_shared/resend-auth.ts";
 
-// RealHunt transactional email. Called server-to-server from Postgres triggers
-// with a shared secret stored in app_secrets (key = rh_email_secret).
-// Sender: RealHunt <hello@realhunt.co> through the verified subdomain below.
-const SENDER_DOMAIN = "notify.realhunt.co";
-const FROM = "RealHunt <hello@realhunt.co>";
-const DEFAULT_REPLY_TO = "carlos@equinoxinvestmentgroup.com";
-const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
-const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
-
-Deno.serve(async (req) => {
+const cors = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type", "X-RealHunt-Mail-Version": "resend-outbox-v2" };
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { ...cors, "Content-Type": "application/json" } });
+Deno.serve(async req => {
   if (req.method === "OPTIONS") return new Response(null, { headers: cors });
-  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-
-  // One-click unsubscribe: GET ?unsubscribe=<token>
-  const url = new URL(req.url);
-  const unsub = url.searchParams.get("unsubscribe");
-  if (req.method === "GET" && unsub) {
-    const { data } = await supabase.from("email_unsubscribe_tokens").select("email").eq("token", unsub).maybeSingle();
-    if (data?.email) await supabase.from("suppressed_emails").upsert({ email: data.email }, { onConflict: "email" });
-    return new Response(`<!doctype html><html><body style="font-family:Helvetica,Arial,sans-serif;padding:40px;text-align:center;color:#141414"><h2>You are unsubscribed.</h2><p>No more emails from RealHunt. <a href="https://realhunt.co/">Back to the deals</a></p></body></html>`, { headers: { "Content-Type": "text/html" } });
+  const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const url = new URL(req.url), unsub = url.searchParams.get("unsubscribe");
+  if ((req.method === "GET" || req.method === "POST") && unsub) {
+    const { data, error } = await db.from("email_unsubscribe_tokens").select("email").eq("token", unsub).maybeSingle();
+    if (error) return json({ error: "Please try again" }, 503);
+    if (data?.email) { const { error } = await db.from("suppressed_emails").upsert({ email: data.email }, { onConflict: "email" }); if (error) return json({ error: "Please try again" }, 503); }
+    return new Response('<!doctype html><html lang="en"><body style="font-family:Arial;padding:40px;text-align:center"><h1>You are unsubscribed.</h1><p>Marketing emails have stopped. Account access emails remain available.</p><a href="https://realhunt.co">Back to RealHunt</a></body></html>', { headers: { "Content-Type": "text/html" } });
   }
-
+  if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
   try {
     const body = await req.json();
-    const { data: sec } = await supabase.from("app_secrets").select("value").eq("key", "rh_email_secret").maybeSingle();
-    if (!sec?.value || body.secret !== sec.value) return json({ error: "forbidden" }, 403);
+    const { data: secret } = await db.from("app_secrets").select("value").eq("key", "rh_email_secret").maybeSingle();
+    if (!secret?.value || body.secret !== secret.value) return json({ error: "Forbidden" }, 403);
     const to = String(body.to || "").trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return json({ error: "valid to required" }, 400);
-    const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) return json({ error: "LOVABLE_API_KEY missing" }, 500);
-
-    const { data: sup } = await supabase.from("suppressed_emails").select("email").eq("email", to).maybeSingle();
-    if (sup) return json({ ok: true, skipped: "suppressed" });
-
-    let token = crypto.randomUUID().replace(/-/g, "");
-    const { data: ex } = await supabase.from("email_unsubscribe_tokens").select("token").eq("email", to).maybeSingle();
-    if (ex?.token) token = ex.token; else await supabase.from("email_unsubscribe_tokens").insert({ email: to, token });
-
-    const id = crypto.randomUUID();
-    const html = String(body.html || "").replace("</body>", `<p style="font-size:11px;color:#a8a293;text-align:center;margin-top:24px;"><a href="${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email?unsubscribe=${token}" style="color:#8a8578;">Unsubscribe</a></p></body>`);
-    const text = String(body.text || html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()) + `\n\nUnsubscribe: ${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email?unsubscribe=${token}`;
-    const replyTo = String(body.reply_to || DEFAULT_REPLY_TO);
-    await sendLovableEmail({ to, from: FROM, sender_domain: SENDER_DOMAIN, subject: String(body.subject || "RealHunt"), html, text, purpose: "transactional", label: String(body.label || "realhunt"), idempotency_key: `rh-${to}-${id}`, message_id: id, unsubscribe_token: token, reply_to: replyTo, replyTo: replyTo }, { apiKey });
-    await supabase.from("email_send_log").insert({ message_id: id, recipient_email: to, template_name: String(body.label || "realhunt"), status: "sent" });
-    return json({ ok: true, id });
-  } catch (e: any) {
-    console.error("send-email error", e);
-    return json({ error: e?.message || String(e) }, 500);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return json({ error: "Valid recipient required" }, 400);
+    const label = String(body.label || "realhunt"), isAuth = /^(confirm-|sorry-confirm-)/.test(label);
+    const { data: suppressed } = await db.from("suppressed_emails").select("email").eq("email", to).maybeSingle();
+    if (suppressed && !isAuth) return json({ ok: true, skipped: "suppressed" });
+    let html = String(body.html || ""), text = String(body.text || html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim());
+    if (html.length > 200000) return json({ error: "Email too large" }, 400);
+    let unsubscribeHeaders: Record<string, string> | undefined;
+    if (!isAuth) {
+      const { data: existing } = await db.from("email_unsubscribe_tokens").select("token").eq("email", to).maybeSingle();
+      const token = existing?.token || crypto.randomUUID().replace(/-/g, "");
+      if (!existing) { const { error } = await db.from("email_unsubscribe_tokens").insert({ email: to, token }); if (error) return json({ error: "Could not prepare email" }, 503); }
+      const link = `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-email?unsubscribe=${token}`;
+      unsubscribeHeaders = { "List-Unsubscribe": `<${link}>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" };
+      const footer = `<p style="font-size:12px;text-align:center"><a href="${link}">Unsubscribe</a></p>`;
+      html = html.includes("</body>") ? html.replace("</body>", footer + "</body>") : html + footer;
+      text += `\n\nUnsubscribe: ${link}`;
+    }
+    // Outbox retries reuse this event identifier. Legacy callers use a content digest.
+    const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(JSON.stringify([to, label, body.subject, body.html])));
+    const fallbackId = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
+    const messageId = body.outbox_id ? `outbox-${body.outbox_id}` : `mail-${fallbackId}`;
+    const providerId = await sendAuthEmail({ runId: messageId, actionType: isAuth ? "confirmation" : "transactional", to, subject: String(body.subject || "RealHunt"), html, text, category: isAuth ? "auth" : "transactional", replyTo: String(body.reply_to || "carlos@equinoxinvestmentgroup.com"), headers: unsubscribeHeaders }, { apiKey: Deno.env.get("RESEND_API_KEY"), from: Deno.env.get("RESEND_FROM_EMAIL") || "RealHunt <hello@realhunt.co>" });
+    await db.from("email_send_log").insert({ message_id: messageId, provider_email_id: providerId, recipient_email: to, template_name: label, status: "sent" });
+    return json({ ok: true, id: providerId });
+  } catch (error) {
+    const status = error instanceof ResendDeliveryError ? (error.retryable ? 503 : 400) : 500;
+    return json({ error: error instanceof ResendDeliveryError ? error.message : "Email could not be sent" }, status);
   }
 });

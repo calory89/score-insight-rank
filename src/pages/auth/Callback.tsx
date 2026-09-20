@@ -63,14 +63,14 @@ const Callback = () => {
           <p className="text-[14px] text-ink-muted mt-2">One last step. From now on you sign in with your email and this password — no links to hunt for in your inbox.</p>
           <form onSubmit={save} className="mt-6 flex flex-col gap-3">
             <label className="relative"><Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted" />
-              <input required autoFocus type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Your new password" className={field} /></label>
+              <input aria-label="New password" required autoFocus type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Your new password" className={field} /></label>
             <label className="relative"><Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted" />
-              <input required type="password" autoComplete="new-password" value={pw2} onChange={(e) => setPw2(e.target.value)} placeholder="Type it again" className={field} /></label>
+              <input aria-label="Confirm new password" required type="password" autoComplete="new-password" value={pw2} onChange={(e) => setPw2(e.target.value)} placeholder="Type it again" className={field} /></label>
             <button type="submit" disabled={busy} className="rh-btn-primary !h-12 !rounded-full w-full inline-flex items-center justify-center gap-2 disabled:opacity-60">
               {busy && <Loader2 size={16} className="animate-spin" />} Save and continue
             </button>
           </form>
-          {err && <p className="text-[13px] text-red-600 mt-2">{err}</p>}
+          {err && <p role="alert" className="text-[13px] text-red-600 mt-2">{err}</p>}
           <p className="text-[12px] text-ink-muted mt-4">At least 8 characters.</p>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { track } from "@/lib/rh";
 import { Component, type ReactNode } from "react";
 import { AlertTriangle, RefreshCw, Home, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("ErrorBoundary caught:", error, errorInfo);
+    track("client_error", { meta: { source: "react_boundary" } });
   }
 
   handleRetry = () => {
@@ -90,3 +92,4 @@ class ErrorBoundary extends Component<Props, State> {
 }
 
 export default ErrorBoundary;
+

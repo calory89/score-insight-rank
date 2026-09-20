@@ -32,7 +32,7 @@ const CSS = `
 @keyframes rhPopMob{from{transform:translateY(100%)}to{transform:none}}
 @keyframes rhTick{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.15);opacity:1}100%{transform:scale(1)}}
 @keyframes rhShine{0%{transform:translateX(-120%) skewX(-18deg)}100%{transform:translateX(220%) skewX(-18deg)}}
-body:has([aria-label="Selected homes to compare"]) .rh-bar{display:none}
+body:has([aria-label="Selected homes to compare"]) .rh-bar,body:has([role="dialog"]) .rh-bar{display:none}
 .rh-bar{animation:rhBarIn .55s cubic-bezier(.2,.8,.2,1) both}
 .rh-pop{animation:rhPopIn .45s cubic-bezier(.2,.8,.2,1) both}
 .rh-veil{animation:rhFade .3s ease both}
@@ -82,7 +82,7 @@ const Field = ({ value, onChange, onSubmit, mode, cta, big }: { value: string; o
 const Done = ({ big }: { big?: boolean }) => (
   <div className={`flex items-center gap-3 ${big ? "py-2" : ""}`}>
     <span className="rh-tick inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white"><Check size={18} strokeWidth={3} /></span>
-    <div><p className={`font-medium ${big ? "text-[18px]" : "text-[15px]"}`}>Got it, you're on the list.</p><p className="text-[13px] text-ink-muted">Your top 10 homes land in your inbox by the end of this week.</p></div>
+    <div><p className={`font-medium ${big ? "text-[18px]" : "text-[15px]"}`}>Got it, you're on the list.</p><p className="text-[13px] text-ink-muted">We will email you our next selection of homes.</p></div>
   </div>
 );
 

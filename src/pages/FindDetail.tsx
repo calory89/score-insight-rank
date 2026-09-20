@@ -1,3 +1,4 @@
+import { listingHook, reviewAge } from "@/lib/listing-integrity";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -134,7 +135,7 @@ const FindDetail = () => {
             <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted">{f.source_account === "idealista" ? "A RealHunt find" : <>Spotted by <Link to={`/from/${f.source_account}`} className="underline">{sourceName}</Link></>}{when ? " · " + when : ""}</p>
             <h1 className="font-display text-[clamp(38px,7vw,64px)] leading-none tracking-tight mt-3 tabular-nums">{f.price_eur ? eur(f.price_eur) : "Price in the listing"}</h1>
             <p className="text-[20px] md:text-[24px] font-medium mt-3 leading-snug">{user ? (f.location_name || c) : c}</p>
-            {f.hook && <p className="text-[15px] mt-2 text-ink-muted">{f.hook}</p>}
+            {listingHook(f) && <p className="text-[15px] mt-2 text-ink-muted">{listingHook(f)}</p>}
             {f.price_raw && f.price_eur && f.price_raw !== "seen in image" && <p className="text-[13px] text-ink-muted mt-1">Listed as {f.price_raw}, converted approximately.</p>}
             <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[14px] text-ink-muted">
               {!user && <button onClick={() => setAuth(true)} className="inline-flex items-center gap-1.5 underline underline-offset-4"><MapPin size={14} /><Lock size={12} /> Sign in for the exact location</button>}
@@ -147,6 +148,7 @@ const FindDetail = () => {
               {((f as any).status === "sold" || (f as any).status === "reserved") && <span className="px-2 py-0.5 rounded-full bg-red-600 text-white text-[12px] uppercase">{(f as any).status}</span>}
             </div>
 
+            <p className="mt-4 text-xs text-ink-muted">{reviewAge((f as any).source_checked_at)}</p>
             <DecisionSummary home={f} />
 
             <section className="mt-8 border-t border-hairline pt-7">
@@ -161,7 +163,7 @@ const FindDetail = () => {
                 <div className="border border-hairline rounded-2xl bg-white p-6 flex flex-col gap-3">
                   <p className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><Lock size={18} /> See the full details, free</p>
                   <p className="text-[14px] text-ink-muted">Sign in for the exact location, full description and original listing.</p>
-                  <div><Gate /></div>
+                  <a href="#original-listing" className="text-sm underline min-h-11 inline-flex items-center">Continue to the original listing ↓</a>
                 </div>
               )}
             </section>
@@ -176,8 +178,8 @@ const FindDetail = () => {
             <section id="contact-home" className="mt-8 border-t border-hairline pt-7 scroll-mt-24">
               <h2 className="font-display text-[22px] mb-4">Interested in this home?</h2>
               <div className="md:hidden mb-5">{user ? <button onClick={open} className="rh-btn-primary inline-flex items-center gap-2">Open listing <ExternalLink size={15} /></button> : <button onClick={() => setAuth(true)} className="rh-btn-primary inline-flex items-center gap-2"><Lock size={15} /> Get all the info, free</button>}<div className="flex gap-4 mt-4"><button onClick={toggleFav} className="text-[14px] inline-flex items-center gap-1.5"><Heart size={16} fill={fav ? "currentColor" : "none"} />{fav ? "Saved" : "Save"}</button><button onClick={share} className="text-[14px] inline-flex items-center gap-1.5"><Share2 size={16} />{copied ? "Copied" : "Share"}</button></div></div>
-              {wantSent ? <p className="inline-flex items-center gap-2 text-[15px]"><Check size={18} /> Got it. A person replies within 24 hours with the next step.</p> : !want ? (
-                <div className="flex items-center justify-between gap-4 flex-wrap"><div><p className="font-display text-[18px] tracking-tight">I want this one</p><p className="text-[13px] text-ink-muted">We check it is still available, contact the seller and tell you what it really costs to buy as a foreigner.</p></div><button onClick={() => { setWant(true); track("want_open", { find: shortcode }); }} className="rh-btn-tertiary !px-5 !py-2.5 !text-[14px]">Ask about this home</button></div>
+              {wantSent ? <p className="inline-flex items-center gap-2 text-[15px]"><Check size={18} /> Got it. Your request is saved. We will contact you with the next step.</p> : !want ? (
+                <div className="flex items-center justify-between gap-4 flex-wrap"><div><p className="font-display text-[18px] tracking-tight">I want this one</p><p className="text-[13px] text-ink-muted">Ask us to check availability and help you understand the next steps. Purchase costs and eligibility need confirmation for your situation.</p></div><button onClick={() => { setWant(true); track("want_open", { find: shortcode }); }} className="rh-btn-tertiary !px-5 !py-2.5 !text-[14px]">Ask about this home</button></div>
               ) : (
                 <form onSubmit={sendWant} className="flex flex-col gap-2">
                   <p className="font-display text-[18px] tracking-tight">Tell us how to reach you</p>

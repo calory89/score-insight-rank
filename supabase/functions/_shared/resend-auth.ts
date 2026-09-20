@@ -5,6 +5,9 @@ type AuthEmail = {
   subject: string;
   html: string;
   text: string;
+  category?: "auth" | "transactional";
+  replyTo?: string;
+  headers?: Record<string, string>;
 };
 
 export class ResendDeliveryError extends Error {
@@ -42,7 +45,9 @@ export async function sendAuthEmail(
         subject: email.subject,
         html: email.html,
         text: email.text,
-        tags: [{ name: 'category', value: 'auth' }, { name: 'action', value: email.actionType }],
+        ...(email.replyTo ? { reply_to: email.replyTo } : {}),
+        ...(email.headers ? { headers: email.headers } : {}),
+        tags: [{ name: 'category', value: email.category || 'auth' }, { name: 'action', value: email.actionType }],
       }),
       signal: AbortSignal.timeout(8000),
     });

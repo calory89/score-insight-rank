@@ -1,3 +1,4 @@
+import { useWebVitals } from "@/hooks/useWebVitals";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -80,7 +81,7 @@ const EmailCapture = L(() => import("@/components/realhunt/EmailCapture"));
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 5 * 60 * 1000, gcTime: 15 * 60 * 1000, retry: 2, refetchOnWindowFocus: false } } });
 
-const PageTracker = ({ children }: { children: React.ReactNode }) => { usePageTracking(); useReferralCapture(); return <>{children}</>; };
+const PageTracker = ({ children }: { children: React.ReactNode }) => { usePageTracking(); useReferralCapture(); useWebVitals(); return <>{children}</>; };
 
 const SuspenseFallback = () => <div className="min-h-[60vh] bg-paper" aria-busy="true" />;
 
@@ -196,3 +197,4 @@ const App = () => (
 );
 
 export default App;
+

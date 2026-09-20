@@ -22,50 +22,45 @@ export const EBC: IG = { id: "ebc", source_account: "ecobeachcity", shortcode: "
 export const CALENDLY = "https://calendly.com/equinoxinvestmentgroup/eco-beach-city-info-call";
 
 export const sid = () => { try { let s = localStorage.getItem("rh_sid"); if (!s) { s = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem("rh_sid", s); } return s; } catch { return "anon"; } };
-// Events are queued and flushed as ONE multi-row insert instead of a request per event. A home page
-// view used to fire about seven separate inserts, and with a few hundred people on the site at once
-// those requests were a large part of what exhausted the connection pool and pushed first paint past
-// 20 seconds. Nothing is lost: the queue is also flushed when the page is hidden or unloaded.
+// Optional analytics never shares the legacy hot table or blocks an application action.
 const QUEUE: any[] = [];
-let flushTimer: any = null;
-
-// ANALYTICS PAUSED 19-sep-2026. Inserts into rh_events were sitting on a lock for close to a minute
-// and every visitor's page was queuing behind them, which took the whole site down: the shell loaded
-// and no homes ever arrived. Analytics is the one thing here nobody is paying for, so it is the first
-// thing to go. Events are still collected in memory and simply dropped, so no call site changes and
-// turning this back on is a one-line revert once the table is healthy.
-const ANALYTICS_ON = false;
-
+let flushTimer: ReturnType<typeof setTimeout> | null = null;
+let sending = false;
+let pausedUntil = 0;
+const permitted = () => { try { return localStorage.getItem("rh_consent") === "all"; } catch { return false; } };
 const flush = async () => {
-  flushTimer = null;
-  if (!QUEUE.length) return;
-  const rows = QUEUE.splice(0, QUEUE.length);
-  if (!ANALYTICS_ON) return;
+  if (flushTimer) clearTimeout(flushTimer); flushTimer = null;
+  if (sending) return;
+  if (!permitted() || Date.now() < pausedUntil) { QUEUE.length = 0; return; }
+  const rows = QUEUE.splice(0, 20); if (!rows.length) return;
+  sending = true;
+  const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), 1500);
   try {
-    const { error } = await db.from("rh_events").insert(rows);
-    if (error) console.warn("rh_events", error.message);
-  } catch {}
+    const { error } = await db.rpc("record_telemetry", { p_rows: rows }).abortSignal(controller.signal);
+    if (error) throw error;
+  } catch { pausedUntil = Date.now() + 120000; QUEUE.length = 0; }
+  finally { clearTimeout(timer); sending = false; if (QUEUE.length) flushTimer = setTimeout(flush, 5000); }
 };
-
 if (typeof document !== "undefined") {
-  // Best effort on the way out — never block the unload.
-  const bail = () => { if (QUEUE.length) { clearTimeout(flushTimer); flushTimer = null; flush(); } };
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") bail(); });
-  window.addEventListener("pagehide", bail);
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") queueMicrotask(() => { void flush(); }); });
+  window.addEventListener("pagehide", () => { queueMicrotask(() => { void flush(); }); });
 }
-
-export const track = async (event: string, extra: { find?: string; meta?: any } = {}) => {
-  if (!ANALYTICS_ON) return;
+export const track = async (event: string, extra: { find?: string; meta?: any; path?: string } = {}) => {
+  if (!permitted() || Date.now() < pausedUntil || QUEUE.length >= 100) return;
   try {
-    const { data } = await supabase.auth.getSession();
-    let exp: any = null, tz: string | null = null, internal = false;
-    try { exp = JSON.parse(sessionStorage.getItem("rh_exp_assign") || "null"); } catch {}
-    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch {}
-    try { if (new URLSearchParams(location.search).get("rh_me") === "1") localStorage.setItem("rh_internal", "1"); internal = localStorage.getItem("rh_internal") === "1"; } catch {}
-    const meta = { ...(extra.meta || {}), ...(exp ? { exp } : {}), ...(tz ? { tz } : {}), ...(internal ? { internal: true } : {}) };
-    QUEUE.push({ sid: sid(), user_id: data.session?.user.id || null, event, path: location.pathname, find_shortcode: extra.find || null, meta });
-    if (QUEUE.length >= 20) { clearTimeout(flushTimer); flushTimer = null; flush(); return; }
-    if (!flushTimer) flushTimer = setTimeout(flush, 2500);
+    let exp: any = null; try { exp = JSON.parse(sessionStorage.getItem("rh_exp_assign") || "null"); } catch {}
+    let internal = false; try { if (new URLSearchParams(location.search).get("rh_me") === "1") localStorage.setItem("rh_internal", "1"); internal = localStorage.getItem("rh_internal") === "1"; } catch {}
+    const meta: Record<string, unknown> = { internal, tz: Intl.DateTimeFormat().resolvedOptions().timeZone };
+    // Never send free-form URLs, search strings, contact details or error messages.
+    for (const key of ["source","ok","n","price","shared","status","mode","tab","exp_key","exp_v","name","value","rating","device","metric_id"]) {
+      const value = extra.meta?.[key];
+      if (typeof value === "number" || typeof value === "boolean") meta[key] = value;
+      else if (typeof value === "string" && /^[a-zA-Z0-9_ .-]{0,80}$/.test(value)) meta[key] = value;
+    }
+    if (exp && typeof exp === "object") meta.exp = Object.fromEntries(Object.entries(exp).filter(([k,v]) => /^[a-z_]{1,60}$/.test(k) && typeof v === "string" && /^[a-zA-Z0-9_-]{1,30}$/.test(v as string)));
+    QUEUE.push({ event_id: crypto.randomUUID(), sid: sid(), event, path: extra.path || location.pathname, find_shortcode: extra.find || null, meta });
+    if (document.visibilityState === "hidden") queueMicrotask(() => { void flush(); });
+    else if (!flushTimer) flushTimer = setTimeout(flush, 5000);
   } catch {}
 };
 

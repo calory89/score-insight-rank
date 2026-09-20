@@ -1,3 +1,7 @@
+import { saveChange, fetchAll, downloadCsv, safeProjectUrl } from "@/lib/platform";
+import { contactCandidates } from "@/lib/contact-import";
+import Pagination from "@/components/realhunt/Pagination";
+import BuyerHistory from "@/components/realhunt/BuyerHistory";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -60,79 +64,169 @@ const NetworkApp = () => {
   const [saleNote, setSaleNote] = useState("");
   const [saleRes, setSaleRes] = useState<any | null>(null);
   const [copied, setCopied] = useState("");
-  const setMode = async (mode: string) => { setOv((o: any) => o ? { ...o, developer: { ...o.developer, mode } } : o); await db.from("network_developers").update({ mode, share_default: mode !== "receive", updated_at: new Date().toISOString() }).eq("id", ov.developer.id); track("devapp_mode", { meta: { mode } }); };
+  const [contactPage, setContactPage] = useState(0);
+  const [contactTotal, setContactTotal] = useState(0);
+  const [contactQuery, setContactQuery] = useState("");
+  const [contactLoading, setContactLoading] = useState(false);
+  const [contactError, setContactError] = useState(false);
+  const [contactRevision, setContactRevision] = useState(0);
+  const [importIssues, setImportIssues] = useState<{ row: number; message: string }[]>([]);
+  const [importDuplicates, setImportDuplicates] = useState(0);
+  const [buyerQuery, setBuyerQuery] = useState("");
+  const [followupsOnly, setFollowupsOnly] = useState(false);
+  const [buyerLimit, setBuyerLimit] = useState(30);
+  const mutation = useRef(false);
+  const resumeKey = user ? `rh_import_${user.id}` : "";
+  const setMode = async (mode: string) => {
+    const result = await saveChange(() => db.from("network_developers").update({ mode, share_default: mode !== "receive", updated_at: new Date().toISOString() }).eq("id", ov.developer.id).select("id").single(), "Preference saved");
+    if (result.ok) { await load(); track("devapp_mode", { meta: { mode } }); }
+  };
 
   const load = async () => {
     setLoadErr(false);
+    let timeout: ReturnType<typeof setTimeout> | undefined;
     try {
       const res: any = await Promise.race([
         db.rpc("dev_overview"),
-        new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 20000)),
+        new Promise((_, rej) => { timeout = setTimeout(() => rej(new Error("timeout")), 20000); }),
       ]);
       if (res?.error) { setLoadErr(true); return; }
       const data = res?.data;
       setOv(data ?? null);
+      if (data) setOpen((current: any) => current ? data.received?.find((i: any) => i.id === current.id) || null : null);
       if (data) { const f = data.developer; setForm({ company: f.company || "", contact_name: f.contact_name || "", email: f.email || "", phone: f.phone || "", website: f.website || "", country: f.country || "", project_name: f.project_name || "", project_url: f.project_url || "", price_from: f.price_from || "", share_default: !!f.share_default }); }
-    } catch { setLoadErr(true); }
+    } catch { setLoadErr(true); } finally { clearTimeout(timeout); }
   };
   useEffect(() => { document.title = "Developer panel · RealHunt Network"; track("devapp_view", { meta: { tab } }); }, [tab]);
   useEffect(() => { if (!user) { setOv(undefined); return; } load(); try { const p = JSON.parse(sessionStorage.getItem("rh_dev_prefill") || "null"); if (p) setForm((f: any) => ({ ...f, email: p.email || user.email || "", phone: p.phone || "", project_url: p.project_url || "" })); else setForm((f: any) => ({ ...f, email: user.email || "" })); } catch {} }, [user]);
-  useEffect(() => { if (!ov || tab !== "leads") return; db.from("lead_fingerprints").select("id,fp,kind,shared,country,budget,tag,uploaded_at").eq("developer_id", ov.developer.id).order("uploaded_at", { ascending: false }).limit(2000).then(({ data }: any) => setLeads(data || [])); }, [ov, tab]);
+  const contactsQuery = (offset: number, size: number) => db.rpc("dev_contacts_page", { p_query: contactQuery, p_mode: onlyShared, p_offset: offset, p_limit: size });
+  useEffect(() => { setContactPage(0); }, [contactQuery, onlyShared]);
+  useEffect(() => {
+    if (!ov || tab !== "leads") return;
+    let active = true; setContactLoading(true); setContactError(false);
+    const timer = setTimeout(() => Promise.resolve(contactsQuery(contactPage * 50, 50)).then(({ data, error }: any) => {
+      if (!active) return;
+      if (error) { setContactError(true); return; }
+      setLeads(data.rows || []); setContactTotal(data.total || 0);
+    }).catch(() => { if (active) setContactError(true); }).finally(() => { if (active) setContactLoading(false); }), 200);
+    return () => { active = false; clearTimeout(timer); };
+  }, [ov?.developer?.id, tab, contactPage, contactQuery, onlyShared, contactRevision]);
+  useEffect(() => {
+    if (!resumeKey) return;
+    try { const pending = JSON.parse(sessionStorage.getItem(resumeKey) || "null"); if (pending?.rows?.length) { setRows(pending.rows.map((r: any) => ({ ...r, raw: "Previously prepared contact" }))); setUpOpts(pending.options); setMsg("An interrupted import is ready to resume. Only fingerprints were saved in this tab."); } } catch {}
+  }, [resumeKey]);
   useEffect(() => { try { localStorage.setItem("rh_crm_view", view); } catch {} }, [view]);
 
   const register = async (e: React.FormEvent) => {
     e.preventDefault(); if (!user) return; setBusy(true); setMsg("");
-    let url = form.project_url.trim(); if (url && !/^https?:\/\//i.test(url)) url = "https://" + url;
+    let url: string; try { url = safeProjectUrl(form.project_url); } catch { setBusy(false); setMsg("Enter a valid project website."); return; }
     const payload = { ...form, project_url: url, price_from: form.price_from ? Number(form.price_from) : null, user_id: user.id };
-    const { error } = ov ? await db.from("network_developers").update(payload).eq("user_id", user.id) : await db.from("network_developers").insert(payload);
-    setBusy(false); if (error) { setMsg(error.message); return; }
+    const result = await saveChange(() => ov ? db.from("network_developers").update(payload).eq("user_id", user.id).select("id").single() : db.from("network_developers").insert(payload).select("id").single());
+    setBusy(false); if (!result.ok) { setMsg("Could not save. Your form is still here; please try again."); return; }
     track(ov ? "devapp_update" : "devapp_register"); try { sessionStorage.removeItem("rh_dev_prefill"); } catch {}
     await load(); if (!ov) nav("/network/agreement"); else setMsg("Saved.");
   };
 
-  // parse pasted text or CSV: every email / phone found becomes one fingerprint
   const parse = async (text: string) => {
-    const found = new Map<string, string>();
-    text.split(/[\r\n]+/).forEach((line) => {
-      line.split(/[,;\t]/).forEach((cell) => { const c = cell.replace(/^["']|["']$/g, "").trim(); if (!c) return; if (isEmail(c)) found.set(normEmail(c), c); else if (isPhone(c) && normPhone(c).length >= 7) found.set("p:" + normPhone(c), c); });
-    });
-    const list = Array.from(found.values()); const out: { raw: string; fp: string; kind: string }[] = [];
-    for (let i = 0; i < list.length; i++) { const r = await fingerprint(list[i]); if (r) out.push({ raw: list[i], ...r }); if (i % 50 === 0) setProg(Math.round((i / list.length) * 100)); }
-    setProg(100); setRows(out);
+    setMsg(""); setRows([]);
+    if (text.length > 10 * 1024 * 1024) { setMsg("Use a file smaller than 10 MB."); setProg(0); return; }
+    const found = contactCandidates(text); setImportIssues(found.issues); setImportDuplicates(found.duplicates);
+    if (found.invalid) { setProg(0); return; }
+    const out: { raw: string; fp: string; kind: string }[] = [];
+    try {
+      for (let i = 0; i < found.contacts.length; i += 100) {
+        const batch = await Promise.all(found.contacts.slice(i, i + 100).map(async raw => { const result = await fingerprint(raw); return result ? { raw, ...result } : null; }));
+        out.push(...batch.filter((r): r is NonNullable<typeof r> => r !== null));
+        setProg(Math.round(Math.min(i + 100, found.contacts.length) / found.contacts.length * 100));
+        await new Promise(resolve => setTimeout(resolve, 0));
+      }
+      setRows(out); setProg(100);
+    } catch { setMsg("Could not prepare contacts. Please try again."); setProg(0); }
   };
-  const onFile = async (f: File | undefined) => { if (!f) return; setRaw(""); setUpRes(null); setProg(1); await parse(await f.text()); };
+  const onFile = async (f: File | undefined) => {
+    if (!f || busy) return; setRaw(""); setUpRes(null); setProg(1);
+    if (f.size > 10 * 1024 * 1024) { setMsg("Use a file smaller than 10 MB."); setProg(0); return; }
+    try { await parse(await f.text()); } catch { setMsg("Could not read this file."); setProg(0); }
+  };
   const send = async () => {
-    if (!rows.length) return; setBusy(true); setUpRes(null);
-    const body = rows.map((r) => ({ fp: r.fp, kind: r.kind, shared: upOpts.shared, country: upOpts.country || null, budget: upOpts.budget ? Number(upOpts.budget) : null, tag: upOpts.tag || null }));
-    const { data, error } = await db.rpc("dev_upload_fps", { p_rows: body });
-    setBusy(false); if (error) { setMsg(error.message); return; }
-    setUpRes(data); track("devapp_upload", { meta: { n: rows.length, shared: upOpts.shared } }); setRows([]); setRaw(""); load();
+    if (!rows.length || mutation.current) return; mutation.current = true; setBusy(true); setUpRes(null); setMsg("");
+    let remaining = rows.slice(); let inserted = 0, duplicates = 0; const total = rows.length;
+    const checkpoint = () => { try { sessionStorage.setItem(resumeKey, JSON.stringify({ rows: remaining.map(({ fp, kind }) => ({ fp, kind })), options: upOpts })); } catch {} };
+    checkpoint();
+    try {
+      while (remaining.length) {
+        const batch = remaining.slice(0, 250).map(({ fp, kind }) => ({ fp, kind, shared: upOpts.shared, country: upOpts.country || null, budget: upOpts.budget ? Number(upOpts.budget) : null, tag: upOpts.tag || null }));
+        const result = await saveChange<any>(() => db.rpc("dev_upload_fps", { p_rows: batch }));
+        if (!result.ok) { setRows(remaining); setMsg(`${total - remaining.length} processed. ${remaining.length} remaining. Retry to continue safely.`); return; }
+        inserted += result.data.inserted || 0; duplicates += result.data.duplicates || 0;
+        remaining = remaining.slice(batch.length); checkpoint(); setProg(Math.round((total - remaining.length) / total * 100));
+      }
+      try { sessionStorage.removeItem(resumeKey); } catch {}
+      setUpRes({ inserted, duplicates }); setRows([]); setRaw(""); setContactRevision(x => x + 1); await load();
+      track("devapp_upload", { meta: { n: total, shared: upOpts.shared } });
+    } finally { mutation.current = false; setBusy(false); }
   };
-  const setShared = async (ids: number[], shared: boolean) => { if (!ids.length) return; setLeads((l) => l.map((x) => (ids.includes(x.id) ? { ...x, shared } : x))); await db.from("lead_fingerprints").update({ shared }).in("id", ids); load(); };
-  const check = async (e: React.FormEvent) => { e.preventDefault(); const r = await fingerprint(q); if (!r) { setCheckRes({ bad: true }); return; } const { data } = await db.rpc("dev_check_fp", { p_fp: r.fp }); setCheckRes({ ...data, fp: r.fp, kind: r.kind }); };
-  const exportCsv = () => { const csv = "fingerprint,kind,shared,country,budget,tag,uploaded_at\n" + leads.map((l) => [l.fp, l.kind, l.shared, l.country || "", l.budget || "", l.tag || "", l.uploaded_at].join(",")).join("\n"); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = "realhunt-fingerprints.csv"; a.click(); };
-  const wipe = async () => { if (!confirm("Delete all your fingerprints from RealHunt? Introductions already made are kept, and buyers you had will no longer be exempt.")) return; await db.from("lead_fingerprints").delete().eq("developer_id", ov.developer.id); setLeads([]); load(); };
-
-  // CRM actions
-  const patchIntro = async (id: string, patch: any) => { setOv((o: any) => o ? { ...o, received: o.received.map((i: any) => (i.id === id ? { ...i, ...patch } : i)) } : o); if (open?.id === id) setOpen((x: any) => ({ ...x, ...patch })); await db.from("introductions").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", id); };
-  const setStatus = async (i: any, status: string) => { if (status === "sold") { setSale(i); setPrice(""); setSaleNote(""); setSaleRes(null); return; } if (status === "accepted" && !signed) { nav("/network/agreement"); return; } await patchIntro(i.id, { status }); track("devapp_status", { meta: { status } }); load(); };
-  const reportSale = async (e: React.FormEvent) => { e.preventDefault(); if (!sale) return; setBusy(true); const { data, error } = await db.rpc("dev_report_sale", { p_intro: sale.id, p_price: Number(price), p_note: saleNote || null }); setBusy(false); if (error) { setSaleRes({ error: error.message }); return; } setSaleRes(data); track("devapp_sale", { meta: { price: Number(price), exempt: data.exempt } }); load(); };
+  const setShared = async (ids: number[], shared: boolean) => {
+    if (!ids.length || mutation.current) return; mutation.current = true;
+    const result = await saveChange(() => db.from("lead_fingerprints").update({ shared }).in("id", ids).select("id"), "Sharing preference saved");
+    mutation.current = false;
+    if (result.ok) { setContactRevision(x => x + 1); await load(); }
+  };
+  const check = async (e: React.FormEvent) => {
+    e.preventDefault(); const r = await fingerprint(q); if (!r) { setCheckRes({ bad: true }); return; }
+    const result = await saveChange<any>(() => db.rpc("dev_check_fp", { p_fp: r.fp }));
+    if (result.ok) setCheckRes({ ...result.data, fp: r.fp, kind: r.kind });
+  };
+  const exportCsv = async () => {
+    const result = await saveChange(async () => ({ data: await fetchAll<any>(async (from, to) => {
+      const res = await contactsQuery(from, to - from + 1); return { error: res.error, data: res.data?.rows || [], count: res.data?.total };
+    }) }));
+    if (result.ok) downloadCsv("realhunt-fingerprints.csv", [["fingerprint","kind","shared","country","budget","tag","uploaded_at"], ...result.data.map(l => [l.fp,l.kind,l.shared,l.country,l.budget,l.tag,l.uploaded_at])]);
+  };
+  const wipe = async () => {
+    if (!confirm("Delete all your fingerprints? Existing introductions remain, but prior-contact exemptions may be lost.")) return;
+    const result = await saveChange(() => db.from("lead_fingerprints").delete().eq("developer_id", ov.developer.id), "Fingerprints deleted");
+    if (result.ok) { setLeads([]); setContactRevision(x => x + 1); await load(); }
+  };
+  const patchIntro = async (id: string, patch: any) => {
+    if (mutation.current) return false; mutation.current = true;
+    const result = await saveChange(() => db.rpc("dev_update_intro", { p_id: id, p_patch: patch }), "Saved");
+    mutation.current = false;
+    if (!result.ok) return false;
+    setOpen((x: any) => x?.id === id ? { ...x, ...patch, updated_at: new Date().toISOString() } : x);
+    await load(); return true;
+  };
+  const setStatus = async (i: any, status: string) => {
+    if (status === "sold") { setSale(i); setPrice(""); setSaleNote(""); setSaleRes(null); return; }
+    if (status === "accepted" && !signed) { nav("/network/agreement"); return; }
+    if (await patchIntro(i.id, { status })) track("devapp_status", { meta: { status } });
+  };
+  const reportSale = async (e: React.FormEvent) => {
+    e.preventDefault(); if (!sale || mutation.current) return; mutation.current = true; setBusy(true);
+    const result = await saveChange<any>(() => db.rpc("dev_report_sale", { p_intro: sale.id, p_price: Number(price), p_note: saleNote || null }));
+    mutation.current = false; setBusy(false);
+    if (!result.ok) { setSaleRes({ error: "The sale could not be saved. You can safely retry." }); return; }
+    setSaleRes(result.data); track("devapp_sale", { meta: { price: Number(price), exempt: result.data.exempt } }); await load();
+  };
   const copy = (t: string, k: string) => { navigator.clipboard?.writeText(t).then(() => { setCopied(k); setTimeout(() => setCopied(""), 1500); }); };
 
-  const shownLeads = useMemo(() => leads.filter((l) => onlyShared === "all" || (onlyShared === "shared" ? l.shared : !l.shared)), [leads, onlyShared]);
+  const shownLeads = leads;
   const approved = ov?.developer?.status === "approved";
   const signed = !!ov?.signed && ov?.developer?.agreement_version === AGREEMENT_VERSION;
   const received: any[] = ov?.received || [];
+  const filteredBuyers = received.filter(i => (!buyerQuery || [i.buyer, i.contact, i.buyer_country, i.note, i.dev_notes].some(v => String(v || "").toLowerCase().includes(buyerQuery.toLowerCase()))) && (!followupsOnly || (i.next_action_at && i.next_action_at <= new Date().toISOString().slice(0,10) && !["sold","lost"].includes(i.status))));
   const waiting = received.filter((i) => i.status === "proposed").length;
   const overdue = received.filter((i) => i.next_action_at && new Date(i.next_action_at) < new Date(new Date().toDateString()) && !["sold", "lost"].includes(i.status)).length;
   const active = received.filter((i) => !["sold", "lost"].includes(i.status)).length;
+
+  if (authLoading) return <div className="min-h-screen bg-paper text-ink"><RHNav /><p role="status" className="p-8">Checking your session…</p></div>;
 
   if (!user) return (
     <div className="min-h-screen bg-paper text-ink"><RHNav />
       <div className="max-w-[1140px] mx-auto px-4 md:px-6 py-10 md:py-16 grid lg:grid-cols-[1.1fr_1fr] gap-10 items-start">
         <div>
           <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-3">RealHunt Network · developer panel</p>
-          <h1 className="font-display text-[clamp(32px,4.5vw,46px)] leading-tight tracking-tight">Get set up in five minutes. Then the buyers start.</h1>
+          <h1 className="font-display text-[clamp(32px,4.5vw,46px)] leading-tight tracking-tight">Set up your project. Be ready for the right buyers.</h1>
           <p className="text-[16px] text-ink-muted mt-3 max-w-[54ch]">No cost to join. You pay {COMMISSION_PCT}% only when a buyer we introduce actually buys, and you can earn {SOURCE_SHARE_PCT}% from leads you never managed to close. Here is exactly what happens, in order.</p>
           <div className="mt-6 grid sm:grid-cols-2 gap-3">
             <div className="border border-hairline rounded-2xl bg-white p-4">
@@ -153,7 +247,7 @@ const NetworkApp = () => {
             </div>
           </div>
           <ol className="mt-7 flex flex-col gap-3">
-            {[["Sign in", "Free. A link by email or Google, no password to remember."], ["Tell us about your project", "Company, project name, page, country, price from. One minute."], ["Sign the one-page agreement", "You type your name. It says in plain English: 5% only on buyers we bring you who buy, 3% to you when a shared lead of yours buys elsewhere, 0% on buyers you already had."], ["Upload the contacts you already have", "Your CRM export, any format. They are turned into fingerprints in your browser: we never see a name, email or phone. Anything in your list before we introduce it is yours, no commission, ever. This is what protects you, so do it before accepting buyers."], ["Choose what you want", "Only receive buyers, only earn from the leads you share, or both. Separate switches, you can change them any time."], ["Accept buyers and close", "Each buyer arrives in your pipeline with an introduction ID. Accept, get the contact, sell. Report the sale with the price and we settle the rest."]].map(([t, d], i) => (
+            {[["Sign in", "Free. A link by email or Google, no password to remember."], ["Tell us about your project", "Company, project name, page, country, price from. One minute."], ["Sign the one-page agreement", "You type your name. It says in plain English: 5% only on buyers we bring you who buy, 3% to you when a shared lead of yours buys elsewhere, 0% on buyers you already had."], ["Upload the contacts you already have", "Your CRM export in CSV or TSV format. They are turned into fingerprints in your browser: we never see a name, email or phone. Anything in your list before we introduce it is yours, no commission, ever. This is what protects you, so do it before accepting buyers."], ["Choose what you want", "Only receive buyers, only earn from the leads you share, or both. Separate switches, you can change them any time."], ["Accept buyers and close", "Each buyer arrives in your pipeline with an introduction ID. Accept, get the contact, sell. Report the sale with the price and we settle the rest."]].map(([t, d], i) => (
               <li key={t} className="flex gap-4 border border-hairline rounded-2xl bg-white p-4"><span className="h-8 w-8 shrink-0 rounded-full bg-ink text-paper font-display text-[15px] inline-flex items-center justify-center">{i + 1}</span><span><p className="font-medium text-[15px]">{t}</p><p className="text-[14px] text-ink-muted mt-0.5 leading-relaxed">{d}</p></span></li>
             ))}
           </ol>
@@ -170,7 +264,7 @@ const NetworkApp = () => {
             <div className="mt-3 flex flex-col gap-3 text-[14px]">
               <div className="rounded-xl bg-paper border border-hairline p-4"><p className="font-medium">Receive buyers</p><p className="text-ink-muted mt-0.5">We send you buyers. You pay {COMMISSION_PCT}% of the sale only if one buys. €0 if nobody does.</p></div>
               <div className="rounded-xl bg-paper border border-hairline p-4"><p className="font-medium">Earn from leads you could not sell to</p><p className="text-ink-muted mt-0.5">Mark old contacts as shared. If one buys another project in the network, you get {SOURCE_SHARE_PCT}% of that sale. You pay nothing.</p></div>
-              <div className="rounded-xl bg-paper border border-hairline p-4"><p className="font-medium">Just protect my contacts</p><p className="text-ink-muted mt-0.5">Upload without sharing. Nobody sees them, nobody gets introduced to them. It only proves they were yours, so they stay at 0%.</p></div>
+              <div className="rounded-xl bg-paper border border-hairline p-4"><p className="font-medium">Just protect my contacts</p><p className="text-ink-muted mt-0.5">Upload without sharing. They are not shared with other developers for introductions. It only proves they were yours, so they stay at 0%.</p></div>
             </div>
             <p className="text-[12px] text-ink-muted mt-3"><Link to="/network/agreement" className="underline">Read the full agreement</Link> · <Link to="/network" className="underline">How the network works</Link></p>
           </div>
@@ -240,12 +334,13 @@ const NetworkApp = () => {
     <div className="min-h-screen bg-paper text-ink"><RHNav />
       <div className="max-w-[1240px] mx-auto px-4 md:px-6 py-8 md:py-10">
         <div className="flex flex-wrap items-end justify-between gap-4">
-          <div><p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-2">Developer panel</p><h1 className="font-display text-[30px] md:text-[34px] tracking-tight">{ov.developer.project_name || ov.developer.company}</h1></div>
+          <div><nav aria-label="CRM workspaces" className="flex gap-4 text-xs mb-4"><Link to="/network/app/buyers" className="underline">Introduced buyers</Link><Link to="/leads" className="underline">My sales CRM</Link></nav><p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-2">Developer panel</p><h1 className="font-display text-[30px] md:text-[34px] tracking-tight">{ov.developer.project_name || ov.developer.company}</h1></div>
           <div className="flex flex-wrap gap-2">
             <span className={`px-3 py-1.5 rounded-full text-[12px] font-medium inline-flex items-center gap-1.5 ${signed ? "bg-emerald-500/10 text-emerald-700" : "bg-amber-500/10 text-amber-700"}`}><FileSignature size={13} /> {signed ? "Agreement signed" : "Agreement not signed"}</span>
-            <span className={`px-3 py-1.5 rounded-full text-[12px] font-medium ${approved ? "bg-emerald-500/10 text-emerald-700" : "bg-amber-500/10 text-amber-700"}`}>{approved ? "Approved · receiving buyers" : "Under review · introductions start once approved"}</span>
+            <span className={`px-3 py-1.5 rounded-full text-[12px] font-medium ${approved ? "bg-emerald-500/10 text-emerald-700" : "bg-amber-500/10 text-amber-700"}`}>{approved ? "Approved · eligible for introductions" : "Under review · introductions start once approved"}</span>
           </div>
         </div>
+        {msg && <p role="status" className="mt-4 rounded-xl border border-hairline bg-white p-4 text-sm">{msg}</p>}
         <div className="mt-6 flex gap-1 overflow-x-auto scrollbar-none border-b border-hairline">{TABS.map(([k, l]) => <Link key={k} to={`/network/app/${k}`} className={`shrink-0 px-4 py-2.5 text-[14px] border-b-2 -mb-px inline-flex items-center gap-1.5 ${tab === k ? "border-ink text-ink font-medium" : "border-transparent text-ink-muted hover:text-ink"}`}>{l}{k === "buyers" && waiting > 0 && <span className="h-5 min-w-5 px-1.5 rounded-full bg-ink text-paper text-[11px] inline-flex items-center justify-center">{waiting}</span>}</Link>)}</div>
 
         {!signed && tab !== "settings" && (
@@ -280,7 +375,7 @@ const NetworkApp = () => {
               <div className="border border-hairline rounded-2xl bg-white p-5 md:p-6">
                 <p className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><Sparkles size={18} /> Get set up</p>
                 <ol className="mt-4 grid md:grid-cols-5 gap-3">
-                  {[[true, "Project registered", "Done.", ""], [signed, "Sign the agreement", signed ? `v${ov.developer.agreement_version} · ${ov.developer.agreement_signer}` : "One page, typed signature.", "/network/agreement"], [ov.leads > 0, "Upload your contacts", ov.leads > 0 ? `${ov.leads} fingerprints protect your own buyers` : "Anything not uploaded counts as ours if it buys.", "/network/app/upload"], [!!ov.developer.mode, "Choose what you want", ov.developer.mode === "receive" ? "Receive buyers only" : ov.developer.mode === "share" ? "Earn from shared leads only" : ov.developer.mode === "both" ? "Receive and share" : "Receive, share, or both.", ""], [approved, "Get approved", approved ? "Receiving buyers." : "We review by hand, usually within a day.", ""]].map(([ok, t, d, to]: any, n) => (
+                  {[[true, "Project registered", "Done.", ""], [signed, "Sign the agreement", signed ? `v${ov.developer.agreement_version} · ${ov.developer.agreement_signer}` : "One page, typed signature.", "/network/agreement"], [ov.leads > 0, "Upload your contacts", ov.leads > 0 ? `${ov.leads} fingerprints protect your own buyers` : "Anything not uploaded counts as ours if it buys.", "/network/app/upload"], [!!ov.developer.mode, "Choose what you want", ov.developer.mode === "receive" ? "Receive buyers only" : ov.developer.mode === "share" ? "Earn from shared leads only" : ov.developer.mode === "both" ? "Receive and share" : "Receive, share, or both.", ""], [approved, "Get approved", approved ? "Receiving buyers." : "Manual review pending.", ""]].map(([ok, t, d, to]: any, n) => (
                     <li key={t} className={`rounded-xl border p-4 ${ok ? "border-emerald-500/40 bg-emerald-500/5" : "border-hairline"}`}><p className="text-[13px] font-medium inline-flex items-center gap-2">{ok ? <Check size={14} className="text-emerald-600" /> : <span className="h-4 w-4 rounded-full border border-ink-muted inline-flex items-center justify-center text-[10px]">{n + 1}</span>}{t}</p><p className="text-[12px] text-ink-muted mt-1">{d}</p>{!ok && to && <Link to={to} className="text-[12px] underline text-ink mt-1 inline-block">Do it →</Link>}</li>
                   ))}
                 </ol>
@@ -301,23 +396,25 @@ const NetworkApp = () => {
 
         {tab === "buyers" && (
           <div className="mt-6 flex flex-col gap-4">
-            {!approved && <div className="border border-amber-500/40 bg-amber-500/5 rounded-2xl p-5 text-[14px]">We are reviewing your project. Introductions start the moment it is approved, usually within a day. Uploading your contacts now means you are first in line.</div>}
+            {!approved && <div className="border border-amber-500/40 bg-amber-500/5 rounded-2xl p-5 text-[14px]">We are reviewing your project. Introductions become available after approval and agreement signature. Upload your existing contacts before accepting introductions.</div>}
             <div className="flex flex-wrap items-center gap-2">
               <p className="text-[14px] text-ink-muted">{received.length} buyers · {active} active{overdue ? <span className="text-amber-700"> · {overdue} overdue</span> : ""}</p>
               <span className="flex-1" />
               <div className="inline-flex border border-hairline rounded-full bg-white p-0.5">{(["board", "list"] as const).map((v) => <button key={v} onClick={() => setView(v)} className={`px-3 py-1.5 rounded-full text-[12px] inline-flex items-center gap-1.5 ${view === v ? "bg-ink text-paper" : "text-ink-muted"}`}>{v === "board" ? <LayoutGrid size={13} /> : <List size={13} />}{v}</button>)}</div>
             </div>
-            {received.length === 0 ? <div className="border border-hairline rounded-2xl bg-white p-10 text-center text-ink-muted">No buyers introduced yet. They appear here with their status, and we email you at {ov.developer.email} for each one.</div> : view === "board" ? (
+            <div className="flex flex-wrap gap-3"><input aria-label="Search all introduced buyers" placeholder="Search buyer, country or notes" value={buyerQuery} onChange={e => { setBuyerQuery(e.target.value); setBuyerLimit(30); }} className={`${inp} flex-1`} /><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={followupsOnly} onChange={e => setFollowupsOnly(e.target.checked)} />Follow-ups due</label></div>
+            {received.length === 0 ? <div className="border border-hairline rounded-2xl bg-white p-10 text-center text-ink-muted">No buyers introduced yet. New introductions appear here, with notifications sent to {ov.developer.email}.</div> : view === "board" ? (
               <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
-                {STAGES.map((s) => { const col = received.filter((i) => i.status === s); return (
+                {STAGES.map((s) => { const col = filteredBuyers.filter((i) => i.status === s); return (
                   <div key={s} className="shrink-0 w-[260px] rounded-2xl bg-hairline/30 p-2.5">
                     <div className="flex items-center justify-between px-1.5 pb-2"><span className="text-[12px] font-medium">{STATUS[s]}</span><span className="text-[11px] text-ink-muted tabular-nums">{col.length}</span></div>
-                    <div className="flex flex-col gap-2">{col.map((i) => <BuyerCard key={i.id} i={i} />)}{col.length === 0 && <div className="rounded-xl border border-dashed border-hairline h-16" />}</div>
+                    <div className="flex flex-col gap-2">{col.slice(0, buyerLimit).map((i) => <BuyerCard key={i.id} i={i} />)}{col.length === 0 && <div className="rounded-xl border border-dashed border-hairline h-16" />}</div>
                   </div>); })}
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">{received.map((i) => <BuyerCard key={i.id} i={i} compact />)}</div>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">{filteredBuyers.slice(0, buyerLimit).map((i) => <BuyerCard key={i.id} i={i} compact />)}</div>
             )}
+            {filteredBuyers.length > buyerLimit && <button onClick={() => setBuyerLimit(n => n + 30)} className="min-h-11 underline text-sm">Show more buyers</button>}
             <p className="text-[12px] text-ink-muted">Accept and we send you the buyer's contact. Keep the status honest: it is what the sharing developer gets paid on, and how we send you better fits. A sale is reported with its price from the buyer's card.</p>
           </div>
         )}
@@ -327,14 +424,15 @@ const NetworkApp = () => {
             <div className="flex flex-col gap-4">
               <div className="border border-hairline rounded-2xl bg-white p-5 md:p-6">
                 <p className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><ShieldCheck size={18} className="text-emerald-600" /> Your contacts never leave this browser</p>
-                <p className="text-[14px] text-ink-muted mt-1">Drop a CSV or paste emails and phones. Each one becomes a one-way fingerprint here, on your machine, and only the fingerprint is sent. We cannot read it back. Nobody can. <b className="text-ink">A contact uploaded before we introduce it is yours: no commission, ever.</b></p>
+                <p className="text-[14px] text-ink-muted mt-1">Drop a CSV or paste emails and phones. Each one becomes a one-way fingerprint here, on your machine, and only the fingerprint is sent. Raw contact details are not uploaded. Fingerprints are used for matching and should still be treated as sensitive data. <b className="text-ink">A contact uploaded before we introduce it is yours: no commission, ever.</b></p>
                 <div onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); onFile(e.dataTransfer.files?.[0]); }} onClick={() => fileRef.current?.click()} className="mt-4 border-2 border-dashed border-hairline hover:border-ink rounded-2xl p-8 text-center cursor-pointer">
-                  <Upload size={22} className="mx-auto text-ink-muted" /><p className="text-[14px] mt-2">Drop your CSV / Excel export here, or click to choose</p><p className="text-[12px] text-ink-muted mt-1">Any column layout. We only pick up emails and phone numbers.</p>
+                  <Upload size={22} className="mx-auto text-ink-muted" /><p className="text-[14px] mt-2">Drop a CSV exported from your CRM or Excel, or click to choose</p><p className="text-[12px] text-ink-muted mt-1">Any column layout. We only pick up emails and phone numbers.</p>
                   <input ref={fileRef} type="file" accept=".csv,.txt,.tsv" className="hidden" onChange={(e) => onFile(e.target.files?.[0])} />
                 </div>
                 <textarea value={raw} onChange={(e) => setRaw(e.target.value)} placeholder={"or paste here, one per line:\nmaria@gmail.com\n+34 600 123 456"} className={`${inp} mt-3 w-full h-28 rounded-2xl font-mono text-[13px]`} />
-                <div className="mt-3 flex items-center gap-3"><button onClick={() => { setUpRes(null); setProg(1); parse(raw); }} disabled={!raw.trim()} className="px-4 py-2 rounded-full border border-ink text-[14px] font-medium disabled:opacity-40">Fingerprint pasted text</button>{prog > 0 && prog < 100 && <span className="text-[13px] text-ink-muted inline-flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> hashing {prog}%</span>}</div>
+                <div className="mt-3 flex items-center gap-3"><button onClick={() => { setUpRes(null); setProg(1); parse(raw); }} disabled={busy || !raw.trim()} className="px-4 py-2 rounded-full border border-ink text-[14px] font-medium disabled:opacity-40">Fingerprint pasted text</button>{prog > 0 && prog < 100 && <span className="text-[13px] text-ink-muted inline-flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> hashing {prog}%</span>}</div>
               </div>
+              {(importIssues.length > 0 || importDuplicates > 0) && <div className="border border-amber-300 rounded-2xl p-4 text-sm" role="status"><p>{importDuplicates} duplicate contacts removed. {importIssues.length} rows need attention.</p>{importIssues.slice(0, 10).map((issue,n) => <p key={n}>Row {issue.row}: {issue.message}</p>)}</div>}
               {rows.length > 0 && (
                 <div className="border border-hairline rounded-2xl bg-white p-5 md:p-6">
                   <p className="font-display text-[20px] tracking-tight">{rows.length} contacts ready · {rows.filter((r) => r.kind === "email").length} emails, {rows.filter((r) => r.kind === "phone").length} phones</p>
@@ -345,7 +443,7 @@ const NetworkApp = () => {
                     <Field l="Tag"><input className={inp} placeholder="expo-2025, cold, visited…" value={upOpts.tag} onChange={(e) => setUpOpts({ ...upOpts, tag: e.target.value })} /></Field>
                   </div>
                   <div className="mt-4 grid sm:grid-cols-2 gap-3">
-                    <button type="button" onClick={() => setUpOpts({ ...upOpts, shared: false })} className={`text-left rounded-2xl border-2 p-4 ${!upOpts.shared ? "border-ink bg-paper" : "border-hairline"}`}><p className="font-medium text-[15px] inline-flex items-center gap-2"><ShieldCheck size={16} /> Just protect these contacts</p><p className="text-[13px] text-ink-muted mt-1 leading-relaxed">Private. Nobody sees them, nobody gets introduced to them. If we ever send you one of these people, the sale is exempt: 0%.</p></button>
+                    <button type="button" onClick={() => setUpOpts({ ...upOpts, shared: false })} className={`text-left rounded-2xl border-2 p-4 ${!upOpts.shared ? "border-ink bg-paper" : "border-hairline"}`}><p className="font-medium text-[15px] inline-flex items-center gap-2"><ShieldCheck size={16} /> Just protect these contacts</p><p className="text-[13px] text-ink-muted mt-1 leading-relaxed">Private. They are not shared with other developers for introductions. If we ever send you one of these people, the sale is exempt: 0%.</p></button>
                     <button type="button" onClick={() => setUpOpts({ ...upOpts, shared: true })} className={`text-left rounded-2xl border-2 p-4 ${upOpts.shared ? "border-ink bg-paper" : "border-hairline"}`}><p className="font-medium text-[15px] inline-flex items-center gap-2"><BadgeEuro size={16} /> Protect and share, earn {SOURCE_SHARE_PCT}%</p><p className="text-[13px] text-ink-muted mt-1 leading-relaxed">Same protection, plus: if one of them buys another project in the network, you get {SOURCE_SHARE_PCT}% of that sale. Still nobody sees the contact. You can un-share any contact later.</p></button>
                   </div>
                   <div className="mt-4 flex items-center gap-3"><button onClick={send} disabled={busy} className="rh-btn-primary inline-flex items-center gap-2">{busy ? <Loader2 size={16} className="animate-spin" /> : <Fingerprint size={16} />} Send {rows.length} fingerprints</button><button onClick={() => { setRows([]); setRaw(""); }} className="text-[13px] text-ink-muted underline">Clear</button></div>
@@ -357,7 +455,7 @@ const NetworkApp = () => {
             <aside className="flex flex-col gap-3">
               <div className="border border-hairline rounded-2xl bg-white p-5"><p className="font-medium text-[15px] inline-flex items-center gap-2"><Search size={16} /> Is this contact known?</p><p className="text-[13px] text-ink-muted mt-1">Type an email or phone. It is fingerprinted here and only the fingerprint is checked.</p>
                 <form onSubmit={check} className="mt-3 flex gap-2"><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="name@mail.com" className={`${inp} flex-1 min-w-0`} /><button className="px-4 rounded-xl border border-ink text-[13px] font-medium">Check</button></form>
-                {checkRes && (checkRes.bad ? <p className="text-[13px] text-red-600 mt-2">Not an email or phone.</p> : <ul className="mt-3 text-[13px] flex flex-col gap-1"><li>{checkRes.mine ? "✓ In your list, protected" : "· Not in your list"}</li><li>{checkRes.realhunt ? "✓ Active RealHunt buyer" : "· Not a RealHunt buyer yet"}</li><li>{Number(checkRes.network) > 0 ? `✓ With ${checkRes.network} other developer${checkRes.network > 1 ? "s" : ""}` : "· No other developer has them"}</li><li>{Number(checkRes.introduced) > 0 ? `✓ Introduced ${checkRes.introduced}×` : "· Never introduced"}</li></ul>)}
+                {checkRes && (checkRes.restricted ? <p className="text-sm">Upload this contact to your own list before checking matches.</p> : checkRes.bad ? <p className="text-[13px] text-red-600 mt-2">Not an email or phone.</p> : <ul className="mt-3 text-[13px] flex flex-col gap-1"><li>{checkRes.mine ? "✓ In your list, protected" : "· Not in your list"}</li><li>{checkRes.realhunt ? "✓ Active RealHunt buyer" : "· Not a RealHunt buyer yet"}</li><li>{Number(checkRes.network) > 0 ? `✓ With ${checkRes.network} other developer${checkRes.network > 1 ? "s" : ""}` : "· No other developer has them"}</li><li>{Number(checkRes.introduced) > 0 ? `✓ Introduced ${checkRes.introduced}×` : "· Never introduced"}</li></ul>)}
               </div>
               <div className="border border-hairline rounded-2xl bg-white p-5 text-[13px] text-ink-muted"><p className="font-medium text-ink text-[15px]">What a fingerprint looks like</p><p className="mt-2 font-mono break-all text-[12px]">{"a8f09af9fc6af1a5…fd0e06d1"}</p><p className="mt-2">64 characters, one way. Same contact → same fingerprint, on every developer's machine. That is how we know a buyer was already yours without anyone seeing a name.</p></div>
             </aside>
@@ -367,19 +465,22 @@ const NetworkApp = () => {
         {tab === "leads" && (
           <div className="mt-6 flex flex-col gap-4">
             <div className="flex flex-wrap items-center gap-2">
-              {(["all", "shared", "private"] as const).map((k) => <button key={k} onClick={() => setOnlyShared(k)} className={`px-3.5 py-2 rounded-full border text-[13px] ${onlyShared === k ? "bg-ink text-paper border-ink" : "border-hairline bg-white"}`}>{k === "all" ? `All (${leads.length})` : k === "shared" ? `Shared (${leads.filter((l) => l.shared).length})` : `Private (${leads.filter((l) => !l.shared).length})`}</button>)}
+              {(["all", "shared", "private"] as const).map((k) => <button key={k} onClick={() => setOnlyShared(k)} className={`px-3.5 py-2 rounded-full border text-[13px] ${onlyShared === k ? "bg-ink text-paper border-ink" : "border-hairline bg-white"}`}>{k === "all" ? `All (${ov.leads})` : k === "shared" ? `Shared (${ov.shared})` : `Private (${ov.leads - ov.shared})`}</button>)}
               <span className="flex-1" />
               <button onClick={() => setShared(shownLeads.map((l) => l.id), true)} className="px-3.5 py-2 rounded-full border border-hairline bg-white text-[13px]">Share all shown</button>
               <button onClick={() => setShared(shownLeads.map((l) => l.id), false)} className="px-3.5 py-2 rounded-full border border-hairline bg-white text-[13px]">Make all shown private</button>
               <button onClick={exportCsv} className="px-3.5 py-2 rounded-full border border-hairline bg-white text-[13px] inline-flex items-center gap-1.5"><Download size={14} /> Export</button>
             </div>
-            {leads.length === 0 ? <div className="border border-hairline rounded-2xl bg-white p-10 text-center text-ink-muted">No contacts yet. <Link to="/network/app/upload" className="underline text-ink">Upload your first batch</Link> so the buyers you already have stay yours.</div> : (
+            <input aria-label="Search all contacts" placeholder="Search country, tag or fingerprint" className={inp} value={contactQuery} onChange={e => setContactQuery(e.target.value)} />
+            {contactError ? <button onClick={() => setContactRevision(x => x + 1)} className="min-h-11 underline">Contacts could not load. Retry</button> : contactLoading ? <p role="status">Loading contacts…</p> : leads.length === 0 ? <div className="border border-hairline rounded-2xl bg-white p-10 text-center text-ink-muted">No contacts match this view. <Link to="/network/app/upload" className="underline text-ink">Upload your first batch</Link> so the buyers you already have stay yours.</div> : (
               <div className="border border-hairline rounded-2xl bg-white overflow-x-auto"><table className="w-full text-[13px]"><thead><tr className="text-[11px] uppercase tracking-wider text-ink-muted"><th className="text-left px-4 py-2.5">Fingerprint</th><th className="text-left px-3 py-2.5">Kind</th><th className="text-left px-3 py-2.5">Country</th><th className="text-left px-3 py-2.5">Budget</th><th className="text-left px-3 py-2.5">Tag</th><th className="text-left px-3 py-2.5">Uploaded</th><th className="text-left px-3 py-2.5">Shared</th></tr></thead>
-                <tbody>{shownLeads.slice(0, 500).map((l) => <tr key={l.id} className="border-t border-hairline/70"><td className="px-4 py-2 font-mono">{mask(l.fp)}</td><td className="px-3 py-2 text-ink-muted">{l.kind}</td><td className="px-3 py-2">{l.country || "—"}</td><td className="px-3 py-2 tabular-nums">{l.budget ? eur(l.budget) : "—"}</td><td className="px-3 py-2 text-ink-muted">{l.tag || "—"}</td><td className="px-3 py-2 text-ink-muted">{fmtD(l.uploaded_at)}</td><td className="px-3 py-2"><button onClick={() => setShared([l.id], !l.shared)} aria-label="Toggle share">{l.shared ? <ToggleRight size={24} className="text-emerald-600" /> : <ToggleLeft size={24} className="text-ink-muted" />}</button></td></tr>)}</tbody></table>
-                {shownLeads.length > 500 && <p className="px-4 py-3 text-[12px] text-ink-muted">Showing 500 of {shownLeads.length}. Export to see all.</p>}</div>
+                <tbody>{shownLeads.map((l) => <tr key={l.id} className="border-t border-hairline/70"><td className="px-4 py-2 font-mono">{mask(l.fp)}</td><td className="px-3 py-2 text-ink-muted">{l.kind}</td><td className="px-3 py-2">{l.country || "—"}</td><td className="px-3 py-2 tabular-nums">{l.budget ? eur(l.budget) : "—"}</td><td className="px-3 py-2 text-ink-muted">{l.tag || "—"}</td><td className="px-3 py-2 text-ink-muted">{fmtD(l.uploaded_at)}</td><td className="px-3 py-2"><button onClick={() => setShared([l.id], !l.shared)} aria-label="Toggle share">{l.shared ? <ToggleRight size={24} className="text-emerald-600" /> : <ToggleLeft size={24} className="text-ink-muted" />}</button></td></tr>)}</tbody></table>
+                </div>
             )}
           </div>
         )}
+
+        {tab === "leads" && <Pagination page={contactPage} total={contactTotal} onChange={setContactPage} busy={contactLoading} />}
 
         {tab === "deals" && (
           <div className="mt-6 flex flex-col gap-4">
@@ -418,7 +519,7 @@ const NetworkApp = () => {
 
         {tab === "privacy" && (
           <div className="mt-6 grid md:grid-cols-2 gap-4 text-[14px] leading-relaxed">
-            <div className="border border-hairline rounded-2xl bg-white p-6"><p className="font-display text-[20px] tracking-tight">I am not handing my database to a competitor.</p><p className="mt-2 text-ink-muted">Right. So you never hand it to anyone. Each email or phone is turned into a 64-character fingerprint in your browser. Fingerprints cannot be reversed. We store fingerprints, a country, a budget and a tag. Never a name, never an email, never a phone.</p></div>
+            <div className="border border-hairline rounded-2xl bg-white p-6"><p className="font-display text-[20px] tracking-tight">I am not handing my database to a competitor.</p><p className="mt-2 text-ink-muted">Right. So you never hand it to anyone. Each email or phone is turned into a 64-character fingerprint in your browser. Fingerprints let us match contacts without uploading the original details; they are still sensitive. We store fingerprints, a country, a budget and a tag. Never a name, never an email, never a phone.</p></div>
             <div className="border border-hairline rounded-2xl bg-white p-6"><p className="font-display text-[20px] tracking-tight">The {COMMISSION_PCT}% rule</p><p className="mt-2 text-ink-muted">We introduce a buyer, you sell, you pay {COMMISSION_PCT}% of the price. If that buyer's fingerprint was already in your panel before we introduced them, it is exempt, automatically. If you had them but never uploaded, they count as ours. That is the whole reason to upload first.</p></div>
             <div className="border border-hairline rounded-2xl bg-white p-6"><p className="font-display text-[20px] tracking-tight">The {SOURCE_SHARE_PCT}% rule</p><p className="mt-2 text-ink-muted">A lead you marked as shared buys another project in the network through an introduction. The selling developer pays {COMMISSION_PCT}% of the sale to RealHunt, and only that: out of it, {SOURCE_SHARE_PCT}% of the sale goes to you within {PAYMENT_DAYS} days and {COMMISSION_PCT - SOURCE_SHARE_PCT}% stays with RealHunt. You pay nothing to share. Private leads are never introduced.</p></div>
             <div className="border border-hairline rounded-2xl bg-white p-6"><p className="font-display text-[20px] tracking-tight">Wait, then how do you contact the buyer?</p><p className="mt-2 text-ink-muted">We don't, from a fingerprint. When a match is accepted we ask you, the developer who owns the relationship, for that one contact, or the buyer is already a RealHunt user who asked us to find them a home. Either way, consent first. Operated by Equinox Investment Group LLC, Sheridan, Wyoming. <Link to="/network/agreement" className="underline text-ink">Full agreement</Link>.</p></div>
@@ -442,7 +543,7 @@ const NetworkApp = () => {
                 <div className="flex flex-col gap-2 text-[14px]">{i.contact.split(/\s*[|\n]\s*/).filter(Boolean).map((c: string) => { const isMail = /@/.test(c); const isTel = /^[+\d][\d\s().-]{6,}$/.test(c); return <div key={c} className="flex items-center justify-between gap-2"><span className="inline-flex items-center gap-2 min-w-0">{isMail ? <Mail size={14} className="text-ink-muted shrink-0" /> : isTel ? <Phone size={14} className="text-ink-muted shrink-0" /> : null}<span className="truncate">{c}</span></span><span className="flex gap-1 shrink-0">{isMail && <a href={`mailto:${c}`} className="px-2 py-1 rounded-full border border-hairline text-[12px]">Email</a>}{isTel && <a href={`https://wa.me/${c.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="px-2 py-1 rounded-full border border-hairline text-[12px]">WhatsApp</a>}<button onClick={() => copy(c, c)} className="px-2 py-1 rounded-full border border-hairline text-[12px] inline-flex items-center gap-1"><Copy size={11} /> {copied === c ? "Copied" : "Copy"}</button></span></div>; })}</div>
               ) : i.status === "proposed" ? (
                 <p className="text-[13px] text-ink-muted">Accept the introduction and the contact appears here. {!signed && <Link to="/network/agreement" className="underline text-ink">Sign the agreement first.</Link>}</p>
-              ) : <p className="text-[13px] text-ink-muted">We are sending the contact to {ov.developer.email}. It will show here too as soon as it is in.</p>}
+              ) : <p className="text-[13px] text-ink-muted">Contact details are pending. They will appear here when RealHunt adds them.</p>}
             </div>
 
             {/* stage */}
@@ -455,8 +556,9 @@ const NetworkApp = () => {
             {/* follow up + notes */}
             <div className="border border-hairline rounded-2xl bg-white p-4 flex flex-col gap-3">
               <Field l="Next follow-up"><input type="date" className={inp} value={i.next_action_at || ""} onChange={(e) => patchIntro(i.id, { next_action_at: e.target.value || null })} /></Field>
-              <Field l="Your notes (only you see them)"><textarea defaultValue={i.dev_notes || ""} onBlur={(e) => e.target.value !== (i.dev_notes || "") && patchIntro(i.id, { dev_notes: e.target.value })} placeholder="Called Tue, wants sea view, visiting in March…" className={`${inp} h-28 rounded-2xl`} /></Field>
+              <Field l="Your notes (visible to you and RealHunt support)"><textarea defaultValue={i.dev_notes || ""} onBlur={(e) => e.target.value !== (i.dev_notes || "") && patchIntro(i.id, { dev_notes: e.target.value })} placeholder="Called Tue, wants sea view, visiting in March…" className={`${inp} h-28 rounded-2xl`} /></Field>
             </div>
+            <BuyerHistory id={i.id} revision={i.updated_at} />
             <p className="text-[12px] text-ink-muted">Introduction ID {i.id.slice(0, 8)}. Every status change is logged; it is what the agreement is settled on.</p>
           </aside>
         </div>); })()}
@@ -484,3 +586,4 @@ const NetworkApp = () => {
   );
 };
 export default NetworkApp;
+

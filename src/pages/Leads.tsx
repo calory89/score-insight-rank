@@ -1,3 +1,4 @@
+import { saveChange, fetchAll } from "@/lib/platform";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -188,13 +189,13 @@ const LeadDetail = ({ lead, onClose, onUpdate }: { lead: Lead; onClose: () => vo
   const sc = statusConfig[lead.status] || statusConfig.new;
 
   const updateStatus = async (newStatus: string) => {
-    await (supabase as any).from("leads").update({ status: newStatus }).eq("id", lead.id);
+    const result = await saveChange(() => (supabase as any).from("leads").update({ status: newStatus }).eq("id", lead.id).select("id").single()); if (!result.ok) return;
     toast({ title: `Status updated to ${statusConfig[newStatus]?.label || newStatus}` });
     onUpdate();
   };
 
   const deleteLead = async () => {
-    await (supabase as any).from("leads").delete().eq("id", lead.id);
+    const result = await saveChange(() => (supabase as any).from("leads").delete().eq("id", lead.id).select("id").single()); if (!result.ok) return;
     toast({ title: "Lead deleted" });
     onClose();
     onUpdate();
@@ -341,11 +342,8 @@ const Leads = () => {
   }, [user]);
 
   const loadLeads = async () => {
-    const { data } = await (supabase as any)
-      .from("leads")
-      .select("*")
-      .order("created_at", { ascending: false });
-    setLeads((data || []) as Lead[]);
+    const result = await saveChange(async () => ({ data: await fetchAll<Lead>((from,to) => (supabase as any).from("leads").select("*", { count: "exact" }).order("created_at", { ascending: false }).order("id").range(from,to)) }));
+    if (result.ok) setLeads(result.data);
     setLoading(false);
   };
 
@@ -556,3 +554,4 @@ const Leads = () => {
 };
 
 export default Leads;
+

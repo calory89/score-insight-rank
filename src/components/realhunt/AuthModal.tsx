@@ -40,7 +40,7 @@ export default function AuthModal({ open, onClose, title = "Sign in to see the o
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) { setErr("Enter a valid email address."); return; }
     busyRef.current = true; setBusy(true); setErr(""); rememberReturn(to);
     try {
-      const { error } = await supabase.auth.signInWithOtp({ email: address, options: { emailRedirectTo: confirmationUrl(location.origin, to), shouldCreateUser: true } });
+      const { error } = await supabase.auth.signInWithOtp({ email: address, options: { emailRedirectTo: confirmationUrl(location.origin, to), shouldCreateUser: true, data: { auth_return_to: to } } });
       if (error) { setErr(authError(error)); if (error.status === 429) { deadline.current = Date.now() + 60000; setRemaining(60); } return; }
       setSentTo(address); deadline.current = Date.now() + 60000; setRemaining(60); track("auth_magic", { find });
     } catch { setErr(authError(null)); } finally { busyRef.current = false; setBusy(false); }

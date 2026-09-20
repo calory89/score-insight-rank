@@ -19,3 +19,7 @@ project_id = "nylmhdtlshhtjkuvfbms"
     verify_jwt = false
   [functions.send-email]
     verify_jwt = false
+
+  [functions.resend-delivery]
+    verify_jwt = false
+

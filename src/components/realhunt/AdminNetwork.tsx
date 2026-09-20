@@ -1,3 +1,5 @@
+import Pagination from "./Pagination";
+import { saveChange, csvCell } from "@/lib/platform";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { eur } from "@/lib/rh";
@@ -12,6 +14,22 @@ const Td = ({ c, m, mono }: { c: React.ReactNode; m?: boolean; mono?: boolean })
 const Stat = ({ n, t, tone }: { n: React.ReactNode; t: string; tone?: string }) => <span><b className={`font-display text-[22px] ${tone || ""}`}>{n}</b> <span className="text-ink-muted">{t}</span></span>;
 
 const AdminNetwork = () => {
+  const [candidatePage, setCandidatePage] = useState(0);
+  const [candidateQuery, setCandidateQuery] = useState("");
+  const [candidates, setCandidates] = useState<any[]>([]);
+  const [candidateTotal, setCandidateTotal] = useState(0);
+  const [candidateError, setCandidateError] = useState(false);
+  const [candidateRetry, setCandidateRetry] = useState(0);
+  const [candidateBusy, setCandidateBusy] = useState(false);
+  useEffect(() => { setCandidatePage(0); }, [candidateQuery]);
+  useEffect(() => {
+    let active = true; setCandidateBusy(true); setCandidateError(false);
+    const timer = setTimeout(() => Promise.resolve(db.rpc("admin_candidates_page", { p_query: candidateQuery, p_offset: candidatePage * 50, p_limit: 50 })).then(({ data,error }: any) => {
+      if (!active) return;
+      if (error) { setCandidateError(true); return; } setCandidates(data.rows); setCandidateTotal(data.total);
+    }).catch(() => { if (active) setCandidateError(true); }).finally(() => { if (active) setCandidateBusy(false); }), 200);
+    return () => { active = false; clearTimeout(timer); };
+  }, [candidatePage, candidateQuery, candidateRetry]);
   const [d, setD] = useState<any | null>(null);
   const [busy, setBusy] = useState("");
   const [pick, setPick] = useState<any | null>(null); // candidate being introduced
@@ -20,21 +38,24 @@ const AdminNetwork = () => {
   const [f, setF] = useState<"all" | "pending" | "approved" | "paused" | "unsigned">("all");
   const [contactFor, setContactFor] = useState<any | null>(null);
   const [contact, setContact] = useState(""); const [cCountry, setCCountry] = useState(""); const [cBudget, setCBudget] = useState("");
-  const load = () => db.rpc("admin_network").then(({ data }: any) => setD(data));
+  const [loadError, setLoadError] = useState(false);
+  const load = async () => { setLoadError(false); const result = await saveChange<any>(() => db.rpc("admin_network")); if (result.ok) setD(result.data); else setLoadError(true); };
+  const change = async (operation: () => PromiseLike<any>) => { const result = await saveChange(operation, "Saved"); if (result.ok) await load(); return result.ok; };
   useEffect(() => { load(); }, []);
-  const setStatus = async (id: string, status: string) => { setBusy(id); await db.from("network_developers").update({ status, updated_at: new Date().toISOString() }).eq("id", id); await load(); setBusy(""); };
-  const setPct = async (id: string, col: "commission_pct" | "source_share_pct", v: number) => { await db.from("network_developers").update({ [col]: v }).eq("id", id); load(); };
-  const setNotes = async (id: string, notes: string) => { await db.from("network_developers").update({ notes }).eq("id", id); };
-  const setIntro = async (id: string, status: string) => { await db.from("introductions").update({ status, updated_at: new Date().toISOString() }).eq("id", id); load(); };
-  const introduce = async () => { if (!pick || !to) return; setBusy("intro"); const { data, error } = await db.rpc("admin_introduce", { p_fp: pick.fp, p_to: to, p_from: pick.from_developer, p_note: note || null }); setBusy(""); setRes(error ? error.message : data.ok ? "Introduced. The developer got an email." : data.reason); if (data?.ok) { setPick(null); setTo(""); setNote(""); load(); } };
-  const saveContact = async () => { if (!contactFor) return; setBusy("contact"); await db.rpc("admin_set_intro_contact", { p_id: contactFor.id, p_contact: contact || null, p_country: cCountry || null, p_budget: cBudget ? Number(cBudget) : null }); setBusy(""); setContactFor(null); load(); };
-  const setDeal = async (id: string, status: string) => { await db.rpc("admin_set_deal", { p_id: id, p_status: status, p_notes: null }); load(); };
-  const setDealNotes = async (id: string, notes: string) => { await db.rpc("admin_set_deal", { p_id: id, p_status: null, p_notes: notes }); };
-  const sharePaid = async (id: string) => { await db.rpc("admin_mark_share_paid", { p_id: id }); load(); };
+  const setStatus = async (id: string, status: string) => { setBusy(id); await change(() => db.from("network_developers").update({ status, updated_at: new Date().toISOString() }).eq("id", id).select("id").single()); setBusy(""); };
+  const setPct = async (id: string, col: "commission_pct" | "source_share_pct", v: number) => { await change(() => db.from("network_developers").update({ [col]: v }).eq("id", id).select("id").single()); };
+  const setNotes = async (id: string, notes: string) => { await change(() => db.from("network_developers").update({ notes }).eq("id", id).select("id").single()); };
+  const setIntro = async (id: string, status: string) => { await change(() => db.rpc("admin_update_intro", { p_id: id, p_status: status })); };
+  const introduce = async () => { if (!pick || !to || busy === "intro") return; setBusy("intro"); const result = await saveChange<any>(() => db.rpc("admin_introduce", { p_fp: pick.fp, p_to: to, p_from: pick.from_developer, p_note: note || null })); setBusy(""); if (!result.ok) return; const data = result.data; setRes(data.ok ? "Introduction created. Email delivery is tracked separately." : data.reason); if (data.ok) { setPick(null); setTo(""); setNote(""); load(); } };
+  const saveContact = async () => { if (!contactFor) return; setBusy("contact"); const ok = await change(() => db.rpc("admin_set_intro_contact", { p_id: contactFor.id, p_contact: contact || null, p_country: cCountry || null, p_budget: cBudget ? Number(cBudget) : null })); setBusy(""); if (ok) setContactFor(null); };
+  const setDeal = async (id: string, status: string) => { await change(() => db.rpc("admin_set_deal", { p_id: id, p_status: status, p_notes: null })); };
+  const setDealNotes = async (id: string, notes: string) => { await change(() => db.rpc("admin_set_deal", { p_id: id, p_status: null, p_notes: notes })); };
+  const sharePaid = async (id: string) => { await change(() => db.rpc("admin_mark_share_paid", { p_id: id })); };
   const devs = useMemo(() => (d?.developers || []).filter((x: any) => f === "all" || (f === "unsigned" ? !x.signed_at : x.status === f)), [d, f]);
   const name = (id: string) => { const x = (d?.developers || []).find((y: any) => y.id === id); return x ? x.project_name || x.company : id.slice(0, 8); };
-  const exportDevs = () => { const rows = (d?.developers || []).map((x: any) => [x.company, x.contact_name, x.email, x.phone, x.project_name, x.project_url, x.country, x.price_from, x.status, x.signed_at || "", x.signer || "", x.commission_pct, x.source_share_pct, x.leads, x.shared, x.overlap_rh, x.overlap_net, x.intros_in, x.sold, x.owed, x.created_at].map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["company,contact,email,phone,project,url,country,price_from,status,signed_at,signer,commission_pct,source_share_pct,leads,shared,overlap_rh,overlap_net,intros_in,sold,owed,created\n" + rows.join("\n")], { type: "text/csv" })); a.download = "realhunt-network-developers.csv"; a.click(); };
-  const exportDeals = () => { const rows = (d?.deals || []).map((x: any) => [x.developer, x.developer_email, x.source, x.buyer, x.sale_price, x.commission_pct, x.commission_eur, x.source_share_eur, x.exempt, x.status, x.reported_at, x.invoiced_at || "", x.paid_at || "", x.source_paid_at || "", x.notes || ""].map((v) => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["developer,email,source,buyer,sale_price,commission_pct,commission_eur,source_share_eur,exempt,status,reported,invoiced,paid,share_paid,notes\n" + rows.join("\n")], { type: "text/csv" })); a.download = "realhunt-network-deals.csv"; a.click(); };
+  const exportDevs = () => { const rows = (d?.developers || []).map((x: any) => [x.company, x.contact_name, x.email, x.phone, x.project_name, x.project_url, x.country, x.price_from, x.status, x.signed_at || "", x.signer || "", x.commission_pct, x.source_share_pct, x.leads, x.shared, x.overlap_rh, x.overlap_net, x.intros_in, x.sold, x.owed, x.created_at].map(csvCell).join(",")); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["company,contact,email,phone,project,url,country,price_from,status,signed_at,signer,commission_pct,source_share_pct,leads,shared,overlap_rh,overlap_net,intros_in,sold,owed,created\n" + rows.join("\n")], { type: "text/csv" })); a.download = "realhunt-network-developers.csv"; a.click(); };
+  const exportDeals = () => { const rows = (d?.deals || []).map((x: any) => [x.developer, x.developer_email, x.source, x.buyer, x.sale_price, x.commission_pct, x.commission_eur, x.source_share_eur, x.exempt, x.status, x.reported_at, x.invoiced_at || "", x.paid_at || "", x.source_paid_at || "", x.notes || ""].map(csvCell).join(",")); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["developer,email,source,buyer,sale_price,commission_pct,commission_eur,source_share_eur,exempt,status,reported,invoiced,paid,share_paid,notes\n" + rows.join("\n")], { type: "text/csv" })); a.download = "realhunt-network-deals.csv"; a.click(); };
+  if (loadError) return <div role="alert">Network could not load. <button onClick={load} className="min-h-11 underline">Retry</button></div>;
   if (!d) return <p className="text-ink-muted inline-flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Loading network…</p>;
   const t = d.totals;
   return (
@@ -68,17 +89,21 @@ const AdminNetwork = () => {
       <section>
         <h2 className="font-display text-[20px] tracking-tight mb-1">Shared leads you can introduce</h2>
         <p className="text-[13px] text-ink-muted mb-3">Only leads marked as shared by approved developers. Pick one, choose the receiving project, we check they do not already have that buyer.</p>
+        <input aria-label="Search all shared leads" value={candidateQuery} onChange={e => setCandidateQuery(e.target.value)} placeholder="Search project, country or tag" className="w-full min-h-11 border border-hairline rounded-xl px-4 mb-3" />
+        {candidateError && <button className="underline min-h-11" onClick={() => setCandidateRetry(n => n + 1)}>Could not load shared leads. Retry</button>}
+        {candidateBusy && <p role="status">Loading shared leads…</p>}
         {pick && <div className="border border-ink rounded-xl bg-white p-4 mb-3 flex flex-wrap items-end gap-3">
           <div className="text-[13px]"><p className="font-mono">{pick.fp.slice(0, 12)}…</p><p className="text-ink-muted">from {pick.from_name} · {pick.country || "any"} · {pick.budget ? eur(pick.budget) : "budget ?"}</p></div>
-          <label className="text-[12px] text-ink-muted flex flex-col gap-1">Introduce to<select value={to} onChange={(e) => setTo(e.target.value)} className="border border-hairline rounded-lg px-2 py-1.5 text-[13px] bg-paper min-w-[200px]"><option value="">Choose project</option>{d.developers.filter((x: any) => x.status === "approved" && x.id !== pick.from_developer).map((x: any) => <option key={x.id} value={x.id}>{x.project_name || x.company} · {x.country || ""} {x.price_from ? "from " + eur(x.price_from) : ""}{x.signed_at ? "" : " · UNSIGNED"}</option>)}</select></label>
+          <label className="text-[12px] text-ink-muted flex flex-col gap-1">Introduce to<select value={to} onChange={(e) => setTo(e.target.value)} className="border border-hairline rounded-lg px-2 py-1.5 text-[13px] bg-paper min-w-[200px]"><option value="">Choose project</option>{d.developers.filter((x: any) => x.status === "approved" && x.signed_at && x.mode !== "share" && x.id !== pick.from_developer).map((x: any) => <option key={x.id} value={x.id}>{x.project_name || x.company} · {x.country || ""} {x.price_from ? "from " + eur(x.price_from) : ""}{x.signed_at ? "" : " · UNSIGNED"}</option>)}</select></label>
           <label className="text-[12px] text-ink-muted flex flex-col gap-1 flex-1 min-w-[200px]">Note for the developer<input value={note} onChange={(e) => setNote(e.target.value)} placeholder="Looking for 2 bedrooms near the beach, budget 150k" className="border border-hairline rounded-lg px-2 py-1.5 text-[13px] bg-paper" /></label>
           <button disabled={!to || busy === "intro"} onClick={introduce} className="rh-btn-primary !px-4 !py-2 !text-[13px] inline-flex items-center gap-1.5"><Handshake size={14} /> Introduce</button><button onClick={() => { setPick(null); setRes(""); }} className="text-[12px] underline text-ink-muted">Cancel</button>
           {res && <p className="w-full text-[13px]">{res}</p>}
         </div>}
         <div className="border border-hairline rounded-xl bg-white overflow-x-auto max-h-[420px] overflow-y-auto"><table className="w-full"><thead><tr><Th c="Fingerprint" /><Th c="From" /><Th c="Country" /><Th c="Budget" /><Th c="Tag" /><Th c="RH buyer" /><Th c="Also with" /><Th c="Intros" /><Th c="Uploaded" /><Th c="" /></tr></thead><tbody>
-          {d.candidates.map((c: any) => <tr key={c.fp + c.from_developer}><Td c={c.fp.slice(0, 10) + "…"} mono /><Td c={c.from_name} /><Td c={c.country || "—"} /><Td c={c.budget ? eur(c.budget) : "—"} /><Td c={c.tag || "—"} m /><Td c={c.rh_user ? <b className="text-emerald-700">yes</b> : "—"} /><Td c={c.also_with || "—"} /><Td c={c.intros || "—"} /><Td c={fmt(c.uploaded_at)} m /><Td c={<button onClick={() => { setPick(c); setRes(""); }} className="px-2.5 py-1 rounded-full border border-hairline text-[12px] hover:border-ink">Introduce</button>} /></tr>)}
-          {d.candidates.length === 0 && <tr><Td c="Nothing shared yet." m /></tr>}
+          {candidates.map((c: any) => <tr key={c.fp + c.from_developer}><Td c={c.fp.slice(0, 10) + "…"} mono /><Td c={c.from_name} /><Td c={c.country || "—"} /><Td c={c.budget ? eur(c.budget) : "—"} /><Td c={c.tag || "—"} m /><Td c={c.rh_user ? <b className="text-emerald-700">yes</b> : "—"} /><Td c={c.also_with || "—"} /><Td c={c.intros || "—"} /><Td c={fmt(c.uploaded_at)} m /><Td c={<button onClick={() => { setPick(c); setRes(""); }} className="px-2.5 py-1 rounded-full border border-hairline text-[12px] hover:border-ink">Introduce</button>} /></tr>)}
+          {!candidateBusy && candidates.length === 0 && <tr><Td c="Nothing shared yet." m /></tr>}
         </tbody></table></div>
+        <Pagination page={candidatePage} total={candidateTotal} onChange={setCandidatePage} busy={candidateBusy} />
       </section>
 
       <section>
@@ -118,3 +143,4 @@ const AdminNetwork = () => {
   );
 };
 export default AdminNetwork;
+

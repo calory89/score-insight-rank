@@ -12,7 +12,7 @@ import { EmailChangeEmail } from '../_shared/email-templates/email-change.tsx'
 import { ReauthenticationEmail } from '../_shared/email-templates/reauthentication.tsx'
 
 const corsHeaders = {
-  'X-RealHunt-Auth-Version': 'resend-v1',
+  'X-RealHunt-Auth-Version': 'resend-v2',
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
     'authorization, x-client-info, apikey, content-type, x-lovable-signature, x-lovable-timestamp, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
@@ -251,10 +251,12 @@ async function handleWebhook(req: Request): Promise<Response> {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
   const messageId = `auth-${run_id}`
+  let providerId: string | undefined;
   const log = async (status: string, errorMessage?: string) => {
     try {
       const { error } = await supabase.from('email_send_log').insert({
         message_id: messageId,
+        provider_email_id: providerId || null,
         template_name: emailType,
         recipient_email: payload.data.email,
         status,
@@ -267,7 +269,7 @@ async function handleWebhook(req: Request): Promise<Response> {
   }
 
   try {
-    await sendAuthEmail({
+    providerId = await sendAuthEmail({
       runId: run_id,
       actionType: emailType,
       to: payload.data.email,
