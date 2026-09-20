@@ -1,3 +1,4 @@
+import OriginalListingLink from "@/components/realhunt/OriginalListingLink";
 import { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ArrowLeft, ExternalLink, MapPin, BadgeCheck } from "lucide-react";
@@ -77,11 +78,11 @@ const Como = () => {
               </div>
             )}
 
-            <a href={URL} target="_blank" rel="noopener noreferrer"
+            <OriginalListingLink href={URL} target="_blank" rel="noopener noreferrer"
               onClick={() => track("click", { find: "como-1", meta: { promoted: true, out: "idealista" } })}
               className="mt-8 w-full md:w-auto inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full bg-ink text-paper text-[15px] font-semibold hover:opacity-90 transition-opacity">
               See the full listing on idealista <ExternalLink size={16} />
-            </a>
+            </OriginalListingLink>
             <p className="text-[12.5px] text-ink-muted mt-3">Opens idealista.it, where the photos, the size and the agent's contact details are.</p>
 
             <div className="mt-10">
@@ -104,11 +105,11 @@ const Como = () => {
               <p className="inline-flex items-center gap-1.5 text-[12.5px] text-ink-muted"><BadgeCheck size={14} /> Featured home</p>
               <p className="font-display text-[30px] tracking-tight mt-2 tabular-nums">{eur(PRICE)}</p>
               <p className="text-[13.5px] text-ink-muted mt-1">Lake Como, Italy</p>
-              <a href={URL} target="_blank" rel="noopener noreferrer"
+              <OriginalListingLink href={URL} target="_blank" rel="noopener noreferrer"
                 onClick={() => track("click", { find: "como-1", meta: { promoted: true, out: "idealista", where: "aside" } })}
                 className="mt-4 w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-full bg-ink text-paper text-[14px] font-semibold hover:opacity-90 transition-opacity">
                 Open the listing <ExternalLink size={15} />
-              </a>
+              </OriginalListingLink>
               <Link to="/" className="mt-2.5 w-full inline-flex items-center justify-center px-5 py-3 rounded-full border border-hairline text-[14px] font-medium hover:border-ink transition-colors">
                 Browse all homes
               </Link>
