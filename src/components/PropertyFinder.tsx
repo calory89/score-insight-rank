@@ -234,7 +234,7 @@ const PropertyFinder = () => {
                       <div className="md:w-72 h-48 md:h-auto">
                         <img
                           src={ECO_BEACH_CITY.image_url}
-                          alt="Eco Beach City"
+                          alt="Eco Beach City development — top pick analyzed property"
                           className="w-full h-full object-cover"
                         />
                       </div>
@@ -291,7 +291,7 @@ const PropertyFinder = () => {
                     <div className="flex flex-col sm:flex-row">
                       {item.image_url && (
                         <div className="sm:w-40 h-32 sm:h-auto">
-                          <img src={item.image_url} alt={item.address || ""} className="w-full h-full object-cover" />
+                          <img src={item.image_url} alt={item.address ? `Property at ${item.address}` : `Analyzed property in ${item.city || "an international market"}`} className="w-full h-full object-cover" />
                         </div>
                       )}
                       <CardContent className="flex-1 p-4">

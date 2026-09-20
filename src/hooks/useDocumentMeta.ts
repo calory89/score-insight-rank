@@ -1,10 +1,14 @@
 import { useEffect } from "react";
 
+const SITE = "https://realhunt.co";
+
 interface DocumentMeta {
   title: string;
   description?: string;
   ogImage?: string;
   canonicalUrl?: string;
+  ogType?: string;
+  jsonLd?: Record<string, unknown> | null;
 }
 
 const setMeta = (selector: string, attr: string, value: string) => {
@@ -12,7 +16,7 @@ const setMeta = (selector: string, attr: string, value: string) => {
   if (el) el.setAttribute(attr, value);
 };
 
-const useDocumentMeta = ({ title, description, ogImage, canonicalUrl }: DocumentMeta) => {
+const useDocumentMeta = ({ title, description, ogImage, canonicalUrl, ogType, jsonLd }: DocumentMeta) => {
   useEffect(() => {
     document.title = title;
 
@@ -30,12 +34,28 @@ const useDocumentMeta = ({ title, description, ogImage, canonicalUrl }: Document
       setMeta('meta[name="twitter:image"]', "content", ogImage);
     }
 
-    if (canonicalUrl) {
-      setMeta('meta[property="og:url"]', "content", canonicalUrl);
-      const canonical = document.querySelector('link[rel="canonical"]');
-      if (canonical) canonical.setAttribute("href", canonicalUrl);
+    // Every route self-references: canonical and og:url always match the page itself.
+    const url = canonicalUrl || `${SITE}${window.location.pathname}`;
+    setMeta('meta[property="og:url"]', "content", url);
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) canonical.setAttribute("href", url);
+
+    setMeta('meta[property="og:type"]', "content", ogType || "website");
+
+    let script: HTMLScriptElement | null = null;
+    if (jsonLd) {
+      script = document.createElement("script");
+      script.type = "application/ld+json";
+      script.setAttribute("data-route-jsonld", "true");
+      script.textContent = JSON.stringify(jsonLd);
+      document.head.appendChild(script);
     }
-  }, [title, description, ogImage, canonicalUrl]);
+
+    return () => {
+      if (script) script.remove();
+      if (ogType && ogType !== "website") setMeta('meta[property="og:type"]', "content", "website");
+    };
+  }, [title, description, ogImage, canonicalUrl, ogType, JSON.stringify(jsonLd ?? null)]);
 };
 
 export default useDocumentMeta;

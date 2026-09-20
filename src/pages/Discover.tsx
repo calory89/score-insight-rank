@@ -174,7 +174,7 @@ const Discover = () => {
               >
                 {d.image_url && (
                   <div className="h-40 bg-secondary overflow-hidden cursor-pointer" onClick={() => navigate(`/analysis/${d.analysis_id}`)}>
-                    <img src={d.image_url} alt={d.address || "Property"} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <img src={d.image_url} alt={d.address ? `Property at ${d.address}` : `Analyzed property in ${d.city || d.country || "an international market"}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   </div>
                 )}
                 <div className="p-4">

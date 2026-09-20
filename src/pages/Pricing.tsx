@@ -116,7 +116,7 @@ const Pricing = () => {
                   Most chosen
                 </span>
               )}
-              <h3 className="font-display text-[24px] text-ink">{p.name}</h3>
+              <h2 className="font-display text-[24px] text-ink">{p.name}</h2>
               <p className="text-[13px] text-ink-muted mt-1">{p.tagline}</p>
               <div className="flex items-baseline gap-1 mt-5">
                 <span className="font-display text-[42px] text-ink">{p.priceLabel}</span>
