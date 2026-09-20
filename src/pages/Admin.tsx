@@ -67,16 +67,25 @@ const Admin = () => {
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [myAnalysesCount, setMyAnalysesCount] = useState(0);
+  // null = still checking. Authorisation is confirmed server-side via the role system.
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user || user.email !== ADMIN_EMAIL) {
+    if (!user) {
       navigate("/");
       return;
     }
 
     const fetchAdminData = async () => {
       try {
+        const { data: adminRole } = await supabase.rpc("is_admin", { _user_id: user.id });
+        if (!adminRole) {
+          setIsAdmin(false);
+          navigate("/");
+          return;
+        }
+        setIsAdmin(true);
         const [adminResult, countResult] = await Promise.all([
           supabase.functions.invoke("admin-data"),
           supabase.from("analyses").select("id", { count: "exact", head: true }).eq("user_id", user.id),
