@@ -1542,3 +1542,33 @@
  .hunt-crm-info h2, .hunt-crm-info h3 { font-size: 15px; }
  .hunt-crm-toolbar .hunt-crm-search { flex-basis: 100%; }
 }
+
+.hunt-detail-score { margin: 18px 0; }
+.hunt-score-period { display: block; color: var(--rh-ink-muted); font-size: 11px; margin-bottom: 8px; }
+.hunt-upvote { transition: background .15s, color .15s, transform .15s; }
+.hunt-upvote:active:not(:disabled) { transform: scale(.96); }
+@media (max-width: 600px) {
+ .hunt-header { min-height: 60px; height: auto; padding-top: 8px; padding-bottom: 8px; }
+ .hunt-header nav .hunt-primary { border-radius: 12px; min-height: 44px; }
+ .hunt-home .hunt-tabs { gap: 6px; border: 0; background: var(--rh-surface-2); padding: 4px; border-radius: 13px; }
+ .hunt-home .hunt-tabs > button { flex: 1; justify-content: center; border: 0; min-height: 44px; border-radius: 10px; font-size: 13px; }
+ .hunt-home .hunt-tabs > button[aria-pressed="true"] { background: white; box-shadow: 0 1px 4px #0000000a; color: var(--h-ink); }
+ .hunt-home .hunt-card { border-radius: 16px; }
+ .hunt-card .hunt-upvote { min-height: 48px; border-radius: 12px; }
+ .hunt-card-photo > .hunt-save { min-width: 44px; min-height: 44px; border-radius: 12px; }
+ .hunt-card .hunt-card-bottom a { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
+ .hunt-detail { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+ .hunt-detail .hunt-back { margin: 8px 0; }
+ .hunt-detail-grid { gap: 16px; }
+ .hunt-detail .hunt-media-detail { aspect-ratio: 1.25; border-radius: 16px; }
+ .hunt-detail h1 { font-size: 26px; line-height: 1.2; margin: 12px 0; }
+ .hunt-detail section > p { margin: 8px 0; font-size: 13px; line-height: 1.5; }
+ .hunt-detail .hunt-price { font-size: 29px; margin: 10px 0; }
+ .hunt-detail-actions { position: fixed; left: 12px; right: 12px; bottom: max(10px, env(safe-area-inset-bottom)); z-index: 35; margin: 0; padding: 9px; gap: 8px; flex-wrap: nowrap; background: var(--rh-bg); border: 1px solid var(--h-line); box-shadow: 0 6px 30px #00000014; border-radius: 18px; }
+ .hunt-detail-actions .hunt-primary { min-width: 0; min-height: 48px; border-radius: 12px; padding: 10px; }
+ .hunt-detail-actions > button:not(.hunt-primary) { min-width: 48px; min-height: 48px; border-radius: 12px; background: white; border: 1px solid var(--h-line); }
+ .hunt-detail .hunt-report { min-height: 44px; }
+ .hunt-detail .hunt-comment-form textarea { min-height: 100px; }
+ .hunt-detail :target { scroll-margin-bottom: 110px; }
+}
+@media (prefers-reduced-motion: reduce) { .hunt-upvote { transition: none; } }
