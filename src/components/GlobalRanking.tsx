@@ -307,15 +307,13 @@ const GlobalRanking = () => {
 
     setVotedIds(getVotedIds());
 
-    // Aggregate real vote counts (all-time)
+    // Aggregate real vote counts (all-time) — counts only, no voter data exposed
     (async () => {
-      const { data: voteRows } = await (supabase as any)
-        .from("votes")
-        .select("analysis_id");
+      const { data: voteRows } = await (supabase as any).rpc("vote_counts");
       if (voteRows) {
         const counts: Record<string, number> = {};
-        for (const r of voteRows as { analysis_id: string }[]) {
-          counts[r.analysis_id] = (counts[r.analysis_id] || 0) + 1;
+        for (const r of voteRows as { analysis_id: string; votes: number }[]) {
+          counts[r.analysis_id] = Number(r.votes) || 0;
         }
         setVoteCounts(counts);
       }
