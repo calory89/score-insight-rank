@@ -122,7 +122,7 @@ const Home = () => {
   const sortParam = new URLSearchParams(route.search).get("sort");
   const sort: "best" | "cheap" | "new" = sortParam === "cheap" || sortParam === "new" ? sortParam : "best";
   const applyFilters = (filters: CatalogFilters, ordering = sort) => {
-    const path = aParam ? route.pathname : "/";
+    const path = aParam ? route.pathname : "/browse";
     navigate(path + filterSearch(filters, ordering, route.search));
   };
   const setSort = (value: typeof sort) => applyFilters(applied, value);
