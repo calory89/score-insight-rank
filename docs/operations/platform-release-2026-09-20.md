@@ -42,3 +42,12 @@ Once the delivery endpoint is deployed, register a Resend webhook for delivered,
 ## Measurement limits
 
 Production p75 targets need real traffic and sufficient samples. Unit viewport checks are not physical-device certification. This release does not claim a 100/100 score, zero possible failures, verified property ownership or guaranteed email inbox placement.
+
+## Observed production result
+
+- Release commit: `9294d6b9cd4807ec565d9441563f9270e53c5e45`. GitHub Actions run `35506755134` completed successfully, including clean dependency installation, type checks, 39 UI/logic tests, 10 email tests, production build and bundle budget.
+- Migration `20260920160000` committed atomically and recorded in `supabase_migrations.schema_migrations`. Audit and email-delivery tables exist; anonymous execution of the mail-sending RPC is denied.
+- Published through Lovable without invoking its AI chat/generation operation. The live custom domain serves the new interface (`/assets/index-D-7bVW2d.js`); confirmed revised developer review copy, dated/unknown listing availability and simplified source gate on `/find/Dc26HIXDP28`. Unauthenticated administration remains blocked.
+- Edge Function activation remains incomplete: the live auth hook reports `resend-v1`, the outbox sender lacks the new version header, and `resend-delivery` returns 404. GitHub synchronization and website publishing did not deploy these functions. The available Lovable connector exposes no separate Edge Function deployment operation, and this session has no authenticated infrastructure browser or management credentials. No Lovable AI call was used to bypass this limitation.
+- The Resend delivery webhook has not been registered because its receiver is not deployed. To finish: deploy `auth-email-hook`, `send-email`, and `resend-delivery`; verify the version headers/unsigned-request rejection; register the signed Resend webhook and store its secret server-side. Existing mail sending remains active; accepted messages are not evidence of inbox delivery.
+- A full backup restoration drill and physical-device verification remain unperformed. Real-user performance reporting needs traffic; no 100/100 score is claimed.
