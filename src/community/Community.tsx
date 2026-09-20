@@ -21,7 +21,6 @@ import OriginalListingLink from "@/components/realhunt/OriginalListingLink";
 import AuthModal from "@/components/realhunt/AuthModal";
 import {
   ArrowUp,
-  ArrowDown,
   ArrowUpRight,
   Bookmark,
   MessageCircle,
@@ -316,36 +315,14 @@ function Vote({
       setBusy(false);
     }
   }
-  const total = scope === "all" ? d.life_net : d.week_net;
+  const total = scope === "all" ? d.life_up : d.week_up;
   return (
     <div className="hunt-vote-wrap">
-      <div className="hunt-vote" aria-label="Vote on this deal">
-        <button
-          disabled={demo || busy || !session}
-          aria-label="Upvote deal"
-          aria-pressed={selected === 1}
-          onClick={() => vote(1)}
-        >
-          <ArrowUp size={18} />
-          <span>{num(d.week_up)}</span>
-        </button>
-        <div>
-          <strong>
-            {total > 0 ? "+" : ""}
-            {total || 0}
-          </strong>
-          <small>{demo ? "Demo · fictional votes" : scope === "all" ? "all time" : "this week"}</small>
-        </div>
-        <button
-          disabled={demo || busy || !session}
-          aria-label="Downvote deal"
-          aria-pressed={selected === -1}
-          onClick={() => vote(-1)}
-        >
-          <ArrowDown size={17} />
-          <span>{num(d.week_down)}</span>
-        </button>
-      </div>
+      <button className="hunt-upvote" disabled={demo || busy || !session}
+        aria-label="Upvote deal" aria-pressed={selected === 1} onClick={() => vote(1)}>
+        <ArrowUp size={18} /><strong>{num(total)}</strong>
+      </button>
+      {demo && <small className="hunt-demo-caption">Demo</small>}
       {shared && (
         <button
           className="hunt-after-vote"
@@ -433,12 +410,12 @@ function Card({
             {categories.find((c) => c[0] === deal.category)?.[1] || "Discovery"}
           </span>
         </div>
-        <div className="hunt-price">
+        {deal.price_eur != null && <div className="hunt-price">
           {money(deal.price_eur)}
           {deal.sqm && deal.price_eur != null && (
             <small>{money(Math.round(deal.price_eur / deal.sqm))}/m²</small>
           )}
-        </div>
+        </div>}
         <h2>
           <Link to={`/deal/${deal.slug}`}>{deal.title}</Link>
         </h2>
@@ -478,21 +455,9 @@ function Card({
             <Bookmark size={13} />
             {num(deal.saves)}
           </span>
-          <span className="hunt-lifetime">
-            {num(deal.life_up + deal.life_down)} lifetime votes
-          </span>
+
         </div>
-        {(deal.has_source || safeUrl(deal.source_url)) && (
-          <OriginalListingLink
-            href={deal.source_url || undefined}
-            returnTo={`/deal/${deal.slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hunt-original"
-          >
-            Original listing <ArrowUpRight size={14} />
-          </OriginalListingLink>
-        )}
+
       </div>
     </article>
   );
@@ -604,8 +569,8 @@ function Home() {
   };
   const demoPriority = (d: Deal) => d.slug === "Dc4gpg6slIT" ? 0 : d.slug === "acquappesa-sea-view-39000" ? 1 : 2;
   const displayedRows = demo ? [...(feed?.rows || [])].sort((a, b) => demoPriority(a) - demoPriority(b)).map((d, i) => {
-    const up = Math.max(1, Math.round(370 * Math.pow(.986, i)));
-    const down = Math.floor(up * .04);
+    const up = [370, 328, 124, 67][i] ?? Math.max(0, Math.round(28 * Math.pow(.79, i - 4)));
+    const down = 0;
     return { ...d, demo: true, rank: i + 1, week_up: up, week_down: down, week_net: up - down, life_up: up, life_down: down, life_net: up - down, votes_24h: 0 };
   }) : feed?.rows;
   return (
@@ -1611,7 +1576,7 @@ function Admin() {
                 type="number"
                 min="1"
                 defaultValue={d.price_eur || ""}
-                placeholder="Price on request if unknown"
+                placeholder="Optional"
               />
             </label>
             <label>Country<input name="country" defaultValue={d.country || ""} minLength={2} maxLength={80} required /></label>
