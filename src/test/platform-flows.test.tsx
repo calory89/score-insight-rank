@@ -64,3 +64,14 @@ it("paginates beyond the old 2000-contact limit and sends search to the server",
   fireEvent.change(screen.getByLabelText("Search all contacts"), { target: { value: "Japan" } });
   await waitFor(() => expect(state.rpc).toHaveBeenCalledWith("dev_contacts_page", expect.objectContaining({ p_query: "Japan", p_offset: 0 })));
 });
+it("registers a contact contributor without a project or forced agreement redirect", async () => {
+  const created=structuredClone(state.overview);state.overview=null;
+  state.insert.mockImplementation((payload:any)=>({select:()=>({single:async()=>{state.overview={...created,developer:{...created.developer,...payload,receiving_enabled:false,status:"pending"}};return {data:{id:"qa-dev"},error:null};}})}));
+  render(<MemoryRouter initialEntries={["/network/app/overview"]}><Routes><Route path="/network/app/:tab" element={<NetworkApp />} /></Routes></MemoryRouter>);
+  fireEvent.change(await screen.findByLabelText("Company or professional name"),{target:{value:"QA contributor"}});
+  fireEvent.change(screen.getByLabelText("Your name"),{target:{value:"QA"}});
+  expect(screen.getByLabelText("Project name (only required to receive buyers)")).not.toBeRequired();
+  fireEvent.click(screen.getByRole("button",{name:"Create my panel"}));
+  await waitFor(()=>expect(state.insert).toHaveBeenCalledWith(expect.objectContaining({company:"QA contributor",project_url:"",project_name:""})));
+  expect(await screen.findByText("Protect. Share. Receive.")).toBeInTheDocument();
+});

@@ -1,7 +1,7 @@
 -- Run after the migration inside the SAME transaction and roll back.
-insert into public.network_developers(id,user_id,company,status,agreement_accepted_at,agreement_version,agreement_signer,receiving_enabled,share_default)
-values('10000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000011','Workflow QA source','approved',now(),'2026-09-17','QA',false,false),
-('10000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000012','Workflow QA recipient','approved',now(),'2026-09-17','QA',true,false);
+insert into public.network_developers(id,user_id,company,status,agreement_accepted_at,agreement_version,agreement_signer,receiving_enabled,share_default,project_name,project_url)
+values('10000000-0000-4000-8000-000000000001','10000000-0000-4000-8000-000000000011','Workflow QA source','approved',now(),'2026-09-17','QA',false,false,'QA source project','https://source.example.test'),
+('10000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000012','Workflow QA recipient','approved',now(),'2026-09-17','QA',true,false,'QA receiver project','https://receiver.example.test');
 insert into public.lead_fingerprints(developer_id,fp,kind,shared,uploaded_at)
 values('10000000-0000-4000-8000-000000000001',encode(extensions.digest('network-qa@example.test|rhn1','sha256'),'hex'),'email',false,now()-interval '1 day'),
 ('10000000-0000-4000-8000-000000000002',encode(extensions.digest('network-qa@example.test|rhn1','sha256'),'hex'),'email',false,now()-interval '1 day');
@@ -31,6 +31,9 @@ do $$ declare fp text:=encode(extensions.digest('network-qa@example.test|rhn1','
  if not denied then raise exception 'FAIL stale conditions accepted'; end if;
  r:=public.admin_introduce_checked(fp,'10000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001',null,preview);
  perform set_config('qa.intro',r->>'id',true);
+ denied:=false;begin perform public.admin_supply_intro_contact((r->>'id')::uuid,'QA | network-qa@example.test','Spain',100000,'');exception when others then denied:=true;end;
+ if not denied then raise exception 'FAIL admin handoff without evidence';end if;
+ perform public.admin_supply_intro_contact((r->>'id')::uuid,'QA | network-qa@example.test','Spain',100000,'QA explicit permission for this introduction');
  denied:=false;begin perform public.admin_introduce_checked(fp,'10000000-0000-4000-8000-000000000002','10000000-0000-4000-8000-000000000001',null,preview);exception when others then denied:=true;end;
  if not denied then raise exception 'FAIL duplicate introduction'; end if;
 end $$;
@@ -38,6 +41,7 @@ reset role;
 select set_config('request.jwt.claims','{"sub":"10000000-0000-4000-8000-000000000012","role":"authenticated"}',true);
 set local role authenticated;
 do $$ declare r jsonb;begin
+ if public.dev_overview()->'received'->0->>'contact' is not null then raise exception 'FAIL handoff exposed before acceptance';end if;
  delete from public.lead_fingerprints where developer_id='10000000-0000-4000-8000-000000000002';
  if not (public.dev_overview()->'received'->0->>'was_mine')::boolean then raise exception 'FAIL deletion lost exemption';end if;
  perform public.dev_update_intro(current_setting('qa.intro')::uuid,'{"status":"accepted"}');
@@ -116,5 +120,18 @@ do $$ declare r jsonb;begin
  perform public.dev_update_intro(current_setting('qa.rh_intro')::uuid,'{"status":"contacted"}');
  r:=public.dev_report_sale(current_setting('qa.rh_intro')::uuid,10000,null);
  if (r->>'commission_eur')::numeric<>500 or (r->>'source_share_eur')::numeric<>0 then raise exception 'FAIL introduction terms changed after creation';end if;
+end $$;
+reset role;
+-- Contributor registration does not require a property project; receiving does.
+reset role;
+select set_config('request.jwt.claims','{"sub":"10000000-0000-4000-8000-000000000013","role":"authenticated"}',true);
+set local role authenticated;
+insert into public.network_developers(id,user_id,company,contact_name) values('10000000-0000-4000-8000-000000000003','10000000-0000-4000-8000-000000000013','QA contributor','QA');
+do $$ declare denied boolean:=false;begin
+ if (public.dev_overview()->'developer'->>'receiving_enabled')::boolean then raise exception 'FAIL contributor automatically receives';end if;
+ begin perform public.dev_network_preferences(true);exception when others then denied:=true;end;
+ if not denied then raise exception 'FAIL receiving without project';end if;
+ perform public.dev_upload_fps('[{"fp":"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff","kind":"email","shared":false}]');
+ if (public.dev_overview()->>'leads')::integer<>1 then raise exception 'FAIL contributor cannot protect';end if;
 end $$;
 reset role;

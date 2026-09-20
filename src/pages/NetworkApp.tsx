@@ -119,12 +119,12 @@ const NetworkApp = () => {
 
   const register = async (e: React.FormEvent) => {
     e.preventDefault(); if (!user) return; setBusy(true); setMsg("");
-    let url: string; try { url = safeProjectUrl(form.project_url); } catch { setBusy(false); setMsg("Enter a valid project website."); return; }
+    let url: string; try { url = form.project_url.trim() ? safeProjectUrl(form.project_url) : ""; if (ov?.developer.receiving_enabled && (!url || !form.project_name.trim())) throw new Error("Project required"); } catch { setBusy(false); setMsg(ov?.developer.receiving_enabled ? "A project name and valid website are required while receiving buyers." : "Enter a valid website, or leave it empty if you only protect or share contacts."); return; }
     const payload = { ...form, project_url: url, price_from: form.price_from ? Number(form.price_from) : null, user_id: user.id };
     const result = await saveChange(() => ov ? db.from("network_developers").update(payload).eq("user_id", user.id).select("id").single() : db.from("network_developers").insert(payload).select("id").single());
     setBusy(false); if (!result.ok) { setMsg("Could not save. Your form is still here; please try again."); return; }
     track(ov ? "devapp_update" : "devapp_register"); try { sessionStorage.removeItem("rh_dev_prefill"); } catch {}
-    await load(); if (!ov) nav("/network/agreement"); else setMsg("Saved.");
+    await load(); if (!ov) nav("/network/app/overview"); else setMsg("Saved.");
   };
 
   const parse = async (text: string) => {
@@ -228,7 +228,7 @@ const NetworkApp = () => {
       <div className="max-w-[1140px] mx-auto px-4 md:px-6 py-10 md:py-16 grid lg:grid-cols-[1.1fr_1fr] gap-10 items-start">
         <div>
           <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-3">RealHunt Network · developer panel</p>
-          <h1 className="font-display text-[clamp(32px,4.5vw,46px)] leading-tight tracking-tight">Set up your project. Be ready for the right buyers.</h1>
+          <h1 className="font-display text-[clamp(32px,4.5vw,46px)] leading-tight tracking-tight">Protect your contacts. Share to earn. Receive buyers.</h1>
           <p className="text-[16px] text-ink-muted mt-3 max-w-[54ch]">No cost to join. You pay {COMMISSION_PCT}% only when a buyer we introduce actually buys, and you can earn {SOURCE_SHARE_PCT}% from leads you never managed to close. Here is exactly what happens, in order.</p>
           <div className="mt-6 grid sm:grid-cols-2 gap-3">
             <div className="border border-hairline rounded-2xl bg-white p-4">
@@ -236,20 +236,20 @@ const NetworkApp = () => {
               <ul className="mt-2 flex flex-col gap-1.5 text-[14px] text-ink-muted">
                 <li>You have homes, plots or a development for sale.</li>
                 <li>Or you have a list of buyer contacts you never closed.</li>
-                <li>You are an agency, a developer or a broker.</li>
+                <li>You want to contribute buyer referrals, protect contacts, or receive buyers.</li>
               </ul>
             </div>
             <div className="border border-hairline rounded-2xl bg-paper p-4">
               <p className="font-medium text-[15px]">This is not for you if</p>
               <ul className="mt-2 flex flex-col gap-1.5 text-[14px] text-ink-muted">
                 <li>You are looking to buy a home for yourself.</li>
-                <li>You have nothing to sell and no contacts to share.</li>
+                <li>You have neither a project nor buyer contacts to register.</li>
               </ul>
               <Link to="/" className="inline-block mt-2 text-[13px] underline">Looking for a home? Start here instead →</Link>
             </div>
           </div>
           <ol className="mt-7 flex flex-col gap-3">
-            {[["Sign in", "Free. A link by email or Google, no password to remember."], ["Tell us about your project", "Company, project name, page, country, price from. One minute."], ["Sign the one-page agreement", "You type your name. It says in plain English: 5% only on buyers we bring you who buy, 3% to you when a shared lead of yours buys elsewhere, 0% on buyers you already had."], ["Upload the contacts you already have", "Your CRM export in CSV or TSV format. They are turned into fingerprints in your browser: we never see a name, email or phone. Anything in your list before we introduce it is yours, no commission, ever. This is what protects you, so do it before accepting buyers."], ["Choose what you want", "Only receive buyers, only earn from the leads you share, or both. Separate switches, you can change them any time."], ["Accept buyers and close", "Each buyer arrives in your pipeline with an introduction ID. Accept, get the contact, sell. Report the sale with the price and we settle the rest."]].map(([t, d], i) => (
+            {[["Sign in", "Free. A link by email or Google, no password to remember."], ["Create your profile", "Your name and contact details. A project is only required if you want to receive buyers."], ["Sign the one-page agreement", "You type your name. It says in plain English: 5% only on buyers we bring you who buy, 3% to you when a shared lead of yours buys elsewhere, 0% on buyers you already had."], ["Upload the contacts you already have", "Your CRM export in CSV or TSV format. Bulk uploads are turned into fingerprints in your browser; original details require a separate authorized handoff. Anything in your list before we introduce it is yours, no commission, ever. This is what protects you, so do it before accepting buyers."], ["Choose what you want", "Protect privately, choose contacts to share, and independently enable receiving. Sharing is never required to receive."], ["Accept buyers and close", "Each buyer arrives in your pipeline with an introduction ID. Accept, get the contact, sell. Report the sale with the price and we settle the rest."]].map(([t, d], i) => (
               <li key={t} className="flex gap-4 border border-hairline rounded-2xl bg-white p-4"><span className="h-8 w-8 shrink-0 rounded-full bg-ink text-paper font-display text-[15px] inline-flex items-center justify-center">{i + 1}</span><span><p className="font-medium text-[15px]">{t}</p><p className="text-[14px] text-ink-muted mt-0.5 leading-relaxed">{d}</p></span></li>
             ))}
           </ol>
@@ -294,12 +294,12 @@ const NetworkApp = () => {
 
   const RegisterForm = (
     <form onSubmit={register} className="border border-hairline rounded-2xl bg-white p-6 md:p-8 grid md:grid-cols-2 gap-4">
-      <Field l="Company"><input required className={inp} value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} /></Field>
+      <Field l="Company or professional name"><input required className={inp} value={form.company} onChange={(e) => setForm({ ...form, company: e.target.value })} /></Field>
       <Field l="Your name"><input required className={inp} value={form.contact_name} onChange={(e) => setForm({ ...form, contact_name: e.target.value })} /></Field>
       <Field l="Email"><input required type="email" className={inp} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
       <Field l="Phone (optional)"><input className={inp} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></Field>
-      <Field l="Project name"><input required className={inp} value={form.project_name} onChange={(e) => setForm({ ...form, project_name: e.target.value })} /></Field>
-      <Field l="Project page"><input required className={inp} placeholder="yourproject.com" value={form.project_url} onChange={(e) => setForm({ ...form, project_url: e.target.value })} /></Field>
+      <Field l="Project name (only required to receive buyers)"><input required={!!ov?.developer.receiving_enabled} className={inp} value={form.project_name} onChange={(e) => setForm({ ...form, project_name: e.target.value })} /></Field>
+      <Field l="Project page (only required to receive buyers)"><input required={!!ov?.developer.receiving_enabled} className={inp} placeholder="yourproject.com" value={form.project_url} onChange={(e) => setForm({ ...form, project_url: e.target.value })} /></Field>
       <Field l="Country"><select className={inp} value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })}>{COUNTRIES.map((c) => <option key={c} value={c}>{c || "Choose"}</option>)}</select></Field>
       <Field l="Price from (€)"><input type="number" className={inp} value={form.price_from} onChange={(e) => setForm({ ...form, price_from: e.target.value })} /></Field>
       <div className="md:col-span-2 flex items-center gap-4"><button disabled={busy} className="rh-btn-primary inline-flex items-center gap-2">{busy && <Loader2 size={16} className="animate-spin" />} {ov ? "Save" : "Create my panel"}</button>{msg && <span className="text-[13px] text-ink-muted">{msg}</span>}</div>
@@ -309,7 +309,7 @@ const NetworkApp = () => {
   if (ov === null) return (
     <div className="min-h-screen bg-paper text-ink"><RHNav />
       <div className="max-w-[860px] mx-auto px-6 py-12 flex flex-col gap-6">
-        <div><p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-2">RealHunt Network</p><h1 className="font-display text-[34px] tracking-tight">Tell us about your project. One minute.</h1><p className="text-[15px] text-ink-muted mt-2">Upload privately to protect existing contacts, choose which contacts to share, and independently enable new buyers. Approval and a signed agreement are required before receiving introductions.</p></div>
+        <div><p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-2">RealHunt Network</p><h1 className="font-display text-[34px] tracking-tight">Create your network profile.</h1><p className="text-[15px] text-ink-muted mt-2">Upload privately to protect existing contacts, choose which contacts to share, and independently enable new buyers. Approval and a signed agreement are required before receiving introductions.</p></div>
         {RegisterForm}
       </div>
     </div>
