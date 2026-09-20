@@ -345,4 +345,34 @@ await test("submission spam limits, honeypot and unsafe URLs are enforced on the
     assert.equal(await one("select has_function_privilege('anon','community_deal(text,text)','EXECUTE')"),false);
   } finally {await db.exec('ROLLBACK');}
 });
+await test('initial points are separate from real votes, stable on replay, and expire weekly',async()=>{
+  const before=await one('select count(*) from community_week_votes');
+  await db.exec(await readFile(new URL('../supabase/migrations/20260921010000_launch_points.sql',import.meta.url),'utf8'));
+  assert.equal(await one('select count(*) from community_week_votes'),before);
+  await db.exec('BEGIN');
+  try {
+    await db.exec('UPDATE community_deals SET launch_week_id=(community_current_week()).id WHERE launch_points>0');
+    let feed=await one('select community_rankings()');
+    const seeded=feed.rows.find(x=>x.launch_points===370);
+    assert.ok(seeded);
+    assert.equal(seeded.week_net,seeded.week_up+370);
+    assert.equal(feed.weekly_points,feed.rows.reduce((s,d)=>s+d.week_net,0));
+    await login(null);
+    const visitor=await api('session',null);
+    assert.equal((await api('vote',visitor.token,{id:seeded.id,value:1})).ok,true);
+    const voted=await one('select community_rankings()');
+    assert.equal(voted.weekly_votes,feed.weekly_votes+1);
+    assert.equal(voted.weekly_points,feed.weekly_points+1);
+    assert.equal((await api('vote',visitor.token,{id:seeded.id,value:1})).already,true);
+    const detail=(await api('detail',visitor.token,{slug:seeded.slug})).deal;
+    assert.equal(detail.week_net,seeded.week_net+1);
+    const week=voted.week.id;
+    await db.query("UPDATE community_weeks SET ends_at=now()-interval '1 second' WHERE id=$1",[week]);
+    const next=await one('select community_rankings()');
+    assert.equal(next.weekly_points,0);
+    assert.equal(next.weekly_votes,0);
+    assert.equal(next.global_points,voted.global_points);
+    assert.equal(next.global_votes,voted.global_votes);
+  } finally { await db.exec('ROLLBACK'); }
+});
 await db.close();

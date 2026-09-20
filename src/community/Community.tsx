@@ -186,7 +186,6 @@ function Shell({ children }: { children: ReactNode }) {
           </p>
           <div>
             <Link to="/browse">Browse homes</Link>
-            <Link to="/winners">Weekly winners</Link>
             <Link to="/legal/privacy">Privacy</Link>
             <Link to="/legal/terms">Terms</Link>
             {session?.admin && <Link to="/hunt/admin">Moderation</Link>}
@@ -286,10 +285,9 @@ function Vote({
   const [shared, setShared] = useState(false);
   const selected = session?.votes?.[deal.id];
   const d = preview || deal;
-  const demo = !!deal.demo;
   useEffect(() => setPreview(null), [deal.week_up, deal.week_down]);
   async function vote(value: number) {
-    if (busy || demo) return;
+    if (busy) return;
     if (selected === value) {
       setNotice("You already voted on this deal ✓");
       return;
@@ -314,14 +312,15 @@ function Vote({
       setBusy(false);
     }
   }
-  const total = scope === "all" ? d.life_up : d.week_up;
+  const total = scope === "all" ? d.life_net : d.week_net;
+  const initialPoints = scope === "all" ? d.launch_points || 0 : d.launch_week_points || 0;
   return (
     <div className="hunt-vote-wrap">
-      <button className="hunt-upvote" disabled={demo || busy || !session}
+      <button className="hunt-upvote" disabled={busy || !session}
         aria-label="Upvote deal" aria-pressed={selected === 1} onClick={() => vote(1)}>
         <ArrowUp size={18} /><strong>{num(total)}</strong>
       </button>
-      {demo && <small className="hunt-demo-caption">Demo</small>}
+      {initialPoints > 0 && <small className="hunt-demo-caption" title={`${initialPoints} initial points + ${scope === "all" ? d.life_up : d.week_up} real votes`}>Includes initial points</small>}
       {shared && (
         <button
           className="hunt-after-vote"
@@ -529,7 +528,6 @@ function Home() {
   const { user } = useAuth();
   const [params, setParams] = useSearchParams();
   const scope = params.get("tab") === "all" ? "all" : "week";
-  const demo = params.get("demo") === "1";
   const country = "";
   const category = "";
   const [feed, setFeed] = useState<Feed | null>(null);
@@ -567,17 +565,10 @@ function Home() {
     val ? next.set(key, val) : next.delete(key);
     setParams(next);
   };
-  const demoVotes = (i: number) => [370, 328, 124, 67][i] ?? Math.max(0, Math.round(28 * Math.pow(.79, i - 4)));
-  const demoTotal = Array.from({length: feed?.total || 0}, (_, i) => demoVotes(i)).reduce((a, b) => a + b, 0);
-  const demoPriority = (d: Deal) => d.slug === "Dc4gpg6slIT" ? 0 : d.slug === "acquappesa-sea-view-39000" ? 1 : 2;
-  const displayedRows = demo ? [...(feed?.rows || [])].sort((a, b) => demoPriority(a) - demoPriority(b)).map((d, i) => {
-    const up = demoVotes(i);
-    const down = 0;
-    return { ...d, demo: true, rank: i + 1, week_up: up, week_down: down, week_net: up - down, life_up: up, life_down: down, life_net: up - down, votes_24h: 0 };
-  }) : feed?.rows;
+  const displayedRows = feed?.rows;
   return (
     <div className="hunt-wrap hunt-home">
-      {demo && <div className="hunt-demo-notice" role="status">Demo · Fictional votes. Real voting is disabled in this preview. <button onClick={() => update("demo", "")}>Show real ranking →</button></div>}
+
       <section className="hunt-hero">
         <h1>
           Property worth finding.
@@ -590,11 +581,11 @@ function Home() {
           </span>
           <i />
           <span>
-            <strong>{feed ? num(demo ? demoTotal : feed.weekly_votes) : "—"}</strong> this week
+            <strong>{feed ? num(feed.weekly_points ?? feed.weekly_votes) : "—"}</strong> points this week
           </span>
           <i />
           <span>
-            <strong>{feed ? num(demo ? demoTotal : feed.global_votes) : "—"}</strong> total votes
+            <strong>{feed ? num(feed.global_votes) : "—"}</strong> total votes
           </span>
         </div>
       </section>
@@ -697,9 +688,9 @@ function Home() {
         </Link>
       </section>
       <p className="hunt-rules">
-        One vote per deal, per visitor each week. Change your mind at any time.
-        No account needed to vote. Rankings reset weekly; lifetime votes stay.
-        Launch-day votes count towards Sep 21–28.
+        One upvote per deal, per visitor each week.
+        No account needed to vote. Weekly points reset; All Time keeps the total.
+        Initial editorial points are labelled separately. All new votes come from visitors.
       </p>
     </div>
   );

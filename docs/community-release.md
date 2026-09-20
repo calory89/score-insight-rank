@@ -47,5 +47,7 @@ Remove the two retired hero copy blocks. The home now accepts a property URL; Se
 
 Authentication checks cover password success/failure, email confirmation destinations and cooldown, provider failure, first-password setup, expired links and return URL safety. The live auth settings allow signup and email access and require email confirmation. A browser negative-login test reached the real auth service and displayed the expected invalid-credentials error. A real successful login and email delivery still require a user-provided test address; mocked success tests are not proof of live email delivery.
 
-### Demonstration view
-`?demo=1` is a labelled, non-voting presentation only. Its synthetic votes fall sharply after the leaders and reach zero in the long tail. Global demo counters sum the complete demo catalog, including unloaded pages. Production defaults to the real ranking; demo scores never enter the database.
+### Initial points and live voting
+The launch migration `20260921010000_launch_points.sql` stores a one-time editorial allocation separately from actual visitor ballots. The first entries receive 370, 328, 124 and 67 points; the long tail rapidly reaches zero. Cards label initial points, while every visitor vote is persisted through the real rate-limited API. Existing `?demo=1` links no longer disable voting or substitute synthetic data. This Week includes launch points only in the inaugural week; All Time retains them. Total votes always counts real visitor ballots. New submissions receive no initial points. Historic snapshots preserve their initial component separately.
+
+The footer winner link and obsolete vote-direction text are removed. Email delivery/login verification still needs a user-provided test address. Admin notifications currently use the in-app review queue; unknown external listing data still requires manual completion rather than claiming universal extraction.
