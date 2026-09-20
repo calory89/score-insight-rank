@@ -16,8 +16,8 @@ vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({ user: mocks.user }),
 }));
 vi.mock("@/components/realhunt/AuthModal", () => ({
-  default: ({ open }: any) =>
-    open ? <div role="dialog">Join the hunt</div> : null,
+  default: ({ open, redirect }: any) =>
+    open ? <div role="dialog" data-return-to={redirect}>Join the hunt</div> : null,
 }));
 const deal = {
   id: "deal-1",
@@ -74,6 +74,7 @@ beforeEach(() => {
             },
           }
         : { data: { ok: true } };
+    if (p.p_action === "detail") return {data: {deal, comments: []}};
     if (p.p_action === "import") return { data: { data: null, manual: true } };
     return { data: { ok: true } };
   });
@@ -176,4 +177,32 @@ test("Sumba is the third card, labelled sponsored and outside voting", async () 
   expect(ad.querySelector("button")).toBeNull();
   expect(ad.querySelector("a")?.getAttribute("href")).toBe("/ecobeachcity");
   expect(screen.getAllByRole("button", {name: "Upvote deal"})).toHaveLength(3);
+});
+
+for (const path of ['/', '/deal/stone-home']) {
+  test(`original listings require an account on ${path}`, async () => {
+    open(path);
+    const source = await screen.findByRole('button', {name:'Original listing'});
+    expect(screen.queryByRole('link',{name:'Original listing'})).toBeNull();
+    fireEvent.click(source);
+    expect(await screen.findByRole('dialog')).toHaveAttribute('data-return-to','/deal/stone-home');
+  });
+  test(`signed-in visitors can open the original listing on ${path}`, async () => {
+    mocks.user = {id:'signed-in'};
+    open(path);
+    expect(await screen.findByRole('link',{name:'Original listing'})).toHaveAttribute('href',deal.source_url);
+  });
+}
+test('the full catalog stays available beyond the first page', async () => {
+  const previous=mocks.rpc.getMockImplementation()!;
+  mocks.rpc.mockImplementation(async (name:string,p:any)=>{
+    const response=await previous(name,p);
+    if(name==='community_rankings') response.data={...response.data,total:349,global_deals:349,rows:[{...deal,id:'deal-'+p.p_offset,slug:'home-'+p.p_offset,rank:p.p_offset+1}]};
+    return response;
+  });
+  open();
+  expect(await screen.findByText('Showing 1 of 349 deals')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button',{name:'More discoveries'}));
+  expect(await screen.findByText('Showing 2 of 349 deals · plus 1 sponsored listing')).toBeInTheDocument();
+  expect(screen.getAllByRole('button',{name:'Original listing'})).toHaveLength(2);
 });
