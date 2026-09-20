@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "./AuthModal";
 
 // Anonymous visitors never receive an outbound anchor, including via context menus.
-export default function OriginalListingLink({ href, children, className, onClick, ...props }: ComponentProps<"a">) {
+export default function OriginalListingLink({ href, children, className, onClick, returnTo, ...props }: ComponentProps<"a"> & { returnTo?: string }) {
   const { user, loading } = useAuth();
   const route = useLocation();
   const [open, setOpen] = useState(false);
@@ -16,6 +16,6 @@ export default function OriginalListingLink({ href, children, className, onClick
     {open && <AuthModal open onClose={() => setOpen(false)} initialMode="up"
       title="Create a free account to open the original listing"
       subtitle="Already registered? Sign in below. We will bring you back to this property."
-      redirect={route.pathname + route.search + route.hash} />}
+      redirect={returnTo || route.pathname + route.search + route.hash} />}
   </>;
 }
