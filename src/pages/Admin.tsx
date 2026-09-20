@@ -1,3 +1,4 @@
+import AdminWorkspaceNav from "@/components/realhunt/AdminWorkspaceNav";
 import { useEffect, useState, useMemo, lazy, Suspense } from "react";
 import AdminUserDetail from "@/components/admin/AdminUserDetail";
 
@@ -107,6 +108,7 @@ const Admin = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto px-4 pt-20 pb-16 max-w-6xl">
+        <AdminWorkspaceNav />
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Admin CRM</h1>
@@ -311,3 +313,4 @@ const Admin = () => {
 };
 
 export default Admin;
+

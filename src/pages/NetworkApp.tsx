@@ -1,3 +1,4 @@
+import { NetworkPreferences, NetworkTasks, IntroductionTerms, SourceContactRequests, NetworkStatement, sourcePaymentLabel } from "@/components/realhunt/NetworkTools";
 import { saveChange, fetchAll, downloadCsv, safeProjectUrl } from "@/lib/platform";
 import { contactCandidates } from "@/lib/contact-import";
 import Pagination from "@/components/realhunt/Pagination";
@@ -24,8 +25,8 @@ const COUNTRIES = ["", "Spain", "Portugal", "Italy", "France", "Greece", "Indone
 const STATUS: Record<string, string> = { proposed: "New", accepted: "Accepted", contacted: "Contacted", visited: "Visited", reserved: "Reserved", sold: "Sold", lost: "Lost" };
 const STAGES = ["proposed", "accepted", "contacted", "visited", "reserved", "sold", "lost"];
 const NEXT: Record<string, string[]> = { proposed: ["accepted", "lost"], accepted: ["contacted", "lost"], contacted: ["visited", "reserved", "lost"], visited: ["reserved", "lost"], reserved: ["sold", "lost"], sold: [], lost: ["accepted"] };
-type Tab = "overview" | "buyers" | "upload" | "leads" | "deals" | "earnings" | "settings" | "privacy";
-const TABS: [Tab, string][] = [["overview", "Overview"], ["buyers", "Buyers"], ["upload", "Upload contacts"], ["leads", "My contacts"], ["deals", "Deals & commission"], ["earnings", "Earnings"], ["settings", "Settings"], ["privacy", "How it works"]];
+type Tab = "today" | "overview" | "buyers" | "upload" | "leads" | "deals" | "earnings" | "settings" | "privacy";
+const TABS: [Tab, string][] = [["today", "My day"], ["overview", "Network overview"], ["buyers", "Buyers received"], ["upload", "Protect contacts"], ["leads", "Protected / shared"], ["deals", "Commissions payable"], ["earnings", "Referrals & earnings"], ["settings", "Settings"], ["privacy", "How it works"]];
 const fmtD = (s?: string | null) => (s ? new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) : "");
 const daysAgo = (s: string) => Math.max(0, Math.round((Date.now() - new Date(s).getTime()) / 86400000));
 
@@ -72,15 +73,14 @@ const NetworkApp = () => {
   const [contactRevision, setContactRevision] = useState(0);
   const [importIssues, setImportIssues] = useState<{ row: number; message: string }[]>([]);
   const [importDuplicates, setImportDuplicates] = useState(0);
+  const [buyerSource,setBuyerSource]=useState("all");
+  const [buyerStage,setBuyerStage]=useState("all");
   const [buyerQuery, setBuyerQuery] = useState("");
   const [followupsOnly, setFollowupsOnly] = useState(false);
   const [buyerLimit, setBuyerLimit] = useState(30);
   const mutation = useRef(false);
   const resumeKey = user ? `rh_import_${user.id}` : "";
-  const setMode = async (mode: string) => {
-    const result = await saveChange(() => db.from("network_developers").update({ mode, share_default: mode !== "receive", updated_at: new Date().toISOString() }).eq("id", ov.developer.id).select("id").single(), "Preference saved");
-    if (result.ok) { await load(); track("devapp_mode", { meta: { mode } }); }
-  };
+
 
   const load = async () => {
     setLoadErr(false);
@@ -167,8 +167,10 @@ const NetworkApp = () => {
     } finally { mutation.current = false; setBusy(false); }
   };
   const setShared = async (ids: number[], shared: boolean) => {
-    if (!ids.length || mutation.current) return; mutation.current = true;
-    const result = await saveChange(() => db.from("lead_fingerprints").update({ shared }).in("id", ids).select("id"), "Sharing preference saved");
+    if (!ids.length || mutation.current) return;
+    if (!confirm(shared ? `Make ${ids.length} selected contact(s) available for introductions? This does not send their original email or phone. You will authorize contact details separately.` : `Make ${ids.length} contact(s) private for future introductions? Existing introductions and commissions remain unchanged.`)) return;
+    mutation.current = true;
+    const result = await saveChange(() => db.rpc("dev_set_contact_sharing", { p_ids: ids, p_shared: shared }), "Sharing preference saved");
     mutation.current = false;
     if (result.ok) { setContactRevision(x => x + 1); await load(); }
   };
@@ -184,7 +186,7 @@ const NetworkApp = () => {
     if (result.ok) downloadCsv("realhunt-fingerprints.csv", [["fingerprint","kind","shared","country","budget","tag","uploaded_at"], ...result.data.map(l => [l.fp,l.kind,l.shared,l.country,l.budget,l.tag,l.uploaded_at])]);
   };
   const wipe = async () => {
-    if (!confirm("Delete all your fingerprints? Existing introductions remain, but prior-contact exemptions may be lost.")) return;
+    if (!confirm("Delete all your fingerprints? Existing introductions retain recorded exemptions. Deleted contacts will no longer protect you against future introductions.")) return;
     const result = await saveChange(() => db.from("lead_fingerprints").delete().eq("developer_id", ov.developer.id), "Fingerprints deleted");
     if (result.ok) { setLeads([]); setContactRevision(x => x + 1); await load(); }
   };
@@ -205,7 +207,7 @@ const NetworkApp = () => {
     e.preventDefault(); if (!sale || mutation.current) return; mutation.current = true; setBusy(true);
     const result = await saveChange<any>(() => db.rpc("dev_report_sale", { p_intro: sale.id, p_price: Number(price), p_note: saleNote || null }));
     mutation.current = false; setBusy(false);
-    if (!result.ok) { setSaleRes({ error: "The sale could not be saved. You can safely retry." }); return; }
+    if (!result.ok) { setSaleRes(null); return; }
     setSaleRes(result.data); track("devapp_sale", { meta: { price: Number(price), exempt: result.data.exempt } }); await load();
   };
   const copy = (t: string, k: string) => { navigator.clipboard?.writeText(t).then(() => { setCopied(k); setTimeout(() => setCopied(""), 1500); }); };
@@ -214,7 +216,7 @@ const NetworkApp = () => {
   const approved = ov?.developer?.status === "approved";
   const signed = !!ov?.signed && ov?.developer?.agreement_version === AGREEMENT_VERSION;
   const received: any[] = ov?.received || [];
-  const filteredBuyers = received.filter(i => (!buyerQuery || [i.buyer, i.contact, i.buyer_country, i.note, i.dev_notes].some(v => String(v || "").toLowerCase().includes(buyerQuery.toLowerCase()))) && (!followupsOnly || (i.next_action_at && i.next_action_at <= new Date().toISOString().slice(0,10) && !["sold","lost"].includes(i.status))));
+  const filteredBuyers = received.filter(i => (buyerSource === "all" || (buyerSource === "exempt" ? i.was_mine : buyerSource === "realhunt" ? i.from === "RealHunt" : i.from !== "RealHunt")) && (buyerStage === "all" || i.status === buyerStage) && (!buyerQuery || [i.buyer, i.contact, i.buyer_country, i.note, i.dev_notes].some(v => String(v || "").toLowerCase().includes(buyerQuery.toLowerCase()))) && (!followupsOnly || (i.next_action_at && i.next_action_at <= new Date().toISOString().slice(0,10) && !["sold","lost"].includes(i.status))));
   const waiting = received.filter((i) => i.status === "proposed").length;
   const overdue = received.filter((i) => i.next_action_at && new Date(i.next_action_at) < new Date(new Date().toDateString()) && !["sold", "lost"].includes(i.status)).length;
   const active = received.filter((i) => !["sold", "lost"].includes(i.status)).length;
@@ -300,7 +302,6 @@ const NetworkApp = () => {
       <Field l="Project page"><input required className={inp} placeholder="yourproject.com" value={form.project_url} onChange={(e) => setForm({ ...form, project_url: e.target.value })} /></Field>
       <Field l="Country"><select className={inp} value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })}>{COUNTRIES.map((c) => <option key={c} value={c}>{c || "Choose"}</option>)}</select></Field>
       <Field l="Price from (€)"><input type="number" className={inp} value={form.price_from} onChange={(e) => setForm({ ...form, price_from: e.target.value })} /></Field>
-      <label className="md:col-span-2 flex items-start gap-3 text-[14px]"><input type="checkbox" className="mt-1" checked={form.share_default} onChange={(e) => setForm({ ...form, share_default: e.target.checked })} /><span>Share my uploaded contacts with the network by default. <span className="text-ink-muted">You can change it per contact later. Shared means RealHunt may introduce that buyer to another project; you earn {SOURCE_SHARE_PCT}% of that sale.</span></span></label>
       <div className="md:col-span-2 flex items-center gap-4"><button disabled={busy} className="rh-btn-primary inline-flex items-center gap-2">{busy && <Loader2 size={16} className="animate-spin" />} {ov ? "Save" : "Create my panel"}</button>{msg && <span className="text-[13px] text-ink-muted">{msg}</span>}</div>
     </form>
   );
@@ -308,7 +309,7 @@ const NetworkApp = () => {
   if (ov === null) return (
     <div className="min-h-screen bg-paper text-ink"><RHNav />
       <div className="max-w-[860px] mx-auto px-6 py-12 flex flex-col gap-6">
-        <div><p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-2">RealHunt Network</p><h1 className="font-display text-[34px] tracking-tight">Tell us about your project. One minute.</h1><p className="text-[15px] text-ink-muted mt-2">Then sign the one-page agreement, upload your contacts, and start receiving buyers. We review every developer by hand before any introduction.</p></div>
+        <div><p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-2">RealHunt Network</p><h1 className="font-display text-[34px] tracking-tight">Tell us about your project. One minute.</h1><p className="text-[15px] text-ink-muted mt-2">Upload privately to protect existing contacts, choose which contacts to share, and independently enable new buyers. Approval and a signed agreement are required before receiving introductions.</p></div>
         {RegisterForm}
       </div>
     </div>
@@ -318,7 +319,7 @@ const NetworkApp = () => {
   const BuyerCard = ({ i, compact }: { i: any; compact?: boolean }) => (
     <button onClick={() => setOpen(i)} className={`text-left w-full border rounded-2xl bg-white p-4 hover:border-ink transition-colors ${i.next_action_at && new Date(i.next_action_at) < new Date(new Date().toDateString()) && !["sold", "lost"].includes(i.status) ? "border-amber-400" : "border-hairline"}`}>
       <div className="flex items-center justify-between gap-2"><span className="font-mono text-[13px]">Buyer {i.buyer}</span>{compact ? <Pill s={i.status} /> : <span className="text-[11px] text-ink-muted">{daysAgo(i.created_at)}d</span>}</div>
-      <p className="text-[13px] mt-1.5 line-clamp-2">{i.note || "Fits your country and price."}</p>
+      <p className="text-[13px] mt-1.5 line-clamp-2">{i.note || "Review the buyer details before accepting."}</p><p className="text-xs text-ink-muted mt-2">{i.from} · {i.was_mine ? "0% · protected contact" : `${i.commission_pct ?? "—"}% on a sale`}</p>
       <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-ink-muted">
         {i.buyer_country && <span className="px-2 py-0.5 rounded-full bg-paper border border-hairline">{i.buyer_country}</span>}
         {i.buyer_budget && <span className="px-2 py-0.5 rounded-full bg-paper border border-hairline tabular-nums">{eur(i.buyer_budget)}</span>}
@@ -350,6 +351,8 @@ const NetworkApp = () => {
           </div>
         )}
 
+        {tab === "today" && <div className="mt-6 space-y-5"><NetworkTasks buyers={received} onOpen={setOpen} /><SourceContactRequests given={ov.given || []} onChange={load} /></div>}
+
         {tab === "overview" && (
           <div className="mt-6 flex flex-col gap-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -359,23 +362,12 @@ const NetworkApp = () => {
               <Kpi n={eur(Number(ov.earned))} t="earned from shared leads" sub={Number(ov.pending_earn) ? `+ ${eur(Number(ov.pending_earn))} pending` : `${SOURCE_SHARE_PCT}% when a shared lead buys elsewhere`} />
             </div>
 
-            {/* onboarding checklist */}
-            {!ov.developer.mode && (
-              <div className="border-2 border-ink rounded-2xl bg-white p-5 md:p-6">
-                <p className="font-display text-[20px] tracking-tight">How do you want to use the network?</p>
-                <p className="text-[14px] text-ink-muted mt-1">Pick one. You can change it later in Settings. Uploading your contacts is separate and always a good idea: it is what proves a buyer was already yours.</p>
-                <div className="mt-4 grid md:grid-cols-3 gap-3">
-                  {[["receive", "Receive buyers only", `We send you buyers. You pay ${COMMISSION_PCT}% only when one buys. Your uploaded contacts stay private.`], ["share", "Earn from my leads only", `You share contacts you could not sell to and earn ${SOURCE_SHARE_PCT}% when one buys elsewhere. You do not receive buyers.`], ["both", "Both (recommended)", `Receive buyers and earn from shared leads. Most developers earn more from sharing than they pay in commission.`]].map(([k, t, d]) => (
-                    <button key={k} onClick={() => setMode(k)} className={`text-left rounded-2xl border p-4 hover:border-ink ${k === "both" ? "border-ink" : "border-hairline"}`}><p className="font-medium text-[15px]">{t}</p><p className="text-[13px] text-ink-muted mt-1 leading-relaxed">{d}</p></button>
-                  ))}
-                </div>
-              </div>
-            )}
-            {(!signed || !ov.leads || !approved || !ov.developer.mode) && (
+            <NetworkPreferences overview={ov} onChange={load} />
+            {(!signed || !ov.leads || !approved) && (
               <div className="border border-hairline rounded-2xl bg-white p-5 md:p-6">
                 <p className="font-display text-[20px] tracking-tight inline-flex items-center gap-2"><Sparkles size={18} /> Get set up</p>
-                <ol className="mt-4 grid md:grid-cols-5 gap-3">
-                  {[[true, "Project registered", "Done.", ""], [signed, "Sign the agreement", signed ? `v${ov.developer.agreement_version} · ${ov.developer.agreement_signer}` : "One page, typed signature.", "/network/agreement"], [ov.leads > 0, "Upload your contacts", ov.leads > 0 ? `${ov.leads} fingerprints protect your own buyers` : "Anything not uploaded counts as ours if it buys.", "/network/app/upload"], [!!ov.developer.mode, "Choose what you want", ov.developer.mode === "receive" ? "Receive buyers only" : ov.developer.mode === "share" ? "Earn from shared leads only" : ov.developer.mode === "both" ? "Receive and share" : "Receive, share, or both.", ""], [approved, "Get approved", approved ? "Receiving buyers." : "Manual review pending.", ""]].map(([ok, t, d, to]: any, n) => (
+                <ol className="mt-4 grid md:grid-cols-4 gap-3">
+                  {[[true, "Project registered", "Done.", ""], [signed, "Sign the agreement", signed ? `v${ov.developer.agreement_version} · ${ov.developer.agreement_signer}` : "One page, typed signature.", "/network/agreement"], [ov.leads > 0, "Upload your contacts", ov.leads > 0 ? `${ov.leads} fingerprints protect your own buyers` : "Optional. Register existing contacts before a future introduction to establish prior-contact protection.", "/network/app/upload"], [approved, "Get approved", approved ? "Eligible; receiving can be enabled independently." : "Manual review pending.", ""]].map(([ok, t, d, to]: any, n) => (
                     <li key={t} className={`rounded-xl border p-4 ${ok ? "border-emerald-500/40 bg-emerald-500/5" : "border-hairline"}`}><p className="text-[13px] font-medium inline-flex items-center gap-2">{ok ? <Check size={14} className="text-emerald-600" /> : <span className="h-4 w-4 rounded-full border border-ink-muted inline-flex items-center justify-center text-[10px]">{n + 1}</span>}{t}</p><p className="text-[12px] text-ink-muted mt-1">{d}</p>{!ok && to && <Link to={to} className="text-[12px] underline text-ink mt-1 inline-block">Do it →</Link>}</li>
                   ))}
                 </ol>
@@ -402,7 +394,8 @@ const NetworkApp = () => {
               <span className="flex-1" />
               <div className="inline-flex border border-hairline rounded-full bg-white p-0.5">{(["board", "list"] as const).map((v) => <button key={v} onClick={() => setView(v)} className={`px-3 py-1.5 rounded-full text-[12px] inline-flex items-center gap-1.5 ${view === v ? "bg-ink text-paper" : "text-ink-muted"}`}>{v === "board" ? <LayoutGrid size={13} /> : <List size={13} />}{v}</button>)}</div>
             </div>
-            <div className="flex flex-wrap gap-3"><input aria-label="Search all introduced buyers" placeholder="Search buyer, country or notes" value={buyerQuery} onChange={e => { setBuyerQuery(e.target.value); setBuyerLimit(30); }} className={`${inp} flex-1`} /><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={followupsOnly} onChange={e => setFollowupsOnly(e.target.checked)} />Follow-ups due</label></div>
+            <div className="flex flex-wrap gap-3"><input aria-label="Search all introduced buyers" placeholder="Search buyer, country or notes" value={buyerQuery} onChange={e => { setBuyerQuery(e.target.value); setBuyerLimit(30); }} className={`${inp} flex-1`} /><select aria-label="Buyer source" className={inp} value={buyerSource} onChange={e=>{setBuyerSource(e.target.value);setBuyerLimit(30);}}><option value="all">All origins</option><option value="realhunt">RealHunt buyers</option><option value="network">Shared by developers</option><option value="exempt">My prior contacts · 0%</option></select><select aria-label="Buyer stage" className={inp} value={buyerStage} onChange={e=>{setBuyerStage(e.target.value);setBuyerLimit(30);}}><option value="all">All stages</option>{STAGES.map(stage=><option key={stage} value={stage}>{STATUS[stage]}</option>)}</select><label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={followupsOnly} onChange={e => setFollowupsOnly(e.target.checked)} />Follow-ups due</label></div>
+            {received.length > 0 && filteredBuyers.length === 0 && <p className="rounded-xl border border-hairline p-5 text-sm">No buyers match these filters. <button className="underline" onClick={()=>{setBuyerQuery("");setBuyerSource("all");setBuyerStage("all");setFollowupsOnly(false);}}>Clear filters</button></p>}
             {received.length === 0 ? <div className="border border-hairline rounded-2xl bg-white p-10 text-center text-ink-muted">No buyers introduced yet. New introductions appear here, with notifications sent to {ov.developer.email}.</div> : view === "board" ? (
               <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 md:mx-0 md:px-0">
                 {STAGES.map((s) => { const col = filteredBuyers.filter((i) => i.status === s); return (
@@ -415,7 +408,7 @@ const NetworkApp = () => {
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">{filteredBuyers.slice(0, buyerLimit).map((i) => <BuyerCard key={i.id} i={i} compact />)}</div>
             )}
             {filteredBuyers.length > buyerLimit && <button onClick={() => setBuyerLimit(n => n + 30)} className="min-h-11 underline text-sm">Show more buyers</button>}
-            <p className="text-[12px] text-ink-muted">Accept and we send you the buyer's contact. Keep the status honest: it is what the sharing developer gets paid on, and how we send you better fits. A sale is reported with its price from the buyer's card.</p>
+            <p className="text-[12px] text-ink-muted">Accept the recorded terms; authorized contact details follow when supplied. Keep the status honest: it is what the sharing developer gets paid on, and how we send you better fits. A sale is reported with its price from the buyer's card.</p>
           </div>
         )}
 
@@ -449,7 +442,7 @@ const NetworkApp = () => {
                   <div className="mt-4 flex items-center gap-3"><button onClick={send} disabled={busy} className="rh-btn-primary inline-flex items-center gap-2">{busy ? <Loader2 size={16} className="animate-spin" /> : <Fingerprint size={16} />} Send {rows.length} fingerprints</button><button onClick={() => { setRows([]); setRaw(""); }} className="text-[13px] text-ink-muted underline">Clear</button></div>
                 </div>
               )}
-              {upRes && <div className="border border-emerald-500/40 bg-emerald-500/5 rounded-2xl p-5 text-[14px]"><p className="font-medium inline-flex items-center gap-2"><Check size={16} /> Done. These contacts are now protected.</p><p className="mt-1"><b>{upRes.inserted}</b> new · <b>{upRes.duplicates}</b> already in your list · <b>{upRes.overlap_realhunt}</b> of all your leads are active RealHunt buyers · <b>{upRes.overlap_network}</b> are also with another developer.</p></div>}
+              {upRes && <div className="border border-emerald-500/40 bg-emerald-500/5 rounded-2xl p-5 text-[14px]"><p className="font-medium inline-flex items-center gap-2"><Check size={16} /> Done. These contacts are now protected.</p><p className="mt-1"><b>{upRes.inserted}</b> new · <b>{upRes.duplicates}</b> already in your list · Protection timestamps are recorded by the server. Duplicate imports keep the original timestamp.</p></div>}
               {msg && <p className="text-[13px] text-red-600">{msg}</p>}
             </div>
             <aside className="flex flex-col gap-3">
@@ -463,18 +456,18 @@ const NetworkApp = () => {
         )}
 
         {tab === "leads" && (
-          <div className="mt-6 flex flex-col gap-4">
+          <div className="mt-6 flex flex-col gap-4"><div className="rounded-2xl border border-hairline bg-white p-5"><h2 className="font-display text-xl">Every uploaded contact is protected. Sharing is optional.</h2><p className="text-sm text-ink-muted mt-2">Private contacts are only used to check prior ownership. Shared contacts can generate introductions and referral earnings. Sharing can be withdrawn for future introductions.</p></div>
             <div className="flex flex-wrap items-center gap-2">
               {(["all", "shared", "private"] as const).map((k) => <button key={k} onClick={() => setOnlyShared(k)} className={`px-3.5 py-2 rounded-full border text-[13px] ${onlyShared === k ? "bg-ink text-paper border-ink" : "border-hairline bg-white"}`}>{k === "all" ? `All (${ov.leads})` : k === "shared" ? `Shared (${ov.shared})` : `Private (${ov.leads - ov.shared})`}</button>)}
               <span className="flex-1" />
-              <button onClick={() => setShared(shownLeads.map((l) => l.id), true)} className="px-3.5 py-2 rounded-full border border-hairline bg-white text-[13px]">Share all shown</button>
-              <button onClick={() => setShared(shownLeads.map((l) => l.id), false)} className="px-3.5 py-2 rounded-full border border-hairline bg-white text-[13px]">Make all shown private</button>
+              <button onClick={() => setShared(shownLeads.map((l) => l.id), true)} className="px-3.5 py-2 rounded-full border border-hairline bg-white text-[13px]">Share this page</button>
+              <button onClick={() => setShared(shownLeads.map((l) => l.id), false)} className="px-3.5 py-2 rounded-full border border-hairline bg-white text-[13px]">Make this page private</button>
               <button onClick={exportCsv} className="px-3.5 py-2 rounded-full border border-hairline bg-white text-[13px] inline-flex items-center gap-1.5"><Download size={14} /> Export</button>
             </div>
             <input aria-label="Search all contacts" placeholder="Search country, tag or fingerprint" className={inp} value={contactQuery} onChange={e => setContactQuery(e.target.value)} />
             {contactError ? <button onClick={() => setContactRevision(x => x + 1)} className="min-h-11 underline">Contacts could not load. Retry</button> : contactLoading ? <p role="status">Loading contacts…</p> : leads.length === 0 ? <div className="border border-hairline rounded-2xl bg-white p-10 text-center text-ink-muted">No contacts match this view. <Link to="/network/app/upload" className="underline text-ink">Upload your first batch</Link> so the buyers you already have stay yours.</div> : (
-              <div className="border border-hairline rounded-2xl bg-white overflow-x-auto"><table className="w-full text-[13px]"><thead><tr className="text-[11px] uppercase tracking-wider text-ink-muted"><th className="text-left px-4 py-2.5">Fingerprint</th><th className="text-left px-3 py-2.5">Kind</th><th className="text-left px-3 py-2.5">Country</th><th className="text-left px-3 py-2.5">Budget</th><th className="text-left px-3 py-2.5">Tag</th><th className="text-left px-3 py-2.5">Uploaded</th><th className="text-left px-3 py-2.5">Shared</th></tr></thead>
-                <tbody>{shownLeads.map((l) => <tr key={l.id} className="border-t border-hairline/70"><td className="px-4 py-2 font-mono">{mask(l.fp)}</td><td className="px-3 py-2 text-ink-muted">{l.kind}</td><td className="px-3 py-2">{l.country || "—"}</td><td className="px-3 py-2 tabular-nums">{l.budget ? eur(l.budget) : "—"}</td><td className="px-3 py-2 text-ink-muted">{l.tag || "—"}</td><td className="px-3 py-2 text-ink-muted">{fmtD(l.uploaded_at)}</td><td className="px-3 py-2"><button onClick={() => setShared([l.id], !l.shared)} aria-label="Toggle share">{l.shared ? <ToggleRight size={24} className="text-emerald-600" /> : <ToggleLeft size={24} className="text-ink-muted" />}</button></td></tr>)}</tbody></table>
+              <div className="border border-hairline rounded-2xl bg-white overflow-x-auto"><table className="w-full text-[13px]"><thead><tr className="text-[11px] uppercase tracking-wider text-ink-muted"><th className="text-left px-4 py-2.5">Fingerprint</th><th className="text-left px-3 py-2.5">Kind</th><th className="text-left px-3 py-2.5">Country</th><th className="text-left px-3 py-2.5">Budget</th><th className="text-left px-3 py-2.5">Tag</th><th className="text-left px-3 py-2.5">Protected since</th><th className="text-left px-3 py-2.5">Shared</th></tr></thead>
+                <tbody>{shownLeads.map((l) => <tr key={l.id} className="border-t border-hairline/70"><td className="px-4 py-2 font-mono">{mask(l.fp)}</td><td className="px-3 py-2 text-ink-muted">{l.kind}</td><td className="px-3 py-2">{l.country || "—"}</td><td className="px-3 py-2 tabular-nums">{l.budget ? eur(l.budget) : "—"}</td><td className="px-3 py-2 text-ink-muted">{l.tag || "—"}</td><td className="px-3 py-2 text-ink-muted">{new Date(l.uploaded_at).toLocaleString()}</td><td className="px-3 py-2"><button onClick={() => setShared([l.id], !l.shared)} aria-label="Toggle share">{l.shared ? <ToggleRight size={24} className="text-emerald-600" /> : <ToggleLeft size={24} className="text-ink-muted" />}</button></td></tr>)}</tbody></table>
                 </div>
             )}
           </div>
@@ -483,14 +476,14 @@ const NetworkApp = () => {
         {tab === "leads" && <Pagination page={contactPage} total={contactTotal} onChange={setContactPage} busy={contactLoading} />}
 
         {tab === "deals" && (
-          <div className="mt-6 flex flex-col gap-4">
+          <div className="mt-6 flex flex-col gap-4"><NetworkStatement overview={ov} kind="payable" />
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <Kpi n={eur(Number(ov.sales_total))} t="sold to introduced buyers" />
-              <Kpi n={eur(Number(ov.owed))} t="commission owed" sub={`${COMMISSION_PCT}% of commissionable sales`} warn={Number(ov.owed) > 0} />
+              <Kpi n={eur(Number(ov.owed))} t="commission owed" sub="Rates recorded for each introduction" warn={Number(ov.owed) > 0} />
               <Kpi n={eur(Number(ov.paid_total))} t="commission paid" />
               <Kpi n={(ov.deals || []).filter((d: any) => d.exempt).length} t="exempt sales" sub="buyers you had before the introduction" />
             </div>
-            <div className="border border-hairline rounded-2xl bg-white p-5 text-[14px] flex flex-col md:flex-row md:items-center gap-3"><BadgeEuro size={20} className="text-ink-muted shrink-0" /><p className="flex-1">A sale is reported from the buyer's card in <Link to="/network/app/buyers" className="underline">Buyers</Link>: set the price and we calculate the rest. If the fingerprint was in your list before we introduced the buyer, the sale is exempt automatically. Otherwise we invoice {COMMISSION_PCT}%, payable in {PAYMENT_DAYS} days.</p></div>
+            <div className="border border-hairline rounded-2xl bg-white p-5 text-[14px] flex flex-col md:flex-row md:items-center gap-3"><BadgeEuro size={20} className="text-ink-muted shrink-0" /><p className="flex-1">A sale is reported from the buyer's card in <Link to="/network/app/buyers" className="underline">Buyers</Link>: set the price and we calculate the rest. If the fingerprint was in your list before we introduced the buyer, the sale is exempt automatically. Otherwise the rate recorded for that introduction applies. Payment terms remain those in your agreement.</p></div>
             {(ov.deals || []).length === 0 ? <div className="border border-hairline rounded-2xl bg-white p-10 text-center text-ink-muted">No sales reported yet.</div> : (
               <div className="border border-hairline rounded-2xl bg-white overflow-x-auto"><table className="w-full text-[13px]"><thead><tr className="text-[11px] uppercase tracking-wider text-ink-muted"><th className="text-left px-4 py-2.5">Buyer</th><th className="text-left px-3 py-2.5">Sale price</th><th className="text-left px-3 py-2.5">Commission</th><th className="text-left px-3 py-2.5">Status</th><th className="text-left px-3 py-2.5">Reported</th><th className="text-left px-3 py-2.5">Invoiced</th><th className="text-left px-3 py-2.5">Paid</th><th className="text-left px-3 py-2.5">Note</th></tr></thead><tbody>
                 {ov.deals.map((d: any) => <tr key={d.id} className="border-t border-hairline/70"><td className="px-4 py-2 font-mono">{d.buyer}…<br /><span className="font-sans text-[11px] text-ink-muted">{d.from === "RealHunt" ? "from RealHunt" : "via network"}</span></td><td className="px-3 py-2 tabular-nums">{eur(Number(d.sale_price))}</td><td className="px-3 py-2 tabular-nums">{d.exempt ? <span className="text-emerald-700">€0 · exempt</span> : <>{eur(Number(d.commission_eur))} <span className="text-ink-muted">({d.commission_pct}%)</span></>}{d.exempt_reason && <p className="text-[11px] text-ink-muted">{d.exempt_reason}</p>}</td><td className="px-3 py-2"><span className={`px-2 py-0.5 rounded-full text-[11px] ${d.status === "paid" ? "bg-emerald-500/10 text-emerald-700" : d.status === "invoiced" ? "bg-amber-500/10 text-amber-700" : d.status === "void" ? "bg-hairline text-ink-muted" : "bg-ink text-paper"}`}>{d.status}</span></td><td className="px-3 py-2 text-ink-muted">{fmtD(d.reported_at)}</td><td className="px-3 py-2 text-ink-muted">{fmtD(d.invoiced_at) || "—"}</td><td className="px-3 py-2 text-ink-muted">{fmtD(d.paid_at) || "—"}</td><td className="px-3 py-2 text-ink-muted">{d.notes || "—"}</td></tr>)}
@@ -500,10 +493,10 @@ const NetworkApp = () => {
         )}
 
         {tab === "earnings" && (
-          <div className="mt-6 flex flex-col gap-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3"><Kpi n={eur(Number(ov.earned))} t="paid to you" sub="shared leads that bought elsewhere" /><Kpi n={eur(Number(ov.pending_earn))} t="pending" sub="waiting for the selling developer to pay" /><Kpi n={(ov.given || []).length} t="introductions from your leads" /><Kpi n={`${SOURCE_SHARE_PCT}%`} t="of the sale price" sub={`paid within ${PAYMENT_DAYS} days of RealHunt collecting`} /></div>
-            {(ov.given || []).length === 0 ? <div className="border border-hairline rounded-2xl bg-white p-10 text-center text-ink-muted">Nothing yet. Share leads and this fills up when one of them fits another project.</div> : (
-              <div className="border border-hairline rounded-2xl bg-white overflow-x-auto"><table className="w-full text-[13px]"><thead><tr className="text-[11px] uppercase tracking-wider text-ink-muted"><th className="text-left px-4 py-2.5">Buyer</th><th className="text-left px-3 py-2.5">Introduced to</th><th className="text-left px-3 py-2.5">Status</th><th className="text-left px-3 py-2.5">Your share</th><th className="text-left px-3 py-2.5">When</th></tr></thead><tbody>{ov.given.map((g: any) => <tr key={g.id} className="border-t border-hairline/70"><td className="px-4 py-2 font-mono">{g.buyer}…</td><td className="px-3 py-2">{g.to}</td><td className="px-3 py-2"><Pill s={g.status} /></td><td className="px-3 py-2 tabular-nums">{g.share_eur ? <>{eur(Number(g.share_eur))} <span className="text-ink-muted text-[11px]">{g.share_status === "paid" ? "paid" : "pending"}</span></> : <span className="text-ink-muted">—</span>}</td><td className="px-3 py-2 text-ink-muted">{fmtD(g.created_at)}</td></tr>)}</tbody></table></div>
+          <div className="mt-6 flex flex-col gap-4"><SourceContactRequests given={ov.given || []} onChange={load} /><NetworkStatement overview={ov} kind="receivable" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3"><Kpi n={eur(Number(ov.earned))} t="paid to you" sub="shared leads that bought elsewhere" /><Kpi n={eur(Number(ov.pending_earn))} t="pending" sub="reported earnings not yet paid to you" /><Kpi n={(ov.given || []).length} t="introductions from your leads" /><Kpi n={(ov.given || []).filter((g:any) => g.share_status === "ready_for_payout").length} t="collected, awaiting payout" sub="Seller payment and your payout are separate events" /></div>
+            {(ov.given || []).length === 0 ? <div className="border border-hairline rounded-2xl bg-white p-10 text-center text-ink-muted">No introductions from your shared contacts yet. Sharing is optional; it never affects your ability to receive buyers.</div> : (
+              <div className="border border-hairline rounded-2xl bg-white overflow-x-auto"><table className="w-full text-[13px]"><thead><tr className="text-[11px] uppercase tracking-wider text-ink-muted"><th className="text-left px-4 py-2.5">Buyer</th><th className="text-left px-3 py-2.5">Introduced to</th><th className="text-left px-3 py-2.5">Status</th><th className="text-left px-3 py-2.5">Your share</th><th className="text-left px-3 py-2.5">When</th></tr></thead><tbody>{ov.given.map((g: any) => <tr key={g.id} className="border-t border-hairline/70"><td className="px-4 py-2 font-mono">{g.buyer}…</td><td className="px-3 py-2">{g.to}</td><td className="px-3 py-2"><Pill s={g.status} /></td><td className="px-3 py-2 tabular-nums">{g.share_eur != null ? eur(Number(g.share_eur)) : "—"}<p className="text-xs text-ink-muted">{sourcePaymentLabel(g.share_status,g.exempt)}</p></td><td className="px-3 py-2 text-ink-muted">{fmtD(g.created_at)}</td></tr>)}</tbody></table></div>
             )}
           </div>
         )}
@@ -511,15 +504,15 @@ const NetworkApp = () => {
         {tab === "settings" && (
           <div className="mt-6 flex flex-col gap-4">
             {RegisterForm}
-            <div className="border border-hairline rounded-2xl bg-white p-5 md:p-6"><p className="font-medium text-[15px]">What you want from the network</p><p className="text-[13px] text-ink-muted mt-0.5">Separate from uploading: uploading always protects you. This only decides whether we send you buyers and whether your new uploads are shared by default.</p><div className="mt-3 flex flex-wrap gap-2">{[["receive", "Receive buyers only"], ["share", "Earn from my leads only"], ["both", "Both"]].map(([k, l]) => <button key={k} onClick={() => setMode(k)} className={`px-4 py-2 rounded-full border text-[13px] ${ov.developer.mode === k ? "bg-ink text-paper border-ink" : "border-hairline bg-white hover:border-ink"}`}>{l}</button>)}</div></div>
+            <NetworkPreferences overview={ov} onChange={load} />
             <div className="border border-hairline rounded-2xl bg-white p-5 md:p-6 flex flex-col md:flex-row md:items-center gap-3"><div className="flex-1"><p className="font-medium text-[15px] inline-flex items-center gap-2"><FileSignature size={15} /> Network agreement</p><p className="text-[13px] text-ink-muted">{signed ? `Signed v${ov.developer.agreement_version} by ${ov.developer.agreement_signer} on ${new Date(ov.developer.agreement_accepted_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}.` : "Not signed yet. Needed before you can accept buyers."}</p></div><Link to="/network/agreement" className="px-4 py-2 rounded-full border border-ink text-[13px] font-medium">{signed ? "Read my copy" : "Read and sign"}</Link></div>
-            <div className="border border-hairline rounded-2xl bg-white p-5 md:p-6 flex flex-col md:flex-row md:items-center gap-3"><div className="flex-1"><p className="font-medium text-[15px]">Delete all my fingerprints</p><p className="text-[13px] text-ink-muted">Removes every fingerprint you uploaded. Introductions already made are kept for accounting, and buyers you had stop being exempt.</p></div><button onClick={wipe} className="px-4 py-2 rounded-full border border-red-600 text-red-600 text-[13px] font-medium inline-flex items-center gap-1.5"><Trash2 size={14} /> Delete all</button></div>
+            <div className="border border-hairline rounded-2xl bg-white p-5 md:p-6 flex flex-col md:flex-row md:items-center gap-3"><div className="flex-1"><p className="font-medium text-[15px]">Delete all my fingerprints</p><p className="text-[13px] text-ink-muted">Removes uploaded fingerprints from future matching. Existing introductions keep their recorded exemption and commission terms. This does not cancel existing obligations.</p></div><button onClick={wipe} className="px-4 py-2 rounded-full border border-red-600 text-red-600 text-[13px] font-medium inline-flex items-center gap-1.5"><Trash2 size={14} /> Delete all</button></div>
           </div>
         )}
 
         {tab === "privacy" && (
           <div className="mt-6 grid md:grid-cols-2 gap-4 text-[14px] leading-relaxed">
-            <div className="border border-hairline rounded-2xl bg-white p-6"><p className="font-display text-[20px] tracking-tight">I am not handing my database to a competitor.</p><p className="mt-2 text-ink-muted">Right. So you never hand it to anyone. Each email or phone is turned into a 64-character fingerprint in your browser. Fingerprints let us match contacts without uploading the original details; they are still sensitive. We store fingerprints, a country, a budget and a tag. Never a name, never an email, never a phone.</p></div>
+            <div className="border border-hairline rounded-2xl bg-white p-6"><p className="font-display text-[20px] tracking-tight">I am not handing my database to a competitor.</p><p className="mt-2 text-ink-muted">Right. So you never hand it to anyone. Each email or phone is turned into a 64-character fingerprint in your browser. Fingerprints let us match contacts without uploading the original details; they are still sensitive. We store fingerprints, a country, a budget and a tag. Bulk uploads do not include names, emails or phones. A separate authorized handoff supplies the original details for one accepted introduction.</p></div>
             <div className="border border-hairline rounded-2xl bg-white p-6"><p className="font-display text-[20px] tracking-tight">The {COMMISSION_PCT}% rule</p><p className="mt-2 text-ink-muted">We introduce a buyer, you sell, you pay {COMMISSION_PCT}% of the price. If that buyer's fingerprint was already in your panel before we introduced them, it is exempt, automatically. If you had them but never uploaded, they count as ours. That is the whole reason to upload first.</p></div>
             <div className="border border-hairline rounded-2xl bg-white p-6"><p className="font-display text-[20px] tracking-tight">The {SOURCE_SHARE_PCT}% rule</p><p className="mt-2 text-ink-muted">A lead you marked as shared buys another project in the network through an introduction. The selling developer pays {COMMISSION_PCT}% of the sale to RealHunt, and only that: out of it, {SOURCE_SHARE_PCT}% of the sale goes to you within {PAYMENT_DAYS} days and {COMMISSION_PCT - SOURCE_SHARE_PCT}% stays with RealHunt. You pay nothing to share. Private leads are never introduced.</p></div>
             <div className="border border-hairline rounded-2xl bg-white p-6"><p className="font-display text-[20px] tracking-tight">Wait, then how do you contact the buyer?</p><p className="mt-2 text-ink-muted">We don't, from a fingerprint. When a match is accepted we ask you, the developer who owns the relationship, for that one contact, or the buyer is already a RealHunt user who asked us to find them a home. Either way, consent first. Operated by Equinox Investment Group LLC, Sheridan, Wyoming. <Link to="/network/agreement" className="underline text-ink">Full agreement</Link>.</p></div>
@@ -536,27 +529,29 @@ const NetworkApp = () => {
             <div className="flex flex-wrap items-center gap-2"><Pill s={i.status} />{i.buyer_country && <span className="px-2 py-0.5 rounded-full bg-white border border-hairline text-[11px]">{i.buyer_country}</span>}{i.buyer_budget && <span className="px-2 py-0.5 rounded-full bg-white border border-hairline text-[11px] tabular-nums">budget {eur(i.buyer_budget)}</span>}</div>
             {i.note && <div className="border border-hairline rounded-2xl bg-white p-4 text-[14px]"><p className="text-[11px] uppercase tracking-wider text-ink-muted mb-1">From RealHunt</p>{i.note}</div>}
 
+            <IntroductionTerms buyer={i} />
+
             {/* contact */}
             <div className="border border-hairline rounded-2xl bg-white p-4">
               <p className="text-[11px] uppercase tracking-wider text-ink-muted mb-2">Contact</p>
               {i.contact ? (
                 <div className="flex flex-col gap-2 text-[14px]">{i.contact.split(/\s*[|\n]\s*/).filter(Boolean).map((c: string) => { const isMail = /@/.test(c); const isTel = /^[+\d][\d\s().-]{6,}$/.test(c); return <div key={c} className="flex items-center justify-between gap-2"><span className="inline-flex items-center gap-2 min-w-0">{isMail ? <Mail size={14} className="text-ink-muted shrink-0" /> : isTel ? <Phone size={14} className="text-ink-muted shrink-0" /> : null}<span className="truncate">{c}</span></span><span className="flex gap-1 shrink-0">{isMail && <a href={`mailto:${c}`} className="px-2 py-1 rounded-full border border-hairline text-[12px]">Email</a>}{isTel && <a href={`https://wa.me/${c.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="px-2 py-1 rounded-full border border-hairline text-[12px]">WhatsApp</a>}<button onClick={() => copy(c, c)} className="px-2 py-1 rounded-full border border-hairline text-[12px] inline-flex items-center gap-1"><Copy size={11} /> {copied === c ? "Copied" : "Copy"}</button></span></div>; })}</div>
               ) : i.status === "proposed" ? (
-                <p className="text-[13px] text-ink-muted">Accept the introduction and the contact appears here. {!signed && <Link to="/network/agreement" className="underline text-ink">Sign the agreement first.</Link>}</p>
+                <p className="text-[13px] text-ink-muted">Review the terms and accept. Authorized contact details appear here once supplied. {!signed && <Link to="/network/agreement" className="underline text-ink">Sign the agreement first.</Link>}</p>
               ) : <p className="text-[13px] text-ink-muted">Contact details are pending. They will appear here when RealHunt adds them.</p>}
             </div>
 
             {/* stage */}
             <div className="border border-hairline rounded-2xl bg-white p-4">
               <p className="text-[11px] uppercase tracking-wider text-ink-muted mb-2">Move to</p>
-              <div className="flex flex-wrap gap-1.5">{(NEXT[i.status] || []).map((s) => <button key={s} onClick={() => setStatus(i, s)} disabled={s === "accepted" && !signed && i.status === "proposed"} className={`px-3 py-1.5 rounded-full border text-[12px] disabled:opacity-40 ${s === "sold" ? "bg-emerald-600 border-emerald-600 text-white" : s === "lost" ? "border-hairline text-ink-muted hover:border-ink" : "bg-ink border-ink text-paper"}`}>{s === "accepted" && i.status === "proposed" ? "Accept, send me the contact" : s === "lost" && i.status === "proposed" ? "Not for us" : s === "sold" ? "Mark sold, report price" : STATUS[s]}</button>)}{i.status === "sold" && i.deal && <span className="text-[13px] text-emerald-700 inline-flex items-center gap-1"><Check size={14} /> Sold for {eur(Number(i.deal.sale_price))} · {i.deal.exempt ? "exempt" : `${eur(Number(i.deal.commission_eur))} commission · ${i.deal.status}`}</span>}</div>
+              <div className="flex flex-wrap gap-1.5">{(NEXT[i.status] || []).map((s) => <button key={s} onClick={() => setStatus(i, s)} disabled={s === "accepted" && !signed && i.status === "proposed"} className={`px-3 py-1.5 rounded-full border text-[12px] disabled:opacity-40 ${s === "sold" ? "bg-emerald-600 border-emerald-600 text-white" : s === "lost" ? "border-hairline text-ink-muted hover:border-ink" : "bg-ink border-ink text-paper"}`}>{s === "accepted" && i.status === "proposed" ? "Accept these terms" : s === "lost" && i.status === "proposed" ? "Not for us" : s === "sold" ? "Mark sold, report price" : STATUS[s]}</button>)}{i.status === "sold" && i.deal && <span className="text-[13px] text-emerald-700 inline-flex items-center gap-1"><Check size={14} /> Sold for {eur(Number(i.deal.sale_price))} · {i.deal.exempt ? "exempt" : `${eur(Number(i.deal.commission_eur))} commission · ${i.deal.status}`}</span>}</div>
               {i.status === "proposed" && !signed && <p className="text-[12px] text-amber-700 mt-2 inline-flex items-center gap-1"><AlertTriangle size={12} /> Sign the agreement to accept buyers.</p>}
             </div>
 
             {/* follow up + notes */}
             <div className="border border-hairline rounded-2xl bg-white p-4 flex flex-col gap-3">
               <Field l="Next follow-up"><input type="date" className={inp} value={i.next_action_at || ""} onChange={(e) => patchIntro(i.id, { next_action_at: e.target.value || null })} /></Field>
-              <Field l="Your notes (visible to you and RealHunt support)"><textarea defaultValue={i.dev_notes || ""} onBlur={(e) => e.target.value !== (i.dev_notes || "") && patchIntro(i.id, { dev_notes: e.target.value })} placeholder="Called Tue, wants sea view, visiting in March…" className={`${inp} h-28 rounded-2xl`} /></Field>
+              <Field l="Your notes (visible to you and RealHunt support)"><textarea key={i.id} defaultValue={i.dev_notes || ""} onBlur={(e) => e.target.value !== (i.dev_notes || "") && patchIntro(i.id, { dev_notes: e.target.value })} placeholder="Called Tue, wants sea view, visiting in March…" className={`${inp} h-28 rounded-2xl`} /></Field>
             </div>
             <BuyerHistory id={i.id} revision={i.updated_at} />
             <p className="text-[12px] text-ink-muted">Introduction ID {i.id.slice(0, 8)}. Every status change is logged; it is what the agreement is settled on.</p>
@@ -572,12 +567,12 @@ const NetworkApp = () => {
             {!saleRes && (<>
               <Field l="Total price paid by the buyer (€, before taxes and discounts)"><input required type="number" min={1} step={1} autoFocus value={price} onChange={(e) => setPrice(e.target.value)} placeholder="185000" className={`${inp} text-[18px] font-display`} /></Field>
               <Field l="Unit, reference or note (optional)"><input value={saleNote} onChange={(e) => setSaleNote(e.target.value)} placeholder="Villa B4, reserved 12 Sep" className={inp} /></Field>
-              <div className="rounded-xl bg-white border border-hairline p-4 text-[13px]">{sale.was_mine ? <p className="text-emerald-700 inline-flex items-center gap-2"><ShieldCheck size={14} /> This buyer was in your list before the introduction. The sale will be recorded as exempt, €0 commission.</p> : <p>Commission at {COMMISSION_PCT}%: <b className="tabular-nums">{price ? eur(Number(price) * COMMISSION_PCT / 100) : "€0"}</b>. We send the invoice; payable in {PAYMENT_DAYS} days.</p>}</div>
+              <div className="rounded-xl bg-white border border-hairline p-4 text-[13px]">{sale.was_mine ? <p className="text-emerald-700 inline-flex items-center gap-2"><ShieldCheck size={14} /> This buyer was in your list before the introduction. The sale will be recorded as exempt, €0 commission.</p> : <p>Commission at {sale.commission_pct}%: <b className="tabular-nums">{price ? eur(Number(price) * Number(sale.commission_pct) / 100) : "€0"}</b>. We send the invoice; payable in {PAYMENT_DAYS} days.</p>}</div>
               <button disabled={busy || !price} className="rh-btn-primary inline-flex items-center justify-center gap-2">{busy ? <Loader2 size={16} className="animate-spin" /> : <Receipt size={16} />} Confirm sale</button>
               <p className="text-[12px] text-ink-muted">By confirming you declare this sale under the network agreement v{ov.developer.agreement_version || AGREEMENT_VERSION}.</p>
             </>)}
             {saleRes && (saleRes.error ? <p className="text-[14px] text-red-600">{saleRes.error}</p> : (
-              <div className="flex flex-col gap-3"><p className="text-[15px] inline-flex items-center gap-2"><Check size={18} className="text-emerald-600" /> Recorded. Sold for {eur(Number(saleRes.sale_price))}.</p><p className="text-[14px]">{saleRes.exempt ? "Exempt: the buyer was already yours. Nothing to pay." : `Commission ${eur(Number(saleRes.commission_eur))}. You will get the invoice by email; it also shows under Deals & commission.`}</p><button type="button" onClick={() => { setSale(null); setOpen(null); }} className="rh-btn-primary self-start">Done</button></div>
+              <div className="flex flex-col gap-3"><p className="text-[15px] inline-flex items-center gap-2"><Check size={18} className="text-emerald-600" /> Recorded. Sold for {eur(Number(saleRes.sale_price))}.</p><p className="text-[14px]">{saleRes.exempt ? "Exempt: the buyer was already yours. Nothing to pay." : `Commission ${eur(Number(saleRes.commission_eur))}. It appears under Commissions payable. An invoice is a separate step handled by RealHunt.`}</p><button type="button" onClick={() => { setSale(null); setOpen(null); }} className="rh-btn-primary self-start">Done</button></div>
             ))}
           </form>
         </div>

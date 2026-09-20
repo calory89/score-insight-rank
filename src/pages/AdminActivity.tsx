@@ -1,3 +1,4 @@
+import AdminWorkspaceNav from "@/components/realhunt/AdminWorkspaceNav";
 import { saveChange, fetchAll, downloadCsv } from "@/lib/platform";
 import Pagination from "@/components/realhunt/Pagination";
 import AdminOperations from "@/components/realhunt/AdminOperations";
@@ -89,6 +90,7 @@ const AdminActivity = () => {
     <div className="min-h-screen bg-paper text-ink">
       <RHNav />
       <div className="max-w-[1140px] mx-auto px-6 py-10 flex flex-col gap-10">
+        <AdminWorkspaceNav />
         <div>
           <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-2">Admin</p>
           <h1 className="font-display text-[34px] tracking-tight">{tab === "operations" ? "Operations" : tab === "contacts" ? "All contacts" : tab === "network" ? "RealHunt Network" : tab === "experiments" ? "Experiments" : tab === "subscribers" ? "Subscribers" : "Who is doing what"}</h1>

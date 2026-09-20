@@ -48,12 +48,12 @@ it("keeps the buyer in its original stage when a save fails, then supports a suc
   render(<MemoryRouter initialEntries={["/network/app/buyers"]}><Routes><Route path="/network/app/:tab" element={<NetworkApp />} /></Routes></MemoryRouter>);
   fireEvent.click(await screen.findByRole("button", { name: /Buyer QA buyer/ }));
   state.mutationFails = true;
-  fireEvent.click(screen.getByRole("button", { name: "Accept, send me the contact" }));
+  fireEvent.click(screen.getByRole("button", { name: "Accept these terms" }));
   await waitFor(() => expect(state.toastError).toHaveBeenCalledWith("Save failed", expect.anything()));
-  expect(screen.getByRole("button", { name: "Accept, send me the contact" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Accept these terms" })).toBeInTheDocument();
   state.mutationFails = false;
-  fireEvent.click(screen.getByRole("button", { name: "Accept, send me the contact" }));
-  await waitFor(() => expect(screen.queryByRole("button", { name: "Accept, send me the contact" })).toBeNull());
+  fireEvent.click(screen.getByRole("button", { name: "Accept these terms" }));
+  await waitFor(() => expect(screen.queryByRole("button", { name: "Accept these terms" })).toBeNull());
   expect(screen.getByRole("button", { name: "Contacted" })).toBeInTheDocument();
 });
 it("paginates beyond the old 2000-contact limit and sends search to the server", async () => {

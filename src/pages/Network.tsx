@@ -78,12 +78,12 @@ const Network = () => {
             <p className="text-[13px] text-ink-muted mt-3">Example: one of your old leads buys a €200,000 villa somewhere else. You receive €6,000 for a contact you had written off.</p>
           </div>
           <div className="border-2 border-ink rounded-2xl bg-white p-6 flex flex-col relative">
-            <span className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-ink text-paper text-[11px] font-medium">Most developers choose this</span>
+            <span className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-ink text-paper text-[11px] font-medium">You can combine both</span>
             <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted">Option A + B</p>
             <p className="font-display text-[24px] tracking-tight mt-1">Both</p>
             <p className="text-[15px] text-ink-muted mt-2 leading-relaxed">Receive buyers for your project and put your dead leads to work at the same time. One panel, two switches.</p>
             <div className="mt-4 rounded-xl bg-paper border border-hairline p-4 text-[14px]"><p><b>You pay:</b> {COMMISSION_PCT}% only on buyers we bring you who buy.</p><p className="mt-1"><b>You earn:</b> {SOURCE_SHARE_PCT}% every time one of your shared leads buys elsewhere.</p></div>
-            <p className="text-[13px] text-ink-muted mt-3">Most developers end up earning more from B than they pay in A, because a dead list is usually much bigger than the list of buyers we send.</p>
+            <p className="text-[13px] text-ink-muted mt-3">Receiving and sharing are independent choices. Referral earnings depend on actual completed sales; no earnings are guaranteed.</p>
           </div>
         </div>
       </section>
@@ -124,7 +124,7 @@ const Network = () => {
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-14">
         <H>How it works, step by step</H>
         <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[[Search, "1. Paste your project", "Submit your project page for review. We confirm suitability before making introductions."], [FileSignature, "2. Sign one page, upload your contacts", "The agreement is signed inside your panel by typing your name. Then you upload your contacts: they are turned into fingerprints in your browser, we never see a name or an email. Whatever is in your list before we introduce it stays yours at 0%."], [Users, "3. Choose your switches, receive buyers", "Turn on receiving, sharing, or both. Each buyer arrives with an introduction ID and a card in your pipeline. Accept, call, visit, reserve, sell."], [Coins, "4. Report the sale, we settle it", `Enter the price in your panel. We invoice ${COMMISSION_PCT}%, you pay in ${PAYMENT_DAYS} days. If the buyer came from another developer's shared list, we pay them their ${SOURCE_SHARE_PCT}%. You never deal with anyone but us.`]].map(([I, t, d]: any) => (
+          {[[Search, "1. Paste your project", "Submit your project page for review. We confirm suitability before making introductions."], [FileSignature, "2. Sign one page, upload your contacts", "The agreement is signed inside your panel by typing your name. Then you upload your contacts: they are turned into fingerprints in your browser. Original contact details are supplied separately, with permission, for individual introductions. Whatever is in your list before we introduce it stays yours at 0%."], [Users, "3. Choose your switches, receive buyers", "Turn on receiving, sharing, or both. Each buyer arrives with an introduction ID and a card in your pipeline. Accept, call, visit, reserve, sell."], [Coins, "4. Report the sale, we settle it", `Enter the price in your panel. We invoice ${COMMISSION_PCT}%, you pay in ${PAYMENT_DAYS} days. If the buyer came from another developer's shared list, we pay them their ${SOURCE_SHARE_PCT}%. You never deal with anyone but us.`]].map(([I, t, d]: any) => (
             <div key={t} className="border border-hairline rounded-2xl bg-white p-6"><I size={22} className="text-ink-muted" /><p className="font-display text-[19px] tracking-tight mt-4">{t}</p><p className="text-[14px] text-ink-muted mt-2 leading-relaxed">{d}</p></div>
           ))}
         </div>
@@ -150,7 +150,9 @@ const Network = () => {
         <div>
           <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-4">RealHunt Network · developers and agencies</p>
           <h1 className="font-display text-[clamp(34px,5.6vw,60px)] leading-[1.0] tracking-tight text-balance">{headline.text || `Free buyers for your project. You pay ${COMMISSION_PCT}% only when one buys.`}</h1>
-          <p className="mt-5 text-[17px] text-ink-muted max-w-[52ch] leading-relaxed">Two things you can do here, separately or together: <b className="text-ink">receive buyers</b> for your project (you pay {COMMISSION_PCT}% only when one buys), and <b className="text-ink">earn {SOURCE_SHARE_PCT}%</b> every time a lead you could not sell to buys another project in the network.</p>
+          <p className="mt-5 text-[17px] text-ink-muted max-w-[52ch] leading-relaxed">Receive buyers and earn referral commission, independently: <b className="text-ink">receive buyers</b> for your project (you pay {COMMISSION_PCT}% only when one buys), and <b className="text-ink">earn {SOURCE_SHARE_PCT}%</b> every time a lead you could not sell to buys another project in the network.</p>
+
+          <div className="mt-5 rounded-xl border border-hairline bg-white p-4 text-sm"><b>Only want to protect your existing contacts?</b><p className="mt-1 text-ink-muted">Upload them privately. Sharing is optional, and receiving buyers does not require sharing. Prior matching contacts are exempt from commission on that introduction.</p><Link to="/network/app" className="inline-block underline mt-3 min-h-11">Open my network panel →</Link></div>
 
           <div id="analyze" className="mt-7 border border-hairline rounded-2xl bg-white p-5 md:p-6 shadow-sm">
             {stage === "idle" && (
