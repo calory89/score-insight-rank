@@ -1451,3 +1451,52 @@
 @media(max-width:600px) { .hunt-quick-submit { padding: 18px; } .hunt-quick-row { flex-direction: column; } .hunt-quick-row button { width: 100%; } .hunt-header:has(.hunt-admin-link) { height: auto; min-height: 82px; flex-wrap: wrap; padding-top: 12px; padding-bottom: 12px; } .hunt-header:has(.hunt-admin-link) nav { flex-wrap: wrap; } }
 
 .hunt-full-details { display: inline-flex; align-items: center; min-height: 44px; margin-top: 10px; font-size: 12px; text-decoration: underline !important; }
+
+/* Keep discovery and submission together above the first properties. */
+.hunt-header { height: 64px; }
+.hunt-home .hunt-hero { display: grid; grid-template-columns: 1fr 1fr; align-items: center; column-gap: 40px; padding: 26px 0 18px; text-align: left; }
+.hunt-home .hunt-hero h1 { margin: 0; font-size: clamp(28px, 3vw, 40px); letter-spacing: -1.2px; line-height: 1.12; }
+.hunt-home .hunt-hero h1 em { display: block; font-size: .65em; margin-top: 7px; letter-spacing: -.4px; }
+.hunt-home .hunt-quick-submit { width: 100%; margin: 0; padding: 14px 16px; border-radius: 12px; }
+.hunt-home .hunt-quick-submit h2 { font: 600 14px Inter, sans-serif; }
+.hunt-home .hunt-quick-submit > p { font-size: 12px; margin: 5px 0 10px; line-height: 1.4; }
+.hunt-home .hunt-quick-row { flex-direction: row; gap: 8px; }
+.hunt-home .hunt-quick-row input { min-height: 44px; padding: 10px; }
+.hunt-home .hunt-quick-row button { width: auto; flex-shrink: 0; padding: 10px 12px; }
+.hunt-home .hunt-hero-stats { grid-column: 1 / -1; justify-content: flex-start; margin-top: 14px; gap: 14px; font-size: 11px; }
+.hunt-home .hunt-feed-header { margin: 0 0 4px; align-items: center; }
+.hunt-home .hunt-feed-header h2 { font-size: 19px; margin: 0 0 3px; }
+.hunt-home .hunt-feed-header p { font-size: 11px; line-height: 1.4; }
+.hunt-home .hunt-winners-link { margin-top: 0; min-height: 44px; }
+.hunt-home .hunt-tabs { margin-bottom: 14px; gap: 24px; }
+@media (max-width: 700px) {
+  .hunt-home .hunt-hero { grid-template-columns: 1fr; gap: 12px; padding: 16px 0 12px; }
+  .hunt-home .hunt-hero h1 { font-size: 28px; }
+  .hunt-home .hunt-hero h1 em { font-size: 16px; margin-top: 4px; }
+  .hunt-home .hunt-quick-submit { padding: 12px; }
+  .hunt-home .hunt-hero-stats { margin: 0; gap: 10px; font-size: 10px; }
+  .hunt-home .hunt-hero-stats strong { font-size: 11px; }
+  .hunt-home .hunt-tabs { gap: 18px; margin-bottom: 12px; }
+  .hunt-home .hunt-grid { gap: 16px; }
+  .hunt-home .hunt-media { aspect-ratio: 2.1; }
+  .hunt-home .hunt-card-body { padding: 12px 14px 8px; }
+}
+@media (max-height: 700px) and (max-width: 700px) {
+  .hunt-home .hunt-hero { padding-top: 10px; gap: 8px; }
+  .hunt-home .hunt-media { aspect-ratio: 2.7; }
+}
+
+@media (max-width: 700px) {
+  .hunt-home .hunt-feed-header h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .hunt-home .hunt-feed-header { margin-bottom: 0; }
+  .hunt-home .hunt-winners-link { min-height: 32px; }
+  .hunt-home .hunt-quick-submit > p { margin: 4px 0 8px; }
+  .hunt-home .hunt-quick-row button { min-width: 72px; }
+  .hunt-home .hunt-media { aspect-ratio: auto; height: clamp(110px, 18vh, 160px); }
+  .hunt-home .hunt-price { font-size: 25px; margin: 4px 0; }
+  .hunt-home .hunt-card h2 { font-size: 14px; line-height: 1.35; }
+  .hunt-home .hunt-metrics { margin: 4px 0 8px !important; }
+  .hunt-home .hunt-hunter { margin-bottom: 8px; }
+  .hunt-home .hunt-vote { height: 46px; }
+  .hunt-home .hunt-vote button { min-height: 44px; }
+}
