@@ -134,7 +134,7 @@ test("country and lifetime views send real filter parameters and omit Today", as
   ).not.toBeInTheDocument();
 });
 test("unsupported import falls back to manual details and keeps the draft through sign-in", async () => {
-  open("/submit");
+  open("/submit?details=1");
   fireEvent.change(screen.getByLabelText("Original property listing"), {
     target: { value: "https://example.org/new-house" },
   });
@@ -205,4 +205,45 @@ test('the full catalog stays available beyond the first page', async () => {
   fireEvent.click(screen.getByRole('button',{name:'More discoveries'}));
   expect(await screen.findByText('Showing 2 of 349 deals · plus 1 sponsored listing')).toBeInTheDocument();
   expect(screen.getAllByRole('button',{name:'Original listing'})).toHaveLength(2);
+});
+
+test('the home removes the old copy and asks for registration before a link submission', async () => {
+  open();
+  expect(screen.queryByText('THE WORLD IS FULL OF GOOD FINDS')).toBeNull();
+  expect(screen.queryByText(/A little place by the sea/)).toBeNull();
+  fireEvent.change(screen.getByRole('textbox',{name:'Property listing URL'}),{target:{value:'https://example.org/new-home'}});
+  fireEvent.submit(screen.getByRole('button',{name:'Send property'}).closest('form')!);
+  expect(await screen.findByRole('dialog')).toHaveAttribute('data-return-to','/submit?quick=1&url=https%3A%2F%2Fexample.org%2Fnew-home');
+  expect(mocks.rpc.mock.calls.some(([,p])=>p.p_action==='quick_submit')).toBe(false);
+});
+test('a signed-in visitor submits just a link for private review', async () => {
+  mocks.user={id:'signed-in'};
+  open('/submit?quick=1&url=https%3A%2F%2Fexample.org%2Fnew-home');
+  const button=screen.getByRole('button',{name:'Send property'});
+  await waitFor(()=>expect(button).not.toBeDisabled());
+  expect(screen.getByRole('textbox',{name:'Property listing URL'})).toHaveValue('https://example.org/new-home');
+  expect(mocks.rpc.mock.calls.some(([,p])=>p.p_action==='quick_submit')).toBe(false);
+  fireEvent.click(button);
+  expect(await screen.findByRole('status')).toHaveTextContent('pending admin review');
+  expect(mocks.rpc).toHaveBeenCalledWith('community_api',expect.objectContaining({p_action:'quick_submit',p_payload:expect.objectContaining({url:'https://example.org/new-home'})}));
+  expect(screen.getByRole('link',{name:'View my submissions →'})).toHaveAttribute('href','/hunt/mine');
+});
+test('submission failures preserve the link and never claim it was received', async () => {
+  mocks.user={id:'signed-in'};
+  const previous=mocks.rpc.getMockImplementation()!;
+  mocks.rpc.mockImplementation((name:string,p:any)=>p.p_action==='quick_submit'?Promise.resolve({data:{error:'You have reached the submission limit'}}):previous(name,p));
+  open('/submit?quick=1&url=https%3A%2F%2Fexample.org%2Fnew-home');
+  const button=screen.getByRole('button',{name:'Send property'});await waitFor(()=>expect(button).not.toBeDisabled());fireEvent.click(button);
+  expect(await screen.findByRole('alert')).toHaveTextContent('submission limit');
+  expect(screen.getByRole('textbox',{name:'Property listing URL'})).toHaveValue('https://example.org/new-home');
+  expect(screen.queryByText(/Received. Your property/)).toBeNull();
+});
+test('my submissions shows statuses, review feedback and real property data', async () => {
+  mocks.user={id:'signed-in'};const previous=mocks.rpc.getMockImplementation()!;
+  mocks.rpc.mockImplementation((name:string,p:any)=>p.p_action==='dashboard'?Promise.resolve({data:{saved:[],deals:[{...deal,status:'approved',created_at:'2026-09-20T12:00:00Z',approved_at:'2026-09-20T13:00:00Z',week_score:4,lifetime_votes:6,views:20},{...deal,id:'pending',title:'New submitted home',status:'pending',created_at:'2026-09-20T14:00:00Z'},{...deal,id:'rejected',title:'Unavailable home',status:'rejected',reject_reason:'No longer available',created_at:'2026-09-20T14:00:00Z'}]}}):previous(name,p));
+  open('/hunt/mine');
+  expect(await screen.findByText('New submitted home')).toBeInTheDocument();
+  expect(screen.getByText('Review note: No longer available')).toBeInTheDocument();
+  expect(screen.getByText('4 weekly score · 6 lifetime votes · 20 views')).toBeInTheDocument();
+  expect(screen.getByLabelText('Submission totals')).toHaveTextContent('3 submitted');
 });
