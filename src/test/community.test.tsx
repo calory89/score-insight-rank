@@ -114,24 +114,24 @@ test("saving requires sign-in and never writes for an anonymous visitor", async 
     false,
   );
 });
-test("country and lifetime views send real filter parameters and omit Today", async () => {
-  open();
-  await screen.findByRole("button", { name: "Upvote deal" });
-  fireEvent.click(screen.getByRole("button", { name: "Countries" }));
-  fireEvent.change(screen.getByLabelText("Country"), {
-    target: { value: "Italy" },
+test("week and all-time use their own counts without hidden filters", async () => {
+  const previous = mocks.rpc.getMockImplementation()!;
+  mocks.rpc.mockImplementation(async (name:string,p:any) => {
+    const response = await previous(name,p);
+    if(name === 'community_rankings') response.data = {...response.data,weekly_votes:2,global_votes:9,rows:[{...deal,life_up:9}]};
+    return response;
   });
-  await waitFor(() =>
-    expect(mocks.rpc).toHaveBeenCalledWith(
-      "community_rankings",
-      expect.objectContaining({ p_country: "Italy" }),
-    ),
-  );
-  fireEvent.click(screen.getByRole("button", { name: "All Time" }));
-  await screen.findByRole("heading", { name: "All-time favourites ↗" });
-  expect(
-    screen.queryByRole("button", { name: "Today" }),
-  ).not.toBeInTheDocument();
+  open('/?country=Italy&category=beach');
+  const up = await screen.findByRole('button',{name:'Upvote deal'});
+  expect(up).toHaveTextContent('2');
+  for(const name of ['Countries','Categories','Today']) expect(screen.queryByRole('button',{name})).toBeNull();
+  expect(screen.queryByRole('link',{name:'Past winners'})).toBeNull();
+  expect(mocks.rpc).toHaveBeenCalledWith('community_rankings',expect.objectContaining({p_country:null,p_category:null,p_scope:'week'}));
+  fireEvent.click(screen.getByRole('button',{name:'All Time'}));
+  await screen.findByRole('heading',{name:'All-time favourites ↗'});
+  expect(up).toHaveTextContent('9');
+  expect(screen.getByText('All votes since launch')).toBeInTheDocument();
+  await waitFor(()=>expect(mocks.rpc).toHaveBeenCalledWith('community_rankings',expect.objectContaining({p_scope:'all'})));
 });
 test("unsupported import falls back to manual details and keeps the draft through sign-in", async () => {
   open("/submit?details=1");
@@ -250,7 +250,7 @@ test('my submissions shows statuses, review feedback and real property data', as
 
 test('fictional demo votes are labelled and cannot write real votes', async () => {
   open('/?demo=1');
-  expect(await screen.findByText('370')).toBeInTheDocument();
+  expect(await screen.findAllByText('370')).toHaveLength(3);
   expect(screen.queryByRole('button',{name:'Downvote deal'})).toBeNull();
   expect(screen.getByText('Demo')).toBeInTheDocument();
   const vote = screen.getByRole('button', {name:'Upvote deal'});
