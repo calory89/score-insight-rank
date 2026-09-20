@@ -35,11 +35,29 @@ async function fetchWebsiteContent(url: string): Promise<string> {
     }
     if (!isFetchableUrl(parsed)) return "[Blocked: URL not allowed]";
 
-    const res = await fetch(formattedUrl, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; RealHuntBot/1.0)" },
-      redirect: "follow",
-      signal: AbortSignal.timeout(8000),
-    });
+    // Follow redirects manually so each hop is validated against the blocklist too
+    let res: Response | null = null;
+    let current = formattedUrl;
+    for (let hop = 0; hop < 4; hop++) {
+      res = await fetch(current, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; RealHuntBot/1.0)" },
+        redirect: "manual",
+        signal: AbortSignal.timeout(8000),
+      });
+      if (res.status < 300 || res.status >= 400) break;
+      const location = res.headers.get("location");
+      if (!location) break;
+      let next: URL;
+      try {
+        next = new URL(location, current);
+      } catch {
+        return "[Blocked: invalid redirect]";
+      }
+      if (!isFetchableUrl(next)) return "[Blocked: URL not allowed]";
+      current = next.toString();
+      res = null;
+    }
+    if (!res) return "[Could not fetch: too many redirects]";
     if (!res.ok) return `[Could not fetch: HTTP ${res.status}]`;
     const html = await res.text();
 
