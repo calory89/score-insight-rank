@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 export type Deal = {
-  demo?: boolean;
+  launch_points?: number;
+  launch_week_points?: number;
   id: string;
   slug: string;
   title: string;
@@ -48,6 +49,8 @@ export type Feed = {
   global_deals: number;
   global_votes: number;
   weekly_votes: number;
+  weekly_points?: number;
+  global_points?: number;
   countries: string[];
 };
 export const categories = [
@@ -134,7 +137,8 @@ export function votePreview(
 ): Deal {
   const up = deal.week_up - (old === 1 ? 1 : 0) + (next === 1 ? 1 : 0);
   const down = deal.week_down - (old === -1 ? 1 : 0) + (next === -1 ? 1 : 0);
-  return { ...deal, week_up: up, week_down: down, week_net: up - down };
+  const delta = up - deal.week_up;
+  return { ...deal, week_up: up, week_down: down, week_net: deal.week_net + delta, life_up: deal.life_up + delta, life_net: deal.life_net + delta };
 }
 export function badge(deal: Deal, scope = "week") {
   if (deal.rank === 1 && (scope === "all" ? deal.life_net : deal.week_net) > 0)
