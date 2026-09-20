@@ -115,7 +115,7 @@ BEGIN
  b AS(SELECT deal_id,count(*) FILTER(WHERE value=1)::int up,count(*) FILTER(WHERE value=-1)::int down,
  count(*) FILTER(WHERE created_at>now()-interval '24 hours' AND value=1)::int recent
  FROM community_week_votes WHERE week_id=w.id GROUP BY deal_id),
- c AS(SELECT d.id,d.slug,d.title,d.source_url,d.source_domain,d.image_urls,d.video_url,d.price_eur,d.country,d.location_name,d.sqm,d.bedrooms,d.category,d.why_great,d.hunter_handle,d.is_editorial_pick,d.pick_note,d.approved_at,d.find_id,
+ c AS(SELECT d.id,d.slug,d.title,CASE WHEN auth.uid() IS NOT NULL THEN d.source_url END source_url,true has_source,d.source_domain,d.image_urls,d.video_url,d.price_eur,d.country,d.location_name,d.sqm,d.bedrooms,d.category,d.why_great,d.hunter_handle,d.is_editorial_pick,d.pick_note,d.approved_at,d.find_id,
  coalesce(a.up,0) life_up,coalesce(a.down,0) life_down,coalesce(a.up,0)-coalesce(a.down,0) life_net,
  coalesce(b.up,0) week_up,coalesce(b.down,0) week_down,coalesce(b.up,0)-coalesce(b.down,0) week_net,coalesce(b.recent,0) votes_24h,
  (SELECT count(*) FROM community_saves s WHERE s.deal_id=d.id) saves,
@@ -187,6 +187,8 @@ BEGIN
     'views',(SELECT count(*) FROM community_views WHERE deal_id=d.id),'saves',(SELECT count(*) FROM community_saves WHERE deal_id=d.id),'comments',(SELECT count(*) FROM community_comments WHERE deal_id=d.id AND status='published'));
    result:=result||jsonb_build_object('week_net',(result->>'week_up')::int-(result->>'week_down')::int,'life_net',(result->>'life_up')::int-(result->>'life_down')::int);
   END IF;
+  result:=result||jsonb_build_object('has_source',true);
+  IF uid IS NULL THEN result:=result-'source_url'; END IF;
   RETURN jsonb_build_object('deal',result,'comments',coalesce((SELECT jsonb_agg(jsonb_build_object('id',c.id,'body',c.body,'created_at',c.created_at,'handle',ch.handle,'own',c.user_id=uid) ORDER BY c.created_at DESC) FROM community_comments c LEFT JOIN community_hunters ch ON ch.user_id=c.user_id WHERE c.deal_id=d.id AND c.status='published'),'[]'));
  ELSIF p_action='winners' THEN
   RETURN jsonb_build_object('weeks',coalesce((SELECT jsonb_agg(to_jsonb(cw)||jsonb_build_object('winners',(SELECT coalesce(jsonb_agg(to_jsonb(cww) ORDER BY rank),'[]') FROM community_week_winners cww WHERE cww.week_id=cw.id AND rank<=10)) ORDER BY cw.starts_at DESC) FROM community_weeks cw WHERE cw.closed_at IS NOT NULL),'[]'));
@@ -287,9 +289,9 @@ GRANT EXECUTE ON FUNCTION public.community_api(text,text,jsonb) TO anon,authenti
 INSERT INTO community_deals(slug,title,source_url,source_key,image_urls,video_url,price_eur,country,location_name,sqm,bedrooms,category,why_great,find_id,hunter_handle,status,is_editorial_pick,approved_at,week_id)
 SELECT f.shortcode,left(coalesce(nullif(f.hook,''),f.location_name,'Property opportunity'),160),coalesce(nullif(f.external_url,''),f.post_url),'',f.image_urls,
  CASE WHEN f.shortcode='Dc4gpg6slIT' THEN '/videos/umbria-35000.mp4' ELSE NULL END,
- f.price_eur,f.country_guess,f.location_name,CASE WHEN f.sqm>0 THEN f.sqm END,CASE WHEN f.bedrooms BETWEEN 0 AND 1000 THEN f.bedrooms END,CASE WHEN f.is_beach THEN 'beach' ELSE 'other' END,NULL,f.id,
+ CASE WHEN f.price_eur>0 THEN f.price_eur END,f.country_guess,f.location_name,CASE WHEN f.sqm>0 THEN f.sqm END,CASE WHEN f.bedrooms BETWEEN 0 AND 1000 THEN f.bedrooms END,CASE WHEN f.is_beach THEN 'beach' ELSE 'other' END,NULL,f.id,
  'realhunt','approved', f.shortcode IN('Dc4gpg6slIT','acquappesa-sea-view-39000','DcndWlcGwtG'),now(),(community_current_week()).id
-FROM ig_finds f WHERE f.status NOT IN('hidden','sold','reserved') AND f.price_eur>0 AND cardinality(f.image_urls)>0
+FROM ig_finds f WHERE coalesce(f.status,'new') NOT IN('hidden','sold','reserved') AND cardinality(f.image_urls)>0
  AND coalesce(nullif(f.external_url,''),f.post_url) ~ '^https?://'
 ON CONFLICT DO NOTHING;
 UPDATE community_deals SET is_editorial_pick=true WHERE status='approved' AND price_eur>0 AND (sqm IS NULL OR sqm>0) AND (bedrooms IS NULL OR bedrooms BETWEEN 0 AND 1000) AND slug IN('Dc4gpg6slIT','acquappesa-sea-view-39000','DcndWlcGwtG');
