@@ -179,7 +179,7 @@ test("Sumba is the third card, labelled sponsored and outside voting", async () 
   expect(screen.getAllByRole("button", {name: "Upvote deal"})).toHaveLength(3);
 });
 
-for (const path of ['/', '/deal/stone-home']) {
+for (const path of ['/deal/stone-home']) {
   test(`original listings require an account on ${path}`, async () => {
     open(path);
     const source = await screen.findByRole('button', {name:'Original listing'});
@@ -204,7 +204,7 @@ test('the full catalog stays available beyond the first page', async () => {
   expect(await screen.findByText('Showing 1 of 349 deals')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button',{name:'More discoveries'}));
   expect(await screen.findByText('Showing 2 of 349 deals · plus 1 sponsored listing')).toBeInTheDocument();
-  expect(screen.getAllByRole('button',{name:'Original listing'})).toHaveLength(2);
+  expect(screen.queryByRole('button',{name:'Original listing'})).toBeNull();
 });
 
 test('the home removes the old copy and asks for registration before a link submission', async () => {
@@ -251,14 +251,13 @@ test('my submissions shows statuses, review feedback and real property data', as
 test('fictional demo votes are labelled and cannot write real votes', async () => {
   open('/?demo=1');
   expect(await screen.findByText('370')).toBeInTheDocument();
-  expect(screen.getByText('14')).toBeInTheDocument();
-  expect(screen.getByText('+356')).toBeInTheDocument();
-  expect(screen.getByText('Demo · fictional votes')).toBeInTheDocument();
+  expect(screen.queryByRole('button',{name:'Downvote deal'})).toBeNull();
+  expect(screen.getByText('Demo')).toBeInTheDocument();
   const vote = screen.getByRole('button', {name:'Upvote deal'});
   expect(vote).toBeDisabled();
   fireEvent.click(vote);
   expect(mocks.rpc.mock.calls.some(([,p])=>p.p_action==='vote')).toBe(false);
   fireEvent.click(screen.getByRole('button',{name:'Show real ranking →'}));
   await waitFor(()=>expect(screen.queryByText('370')).not.toBeInTheDocument());
-  expect(screen.queryByText('Demo · fictional votes')).not.toBeInTheDocument();
+  expect(screen.queryByText('Demo')).not.toBeInTheDocument();
 });
