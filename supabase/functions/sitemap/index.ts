@@ -43,7 +43,18 @@ Deno.serve(async (req) => {
       .order("created_at", { ascending: false })
       .limit(5000);
 
+    // Off-plan project pages (/projects/:slug)
+    const { data: projects } = await supabase
+      .from("projects")
+      .select("slug")
+      .not("slug", "is", null)
+      .limit(2000);
+
     const entries: Entry[] = [...STATIC];
+
+    for (const pr of projects || []) {
+      entries.push({ loc: `${SITE}/projects/${pr.slug}`, changefreq: "weekly", priority: "0.6" });
+    }
 
     const seenCity = new Set<string>();
     const seenCountry = new Set<string>();
