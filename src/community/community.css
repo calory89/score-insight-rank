@@ -1,8 +1,8 @@
 .hunt {
-  --h-ink: #242922;
-  --h-green: #285a3e;
-  --h-paper: #f7f8f3;
-  --h-line: #dce1d5;
+  --h-ink: var(--rh-ink);
+  --h-accent: var(--rh-ink);
+  --h-paper: var(--rh-bg);
+  --h-line: var(--rh-hairline);
   background: var(--h-paper);
   color: var(--h-ink);
   font-family: Inter, system-ui, sans-serif;
@@ -31,7 +31,7 @@
   cursor: wait;
 }
 .hunt :focus-visible {
-  outline: 3px solid #679d76;
+  outline: 3px solid var(--rh-ink-muted);
   outline-offset: 3px;
 }
 .hunt h1,
@@ -58,17 +58,6 @@
   font-size: 25px;
   letter-spacing: -1.3px;
   font-weight: 750;
-}
-.hunt-brand > span:first-child {
-  height: 31px;
-  width: 31px;
-  border-radius: 9px;
-  background: var(--h-green);
-  color: #fff;
-  text-align: center;
-  font-family: Georgia, serif;
-  font-size: 34px;
-  line-height: 27px;
 }
 .hunt-brand .hunt-beta {
   font-size: 8px;
@@ -97,8 +86,8 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: var(--h-green);
-  border: 1px solid var(--h-green);
+  background: var(--h-accent);
+  border: 1px solid var(--h-accent);
   border-radius: 8px;
   color: #fff !important;
   padding: 13px 18px;
@@ -107,7 +96,7 @@
   min-height: 44px;
 }
 .hunt-primary:hover {
-  background: #1e4530;
+  background: var(--rh-ink);
 }
 .hunt-wrap {
   max-width: 1240px;
@@ -128,7 +117,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #52725a;
+  color: var(--rh-ink-muted);
 }
 .hunt-hero .hunt-eyebrow {
   justify-content: center;
@@ -136,11 +125,11 @@
 .hunt-eyebrow > span {
   width: 6px;
   height: 6px;
-  background: #5b885f;
+  background: var(--rh-ink-muted);
   border-radius: 50%;
 }
 .hunt-hero h1 {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: Fraunces, Georgia, serif;
   font-weight: 400;
   font-size: 48px;
   line-height: 1.15;
@@ -149,11 +138,11 @@
 }
 .hunt-hero h1 em {
   font-weight: 400;
-  color: #5c7453;
+  color: var(--rh-ink-muted);
 }
 .hunt-hero > p {
   font-size: 13px;
-  color: #7c8274;
+  color: var(--rh-ink-muted);
   line-height: 1.9;
 }
 .hunt-hero-stats {
@@ -163,10 +152,10 @@
   gap: 24px;
   margin-top: 27px;
   font-size: 10px;
-  color: #7a8174;
+  color: var(--rh-ink-muted);
 }
 .hunt-hero-stats strong {
-  color: #384332;
+  color: var(--rh-ink);
   margin-right: 4px;
   font-size: 12px;
 }
@@ -194,17 +183,17 @@
 }
 .hunt-feed-header h2 > span {
   font-weight: 400;
-  color: #7c9671;
+  color: var(--rh-ink-muted);
 }
 .hunt-feed-header p {
   font-size: 10px;
-  color: #818778;
+  color: var(--rh-ink-muted);
 }
 .hunt-winners-link {
   display: flex;
   gap: 7px;
   align-items: center;
-  color: #68755c !important;
+  color: var(--rh-ink-muted) !important;
   font-size: 11px;
   white-space: nowrap;
 }
@@ -230,13 +219,13 @@
   padding: 0 1px;
 }
 .hunt-tabs > [aria-pressed="true"] {
-  border-bottom-color: var(--h-green);
-  color: var(--h-green);
+  border-bottom-color: var(--h-accent);
+  color: var(--h-accent);
   font-weight: 700;
 }
 .hunt-secondary-search {
   margin-left: auto;
-  color: #818778 !important;
+  color: var(--rh-ink-muted) !important;
 }
 .hunt-grid {
   display: grid;
@@ -260,7 +249,7 @@
 .hunt-media {
   aspect-ratio: 1.43;
   position: relative;
-  background: #e3e7dd;
+  background: var(--rh-surface-2);
   overflow: hidden;
 }
 .hunt-media > a {
@@ -276,7 +265,7 @@
 }
 .hunt-media video {
   object-fit: contain;
-  background: #1f241e;
+  background: var(--rh-ink);
 }
 .hunt-rank {
   position: absolute;
@@ -299,7 +288,7 @@
   border-radius: 8px;
   background: white;
   border: 1px solid var(--h-line);
-  color: #5b6c53;
+  color: var(--rh-ink-muted);
 }
 .hunt-card-photo > .hunt-save {
   position: absolute;
@@ -314,8 +303,8 @@
   position: absolute;
   left: 12px;
   bottom: 12px;
-  background: #e5efcf;
-  color: #3f5931;
+  background: var(--rh-surface-2);
+  color: var(--rh-ink-muted);
   font-size: 9px;
   font-weight: 650;
   border-radius: 4px;
@@ -375,11 +364,11 @@
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #63735b;
+  color: var(--rh-ink-muted);
   font-weight: 650;
 }
 .hunt-card-location span {
-  color: #969c90;
+  color: var(--rh-ink-muted);
   font-weight: 400;
 }
 .hunt-price {
@@ -395,7 +384,7 @@
   font-size: 10px;
   letter-spacing: 0;
   font-weight: 400;
-  color: #818a78;
+  color: var(--rh-ink-muted);
 }
 .hunt-card h2 {
   font-size: 13px;
@@ -412,7 +401,7 @@
 }
 .hunt-metrics {
   font-size: 10px;
-  color: #91978a;
+  color: var(--rh-ink-muted);
   line-height: 1.6;
   margin: 6px 0 14px !important;
   overflow: hidden;
@@ -424,7 +413,7 @@
   align-items: center;
   gap: 5px;
   font-size: 9px;
-  color: #93998b;
+  color: var(--rh-ink-muted);
   flex-wrap: wrap;
   margin-bottom: 15px;
 }
@@ -434,25 +423,25 @@
   align-items: center;
   width: 21px;
   height: 21px;
-  background: #e9ede1;
-  border: 1px solid #dbe3d3;
-  color: #748465;
+  background: var(--rh-surface-2);
+  border: 1px solid var(--rh-surface-2);
+  color: var(--rh-ink-muted);
   border-radius: 50%;
   font-size: 9px;
 }
 .hunt-hunter a {
-  color: #5f6e53;
+  color: var(--rh-ink-muted);
   font-weight: 600;
 }
 .hunt-hunter > span:last-child:not(:first-child) {
   font-size: 8px;
-  color: #7f8c58;
+  color: var(--rh-ink-muted);
   margin-left: auto;
 }
 .hunt-vote {
   display: flex;
-  border: 1px solid #dce4d3;
-  background: #f7f9f2;
+  border: 1px solid var(--rh-surface-2);
+  background: var(--rh-surface-2);
   border-radius: 8px;
   height: 53px;
   align-items: center;
@@ -464,18 +453,18 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  color: #6d7d5e;
+  color: var(--rh-ink-muted);
   min-width: 67px;
   min-height: 52px;
   padding: 0 13px;
   font-size: 11px;
 }
 .hunt-vote button[aria-pressed="true"] {
-  background: #dfeacf;
-  color: #31592f;
+  background: var(--rh-surface-2);
+  color: var(--rh-ink-muted);
 }
 .hunt-vote button:hover {
-  background: #e9efdf;
+  background: var(--rh-surface-2);
 }
 .hunt-vote > div {
   display: flex;
@@ -487,16 +476,16 @@
   font-size: 18px;
   line-height: 1.1;
   font-weight: 650;
-  color: #3b5f35;
+  color: var(--rh-ink-muted);
 }
 .hunt-vote small {
   font-size: 8px;
-  color: #8a967c;
+  color: var(--rh-ink-muted);
   margin-top: 2px;
 }
 .hunt-after-vote {
   font-size: 10px;
-  color: #507244;
+  color: var(--rh-ink-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -508,7 +497,7 @@
   display: flex;
   gap: 12px;
   align-items: center;
-  color: #969d8e;
+  color: var(--rh-ink-muted);
   font-size: 9px;
   margin-top: 13px;
 }
@@ -524,12 +513,12 @@
 }
 .hunt-original {
   margin-top: 12px;
-  border-top: 1px solid #edf0e7;
+  border-top: 1px solid var(--rh-surface-2);
   padding: 10px 0 1px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: #66795b !important;
+  color: var(--rh-ink-muted) !important;
   font-size: 10px;
   min-height: 36px;
 }
@@ -537,7 +526,7 @@
   display: flex;
   gap: 12px;
   align-items: end;
-  background: #edf0e5;
+  background: var(--rh-surface-2);
   padding: 16px;
   border-radius: 9px;
   margin-bottom: 20px;
@@ -556,7 +545,7 @@
 .hunt input,
 .hunt select,
 .hunt textarea {
-  border: 1px solid #d4ddcd;
+  border: 1px solid var(--rh-surface-2);
   border-radius: 7px;
   background: #fff;
   min-height: 45px;
@@ -573,7 +562,7 @@
 .hunt label small {
   font-size: 10px;
   font-weight: 400;
-  color: #87917f;
+  color: var(--rh-ink-muted);
 }
 .hunt-more {
   display: block;
@@ -584,14 +573,14 @@
   margin: 30px auto;
 }
 .hunt-picks {
-  border: 1px solid #dce4cf;
+  border: 1px solid var(--rh-surface-2);
   border-radius: 12px;
-  background: #eff3e5;
+  background: var(--rh-surface-2);
   padding: 26px;
   margin: 45px 0;
 }
 .hunt-picks h2 {
-  font-family: Georgia, serif;
+  font-family: Fraunces, Georgia, serif;
   font-size: 28px;
   font-weight: 400;
   margin: 9px 0;
@@ -599,7 +588,7 @@
 .hunt-picks p,
 .hunt-join p {
   font-size: 12px;
-  color: #7f8b70;
+  color: var(--rh-ink-muted);
   line-height: 1.7;
 }
 .hunt-pick-links {
@@ -639,7 +628,7 @@
   border-bottom: 1px solid var(--h-line);
 }
 .hunt-join h2 {
-  font-family: Georgia, serif;
+  font-family: Fraunces, Georgia, serif;
   font-weight: 400;
   font-size: 30px;
   letter-spacing: -0.7px;
@@ -649,7 +638,7 @@
   text-align: center;
   font-size: 10px;
   line-height: 1.9;
-  color: #8e9685;
+  color: var(--rh-ink-muted);
   margin: 24px auto 40px !important;
   max-width: 750px;
 }
@@ -661,7 +650,7 @@
   display: flex;
   gap: 40px;
   align-items: start;
-  color: #7b8570;
+  color: var(--rh-ink-muted);
   font-size: 10px;
   line-height: 1.8;
 }
@@ -669,7 +658,7 @@
   font-size: 20px;
   font-weight: 650;
   letter-spacing: -1px;
-  color: #34412e;
+  color: var(--rh-ink);
 }
 .hunt-footer > div {
   display: flex;
@@ -705,7 +694,7 @@
   display: flex;
   align-items: center;
   gap: 16px;
-  background: #233b2a;
+  background: var(--rh-ink);
   color: white;
   border-radius: 10px;
   box-shadow: 0 6px 30px #0002;
@@ -720,7 +709,7 @@
   align-items: center;
   justify-content: center;
   gap: 10px;
-  color: #718064;
+  color: var(--rh-ink-muted);
 }
 .hunt-spin {
   animation: hunt-spin 1s linear infinite;
@@ -740,18 +729,18 @@
 }
 .hunt-empty h2,
 .hunt-empty h3 {
-  font-family: Georgia, serif;
+  font-family: Fraunces, Georgia, serif;
   font-size: 28px;
   font-weight: 400;
 }
 .hunt-empty p {
-  color: #7c8973;
+  color: var(--rh-ink-muted);
   line-height: 1.9;
 }
 .hunt-back {
   display: inline-flex;
   font-size: 12px;
-  color: #748166 !important;
+  color: var(--rh-ink-muted) !important;
   min-height: 44px;
   align-items: center;
   margin: 20px 0;
@@ -767,7 +756,7 @@
   aspect-ratio: 1.15;
 }
 .hunt-detail h1 {
-  font-family: Georgia, serif;
+  font-family: Fraunces, Georgia, serif;
   font-size: 34px;
   font-weight: 400;
   line-height: 1.25;
@@ -776,7 +765,7 @@
 }
 .hunt-detail section > p {
   margin: 12px 0;
-  color: #78816d;
+  color: var(--rh-ink-muted);
   line-height: 1.75;
 }
 .hunt-detail-actions {
@@ -798,21 +787,21 @@
 .hunt-fine {
   font-size: 11px;
   line-height: 1.7;
-  color: #8b9380;
+  color: var(--rh-ink-muted);
 }
 .hunt-report {
   font-size: 11px;
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #8a907e;
+  color: var(--rh-ink-muted);
   min-height: 44px;
 }
 .hunt-detail blockquote {
-  border-left: 3px solid #cbd9bc;
+  border-left: 3px solid var(--rh-surface-2);
   padding: 10px 15px;
   margin: 15px 0;
-  background: #edf1e5;
+  background: var(--rh-surface-2);
   line-height: 1.7;
   font-size: 13px;
 }
@@ -821,7 +810,7 @@
   margin: 55px auto;
 }
 .hunt-discussion h2 {
-  font-family: Georgia, serif;
+  font-family: Fraunces, Georgia, serif;
   font-size: 27px;
   font-weight: 400;
 }
@@ -842,7 +831,7 @@
   display: flex;
   justify-content: space-between;
   font-size: 11px;
-  color: #6c7d5c;
+  color: var(--rh-ink-muted);
 }
 .hunt-comment p {
   white-space: pre-wrap;
@@ -860,13 +849,13 @@
   margin: auto;
 }
 .hunt-form-page h1 {
-  font-family: Georgia, serif;
+  font-family: Fraunces, Georgia, serif;
   font-size: 43px;
   font-weight: 400;
   margin: 14px 0;
 }
 .hunt-form-page > p {
-  color: #77836a;
+  color: var(--rh-ink-muted);
   line-height: 1.9;
 }
 .hunt-form-page form {
@@ -888,11 +877,11 @@
 }
 .hunt-steps span {
   padding-bottom: 14px;
-  color: #939b8a;
+  color: var(--rh-ink-muted);
 }
 .hunt-steps .active {
-  border-bottom: 2px solid var(--h-green);
-  color: var(--h-green);
+  border-bottom: 2px solid var(--h-accent);
+  color: var(--h-accent);
 }
 .hunt-form-pair {
   display: grid;
@@ -916,7 +905,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: #edf0e5;
+  background: var(--rh-surface-2);
   border-radius: 9px;
   margin: 30px 0;
 }
@@ -925,7 +914,7 @@
   padding-bottom: 65px;
 }
 .hunt-profile > h1 {
-  font-family: Georgia, serif;
+  font-family: Fraunces, Georgia, serif;
   font-size: 42px;
   font-weight: 400;
   display: flex;
@@ -934,7 +923,7 @@
   margin: 12px 0 22px;
 }
 .hunt-profile > p {
-  color: #7b876e;
+  color: var(--rh-ink-muted);
   margin: 15px 0 30px;
 }
 .hunt-profile > h2 {
@@ -969,7 +958,7 @@
 }
 .hunt-mini span {
   font-size: 11px;
-  color: #8b947f;
+  color: var(--rh-ink-muted);
 }
 .hunt-mini strong {
   font-size: 20px;
@@ -980,7 +969,7 @@
 .hunt-archive > h2 {
   margin: 20px 0;
   font-size: 24px;
-  font-family: Georgia, serif;
+  font-family: Fraunces, Georgia, serif;
   font-weight: 400;
 }
 .hunt-submission {
@@ -1014,7 +1003,7 @@
   font-size: 10px;
   padding: 4px 8px;
   border-radius: 4px;
-  background: #e9eddf;
+  background: var(--rh-surface-2);
   text-transform: capitalize;
   width: fit-content;
 }
@@ -1355,17 +1344,17 @@
 }
 .hunt-fine,
 .hunt-rules {
-  color: #65715d;
+  color: var(--rh-ink-muted);
 }
 .hunt-metrics,
 .hunt-card-bottom {
-  color: #68765e;
+  color: var(--rh-ink-muted);
 }
 .hunt-card-location span {
-  color: #717e68;
+  color: var(--rh-ink-muted);
 }
 .hunt-hero > p {
-  color: #67745f;
+  color: var(--rh-ink-muted);
 }
 .hunt-toast button {
   min-width: 44px;
@@ -1434,3 +1423,9 @@
   bottom: auto;
   pointer-events: none;
 }
+
+/* Share the original RealHunt wordmark typography and brand colours. */
+.hunt-brand { font-family: Fraunces, Georgia, serif; font-weight: 400; font-size: 22px; letter-spacing: -0.02em; }
+.hunt-brand svg { flex-shrink: 0; }
+.hunt-sponsored-label { position: absolute; top: 14px; left: 14px; padding: 7px 11px; border-radius: 6px; background: #fff; color: var(--rh-ink); font-size: 12px; font-weight: 600; }
+.hunt-sponsored .hunt-primary { margin-top: 18px; width: 100%; }
