@@ -64,7 +64,19 @@ export const track = async (event: string, extra: { find?: string; meta?: any; p
   } catch {}
 };
 
-export const srcSet = (u: string) => (u.endsWith(".webp") ? `${u.replace(/\.webp$/, "-s.webp")} 360w, ${u} 720w` : undefined);
+// Only advertise responsive variants that are real, versioned assets. Previously every
+// .webp URL was rewritten to "-s.webp". Most imported listing photos do not have that
+// companion file, so mobile browsers selected a URL that did not exist and displayed a
+// broken-image question mark even though the original photo was available.
+const RESPONSIVE_ASSETS = new Set([
+  "/images/ebc/ebc-card-v2.webp",
+  "/finds/acquappesa-bathroom.webp",
+  "/finds/acquappesa-bedroom.webp",
+  "/finds/acquappesa-living.webp",
+  "/finds/acquappesa-sea-view-39000.webp",
+  "/finds/acquappesa-terrace.webp",
+]);
+export const srcSet = (u: string) => (RESPONSIVE_ASSETS.has(u) ? `${u.replace(/\.webp$/, "-s.webp")} 360w, ${u} 720w` : undefined);
 
 // score = recency + engagement, used for default sort
 export const score = (f: IG) => { if (f.rank_score != null) return f.rank_score * 10; const age = f.posted_at ? (Date.now() - new Date(f.posted_at).getTime()) / 86400000 : 60; const likes = Math.log10((f.likes || 0) + 10); return likes * 2 - age / 10; };
@@ -124,4 +136,3 @@ export const subscribeEmail = async (email: string, source: string, userId?: str
 };
 
 export const lastEmail = () => { try { return localStorage.getItem("rh_last_email") || ""; } catch { return ""; } };
-

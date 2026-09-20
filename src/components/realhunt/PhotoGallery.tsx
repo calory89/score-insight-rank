@@ -21,6 +21,7 @@ export default function PhotoGallery({ images, title, compact = false, href, eag
   const [zoom, setZoom] = useState(false);
   const [visible, setVisible] = useState(eager || !compact);
   const [visited, setVisited] = useState<Set<number>>(() => new Set([index]));
+  const [failed, setFailed] = useState<Set<string>>(() => new Set());
   const timer = useRef<ReturnType<typeof setTimeout>>();
   const scroll = (i: number, smooth = false) => rail.current?.scrollTo({ left: i * rail.current.clientWidth, behavior: smooth && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "smooth" : "instant" as ScrollBehavior });
   const remember = (i: number) => {
@@ -57,12 +58,15 @@ export default function PhotoGallery({ images, title, compact = false, href, eag
     observer.observe(rail.current); return () => observer.disconnect();
   }, [compact, eager]);
   if (!count) return <div className={`${compact ? "absolute inset-0" : "aspect-[4/3] rounded-2xl"} grid place-items-center bg-hairline/40 text-ink-muted text-sm`}>Photos not available</div>;
+  const markFailed = (url: string) => setFailed(previous => previous.has(url) ? previous : new Set([...previous, url]));
+  const unavailable = (label = "Photo unavailable") => <div role="img" aria-label={label} className="w-full h-full grid place-items-center bg-[#e9e7e2] text-ink-muted text-sm">Photo unavailable</div>;
   const image = (url: string, i: number) => {
     // Keep every slide's geometry and controls. Only the current/next/previously viewed
     // photos get a URL. The next slide itself preloads the correct responsive candidate,
     // avoiding the old new Image() request for an additional full-size copy.
     const load = visible && (visited.has(i) || i === index || i === (index + 1) % count || i === index - 1);
-    return <img src={load ? url : undefined} srcSet={load ? srcSet(url) : undefined} sizes={compact ? "(min-width:1280px) 283px, (min-width:1024px) calc((100vw - 88px) / 3), (min-width:768px) calc((100vw - 68px) / 2), (min-width:640px) calc((100vw - 52px) / 2), calc((100vw - 44px) / 2)" : "(min-width:1140px) 1092px, 100vw"} alt={`${title} — photo ${i + 1} of ${count}`} loading={load ? "eager" : "lazy"} fetchPriority={eager && i === index ? "high" : i === index ? "auto" : "low"} decoding="async" draggable={false} onError={e => { e.currentTarget.removeAttribute("srcset"); }} className={`w-full h-full ${compact ? "object-cover" : "object-contain"}`} />;
+    if (failed.has(url)) return unavailable(`${title} — photo ${i + 1} unavailable`);
+    return <img src={load ? url : undefined} srcSet={load ? srcSet(url) : undefined} sizes={compact ? "(min-width:1280px) 283px, (min-width:1024px) calc((100vw - 88px) / 3), (min-width:768px) calc((100vw - 68px) / 2), (min-width:640px) calc((100vw - 52px) / 2), calc((100vw - 44px) / 2)" : "(min-width:1140px) 1092px, 100vw"} alt={`${title} — photo ${i + 1} of ${count}`} loading={load ? "eager" : "lazy"} fetchPriority={eager && i === index ? "high" : i === index ? "auto" : "low"} decoding="async" draggable={false} onError={() => markFailed(url)} className={`w-full h-full ${compact ? "object-cover" : "object-contain"}`} />;
   };
   return <>
     <div role="region" aria-label={`${title} photos`} aria-roledescription="carousel" className={compact ? "absolute inset-0" : "overflow-hidden md:rounded-2xl bg-hairline/30"}>
@@ -85,13 +89,13 @@ export default function PhotoGallery({ images, title, compact = false, href, eag
         <span aria-live="polite" aria-atomic="true" className={`absolute pointer-events-none rounded-full bg-black/60 text-white text-[11px] px-2.5 py-1 tabular-nums ${compact ? "bottom-2 left-1/2 -translate-x-1/2" : "bottom-3 left-3"}`}>{index + 1} / {count}</span>
         {!compact && <button onClick={() => setExpanded(true)} className="absolute bottom-2 right-2 rounded-full bg-white/95 h-11 px-4 flex items-center gap-2 text-sm"><Expand size={16} /> Enlarge</button>}
       </div>
-      {!compact && count > 1 && <div className="flex gap-2 overflow-x-auto p-3 bg-white" aria-label="Choose a photo">{photos.map((url, i) => <button type="button" key={`${url}-${i}`} aria-label={`Show photo ${i + 1}`} aria-pressed={i === index} onClick={() => go(i)} className={`shrink-0 w-20 md:w-28 aspect-[4/3] rounded-lg overflow-hidden border-2 ${i === index ? "border-ink opacity-100" : "border-transparent opacity-60"}`}><img src={url} srcSet={srcSet(url)} sizes="112px" alt="" loading="lazy" className="w-full h-full object-cover" /></button>)}</div>}
+      {!compact && count > 1 && <div className="flex gap-2 overflow-x-auto p-3 bg-white" aria-label="Choose a photo">{photos.map((url, i) => <button type="button" key={`${url}-${i}`} aria-label={`Show photo ${i + 1}`} aria-pressed={i === index} onClick={() => go(i)} className={`shrink-0 w-20 md:w-28 aspect-[4/3] rounded-lg overflow-hidden border-2 ${i === index ? "border-ink opacity-100" : "border-transparent opacity-60"}`}>{failed.has(url) ? unavailable(`Photo ${i + 1} unavailable`) : <img src={url} srcSet={srcSet(url)} sizes="112px" alt="" loading="lazy" onError={() => markFailed(url)} className="w-full h-full object-cover" />}</button>)}</div>}
     </div>
     <Dialog.Root open={expanded} onOpenChange={value => { setExpanded(value); setZoom(false); }}>
       <Dialog.Portal><Dialog.Overlay className="fixed inset-0 z-[85] bg-black/95" /><Dialog.Content aria-describedby={undefined} className="fixed inset-0 z-[90] text-white flex flex-col" onKeyDown={e => { if (!zoom && ["ArrowLeft", "ArrowRight"].includes(e.key)) { e.preventDefault(); go(index + (e.key === "ArrowRight" ? 1 : -1)); } }}>
         <div className="flex items-center justify-between gap-3 p-4 shrink-0"><Dialog.Title className="text-sm line-clamp-1">{title} · {index + 1} / {count}</Dialog.Title><div className="flex gap-2"><button aria-label={zoom ? "Zoom out" : "Zoom in"} onClick={() => setZoom(v => !v)} className="h-11 w-11 flex items-center justify-center rounded-full bg-white/15">{zoom ? <ZoomOut size={20} /> : <ZoomIn size={20} />}</button><Dialog.Close aria-label="Close enlarged photo" className="h-11 w-11 flex items-center justify-center rounded-full bg-white/15"><X size={22} /></Dialog.Close></div></div>
         <div className="flex-1 min-h-0 overflow-auto" onTouchStart={e => { if (!zoom && e.touches.length === 1) gesture.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, moved: false }; else gesture.current = null; }} onTouchEnd={e => { const g = gesture.current; if (!zoom && g && e.changedTouches[0]) { const dx = e.changedTouches[0].clientX - g.x; const dy = e.changedTouches[0].clientY - g.y; if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) go(index + (dx < 0 ? 1 : -1)); } gesture.current = null; }}>
-          <img src={photos[index]} alt={`${title} — photo ${index + 1}`} draggable={false} onDoubleClick={() => setZoom(v => !v)} className={zoom ? "w-[200%] max-w-none h-[200%] object-contain" : "w-full h-full object-contain"} />
+          {failed.has(photos[index]) ? unavailable(`${title} — photo ${index + 1} unavailable`) : <img src={photos[index]} alt={`${title} — photo ${index + 1}`} draggable={false} onError={() => markFailed(photos[index])} onDoubleClick={() => setZoom(v => !v)} className={zoom ? "w-[200%] max-w-none h-[200%] object-contain" : "w-full h-full object-contain"} />}
         </div>
         <div className="flex items-center justify-center gap-6 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shrink-0"><button disabled={count < 2} onClick={() => go(index - 1)} aria-label="Previous enlarged photo" className="h-12 w-12 grid place-items-center rounded-full bg-white/15"><ChevronLeft /></button><span className="text-sm tabular-nums">{index + 1} / {count}</span><button disabled={count < 2} onClick={() => go(index + 1)} aria-label="Next enlarged photo" className="h-12 w-12 grid place-items-center rounded-full bg-white/15"><ChevronRight /></button></div>
       </Dialog.Content></Dialog.Portal>
