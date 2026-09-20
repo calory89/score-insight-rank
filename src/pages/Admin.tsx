@@ -33,7 +33,6 @@ import { PageLoader } from "@/components/PageLoader";
 
 const AdminPanelFallback = () => <PageLoader variant="table" count={4} />;
 
-const ADMIN_EMAIL = "rrppspain@gmail.com";
 
 interface UserData {
   id: string;
