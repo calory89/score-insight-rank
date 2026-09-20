@@ -101,6 +101,13 @@ function Shell({ children }: { children: ReactNode }) {
     document.title =
       "RealHunt — Property deals. Found by people. Ranked by you.";
   }, [location.pathname]);
+  useEffect(() => {
+    if (!session?.admin) return;
+    const refresh = () => { if (document.visibilityState === "visible") void connect(); };
+    const timer = window.setInterval(refresh, 60000);
+    window.addEventListener("focus", refresh);
+    return () => { window.clearInterval(timer); window.removeEventListener("focus", refresh); };
+  }, [session?.admin, user?.id]);
   const requireUser = () => {
     if (!user) {
       setAuth(true);
@@ -125,6 +132,7 @@ function Shell({ children }: { children: ReactNode }) {
         requireUser,
         notice,
         setNotice,
+        refreshSession: connect,
       }}
     >
       <div className="hunt">
@@ -142,13 +150,14 @@ function Shell({ children }: { children: ReactNode }) {
             </Link>
             {user ? (
               <Link to="/hunt/mine" className="hunt-account">
-                My hunts
+                My submissions
               </Link>
             ) : (
               <button onClick={() => setAuth(true)} className="hunt-account">
                 Sign in
               </button>
             )}
+            {session?.admin && <Link to="/hunt/admin" className="hunt-admin-link">Review ({session.pending_submissions || 0})</Link>}
             <Link className="hunt-primary" to="/submit">
               <Plus size={16} />
               <span>Submit a Deal</span>
@@ -507,6 +516,50 @@ function SponsoredCard() {
     </article>
   );
 }
+function QuickSubmission({ initialUrl = "", standalone = false }: { initialUrl?: string; standalone?: boolean }) {
+  const { user, session, call } = useCommunity();
+  const [url, setUrl] = useState(initialUrl);
+  const [note, setNote] = useState("");
+  const [honeypot, setHoneypot] = useState("");
+  const [auth, setAuth] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [result, setResult] = useState<any>(null);
+  const submitting = useRef(false);
+  const destination = `/submit?quick=1&url=${encodeURIComponent(url.trim())}`;
+  async function send(e: FormEvent) {
+    e.preventDefault();
+    if (!user) { setAuth(true); return; }
+    if (!session || submitting.current) return;
+    submitting.current = true; setBusy(true); setError("");
+    try { setResult(await call("quick_submit", { url: url.trim(), why: note, website: honeypot })); }
+    catch (e) { setError((e as Error).message); }
+    finally { submitting.current = false; setBusy(false); }
+  }
+  return <section className={"hunt-quick-submit" + (standalone ? " hunt-quick-standalone" : "")} aria-label="Share a property">
+    <h2>Found a good property? Share it.</h2>
+    <p>Paste the property listing. If approved, it will go live for the community to vote on.</p>
+    {result ? <div role="status" className="hunt-quick-success">
+      <strong>{result.duplicate ? "This property is already published." : result.already ? "This property is already in your submissions." : "Received. Your property is pending admin review."}</strong>
+      <Link to={result.duplicate ? `/deal/${result.duplicate}` : "/hunt/mine"}>{result.duplicate ? "View and vote →" : "View my submissions →"}</Link>
+      <button onClick={() => { setResult(null); setUrl(""); setNote(""); }}>Share another property</button>
+    </div> : <form onSubmit={send}>
+      <div className="hunt-quick-row">
+        <label><span className="sr-only">Property listing URL</span><input type="url" name="property_url" required maxLength={2000} placeholder="Paste the property link here…" value={url} onChange={e => setUrl(e.target.value)} /></label>
+        <button type="submit" className="hunt-primary" disabled={busy || (!!user && !session)}>{busy ? "Sending…" : "Send property"}<ArrowUpRight size={17} /></button>
+      </div>
+      {standalone && user && <label className="hunt-quick-note">Anything we should know? <span>(optional)</span><textarea maxLength={800} value={note} onChange={e => setNote(e.target.value)} /></label>}
+      <label className="hunt-honeypot" aria-hidden="true">Website<input name="website" tabIndex={-1} autoComplete="off" value={honeypot} onChange={e => setHoneypot(e.target.value)} /></label>
+      <p className="hunt-fine">Free account required to send. Track pending, approved and rejected properties in My submissions.</p>
+    </form>}
+    {standalone && !result && <Link className="hunt-full-details" to={`/submit?details=1${url ? `&url=${encodeURIComponent(url)}` : ""}`}>Add full property details instead →</Link>}
+    {error && <ErrorBox error={error} />}
+    {auth && <AuthModal open onClose={() => setAuth(false)} initialMode="up" redirect={destination}
+      title="Create a free account to submit your property"
+      subtitle="Your link is saved. After signing in, confirm your submission and track its review in My submissions." />}
+  </section>;
+}
+
 function Home() {
   const { user } = useAuth();
   const [params, setParams] = useSearchParams();
@@ -550,19 +603,12 @@ function Home() {
   return (
     <div className="hunt-wrap">
       <section className="hunt-hero">
-        <div className="hunt-eyebrow">
-          <span /> THE WORLD IS FULL OF GOOD FINDS
-        </div>
         <h1>
           The best property deals.
           <br />
           <em>Found by people. Ranked by you.</em>
         </h1>
-        <p>
-          A little place by the sea. A village home with a story.
-          <br className="hunt-desktop" /> Discover extraordinary opportunities —
-          and help the best rise.
-        </p>
+        <QuickSubmission />
         <div className="hunt-hero-stats">
           <span>
             <strong>{feed ? num(feed.global_deals) : "—"}</strong> deals to
@@ -1008,10 +1054,12 @@ function ProfileEditor() {
 }
 const draftKey = "rh_hunt_submission";
 function Submit() {
+  const [params] = useSearchParams();
   const { session, call, requireUser, setNotice } = useCommunity();
   const [draft, setDraft] = useState<any>(() => {
     try {
-      return JSON.parse(sessionStorage.getItem(draftKey) || "{}");
+      const stored = JSON.parse(sessionStorage.getItem(draftKey) || "{}");
+      return params.get("url") && params.get("url") !== stored.url ? { url: params.get("url") } : stored;
     } catch {
       return {};
     }
@@ -1397,7 +1445,7 @@ function Mine() {
     );
   return (
     <div className="hunt-wrap hunt-profile">
-      <h1>{pathname.endsWith("saved") ? "Saved deals" : "My hunts"}</h1>
+      <h1>{pathname.endsWith("saved") ? "Saved deals" : "My submissions"}</h1>
       <nav className="hunt-tabs">
         <Link to="/hunt/mine">My submissions</Link>
         <Link to="/hunt/saved">Saved deals</Link>
@@ -1430,9 +1478,11 @@ function Mine() {
             <Plus size={16} />
             Find your next deal
           </Link>
-          {!data.deals.length && (
-            <p>Your first great discovery starts with a link.</p>
-          )}
+          <div className="hunt-submission-summary" aria-label="Submission totals">
+            <span><strong>{data.deals.length}</strong> submitted</span>
+            {(["pending", "approved", "rejected"] as const).map(status => <span key={status}><strong>{data.deals.filter((d: any) => d.status === status).length}</strong> {status === "pending" ? "pending review" : status}</span>)}
+          </div>
+          {!data.deals.length && <p>Your first great discovery starts with a link.</p>}
           {data.deals.map((d: any) => (
             <article className="hunt-submission" key={d.id}>
               <div>
@@ -1440,7 +1490,12 @@ function Mine() {
                   {d.status === "pending" ? "Pending review" : d.status}
                 </span>
                 <h2>{d.title}</h2>
-                <p>{d.reject_reason}</p>
+                <p>{money(d.price_eur)} · {d.country || "Location awaiting review"}{d.location_name ? ` · ${d.location_name}` : ""}</p>
+                <p>Submitted {new Date(d.created_at).toLocaleDateString("en-GB")}{d.approved_at ? ` · Approved ${new Date(d.approved_at).toLocaleDateString("en-GB")}` : ""}</p>
+                {d.why_great && <p>{d.why_great}</p>}
+                {d.reject_reason && <p>Review note: {d.reject_reason}</p>}
+                {safeUrl(d.source_url) && <a href={d.source_url} target="_blank" rel="noopener noreferrer">Original listing ↗</a>}
+                {d.status === "approved" && <p>{num(d.week_score || 0)} weekly score · {num(d.lifetime_votes || 0)} lifetime votes · {num(d.views || 0)} views</p>}
               </div>
               {d.status === "approved" && (
                 <div>
@@ -1468,13 +1523,15 @@ function Mine() {
   );
 }
 function Admin() {
-  const { session, call, setNotice } = useCommunity();
+  const { session, call, setNotice, refreshSession } = useCommunity();
+  const [reasons, setReasons] = useState<Record<string, string>>({});
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   async function load() {
     try {
       setData(await call("queue"));
+      setError("");
     } catch (e) {
       setError((e as Error).message);
     }
@@ -1487,6 +1544,7 @@ function Admin() {
     try {
       await call(action, payload);
       await load();
+      await refreshSession();
       setNotice("Review saved.");
     } catch (e) {
       setNotice((e as Error).message);
@@ -1507,6 +1565,7 @@ function Admin() {
       <h1>Community moderation</h1>
       <p>Review the source, price and photos before approving a discovery.</p>
       {error && <ErrorBox error={error} retry={load} />}
+      <button className="hunt-more" onClick={load} disabled={busy}>Refresh submissions</button>
       <h2>Pending submissions ({data?.pending.length || 0})</h2>
       {data?.pending.map((d: any) => (
         <article key={d.id} className="hunt-review">
@@ -1526,7 +1585,9 @@ function Admin() {
                 id: d.id,
                 decision: "edit",
                 title: f.get("title"),
-                price_eur: Number(f.get("price")),
+                price_eur: f.get("price") ? Number(f.get("price")) : null,
+                country: f.get("country"),
+                location: f.get("location"),
                 image: f.get("image"),
               });
             }}
@@ -1546,20 +1607,24 @@ function Admin() {
                 name="price"
                 type="number"
                 min="1"
-                defaultValue={d.price_eur}
-                required
+                defaultValue={d.price_eur || ""}
+                placeholder="Price on request if unknown"
               />
             </label>
+            <label>Country<input name="country" defaultValue={d.country || ""} minLength={2} maxLength={80} required /></label>
+            <label>Location<input name="location" defaultValue={d.location_name || ""} maxLength={160} /></label>
             <label>
               Photo URL
               <input
                 name="image"
                 type="url"
-                defaultValue={d.image_urls[0] || ""}
+                defaultValue={safeUrl(d.image_urls[0]) ? d.image_urls[0] : ""}
+                placeholder={d.image_urls.length ? "Keep current photo, or paste https://…" : "https://…"}
               />
             </label>
             <button disabled={busy}>Save edits</button>
           </form>
+          <label>Rejection reason (shown to the submitter)<textarea maxLength={500} value={reasons[d.id] || ""} onChange={e => setReasons(r => ({...r, [d.id]: e.target.value}))} /></label>
           <div className="hunt-review-actions">
             <button
               className="hunt-primary"
@@ -1574,7 +1639,7 @@ function Admin() {
                 act("moderate", {
                   id: d.id,
                   decision: "reject",
-                  reason: "Does not meet the community listing guidelines",
+                  reason: reasons[d.id]?.trim() || "Does not meet the community listing guidelines",
                 })
               }
             >
@@ -1644,10 +1709,12 @@ function Admin() {
   );
 }
 export default function Community() {
-  const path = useLocation().pathname;
+  const location = useLocation();
+  const path = location.pathname;
+  const params = new URLSearchParams(location.search);
   let page: ReactNode =
     path === "/submit" ? (
-      <Submit />
+      params.get("details") === "1" ? <Submit /> : <div className="hunt-wrap"><QuickSubmission key={params.get("url")} initialUrl={params.get("url") || ""} standalone /></div>
     ) : path.startsWith("/deal/") ? (
       <Detail />
     ) : path.startsWith("/hunter/") ? (
