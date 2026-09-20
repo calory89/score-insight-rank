@@ -537,20 +537,20 @@ function QuickSubmission({ initialUrl = "", standalone = false }: { initialUrl?:
     finally { submitting.current = false; setBusy(false); }
   }
   return <section className={"hunt-quick-submit" + (standalone ? " hunt-quick-standalone" : "")} aria-label="Share a property">
-    <h2>Found a good property? Share it.</h2>
-    <p>Paste the property listing. If approved, it will go live for the community to vote on.</p>
+    <h2>Found a great property?</h2>
+    <p>Share a link. We review. Everyone votes.</p>
     {result ? <div role="status" className="hunt-quick-success">
       <strong>{result.duplicate ? "This property is already published." : result.already ? "This property is already in your submissions." : "Received. Your property is pending admin review."}</strong>
       <Link to={result.duplicate ? `/deal/${result.duplicate}` : "/hunt/mine"}>{result.duplicate ? "View and vote →" : "View my submissions →"}</Link>
       <button onClick={() => { setResult(null); setUrl(""); setNote(""); }}>Share another property</button>
     </div> : <form onSubmit={send}>
       <div className="hunt-quick-row">
-        <label><span className="sr-only">Property listing URL</span><input type="url" name="property_url" required maxLength={2000} placeholder="Paste the property link here…" value={url} onChange={e => setUrl(e.target.value)} /></label>
-        <button type="submit" className="hunt-primary" disabled={busy || (!!user && !session)}>{busy ? "Sending…" : "Send property"}<ArrowUpRight size={17} /></button>
+        <label><span className="sr-only">Property listing URL</span><input type="url" name="property_url" required maxLength={2000} placeholder="Paste a property link…" value={url} onChange={e => setUrl(e.target.value)} /></label>
+        <button type="submit" aria-label="Send property" className="hunt-primary" disabled={busy || (!!user && !session)}>{busy ? "Sending…" : standalone ? "Send property" : "Send"}<ArrowUpRight size={17} /></button>
       </div>
       {standalone && user && <label className="hunt-quick-note">Anything we should know? <span>(optional)</span><textarea maxLength={800} value={note} onChange={e => setNote(e.target.value)} /></label>}
       <label className="hunt-honeypot" aria-hidden="true">Website<input name="website" tabIndex={-1} autoComplete="off" value={honeypot} onChange={e => setHoneypot(e.target.value)} /></label>
-      <p className="hunt-fine">Free account required to send. Track pending, approved and rejected properties in My submissions.</p>
+      {standalone && <p className="hunt-fine">Free account · Track every submission.</p>}
     </form>}
     {standalone && !result && <Link className="hunt-full-details" to={`/submit?details=1${url ? `&url=${encodeURIComponent(url)}` : ""}`}>Add full property details instead →</Link>}
     {error && <ErrorBox error={error} />}
@@ -601,41 +601,35 @@ function Home() {
     setParams(next);
   };
   return (
-    <div className="hunt-wrap">
+    <div className="hunt-wrap hunt-home">
       <section className="hunt-hero">
         <h1>
-          The best property deals.
-          <br />
-          <em>Found by people. Ranked by you.</em>
+          Property worth finding.
+          <em>You decide what rises.</em>
         </h1>
         <QuickSubmission />
         <div className="hunt-hero-stats">
           <span>
-            <strong>{feed ? num(feed.global_deals) : "—"}</strong> deals to
-            discover
+            <strong>{feed ? num(feed.global_deals) : "—"}</strong> deals
           </span>
           <i />
           <span>
-            <strong>{feed ? num(feed.weekly_votes) : "—"}</strong> votes this
-            week
+            <strong>{feed ? num(feed.weekly_votes) : "—"}</strong> this week
           </span>
           <i />
           <span>
-            <strong>{feed ? num(feed.global_votes) : "—"}</strong> lifetime
-            votes
+            <strong>{feed ? num(feed.global_votes) : "—"}</strong> total votes
           </span>
         </div>
       </section>
       <div className="hunt-feed-header">
         <div>
-          <div className="hunt-eyebrow">THE COMMUNITY LEADERBOARD</div>
           <h2>
             {scope === "all" ? "All-time favourites" : "Top deals this week"}{" "}
             <span>↗</span>
           </h2>
           <p>
-            {feed?.week?.label?.replace("-", "–") || "Sep 21–28, 2026"} · UTC ·
-            Ranked by upvotes minus downvotes
+            {feed?.week?.label?.replace("-", "–") || "Sep 21–28, 2026"} · UTC
           </p>
         </div>
         <Link to="/winners" className="hunt-winners-link">
