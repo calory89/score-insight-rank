@@ -405,6 +405,378 @@ export type Database = {
           },
         ]
       }
+      community_comments: {
+        Row: {
+          body: string
+          created_at: string
+          deal_id: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          deal_id: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          deal_id?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_comments_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "community_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_deals: {
+        Row: {
+          approved_at: string | null
+          bedrooms: number | null
+          category: string
+          country: string | null
+          created_at: string
+          currency: string
+          find_id: string | null
+          hunter_handle: string | null
+          id: string
+          image_urls: string[]
+          is_editorial_pick: boolean
+          location_name: string | null
+          pick_note: string | null
+          price_eur: number | null
+          reject_reason: string | null
+          slug: string
+          source_domain: string | null
+          source_key: string
+          source_url: string
+          sqm: number | null
+          status: string
+          submitted_by: string | null
+          title: string
+          updated_at: string
+          video_url: string | null
+          week_id: string | null
+          why_great: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          bedrooms?: number | null
+          category?: string
+          country?: string | null
+          created_at?: string
+          currency?: string
+          find_id?: string | null
+          hunter_handle?: string | null
+          id?: string
+          image_urls?: string[]
+          is_editorial_pick?: boolean
+          location_name?: string | null
+          pick_note?: string | null
+          price_eur?: number | null
+          reject_reason?: string | null
+          slug: string
+          source_domain?: string | null
+          source_key: string
+          source_url: string
+          sqm?: number | null
+          status?: string
+          submitted_by?: string | null
+          title: string
+          updated_at?: string
+          video_url?: string | null
+          week_id?: string | null
+          why_great?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          bedrooms?: number | null
+          category?: string
+          country?: string | null
+          created_at?: string
+          currency?: string
+          find_id?: string | null
+          hunter_handle?: string | null
+          id?: string
+          image_urls?: string[]
+          is_editorial_pick?: boolean
+          location_name?: string | null
+          pick_note?: string | null
+          price_eur?: number | null
+          reject_reason?: string | null
+          slug?: string
+          source_domain?: string | null
+          source_key?: string
+          source_url?: string
+          sqm?: number | null
+          status?: string
+          submitted_by?: string | null
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+          week_id?: string | null
+          why_great?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_deals_find_id_fkey"
+            columns: ["find_id"]
+            isOneToOne: false
+            referencedRelation: "ig_finds"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_deals_week_id_fkey"
+            columns: ["week_id"]
+            isOneToOne: false
+            referencedRelation: "community_weeks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_reports: {
+        Row: {
+          comment_id: string | null
+          created_at: string
+          deal_id: string | null
+          detail: string | null
+          id: string
+          reason: string
+          reporter_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          comment_id?: string | null
+          created_at?: string
+          deal_id?: string | null
+          detail?: string | null
+          id?: string
+          reason: string
+          reporter_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          comment_id?: string | null
+          created_at?: string
+          deal_id?: string | null
+          detail?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_reports_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "community_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reports_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "community_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_saves: {
+        Row: {
+          created_at: string
+          deal_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deal_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_saves_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "community_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_views: {
+        Row: {
+          deal_id: string
+          viewed_on: string
+          voter_key: string
+        }
+        Insert: {
+          deal_id: string
+          viewed_on?: string
+          voter_key: string
+        }
+        Update: {
+          deal_id?: string
+          viewed_on?: string
+          voter_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_views_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "community_deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_votes: {
+        Row: {
+          created_at: string
+          deal_id: string
+          id: string
+          updated_at: string
+          user_id: string | null
+          value: number
+          voter_key: string
+          week_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          deal_id: string
+          id?: string
+          updated_at?: string
+          user_id?: string | null
+          value: number
+          voter_key: string
+          week_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string
+          id?: string
+          updated_at?: string
+          user_id?: string | null
+          value?: number
+          voter_key?: string
+          week_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_votes_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "community_deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_votes_week_id_fkey"
+            columns: ["week_id"]
+            isOneToOne: false
+            referencedRelation: "community_weeks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_week_winners: {
+        Row: {
+          archived_at: string
+          deal_id: string
+          down_votes: number
+          net_score: number
+          rank: number
+          up_votes: number
+          week_id: string
+        }
+        Insert: {
+          archived_at?: string
+          deal_id: string
+          down_votes: number
+          net_score: number
+          rank: number
+          up_votes: number
+          week_id: string
+        }
+        Update: {
+          archived_at?: string
+          deal_id?: string
+          down_votes?: number
+          net_score?: number
+          rank?: number
+          up_votes?: number
+          week_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_week_winners_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "community_deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_week_winners_week_id_fkey"
+            columns: ["week_id"]
+            isOneToOne: false
+            referencedRelation: "community_weeks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_weeks: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          ends_at: string
+          id: string
+          label: string
+          starts_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          ends_at: string
+          id?: string
+          label: string
+          starts_at: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          ends_at?: string
+          id?: string
+          label?: string
+          starts_at?: string
+        }
+        Relationships: []
+      }
       contact_requests: {
         Row: {
           company: string | null
@@ -2943,6 +3315,68 @@ export type Database = {
         Returns: Json
       }
       admin_web_vitals: { Args: never; Returns: Json }
+      community_cast_vote: {
+        Args: {
+          p_deal: string
+          p_user: string
+          p_value: number
+          p_voter: string
+        }
+        Returns: Json
+      }
+      community_close_week: { Args: { p_week: string }; Returns: Json }
+      community_current_week: {
+        Args: never
+        Returns: {
+          closed_at: string | null
+          created_at: string
+          ends_at: string
+          id: string
+          label: string
+          starts_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "community_weeks"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      community_deal: {
+        Args: { p_slug: string; p_voter?: string }
+        Returns: Json
+      }
+      community_hunter: { Args: { p_handle: string }; Returns: Json }
+      community_merge_votes: {
+        Args: { p_anon: string; p_user: string }
+        Returns: Json
+      }
+      community_moderate_deal: {
+        Args: {
+          p_action: string
+          p_deal: string
+          p_pick?: boolean
+          p_pick_note?: string
+          p_reason?: string
+        }
+        Returns: Json
+      }
+      community_moderation_queue: { Args: never; Returns: Json }
+      community_rankings: {
+        Args: {
+          p_category?: string
+          p_country?: string
+          p_limit?: number
+          p_offset?: number
+          p_scope?: string
+          p_voter?: string
+        }
+        Returns: Json
+      }
+      community_record_view: {
+        Args: { p_deal: string; p_voter: string }
+        Returns: undefined
+      }
       dev_authorize_intro_contact: {
         Args: {
           p_authorized: boolean
