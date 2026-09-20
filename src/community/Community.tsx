@@ -17,6 +17,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { EBC } from "@/lib/rh";
 import { listingVideo } from "@/lib/listing-media";
+import OriginalListingLink from "@/components/realhunt/OriginalListingLink";
 import AuthModal from "@/components/realhunt/AuthModal";
 import {
   ArrowUp,
@@ -424,7 +425,7 @@ function Card({
         </div>
         <div className="hunt-price">
           {money(deal.price_eur)}
-          {deal.sqm && (
+          {deal.sqm && deal.price_eur != null && (
             <small>{money(Math.round(deal.price_eur / deal.sqm))}/m²</small>
           )}
         </div>
@@ -471,15 +472,15 @@ function Card({
             {num(deal.life_up + deal.life_down)} lifetime votes
           </span>
         </div>
-        {safeUrl(deal.source_url) && (
-          <a
-            href={deal.source_url}
+        {(deal.has_source || safeUrl(deal.source_url)) && (
+          <OriginalListingLink
+            href={deal.source_url || undefined}
             target="_blank"
             rel="noopener noreferrer"
             className="hunt-original"
           >
             Original listing <ArrowUpRight size={14} />
-          </a>
+          </OriginalListingLink>
         )}
       </div>
     </article>
@@ -506,6 +507,7 @@ function SponsoredCard() {
   );
 }
 function Home() {
+  const { user } = useAuth();
   const [params, setParams] = useSearchParams();
   const scope = params.get("tab") === "all" ? "all" : "week";
   const country = params.get("country") || "";
@@ -538,7 +540,7 @@ function Home() {
   }
   useEffect(() => {
     load();
-  }, [scope, country, category]);
+  }, [scope, country, category, user?.id]);
   const update = (key: string, val: string) => {
     const next = new URLSearchParams(params);
     val ? next.set(key, val) : next.delete(key);
@@ -677,6 +679,7 @@ function Home() {
               </Link>
             </div>
           )}
+          {feed && <p className="hunt-feed-count" role="status">Showing {num(feed.rows.length)} of {num(feed.total)} deals{!country && !category && feed.rows.length >= 2 ? " · plus 1 sponsored listing" : ""}</p>}
           {feed && feed.rows.length < feed.total && (
             <button
               className="hunt-more"
@@ -732,6 +735,7 @@ function Home() {
   );
 }
 function Detail() {
+  const { user } = useAuth();
   const { slug } = useParams();
   const { session, call, requireUser, setNotice } = useCommunity();
   const [data, setData] = useState<any>(null);
@@ -749,7 +753,7 @@ function Detail() {
   }
   useEffect(() => {
     if (session) load();
-  }, [slug, session?.token]);
+  }, [slug, session?.token, user?.id]);
   const d: Deal = data?.deal;
   if (error)
     return (
@@ -776,7 +780,7 @@ function Detail() {
             {d.sqm ? ` · ${d.sqm} m²` : ""}
             {d.bedrooms ? ` · ${d.bedrooms} beds` : ""}
           </p>
-          {d.sqm && <p>{money(Math.round(d.price_eur / d.sqm))} per m²</p>}
+          {d.sqm && d.price_eur != null && <p>{money(Math.round(d.price_eur / d.sqm))} per m²</p>}
           <p>
             Found by{" "}
             <Link to={`/hunter/${d.hunter_handle}`}>@{d.hunter_handle}</Link>
@@ -788,15 +792,15 @@ function Detail() {
             onChange={load}
           />
           <div className="hunt-detail-actions">
-            {safeUrl(d.source_url) && (
-              <a
-                href={d.source_url}
+            {(d.has_source || safeUrl(d.source_url)) && (
+              <OriginalListingLink
+                href={d.source_url || undefined}
                 className="hunt-primary"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 Original listing <ArrowUpRight size={17} />
-              </a>
+              </OriginalListingLink>
             )}
             <Save deal={d} onChange={load} />
             <button
