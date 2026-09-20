@@ -241,4 +241,21 @@ await test("weekly rollover preserves lifetime and freezes winner snapshots", as
   );
   assert.equal((await one("select community_rankings()")).rows[0].life_net, -1);
 });
+await test("launch homes break ties without overriding actual votes", async () => {
+  await db.exec("BEGIN");
+  try {
+    await db.exec("DELETE FROM community_week_votes; DELETE FROM community_votes;");
+    await db.exec(`INSERT INTO community_deals(slug,title,source_url,source_key,image_urls,price_eur,country,status,approved_at)
+      VALUES('Dc4gpg6slIT','Umbria','https://example.org/umbria','',ARRAY['https://example.org/u.jpg'],35000,'Italy','approved',now()),
+      ('acquappesa-sea-view-39000','Acquappesa','https://example.org/acquappesa','',ARRAY['https://example.org/a.jpg'],39000,'Italy','approved',now())`);
+    for (const scope of ['week', 'all']) {
+      const f = await one("select community_rankings($1)", [scope]);
+      assert.deepEqual(f.rows.slice(0,2).map(d => d.slug), ['Dc4gpg6slIT','acquappesa-sea-view-39000']);
+      assert.equal(f.global_votes, 0);
+    }
+    await api('vote',account.token,{id:deal.id,value:1});
+    assert.equal((await one('select community_rankings()')).rows[0].id,deal.id);
+    assert.equal((await one("select community_rankings('all')")).rows[0].id,deal.id);
+  } finally { await db.exec("ROLLBACK"); }
+});
 await db.close();
