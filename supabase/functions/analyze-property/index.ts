@@ -1510,6 +1510,32 @@ serve(async (req) => {
           throw new Error("Failed to save analysis");
         }
         saved = inserted;
+
+        // Consume one credit server-side for each brand-new analysis
+        try {
+          const { data: sub } = await supabase
+            .from("subscriptions")
+            .select("id, credits_used")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          if (sub) {
+            await supabase
+              .from("subscriptions")
+              .update({ credits_used: (sub.credits_used || 0) + 1 })
+              .eq("id", sub.id);
+          } else {
+            await supabase.from("subscriptions").insert({
+              user_id: user.id,
+              plan: "free",
+              credits_total: 5,
+              credits_used: 1,
+              billing_period_start: new Date().toISOString(),
+              billing_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            });
+          }
+        } catch (creditErr) {
+          console.error("Credit accounting failed:", creditErr);
+        }
       }
     }
 
