@@ -7,6 +7,8 @@ import DecisionSummary from "@/components/realhunt/DecisionSummary";
 import { readSession } from "@/lib/catalog";
 import { safeReturnPath } from "@/lib/auth-return";
 import PhotoGallery from "@/components/realhunt/PhotoGallery";
+import ListingVideo from "@/components/realhunt/ListingVideo";
+import { listingVideo } from "@/lib/listing-media";
 import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
 import CaptureInline from "@/components/realhunt/CaptureInline";
@@ -128,7 +130,7 @@ const FindDetail = () => {
       <div className="max-w-[1140px] mx-auto md:px-6 md:pt-6">
         <Link to={backTo} className="inline-flex items-center gap-2 text-[13px] text-ink-muted hover:text-ink my-4 mx-4 md:mx-0 md:mt-0"><ArrowLeft size={14} /> Back to results</Link>
 
-        <PhotoGallery key={f.shortcode} images={imgs} title={f.location_name || c} rememberKey={f.shortcode} eager />
+        {listingVideo(f.shortcode) ? <ListingVideo key={f.shortcode} shortcode={f.shortcode} title={f.location_name || c} /> : <PhotoGallery key={f.shortcode} images={imgs} title={f.location_name || c} rememberKey={f.shortcode} eager />}
 
         <div className="px-4 md:px-0 grid md:grid-cols-[minmax(0,1fr)_300px] gap-8 lg:gap-12 mt-8">
           <div>
@@ -153,7 +155,7 @@ const FindDetail = () => {
 
             <section className="mt-8 border-t border-hairline pt-7">
               <h2 className="font-display text-[20px] tracking-tight mb-3">About this home</h2>
-              {user ? (
+              {user || listingVideo(f.shortcode) ? (
                 <>
                   <p className="text-[16px] leading-relaxed whitespace-pre-line">{f.caption_en || cap || "The original post has no text. Open it to see the details."}</p>
                   {f.lat && <div ref={mapRef} className="mt-5 h-[260px] rounded-2xl overflow-hidden border border-hairline z-0" />}

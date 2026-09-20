@@ -6,6 +6,8 @@ import QuickView from "@/components/realhunt/QuickView";
 import { catalogPosition, useCatalogPosition } from "@/hooks/useCatalogPosition";
 import { CatalogFilters, COMO, EMPTY_FILTERS, comparisonCodes, filtersFromUrl, filterSearch, homePath, matchesHome, readSession, writeSession } from "@/lib/catalog";
 import PhotoGallery from "@/components/realhunt/PhotoGallery";
+import ListingVideo from "@/components/realhunt/ListingVideo";
+import { listingVideo } from "@/lib/listing-media";
 import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
 import CaptureInline from "@/components/realhunt/CaptureInline";
@@ -344,7 +346,7 @@ const Home = () => {
             return (
               <article key={f.id} data-listing-href={to} data-home-code={f.shortcode} className="group relative rounded-2xl overflow-hidden bg-white border border-hairline shadow-sm hover:shadow-lg transition-shadow">
                 <div className="relative aspect-[4/3] overflow-hidden bg-hairline/30">
-                  <PhotoGallery images={f.image_urls!} title={f.location_name || c} compact href={to} rememberKey={f.shortcode} linkState={{ catalogUrl }} eager={i < 4} onOpen={() => track("card_click", { find: f.shortcode })} />
+                  {listingVideo(f.shortcode) ? <ListingVideo shortcode={f.shortcode} title={f.location_name || c} compact href={to} linkState={{ catalogUrl }} onOpen={() => track("card_click", { find: f.shortcode })} /> : <PhotoGallery images={f.image_urls!} title={f.location_name || c} compact href={to} rememberKey={f.shortcode} linkState={{ catalogUrl }} eager={i < 4} onOpen={() => track("card_click", { find: f.shortcode })} />}
                   {((f as any).status === "sold" || (f as any).status === "reserved") ? <span className="absolute pointer-events-none top-3 left-3 rounded-full bg-red-600 text-white px-2.5 py-1 text-[11px] uppercase">{(f as any).status}</span> : drops.has(f.id) ? <span className="absolute pointer-events-none top-3 left-3 rounded-full bg-amber-100 text-amber-900 px-2.5 py-1 text-[11px]">Price drop</span> : isNew(f.posted_at) ? <span className="absolute pointer-events-none top-3 left-3 rounded-full bg-white/95 text-ink px-2.5 py-1 text-[11px]">New</span> : null}
                   {!f.id.startsWith("ebc") && f.id !== "como-1" && <button onClick={(e) => toggleFav(e, f)} aria-label="Save" aria-pressed={favs.has(f.id)} className={`absolute top-2 right-2 sm:top-3 sm:right-3 z-10 h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-white/95 shadow inline-flex items-center justify-center hover:scale-105 transition-transform ${favs.has(f.id) ? "text-red-500" : "text-ink"}`}><Heart size={17} fill={favs.has(f.id) ? "currentColor" : "none"} /></button>}
                 </div>
