@@ -537,6 +537,24 @@ serve(async (req) => {
       });
     }
 
+    // Server-side plan/credit enforcement — the UI modal is UX only
+    const UNLIMITED_PLANS = ["pro", "super_pro", "enterprise"];
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("plan, credits_used, credits_total")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (subscription && !UNLIMITED_PLANS.includes(subscription.plan)) {
+      if ((subscription.credits_used || 0) >= (subscription.credits_total || 0)) {
+        return new Response(JSON.stringify({
+          error: "Free analysis limit reached. Upgrade to Pro for unlimited analyses.",
+          code: "credits_exhausted",
+        }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     let { url, manual_content, manual_fields } = await req.json();
 
     // Input validation
