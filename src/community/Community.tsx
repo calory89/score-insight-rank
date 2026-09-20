@@ -210,7 +210,7 @@ async function shareDeal(d: Pick<Deal, "slug" | "title">, message: string) {
     await navigator.clipboard.writeText(`${message}\n${url}`);
   }
 }
-function Media({ deal, detail = false }: { deal: Deal; detail?: boolean }) {
+function Media({ deal, detail = false, scope = "week" }: { deal: Deal; detail?: boolean; scope?: string }) {
   const [index, setIndex] = useState(0);
   const [play, setPlay] = useState(false);
   const imgs = deal.image_urls || [];
@@ -228,7 +228,7 @@ function Media({ deal, detail = false }: { deal: Deal; detail?: boolean }) {
           aria-label={`${deal.title} property video`}
         />
       ) : (
-        <Link to={`/deal/${deal.slug}`} tabIndex={detail ? -1 : 0}>
+        <Link to={`/deal/${deal.slug}${scope === "all" ? "?tab=all" : ""}`} tabIndex={detail ? -1 : 0}>
           <img
             src={imgs[index] || "/favicon.png"}
             alt={deal.title}
@@ -395,7 +395,7 @@ function Card({
   return (
     <article className="hunt-card">
       <div className="hunt-card-photo">
-        <Media deal={deal} />
+        <Media deal={deal} scope={scope} />
         <span className="hunt-rank">{pick ? "✦" : `#${deal.rank}`}</span>
         <Save deal={deal} onChange={onChange} />
         {tag && !pick && <span className="hunt-badge">{tag}</span>}
@@ -410,12 +410,9 @@ function Card({
         </div>
         {deal.price_eur != null && <div className="hunt-price">
           {money(deal.price_eur)}
-          {deal.sqm && deal.price_eur != null && (
-            <small>{money(Math.round(deal.price_eur / deal.sqm))}/m²</small>
-          )}
         </div>}
         <h2>
-          <Link to={`/deal/${deal.slug}`}>{deal.title}</Link>
+          <Link to={`/deal/${deal.slug}${scope === "all" ? "?tab=all" : ""}`}>{deal.title}</Link>
         </h2>
         <p className="hunt-metrics">
           {deal.location_name}
@@ -439,7 +436,7 @@ function Card({
         <Vote deal={deal} scope={scope} onChange={onChange} />
         <div className="hunt-card-bottom">
           <Link
-            to={`/deal/${deal.slug}#discussion`}
+            to={`/deal/${deal.slug}${scope === "all" ? "?tab=all" : ""}#discussion`}
             aria-label={`${deal.comments || 0} comments`}
           >
             <MessageCircle size={14} />
@@ -696,6 +693,8 @@ function Home() {
   );
 }
 function Detail() {
+  const [detailParams] = useSearchParams();
+  const scope = detailParams.get("tab") === "all" ? "all" : "week";
   const { user } = useAuth();
   const { slug } = useParams();
   const { session, call, requireUser, setNotice } = useCommunity();
@@ -725,11 +724,11 @@ function Detail() {
   if (!d) return <Loading />;
   return (
     <div className="hunt-wrap hunt-detail">
-      <Link to="/" className="hunt-back">
-        ← Back to this week
+      <Link to={scope === "all" ? "/?tab=all" : "/"} className="hunt-back">
+        ← {scope === "all" ? "Back to all time" : "Back to this week"}
       </Link>
       <div className="hunt-detail-grid">
-        <Media deal={d} detail />
+        <Media deal={d} detail scope={scope} />
         <section>
           <span className="hunt-eyebrow">
             {d.country} · {d.category}
@@ -741,17 +740,16 @@ function Detail() {
             {d.sqm ? ` · ${d.sqm} m²` : ""}
             {d.bedrooms ? ` · ${d.bedrooms} beds` : ""}
           </p>
-          {d.sqm && d.price_eur != null && <p>{money(Math.round(d.price_eur / d.sqm))} per m²</p>}
           <p>
             Found by{" "}
             <Link to={`/hunter/${d.hunter_handle}`}>@{d.hunter_handle}</Link>
             {d.is_editorial_pick ? " · ✦ RealHunt Pick" : ""}
           </p>
           {d.why_great && <blockquote>{d.why_great}</blockquote>}
-          <Vote
-            deal={{ ...d, week_net: d.week_up - d.week_down }}
-            onChange={load}
-          />
+          <div className="hunt-detail-score">
+            <span className="hunt-score-period">{scope === "all" ? "All-time points" : "This week's points"}</span>
+            <Vote deal={d} scope={scope} onChange={load} />
+          </div>
           <div className="hunt-detail-actions">
             {(d.has_source || safeUrl(d.source_url)) && (
               <OriginalListingLink
@@ -760,7 +758,7 @@ function Detail() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Original listing <ArrowUpRight size={17} />
+                View listing <ArrowUpRight size={17} />
               </OriginalListingLink>
             )}
             <Save deal={d} onChange={load} />
