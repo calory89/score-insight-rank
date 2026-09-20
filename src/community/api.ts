@@ -34,6 +34,7 @@ export type Deal = {
 export type Session = {
   token: string;
   admin: boolean;
+  pending_submissions?: number;
   hunter?: { handle: string; display_name: string; bio: string };
   votes: Record<string, number>;
   saved: string[];
