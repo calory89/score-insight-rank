@@ -19,6 +19,6 @@ jobs:
       - run: npx tsc -p tsconfig.app.json --noEmit
       - run: npx tsc -p tsconfig.node.json --noEmit
       - run: npm test
-      - run: node --test tests/auth-email.test.mjs
+      - run: node --test tests/auth-email.test.mjs tests/community-db.test.mjs
       - run: npm run build
       - run: node scripts/check-bundle.mjs
