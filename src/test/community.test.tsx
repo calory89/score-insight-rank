@@ -183,15 +183,15 @@ test("Sumba is the third card, labelled sponsored and outside voting", async () 
 for (const path of ['/deal/stone-home']) {
   test(`original listings require an account on ${path}`, async () => {
     open(path);
-    const source = await screen.findByRole('button', {name:'Original listing'});
-    expect(screen.queryByRole('link',{name:'Original listing'})).toBeNull();
+    const source = await screen.findByRole('button', {name:'View listing'});
+    expect(screen.queryByRole('link',{name:'View listing'})).toBeNull();
     fireEvent.click(source);
     expect(await screen.findByRole('dialog')).toHaveAttribute('data-return-to','/deal/stone-home');
   });
   test(`signed-in visitors can open the original listing on ${path}`, async () => {
     mocks.user = {id:'signed-in'};
     open(path);
-    expect(await screen.findByRole('link',{name:'Original listing'})).toHaveAttribute('href',deal.source_url);
+    expect(await screen.findByRole('link',{name:'View listing'})).toHaveAttribute('href',deal.source_url);
   });
 }
 test('the full catalog stays available beyond the first page', async () => {
@@ -205,7 +205,7 @@ test('the full catalog stays available beyond the first page', async () => {
   expect(await screen.findByText('Showing 1 of 349 deals')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button',{name:'More discoveries'}));
   expect(await screen.findByText('Showing 2 of 349 deals · plus 1 sponsored listing')).toBeInTheDocument();
-  expect(screen.queryByRole('button',{name:'Original listing'})).toBeNull();
+  expect(screen.queryByRole('button',{name:'View listing'})).toBeNull();
 });
 
 test('the home removes the old copy and asks for registration before a link submission', async () => {
@@ -299,8 +299,30 @@ test('admin workspace previews source photos and retains explicit approval actio
   expect(within(card).getByRole('img')).toHaveAttribute('src',deal.image_urls[0]);
   expect(within(card).getByRole('link',{name:'example.org'})).toHaveAttribute('href',deal.source_url);
   expect(card.querySelector('details')).not.toHaveAttribute('open');
-  fireEvent.click(within(card).getByRole('button',{name:'Approve',exact:true}));
+  fireEvent.click(within(card).getByRole('button',{name:'Approve'}));
   await waitFor(()=>expect(mocks.rpc).toHaveBeenCalledWith('community_api',expect.objectContaining({p_action:'moderate',p_payload:{id:deal.id,decision:'approve'}})));
   fireEvent.change(screen.getByRole('searchbox',{name:'Search admin submissions'}),{target:{value:'unmatched'}});
   expect(screen.getByText('No pending submissions match your search.')).toBeInTheDocument();
+});
+
+test('detail keeps server points including launch allocation instead of recalculating ballots',async()=>{
+  const previous=mocks.rpc.getMockImplementation()!;
+  mocks.rpc.mockImplementation((name:string,p:any)=>p.p_action==='detail'?Promise.resolve({data:{deal:{...deal,week_up:1,week_net:371,life_up:5,life_net:375,launch_points:370,launch_week_points:370,sqm:78},comments:[]}}):previous(name,p));
+  open('/deal/stone-home');
+  expect(await screen.findByRole('button',{name:'Upvote deal'})).toHaveTextContent('371');
+  expect(screen.queryByText(/per m²|\/m²/)).toBeNull();
+});
+test('all-time card links retain the scoring period when opening detail',async()=>{
+  open('/?tab=all');
+  const title=within(await screen.findByRole('heading',{name:deal.title})).getByRole('link');
+  expect(title).toHaveAttribute('href','/deal/stone-home?tab=all');
+  fireEvent.click(title);
+  await screen.findByRole('link',{name:'← Back to all time'});
+  expect(screen.getByText('All-time points')).toBeInTheDocument();
+});
+test('all-time detail displays the cumulative points from the server',async()=>{
+  const previous=mocks.rpc.getMockImplementation()!;
+  mocks.rpc.mockImplementation((name:string,p:any)=>p.p_action==='detail'?Promise.resolve({data:{deal:{...deal,week_net:1,life_net:375,life_up:5,launch_points:370,launch_week_points:0},comments:[]}}):previous(name,p));
+  open('/deal/stone-home?tab=all');
+  expect(await screen.findByRole('button',{name:'Upvote deal'})).toHaveTextContent('375');
 });
