@@ -595,6 +595,30 @@ export type Database = {
           },
         ]
       }
+      email_delivery_events: {
+        Row: {
+          event_at: string
+          event_id: string
+          event_type: string
+          provider_email_id: string
+          received_at: string
+        }
+        Insert: {
+          event_at: string
+          event_id: string
+          event_type: string
+          provider_email_id: string
+          received_at?: string
+        }
+        Update: {
+          event_at?: string
+          event_id?: string
+          event_type?: string
+          provider_email_id?: string
+          received_at?: string
+        }
+        Relationships: []
+      }
       email_outbox: {
         Row: {
           attempts: number
@@ -640,6 +664,7 @@ export type Database = {
           error_message: string | null
           id: number
           message_id: string | null
+          provider_email_id: string | null
           recipient_email: string | null
           status: string | null
           template_name: string | null
@@ -649,6 +674,7 @@ export type Database = {
           error_message?: string | null
           id?: never
           message_id?: string | null
+          provider_email_id?: string | null
           recipient_email?: string | null
           status?: string | null
           template_name?: string | null
@@ -658,6 +684,7 @@ export type Database = {
           error_message?: string | null
           id?: never
           message_id?: string | null
+          provider_email_id?: string | null
           recipient_email?: string | null
           status?: string | null
           template_name?: string | null
@@ -939,6 +966,7 @@ export type Database = {
           saves_count: number
           shortcode: string | null
           source_account: string
+          source_checked_at: string | null
           sqm: number | null
           status: string | null
           verified: boolean
@@ -968,6 +996,7 @@ export type Database = {
           saves_count?: number
           shortcode?: string | null
           source_account: string
+          source_checked_at?: string | null
           sqm?: number | null
           status?: string | null
           verified?: boolean
@@ -997,6 +1026,7 @@ export type Database = {
           saves_count?: number
           shortcode?: string | null
           source_account?: string
+          source_checked_at?: string | null
           sqm?: number | null
           status?: string | null
           verified?: boolean
@@ -1009,6 +1039,10 @@ export type Database = {
           buyer_contact: string | null
           buyer_country: string | null
           buyer_fp: string
+          commission_pct_snapshot: number | null
+          contact_authorization_note: string | null
+          contact_authorized_at: string | null
+          contact_authorized_by: string | null
           contact_revealed_at: string | null
           created_at: string
           created_by: string | null
@@ -1018,6 +1052,9 @@ export type Database = {
           id: string
           next_action_at: string | null
           note: string | null
+          prior_contact_at: string | null
+          protection_checked_at: string | null
+          source_share_pct_snapshot: number | null
           status: string
           to_developer: string
           updated_at: string
@@ -1027,6 +1064,10 @@ export type Database = {
           buyer_contact?: string | null
           buyer_country?: string | null
           buyer_fp: string
+          commission_pct_snapshot?: number | null
+          contact_authorization_note?: string | null
+          contact_authorized_at?: string | null
+          contact_authorized_by?: string | null
           contact_revealed_at?: string | null
           created_at?: string
           created_by?: string | null
@@ -1036,6 +1077,9 @@ export type Database = {
           id?: string
           next_action_at?: string | null
           note?: string | null
+          prior_contact_at?: string | null
+          protection_checked_at?: string | null
+          source_share_pct_snapshot?: number | null
           status?: string
           to_developer: string
           updated_at?: string
@@ -1045,6 +1089,10 @@ export type Database = {
           buyer_contact?: string | null
           buyer_country?: string | null
           buyer_fp?: string
+          commission_pct_snapshot?: number | null
+          contact_authorization_note?: string | null
+          contact_authorized_at?: string | null
+          contact_authorized_by?: string | null
           contact_revealed_at?: string | null
           created_at?: string
           created_by?: string | null
@@ -1054,6 +1102,9 @@ export type Database = {
           id?: string
           next_action_at?: string | null
           note?: string | null
+          prior_contact_at?: string | null
+          protection_checked_at?: string | null
+          source_share_pct_snapshot?: number | null
           status?: string
           to_developer?: string
           updated_at?: string
@@ -1215,6 +1266,48 @@ export type Database = {
         }
         Relationships: []
       }
+      network_audit: {
+        Row: {
+          action: string
+          actor: string | null
+          after_values: Json
+          before_values: Json
+          created_at: string
+          entity: string
+          entity_id: string
+          fields: string[]
+          id: number
+          next_status: string | null
+          previous_status: string | null
+        }
+        Insert: {
+          action: string
+          actor?: string | null
+          after_values?: Json
+          before_values?: Json
+          created_at?: string
+          entity: string
+          entity_id: string
+          fields?: string[]
+          id?: never
+          next_status?: string | null
+          previous_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor?: string | null
+          after_values?: Json
+          before_values?: Json
+          created_at?: string
+          entity?: string
+          entity_id?: string
+          fields?: string[]
+          id?: never
+          next_status?: string | null
+          previous_status?: string | null
+        }
+        Relationships: []
+      }
       network_deals: {
         Row: {
           buyer_fp: string | null
@@ -1330,6 +1423,7 @@ export type Database = {
           price_from: number | null
           project_name: string | null
           project_url: string | null
+          receiving_enabled: boolean
           share_default: boolean
           source_share_pct: number
           status: string
@@ -1357,6 +1451,7 @@ export type Database = {
           price_from?: number | null
           project_name?: string | null
           project_url?: string | null
+          receiving_enabled?: boolean
           share_default?: boolean
           source_share_pct?: number
           status?: string
@@ -1384,6 +1479,7 @@ export type Database = {
           price_from?: number | null
           project_name?: string | null
           project_url?: string | null
+          receiving_enabled?: boolean
           share_default?: boolean
           source_share_pct?: number
           status?: string
@@ -1392,6 +1488,89 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      network_sharing_events: {
+        Row: {
+          actor: string | null
+          created_at: string
+          developer_id: string
+          fp: string
+          id: number
+          shared: boolean
+        }
+        Insert: {
+          actor?: string | null
+          created_at?: string
+          developer_id: string
+          fp: string
+          id?: never
+          shared: boolean
+        }
+        Update: {
+          actor?: string | null
+          created_at?: string
+          developer_id?: string
+          fp?: string
+          id?: never
+          shared?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "network_sharing_events_developer_id_fkey"
+            columns: ["developer_id"]
+            isOneToOne: false
+            referencedRelation: "network_developers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      network_tasks: {
+        Row: {
+          created_at: string
+          developer_id: string
+          done: boolean
+          due_on: string
+          id: string
+          introduction_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          developer_id: string
+          done?: boolean
+          due_on: string
+          id?: string
+          introduction_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          developer_id?: string
+          done?: boolean
+          due_on?: string
+          id?: string
+          introduction_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "network_tasks_developer_id_fkey"
+            columns: ["developer_id"]
+            isOneToOne: false
+            referencedRelation: "network_developers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "network_tasks_introduction_id_fkey"
+            columns: ["introduction_id"]
+            isOneToOne: false
+            referencedRelation: "introductions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       newsletter_subscribers: {
         Row: {
@@ -2171,6 +2350,42 @@ export type Database = {
         }
         Relationships: []
       }
+      rh_telemetry_events: {
+        Row: {
+          created_at: string
+          event: string
+          event_id: string
+          find_shortcode: string | null
+          id: number
+          meta: Json | null
+          path: string | null
+          sid: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event: string
+          event_id: string
+          find_shortcode?: string | null
+          id?: never
+          meta?: Json | null
+          path?: string | null
+          sid: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event?: string
+          event_id?: string
+          find_shortcode?: string | null
+          id?: never
+          meta?: Json | null
+          path?: string | null
+          sid?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       saved_searches: {
         Row: {
           agent_id: string
@@ -2655,16 +2870,47 @@ export type Database = {
       }
     }
     Functions: {
+      admin_approve_submission: {
+        Args: { p_approve: boolean; p_id: string }
+        Returns: undefined
+      }
+      admin_candidates_page: {
+        Args: { p_limit?: number; p_offset?: number; p_query?: string }
+        Returns: Json
+      }
+      admin_contacts_page: {
+        Args: { p_limit?: number; p_offset?: number; p_query?: string }
+        Returns: Json
+      }
       admin_experiments: {
         Args: { p_days?: number; p_exclude_tz?: string[] }
+        Returns: Json
+      }
+      admin_intro_preview: {
+        Args: { p_fp: string; p_from: string; p_to: string }
         Returns: Json
       }
       admin_introduce: {
         Args: { p_fp: string; p_from: string; p_note: string; p_to: string }
         Returns: Json
       }
+      admin_introduce_checked: {
+        Args: {
+          p_expected: Json
+          p_fp: string
+          p_from: string
+          p_note: string
+          p_to: string
+        }
+        Returns: Json
+      }
       admin_mark_share_paid: { Args: { p_id: string }; Returns: Json }
       admin_network: { Args: never; Returns: Json }
+      admin_platform_health: { Args: never; Returns: Json }
+      admin_rh_candidates: {
+        Args: { p_limit?: number; p_offset?: number; p_query?: string }
+        Returns: Json
+      }
       admin_set_deal: {
         Args: { p_id: string; p_notes: string; p_status: string }
         Returns: Json
@@ -2682,16 +2928,68 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_supply_intro_contact: {
+        Args: {
+          p_budget: number
+          p_contact: string
+          p_country: string
+          p_id: string
+          p_permission_note: string
+        }
+        Returns: Json
+      }
+      admin_update_intro: {
+        Args: { p_id: string; p_status: string }
+        Returns: Json
+      }
+      admin_web_vitals: { Args: never; Returns: Json }
+      dev_authorize_intro_contact: {
+        Args: {
+          p_authorized: boolean
+          p_email: string
+          p_intro: string
+          p_name: string
+          p_phone: string
+        }
+        Returns: Json
+      }
+      dev_buyer_history: { Args: { p_id: string }; Returns: Json }
       dev_check_fp: { Args: { p_fp: string }; Returns: Json }
+      dev_contacts_page: {
+        Args: {
+          p_limit?: number
+          p_mode?: string
+          p_offset?: number
+          p_query?: string
+        }
+        Returns: Json
+      }
+      dev_network_preferences: { Args: { p_receive: boolean }; Returns: Json }
       dev_overview: { Args: never; Returns: Json }
       dev_report_sale: {
         Args: { p_intro: string; p_note: string; p_price: number }
+        Returns: Json
+      }
+      dev_save_task: {
+        Args: {
+          p_done: boolean
+          p_due: string
+          p_id: string
+          p_intro: string
+          p_title: string
+        }
+        Returns: Json
+      }
+      dev_set_contact_sharing: {
+        Args: { p_ids: number[]; p_shared: boolean }
         Returns: Json
       }
       dev_sign_agreement: {
         Args: { p_name: string; p_ua: string; p_version: string }
         Returns: Json
       }
+      dev_tasks: { Args: never; Returns: Json }
+      dev_update_intro: { Args: { p_id: string; p_patch: Json }; Returns: Json }
       dev_upload_fps: { Args: { p_rows: Json }; Returns: Json }
       find_card_html: {
         Args: { f: Database["public"]["Tables"]["ig_finds"]["Row"] }
@@ -2769,6 +3067,16 @@ export type Database = {
           shortcode: string
         }[]
       }
+      record_email_delivery: {
+        Args: {
+          p_at: string
+          p_event_id: string
+          p_provider_id: string
+          p_type: string
+        }
+        Returns: undefined
+      }
+      record_telemetry: { Args: { p_rows: Json }; Returns: undefined }
       rh_confirm_email_html: { Args: { p_link: string }; Returns: string }
       rh_fp: { Args: { p: string }; Returns: string }
       rh_live_stats: {
@@ -2779,6 +3087,7 @@ export type Database = {
         }[]
       }
       rh_top10_html: { Args: never; Returns: string }
+      rh_urlencode: { Args: { value: string }; Returns: string }
       send_brevo: {
         Args: { p_html: string; p_subject: string; p_to: string }
         Returns: undefined
