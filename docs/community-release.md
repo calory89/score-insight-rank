@@ -34,3 +34,8 @@ The database tests use local PostgreSQL through PGlite with pgcrypto and synthet
 
 ### Brand and launch placement
 Use the existing RealHunt roof logo, Fraunces wordmark and shared brand palette. With equal net scores and upvote counts, Umbria (€35,000) and Acquappesa (€39,000) lead in that order; genuine votes take precedence. The same tie-break applies to closed weekly winners. An explicitly labelled Eco Beach City sponsored card occupies the third unfiltered feed position, outside vote ranks and counters. No votes are seeded for promotion.
+
+### Complete catalog and original-listing registration
+Import every eligible visible catalog listing, including listings without a published price (displayed as “Price on request”). Keep the complete feed accessible in pages of 24 with an explicit showing/total counter. Sponsored placement remains separate from catalog totals.
+
+Original-listing actions require an authenticated account across the community cards, community details, Lake Como and legacy deal cards. Anonymous actions show free registration with existing-account sign-in; they do not render outbound anchors. Community rankings, Picks and detail responses omit source URLs for anonymous requests, including details outside the first 100 rankings. Refresh source availability after sign-in/sign-out. Existing find-detail pages retain their account gate.
