@@ -24,6 +24,8 @@ const STATIC: Entry[] = [
   { loc: `${SITE}/method`,    changefreq: "monthly", priority: "0.5" },
   { loc: `${SITE}/pricing`,   changefreq: "monthly", priority: "0.5" },
   { loc: `${SITE}/for-agents`,changefreq: "monthly", priority: "0.4" },
+  { loc: `${SITE}/homescoring`, changefreq: "weekly",  priority: "0.5" },
+  { loc: `${SITE}/apply`,       changefreq: "monthly", priority: "0.4" },
   { loc: `${SITE}/legal/privacy`, changefreq: "yearly", priority: "0.2" },
   { loc: `${SITE}/legal/terms`,   changefreq: "yearly", priority: "0.2" },
 ];

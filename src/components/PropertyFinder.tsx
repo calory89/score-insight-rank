@@ -234,7 +234,7 @@ const PropertyFinder = () => {
                       <div className="md:w-72 h-48 md:h-auto">
                         <img
                           src={ECO_BEACH_CITY.image_url}
-                          alt="Eco Beach City"
+                          alt="Eco Beach City development — top pick analyzed property"
                           className="w-full h-full object-cover"
                         />
                       </div>

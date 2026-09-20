@@ -33,7 +33,8 @@ const ForAgents = () => {
         </div>
 
         {/* Mock preview */}
-        <div className="mt-14 grid md:grid-cols-2 gap-8 items-start">
+        <h2 className="mt-14 font-display text-[28px] md:text-[34px] text-ink">What your client receives</h2>
+        <div className="mt-6 grid md:grid-cols-2 gap-8 items-start">
           <div className="rounded-2xl border border-hairline bg-surface p-6 md:p-8 shadow-[0_4px_40px_-20px_rgba(15,17,21,0.25)]">
             <div className="flex items-center justify-between mb-5">
               <div className="font-display text-[20px]">Carla Mendes</div>
@@ -69,7 +70,8 @@ const ForAgents = () => {
         </div>
 
         {/* Pricing teaser */}
-        <div className="mt-16 rounded-2xl border border-hairline bg-[#FBF8F1] p-8 md:p-10">
+        <h2 className="mt-16 font-display text-[28px] md:text-[34px] text-ink">Plans for agents</h2>
+        <div className="mt-6 rounded-2xl border border-hairline bg-[#FBF8F1] p-8 md:p-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
             <div>
               <div className="font-display text-[26px] text-ink">Agent Pro — €39/month</div>
