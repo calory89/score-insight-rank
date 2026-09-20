@@ -112,7 +112,7 @@ RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp A
 DECLARE w community_weeks; result jsonb;
 BEGIN
  w:=community_rollover();
- WITH a AS(SELECT deal_id,count(*) FILTER(WHERE value=1)::int up,count(*) FILTER(WHERE value=-1)::int down FROM community_votes GROUP BY deal_id),
+ WITH a AS(SELECT deal_id,count(*) FILTER(WHERE value=1)::int up,count(*) FILTER(WHERE value=-1)::int down FROM community_week_votes GROUP BY deal_id),
  b AS(SELECT deal_id,count(*) FILTER(WHERE value=1)::int up,count(*) FILTER(WHERE value=-1)::int down,
  count(*) FILTER(WHERE created_at>now()-interval '24 hours' AND value=1)::int recent
  FROM community_week_votes WHERE week_id=w.id GROUP BY deal_id),
@@ -127,8 +127,8 @@ BEGIN
  filtered AS(SELECT * FROM ranked WHERE (p_country IS NULL OR country=p_country) AND (p_category IS NULL OR category=p_category)),
  page AS(SELECT * FROM filtered ORDER BY rank LIMIT least(greatest(p_limit,1),100) OFFSET greatest(p_offset,0))
  SELECT jsonb_build_object('week',to_jsonb(w),'scope',p_scope,'total',(SELECT count(*) FROM filtered),
- 'global_deals',(SELECT count(*) FROM c),'global_votes',(SELECT coalesce(sum(life_up+life_down),0) FROM c),
- 'weekly_votes',(SELECT coalesce(sum(week_up+week_down),0) FROM c),
+ 'global_deals',(SELECT count(*) FROM c),'global_votes',(SELECT coalesce(sum(life_up),0) FROM c),
+ 'weekly_votes',(SELECT coalesce(sum(week_up),0) FROM c),
  'countries',(SELECT coalesce(jsonb_agg(x.country ORDER BY x.country),'[]') FROM (SELECT DISTINCT country FROM c WHERE country IS NOT NULL) x),
  'picks',coalesce((SELECT jsonb_agg(to_jsonb(p)) FROM (SELECT * FROM ranked WHERE is_editorial_pick ORDER BY approved_at DESC LIMIT 3) p),'[]'),
  'rows',coalesce((SELECT jsonb_agg(to_jsonb(page) ORDER BY rank) FROM page),'[]')) INTO result;
@@ -184,7 +184,7 @@ BEGIN
   SELECT x INTO result FROM jsonb_array_elements(result->'rows') x WHERE x->>'id'=d.id::text;
   IF result IS NULL THEN
    result:=to_jsonb(d)-'submitted_by'-'reject_reason'-'source_key';
-   result:=result||jsonb_build_object('week_up',(SELECT count(*) FROM community_week_votes WHERE deal_id=d.id AND week_id=w.id AND value=1),'week_down',(SELECT count(*) FROM community_week_votes WHERE deal_id=d.id AND week_id=w.id AND value=-1),'life_up',(SELECT count(*) FROM community_votes WHERE deal_id=d.id AND value=1),'life_down',(SELECT count(*) FROM community_votes WHERE deal_id=d.id AND value=-1),
+   result:=result||jsonb_build_object('week_up',(SELECT count(*) FROM community_week_votes WHERE deal_id=d.id AND week_id=w.id AND value=1),'week_down',(SELECT count(*) FROM community_week_votes WHERE deal_id=d.id AND week_id=w.id AND value=-1),'life_up',(SELECT count(*) FROM community_week_votes WHERE deal_id=d.id AND value=1),'life_down',(SELECT count(*) FROM community_week_votes WHERE deal_id=d.id AND value=-1),
     'views',(SELECT count(*) FROM community_views WHERE deal_id=d.id),'saves',(SELECT count(*) FROM community_saves WHERE deal_id=d.id),'comments',(SELECT count(*) FROM community_comments WHERE deal_id=d.id AND status='published'));
    result:=result||jsonb_build_object('week_net',(result->>'week_up')::int,'life_net',(result->>'life_up')::int);
   END IF;
@@ -226,7 +226,7 @@ BEGIN
   UPDATE community_deals SET hunter_handle=coalesce(p_payload->>'handle',h.handle) WHERE submitted_by=uid;
   RETURN jsonb_build_object('ok',true,'hunter',(SELECT to_jsonb(ch)-'user_id' FROM community_hunters ch WHERE user_id=uid));
  ELSIF p_action='dashboard' THEN
-  RETURN jsonb_build_object('deals',coalesce((SELECT jsonb_agg(to_jsonb(cd)||jsonb_build_object('week_score',(SELECT count(*) FROM community_week_votes WHERE deal_id=cd.id AND week_id=w.id AND value=1),'lifetime_votes',(SELECT count(*) FROM community_votes WHERE deal_id=cd.id),'views',(SELECT count(*) FROM community_views WHERE deal_id=cd.id)) ORDER BY created_at DESC) FROM community_deals cd WHERE submitted_by=uid),'[]'),
+  RETURN jsonb_build_object('deals',coalesce((SELECT jsonb_agg(to_jsonb(cd)||jsonb_build_object('week_score',(SELECT count(*) FROM community_week_votes WHERE deal_id=cd.id AND week_id=w.id AND value=1),'lifetime_votes',(SELECT count(*) FROM community_week_votes WHERE deal_id=cd.id AND value=1),'views',(SELECT count(*) FROM community_views WHERE deal_id=cd.id)) ORDER BY created_at DESC) FROM community_deals cd WHERE submitted_by=uid),'[]'),
    'saved',coalesce((SELECT jsonb_agg(jsonb_build_object('slug',cd.slug,'title',cd.title,'price_eur',cd.price_eur,'image_urls',cd.image_urls)) FROM community_deals cd JOIN community_saves cs ON cs.deal_id=cd.id WHERE cs.user_id=uid AND cd.status='approved'),'[]'));
  ELSIF p_action='quick_submit' THEN
   IF length(btrim(coalesce(p_payload->>'website','')))>0 THEN RETURN jsonb_build_object('error','Unable to accept this submission'); END IF;
