@@ -288,9 +288,10 @@ function Vote({
   const [shared, setShared] = useState(false);
   const selected = session?.votes?.[deal.id];
   const d = preview || deal;
+  const demo = !!deal.demo;
   useEffect(() => setPreview(null), [deal.week_up, deal.week_down]);
   async function vote(value: number) {
-    if (busy) return;
+    if (busy || demo) return;
     if (selected === value) {
       setNotice("You already voted on this deal ✓");
       return;
@@ -320,7 +321,7 @@ function Vote({
     <div className="hunt-vote-wrap">
       <div className="hunt-vote" aria-label="Vote on this deal">
         <button
-          disabled={busy || !session}
+          disabled={demo || busy || !session}
           aria-label="Upvote deal"
           aria-pressed={selected === 1}
           onClick={() => vote(1)}
@@ -333,10 +334,10 @@ function Vote({
             {total > 0 ? "+" : ""}
             {total || 0}
           </strong>
-          <small>{scope === "all" ? "all time" : "this week"}</small>
+          <small>{demo ? "Demo · fictional votes" : scope === "all" ? "all time" : "this week"}</small>
         </div>
         <button
-          disabled={busy || !session}
+          disabled={demo || busy || !session}
           aria-label="Downvote deal"
           aria-pressed={selected === -1}
           onClick={() => vote(-1)}
@@ -564,6 +565,7 @@ function Home() {
   const { user } = useAuth();
   const [params, setParams] = useSearchParams();
   const scope = params.get("tab") === "all" ? "all" : "week";
+  const demo = params.get("demo") === "1";
   const country = params.get("country") || "";
   const category = params.get("category") || "";
   const [feed, setFeed] = useState<Feed | null>(null);
@@ -600,8 +602,15 @@ function Home() {
     val ? next.set(key, val) : next.delete(key);
     setParams(next);
   };
+  const demoPriority = (d: Deal) => d.slug === "Dc4gpg6slIT" ? 0 : d.slug === "acquappesa-sea-view-39000" ? 1 : 2;
+  const displayedRows = demo ? [...(feed?.rows || [])].sort((a, b) => demoPriority(a) - demoPriority(b)).map((d, i) => {
+    const up = Math.max(1, Math.round(370 * Math.pow(.986, i)));
+    const down = Math.floor(up * .04);
+    return { ...d, demo: true, rank: i + 1, week_up: up, week_down: down, week_net: up - down, life_up: up, life_down: down, life_net: up - down, votes_24h: 0 };
+  }) : feed?.rows;
   return (
     <div className="hunt-wrap hunt-home">
+      {demo && <div className="hunt-demo-notice" role="status">Demo · Fictional votes. Real voting is disabled in this preview. <button onClick={() => update("demo", "")}>Show real ranking →</button></div>}
       <section className="hunt-hero">
         <h1>
           Property worth finding.
@@ -704,7 +713,7 @@ function Home() {
       ) : (
         <>
           <div className="hunt-grid">
-            {feed?.rows.map((d, index) => (
+            {displayedRows?.map((d, index) => (
               <Fragment key={d.id}>
                 <Card deal={d} scope={scope} onChange={() => load()} />
                 {index === 1 && !country && !category && <SponsoredCard />}
