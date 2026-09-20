@@ -7,12 +7,34 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Blocks loopback, link-local, and private network ranges so a supplied URL
+// cannot be used to reach internal services or cloud metadata endpoints.
+const BLOCKED_HOST = /^(localhost$|127\.|0\.0\.0\.0$|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1\]?$|\[?f[cd][0-9a-f]{2}:|.*\.local$|.*\.internal$)/i;
+
+function isFetchableUrl(parsed: URL): boolean {
+  if (parsed.protocol !== "https:") return false;
+  return !BLOCKED_HOST.test(parsed.hostname);
+}
+
 async function fetchWebsiteContent(url: string): Promise<string> {
   try {
     let formattedUrl = url.trim();
     if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
       formattedUrl = `https://${formattedUrl}`;
     }
+    // Force HTTPS so http:// targets cannot be used to probe internal services
+    let parsed: URL;
+    try {
+      parsed = new URL(formattedUrl);
+    } catch {
+      return "[Blocked: invalid URL]";
+    }
+    if (parsed.protocol === "http:") {
+      parsed.protocol = "https:";
+      formattedUrl = parsed.toString();
+    }
+    if (!isFetchableUrl(parsed)) return "[Blocked: URL not allowed]";
+
     const res = await fetch(formattedUrl, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; RealHuntBot/1.0)" },
       redirect: "follow",
