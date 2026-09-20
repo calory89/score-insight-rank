@@ -25,7 +25,7 @@ const AnalysisHeader = ({ data: d, forensic: f, globalScore, confidenceLevel }: 
       {/* Property Image */}
       {hasImage && (
         <div className="h-48 md:h-64 w-full overflow-hidden relative">
-          <img src={imgUrl} alt={d.address || "Property"} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+          <img src={imgUrl} alt={d.address ? `Property at ${d.address}` : `Analyzed property in ${d.city || d.country || "an international market"}`} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
           <div className="absolute top-4 right-4">
             <div className="h-16 w-16 rounded-2xl bg-card/90 backdrop-blur-sm border border-border flex flex-col items-center justify-center shadow-lg">
               <span className={`text-2xl font-bold font-mono leading-none ${scoreColor(globalScore)}`}>{globalScore}</span>

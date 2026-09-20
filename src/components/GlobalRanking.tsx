@@ -455,6 +455,7 @@ const GlobalRanking = () => {
             />
           </div>
           <select
+            aria-label="Select country"
             value={selectedCountry}
             onChange={(e) => setSelectedCountry(e.target.value)}
             className="rounded-full text-[13px] px-4 py-2 bg-surface text-ink border border-hairline focus:outline-none"

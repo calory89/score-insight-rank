@@ -15,6 +15,17 @@ const ProjectDetail = () => {
   useDocumentMeta({
     title: p ? `${p.name} — RealHunt Score` : "Project — RealHunt",
     description: p?.description || "Independent off-plan property scoring.",
+    ogType: "product",
+    jsonLd: p
+      ? {
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: p.name,
+          ...(p.description ? { description: p.description } : {}),
+          ...(p.developer?.name ? { brand: { "@type": "Brand", name: p.developer.name } } : {}),
+          url: `https://realhunt.co/projects/${p.slug || slug}`,
+        }
+      : null,
   });
 
   useEffect(() => {
