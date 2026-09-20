@@ -1,4 +1,5 @@
 import {
+  Fragment,
   createContext,
   useContext,
   useEffect,
@@ -14,6 +15,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { EBC } from "@/lib/rh";
 import { listingVideo } from "@/lib/listing-media";
 import AuthModal from "@/components/realhunt/AuthModal";
 import {
@@ -127,7 +129,7 @@ function Shell({ children }: { children: ReactNode }) {
       <div className="hunt">
         <header className="hunt-header">
           <Link to="/" className="hunt-brand">
-            <span>r</span>RealHunt<span className="hunt-beta">COMMUNITY</span>
+            <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#141414" /><path d="M14 35 L32 17 L50 35" fill="none" stroke="#FFFFFF" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" /><circle cx="32" cy="43.5" r="6.5" fill="#0EA5E9" /></svg>RealHunt
           </Link>
           <nav aria-label="Main navigation">
             <Link to="/browse" className="hunt-browse">
@@ -483,6 +485,26 @@ function Card({
     </article>
   );
 }
+function SponsoredCard() {
+  return (
+    <article className="hunt-card hunt-sponsored" aria-label="Sponsored: Eco Beach City, Sumba">
+      <div className="hunt-card-photo">
+        <Link to="/ecobeachcity" className="hunt-media">
+          <img src={EBC.image_urls![0]} alt="Eco Beach City cabin in Sumba" loading="lazy" />
+        </Link>
+        <span className="hunt-sponsored-label">Sponsored</span>
+      </div>
+      <div className="hunt-card-body">
+        <div className="hunt-card-location">Indonesia <span>· Beach</span></div>
+        <div className="hunt-price">{money(EBC.price_eur!)}</div>
+        <h2><Link to="/ecobeachcity">Beachfront cabin + land in Sumba</Link></h2>
+        <p className="hunt-metrics">Mamboro, Sumba · Eco Beach City</p>
+        <p>Cabin plus second-line plot. Renewable 80-year lease. Instalments available.</p>
+        <Link to="/ecobeachcity" className="hunt-primary">Explore Eco Beach City <ArrowUpRight size={16} /></Link>
+      </div>
+    </article>
+  );
+}
 function Home() {
   const [params, setParams] = useSearchParams();
   const scope = params.get("tab") === "all" ? "all" : "week";
@@ -639,8 +661,11 @@ function Home() {
       ) : (
         <>
           <div className="hunt-grid">
-            {feed?.rows.map((d) => (
-              <Card key={d.id} deal={d} scope={scope} onChange={() => load()} />
+            {feed?.rows.map((d, index) => (
+              <Fragment key={d.id}>
+                <Card deal={d} scope={scope} onChange={() => load()} />
+                {index === 1 && !country && !category && <SponsoredCard />}
+              </Fragment>
             ))}
           </div>
           {feed?.rows.length === 0 && !error && (
