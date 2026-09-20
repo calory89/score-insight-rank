@@ -106,7 +106,7 @@ const Admin = () => {
   }, [user, authLoading, navigate]);
 
   if (authLoading || !user) return null;
-  if (user.email !== ADMIN_EMAIL) return null;
+  if (isAdmin !== true) return null;
 
   const filteredUsers = users.filter(u =>
     u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
