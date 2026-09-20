@@ -31,3 +31,6 @@ Use the existing GitHub integration to synchronize tested source to Lovable, the
 Run `npm ci --legacy-peer-deps`, both TypeScript checks from the quality workflow, `npm test`, `node --test tests/auth-email.test.mjs tests/community-db.test.mjs`, `npm run build`, and `node scripts/check-bundle.mjs`.
 
 The database tests use local PostgreSQL through PGlite with pgcrypto and synthetic fixture data; they do not connect to production. They cover deduplication, reversal, account merge, approval boundaries, attribution, authenticated saves/comments, views, moderation, raw-table permissions and immutable weekly snapshots. UI tests cover vote success/failure, save login, filters and submission draft retention. Production authentication and publication still require live smoke testing after deployment.
+
+### Brand and launch placement
+Use the existing RealHunt roof logo, Fraunces wordmark and shared brand palette. With equal net scores and upvote counts, Umbria (€35,000) and Acquappesa (€39,000) lead in that order; genuine votes take precedence. The same tie-break applies to closed weekly winners. An explicitly labelled Eco Beach City sponsored card occupies the third unfiltered feed position, outside vote ranks and counters. No votes are seeded for promotion.
