@@ -7,17 +7,57 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Blocks loopback, link-local, and private network ranges so a supplied URL
+// cannot be used to reach internal services or cloud metadata endpoints.
+const BLOCKED_HOST = /^(localhost$|127\.|0\.0\.0\.0$|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1\]?$|\[?f[cd][0-9a-f]{2}:|.*\.local$|.*\.internal$)/i;
+
+function isFetchableUrl(parsed: URL): boolean {
+  if (parsed.protocol !== "https:") return false;
+  return !BLOCKED_HOST.test(parsed.hostname);
+}
+
 async function fetchWebsiteContent(url: string): Promise<string> {
   try {
     let formattedUrl = url.trim();
     if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
       formattedUrl = `https://${formattedUrl}`;
     }
-    const res = await fetch(formattedUrl, {
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; RealHuntBot/1.0)" },
-      redirect: "follow",
-      signal: AbortSignal.timeout(8000),
-    });
+    // Force HTTPS so http:// targets cannot be used to probe internal services
+    let parsed: URL;
+    try {
+      parsed = new URL(formattedUrl);
+    } catch {
+      return "[Blocked: invalid URL]";
+    }
+    if (parsed.protocol === "http:") {
+      parsed.protocol = "https:";
+      formattedUrl = parsed.toString();
+    }
+    if (!isFetchableUrl(parsed)) return "[Blocked: URL not allowed]";
+
+    // Follow redirects manually so each hop is validated against the blocklist too
+    let res: Response | null = null;
+    let current = formattedUrl;
+    for (let hop = 0; hop < 4; hop++) {
+      res = await fetch(current, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; RealHuntBot/1.0)" },
+        redirect: "manual",
+        signal: AbortSignal.timeout(8000),
+      });
+      if (res.status < 300 || res.status >= 400) break;
+      const location = res.headers.get("location");
+      if (!location) break;
+      let next: URL;
+      try {
+        next = new URL(location, current);
+      } catch {
+        return "[Blocked: invalid redirect]";
+      }
+      if (!isFetchableUrl(next)) return "[Blocked: URL not allowed]";
+      current = next.toString();
+      res = null;
+    }
+    if (!res) return "[Could not fetch: too many redirects]";
     if (!res.ok) return `[Could not fetch: HTTP ${res.status}]`;
     const html = await res.text();
 

@@ -3093,6 +3093,13 @@ export type Database = {
         Returns: undefined
       }
       send_weekly_digest: { Args: never; Returns: number }
+      vote_counts: {
+        Args: never
+        Returns: {
+          analysis_id: string
+          votes: number
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"

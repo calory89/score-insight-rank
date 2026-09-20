@@ -3,6 +3,7 @@
 // (3) generate a calibrated score across the 5 RealHunt dimensions, and (4) persist it.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireAdmin, authErrorResponse } from "../_shared/require-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,9 +24,19 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // Writing into the public project catalog is an admin-only operation
+    const auth = await requireAdmin(req);
+    if ("failure" in auth) return authErrorResponse(auth.failure, corsHeaders);
+
     const { query } = await req.json();
     if (!query || typeof query !== "string") {
       return new Response(JSON.stringify({ error: "Missing query" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (query.length > 500) {
+      return new Response(JSON.stringify({ error: "Query too long (max 500 characters)" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

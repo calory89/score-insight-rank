@@ -537,6 +537,24 @@ serve(async (req) => {
       });
     }
 
+    // Server-side plan/credit enforcement — the UI modal is UX only
+    const UNLIMITED_PLANS = ["pro", "super_pro", "enterprise"];
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("plan, credits_used, credits_total")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (subscription && !UNLIMITED_PLANS.includes(subscription.plan)) {
+      if ((subscription.credits_used || 0) >= (subscription.credits_total || 0)) {
+        return new Response(JSON.stringify({
+          error: "Free analysis limit reached. Upgrade to Pro for unlimited analyses.",
+          code: "credits_exhausted",
+        }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     let { url, manual_content, manual_fields } = await req.json();
 
     // Input validation
@@ -1510,6 +1528,32 @@ serve(async (req) => {
           throw new Error("Failed to save analysis");
         }
         saved = inserted;
+
+        // Consume one credit server-side for each brand-new analysis
+        try {
+          const { data: sub } = await supabase
+            .from("subscriptions")
+            .select("id, credits_used")
+            .eq("user_id", user.id)
+            .maybeSingle();
+          if (sub) {
+            await supabase
+              .from("subscriptions")
+              .update({ credits_used: (sub.credits_used || 0) + 1 })
+              .eq("id", sub.id);
+          } else {
+            await supabase.from("subscriptions").insert({
+              user_id: user.id,
+              plan: "free",
+              credits_total: 5,
+              credits_used: 1,
+              billing_period_start: new Date().toISOString(),
+              billing_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            });
+          }
+        } catch (creditErr) {
+          console.error("Credit accounting failed:", creditErr);
+        }
       }
     }
 

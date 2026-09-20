@@ -33,7 +33,6 @@ import { PageLoader } from "@/components/PageLoader";
 
 const AdminPanelFallback = () => <PageLoader variant="table" count={4} />;
 
-const ADMIN_EMAIL = "rrppspain@gmail.com";
 
 interface UserData {
   id: string;
@@ -67,16 +66,25 @@ const Admin = () => {
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [myAnalysesCount, setMyAnalysesCount] = useState(0);
+  // null = still checking. Authorisation is confirmed server-side via the role system.
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user || user.email !== ADMIN_EMAIL) {
+    if (!user) {
       navigate("/");
       return;
     }
 
     const fetchAdminData = async () => {
       try {
+        const { data: adminRole } = await supabase.rpc("is_admin", { _user_id: user.id });
+        if (!adminRole) {
+          setIsAdmin(false);
+          navigate("/");
+          return;
+        }
+        setIsAdmin(true);
         const [adminResult, countResult] = await Promise.all([
           supabase.functions.invoke("admin-data"),
           supabase.from("analyses").select("id", { count: "exact", head: true }).eq("user_id", user.id),
@@ -97,7 +105,7 @@ const Admin = () => {
   }, [user, authLoading, navigate]);
 
   if (authLoading || !user) return null;
-  if (user.email !== ADMIN_EMAIL) return null;
+  if (isAdmin !== true) return null;
 
   const filteredUsers = users.filter(u =>
     u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -234,7 +242,7 @@ const Admin = () => {
                               {u.detected_country && <><MapPin className="h-3 w-3 ml-1" /> {u.detected_country}</>}
                             </p>
                             <p className="sm:hidden text-[10px] text-muted-foreground mt-0.5">
-                              {new Date(u.created_at).toLocaleDateString()} · <span className={`font-medium uppercase ${u.email === ADMIN_EMAIL || u.plan !== "free" ? "text-primary" : ""}`}>{u.email === ADMIN_EMAIL ? "pro" : u.plan}</span>
+                              {new Date(u.created_at).toLocaleDateString()} · <span className={`font-medium uppercase ${u.plan !== "free" ? "text-primary" : ""}`}>{u.plan}</span>
                             </p>
                           </div>
                           <span className="text-xs text-muted-foreground hidden sm:block">{new Date(u.created_at).toLocaleDateString()}</span>
@@ -243,9 +251,8 @@ const Admin = () => {
                           </span>
                           <span className="text-xs font-mono text-foreground">{u.analyses_count}</span>
                           <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full w-fit hidden sm:block ${
-                            u.email === ADMIN_EMAIL ? "bg-primary/10 text-primary" :
                             u.plan === "free" ? "bg-secondary text-muted-foreground" : "bg-primary/10 text-primary"
-                          }`}>{u.email === ADMIN_EMAIL ? "pro" : u.plan}</span>
+                          }`}>{u.plan}</span>
                           <div className="flex justify-end">
                             {expandedUser === u.id ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                           </div>
