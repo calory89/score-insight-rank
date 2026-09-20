@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 export type Deal = {
+  demo?: boolean;
   id: string;
   slug: string;
   title: string;
