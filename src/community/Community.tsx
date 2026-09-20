@@ -35,7 +35,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
-  SlidersHorizontal,
 } from "lucide-react";
 import {
   api,
@@ -531,12 +530,11 @@ function Home() {
   const [params, setParams] = useSearchParams();
   const scope = params.get("tab") === "all" ? "all" : "week";
   const demo = params.get("demo") === "1";
-  const country = params.get("country") || "";
-  const category = params.get("category") || "";
+  const country = "";
+  const category = "";
   const [feed, setFeed] = useState<Feed | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [filters, setFilters] = useState(false);
   const seq = useRef(0);
   async function load(more = false) {
     const n = ++seq.current;
@@ -564,12 +562,16 @@ function Home() {
   }, [scope, country, category, user?.id]);
   const update = (key: string, val: string) => {
     const next = new URLSearchParams(params);
+    next.delete("country");
+    next.delete("category");
     val ? next.set(key, val) : next.delete(key);
     setParams(next);
   };
+  const demoVotes = (i: number) => [370, 328, 124, 67][i] ?? Math.max(0, Math.round(28 * Math.pow(.79, i - 4)));
+  const demoTotal = Array.from({length: feed?.total || 0}, (_, i) => demoVotes(i)).reduce((a, b) => a + b, 0);
   const demoPriority = (d: Deal) => d.slug === "Dc4gpg6slIT" ? 0 : d.slug === "acquappesa-sea-view-39000" ? 1 : 2;
   const displayedRows = demo ? [...(feed?.rows || [])].sort((a, b) => demoPriority(a) - demoPriority(b)).map((d, i) => {
-    const up = [370, 328, 124, 67][i] ?? Math.max(0, Math.round(28 * Math.pow(.79, i - 4)));
+    const up = demoVotes(i);
     const down = 0;
     return { ...d, demo: true, rank: i + 1, week_up: up, week_down: down, week_net: up - down, life_up: up, life_down: down, life_net: up - down, votes_24h: 0 };
   }) : feed?.rows;
@@ -588,11 +590,11 @@ function Home() {
           </span>
           <i />
           <span>
-            <strong>{feed ? num(feed.weekly_votes) : "—"}</strong> this week
+            <strong>{feed ? num(demo ? demoTotal : feed.weekly_votes) : "—"}</strong> this week
           </span>
           <i />
           <span>
-            <strong>{feed ? num(feed.global_votes) : "—"}</strong> total votes
+            <strong>{feed ? num(demo ? demoTotal : feed.global_votes) : "—"}</strong> total votes
           </span>
         </div>
       </section>
@@ -603,13 +605,9 @@ function Home() {
             <span>↗</span>
           </h2>
           <p>
-            {feed?.week?.label?.replace("-", "–") || "Sep 21–28, 2026"} · UTC
+            {scope === "all" ? "All votes since launch" : `${feed?.week?.label?.replace("-", "–") || "Sep 21–28, 2026"} · UTC`}
           </p>
         </div>
-        <Link to="/winners" className="hunt-winners-link">
-          <Trophy size={16} />
-          Past winners
-        </Link>
       </div>
       <nav className="hunt-tabs" aria-label="Browse rankings">
         <button
@@ -624,54 +622,11 @@ function Home() {
         >
           All Time
         </button>
-        <button onClick={() => setFilters((v) => !v)} aria-expanded={filters}>
-          Countries <SlidersHorizontal size={13} />
-        </button>
-        <button onClick={() => setFilters((v) => !v)} aria-expanded={filters}>
-          Categories
-        </button>
         <Link to="/browse" className="hunt-secondary-search">
           <Search size={15} />
           Search listings
         </Link>
       </nav>
-      {(filters || country || category) && (
-        <div className="hunt-filters">
-          <label>
-            Country
-            <select
-              value={country}
-              onChange={(e) => update("country", e.target.value)}
-            >
-              <option value="">All countries</option>
-              {feed?.countries.map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Category
-            <select
-              value={category}
-              onChange={(e) => update("category", e.target.value)}
-            >
-              <option value="">All categories</option>
-              {categories.map((c) => (
-                <option key={c[0]} value={c[0]}>
-                  {c[1]}
-                </option>
-              ))}
-            </select>
-          </label>
-          {(country || category) && (
-            <button
-              onClick={() => setParams(scope === "all" ? { tab: "all" } : {})}
-            >
-              Clear filters
-            </button>
-          )}
-        </div>
-      )}
       {error && <ErrorBox error={error} retry={() => load()} />}
       {!feed && busy ? (
         <Loading />
