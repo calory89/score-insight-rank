@@ -1427,3 +1427,10 @@
     font-size: 11px;
   }
 }
+
+/* Keep the rank badge clear of the playable video control. */
+.hunt-badge {
+  top: 62px;
+  bottom: auto;
+  pointer-events: none;
+}
