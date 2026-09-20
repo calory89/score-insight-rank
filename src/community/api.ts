@@ -61,7 +61,7 @@ export const categories = [
 ];
 export const money = (n?: number | null) =>
   n == null
-    ? "Price on request"
+    ? ""
     : new Intl.NumberFormat("en-IE", {
         style: "currency",
         currency: "EUR",
