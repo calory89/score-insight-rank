@@ -20,16 +20,18 @@ export default function PhotoGallery({ images, title, compact = false, href, eag
   const [expanded, setExpanded] = useState(false);
   const [zoom, setZoom] = useState(false);
   const [visible, setVisible] = useState(eager || !compact);
+  const [visited, setVisited] = useState<Set<number>>(() => new Set([index]));
   const timer = useRef<ReturnType<typeof setTimeout>>();
   const scroll = (i: number, smooth = false) => rail.current?.scrollTo({ left: i * rail.current.clientWidth, behavior: smooth && !window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ? "smooth" : "instant" as ScrollBehavior });
   const remember = (i: number) => {
     current.current = i; setIndex(i);
+    setVisited(previous => previous.has(i) ? previous : new Set([...previous, i]));
     if (storageKey) { writeSession(storageKey, i); window.dispatchEvent(new CustomEvent(PHOTO_EVENT, { detail: { key: storageKey, index: i, source } })); }
   };
   const go = (i: number) => { if (!count) return; const next = (i + count) % count; remember(next); scroll(next, true); setZoom(false); };
   useLayoutEffect(() => {
     const next = Math.max(0, Math.min(count - 1, readSession<number>(storageKey, 0) || 0));
-    current.current = next; setIndex(next); scroll(next);
+    current.current = next; setIndex(next); setVisited(new Set([next])); scroll(next);
     const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => scroll(current.current)) : null;
     if (rail.current) observer?.observe(rail.current);
     return () => { observer?.disconnect(); clearTimeout(timer.current); };
@@ -45,16 +47,23 @@ export default function PhotoGallery({ images, title, compact = false, href, eag
     return () => window.removeEventListener(PHOTO_EVENT, sync);
   }, [storageKey, count, source]);
   useEffect(() => {
-    if (!compact || eager || !rail.current || typeof IntersectionObserver === "undefined") return;
-    const observer = new IntersectionObserver(entries => setVisible(entries.some(e => e.isIntersecting)), { rootMargin: "200px" });
+    if (!compact || eager || !rail.current) return;
+    if (typeof IntersectionObserver === "undefined") { setVisible(true); return; }
+    // Latch once near the viewport: native lazy loading fetches several offscreen rows and
+    // horizontal slides. Do not attach image URLs until this card is actually approaching.
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(e => e.isIntersecting)) { setVisible(true); observer.disconnect(); }
+    }, { rootMargin: "300px" });
     observer.observe(rail.current); return () => observer.disconnect();
   }, [compact, eager]);
-  useEffect(() => {
-    if (count < 2 || !visible) return;
-    const next = new Image(); next.src = photos[(index + 1) % count];
-  }, [visible, index, count, photos[(index + 1) % Math.max(count, 1)]]);
   if (!count) return <div className={`${compact ? "absolute inset-0" : "aspect-[4/3] rounded-2xl"} grid place-items-center bg-hairline/40 text-ink-muted text-sm`}>Photos not available</div>;
-  const image = (url: string, i: number) => <img src={url} srcSet={srcSet(url)} sizes={compact ? "(min-width:1280px) 300px, (min-width:1024px) 33vw, 50vw" : "(min-width:1140px) 1092px, 100vw"} alt={`${title} — photo ${i + 1} of ${count}`} loading={visible && (i === index || i === (index + 1) % count) ? "eager" : "lazy"} decoding="async" draggable={false} onError={e => { e.currentTarget.removeAttribute("srcset"); }} className={`w-full h-full ${compact ? "object-cover" : "object-contain"}`} />;
+  const image = (url: string, i: number) => {
+    // Keep every slide's geometry and controls. Only the current/next/previously viewed
+    // photos get a URL. The next slide itself preloads the correct responsive candidate,
+    // avoiding the old new Image() request for an additional full-size copy.
+    const load = visible && (visited.has(i) || i === index || i === (index + 1) % count || i === index - 1);
+    return <img src={load ? url : undefined} srcSet={load ? srcSet(url) : undefined} sizes={compact ? "(min-width:1280px) 283px, (min-width:1024px) calc((100vw - 88px) / 3), (min-width:768px) calc((100vw - 68px) / 2), (min-width:640px) calc((100vw - 52px) / 2), calc((100vw - 44px) / 2)" : "(min-width:1140px) 1092px, 100vw"} alt={`${title} — photo ${i + 1} of ${count}`} loading={load ? "eager" : "lazy"} fetchPriority={eager && i === index ? "high" : i === index ? "auto" : "low"} decoding="async" draggable={false} onError={e => { e.currentTarget.removeAttribute("srcset"); }} className={`w-full h-full ${compact ? "object-cover" : "object-contain"}`} />;
+  };
   return <>
     <div role="region" aria-label={`${title} photos`} aria-roledescription="carousel" className={compact ? "absolute inset-0" : "overflow-hidden md:rounded-2xl bg-hairline/30"}>
       <div className={compact ? "relative h-full" : "relative aspect-[4/3] md:aspect-[16/9] bg-[#e9e7e2]"}>

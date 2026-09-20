@@ -301,3 +301,10 @@
   body:has(.rh-mobile-nav) { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
   body:has(.rh-mobile-nav) .rh-cookie-banner { bottom: calc(64px + env(safe-area-inset-bottom)); }
 }
+
+/* Connection status: keep the same notices without a page-wide JS animation dependency. */
+@keyframes rh-status-in { from { transform: translateY(-48px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes rh-status-out { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-48px); opacity: 0; } }
+.rh-connection-notice { animation: rh-status-in 200ms ease-out both; }
+.rh-connection-notice[data-visible="false"] { animation-name: rh-status-out; }
+@media (prefers-reduced-motion: reduce) { .rh-connection-notice { animation-duration: 1ms; } }

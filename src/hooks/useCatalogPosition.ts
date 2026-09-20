@@ -34,14 +34,19 @@ export function useCatalogPosition(url: string, ready: boolean, limit: number) {
   }, [url, ready]);
   useEffect(() => {
     if (!ready) return;
+    let frame = 0;
     const save = () => {
+      if (frame) { cancelAnimationFrame(frame); frame = 0; }
       if (restoring.current) return;
       const anchor = [...document.querySelectorAll<HTMLElement>("[data-home-code]")].find(el => el.getBoundingClientRect().bottom > 100);
       writeSession(storageKey(url), { y: window.scrollY, limit: limitRef.current, at: Date.now(), anchor: anchor?.dataset.homeCode, offset: anchor?.getBoundingClientRect().top });
     };
-    window.addEventListener("scroll", save, { passive: true });
+    // Layout reads and sessionStorage writes run at most once per frame. Click/pagehide
+    // still flush synchronously so opening a home never loses the latest position.
+    const scheduleSave = () => { if (!frame) frame = requestAnimationFrame(save); };
+    window.addEventListener("scroll", scheduleSave, { passive: true });
     window.addEventListener("pagehide", save);
     document.addEventListener("click", save, true);
-    return () => { window.removeEventListener("scroll", save); window.removeEventListener("pagehide", save); document.removeEventListener("click", save, true); };
+    return () => { cancelAnimationFrame(frame); window.removeEventListener("scroll", scheduleSave); window.removeEventListener("pagehide", save); document.removeEventListener("click", save, true); };
   }, [url, ready]);
 }

@@ -21,6 +21,14 @@ const DROPS_KEY = "rh_drops_v1";
 const FEED_COLS = "id,source_account,shortcode,image_urls,posted_at,location_name,country_guess,price_eur,is_beach,price_in_image,sqm,bedrooms,hook,rank_score,verified,status";
 const VALID_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
+function cachedFeed(): IG[] {
+  try {
+    const cache = JSON.parse(localStorage.getItem(FEED_KEY) || "null");
+    if (cache && Array.isArray(cache.rows) && Date.now() - cache.t < 7 * 86400e3) return cache.rows;
+  } catch { /* Storage may be disabled or full. The live feed remains available. */ }
+  return [];
+}
+
 // A promoted listing that lives on idealista, not on RealHunt. It is always the last card in the
 // feed, and like every other home it opens its own page first (/lake-como); the outbound link to the
 // original listing is there. We never pretend to host it.
@@ -96,7 +104,7 @@ const CaptureCard = () => {
 const Home = () => {
   const { country: cParam, account: aParam } = useParams();
   const { user } = useAuth();
-  const [finds, setFinds] = useState<IG[]>([]);
+  const [finds, setFinds] = useState<IG[]>(cachedFeed);
   const route = useLocation();
   const routeCountry = cParam ? cParam.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") : undefined;
   const applied = useMemo(() => filtersFromUrl(route.search, routeCountry), [route.search, routeCountry]);
@@ -123,12 +131,11 @@ const Home = () => {
   const sentinel = useRef<HTMLDivElement>(null);
   const [pref, setPref] = useState<{ country?: string | null; budget?: number | null }>({});
   const [drops, setDrops] = useState<Set<string>>(new Set());
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(() => finds.length > 0);
   const headline = useExperiment("home_headline", [{ id: "A", text: "Real homes under €60,000." }]);
 
   useEffect(() => {
     // 1. Instant paint from the last feed we saw (stale-while-revalidate), then refresh from the DB.
-    try { const c = JSON.parse(localStorage.getItem(FEED_KEY) || "null"); if (c && Array.isArray(c.rows) && c.rows.length && Date.now() - c.t < 7 * 86400e3) { setFinds(c.rows); setLoaded(true); } } catch {}
     db.from("ig_finds").select(FEED_COLS).neq("status", "hidden").lte("price_eur", HOME_MAX_PRICE).order("rank_score", { ascending: false, nullsFirst: false }).limit(400)
       .then(({ data, error }: any) => {
         if (error && !data) { setLoaded(true); return; }
@@ -212,9 +219,9 @@ const Home = () => {
     return l;
   }, [finds, aParam, pref, loaded, sort]);
   const shown = useMemo(() => selectHomes(applied), [selectHomes, applied]);
-  const previewCount = selectHomes(draft).filter(f => f.id !== "capture").length;
+  const previewCount = useMemo(() => selectHomes(draft).filter(f => f.id !== "capture").length, [selectHomes, draft]);
   const pendingFilters = (Object.keys(EMPTY_FILTERS) as (keyof CatalogFilters)[]).some(key => draft[key] !== applied[key]);
-  const homes = shown.filter(f => f.id !== "capture");
+  const homes = useMemo(() => shown.filter(f => f.id !== "capture"), [shown]);
   const quickIndex = homes.findIndex(f => f.shortcode === quickCode);
   const quickHome = homes[quickIndex] || null;
   const closeQuick = () => { setQuickCode(null); requestAnimationFrame(() => quickTrigger.current?.focus({ preventScroll: true })); };
@@ -243,10 +250,13 @@ const Home = () => {
   }, [loaded, homes.length, selectHomes, applied]);
 
   useEffect(() => {
+    // The loading skeleton can put the sentinel near the viewport. Wait for the
+    // real cards before extending the feed, otherwise the first page doubles.
+    if (!loaded || limit >= shown.length) return;
     const el = sentinel.current; if (!el) return;
     const io = new IntersectionObserver((e) => { if (e[0].isIntersecting) setLimit((n) => n + PAGE); }, { rootMargin: "600px" });
     io.observe(el); return () => io.disconnect();
-  }, []);
+  }, [loaded, limit, shown.length]);
   const min = useMemo(() => shown.reduce((a, f) => (f.price_eur && f.price_eur > 0 && f.price_eur < a ? f.price_eur : a), Infinity), [shown]);
 
   const toggleFav = async (e: React.MouseEvent, f: IG) => {
