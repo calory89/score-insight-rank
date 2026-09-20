@@ -66,12 +66,12 @@ await test("server-issued identity, replay and vote reversal are atomic", async 
     (await api("vote", visitor.token, { id: deal.id, value: 1 })).already,
     true,
   );
-  await api("vote", visitor.token, { id: deal.id, value: -1 });
+  assert.match((await api("vote", visitor.token, { id: deal.id, value: -1 })).error, /Only upvotes/);
   const f = await one("select community_rankings()");
   assert.equal(f.global_votes, 1);
-  assert.equal(f.rows[0].week_net, -1);
-  assert.equal(f.rows[0].week_up, 0);
-  assert.equal(f.rows[0].week_down, 1);
+  assert.equal(f.rows[0].week_net, 1);
+  assert.equal(f.rows[0].week_up, 1);
+  assert.equal(f.rows[0].week_down, 0);
 });
 await test("sign-in merges anonymous votes into an existing account without duplication", async () => {
   await login(user);
@@ -234,7 +234,7 @@ await test("weekly rollover preserves lifetime and freezes winner snapshots", as
   );
   assert.equal(archive.title, deal.title);
   await login(user);
-  await api("vote", account.token, { id: deal.id, value: -1 });
+  await api("vote", account.token, { id: deal.id, value: 1 });
   assert.equal(
     await one(
       "select net_score from community_week_winners where week_id=$1 and deal_id=$2",
@@ -242,7 +242,7 @@ await test("weekly rollover preserves lifetime and freezes winner snapshots", as
     ),
     1,
   );
-  assert.equal((await one("select community_rankings()")).rows[0].life_net, -1);
+  assert.equal((await one("select community_rankings()")).rows[0].life_net, 1);
 });
 await test("launch homes break ties without overriding actual votes", async () => {
   await db.exec("BEGIN");
