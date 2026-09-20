@@ -103,6 +103,7 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.community_rollover() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.community_moderation_queue() FROM PUBLIC,anon,authenticated;
+REVOKE ALL ON FUNCTION public.community_deal(text,text) FROM PUBLIC,anon,authenticated;
 -- Retire unfinished legacy write paths so there is one authoritative implementation.
 REVOKE ALL ON FUNCTION public.community_cast_vote(uuid,text,uuid,smallint), public.community_merge_votes(uuid,text),public.community_record_view(uuid,text),public.community_moderate_deal(uuid,text,text,boolean,text) FROM PUBLIC,anon,authenticated,service_role;
 
@@ -138,7 +139,7 @@ CREATE OR REPLACE FUNCTION public.community_api(p_action text,p_token text DEFAU
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,extensions,pg_temp AS $$
 DECLARE uid uuid:=auth.uid(); admin boolean:=coalesce(public.is_admin(auth.uid()),false);
  actor_key text; old_actor text; token text:=p_token; th text; network_key text; headers jsonb;
- d community_deals; w community_weeks; value_int int; target uuid; h community_hunters; result jsonb; old community_weeks;
+ known_find ig_finds; d community_deals; w community_weeks; value_int int; target uuid; h community_hunters; result jsonb; old community_weeks;
 BEGIN
  IF length(p_payload::text)>16000 OR length(coalesce(token,''))>128 THEN RETURN jsonb_build_object('error','Request too large'); END IF;
  headers:=coalesce(nullif(current_setting('request.headers',true),''),'{}')::jsonb;
@@ -170,7 +171,7 @@ BEGIN
   SELECT * INTO h FROM community_hunters WHERE user_id=uid;
  END IF;
  IF p_action='session' THEN
-  RETURN jsonb_build_object('token',token,'admin',admin,'hunter',CASE WHEN uid IS NOT NULL THEN to_jsonb(h)-'user_id' ELSE NULL END,
+  RETURN jsonb_build_object('token',token,'admin',admin,'pending_submissions',CASE WHEN admin THEN (SELECT count(*) FROM community_deals WHERE status='pending') ELSE NULL END,'hunter',CASE WHEN uid IS NOT NULL THEN to_jsonb(h)-'user_id' ELSE NULL END,
    'votes',coalesce((SELECT jsonb_object_agg(deal_id,value) FROM community_week_votes WHERE actor=actor_key AND week_id=w.id),'{}'),
    'saved',coalesce((SELECT jsonb_agg(deal_id) FROM community_saves WHERE user_id=uid),'[]'));
  END IF;
@@ -225,10 +226,29 @@ BEGIN
   UPDATE community_deals SET hunter_handle=coalesce(p_payload->>'handle',h.handle) WHERE submitted_by=uid;
   RETURN jsonb_build_object('ok',true,'hunter',(SELECT to_jsonb(ch)-'user_id' FROM community_hunters ch WHERE user_id=uid));
  ELSIF p_action='dashboard' THEN
-  RETURN jsonb_build_object('deals',coalesce((SELECT jsonb_agg(to_jsonb(cd) ORDER BY created_at DESC) FROM community_deals cd WHERE submitted_by=uid),'[]'),
+  RETURN jsonb_build_object('deals',coalesce((SELECT jsonb_agg(to_jsonb(cd)||jsonb_build_object('week_score',(SELECT coalesce(sum(value),0) FROM community_week_votes WHERE deal_id=cd.id AND week_id=w.id),'lifetime_votes',(SELECT count(*) FROM community_votes WHERE deal_id=cd.id),'views',(SELECT count(*) FROM community_views WHERE deal_id=cd.id)) ORDER BY created_at DESC) FROM community_deals cd WHERE submitted_by=uid),'[]'),
    'saved',coalesce((SELECT jsonb_agg(jsonb_build_object('slug',cd.slug,'title',cd.title,'price_eur',cd.price_eur,'image_urls',cd.image_urls)) FROM community_deals cd JOIN community_saves cs ON cs.deal_id=cd.id WHERE cs.user_id=uid AND cd.status='approved'),'[]'));
+ ELSIF p_action='quick_submit' THEN
+  IF length(btrim(coalesce(p_payload->>'website','')))>0 THEN RETURN jsonb_build_object('error','Unable to accept this submission'); END IF;
+  PERFORM community_source_key(p_payload->>'url');
+  SELECT * INTO d FROM community_deals WHERE community_source_key(source_url)=community_source_key(p_payload->>'url');
+  IF FOUND THEN
+   IF d.status='approved' THEN RETURN jsonb_build_object('ok',true,'duplicate',d.slug); END IF;
+   IF d.submitted_by=uid THEN RETURN jsonb_build_object('ok',true,'already',true,'slug',d.slug,'status',d.status); END IF;
+   RETURN jsonb_build_object('error','This property has already been submitted for review');
+  END IF;
+  IF NOT community_limit('submit:'||uid,10,3600) OR NOT community_limit('submit-network:'||network_key,40,3600) THEN RETURN jsonb_build_object('error','You have reached the submission limit. Please try later.'); END IF;
+  SELECT * INTO known_find FROM ig_finds WHERE external_url=btrim(p_payload->>'url') OR post_url=btrim(p_payload->>'url') LIMIT 1;
+  INSERT INTO community_deals(slug,title,source_url,source_key,image_urls,price_eur,country,location_name,sqm,bedrooms,category,why_great,submitted_by,hunter_handle,status)
+  VALUES('deal-'||substr(replace(gen_random_uuid()::text,'-',''),1,16),
+   left(coalesce(nullif(known_find.hook,''),nullif(known_find.location_name,''),'Property submitted for review'),160),btrim(p_payload->>'url'),'',
+   coalesce(known_find.image_urls,'{}'::text[]),CASE WHEN known_find.price_eur>0 THEN known_find.price_eur END,
+   known_find.country_guess,known_find.location_name,CASE WHEN known_find.sqm>0 THEN known_find.sqm END,
+   CASE WHEN known_find.bedrooms BETWEEN 0 AND 1000 THEN known_find.bedrooms END,
+   CASE WHEN known_find.is_beach THEN 'beach' ELSE 'other' END,left(p_payload->>'why',800),uid,h.handle,'pending') RETURNING * INTO d;
+  RETURN jsonb_build_object('ok',true,'slug',d.slug,'status','pending');
  ELSIF p_action='submit' THEN
-  IF NOT community_limit('submit:'||uid,10,3600) THEN RETURN jsonb_build_object('error','You have reached the hourly submission limit'); END IF;
+  IF NOT community_limit('submit:'||uid,10,3600) OR NOT community_limit('submit-network:'||network_key,40,3600) THEN RETURN jsonb_build_object('error','You have reached the hourly submission limit'); END IF;
   IF length(btrim(coalesce(p_payload->>'title','')))<5 OR length(btrim(coalesce(p_payload->>'country','')))<2 THEN RETURN jsonb_build_object('error','Add a title and country'); END IF;
   IF coalesce((p_payload->>'price_eur')::int,0)<=0 THEN RETURN jsonb_build_object('error','Add a positive price in euros'); END IF;
   IF length(coalesce(p_payload->>'image',''))>0 THEN PERFORM community_source_key(p_payload->>'image'); END IF;
@@ -263,6 +283,7 @@ BEGIN
   SELECT * INTO d FROM community_deals WHERE id=target FOR UPDATE;
   IF NOT FOUND THEN RETURN jsonb_build_object('error','Deal not found'); END IF;
   IF p_payload->>'decision'='approve' THEN
+   IF length(btrim(coalesce(d.country,'')))<2 OR d.title='Property submitted for review' THEN RETURN jsonb_build_object('error','Add a descriptive title and country before approval'); END IF;
    IF cardinality(d.image_urls)=0 THEN RETURN jsonb_build_object('error','Add at least one photo before approval'); END IF;
    UPDATE community_deals SET status='approved',approved_at=coalesce(approved_at,now()),week_id=coalesce(week_id,w.id),reject_reason=NULL WHERE id=target;
   ELSIF p_payload->>'decision' IN('reject','duplicate') THEN
@@ -272,7 +293,7 @@ BEGIN
    UPDATE community_deals SET is_editorial_pick=coalesce((p_payload->>'pick')::boolean,false),pick_note=left(p_payload->>'note',240) WHERE id=target;
   ELSIF p_payload->>'decision'='edit' THEN
    IF length(coalesce(p_payload->>'image',''))>0 THEN PERFORM community_source_key(p_payload->>'image'); END IF;
-   UPDATE community_deals SET title=left(coalesce(p_payload->>'title',title),160),price_eur=coalesce((p_payload->>'price_eur')::int,price_eur),image_urls=CASE WHEN length(coalesce(p_payload->>'image',''))>0 THEN ARRAY[p_payload->>'image'] ELSE image_urls END WHERE id=target;
+   UPDATE community_deals SET title=left(coalesce(p_payload->>'title',title),160),price_eur=coalesce((p_payload->>'price_eur')::int,price_eur),country=left(coalesce(p_payload->>'country',country),80),location_name=left(coalesce(p_payload->>'location',location_name),160),image_urls=CASE WHEN length(coalesce(p_payload->>'image',''))>0 THEN ARRAY[p_payload->>'image'] ELSE image_urls END WHERE id=target;
   ELSE RETURN jsonb_build_object('error','Unknown moderation action'); END IF;
  ELSIF p_action='resolve' THEN
   UPDATE community_reports SET status=CASE WHEN p_payload->>'resolution'='actioned' THEN 'actioned' ELSE 'dismissed' END,reviewed_by=uid,reviewed_at=now() WHERE id=target;
