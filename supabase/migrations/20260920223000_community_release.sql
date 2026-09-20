@@ -80,8 +80,8 @@ BEGIN
  IF NOT FOUND OR w.ends_at>now() THEN RETURN jsonb_build_object('ok',false); END IF;
  IF w.closed_at IS NOT NULL THEN RETURN jsonb_build_object('ok',true); END IF;
  INSERT INTO community_week_winners(week_id,deal_id,rank,up_votes,down_votes,net_score,snapshot)
- SELECT w.id,d.id,row_number() OVER(ORDER BY coalesce(sum(v.value),0) DESC,count(*) FILTER(WHERE v.value=1) DESC,CASE d.slug WHEN 'Dc4gpg6slIT' THEN 0 WHEN 'acquappesa-sea-view-39000' THEN 1 ELSE 2 END,d.approved_at ASC,d.id ASC),
- count(*) FILTER(WHERE v.value=1),count(*) FILTER(WHERE v.value=-1),coalesce(sum(v.value),0),
+ SELECT w.id,d.id,row_number() OVER(ORDER BY count(*) FILTER(WHERE v.value=1) DESC,count(*) FILTER(WHERE v.value=1) DESC,CASE d.slug WHEN 'Dc4gpg6slIT' THEN 0 WHEN 'acquappesa-sea-view-39000' THEN 1 ELSE 2 END,d.approved_at ASC,d.id ASC),
+ count(*) FILTER(WHERE v.value=1),count(*) FILTER(WHERE v.value=-1),count(*) FILTER(WHERE v.value=1),
  jsonb_build_object('title',d.title,'slug',d.slug,'image_urls',d.image_urls,'price_eur',d.price_eur,'country',d.country,'hunter_handle',d.hunter_handle)
  FROM community_deals d LEFT JOIN community_week_votes v ON v.deal_id=d.id AND v.week_id=w.id
  WHERE d.status='approved' AND d.approved_at<w.ends_at
@@ -117,8 +117,8 @@ BEGIN
  count(*) FILTER(WHERE created_at>now()-interval '24 hours' AND value=1)::int recent
  FROM community_week_votes WHERE week_id=w.id GROUP BY deal_id),
  c AS(SELECT d.id,d.slug,d.title,CASE WHEN auth.uid() IS NOT NULL THEN d.source_url END source_url,true has_source,d.source_domain,d.image_urls,d.video_url,d.price_eur,d.country,d.location_name,d.sqm,d.bedrooms,d.category,d.why_great,d.hunter_handle,d.is_editorial_pick,d.pick_note,d.approved_at,d.find_id,
- coalesce(a.up,0) life_up,coalesce(a.down,0) life_down,coalesce(a.up,0)-coalesce(a.down,0) life_net,
- coalesce(b.up,0) week_up,coalesce(b.down,0) week_down,coalesce(b.up,0)-coalesce(b.down,0) week_net,coalesce(b.recent,0) votes_24h,
+ coalesce(a.up,0) life_up,coalesce(a.down,0) life_down,coalesce(a.up,0) life_net,
+ coalesce(b.up,0) week_up,coalesce(b.down,0) week_down,coalesce(b.up,0) week_net,coalesce(b.recent,0) votes_24h,
  (SELECT count(*) FROM community_saves s WHERE s.deal_id=d.id) saves,
  (SELECT count(*) FROM community_views s WHERE s.deal_id=d.id) views,
  (SELECT count(*) FROM community_comments s WHERE s.deal_id=d.id AND s.status='published') comments
@@ -186,7 +186,7 @@ BEGIN
    result:=to_jsonb(d)-'submitted_by'-'reject_reason'-'source_key';
    result:=result||jsonb_build_object('week_up',(SELECT count(*) FROM community_week_votes WHERE deal_id=d.id AND week_id=w.id AND value=1),'week_down',(SELECT count(*) FROM community_week_votes WHERE deal_id=d.id AND week_id=w.id AND value=-1),'life_up',(SELECT count(*) FROM community_votes WHERE deal_id=d.id AND value=1),'life_down',(SELECT count(*) FROM community_votes WHERE deal_id=d.id AND value=-1),
     'views',(SELECT count(*) FROM community_views WHERE deal_id=d.id),'saves',(SELECT count(*) FROM community_saves WHERE deal_id=d.id),'comments',(SELECT count(*) FROM community_comments WHERE deal_id=d.id AND status='published'));
-   result:=result||jsonb_build_object('week_net',(result->>'week_up')::int-(result->>'week_down')::int,'life_net',(result->>'life_up')::int-(result->>'life_down')::int);
+   result:=result||jsonb_build_object('week_net',(result->>'week_up')::int,'life_net',(result->>'life_up')::int);
   END IF;
   result:=result||jsonb_build_object('has_source',true);
   IF uid IS NULL THEN result:=result-'source_url'; END IF;
@@ -206,7 +206,7 @@ BEGIN
  target:=nullif(p_payload->>'id','')::uuid;
  IF p_action='vote' THEN
   value_int:=(p_payload->>'value')::int;
-  IF value_int NOT IN(-1,1) OR value_int IS NULL THEN RETURN jsonb_build_object('error','Choose an upvote or a downvote'); END IF;
+  IF value_int IS DISTINCT FROM 1 THEN RETURN jsonb_build_object('error','Only upvotes are supported'); END IF;
   SELECT * INTO d FROM community_deals WHERE id=target AND status='approved';
   IF NOT FOUND THEN RETURN jsonb_build_object('error','Deal unavailable'); END IF;
   IF EXISTS(SELECT 1 FROM community_week_votes WHERE deal_id=target AND week_id=w.id AND actor=actor_key AND value=value_int) THEN RETURN jsonb_build_object('ok',true,'already',true); END IF;
@@ -226,7 +226,7 @@ BEGIN
   UPDATE community_deals SET hunter_handle=coalesce(p_payload->>'handle',h.handle) WHERE submitted_by=uid;
   RETURN jsonb_build_object('ok',true,'hunter',(SELECT to_jsonb(ch)-'user_id' FROM community_hunters ch WHERE user_id=uid));
  ELSIF p_action='dashboard' THEN
-  RETURN jsonb_build_object('deals',coalesce((SELECT jsonb_agg(to_jsonb(cd)||jsonb_build_object('week_score',(SELECT coalesce(sum(value),0) FROM community_week_votes WHERE deal_id=cd.id AND week_id=w.id),'lifetime_votes',(SELECT count(*) FROM community_votes WHERE deal_id=cd.id),'views',(SELECT count(*) FROM community_views WHERE deal_id=cd.id)) ORDER BY created_at DESC) FROM community_deals cd WHERE submitted_by=uid),'[]'),
+  RETURN jsonb_build_object('deals',coalesce((SELECT jsonb_agg(to_jsonb(cd)||jsonb_build_object('week_score',(SELECT count(*) FROM community_week_votes WHERE deal_id=cd.id AND week_id=w.id AND value=1),'lifetime_votes',(SELECT count(*) FROM community_votes WHERE deal_id=cd.id),'views',(SELECT count(*) FROM community_views WHERE deal_id=cd.id)) ORDER BY created_at DESC) FROM community_deals cd WHERE submitted_by=uid),'[]'),
    'saved',coalesce((SELECT jsonb_agg(jsonb_build_object('slug',cd.slug,'title',cd.title,'price_eur',cd.price_eur,'image_urls',cd.image_urls)) FROM community_deals cd JOIN community_saves cs ON cs.deal_id=cd.id WHERE cs.user_id=uid AND cd.status='approved'),'[]'));
  ELSIF p_action='quick_submit' THEN
   IF length(btrim(coalesce(p_payload->>'website','')))>0 THEN RETURN jsonb_build_object('error','Unable to accept this submission'); END IF;
