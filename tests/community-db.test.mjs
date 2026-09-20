@@ -347,8 +347,10 @@ await test("submission spam limits, honeypot and unsafe URLs are enforced on the
 });
 await test('initial points are separate from real votes, stable on replay, and expire weekly',async()=>{
   const before=await one('select count(*) from community_week_votes');
+  await db.exec("ALTER TABLE community_deals DROP CONSTRAINT community_area_positive; UPDATE community_deals SET sqm=0 WHERE status='approved'; ALTER TABLE community_deals ADD CONSTRAINT community_area_positive CHECK(sqm IS NULL OR sqm>0) NOT VALID;");
   await db.exec(await readFile(new URL('../supabase/migrations/20260921010000_launch_points.sql',import.meta.url),'utf8'));
   assert.equal(await one('select count(*) from community_week_votes'),before);
+  assert.equal(await one('select count(*) from community_deals where sqm=0'),0);
   await db.exec('BEGIN');
   try {
     await db.exec('UPDATE community_deals SET launch_week_id=(community_current_week()).id WHERE launch_points>0');
