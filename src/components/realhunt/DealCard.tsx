@@ -1,3 +1,4 @@
+import OriginalListingLink from "@/components/realhunt/OriginalListingLink";
 import { ArrowUpRight, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { flagOf, formatEUR } from "@/data/deals";
@@ -15,7 +16,7 @@ const DealCard = ({ deal }: { deal: Deal }) => {
 
   return (
     <article className="rh-card flex flex-col h-full !p-0 overflow-hidden">
-      <a
+      <OriginalListingLink
         href={deal.url}
         target="_blank"
         rel="noopener noreferrer nofollow"
@@ -28,7 +29,7 @@ const DealCard = ({ deal }: { deal: Deal }) => {
           referrerPolicy="no-referrer"
           className="w-full h-[200px] object-cover"
         />
-      </a>
+      </OriginalListingLink>
 
       <div className="p-6 flex flex-col flex-1">
         <div className="flex items-start justify-between gap-4">
@@ -78,14 +79,14 @@ const DealCard = ({ deal }: { deal: Deal }) => {
         )}
 
         <div className="mt-5 pt-5 hairline-t flex items-center justify-between gap-3">
-          <a
+          <OriginalListingLink
             href={deal.url}
             target="_blank"
             rel="noopener noreferrer nofollow"
             className="rh-btn-tertiary text-[13px] inline-flex items-center gap-1.5"
           >
             {deal.source} <ExternalLink size={13} />
-          </a>
+          </OriginalListingLink>
           <Link to={analyzeHref} className="rh-btn-secondary !py-2.5 !px-4 !text-[13px]">
             Score it <ArrowUpRight size={14} />
           </Link>
