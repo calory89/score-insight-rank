@@ -291,7 +291,7 @@ const PropertyFinder = () => {
                     <div className="flex flex-col sm:flex-row">
                       {item.image_url && (
                         <div className="sm:w-40 h-32 sm:h-auto">
-                          <img src={item.image_url} alt={item.address ? `Property at ${item.address}` : `Analyzed property in ${item.city || item.country || "an international market"}`} className="w-full h-full object-cover" />
+                          <img src={item.image_url} alt={item.address ? `Property at ${item.address}` : `Analyzed property in ${item.city || "an international market"}`} className="w-full h-full object-cover" />
                         </div>
                       )}
                       <CardContent className="flex-1 p-4">
