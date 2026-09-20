@@ -1336,17 +1336,41 @@ function Winners() {
     </div>
   );
 }
+function SubmissionPhoto({ deal }: { deal: any }) {
+  const [failed, setFailed] = useState(false);
+  const image = deal.image_urls?.[0];
+  useEffect(() => setFailed(false), [image]);
+  const content = image && !failed ? <img src={image} alt={deal.title} loading="lazy" onError={() => setFailed(true)} /> : <span className="hunt-crm-photo-empty"><Eye size={24} />Photo pending</span>;
+  return <div className="hunt-crm-photo">
+    {deal.status === "approved" ? <Link to={`/deal/${deal.slug}`} aria-label={`View ${deal.title}`}>{content}</Link> : safeUrl(deal.source_url) ? <a href={deal.source_url} target="_blank" rel="noopener noreferrer" aria-label={`Open source for ${deal.title}`}>{content}</a> : content}
+    {deal.image_urls?.length > 1 && <span className="hunt-crm-photo-count">{deal.image_urls.length} photos</span>}
+  </div>;
+}
+function SubmissionSource({ url }: { url?: string }) {
+  if (!safeUrl(url)) return null;
+  let domain = "Original listing";
+  try { domain = new URL(url!).hostname.replace(/^www\./, ""); } catch { return null; }
+  return <a className="hunt-crm-source" href={url} target="_blank" rel="noopener noreferrer" title={url}>{domain}<ArrowUpRight size={14} /></a>;
+}
+function matchesSubmission(deal: any, query: string) {
+  return [deal.title, deal.country, deal.location_name, deal.source_url, deal.hunter_handle].filter(Boolean).join(" ").toLowerCase().includes(query.trim().toLowerCase());
+}
 function Mine() {
   const { user, session, call, requireUser, setNotice } = useCommunity();
   const { pathname } = useLocation();
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("all");
+  const [refreshing, setRefreshing] = useState(false);
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState("");
-  useEffect(() => {
-    if (session && user)
-      call("dashboard")
-        .then(setData)
-        .catch((e: Error) => setError(e.message));
-  }, [session?.token, user?.id]);
+  async function refresh() {
+    setRefreshing(true); setError("");
+    try { setData(await call("dashboard")); }
+    catch(e) { setError((e as Error).message); }
+    finally { setRefreshing(false); }
+  }
+  useEffect(() => { if(session && user) refresh(); }, [session?.token, user?.id]);
+  const submissions = (data?.deals || []).filter((d:any) => (status === "all" || d.status === status) && matchesSubmission(d, query));
   if (!user)
     return (
       <div className="hunt-empty">
@@ -1370,7 +1394,7 @@ function Mine() {
       <ProfileEditor />
       {error && <ErrorBox error={error} />}{" "}
       {!data ? (
-        <Loading />
+        error ? null : <Loading />
       ) : pathname.endsWith("saved") ? (
         <div className="hunt-small-grid">
           {data.saved.map((d: any) => (
@@ -1396,23 +1420,31 @@ function Mine() {
             <span><strong>{data.deals.length}</strong> submitted</span>
             {(["pending", "approved", "rejected"] as const).map(status => <span key={status}><strong>{data.deals.filter((d: any) => d.status === status).length}</strong> {status === "pending" ? "pending review" : status}</span>)}
           </div>
+          <div className="hunt-crm-toolbar">
+            <label className="hunt-crm-search"><Search size={17}/><input type="search" aria-label="Search my submissions" placeholder="Search title, location or link" value={query} onChange={e=>setQuery(e.target.value)}/></label>
+            <label><span className="sr-only">Submission status</span><select aria-label="Submission status" value={status} onChange={e=>setStatus(e.target.value)}><option value="all">All statuses</option><option value="pending">Pending review</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select></label>
+            <button onClick={refresh} disabled={refreshing}>{refreshing ? "Refreshing…" : "Refresh"}</button>
+          </div>
           {!data.deals.length && <p>Your first great discovery starts with a link.</p>}
-          {data.deals.map((d: any) => (
-            <article className="hunt-submission" key={d.id}>
-              <div>
+          {data.deals.length > 0 && !submissions.length && <p role="status">No submissions match your search.</p>}
+          <div className="hunt-crm-list">
+          {submissions.map((d: any) => (
+            <article className="hunt-submission hunt-crm-card" key={d.id}>
+              <SubmissionPhoto deal={d} />
+              <div className="hunt-crm-info">
                 <span className={"hunt-status " + d.status}>
                   {d.status === "pending" ? "Pending review" : d.status}
                 </span>
                 <h2>{d.title}</h2>
-                <p>{money(d.price_eur)} · {d.country || "Location awaiting review"}{d.location_name ? ` · ${d.location_name}` : ""}</p>
+                <p className="hunt-crm-facts">{[money(d.price_eur), d.location_name || d.country, d.sqm ? `${d.sqm} m²` : null, d.bedrooms ? `${d.bedrooms} beds` : null].filter(Boolean).join(" · ") || "Details awaiting review"}</p>
                 <p>Submitted {new Date(d.created_at).toLocaleDateString("en-GB")}{d.approved_at ? ` · Approved ${new Date(d.approved_at).toLocaleDateString("en-GB")}` : ""}</p>
                 {d.why_great && <p>{d.why_great}</p>}
                 {d.reject_reason && <p>Review note: {d.reject_reason}</p>}
-                {safeUrl(d.source_url) && <a href={d.source_url} target="_blank" rel="noopener noreferrer">Original listing ↗</a>}
+                <SubmissionSource url={d.source_url} />
                 {d.status === "approved" && <p>{num(d.week_score || 0)} weekly score · {num(d.lifetime_votes || 0)} lifetime votes · {num(d.views || 0)} views</p>}
               </div>
               {d.status === "approved" && (
-                <div>
+                <div className="hunt-crm-actions">
                   <Link to={`/deal/${d.slug}`}>View live deal →</Link>
                   <button
                     onClick={() =>
@@ -1431,6 +1463,7 @@ function Mine() {
               )}
             </article>
           ))}
+          </div>
         </>
       )}
     </div>
@@ -1438,6 +1471,7 @@ function Mine() {
 }
 function Admin() {
   const { session, call, setNotice, refreshSession } = useCommunity();
+  const [query, setQuery] = useState("");
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [data, setData] = useState<any>(null);
   const [error, setError] = useState("");
@@ -1480,17 +1514,23 @@ function Admin() {
       <p>Review the source, price and photos before approving a discovery.</p>
       {error && <ErrorBox error={error} retry={load} />}
       <button className="hunt-more" onClick={load} disabled={busy}>Refresh submissions</button>
+      <label className="hunt-crm-search hunt-crm-admin-search"><Search size={17}/><input type="search" aria-label="Search admin submissions" placeholder="Search property, source or hunter" value={query} onChange={e=>setQuery(e.target.value)}/></label>
+      {!data && !error && <Loading />}
       <h2>Pending submissions ({data?.pending.length || 0})</h2>
-      {data?.pending.map((d: any) => (
+      {data?.pending.filter((d:any)=>matchesSubmission(d,query)).map((d: any) => (
         <article key={d.id} className="hunt-review">
-          <h3>{d.title}</h3>
-          <p>
-            {money(d.price_eur)} · {d.country} · @{d.hunter_handle}
-          </p>
-          <a href={d.source_url} target="_blank" rel="noopener noreferrer">
-            Check original listing ↗
-          </a>
-          <p>{d.why_great}</p>
+          <div className="hunt-crm-review-head">
+            <SubmissionPhoto deal={d} />
+            <div className="hunt-crm-info">
+              <span className="hunt-status pending">Pending review</span>
+              <h3>{d.title}</h3>
+              <p className="hunt-crm-facts">{[money(d.price_eur), d.location_name || d.country, d.sqm ? `${d.sqm} m²` : null].filter(Boolean).join(" · ")}</p>
+              <p>@{d.hunter_handle} · Submitted {new Date(d.created_at).toLocaleDateString("en-GB")}</p>
+              <SubmissionSource url={d.source_url} />
+              {d.why_great && <p>{d.why_great}</p>}
+            </div>
+          </div>
+          <details className="hunt-crm-edit"><summary>Edit property details</summary>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -1538,6 +1578,7 @@ function Admin() {
             </label>
             <button disabled={busy}>Save edits</button>
           </form>
+          </details>
           <label>Rejection reason (shown to the submitter)<textarea maxLength={500} value={reasons[d.id] || ""} onChange={e => setReasons(r => ({...r, [d.id]: e.target.value}))} /></label>
           <div className="hunt-review-actions">
             <button
@@ -1571,6 +1612,7 @@ function Admin() {
         </article>
       ))}
       {data && !data.pending.length && <p>No pending submissions.</p>}
+      {data?.pending.length > 0 && !data.pending.some((d:any)=>matchesSubmission(d,query)) && <p>No pending submissions match your search.</p>}
       <h2>Open reports ({data?.reports.length || 0})</h2>
       {data?.reports.map((r: any) => (
         <article key={r.id} className="hunt-review">
@@ -1601,9 +1643,10 @@ function Admin() {
       ))}
       <h2>RealHunt Picks</h2>
       <p>Editorial picks are independent of the community ranking.</p>
-      {data?.approved.map((d: any) => (
-        <article key={d.id} className="hunt-submission">
-          <Link to={`/deal/${d.slug}`}>{d.title}</Link>
+      {data?.approved.filter((d:any)=>matchesSubmission(d,query)).map((d: any) => (
+        <article key={d.id} className="hunt-submission hunt-crm-card">
+          <SubmissionPhoto deal={d} />
+          <div className="hunt-crm-info"><span className="hunt-status approved">Approved</span><h3><Link to={`/deal/${d.slug}`}>{d.title}</Link></h3><p>{[money(d.price_eur),d.location_name || d.country].filter(Boolean).join(" · ")}</p><SubmissionSource url={d.source_url} /></div>
           <button
             disabled={busy}
             aria-pressed={d.is_editorial_pick}
