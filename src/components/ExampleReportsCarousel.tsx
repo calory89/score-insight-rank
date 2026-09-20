@@ -98,7 +98,7 @@ const ExampleReportsCarousel = () => {
             <div className="relative h-40 overflow-hidden">
               <img
                 src={report.image_url || PLACEHOLDER_IMAGES[i % PLACEHOLDER_IMAGES.length]}
-                alt={report.address || "Property"}
+                alt={report.address ? `Analyzed property at ${report.address}` : `Example analyzed property report ${i + 1}`}
                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = PLACEHOLDER_IMAGES[i % PLACEHOLDER_IMAGES.length];
