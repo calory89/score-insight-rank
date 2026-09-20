@@ -161,3 +161,19 @@ test("unsupported import falls back to manual details and keeps the draft throug
     false,
   );
 });
+
+test("Sumba is the third card, labelled sponsored and outside voting", async () => {
+  const previous = mocks.rpc.getMockImplementation()!;
+  mocks.rpc.mockImplementation(async (name: string, p: any) => {
+    const response = await previous(name, p);
+    if (name === "community_rankings") response.data.rows = [deal, {...deal, id: "deal-2", slug: "second-home", rank: 2}, {...deal, id: "deal-3", slug: "third-home", rank: 3}];
+    return response;
+  });
+  open();
+  const ad = await screen.findByRole("article", {name: "Sponsored: Eco Beach City, Sumba"});
+  expect(screen.getAllByRole("article")[2]).toBe(ad);
+  expect(ad.textContent).toContain("Sponsored");
+  expect(ad.querySelector("button")).toBeNull();
+  expect(ad.querySelector("a")?.getAttribute("href")).toBe("/ecobeachcity");
+  expect(screen.getAllByRole("button", {name: "Upvote deal"})).toHaveLength(3);
+});
