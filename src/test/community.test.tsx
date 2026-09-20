@@ -247,3 +247,18 @@ test('my submissions shows statuses, review feedback and real property data', as
   expect(screen.getByText('4 weekly score · 6 lifetime votes · 20 views')).toBeInTheDocument();
   expect(screen.getByLabelText('Submission totals')).toHaveTextContent('3 submitted');
 });
+
+test('fictional demo votes are labelled and cannot write real votes', async () => {
+  open('/?demo=1');
+  expect(await screen.findByText('370')).toBeInTheDocument();
+  expect(screen.getByText('14')).toBeInTheDocument();
+  expect(screen.getByText('+356')).toBeInTheDocument();
+  expect(screen.getByText('Demo · fictional votes')).toBeInTheDocument();
+  const vote = screen.getByRole('button', {name:'Upvote deal'});
+  expect(vote).toBeDisabled();
+  fireEvent.click(vote);
+  expect(mocks.rpc.mock.calls.some(([,p])=>p.p_action==='vote')).toBe(false);
+  fireEvent.click(screen.getByRole('button',{name:'Show real ranking →'}));
+  await waitFor(()=>expect(screen.queryByText('370')).not.toBeInTheDocument());
+  expect(screen.queryByText('Demo · fictional votes')).not.toBeInTheDocument();
+});
