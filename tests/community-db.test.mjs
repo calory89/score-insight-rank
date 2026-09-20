@@ -51,7 +51,7 @@ await test("existing catalog seeds approved discoveries without fake engagement"
   assert.equal(deal.week_net, 0);
   assert.ok(!("submitted_by" in deal));
 });
-await test("server-issued identity, replay and vote reversal are atomic", async () => {
+await test("server-issued identity, replay and downvote rejection are atomic", async () => {
   assert.match(
     (await api("vote", "invented", { id: deal.id, value: 1 })).error,
     /expired/,
@@ -242,7 +242,12 @@ await test("weekly rollover preserves lifetime and freezes winner snapshots", as
     ),
     1,
   );
-  assert.equal((await one("select community_rankings()")).rows[0].life_net, 1);
+  const next = await one("select community_rankings()");
+  assert.equal(next.rows[0].life_net, 2);
+  assert.equal(next.global_votes, 2);
+  assert.equal(next.weekly_votes, 1);
+  assert.equal((await api("vote", account.token, {id: deal.id, value: 1})).already, true);
+  assert.equal((await one("select community_rankings()")).global_votes, 2);
 });
 await test("launch homes break ties without overriding actual votes", async () => {
   await db.exec("BEGIN");
