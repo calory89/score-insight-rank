@@ -9,7 +9,11 @@ WITH ordered AS (
 ), seeded AS (
  SELECT id, CASE n WHEN 0 THEN 370 WHEN 1 THEN 328 WHEN 2 THEN 124 WHEN 3 THEN 67 ELSE round(28*power(.79,n-4))::int END AS points FROM ordered
 )
-UPDATE public.community_deals d SET launch_points=s.points,launch_week_id=(SELECT id FROM public.community_weeks ORDER BY starts_at LIMIT 1) FROM seeded s WHERE d.id=s.id;
+-- Legacy rows use zero for unknown metrics; normalize them when updating under current constraints.
+UPDATE public.community_deals d SET sqm=CASE WHEN d.sqm>0 THEN d.sqm END,
+ price_eur=CASE WHEN d.price_eur>0 THEN d.price_eur END,
+ bedrooms=CASE WHEN d.bedrooms BETWEEN 0 AND 1000 THEN d.bedrooms END,
+ launch_points=s.points,launch_week_id=(SELECT id FROM public.community_weeks ORDER BY starts_at LIMIT 1) FROM seeded s WHERE d.id=s.id;
 
 CREATE OR REPLACE FUNCTION public.community_close_week(p_week uuid)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
