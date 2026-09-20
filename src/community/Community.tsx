@@ -475,6 +475,7 @@ function Card({
         {(deal.has_source || safeUrl(deal.source_url)) && (
           <OriginalListingLink
             href={deal.source_url || undefined}
+            returnTo={`/deal/${deal.slug}`}
             target="_blank"
             rel="noopener noreferrer"
             className="hunt-original"
