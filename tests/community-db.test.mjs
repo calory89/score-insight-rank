@@ -289,4 +289,55 @@ await test("anonymous source URLs are gated in rankings, picks and deep detail p
     assert.ok((await one('select community_rankings()')).rows.every(d=>d.source_url));
   } finally {await db.exec('ROLLBACK');}
 });
+await test("link-only submissions require login, remain private and reach the admin queue", async () => {
+  await db.exec('BEGIN');
+  try {
+    await login(null);
+    const guest=await api('session',null);
+    assert.equal((await api('quick_submit',guest.token,{url:'https://example.org/new-house'})).auth,true);
+    await login(user);
+    const result=await api('quick_submit',account.token,{url:'https://example.org/new-house',why:'Worth reviewing',submitted_by:admin,status:'approved'});
+    assert.equal(result.status,'pending');
+    const mine=(await api('dashboard',account.token)).deals.find(d=>d.slug===result.slug);
+    assert.equal(mine.submitted_by,user);
+    assert.equal(mine.why_great,'Worth reviewing');
+    assert.equal(mine.status,'pending');
+    assert.equal((await one('select community_rankings()')).rows.some(d=>d.slug===result.slug),false);
+    assert.equal((await api('quick_submit',account.token,{url:'https://example.org/new-house?utm_source=again'})).already,true);
+    await login('00000000-0000-0000-0000-000000000003');
+    const other=await api('session',null);
+    assert.equal((await api('dashboard',other.token)).deals.length,0);
+    assert.ok((await api('queue',other.token)).error);
+    assert.ok((await api('quick_submit',other.token,{url:'https://example.org/new-house'})).error);
+    await login(admin);
+    const moderator=await api('session',null);
+    assert.ok(moderator.pending_submissions>=1);
+    assert.ok((await api('queue',moderator.token)).pending.some(d=>d.id===mine.id));
+    assert.ok((await api('moderate',moderator.token,{id:mine.id,decision:'approve'})).error);
+    assert.equal((await api('moderate',moderator.token,{id:mine.id,decision:'edit',title:'A reviewed coastal home',country:'Italy',location:'Calabria',price_eur:39000,image:'https://example.org/photo.jpg'})).ok,true);
+    assert.equal((await api('moderate',moderator.token,{id:mine.id,decision:'approve'})).ok,true);
+    await login(user);
+    const approved=(await api('dashboard',account.token)).deals.find(d=>d.id===mine.id);
+    assert.equal(approved.status,'approved');assert.equal(approved.country,'Italy');assert.equal(approved.lifetime_votes,0);
+    assert.ok((await one('select community_rankings()')).rows.some(d=>d.id===mine.id));
+    await login(admin);
+    await api('moderate',moderator.token,{id:mine.id,decision:'reject',reason:'The advertiser confirmed it is no longer available'});
+    await login(user);
+    assert.match((await api('dashboard',account.token)).deals.find(d=>d.id===mine.id).reject_reason,/no longer available/);
+  } finally {await db.exec('ROLLBACK');}
+});
+await test("submission spam limits, honeypot and unsafe URLs are enforced on the server", async () => {
+  await db.exec('BEGIN');
+  try {
+    await login(user);
+    assert.ok((await api('quick_submit',account.token,{url:'https://example.org/bot',website:'bot-filled'})).error);
+    await db.exec('SAVEPOINT invalid_url');
+    await assert.rejects(api('quick_submit',account.token,{url:'http://localhost/admin'}),/public listing/);
+    await db.exec('ROLLBACK TO SAVEPOINT invalid_url');
+    await db.exec("DELETE FROM community_limits WHERE bucket LIKE 'submit:%' OR bucket LIKE 'submit-network:%'");
+    for(let i=0;i<10;i++) assert.equal((await api('quick_submit',account.token,{url:'https://example.org/spam-check/'+i})).status,'pending');
+    assert.match((await api('quick_submit',account.token,{url:'https://example.org/spam-check/extra'})).error,/submission limit/);
+    assert.equal(await one("select has_function_privilege('anon','community_deal(text,text)','EXECUTE')"),false);
+  } finally {await db.exec('ROLLBACK');}
+});
 await db.close();
