@@ -243,7 +243,7 @@ const Admin = () => {
                               {u.detected_country && <><MapPin className="h-3 w-3 ml-1" /> {u.detected_country}</>}
                             </p>
                             <p className="sm:hidden text-[10px] text-muted-foreground mt-0.5">
-                              {new Date(u.created_at).toLocaleDateString()} · <span className={`font-medium uppercase ${u.email === ADMIN_EMAIL || u.plan !== "free" ? "text-primary" : ""}`}>{u.email === ADMIN_EMAIL ? "pro" : u.plan}</span>
+                              {new Date(u.created_at).toLocaleDateString()} · <span className={`font-medium uppercase ${u.plan !== "free" ? "text-primary" : ""}`}>{u.plan}</span>
                             </p>
                           </div>
                           <span className="text-xs text-muted-foreground hidden sm:block">{new Date(u.created_at).toLocaleDateString()}</span>
@@ -252,9 +252,8 @@ const Admin = () => {
                           </span>
                           <span className="text-xs font-mono text-foreground">{u.analyses_count}</span>
                           <span className={`text-[10px] font-medium uppercase tracking-wider px-2 py-0.5 rounded-full w-fit hidden sm:block ${
-                            u.email === ADMIN_EMAIL ? "bg-primary/10 text-primary" :
                             u.plan === "free" ? "bg-secondary text-muted-foreground" : "bg-primary/10 text-primary"
-                          }`}>{u.email === ADMIN_EMAIL ? "pro" : u.plan}</span>
+                          }`}>{u.plan}</span>
                           <div className="flex justify-end">
                             {expandedUser === u.id ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                           </div>
