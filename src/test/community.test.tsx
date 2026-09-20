@@ -118,7 +118,7 @@ test("week and all-time use their own counts without hidden filters", async () =
   const previous = mocks.rpc.getMockImplementation()!;
   mocks.rpc.mockImplementation(async (name:string,p:any) => {
     const response = await previous(name,p);
-    if(name === 'community_rankings') response.data = {...response.data,weekly_votes:2,global_votes:9,rows:[{...deal,life_up:9}]};
+    if(name === 'community_rankings') response.data = {...response.data,weekly_votes:2,global_votes:9,rows:[{...deal,life_up:9,life_net:9}]};
     return response;
   });
   open('/?country=Italy&category=beach');
@@ -248,16 +248,21 @@ test('my submissions shows statuses, review feedback and real property data', as
   expect(screen.getByLabelText('Submission totals')).toHaveTextContent('3 submitted');
 });
 
-test('fictional demo votes are labelled and cannot write real votes', async () => {
+test('initial points preserve live voting even on old demo links', async () => {
+  const previous=mocks.rpc.getMockImplementation()!;
+  mocks.rpc.mockImplementation(async(name:string,p:any)=>{
+    const response=await previous(name,p);
+    if(name==='community_rankings') response.data={...response.data,weekly_points:372,rows:[{...deal,launch_points:370,launch_week_points:370,week_net:372,life_net:372}]};
+    return response;
+  });
   open('/?demo=1');
-  expect(await screen.findAllByText('370')).toHaveLength(3);
-  expect(screen.queryByRole('button',{name:'Downvote deal'})).toBeNull();
-  expect(screen.getByText('Demo')).toBeInTheDocument();
-  const vote = screen.getByRole('button', {name:'Upvote deal'});
-  expect(vote).toBeDisabled();
-  fireEvent.click(vote);
-  expect(mocks.rpc.mock.calls.some(([,p])=>p.p_action==='vote')).toBe(false);
-  fireEvent.click(screen.getByRole('button',{name:'Show real ranking →'}));
-  await waitFor(()=>expect(screen.queryByText('370')).not.toBeInTheDocument());
-  expect(screen.queryByText('Demo')).not.toBeInTheDocument();
+  const up=await screen.findByRole('button',{name:'Upvote deal'});
+  await waitFor(()=>expect(up).not.toBeDisabled());
+  expect(up).toHaveTextContent('372');
+  expect(screen.getByText('Includes initial points')).toHaveAttribute('title','370 initial points + 2 real votes');
+  expect(screen.queryByRole('link',{name:'Weekly winners'})).toBeNull();
+  fireEvent.click(up);
+  await screen.findByText(/Vote counted ✓ Share this find/);
+  expect(mocks.rpc.mock.calls.some(([,p])=>p.p_action==='vote' && p.p_payload.value===1)).toBe(true);
+  expect(screen.queryByText(/Real voting is disabled/)).toBeNull();
 });
