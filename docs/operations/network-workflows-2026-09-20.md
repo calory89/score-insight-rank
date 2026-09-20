@@ -28,7 +28,7 @@ Migration: `20260920200000_network_workflows.sql`. Apply atomically, record it i
 
 Transactional SQL tests: `platform_security.sql` plus `network_workflows.sql`. Cover company isolation, contact permissions/matching, independent preferences, sharing withdrawal, protected-contact deletion, later uploads, duplicate/stale introductions, fixed commission terms, source allocation, task isolation and public access. All test fixtures are rolled back.
 
-UI/logic: 47 tests pass, including eight network workflow tests. Existing email tests: 10 pass. TypeScript and production build pass. Entry bundle: 199,545 bytes, within the existing 250,000-byte budget.
+UI/logic: 48 tests pass, including eight network workflow tests. Existing email tests: 10 pass. TypeScript and production build pass. The entry bundle remains within the existing 250,000-byte budget.
 
 Prior-contact backfill uses existing timestamped fingerprints. It does not reconstruct proof that was already deleted before this release. Existing recorded sales remain unchanged. Contact matching is per normalized email/phone fingerprint, not a claim that different identifiers have been resolved to the same human.
 
@@ -39,3 +39,7 @@ This release does not add bank transfers, invoicing automation, team assignment,
 Application commit `c9eb9964f26ee3e1ee19a3612f52da902c7f7cc9` passed GitHub Actions run `35508584128` (clean install, type checks, all tracked tests, email tests, build and size budget). The migration committed and is recorded in the production ledger. Postconditions confirm task storage exists, public contact handoff is blocked, and direct browser sharing updates are blocked. No synthetic developer records remain.
 
 Website publication is requested after GitHub synchronization; verify the public network page contains “Only want to protect your existing contacts?” and that the project reports this release or a descendant before declaring the frontend live.
+
+## Contributor onboarding
+
+A person who only protects or contributes contacts can register without a property project. Company/professional name and contact information identify the contributor; project name and website become required only when enabling receipt of buyers. Registration returns to the network overview instead of forcing an immediate agreement redirect. Approval and agreement requirements for introductions remain in place. Apply migration `20260920210000_network_onboarding.sql` for the server-side project check.
