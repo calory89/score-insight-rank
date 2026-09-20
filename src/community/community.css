@@ -1432,3 +1432,22 @@
 
 .hunt-original { background: transparent; border: 0; width: 100%; text-align: left; }
 .hunt-feed-count { text-align: center; color: var(--rh-ink-muted); padding-top: 24px; }
+
+.hunt-quick-submit { position: relative; max-width: 760px; margin: 26px auto 0; padding: 24px; border: 1px solid var(--h-line); border-radius: 18px; background: white; text-align: left; }
+.hunt-quick-submit h2 { font-family: Fraunces, Georgia, serif; font-size: 24px; }
+.hunt-quick-submit > p { color: var(--rh-ink-muted); line-height: 1.6; margin: 8px 0 18px; }
+.hunt-quick-row { display: flex; gap: 10px; }
+.hunt-quick-row label { flex: 1; min-width: 0; }
+.hunt-quick-row input, .hunt-quick-note textarea { width: 100%; min-height: 48px; border: 1px solid var(--h-line); border-radius: 8px; padding: 12px; font-size: 16px; background: var(--rh-bg); }
+.hunt-quick-submit .hunt-fine { margin-top: 12px; line-height: 1.6; }
+.hunt-quick-standalone { margin: 48px auto; }
+.hunt-quick-note { display: block; margin-top: 18px; }
+.hunt-quick-note textarea { display: block; margin-top: 8px; }
+.hunt-honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.hunt-quick-success { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; }
+.hunt-quick-success a, .hunt-quick-success button { text-decoration: underline; min-height: 44px; display: inline-flex; align-items: center; }
+.hunt-submission-summary { display: flex; flex-wrap: wrap; gap: 24px; padding: 22px 0; }
+.hunt-admin-link { white-space: nowrap; }
+@media(max-width:600px) { .hunt-quick-submit { padding: 18px; } .hunt-quick-row { flex-direction: column; } .hunt-quick-row button { width: 100%; } .hunt-header:has(.hunt-admin-link) { height: auto; min-height: 82px; flex-wrap: wrap; padding-top: 12px; padding-bottom: 12px; } .hunt-header:has(.hunt-admin-link) nav { flex-wrap: wrap; } }
+
+.hunt-full-details { display: inline-flex; align-items: center; min-height: 44px; margin-top: 10px; font-size: 12px; text-decoration: underline !important; }
