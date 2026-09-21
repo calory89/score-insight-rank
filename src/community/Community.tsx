@@ -15,6 +15,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { EBC, totalCost } from "@/lib/rh";
 import { listingVideo } from "@/lib/listing-media";
 import OriginalListingLink from "@/components/realhunt/OriginalListingLink";
@@ -570,7 +571,7 @@ function Home() {
   const live = useLiveStats();
   const [params, setParams] = useSearchParams();
   const scope = params.get("tab") === "all" ? "all" : "week";
-  const country = "";
+  const country = params.get("country") || "";
   const category = "";
   const [feed, setFeed] = useState<Feed | null>(null);
   const [error, setError] = useState("");
@@ -606,9 +607,14 @@ function Home() {
     return () => window.removeEventListener("rh-voted", on);
   }, [scope]);
   const nextUp = more && feed ? feed.rows.filter((r) => r.country === more.country && !session?.votes?.[r.id]).slice(0, 3) : [];
+  const setCountry = (c: string) => {
+    const next = new URLSearchParams(params);
+    c ? next.set("country", c) : next.delete("country");
+    setParams(next);
+  };
   const update = (key: string, val: string) => {
     const next = new URLSearchParams(params);
-    next.delete("country");
+    if (key !== "tab") next.delete("country");
     next.delete("category");
     val ? next.set(key, val) : next.delete(key);
     setParams(next);
@@ -672,6 +678,13 @@ function Home() {
           Search listings
         </Link>
       </nav>
+      <div className="hunt-chips" role="group" aria-label="Filter by country">
+        {["", "Italy", "Japan", "Sweden", "France", "Spain"].map((c) => (
+          <button key={c || "all"} aria-pressed={country === c} onClick={() => setCountry(c)}>
+            {c || "All countries"}
+          </button>
+        ))}
+      </div>
       {nextUp.length > 0 && (
         <aside className="hunt-next" aria-label="More to vote on">
           <strong>Keep going: more in {more?.country}</strong>
@@ -762,6 +775,35 @@ function Home() {
     </div>
   );
 }
+function Availability({ dealId }: { dealId: string }) {
+  const { user } = useAuth();
+  const { requireUser, setNotice } = useCommunity();
+  const [s, setS] = useState<{ available: number; sold: number; last_at: string | null; mine: string | null } | null>(null);
+  useEffect(() => {
+    (supabase.rpc as any)("community_availability_summary", { p_deal: dealId }).then(({ data }: any) => data && setS(data));
+  }, [dealId, user?.id]);
+  async function vote(status: "available" | "sold") {
+    if (!user) { requireUser(); return; }
+    const { data, error } = await (supabase.rpc as any)("community_availability_vote", { p_deal: dealId, p_status: status });
+    if (error || data?.error) { setNotice(data?.error || "Could not save. Try again."); return; }
+    setS(data); setNotice("Thanks. That helps everyone ✓");
+  }
+  const total = (s?.available || 0) + (s?.sold || 0);
+  return (
+    <div className="hunt-avail">
+      <strong>Is it still for sale?</strong>
+      <span>
+        {total === 0 ? "No reports yet. Called or checked? Tell the others." :
+          `${s!.available} say available · ${s!.sold} say sold (last 30 days)`}
+      </span>
+      <div>
+        <button aria-pressed={s?.mine === "available"} onClick={() => vote("available")}>Still available</button>
+        <button aria-pressed={s?.mine === "sold"} onClick={() => vote("sold")}>Sold or gone</button>
+      </div>
+    </div>
+  );
+}
+
 function Detail() {
   const [detailParams] = useSearchParams();
   const scope = detailParams.get("tab") === "all" ? "all" : "week";
@@ -868,6 +910,7 @@ function Detail() {
             {num(d.life_up + d.life_down)} lifetime votes · {num(d.views)} views
             · {num(d.saves)} saves
           </p>
+          <Availability dealId={d.id} />
           <p className="hunt-fine">
             Price and availability come from the source and may change. Check
             the original listing for current details.
@@ -880,6 +923,10 @@ function Detail() {
           >
             <Flag size={13} /> Report this deal
           </button>
+          <p className="hunt-fine">
+            Agent or owner of this home?{" "}
+            <a href={`mailto:hello@realhunt.co?subject=${encodeURIComponent("Feature my listing: " + d.slug)}`}>Feature it or correct the details</a>
+          </p>
         </section>
       </div>
       {report && (
