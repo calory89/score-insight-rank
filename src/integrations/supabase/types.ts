@@ -456,6 +456,8 @@ export type Database = {
           id: string
           image_urls: string[]
           is_editorial_pick: boolean
+          launch_points: number
+          launch_week_id: string | null
           location_name: string | null
           pick_note: string | null
           price_eur: number | null
@@ -485,6 +487,8 @@ export type Database = {
           id?: string
           image_urls?: string[]
           is_editorial_pick?: boolean
+          launch_points?: number
+          launch_week_id?: string | null
           location_name?: string | null
           pick_note?: string | null
           price_eur?: number | null
@@ -514,6 +518,8 @@ export type Database = {
           id?: string
           image_urls?: string[]
           is_editorial_pick?: boolean
+          launch_points?: number
+          launch_week_id?: string | null
           location_name?: string | null
           pick_note?: string | null
           price_eur?: number | null
@@ -540,6 +546,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "community_deals_launch_week_id_fkey"
+            columns: ["launch_week_id"]
+            isOneToOne: false
+            referencedRelation: "community_weeks"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "community_deals_week_id_fkey"
             columns: ["week_id"]
             isOneToOne: false
@@ -547,6 +560,66 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      community_hunters: {
+        Row: {
+          bio: string
+          created_at: string
+          display_name: string
+          handle: string
+          user_id: string
+        }
+        Insert: {
+          bio?: string
+          created_at?: string
+          display_name?: string
+          handle: string
+          user_id: string
+        }
+        Update: {
+          bio?: string
+          created_at?: string
+          display_name?: string
+          handle?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      community_identities: {
+        Row: {
+          actor: string
+          issued_at: string
+          token_hash: string
+        }
+        Insert: {
+          actor: string
+          issued_at?: string
+          token_hash: string
+        }
+        Update: {
+          actor?: string
+          issued_at?: string
+          token_hash?: string
+        }
+        Relationships: []
+      }
+      community_limits: {
+        Row: {
+          bucket: string
+          hits: number
+          window_at: string
+        }
+        Insert: {
+          bucket: string
+          hits?: number
+          window_at: string
+        }
+        Update: {
+          bucket?: string
+          hits?: number
+          window_at?: string
+        }
+        Relationships: []
       }
       community_reports: {
         Row: {
@@ -705,6 +778,48 @@ export type Database = {
           },
         ]
       }
+      community_week_votes: {
+        Row: {
+          actor: string
+          created_at: string
+          deal_id: string
+          updated_at: string
+          value: number
+          week_id: string
+        }
+        Insert: {
+          actor: string
+          created_at?: string
+          deal_id: string
+          updated_at?: string
+          value: number
+          week_id: string
+        }
+        Update: {
+          actor?: string
+          created_at?: string
+          deal_id?: string
+          updated_at?: string
+          value?: number
+          week_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_week_votes_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "community_deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_week_votes_week_id_fkey"
+            columns: ["week_id"]
+            isOneToOne: false
+            referencedRelation: "community_weeks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       community_week_winners: {
         Row: {
           archived_at: string
@@ -712,6 +827,7 @@ export type Database = {
           down_votes: number
           net_score: number
           rank: number
+          snapshot: Json | null
           up_votes: number
           week_id: string
         }
@@ -721,6 +837,7 @@ export type Database = {
           down_votes: number
           net_score: number
           rank: number
+          snapshot?: Json | null
           up_votes: number
           week_id: string
         }
@@ -730,6 +847,7 @@ export type Database = {
           down_votes?: number
           net_score?: number
           rank?: number
+          snapshot?: Json | null
           up_votes?: number
           week_id?: string
         }
@@ -3315,6 +3433,10 @@ export type Database = {
         Returns: Json
       }
       admin_web_vitals: { Args: never; Returns: Json }
+      community_api: {
+        Args: { p_action: string; p_payload?: Json; p_token?: string }
+        Returns: Json
+      }
       community_cast_vote: {
         Args: {
           p_deal: string
@@ -3347,6 +3469,10 @@ export type Database = {
         Returns: Json
       }
       community_hunter: { Args: { p_handle: string }; Returns: Json }
+      community_limit: {
+        Args: { p_key: string; p_max: number; p_seconds: number }
+        Returns: boolean
+      }
       community_merge_votes: {
         Args: { p_anon: string; p_user: string }
         Returns: Json
@@ -3377,6 +3503,24 @@ export type Database = {
         Args: { p_deal: string; p_voter: string }
         Returns: undefined
       }
+      community_rollover: {
+        Args: never
+        Returns: {
+          closed_at: string | null
+          created_at: string
+          ends_at: string
+          id: string
+          label: string
+          starts_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "community_weeks"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      community_source_key: { Args: { p_url: string }; Returns: string }
       dev_authorize_intro_contact: {
         Args: {
           p_authorized: boolean
