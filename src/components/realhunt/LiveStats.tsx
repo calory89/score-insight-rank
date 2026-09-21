@@ -45,7 +45,8 @@ const readCache = (): Stats | null => {
 // traffic that is a permanent aggregate scan of the largest table in the project, and it exhausted
 // the connection pool: the site served its shell and no home ever loaded. The counter is the least
 // important thing on the page, so it is off until the RPC only ever reads its cache.
-const LIVE_STATS_ON = false;
+// Back on 21-sep-2026: rh_live_stats() now only reads a row a cron refreshes every 2 minutes.
+const LIVE_STATS_ON = true;
 
 const fetchStats = (): Promise<Stats | null> => {
   if (!LIVE_STATS_ON) return Promise.resolve(null);
@@ -99,7 +100,7 @@ const LiveStats = ({ compact }: { compact?: boolean }) => {
         <style>{CSS}</style>
         <span title={`${nf(s.live)} online now · ${nf(s.today)} today`}
           className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-hairline bg-white text-[12px] font-medium tabular-nums text-ink">
-          <span className="rh-live-dot" />{nf(s.live)}
+          <span className="rh-live-dot" />{s.live >= 5 ? nf(s.live) : nf(s.today)}
         </span>
       </>
     );
@@ -110,15 +111,17 @@ const LiveStats = ({ compact }: { compact?: boolean }) => {
       <style>{CSS}</style>
       <div aria-live="polite"
         className="inline-flex items-center gap-2.5 pl-3 pr-3.5 py-1.5 rounded-full border border-hairline bg-white shadow-[0_1px_3px_rgba(20,18,10,.06)]">
+        {s.live >= 5 && (<>
         <span className="inline-flex items-center gap-1.5">
           <span className="rh-live-dot" />
           <span className="text-[13px] font-semibold tabular-nums text-ink">{nf(s.live)}</span>
           <span className="text-[12.5px] text-ink-muted">online</span>
         </span>
         <span className="h-3.5 w-px bg-hairline" />
+        </>)}
         <span className="inline-flex items-center gap-1.5">
           <span className="text-[13px] font-semibold tabular-nums text-ink">{nf(s.today)}</span>
-          <span className="text-[12.5px] text-ink-muted">today</span>
+          <span className="text-[12.5px] text-ink-muted">visitors in 24h</span>
         </span>
       </div>
     </>

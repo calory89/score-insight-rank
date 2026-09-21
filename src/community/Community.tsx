@@ -15,10 +15,11 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { EBC } from "@/lib/rh";
+import { EBC, totalCost } from "@/lib/rh";
 import { listingVideo } from "@/lib/listing-media";
 import OriginalListingLink from "@/components/realhunt/OriginalListingLink";
 import AuthModal from "@/components/realhunt/AuthModal";
+import { useLiveStats } from "@/components/realhunt/LiveStats";
 import {
   ArrowUp,
   ArrowUpRight,
@@ -52,6 +53,26 @@ import {
 } from "./api";
 import "./community.css";
 const Ctx = createContext<any>(null);
+// Imported titles often repeat the price ("€35,000 · Your own home") right under the big price, or
+// say nothing at all ("Property - Japan"). Show something a person would actually write.
+function cleanTitle(d: Pick<Deal, "title" | "location_name" | "country" | "sqm">) {
+  let t = (d.title || "").replace(/^\s*€\s?[\d.,]+\s*(k\b)?\s*[·\-–:|]\s*/i, "").trim();
+  if (!t || /^property\s*[-–]\s*\w+$/i.test(t) || /^property$/i.test(t)) {
+    const where = d.location_name || d.country || "somewhere worth a look";
+    t = d.sqm ? `${d.sqm} m² home in ${where}` : `Home in ${where}`;
+  }
+  return t;
+}
+// Homes imported from Instagram accounts were shown as "Found by @account", as if that account had
+// joined RealHunt and submitted them. It did not. Say where it was spotted instead.
+const isImported = (d: { find_id?: string | null }) => !!d.find_id;
+function closesIn(end?: string) {
+  if (!end) return "";
+  const ms = new Date(end).getTime() - Date.now();
+  if (!(ms > 0)) return "closing now";
+  const dd = Math.floor(ms / 86400000), hh = Math.floor((ms % 86400000) / 3600000);
+  return dd > 0 ? `closes in ${dd}d ${hh}h` : `closes in ${hh}h ${Math.floor((ms % 3600000) / 60000)}m`;
+}
 const useCommunity = () => useContext(Ctx);
 const num = (v: number = 0) => new Intl.NumberFormat("en").format(v);
 function ErrorBox({ error, retry }: { error: string; retry?: () => void }) {
@@ -96,9 +117,25 @@ function Shell({ children }: { children: ReactNode }) {
     };
   }, [user?.id]);
   useEffect(() => {
-    document.title =
-      "RealHunt — Property deals. Found by people. Ranked by you.";
+    if (location.pathname.startsWith("/deal/")) return; // the listing sets its own title
+    document.title = "RealHunt — Homes under €60,000. Found by people. Ranked by you.";
   }, [location.pathname]);
+  // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
+  // has to find the home again and click twice.
+  useEffect(() => {
+    if (!user || !session) return;
+    let id: string | null = null;
+    try { id = sessionStorage.getItem("rh_pending_vote"); } catch {}
+    if (!id) return;
+    try { sessionStorage.removeItem("rh_pending_vote"); } catch {}
+    api("vote", session.token, { id, value: 1 })
+      .then(() => {
+        setSession((s: Session | null) => s ? { ...s, votes: { ...s.votes, [id as string]: 1 } } : s);
+        setNotice("You are in, and your vote counted.");
+        window.dispatchEvent(new CustomEvent("rh-voted", { detail: { id } }));
+      })
+      .catch((e) => setNotice((e as Error).message));
+  }, [user?.id, session?.token]);
   useEffect(() => {
     if (!session?.admin) return;
     const refresh = () => { if (document.visibilityState === "visible") void connect(); };
@@ -158,7 +195,8 @@ function Shell({ children }: { children: ReactNode }) {
             {session?.admin && <Link to="/hunt/admin" className="hunt-admin-link">Review ({session.pending_submissions || 0})</Link>}
             <Link className="hunt-primary" to="/submit">
               <Plus size={16} />
-              <span>Submit a Deal</span>
+              <span className="hunt-submit-long">Submit a Deal</span>
+              <span className="hunt-submit-short">Submit</span>
             </Link>
           </nav>
         </header>
@@ -196,7 +234,7 @@ function Shell({ children }: { children: ReactNode }) {
           onClose={() => setAuth(false)}
           redirect={location.pathname + location.search}
           title="Join the hunt"
-          subtitle="Vote without an account. Sign in to save, comment or submit a deal."
+          subtitle="One vote per person keeps the ranking honest. Just your email: vote, save, comment and submit."
         />
       </div>
     </Ctx.Provider>
@@ -279,7 +317,7 @@ function Vote({
   onChange?: () => void;
   scope?: string;
 }) {
-  const { session, setSession, call, setNotice } = useCommunity();
+  const { session, setSession, call, setNotice, user, requireUser } = useCommunity();
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<Deal | null>(null);
   const [shared, setShared] = useState(false);
@@ -292,6 +330,11 @@ function Vote({
       setNotice("You already voted on this deal ✓");
       return;
     }
+    if (!user) {
+      try { sessionStorage.setItem("rh_pending_vote", deal.id); } catch {}
+      requireUser();
+      return;
+    }
     setBusy(true);
     setPreview(votePreview(deal, selected, value));
     try {
@@ -301,9 +344,8 @@ function Vote({
         votes: { ...s.votes, [deal.id]: value },
       }));
       setShared(true);
-      setNotice(
-        "Your vote counts. Thanks for helping rank this week’s discoveries.",
-      );
+      setNotice("Your vote counts. Thanks for helping rank this week’s discoveries.");
+      window.dispatchEvent(new CustomEvent("rh-voted", { detail: { id: deal.id, country: deal.country } }));
       onChange?.();
     } catch (e) {
       setPreview(null);
@@ -320,7 +362,7 @@ function Vote({
         aria-label="Upvote deal" aria-pressed={selected === 1} onClick={() => vote(1)}>
         <ArrowUp size={18} /><strong>{num(total)}</strong>
       </button>
-      {initialPoints > 0 && <small className="hunt-demo-caption" title={`${initialPoints} initial points + ${scope === "all" ? d.life_up : d.week_up} real votes`}>Includes initial points</small>}
+      <small className="hunt-demo-caption">{total === 1 ? "1 vote" : `${num(total)} votes`}{initialPoints > 0 ? "" : ""}</small>
       {shared && (
         <button
           className="hunt-after-vote"
@@ -398,7 +440,7 @@ function Card({
         <Media deal={deal} scope={scope} />
         <span className="hunt-rank">{pick ? "✦" : `#${deal.rank}`}</span>
         <Save deal={deal} onChange={onChange} />
-        {tag && !pick && <span className="hunt-badge">{tag}</span>}
+        {tag && !pick && !tag.startsWith("#1") && <span className="hunt-badge">{tag}</span>}
       </div>
       <div className="hunt-card-body">
         <div className="hunt-card-location">
@@ -412,7 +454,7 @@ function Card({
           {money(deal.price_eur)}
         </div>}
         <h2>
-          <Link to={`/deal/${deal.slug}${scope === "all" ? "?tab=all" : ""}`}>{deal.title}</Link>
+          <Link to={`/deal/${deal.slug}${scope === "all" ? "?tab=all" : ""}`}>{cleanTitle(deal)}</Link>
         </h2>
         <p className="hunt-metrics">
           {deal.location_name}
@@ -423,7 +465,7 @@ function Card({
           <span className="hunt-avatar">
             {(deal.hunter_handle || "r")[0].toUpperCase()}
           </span>
-          Found by{" "}
+          {isImported(deal) ? "Spotted on" : "Found by"}{" "}
           <Link to={`/hunter/${deal.hunter_handle || "realhunt"}`}>
             @{deal.hunter_handle || "realhunt"}
           </Link>
@@ -523,6 +565,9 @@ function QuickSubmission({ initialUrl = "", standalone = false }: { initialUrl?:
 
 function Home() {
   const { user } = useAuth();
+  const { session } = useCommunity();
+  const [more, setMore] = useState<{ country?: string } | null>(null);
+  const live = useLiveStats();
   const [params, setParams] = useSearchParams();
   const scope = params.get("tab") === "all" ? "all" : "week";
   const country = "";
@@ -555,6 +600,12 @@ function Home() {
   useEffect(() => {
     load();
   }, [scope, country, category, user?.id]);
+  useEffect(() => {
+    const on = (e: Event) => { const d = (e as CustomEvent).detail || {}; if (d.country) setMore({ country: d.country }); load(); };
+    window.addEventListener("rh-voted", on);
+    return () => window.removeEventListener("rh-voted", on);
+  }, [scope]);
+  const nextUp = more && feed ? feed.rows.filter((r) => r.country === more.country && !session?.votes?.[r.id]).slice(0, 3) : [];
   const update = (key: string, val: string) => {
     const next = new URLSearchParams(params);
     next.delete("country");
@@ -578,12 +629,18 @@ function Home() {
           </span>
           <i />
           <span>
-            <strong>{feed ? num(feed.weekly_points ?? feed.weekly_votes) : "—"}</strong> points this week
+            <strong>{feed ? num(feed.weekly_votes) : "—"}</strong> votes this week
           </span>
           <i />
           <span>
             <strong>{feed ? num(feed.global_votes) : "—"}</strong> total votes
           </span>
+          {live && live.today > 0 && (<>
+            <i />
+            <span>
+              <strong>{num(live.today)}</strong> visitors in 24h
+            </span>
+          </>)}
         </div>
       </section>
       <div className="hunt-feed-header">
@@ -593,7 +650,7 @@ function Home() {
             <span>↗</span>
           </h2>
           <p>
-            {scope === "all" ? "All votes since launch" : `${feed?.week?.label?.replace("-", "–") || "Sep 21–28, 2026"} · UTC`}
+            {scope === "all" ? "All votes since launch" : `${feed?.week?.label?.replace("-", "–") || "This week"} · ${closesIn(feed?.week?.ends_at) || "UTC"}`}
           </p>
         </div>
       </div>
@@ -615,6 +672,20 @@ function Home() {
           Search listings
         </Link>
       </nav>
+      {nextUp.length > 0 && (
+        <aside className="hunt-next" aria-label="More to vote on">
+          <strong>Keep going: more in {more?.country}</strong>
+          <div>
+            {nextUp.map((r) => (
+              <Link key={r.id} to={`/deal/${r.slug}`}>
+                <img src={r.image_urls?.[0]} alt="" loading="lazy" />
+                <span>{money(r.price_eur)}</span>
+              </Link>
+            ))}
+          </div>
+          <button aria-label="Hide suggestions" onClick={() => setMore(null)}><X size={14} /></button>
+        </aside>
+      )}
       {error && <ErrorBox error={error} retry={() => load()} />}
       {!feed && busy ? (
         <Loading />
@@ -685,9 +756,8 @@ function Home() {
         </Link>
       </section>
       <p className="hunt-rules">
-        One upvote per deal, per visitor each week.
-        No account needed to vote. Weekly points reset; All Time keeps the total.
-        Initial editorial points are labelled separately. All new votes come from visitors.
+        One vote per person, per home, each week. Sign in with your email to vote, so nobody can vote twice.
+        Only priced homes under €60,000 are ranked. The weekly board resets every Monday; All Time keeps the total.
       </p>
     </div>
   );
@@ -715,6 +785,21 @@ function Detail() {
     if (session) load();
   }, [slug, session?.token, user?.id]);
   const d: Deal = data?.deal;
+  useEffect(() => {
+    if (!d) return;
+    const where = d.location_name || d.country || "";
+    document.title = `${d.price_eur != null ? money(d.price_eur) + " · " : ""}${cleanTitle(d)}${where && !cleanTitle(d).includes(where) ? " · " + where : ""} · RealHunt`;
+    const desc = `${cleanTitle(d)}${d.price_eur != null ? " for " + money(d.price_eur) : ""}. Voted by the RealHunt community. Homes under €60,000.`;
+    const set = (sel: string, attr: string, key: string, val: string) => {
+      let m = document.head.querySelector(sel) as HTMLMetaElement | null;
+      if (!m) { m = document.createElement("meta"); m.setAttribute(attr, key); document.head.appendChild(m); }
+      m.setAttribute("content", val);
+    };
+    set('meta[name="description"]', "name", "description", desc);
+    set('meta[property="og:title"]', "property", "og:title", document.title);
+    set('meta[property="og:description"]', "property", "og:description", desc);
+    if (d.image_urls?.[0]) set('meta[property="og:image"]', "property", "og:image", new URL(d.image_urls[0], location.origin).href);
+  }, [d?.id]);
   if (error)
     return (
       <div className="hunt-wrap">
@@ -733,15 +818,18 @@ function Detail() {
           <span className="hunt-eyebrow">
             {d.country} · {d.category}
           </span>
-          <h1>{d.title}</h1>
+          <h1>{cleanTitle(d)}</h1>
           <div className="hunt-price">{money(d.price_eur)}</div>
+          {d.price_eur != null && totalCost(d.price_eur, d.country) && (
+            <p className="hunt-allin">Realistic all-in with taxes and notary: about <strong>{money(totalCost(d.price_eur, d.country))}</strong></p>
+          )}
           <p>
             {d.location_name}
             {d.sqm ? ` · ${d.sqm} m²` : ""}
             {d.bedrooms ? ` · ${d.bedrooms} beds` : ""}
           </p>
           <p>
-            Found by{" "}
+            {isImported(d) ? "Spotted on" : "Found by"}{" "}
             <Link to={`/hunter/${d.hunter_handle}`}>@{d.hunter_handle}</Link>
             {d.is_editorial_pick ? " · ✦ RealHunt Pick" : ""}
           </p>
@@ -1377,6 +1465,7 @@ function Mine() {
         <button className="hunt-primary" onClick={requireUser}>
           Sign in
         </button>
+        <p><Link to="/">Or see this week’s top homes first →</Link></p>
       </div>
     );
   return (

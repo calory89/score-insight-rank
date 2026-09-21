@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 export type Deal = {
   launch_points?: number;
+  find_id?: string | null;
   launch_week_points?: number;
   id: string;
   slug: string;

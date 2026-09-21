@@ -1572,3 +1572,19 @@
  .hunt-detail :target { scroll-margin-bottom: 110px; }
 }
 @media (prefers-reduced-motion: reduce) { .hunt-upvote { transition: none; } }
+
+/* 21-sep-2026 */
+.hunt-submit-short { display: none; }
+@media (max-width: 600px) {
+  .hunt-submit-long { display: none; }
+  .hunt-submit-short { display: inline; }
+  .hunt-header nav .hunt-primary span { max-width: none; }
+}
+.hunt-allin { font-size: 13.5px; color: #3A382F; margin-top: 4px; }
+.hunt-next { position: relative; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  margin: 14px 0 6px; padding: 12px 40px 12px 14px; border: 1px solid #ECE7DC; border-radius: 16px; background: #fff; }
+.hunt-next strong { font-size: 14px; }
+.hunt-next div { display: flex; gap: 10px; }
+.hunt-next a { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #16150F; text-decoration: none; }
+.hunt-next img { width: 44px; height: 44px; border-radius: 10px; object-fit: cover; }
+.hunt-next button { position: absolute; top: 10px; right: 10px; background: none; border: 0; cursor: pointer; color: #8A8678; }
