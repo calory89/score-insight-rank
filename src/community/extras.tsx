@@ -259,13 +259,16 @@ const PRICE_CAPS = [20000, 30000, 40000, 60000];
 export function Filters({ countries, value, onChange }: { countries: Record<string, number>; value: FeedParams; onChange: (v: FeedParams) => void }) {
   const list = Object.entries(countries || {}).sort((a, b) => b[1] - a[1]);
   const active = !!(value.country || value.category || value.max_price || value.min_sqm || (value.sort && value.sort !== "rank"));
+  const extra = [value.category, value.max_price, value.min_sqm, value.sort && value.sort !== "rank" ? value.sort : ""].filter(Boolean).length;
+  const [open, setOpen] = useState(() => (typeof window !== "undefined" && window.innerWidth > 700) || extra > 0);
   return (
-    <div className="hunt-filters">
+    <div className={"hunt-filters" + (open ? " is-open" : "")}>
       <div className="hunt-chips" role="group" aria-label="Country">
         <button aria-pressed={!value.country} onClick={() => onChange({ ...value, country: "" })}>{t("All countries")}</button>
         {list.map(([c, n]) => <button key={c} aria-pressed={value.country === c} onClick={() => onChange({ ...value, country: c })}>{c} <small>{n}</small></button>)}
       </div>
-      <div className="hunt-filter-row">
+      <button type="button" className="hunt-link hunt-filter-toggle" aria-expanded={open} onClick={() => setOpen((o) => !o)}>{open ? t("Hide filters") : t("More filters")}{extra > 0 ? ` (${extra})` : ""}</button>
+      {open && <div className="hunt-filter-row">
         <label><span>{t("Max price")}</span>
           <select value={value.max_price || ""} onChange={(e) => onChange({ ...value, max_price: e.target.value ? Number(e.target.value) : null })}>
             <option value="">€60,000</option>
@@ -287,7 +290,7 @@ export function Filters({ countries, value, onChange }: { countries: Record<stri
             <option value="price_asc">{t("Cheapest")}</option><option value="sqm">{t("Biggest")}</option>
           </select></label>
         {active && <button className="hunt-link" onClick={() => onChange({ scope: value.scope })}>{t("Clear filters")}</button>}
-      </div>
+      </div>}
     </div>
   );
 }

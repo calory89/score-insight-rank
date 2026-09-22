@@ -80,6 +80,8 @@ const D: Dict = {
   "Newest": ["Más nuevas", "Più recenti", "Neueste"],
   "Cheapest": ["Más baratas", "Più economiche", "Günstigste"],
   "Biggest": ["Más grandes", "Più grandi", "Größte"],
+  "More filters": ["Más filtros", "Altri filtri", "Mehr Filter"],
+  "Hide filters": ["Ocultar filtros", "Nascondi filtri", "Filter ausblenden"],
   "Clear filters": ["Quitar filtros", "Rimuovi filtri", "Filter zurücksetzen"],
   "New": ["Nueva", "Nuova", "Neu"],
   "Early access": ["Acceso anticipado", "Accesso anticipato", "Früher Zugang"],
