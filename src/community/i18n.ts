@@ -8,7 +8,11 @@ export const LANGS: { code: Lang; label: string }[] = [
   { code: "de", label: "Deutsch" },
 ];
 
+// 23-sep-2026 (Carlos): English only for now. Half-translated pages looked broken, so the
+// interface stays in English until every page and listing is translated.
+const ENGLISH_ONLY = true;
 function detect(): Lang {
+  if (ENGLISH_ONLY) return "en";
   try {
     const saved = localStorage.getItem("rh_lang");
     if (saved === "en" || saved === "es" || saved === "it" || saved === "de") return saved;

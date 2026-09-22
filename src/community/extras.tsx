@@ -305,6 +305,8 @@ function useCountdown(to?: string) {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 export function DropBar({ next, early }: { next?: string; early: number }) {
+  // 23-sep-2026 (Carlos): no daily 18:00 drop. Homes go live as soon as they are approved.
+  if (true as boolean) return null;
   const { user } = useAuth();
   const { requireUser } = useCommunity();
   const left = useCountdown(next);
@@ -426,7 +428,7 @@ export function SwipePage() {
       <h1>{t("Swipe")}</h1>
       <p className="hunt-fine">Right to vote, left to skip. {list.length} homes left.</p>
       {!d ? (
-        <div className="hunt-empty"><h3>You have seen every home this week.</h3><p>New homes drop every day at 18:00.</p><Link className="hunt-primary" to="/map">{t("Map")}</Link></div>
+        <div className="hunt-empty"><h3>You have seen every home this week.</h3><p>New homes are added every week.</p><Link className="hunt-primary" to="/map">{t("Map")}</Link></div>
       ) : (
         <>
           <div className="hunt-swipe-card" style={{ transform: `translateX(${dx}px) rotate(${dx / 25}deg)`, transition: start.current === null ? "transform .18s ease" : "none" }}
@@ -490,7 +492,7 @@ export function InvitePage() {
     <div className="hunt-wrap hunt-page">
       <span className="hunt-eyebrow">{t("Invite")}</span>
       <h1>Bring friends who dream of a cheap house</h1>
-      <p>Every friend who joins with your link gives you 5 hunter points. Bring three and you get the Connector badge on the leaderboard. Your friends get early access to every daily drop as soon as they sign in.</p>
+      <p>Every friend who joins with your link gives you 5 hunter points. Bring three and you get the Connector badge on the leaderboard. Your friends get the full listing links as soon as they sign in.</p>
       {!user ? <button className="hunt-primary" onClick={() => requireUser()}>{t("Sign in")}</button> : !me ? <div className="hunt-skeleton-list" /> : (
         <div className="hunt-invite">
           <code>{link}</code>
@@ -736,6 +738,7 @@ export function InstallButton() {
   );
 }
 export function LangSwitch() {
+  if (true as boolean) return null; // English only for now
   const [l, setL] = useState<Lang>(getLang());
   return (
     <label className="hunt-lang"><span className="sr-only">{t("Language")}</span>
