@@ -679,7 +679,7 @@ function Home() {
         </Link>
       </nav>
       <div className="hunt-chips" role="group" aria-label="Filter by country">
-        {["", "Italy", "Japan", "Sweden", "France", "Spain"].map((c) => (
+        {["", "Italy", "Spain", "Portugal"].map((c) => (
           <button key={c || "all"} aria-pressed={country === c} onClick={() => setCountry(c)}>
             {c || "All countries"}
           </button>
