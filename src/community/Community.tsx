@@ -235,7 +235,7 @@ function Shell({ children }: { children: ReactNode }) {
           onClose={() => setAuth(false)}
           redirect={location.pathname + location.search}
           title="Join the hunt"
-          subtitle="One vote per person keeps the ranking honest. Just your email: vote, save, comment and submit."
+          subtitle="Just your email. Open the original listings, save homes, comment and submit your own finds."
         />
       </div>
     </Ctx.Provider>
@@ -318,7 +318,7 @@ function Vote({
   onChange?: () => void;
   scope?: string;
 }) {
-  const { session, setSession, call, setNotice, user, requireUser } = useCommunity();
+  const { session, setSession, call, setNotice } = useCommunity();
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<Deal | null>(null);
   const [shared, setShared] = useState(false);
@@ -329,11 +329,6 @@ function Vote({
     if (busy) return;
     if (selected === value) {
       setNotice("You already voted on this deal ✓");
-      return;
-    }
-    if (!user) {
-      try { sessionStorage.setItem("rh_pending_vote", deal.id); } catch {}
-      requireUser();
       return;
     }
     setBusy(true);
@@ -769,7 +764,7 @@ function Home() {
         </Link>
       </section>
       <p className="hunt-rules">
-        One vote per person, per home, each week. Sign in with your email to vote, so nobody can vote twice.
+        One vote per person, per home, each week. No account needed to vote — you only sign in when you open the original listing.
         Only priced homes under €60,000 are ranked. The weekly board resets every Monday; All Time keeps the total.
       </p>
     </div>
