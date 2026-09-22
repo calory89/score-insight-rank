@@ -1,0 +1,23 @@
+name: import-idealista
+on:
+  push:
+    paths: [".github/workflows/import-idealista.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download and apply
+        run: |
+          curl -sSL -o /tmp/p.zip "https://tmpfiles.org/dl/1790099377.d7ff2dcdba9f1622/wcwP8WYWqZ1u/photos.zip"
+          echo "8dbd3af335b205a48abb0cce71e838d9  /tmp/p.zip" | md5sum -c
+          unzip -o /tmp/p.zip
+          git rm -q .github/workflows/import-idealista.yml
+          git config user.name "calory89"
+          git config user.email "calory89@users.noreply.github.com"
+          git add -A
+          git commit -m "Add 405 photos for 135 active idealista listings"
+          git push
