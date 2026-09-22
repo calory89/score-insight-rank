@@ -1,0 +1,24 @@
+name: rh-og-cards
+# Daily: share cards for new homes, listing data for the prerender step, and the sitemap.
+on:
+  schedule:
+    - cron: "10 16 * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  cards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pillow==11.0.0
+      - run: python3 scripts/og_cards.py
+      - name: commit if changed
+        run: |
+          git config user.name "realhunt-bot"
+          git config user.email "bot@realhunt.co"
+          git add public/og/deal src/data/deal-meta.json public/sitemap.xml public/og-default-60k.jpg
+          git diff --cached --quiet || (git commit -m "Share cards and sitemap for new homes" && git push)
