@@ -97,7 +97,7 @@ const Extras = () => {
 
 const CommunityEmailCapture = () => {
   const { pathname } = useLocation();
-  if (pathname === "/" || /^\/(deal|hunter|hunt|submit|winners)(\/|$)/.test(pathname)) return null;
+  if (pathname === "/" || /^\/(deal|hunter|hunt|submit|winners|swipe|map|leaderboard|invite|alerts|help-buying|guide|homes|c)(\/|$)/.test(pathname)) return null;
   return <EmailCapture />;
 };
 
@@ -169,12 +169,19 @@ const AppRoutes = () => (
       <Route path="/from/:account" element={<Home />} />
       <Route path="/account" element={<Account />} />
       <Route path="/account/:tab" element={<Account />} />
-      <Route path="/map" element={<MapPage />} />
-      <Route path="/swipe" element={<Swipe />} />
+      <Route path="/map" element={<Community />} />
+      <Route path="/swipe" element={<Community />} />
       <Route path="/compare-homes" element={<CompareHomes />} />
-      <Route path="/guide/:country" element={<Guide />} />
+      <Route path="/guide/:country" element={<Community />} />
+      <Route path="/guide" element={<Community />} />
+      <Route path="/leaderboard" element={<Community />} />
+      <Route path="/invite" element={<Community />} />
+      <Route path="/alerts" element={<Community />} />
+      <Route path="/help-buying" element={<Community />} />
+      <Route path="/homes/:country" element={<Community />} />
+      <Route path="/homes/:country/:cap" element={<Community />} />
       <Route path="/sell" element={<Sell />} />
-      <Route path="/c/:username" element={<Collection />} />
+      <Route path="/c/:handle" element={<Community />} />
       <Route path="/legal/cookies" element={<LegalPage page="cookies" />} />
       <Route path="/legal/takedown" element={<LegalPage page="takedown" />} />
       <Route path="/network" element={<Network />} />

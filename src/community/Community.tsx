@@ -21,6 +21,11 @@ import { listingVideo } from "@/lib/listing-media";
 import OriginalListingLink from "@/components/realhunt/OriginalListingLink";
 import AuthModal from "@/components/realhunt/AuthModal";
 import { useLiveStats } from "@/components/realhunt/LiveStats";
+import { lazy, Suspense } from "react";
+import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
+import { t } from "./i18n";
+import { Ctx, useCommunity } from "./ctx";
+const MapView = lazy(() => import("./map"));
 import {
   ArrowUp,
   ArrowUpRight,
@@ -53,7 +58,6 @@ import {
   votePreview,
 } from "./api";
 import "./community.css";
-const Ctx = createContext<any>(null);
 // Imported titles often repeat the price ("€35,000 · Your own home") right under the big price, or
 // say nothing at all ("Property - Japan"). Show something a person would actually write.
 function cleanTitle(d: Pick<Deal, "title" | "location_name" | "country" | "sqm">) {
@@ -66,7 +70,7 @@ function cleanTitle(d: Pick<Deal, "title" | "location_name" | "country" | "sqm">
 }
 // Homes imported from Instagram accounts were shown as "Found by @account", as if that account had
 // joined RealHunt and submitted them. It did not. Say where it was spotted instead.
-const isImported = (d: { find_id?: string | null }) => !!d.find_id;
+const isImported = (d: { find_id?: string | null; imported?: boolean }) => !!d.find_id || !!d.imported;
 function closesIn(end?: string) {
   if (!end) return "";
   const ms = new Date(end).getTime() - Date.now();
@@ -74,7 +78,6 @@ function closesIn(end?: string) {
   const dd = Math.floor(ms / 86400000), hh = Math.floor((ms % 86400000) / 3600000);
   return dd > 0 ? `closes in ${dd}d ${hh}h` : `closes in ${hh}h ${Math.floor((ms % 3600000) / 60000)}m`;
 }
-const useCommunity = () => useContext(Ctx);
 const num = (v: number = 0) => new Intl.NumberFormat("en").format(v);
 function ErrorBox({ error, retry }: { error: string; retry?: () => void }) {
   return (
@@ -93,6 +96,8 @@ function Loading() {
 }
 function Shell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  const langV = useLangVersion();
+  useReferralCapture();
   const [session, setSession] = useState<Session | null>(null);
   const [error, setError] = useState("");
   const [auth, setAuth] = useState(false);
@@ -179,25 +184,25 @@ function Shell({ children }: { children: ReactNode }) {
           <nav aria-label="Main navigation">
             <Link to="/browse" className="hunt-browse">
               <Search size={16} />
-              Browse homes
+              {t("Browse homes")}
             </Link>
             <Link to="/hunt/saved" aria-label="Saved deals">
               <Bookmark size={19} />
             </Link>
             {user ? (
               <Link to="/hunt/mine" className="hunt-account">
-                My submissions
+                {t("My submissions")}
               </Link>
             ) : (
               <button onClick={() => setAuth(true)} className="hunt-account">
-                Sign in
+                {t("Sign in")}
               </button>
             )}
             {session?.admin && <Link to="/hunt/admin" className="hunt-admin-link">Review ({session.pending_submissions || 0})</Link>}
             <Link className="hunt-primary" to="/submit">
               <Plus size={16} />
-              <span className="hunt-submit-long">Submit a Deal</span>
-              <span className="hunt-submit-short">Submit</span>
+              <span className="hunt-submit-long">{t("Submit a Deal")}</span>
+              <span className="hunt-submit-short">{t("Submit")}</span>
             </Link>
           </nav>
         </header>
@@ -214,20 +219,28 @@ function Shell({ children }: { children: ReactNode }) {
             </button>
           </div>
         )}
-        <div className="hunt-main">{children}</div>
+        <div className="hunt-main" key={langV}>{children}</div>
         <footer className="hunt-footer">
           <Link to="/">RealHunt</Link>
           <p>
-            Found by people. Ranked by you.
+            {t("Found by people. Ranked by you.")}
             <br />
-            Listings belong to their original publishers. RealHunt is not the
-            seller.
+            {t("Listings belong to their original publishers. RealHunt is not the seller.")}
           </p>
           <div>
-            <Link to="/browse">Browse homes</Link>
+            <Link to="/browse">{t("Browse homes")}</Link>
             <Link to="/legal/privacy">Privacy</Link>
             <Link to="/legal/terms">Terms</Link>
             {session?.admin && <Link to="/hunt/admin">Moderation</Link>}
+            {session?.admin && <Link to="/hunt/inbox">Inbox</Link>}
+          </div>
+          <div className="hunt-footer-tools">
+            <LangSwitch />
+            <InstallButton />
+            <Link to="/guide/italy">{t("Guides")}</Link>
+            <Link to="/help-buying">{t("Help buying")}</Link>
+            <Link to="/leaderboard">{t("Hunters")}</Link>
+            <Link to="/invite">{t("Invite")}</Link>
           </div>
         </footer>
         <AuthModal
@@ -252,6 +265,7 @@ async function shareDeal(d: Pick<Deal, "slug" | "title">, message: string) {
 function Media({ deal, detail = false, scope = "week" }: { deal: Deal; detail?: boolean; scope?: string }) {
   const [index, setIndex] = useState(0);
   const [play, setPlay] = useState(false);
+  const [lb, setLb] = useState(false);
   const imgs = deal.image_urls || [];
   const videoUrl = deal.video_url || listingVideo(deal.slug)?.src;
   return (
@@ -273,6 +287,7 @@ function Media({ deal, detail = false, scope = "week" }: { deal: Deal; detail?: 
             alt={deal.title}
             loading={detail ? "eager" : "lazy"}
             decoding="async"
+            onClick={detail ? (e) => { e.preventDefault(); setLb(true); } : undefined}
             onError={(e) => {
               if (!e.currentTarget.src.endsWith("/favicon.png"))
                 e.currentTarget.src = "/favicon.png";
@@ -306,6 +321,7 @@ function Media({ deal, detail = false, scope = "week" }: { deal: Deal; detail?: 
           </span>
         </>
       )}
+      {lb && <Lightbox images={imgs} start={index} title={deal.title} onClose={() => setLb(false)} />}
     </div>
   );
 }
@@ -340,7 +356,7 @@ function Vote({
         votes: { ...s.votes, [deal.id]: value },
       }));
       setShared(true);
-      setNotice("Your vote counts. Thanks for helping rank this week’s discoveries.");
+      { const days = bumpStreak(); setNotice(`${t("Your vote counts.")}${days > 1 ? ` ${days} ${t("days in a row")}.` : " Thanks for helping rank this week’s discoveries."}`); }
       window.dispatchEvent(new CustomEvent("rh-voted", { detail: { id: deal.id, country: deal.country } }));
       onChange?.();
     } catch (e) {
@@ -363,10 +379,7 @@ function Vote({
         <button
           className="hunt-after-vote"
           onClick={() =>
-            shareDeal(
-              deal,
-              `I voted for this property on RealHunt. What do you think?`,
-            )
+            shareRow(deal as Row, scope)
               .then(() => setNotice("Ready to share ✓"))
               .catch((e) => {
                 if (e.name !== "AbortError")
@@ -449,6 +462,8 @@ function Card({
         {deal.price_eur != null && <div className="hunt-price">
           {money(deal.price_eur)}
         </div>}
+        <LocalPrice eur={deal.price_eur} sqm={deal.sqm} />
+        <StatusTags deal={deal as Row} />
         <h2>
           <Link to={`/deal/${deal.slug}${scope === "all" ? "?tab=all" : ""}`}>{cleanTitle(deal)}</Link>
         </h2>
@@ -567,8 +582,11 @@ function Home() {
   const [params, setParams] = useSearchParams();
   const scope = params.get("tab") === "all" ? "all" : "week";
   const country = params.get("country") || "";
-  const category = "";
-  const [feed, setFeed] = useState<Feed | null>(null);
+  const category = params.get("type") || "";
+  const maxPrice = Number(params.get("price")) || null;
+  const minSqm = Number(params.get("sqm")) || null;
+  const sort = params.get("order") || "rank";
+  const [feed, setFeed] = useState<any>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const seq = useRef(0);
@@ -577,12 +595,7 @@ function Home() {
     setBusy(true);
     setError("");
     try {
-      const data = await ranking(
-        scope,
-        country,
-        category,
-        more ? feed?.rows.length || 0 : 0,
-      );
+      const data: any = await feedV3({ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort, limit: 24, offset: more ? feed?.rows.length || 0 : 0 });
       if (n !== seq.current) return;
       setFeed((f) =>
         more && f ? { ...data, rows: [...f.rows, ...data.rows] } : data,
@@ -595,7 +608,7 @@ function Home() {
   }
   useEffect(() => {
     load();
-  }, [scope, country, category, user?.id]);
+  }, [scope, country, category, maxPrice, minSqm, sort, user?.id]);
   useEffect(() => {
     const on = (e: Event) => { const d = (e as CustomEvent).detail || {}; if (d.country) setMore({ country: d.country }); load(); };
     window.addEventListener("rh-voted", on);
@@ -605,6 +618,13 @@ function Home() {
   const setCountry = (c: string) => {
     const next = new URLSearchParams(params);
     c ? next.set("country", c) : next.delete("country");
+    setParams(next);
+  };
+  const setFilters = (v: FeedParams) => {
+    const next = new URLSearchParams(params);
+    const put = (k: string, val: unknown) => (val ? next.set(k, String(val)) : next.delete(k));
+    put("country", v.country); put("type", v.category); put("price", v.max_price); put("sqm", v.min_sqm);
+    put("order", v.sort && v.sort !== "rank" ? v.sort : "");
     setParams(next);
   };
   const update = (key: string, val: string) => {
@@ -620,34 +640,37 @@ function Home() {
 
       <section className="hunt-hero">
         <h1>
-          Property worth finding.
-          <em>You decide what rises.</em>
+          {t("Property worth finding.")}
+          <em>{t("You decide what rises.")}</em>
         </h1>
         <QuickSubmission />
         <div className="hunt-hero-stats">
           <span>
-            <strong>{feed ? num(feed.global_deals) : "—"}</strong> deals
+            <strong>{feed ? num(feed.global_deals) : "—"}</strong> {t("deals")}
           </span>
           <i />
           <span>
-            <strong>{feed ? num(feed.weekly_votes) : "—"}</strong> votes this week
+            <strong>{feed ? num(feed.weekly_votes) : "—"}</strong> {t("votes this week")}
           </span>
           <i />
           <span>
-            <strong>{feed ? num(feed.global_votes) : "—"}</strong> total votes
+            <strong>{feed ? num(feed.global_votes) : "—"}</strong> {t("total votes")}
           </span>
           {live && live.today > 0 && (<>
             <i />
             <span>
-              <strong>{num(live.today)}</strong> visitors in 24h
+              <strong>{num(live.today)}</strong> {t("visitors in 24h")}
             </span>
           </>)}
+          {streakNow() > 1 && (<><i /><span className="hunt-streak">{streakNow()} {t("days in a row")}</span></>)}
         </div>
       </section>
+      <ExploreLinks />
+      <DropBar next={feed?.next_drop} early={(feed?.rows || []).filter((r: any) => r.early).length} />
       <div className="hunt-feed-header">
         <div>
           <h2>
-            {scope === "all" ? "All-time favourites" : "Top deals this week"}{" "}
+            {scope === "all" ? t("All-time favourites") : t("Top deals this week")}{" "}
             <span>↗</span>
           </h2>
           <p>
@@ -660,28 +683,22 @@ function Home() {
           aria-pressed={scope === "week"}
           onClick={() => update("tab", "")}
         >
-          This Week
+          {t("This Week")}
         </button>
         <button
           aria-pressed={scope === "all"}
           onClick={() => update("tab", "all")}
         >
-          All Time
+          {t("All Time")}
         </button>
         <Link to="/browse" className="hunt-secondary-search">
           <Search size={15} />
-          Search listings
+          {t("Search listings")}
         </Link>
       </nav>
-      <div className="hunt-chips" role="group" aria-label="Filter by country">
-        {["", "Italy", "Spain", "Portugal"].map((c) => (
-          <button key={c || "all"} aria-pressed={country === c} onClick={() => setCountry(c)}>
-            {c || "All countries"}
-          </button>
-        ))}
-      </div>
+      <Filters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort }} onChange={setFilters} />
       {nextUp.length > 0 && (
-        <aside className="hunt-next" aria-label="More to vote on">
+        <aside className="hunt-keepgoing" aria-label="More to vote on">
           <strong>Keep going: more in {more?.country}</strong>
           <div>
             {nextUp.map((r) => (
@@ -696,7 +713,7 @@ function Home() {
       )}
       {error && <ErrorBox error={error} retry={() => load()} />}
       {!feed && busy ? (
-        <Loading />
+        <div className="hunt-skel-grid" aria-busy="true">{[0, 1, 2, 3, 4, 5].map((n) => <div key={n} className="hunt-skel-card" />)}</div>
       ) : (
         <>
           <div className="hunt-grid">
@@ -704,6 +721,7 @@ function Home() {
               <Fragment key={d.id}>
                 <Card deal={d} scope={scope} onChange={() => load()} />
                 {index === 1 && !country && !category && <SponsoredCard />}
+                {index === 3 && <Personalise countries={Object.keys(feed?.countries_count || {})} onApply={setFilters} />}
               </Fragment>
             ))}
           </div>
@@ -723,7 +741,7 @@ function Home() {
               onClick={() => load(true)}
               disabled={busy}
             >
-              {busy ? "Loading…" : "More discoveries"}
+              {busy ? "Loading…" : t("More discoveries")}
             </button>
           )}
         </>
@@ -786,14 +804,14 @@ function Availability({ dealId }: { dealId: string }) {
   const total = (s?.available || 0) + (s?.sold || 0);
   return (
     <div className="hunt-avail">
-      <strong>Is it still for sale?</strong>
+      <strong>{t("Is it still for sale?")}</strong>
       <span>
-        {total === 0 ? "No reports yet. Called or checked? Tell the others." :
+        {total === 0 ? t("No reports yet. Called or checked? Tell the others.") :
           `${s!.available} say available · ${s!.sold} say sold (last 30 days)`}
       </span>
       <div>
-        <button aria-pressed={s?.mine === "available"} onClick={() => vote("available")}>Still available</button>
-        <button aria-pressed={s?.mine === "sold"} onClick={() => vote("sold")}>Sold or gone</button>
+        <button aria-pressed={s?.mine === "available"} onClick={() => vote("available")}>{t("Still available")}</button>
+        <button aria-pressed={s?.mine === "sold"} onClick={() => vote("sold")}>{t("Sold or gone")}</button>
       </div>
     </div>
   );
@@ -847,7 +865,7 @@ function Detail() {
   return (
     <div className="hunt-wrap hunt-detail">
       <Link to={scope === "all" ? "/?tab=all" : "/"} className="hunt-back">
-        ← {scope === "all" ? "Back to all time" : "Back to this week"}
+        ← {scope === "all" ? t("Back to all time") : t("Back to this week")}
       </Link>
       <div className="hunt-detail-grid">
         <Media deal={d} detail scope={scope} />
@@ -857,6 +875,9 @@ function Detail() {
           </span>
           <h1>{cleanTitle(d)}</h1>
           <div className="hunt-price">{money(d.price_eur)}</div>
+          <LocalPrice eur={d.price_eur} sqm={d.sqm} />
+          <StatusTags deal={d as Row} />
+          <VerifiedLine deal={d as Row} />
           {d.price_eur != null && totalCost(d.price_eur, d.country) && (
             <p className="hunt-allin">Realistic all-in with taxes and notary: about <strong>{money(totalCost(d.price_eur, d.country))}</strong></p>
           )}
@@ -872,10 +893,11 @@ function Detail() {
           </p>
           {d.why_great && <blockquote>{d.why_great}</blockquote>}
           <div className="hunt-detail-score">
-            <span className="hunt-score-period">{scope === "all" ? "All-time points" : "This week's points"}</span>
+            <span className="hunt-score-period">{scope === "all" ? t("All-time points") : t("This week's points")}</span>
             <Vote deal={d} scope={scope} onChange={load} />
           </div>
           <div className="hunt-detail-actions">
+            <Vote deal={d} scope={scope} onChange={load} />
             {(d.has_source || safeUrl(d.source_url)) && (
               <OriginalListingLink
                 href={d.source_url || undefined}
@@ -883,14 +905,14 @@ function Detail() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                View listing <ArrowUpRight size={17} />
+                {t("View listing")} <ArrowUpRight size={17} />
               </OriginalListingLink>
             )}
             <Save deal={d} onChange={load} />
             <button
               aria-label="Share deal"
               onClick={() =>
-                shareDeal(d, d.title)
+                shareRow(d as Row, scope)
                   .then(() => setNotice("Ready to share ✓"))
                   .catch((e) => {
                     if (e.name !== "AbortError")
@@ -906,6 +928,10 @@ function Detail() {
             · {num(d.saves)} saves
           </p>
           <Availability dealId={d.id} />
+          <CostPanel deal={d as Row} />
+          <InfoRequest deal={d as Row} />
+          <p className="hunt-fine">Buying from abroad? <Link to={`/help-buying?country=${encodeURIComponent(d.country || "")}`}>Get a local lawyer, translator or survey</Link>{["Italy", "Spain", "Portugal"].includes(d.country) && <> · <Link to={`/guide/${d.country.toLowerCase()}`}>How to buy in {d.country}</Link></>}</p>
+          <AdminVerify deal={d as Row} onDone={load} />
           <p className="hunt-fine">
             Price and availability come from the source and may change. Check
             the original listing for current details.
@@ -916,7 +942,7 @@ function Detail() {
               if (requireUser()) setReport(true);
             }}
           >
-            <Flag size={13} /> Report this deal
+            <Flag size={13} /> {t("Report this deal")}
           </button>
           <p className="hunt-fine">
             Agent or owner of this home?{" "}
@@ -968,6 +994,7 @@ function Detail() {
           </button>
         </form>
       )}
+      <SimilarHomes slug={d.slug} />
       <section className="hunt-discussion" id="discussion">
         <h2>Local knowledge makes better decisions.</h2>
         <p>Ask a question. Share what you know. Keep it helpful.</p>
@@ -1410,6 +1437,7 @@ function Winners() {
         Weekly winners <Trophy size={32} />
       </h1>
       <p>A permanent record of the community’s favourite discoveries.</p>
+      <LivePodium />
       {error ? (
         <ErrorBox error={error} />
       ) : !data ? (
@@ -1513,6 +1541,7 @@ function Mine() {
   return (
     <div className="hunt-wrap hunt-profile">
       <h1>{pathname.endsWith("saved") ? "Saved deals" : "My submissions"}</h1>
+      {pathname.endsWith("saved") && <ShareSavedToggle />}
       <nav className="hunt-tabs">
         <Link to="/hunt/mine">My submissions</Link>
         <Link to="/hunt/saved">Saved deals</Link>
@@ -1809,6 +1838,26 @@ export default function Community() {
       <Winners />
     ) : path === "/hunt/admin" ? (
       <Admin />
+    ) : path === "/hunt/inbox" ? (
+      <AdminInbox />
+    ) : path === "/swipe" ? (
+      <SwipePage />
+    ) : path === "/map" ? (
+      <Suspense fallback={<Loading />}><MapView /></Suspense>
+    ) : path === "/leaderboard" ? (
+      <LeaderboardPage />
+    ) : path === "/invite" ? (
+      <InvitePage />
+    ) : path === "/alerts" ? (
+      <AlertsPage />
+    ) : path === "/help-buying" ? (
+      <ServicesPage />
+    ) : path.startsWith("/guide") ? (
+      <GuidePage />
+    ) : path.startsWith("/homes/") ? (
+      <HomesPage />
+    ) : path.startsWith("/c/") ? (
+      <CollectionPage />
     ) : path.startsWith("/hunt/") ? (
       <Mine />
     ) : (
