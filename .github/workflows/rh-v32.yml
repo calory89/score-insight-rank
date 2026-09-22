@@ -1,0 +1,31 @@
+name: rh-v32
+on:
+  push:
+    paths: [.github/workflows/rh-v32.yml]
+permissions:
+  contents: write
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: fetch patch
+        run: |
+          curl -sSL -X POST -o /tmp/p.zip https://temp.sh/yAzWg/v32.zip
+          echo "19309602873a4b58e421dd3892cc7b61  /tmp/p.zip" | md5sum -c -
+          mkdir -p /tmp/p && unzip -o -q /tmp/p.zip -d /tmp/p
+      - run: python3 /tmp/p/patch_v32.py
+      - name: syntax
+        run: |
+          for f in src/community/Community.tsx src/community/extras.tsx; do
+            npx --yes esbuild@0.23.1 --jsx=automatic --bundle --external:* --loader:.css=empty --outfile=/dev/null "$f"
+          done
+          grep -q 'ENGLISH_ONLY = true' src/community/i18n.ts
+      - name: commit
+        run: |
+          rm -f .github/workflows/rh-v32.yml
+          git config user.name "realhunt-bot"
+          git config user.email "bot@realhunt.co"
+          git add -A
+          git commit -m "English only for now; no 18:00 drop, homes go live when approved"
+          git push
