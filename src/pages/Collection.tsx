@@ -12,7 +12,7 @@ const Collection = () => {
       <RHNav />
       <div className="max-w-[1240px] mx-auto px-4 md:px-6 py-8">
         <h1 className="font-display text-[clamp(28px,5vw,44px)] tracking-tight">{username}'s picks</h1>
-        <p className="text-ink-muted mt-1 text-[15px]">Homes under €60,000 saved on RealHunt. <Link to="/" className="underline text-ink">Make your own list</Link></p>
+        <p className="text-ink-muted mt-1 text-[15px]">Homes under €100,000 saved on RealHunt. <Link to="/" className="underline text-ink">Make your own list</Link></p>
         {items && items.length === 0 && <p className="mt-6 text-ink-muted">This list is empty or private.</p>}
         <div className="mt-6 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-5">
           {(items || []).map((f) => { const c = norm(f.country_guess); return (

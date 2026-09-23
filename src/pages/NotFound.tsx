@@ -14,7 +14,7 @@ const NotFound = () => {
         <h1 className="mb-4 text-4xl font-bold">404</h1>
         <p className="mb-4 text-xl text-muted-foreground">This page does not exist, but the homes do.</p>
         <a href="/" className="text-primary underline hover:text-primary/90">
-          See this week’s top homes under €60,000
+          See this week’s top homes under €100,000
         </a>
       </div>
     </div>

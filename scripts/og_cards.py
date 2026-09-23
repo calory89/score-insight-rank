@@ -37,6 +37,8 @@ def nice_title(d):
     return t
 
 def fetch_img(path):
+    local = os.path.join(ROOT, "public", path.lstrip("/")) if path.startswith("/") else None
+    if local and os.path.exists(local): return Image.open(local).convert("RGB")
     url = path if path.startswith("http") else SITE + path
     raw = urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "RealHunt-cards/1.0"}), timeout=60).read()
     return Image.open(io.BytesIO(raw)).convert("RGB")
@@ -105,14 +107,14 @@ def default_card(rows):
     dr.line([(67, 81), (80, 67), (93, 81)], fill=(255, 255, 255), width=6)
     dr.ellipse((75, 83, 85, 93), fill=(14, 165, 233))
     dr.text((118, 52), "RealHunt", font=fm, fill=(20, 20, 20))
-    dr.text((56, 110), "Real homes under €60,000.", font=fb, fill=(22, 21, 15))
+    dr.text((56, 110), "Real homes under €100,000.", font=fb, fill=(22, 21, 15))
     dr.text((56, 186), "Found by people. Ranked by your votes.", font=fm, fill=(58, 56, 47))
-    base.save(os.path.join(ROOT, "public", "og-default-60k.jpg"), "JPEG", quality=82, optimize=True)
+    base.save(os.path.join(ROOT, "public", "og-default-100k.jpg"), "JPEG", quality=82, optimize=True)
 
 def main():
     rows = [r for r in all_rows() if r.get("image_urls") and r.get("price_eur")]
     outdir = os.path.join(ROOT, "public", "og", "deal"); os.makedirs(outdir, exist_ok=True)
-    if "--default" in sys.argv or not os.path.exists(os.path.join(ROOT, "public", "og-default-60k.jpg")): default_card(rows)
+    if "--default" in sys.argv or not os.path.exists(os.path.join(ROOT, "public", "og-default-100k.jpg")): default_card(rows)
     made = 0
     for d in rows:
         dest = os.path.join(outdir, f"{d['slug']}.jpg")
@@ -123,7 +125,7 @@ def main():
     for d in rows:
         t = nice_title(d); p = money(d["price_eur"]); loc = d.get("location_name") or d.get("country") or ""
         title = f"{p} · {t}" if p not in t else t
-        desc = f"{t}{'' if p in t else ' for ' + p}. {loc}. Voted by people on RealHunt, where every home costs under €60,000."
+        desc = f"{t}{'' if p in t else ' for ' + p}. {loc}. Voted by people on RealHunt, where every home costs under €100,000."
         img = f"{SITE}/og/deal/{d['slug']}.jpg" if os.path.exists(os.path.join(outdir, f"{d['slug']}.jpg")) else (SITE + d["image_urls"][0] if d["image_urls"][0].startswith("/") else d["image_urls"][0])
         meta.append({"slug": d["slug"], "title": title, "desc": desc, "image": img, "country": d.get("country")})
     os.makedirs(os.path.join(ROOT, "src", "data"), exist_ok=True)
@@ -134,7 +136,7 @@ def main():
     urls += [f"{SITE}/guide/{c}" for c in ("italy", "spain", "portugal")]
     for c in countries:
         urls.append(f"{SITE}/homes/{c}")
-        urls += [f"{SITE}/homes/{c}/under-{p}" for p in (20000, 30000, 40000)]
+        urls += [f"{SITE}/homes/{c}/under-{p}" for p in (20000, 40000, 60000, 80000)]
     urls += [f"{SITE}/deal/{d['slug']}" for d in rows]
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "".join(
         f"  <url><loc>{u}</loc><lastmod>{today}</lastmod></url>\n" for u in urls) + "</urlset>\n"

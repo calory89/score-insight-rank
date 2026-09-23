@@ -89,7 +89,7 @@ const Como = () => {
               <CaptureInline
                 source="como_page"
                 title="More homes like this one, every week"
-                subtitle="Free. Only homes under €60k worth talking about — with the address and the original link."
+                subtitle="Free. Only homes under €100k worth talking about — with the address and the original link."
                 cta="Send me the top 10" />
             </div>
 

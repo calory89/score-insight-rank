@@ -95,7 +95,7 @@ const EmailCapture = () => {
   const barS = useSubscribe("banner");
   const popS = useSubscribe("popup");
   const popRef = useRef<HTMLDivElement>(null);
-  const head = useExperiment("capture_headline", [{ id: "A", text: "The 10 best homes under €60,000. Free, in your inbox." }]);
+  const head = useExperiment("capture_headline", [{ id: "A", text: "The 10 best homes under €100,000. Free, in your inbox." }]);
   const skip = SKIP.some((r) => r.test(pathname)) || get(localStorage, K_SUB) === "1";
 
   // bar: after a short delay, unless dismissed in the last 7 days
@@ -162,7 +162,7 @@ const EmailCapture = () => {
   const onPop = async (v: string) => { if (await popS.submit(v)) { setBar(false); setTimeout(() => setPop(false), 6000); } };
 
   if (skip && !pop && !bar) return null;
-  const sub = peek.min ? <>Cheapest right now: <b className="text-ink">{eur(peek.min)}</b>. Real listings, ranked by how cheap they are for where they are.</> : <>Real listings under €60k, ranked by how cheap they are for where they are.</>;
+  const sub = peek.min ? <>Cheapest right now: <b className="text-ink">{eur(peek.min)}</b>. Real listings, ranked by how cheap they are for where they are.</> : <>Real listings under €100k, ranked by how cheap they are for where they are.</>;
 
   return (
     <>
@@ -198,7 +198,7 @@ const EmailCapture = () => {
               <span className="absolute left-5 bottom-3 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1 text-[12px] font-medium shadow"><Sparkles size={13} /> Free · picked by hand · no spam</span>
             </div>
             <div className="px-5 sm:px-8 pt-3 pb-6 sm:pb-8">
-              <h2 id="rh-pop-title" className="font-display text-[26px] sm:text-[30px] leading-[1.08] tracking-tight max-w-[18ch]">{head.text || "The 10 best homes under €60,000. Free, in your inbox."}</h2>
+              <h2 id="rh-pop-title" className="font-display text-[26px] sm:text-[30px] leading-[1.08] tracking-tight max-w-[18ch]">{head.text || "The 10 best homes under €100,000. Free, in your inbox."}</h2>
               <p className="mt-2 text-[14.5px] text-ink-muted">{sub}</p>
               <div className="mt-5">{popS.mode === "done" ? <Done big /> : <Field value={email} onChange={setEmail} onSubmit={onPop} mode={popS.mode} cta="Send me the top 10" big />}</div>
               {popS.mode === "error" && <p className="mt-2 text-[13px] text-red-600">That email does not look right.</p>}

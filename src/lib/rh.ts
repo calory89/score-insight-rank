@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const db = supabase as any;
 export const MAX_PRICE = 100000;
-export const HOME_MAX_PRICE = 60000;
+export const HOME_MAX_PRICE = 100000;
 export const eur = (n: number) => "€" + Math.round(n).toLocaleString("en-GB");
 export const FLAG: Record<string, string> = { Italy: "🇮🇹", Spain: "🇪🇸", Portugal: "🇵🇹", France: "🇫🇷", Greece: "🇬🇷", Croatia: "🇭🇷", Bulgaria: "🇧🇬", Romania: "🇷🇴", Japan: "🇯🇵", Sweden: "🇸🇪", Norway: "🇳🇴", Denmark: "🇩🇰", Finland: "🇫🇮", Germany: "🇩🇪", Turkey: "🇹🇷", Albania: "🇦🇱", Indonesia: "🇮🇩", Nordics: "❄️", Asia: "🌏", Other: "🌍" };
 export const norm = (c: string | null | undefined) => { if (!c) return "Other"; if (c === "Scandinavia") return "Nordics"; if (c === "International" || c === "Europe") return "Other"; return c; };
@@ -99,6 +99,10 @@ export const COSTS: Record<string, { pct: number; fixed: number; note: string }>
   Germany: { pct: 10, fixed: 1500, note: "Transfer tax 3.5 to 6.5%, notary and registry about 2%, agent up to 3.57% if any." },
   Turkey: { pct: 5, fixed: 1000, note: "Title deed fee 4%, agent 2%, plus valuation and insurance. Some military zones are off limits to foreigners." },
   Albania: { pct: 3, fixed: 700, note: "Notary and registration about 2 to 3%. Foreigners can buy apartments, land needs a company." },
+  "United States": { pct: 3, fixed: 1000, note: "Buyer closing costs are usually 2 to 5%: title insurance, escrow and recording fees. Anyone can buy, no residency or visa needed. Property tax is yearly and set by the county; the listing usually shows it." },
+  Canada: { pct: 1.5, fixed: 1500, note: "Land transfer tax 0 to 2% depending on the province, plus a lawyer, about C$1,500. Until 1 January 2027 most non-Canadians cannot buy homes in Canadian cities (foreign buyer ban); Canadians and permanent residents can." },
+  Mexico: { pct: 6, fixed: 1000, note: "Acquisition tax (ISAI) 2 to 5% plus notary fees, about 6 to 8% in total. Foreigners can buy; within 50 km of the coast it is done through a bank trust (fideicomiso), about US$500 to 1,000 a year." },
+  Australia: { pct: 4, fixed: 1500, note: "Stamp duty about 2 to 4% at this price, plus conveyancing, about A$1,500. Until 30 June 2029 foreign non-residents cannot buy existing homes in Australia; Australian citizens, permanent residents and New Zealanders can." },
   Indonesia: { pct: 0, fixed: 0, note: "Leasehold in an eco village. Land and connections are itemised on the page." },
 };
 export const totalCost = (price: number, country: string | null | undefined) => { const c = COSTS[country || ""]; return c ? Math.round(price * (1 + c.pct / 100) + c.fixed) : null; };

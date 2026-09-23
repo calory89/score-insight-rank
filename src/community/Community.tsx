@@ -124,7 +124,7 @@ function Shell({ children }: { children: ReactNode }) {
   }, [user?.id]);
   useEffect(() => {
     if (location.pathname.startsWith("/deal/")) return; // the listing sets its own title
-    document.title = "RealHunt — Homes under €60,000. Found by people. Ranked by you.";
+    document.title = "RealHunt — Homes under €100,000. Found by people. Ranked by you.";
   }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
   // has to find the home again and click twice.
@@ -783,7 +783,7 @@ function Home() {
       </section>
       <p className="hunt-rules">
         One vote per person, per home, each week. No account needed to vote — you only sign in when you open the original listing.
-        Only priced homes under €60,000 are ranked. The weekly board resets every Monday; All Time keeps the total.
+        Only priced homes under €100,000 are ranked. The weekly board resets every Monday; All Time keeps the total.
       </p>
     </div>
   );
@@ -844,7 +844,7 @@ function Detail() {
     if (!d) return;
     const where = d.location_name || d.country || "";
     document.title = `${d.price_eur != null ? money(d.price_eur) + " · " : ""}${cleanTitle(d)}${where && !cleanTitle(d).includes(where) ? " · " + where : ""} · RealHunt`;
-    const desc = `${cleanTitle(d)}${d.price_eur != null ? " for " + money(d.price_eur) : ""}. Voted by the RealHunt community. Homes under €60,000.`;
+    const desc = `${cleanTitle(d)}${d.price_eur != null ? " for " + money(d.price_eur) : ""}. Voted by the RealHunt community. Homes under €100,000.`;
     const set = (sel: string, attr: string, key: string, val: string) => {
       let m = document.head.querySelector(sel) as HTMLMetaElement | null;
       if (!m) { m = document.createElement("meta"); m.setAttribute(attr, key); document.head.appendChild(m); }

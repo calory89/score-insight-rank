@@ -18,7 +18,7 @@ export default function MapView() {
   const [n, setN] = useState<number | null>(null);
   const navigate = useNavigate();
   useEffect(() => {
-    document.title = "Map of homes under €60,000 · RealHunt";
+    document.title = "Map of homes under €100,000 · RealHunt";
     if (!el.current || map.current) return;
     map.current = L.map(el.current, { zoomControl: true, worldCopyJump: true }).setView([40.5, 3], 5);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap", maxZoom: 17 }).addTo(map.current);

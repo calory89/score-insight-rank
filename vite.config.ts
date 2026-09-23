@@ -71,7 +71,7 @@ function prerenderPages() {
           fs.writeFileSync(path.join(dir, "index.html"), h);
         };
         const SITE = "https://realhunt.co";
-        const DEF = `${SITE}/og-default-60k.jpg`;
+        const DEF = `${SITE}/og-default-100k.jpg`;
         const metaFile = path.resolve(__dirname, "src/data/deal-meta.json");
         const deals: any[] = fs.existsSync(metaFile) ? JSON.parse(fs.readFileSync(metaFile, "utf8")) : [];
         for (const d of deals) {
@@ -81,13 +81,13 @@ function prerenderPages() {
         const countries = Array.from(new Set(deals.map((d) => String(d.country || "").toLowerCase()).filter(Boolean)));
         const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
         for (const c of countries) {
-          page(`${SITE}/homes/${c}`, `Homes under €60,000 in ${cap(c)} · RealHunt`, `Houses for sale under €60,000 in ${cap(c)}, found by people and ranked by votes. New homes every day.`, DEF);
-          for (const p of [20000, 30000, 40000]) page(`${SITE}/homes/${c}/under-${p}`, `Homes under €${p.toLocaleString("en")} in ${cap(c)} · RealHunt`, `Houses for sale under €${p.toLocaleString("en")} in ${cap(c)}, ranked by people's votes.`, DEF);
+          page(`${SITE}/homes/${c}`, `Homes under €100,000 in ${cap(c)} · RealHunt`, `Houses for sale under €100,000 in ${cap(c)}, found by people and ranked by votes. New homes every day.`, DEF);
+          for (const p of [20000, 40000, 60000, 80000]) page(`${SITE}/homes/${c}/under-${p}`, `Homes under €${p.toLocaleString("en")} in ${cap(c)} · RealHunt`, `Houses for sale under €${p.toLocaleString("en")} in ${cap(c)}, ranked by people's votes.`, DEF);
         }
         for (const [c, n] of [["italy", "Italy"], ["spain", "Spain"], ["portugal", "Portugal"]]) page(`${SITE}/guide/${c}`, `How to buy a cheap home in ${n} as a foreigner · RealHunt`, `Steps, papers and taxes to buy a house in ${n} from abroad, in plain words.`, DEF);
-        page(`${SITE}/map`, "Map of homes under €60,000 · RealHunt", "Every home under €60,000 on one map. Italy, Spain, Portugal and more.", DEF);
-        page(`${SITE}/swipe`, "Swipe homes under €60,000 · RealHunt", "Swipe right to vote. The most voted homes rise to the top every week.", DEF);
-        page(`${SITE}/leaderboard`, "Top hunters · RealHunt", "The people who find the best homes under €60,000.", DEF);
+        page(`${SITE}/map`, "Map of homes under €100,000 · RealHunt", "Every home under €100,000 on one map. Italy, Spain, Portugal and more.", DEF);
+        page(`${SITE}/swipe`, "Swipe homes under €100,000 · RealHunt", "Swipe right to vote. The most voted homes rise to the top every week.", DEF);
+        page(`${SITE}/leaderboard`, "Top hunters · RealHunt", "The people who find the best homes under €100,000.", DEF);
         page(`${SITE}/help-buying`, "Help buying a home abroad · RealHunt", "Local lawyers, translators, surveys and tax numbers for buying a house in another country.", DEF);
       } catch (e) {
         console.warn("[rh-prerender-pages] skipped:", (e as Error).message);

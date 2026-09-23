@@ -15,7 +15,7 @@ const MapPage = () => {
   const nav = useNavigate();
   const [n, setN] = useState(0);
   useEffect(() => {
-    document.title = "Map of homes under €60,000 · RealHunt"; track("map_view");
+    document.title = "Map of homes under €100,000 · RealHunt"; track("map_view");
     let map: any;
     Promise.all([load(), db.from("ig_finds").select("shortcode,lat,lng,price_eur,location_name,hook,image_urls").neq("status", "hidden").not("lat", "is", null).lte("price_eur", 100000)]).then(([L, { data }]: any) => {
       if (!ref.current) return;

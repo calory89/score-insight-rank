@@ -145,6 +145,10 @@ const RUNNING: Record<string, { tax: number; insurance: number; utilities: numbe
   Italy: { tax: 350, insurance: 200, utilities: 1200, taxName: "IMU and waste tax" },
   Spain: { tax: 300, insurance: 180, utilities: 1100, taxName: "IBI and waste tax", extra: "Non-residents who do not rent it out also file a small yearly imputed-income tax." },
   Portugal: { tax: 200, insurance: 150, utilities: 1000, taxName: "IMI" },
+  "United States": { tax: 1200, insurance: 900, utilities: 2400, taxName: "property tax" },
+  Canada: { tax: 1500, insurance: 800, utilities: 2400, taxName: "property tax" },
+  Mexico: { tax: 150, insurance: 250, utilities: 900, taxName: "predial" },
+  Australia: { tax: 1400, insurance: 900, utilities: 2000, taxName: "council rates" },
 };
 export function CostPanel({ deal }: { deal: Row }) {
   const [rent, setRent] = useState(() => { try { return Number(localStorage.getItem("rh_rent")) || 900; } catch { return 900; } });
@@ -255,7 +259,7 @@ export function InfoRequest({ deal }: { deal: Row }) {
 }
 
 // ---------------------------------------------------------------- filters
-const PRICE_CAPS = [20000, 30000, 40000, 60000];
+const PRICE_CAPS = [20000, 40000, 60000, 80000, 100000];
 export function Filters({ countries, value, onChange }: { countries: Record<string, number>; value: FeedParams; onChange: (v: FeedParams) => void }) {
   const list = Object.entries(countries || {}).sort((a, b) => b[1] - a[1]);
   const active = !!(value.country || value.category || value.max_price || value.min_sqm || (value.sort && value.sort !== "rank"));
@@ -271,7 +275,7 @@ export function Filters({ countries, value, onChange }: { countries: Record<stri
       {open && <div className="hunt-filter-row">
         <label><span>{t("Max price")}</span>
           <select value={value.max_price || ""} onChange={(e) => onChange({ ...value, max_price: e.target.value ? Number(e.target.value) : null })}>
-            <option value="">€60,000</option>
+            <option value="">€100,000</option>
             {PRICE_CAPS.slice(0, -1).map((p) => <option key={p} value={p}>{money(p)}</option>)}
           </select></label>
         <label><span>{t("Any type")}</span>
@@ -324,7 +328,7 @@ export function DropBar({ next, early }: { next?: string; early: number }) {
 export function AlertForm({ countries, initial, compact = false, onApply }: { countries: string[]; initial?: FeedParams; compact?: boolean; onApply?: (v: FeedParams) => void }) {
   const { user } = useAuth();
   const [picked, setPicked] = useState<string[]>(initial?.country ? [initial.country] : []);
-  const [max, setMax] = useState<number>(initial?.max_price || 60000);
+  const [max, setMax] = useState<number>(initial?.max_price || 100000);
   const [cat, setCat] = useState(initial?.category || "");
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"" | "busy" | "ok" | string>("");
@@ -344,7 +348,7 @@ export function AlertForm({ countries, initial, compact = false, onApply }: { co
         <label><span>{t("Max price")}</span><select value={max} onChange={(e) => setMax(Number(e.target.value))}>{PRICE_CAPS.map((p) => <option key={p} value={p}>{money(p)}</option>)}</select></label>
         <label><span>{t("Any type")}</span><select value={cat} onChange={(e) => setCat(e.target.value)}><option value="">{t("Any type")}</option>{categories.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>
       </div>
-      {onApply && <button type="button" className="hunt-secondary" onClick={() => { prefs(); onApply({ country: picked.length === 1 ? picked[0] : "", max_price: max < 60000 ? max : null, category: cat }); }}>{t("Show my homes")}</button>}
+      {onApply && <button type="button" className="hunt-secondary" onClick={() => { prefs(); onApply({ country: picked.length === 1 ? picked[0] : "", max_price: max < 100000 ? max : null, category: cat }); }}>{t("Show my homes")}</button>}
       {state === "ok" ? <p className="hunt-info-done"><Check size={16} /> Saved. We will email you new matches, one email a day at most.</p> : (
         <div className="hunt-row">
           <input type="email" required placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="Email" />
@@ -369,7 +373,7 @@ export function Personalise({ countries, onApply }: { countries: string[]; onApp
 }
 export function AlertsPage() {
   const [countries, setCountries] = useState<string[]>([]);
-  useEffect(() => { document.title = "Alerts for homes under €60,000 · RealHunt"; feed({ limit: 1 }).then((f) => setCountries(Object.keys(f.countries_count || {}))).catch(() => {}); }, []);
+  useEffect(() => { document.title = "Alerts for homes under €100,000 · RealHunt"; feed({ limit: 1 }).then((f) => setCountries(Object.keys(f.countries_count || {}))).catch(() => {}); }, []);
   return (
     <div className="hunt-wrap hunt-page">
       <span className="hunt-eyebrow">{t("Alerts")}</span>
@@ -402,7 +406,7 @@ export function SwipePage() {
   const [dx, setDx] = useState(0);
   const start = useRef<number | null>(null);
   const navigate = useNavigate();
-  useEffect(() => { document.title = "Swipe homes under €60,000 · RealHunt"; feedAll({}).then((f) => setRows(f.rows)).catch(() => setRows([])); }, []);
+  useEffect(() => { document.title = "Swipe homes under €100,000 · RealHunt"; feedAll({}).then((f) => setRows(f.rows)).catch(() => setRows([])); }, []);
   const list = useMemo(() => (rows || []).filter((r) => !session?.votes?.[r.id]), [rows, session?.token]);
   const d = list[i];
   async function decide(like: boolean) {
@@ -465,7 +469,7 @@ export function LeaderboardPage() {
       <h1>Top hunters</h1>
       <p>Points: 10 for every approved find, 1 for every vote your finds get, 15 for an editor's pick, 5 for every friend you bring. The hunter of the month is featured on the home page.</p>
       {!rows ? <div className="hunt-skeleton-list" /> : rows.length === 0 ? (
-        <div className="hunt-empty"><Trophy size={30} /><h3>The board is empty. The first hunter takes #1.</h3><p>Submit a home under €60,000 that people should see.</p><Link className="hunt-primary" to="/submit">{t("Submit a Deal")}</Link></div>
+        <div className="hunt-empty"><Trophy size={30} /><h3>The board is empty. The first hunter takes #1.</h3><p>Submit a home under €100,000 that people should see.</p><Link className="hunt-primary" to="/submit">{t("Submit a Deal")}</Link></div>
       ) : (
         <ol className="hunt-leaders">
           {rows.map((r, n) => (
@@ -497,7 +501,7 @@ export function InvitePage() {
         <div className="hunt-invite">
           <code>{link}</code>
           <div className="hunt-row">
-            <button className="hunt-primary" onClick={() => (navigator.share ? navigator.share({ title: "RealHunt", text: "Real homes under €60,000, ranked by people. Join me:", url: link }) : navigator.clipboard.writeText(link).then(() => setNotice("Link copied ✓"))).catch(() => {})}><Share2 size={16} /> {t("Share")}</button>
+            <button className="hunt-primary" onClick={() => (navigator.share ? navigator.share({ title: "RealHunt", text: "Real homes under €100,000, ranked by people. Join me:", url: link }) : navigator.clipboard.writeText(link).then(() => setNotice("Link copied ✓"))).catch(() => {})}><Share2 size={16} /> {t("Share")}</button>
             <button className="hunt-secondary" onClick={() => navigator.clipboard.writeText(link).then(() => setNotice("Link copied ✓"))}><Copy size={16} /> Copy</button>
           </div>
           <p><strong>{me.count}</strong> {me.count === 1 ? "friend has" : "friends have"} joined with your link.</p>
@@ -607,7 +611,7 @@ export function GuidePage() {
       <nav className="hunt-chips">{Object.entries(GUIDES).map(([k, x]) => <Link key={k} to={`/guide/${k}`} aria-current={k === country ? "page" : undefined}>{x.name}</Link>)}</nav>
       <ol className="hunt-steps">{g.steps.map(([h, b]) => <li key={h}><strong>{h}</strong><p>{b}</p></li>)}</ol>
       <h2>Every year</h2><p>{g.yearly}</p>
-      <div className="hunt-row"><Link className="hunt-primary" to={`/homes/${country}`}>Homes under €60,000 in {g.name}</Link><Link className="hunt-secondary" to="/help-buying">{t("Help buying")}</Link></div>
+      <div className="hunt-row"><Link className="hunt-primary" to={`/homes/${country}`}>Homes under €100,000 in {g.name}</Link><Link className="hunt-secondary" to="/help-buying">{t("Help buying")}</Link></div>
       {homes.length > 0 && <><h2>Voted homes in {g.name}</h2><div className="hunt-minigrid">{homes.map((d) => <MiniCard key={d.id} d={d} />)}</div></>}
     </div>
   );
@@ -615,7 +619,7 @@ export function GuidePage() {
 export function HomesPage() {
   const { country = "", cap = "" } = useParams();
   const name = country ? country.charAt(0).toUpperCase() + country.slice(1).toLowerCase() : "";
-  const max = Number((cap.match(/\d+/) || [])[0]) || 60000;
+  const max = Number((cap.match(/\d+/) || [])[0]) || 100000;
   const [data, setData] = useState<{ rows: Row[]; total: number } | null>(null);
   useEffect(() => {
     document.title = `Homes under ${money(max)} in ${name} · RealHunt`;
@@ -627,7 +631,7 @@ export function HomesPage() {
       <span className="hunt-eyebrow">{name}</span>
       <h1>Homes under {money(max)} in {name}</h1>
       <p>{data ? `${data.total} homes, ranked by people's votes.` : "Loading…"} Every home links to its original listing.</p>
-      <nav className="hunt-chips">{PRICE_CAPS.map((p) => <Link key={p} aria-current={p === max ? "page" : undefined} to={p === 60000 ? `/homes/${country}` : `/homes/${country}/under-${p}`}>{money(p)}</Link>)}</nav>
+      <nav className="hunt-chips">{PRICE_CAPS.map((p) => <Link key={p} aria-current={p === max ? "page" : undefined} to={p === 100000 ? `/homes/${country}` : `/homes/${country}/under-${p}`}>{money(p)}</Link>)}</nav>
       {!data ? <div className="hunt-skeleton-list" /> : <div className="hunt-minigrid">{data.rows.map((d) => <MiniCard key={d.id} d={d} />)}</div>}
       {GUIDES[country.toLowerCase()] && <p className="hunt-row"><Link className="hunt-secondary" to={`/guide/${country.toLowerCase()}`}>How to buy in {name}</Link></p>}
     </div>
