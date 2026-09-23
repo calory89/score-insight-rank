@@ -13,7 +13,11 @@ export default function MapView() {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layer = useRef<L.LayerGroup | null>(null);
-  const [f, setF] = useState<FeedParams>({ scope: "all" });
+  const [f, setF] = useState<FeedParams>(() => {
+    // Opened from the feed's map button: keep the same filters.
+    const p = new URLSearchParams(location.search);
+    return { scope: "all", country: p.get("country") || "", category: p.get("type") || "", max_price: Number(p.get("price")) || null, min_sqm: Number(p.get("sqm")) || null, q: p.get("q") || undefined } as FeedParams;
+  });
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [n, setN] = useState<number | null>(null);
   const navigate = useNavigate();

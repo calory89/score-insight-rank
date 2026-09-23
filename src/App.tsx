@@ -206,6 +206,9 @@ const AppRoutes = () => (
       <Route path="/homes/:country/:cap" element={<Community />} />
       <Route path="/sell" element={<Sell />} />
       <Route path="/c/:handle" element={<Community />} />
+      <Route path="/b/:slug" element={<Community />} />
+      <Route path="/vs/:a/:b" element={<Community />} />
+      <Route path="/me" element={<Community />} />
       <Route path="/legal/cookies" element={<LegalPage page="cookies" />} />
       <Route path="/legal/takedown" element={<LegalPage page="takedown" />} />
       <Route path="/network" element={<Network />} />

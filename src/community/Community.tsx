@@ -26,6 +26,8 @@ import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, Verifie
 import { t } from "./i18n";
 import { Card4, CardSkeleton, Freshness, TabBar, DetailBar, HeartVote, ShareButton, SaveHeart, remember, rowCache, takeDetail, prefetchDetail, preloadImages } from "./v4";
 import { bumpIx } from "@/lib/rh";
+import { bumpStat } from "./v4";
+import { useTheme, ThemeButton, Welcome, BoardButton, BoardsSection, BoardPage, CompareButton, ComparePage, MapFab, NotifBell, ProfilePage, saveOrder, useHomeSwipe, HomeNav } from "./v5";
 import { Ctx, useCommunity } from "./ctx";
 const MapView = lazy(() => import("./map"));
 import {
@@ -105,6 +107,7 @@ function Shell({ children }: { children: ReactNode }) {
   const [auth, setAuth] = useState(false);
   const [notice, setNotice] = useState("");
   const location = useLocation();
+  const dark = useTheme();
   const sequence = useRef(0);
   async function connect() {
     const seq = ++sequence.current;
@@ -178,7 +181,7 @@ function Shell({ children }: { children: ReactNode }) {
         refreshSession: connect,
       }}
     >
-      <div className="hunt has-tabbar">
+      <div className={"hunt has-tabbar" + (dark ? " is-dark" : "")}>
         <header className="hunt-header">
           <Link to="/" className="hunt-brand">
             <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#141414" /><path d="M14 35 L32 17 L50 35" fill="none" stroke="#FFFFFF" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" /><circle cx="32" cy="43.5" r="6.5" fill="#0EA5E9" /></svg>RealHunt
@@ -191,6 +194,8 @@ function Shell({ children }: { children: ReactNode }) {
             <Link to="/hunt/saved" aria-label="Saved deals">
               <Bookmark size={19} />
             </Link>
+            <NotifBell />
+            <span className="hv-theme-head"><ThemeButton /></span>
             {user ? (
               <Link to="/hunt/mine" className="hunt-account">
                 {t("My submissions")}
@@ -221,7 +226,7 @@ function Shell({ children }: { children: ReactNode }) {
             </button>
           </div>
         )}
-        <div className="hunt-main" key={langV}>{children}</div>
+        <div className="hunt-main hv-page" key={location.pathname + langV}>{children}</div>
         <footer className="hunt-footer">
           <Link to="/">RealHunt</Link>
           <p>
@@ -239,6 +244,7 @@ function Shell({ children }: { children: ReactNode }) {
           <div className="hunt-footer-tools">
             <LangSwitch />
             <InstallButton />
+            <ThemeButton label />
             <Link to="/guide/italy">{t("Guides")}</Link>
             <Link to="/help-buying">{t("Help buying")}</Link>
             <Link to="/leaderboard">{t("Hunters")}</Link>
@@ -590,6 +596,7 @@ function Home() {
   const minSqm = Number(params.get("sqm")) || null;
   const sort = params.get("order") || "rank";
   const q = params.get("q") || "";
+  const location = useLocation();
   const [qText, setQText] = useState(q);
   const [feed, setFeed] = useState<any>(null);
   const [error, setError] = useState("");
@@ -618,6 +625,7 @@ function Home() {
     load();
   }, [scope, country, category, maxPrice, minSqm, sort, q, user?.id]);
   useEffect(() => { setQText(q); }, [q]);
+  useEffect(() => { if (feed?.rows) saveOrder(feed.rows.map((r: any) => r.slug)); }, [feed?.rows?.length, feed?.rows?.[0]?.id]);
   useEffect(() => {
     if (params.get("search") === "1") {
       searchRef.current?.focus();
@@ -669,6 +677,8 @@ function Home() {
   const plain = !country && !category && !q;
   return (
     <div className="hunt-wrap hunt-home hv-home">
+      {!q && !country && <Welcome rows={feed?.rows} />}
+      <MapFab search={location.search} />
       <section className="hv-hero">
         <h1>Homes under €100k you won’t believe are real.</h1>
         <p>Real listings from {feed ? Object.keys(feed.countries_count || {}).length : "10+"} countries. Ranked by people. Double-tap the ones you love.</p>
@@ -793,7 +803,8 @@ function Detail() {
   }
   // Paint at once from the row the feed already had; the full record fills in behind it.
   const cached = slug ? rowCache.get(slug) : undefined;
-  useEffect(() => { setData(null); bumpIx(); window.scrollTo(0, 0); }, [slug]);
+  useEffect(() => { setData(null); bumpIx(); bumpStat("opened"); window.scrollTo(0, 0); }, [slug]);
+  const swipe = useHomeSwipe(slug);
   useEffect(() => {
     if (session) load();
   }, [slug, session?.token, user?.id]);
@@ -827,7 +838,7 @@ function Detail() {
     </OriginalListingLink>
   ) : null;
   return (
-    <div className="hunt-wrap hunt-detail hv-detail">
+    <div className="hunt-wrap hunt-detail hv-detail" {...swipe.handlers}>
       <DetailBar deal={d as Row} scope={scope} onChange={load} listing={listing} />
       <Link to={scope === "all" ? "/?tab=all" : "/"} className="hunt-back">
         ← {scope === "all" ? t("Back to all time") : t("Back to this week")}
@@ -862,6 +873,10 @@ function Detail() {
             {listing}
             <SaveHeart deal={d} className="hunt-save hv-save-inline" />
             <ShareButton deal={d as Row} scope={scope} label />
+          </div>
+          <div className="hv-detail-more">
+            <BoardButton deal={d} />
+            <CompareButton deal={d} />
           </div>
           <p className="hv-votehint">{scope === "all" ? "All-time votes" : "Votes this week"} decide the ranking. Double-tap a photo in the feed to vote.</p>
           <p className="hunt-fine">
@@ -935,6 +950,7 @@ function Detail() {
           </button>
         </form>
       )}
+      <HomeNav prev={swipe.prev} next={swipe.next} pos={swipe.pos} />
       <SimilarHomes slug={d.slug} />
       <section className="hunt-discussion" id="discussion">
         <h2>Local knowledge makes better decisions.</h2>
@@ -1483,6 +1499,7 @@ function Mine() {
   return (
     <div className="hunt-wrap hunt-profile">
       <h1>{pathname.endsWith("saved") ? "Saved deals" : "My submissions"}</h1>
+      {pathname.endsWith("saved") && <BoardsSection />}
       {pathname.endsWith("saved") && <ShareSavedToggle />}
       <nav className="hunt-tabs">
         <Link to="/hunt/mine">My submissions</Link>
@@ -1782,6 +1799,12 @@ export default function Community() {
       <Admin />
     ) : path === "/hunt/inbox" ? (
       <AdminInbox />
+    ) : path.startsWith("/b/") ? (
+      <BoardPage />
+    ) : path.startsWith("/vs/") ? (
+      <ComparePage />
+    ) : path === "/me" ? (
+      <ProfilePage />
     ) : path === "/swipe" ? (
       <SwipePage />
     ) : path === "/map" ? (

@@ -10,6 +10,9 @@ import { useCommunity } from "./ctx";
 import { bumpStreak, niceTitle, dealUrl, shareText, type Row } from "./extras";
 
 const num = (v: number = 0) => new Intl.NumberFormat("en").format(v);
+// Local activity counters for the profile badges (votes, saves, shares, homes opened).
+export function stats(): Record<string, number> { try { return JSON.parse(localStorage.getItem("rh_stats") || "{}") || {}; } catch { return {}; } }
+export function bumpStat(k: string) { try { const s = stats(); s[k] = (s[k] || 0) + 1; localStorage.setItem("rh_stats", JSON.stringify(s)); } catch { /* ignore */ } }
 
 // ---------------------------------------------------------------- instant navigation
 // Every row the feed has shown is kept here, so opening a home paints at once from memory while
@@ -55,7 +58,11 @@ export function useVote(deal: Deal, scope = "week", onChange?: () => void) {
       await call("vote", { id: deal.id, value });
       setSession((s: Session) => ({ ...s, votes: { ...s.votes, [deal.id]: value } }));
       const days = bumpStreak();
-      setNotice(days > 1 ? `Vote counted. ${days} days in a row.` : "Vote counted. Share it and help it rise.");
+      const others = Math.max(0, (scope === "all" ? deal.life_net : deal.week_net) || 0);
+      const crowd = others > 0 ? `You and ${num(others)} ${others === 1 ? "other" : "others"} love this` : "You are the first to love this";
+      const place = deal.rank ? ` · #${deal.rank} ${scope === "all" ? "all time" : "this week"}` : "";
+      setNotice(`❤ ${crowd}${place}.${days > 1 ? ` ${days}-day streak 🔥` : " Share it to push it up."}`);
+      bumpStat("votes");
       bumpIx();
       window.dispatchEvent(new CustomEvent("rh-voted", { detail: { id: deal.id, country: deal.country } }));
       onChange?.();
@@ -152,6 +159,7 @@ export async function storyCard(d: Row, scope = "week"): Promise<Blob | null> {
 }
 export async function shareStory(d: Row, scope = "week"): Promise<"shared" | "copied" | "downloaded"> {
   bumpIx();
+  bumpStat("shares");
   const url = dealUrl(d.slug);
   const text = shareText(d, scope);
   const blob = await storyCard(d, scope);
@@ -206,7 +214,8 @@ export function SaveHeart({ deal, className = "hv-save" }: { deal: Deal; classNa
         try {
           await call("save", { id: deal.id, saved: !saved });
           setSession((s: Session) => ({ ...s, saved: saved ? s.saved.filter((x) => x !== deal.id) : [...s.saved, deal.id] }));
-          setNotice(saved ? "Removed from saved." : "Saved ✓");
+          setNotice(saved ? "Removed from saved." : "Saved ✓ Add it to a board from its page.");
+          if (!saved) bumpStat("saves");
           bumpIx();
         } catch (err) { setNotice((err as Error).message); } finally { setBusy(false); }
       }}>
@@ -226,9 +235,28 @@ function Photos({ deal, href, onDouble }: { deal: Row; href: string; onDouble: (
   const tap = useRef<{ t: number; timer?: any; x?: number }>({ t: 0 });
   const go = (n: number) => setI((n + imgs.length) % imgs.length);
   useEffect(() => { if (imgs[i + 1]) preloadImages([imgs[i + 1]]); }, [i]);
+  // Like a Reel: while a card sits in the middle of the screen, its photos play on their own.
+  // Any touch or click by the visitor stops it for that card.
+  const box = useRef<HTMLDivElement>(null);
+  const [seen, setSeen] = useState(false);
+  const [held, setHeld] = useState(false);
+  useEffect(() => {
+    const el = box.current;
+    if (!el || imgs.length < 2 || typeof IntersectionObserver === "undefined") return;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const io = new IntersectionObserver(([e]) => setSeen(e.intersectionRatio >= 0.75), { threshold: [0, 0.75, 1] });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [imgs.length]);
+  useEffect(() => {
+    if (!seen || held || imgs.length < 2) return;
+    const t = setTimeout(() => go(i + 1), i === 0 ? 1400 : 2400);
+    return () => clearTimeout(t);
+  }, [seen, held, i, imgs.length]);
   return (
-    <div className="hv-photos"
-      onTouchStart={(e) => { tap.current.x = e.touches[0].clientX; }}
+    <div className={"hv-photos" + (seen && !held && imgs.length > 1 ? " is-playing" : "")} ref={box}
+      onMouseDown={() => setHeld(true)}
+      onTouchStart={(e) => { setHeld(true); tap.current.x = e.touches[0].clientX; }}
       onTouchEnd={(e) => {
         const dx = e.changedTouches[0].clientX - (tap.current.x ?? e.changedTouches[0].clientX);
         if (Math.abs(dx) > 40 && imgs.length > 1) { tap.current.t = 0; go(i + (dx < 0 ? 1 : -1)); e.preventDefault(); }
@@ -245,14 +273,14 @@ function Photos({ deal, href, onDouble }: { deal: Row; href: string; onDouble: (
         tap.current.timer = setTimeout(() => { tap.current.t = 0; navigate(href); }, 280);
       }}>
       <a href={href} onClick={(e) => e.preventDefault()} aria-label={niceTitle(deal)} tabIndex={-1}>
-        <img src={imgs[i] || "/favicon.png"} alt={niceTitle(deal)} loading="lazy" decoding="async"
+        <img key={i} className="hv-fade" src={imgs[i] || "/favicon.png"} alt={niceTitle(deal)} loading="lazy" decoding="async"
           onError={(e) => { if (!e.currentTarget.src.endsWith("/favicon.png")) e.currentTarget.src = "/favicon.png"; }} />
       </a>
       {burst > 0 && <span key={burst} className="hv-burst" aria-hidden="true"><Heart size={96} fill="currentColor" /></span>}
       {imgs.length > 1 && <>
         <button className="hv-arrow is-prev" aria-label="Previous photo" onClick={(e) => { e.stopPropagation(); e.preventDefault(); go(i - 1); }}>‹</button>
         <button className="hv-arrow is-next" aria-label="Next photo" onClick={(e) => { e.stopPropagation(); e.preventDefault(); go(i + 1); }}>›</button>
-        <span className="hv-dots" aria-hidden="true">{imgs.slice(0, 6).map((_, n) => <i key={n} className={n === i ? "on" : ""} />)}</span>
+        <span className="hv-dots" aria-hidden="true">{imgs.slice(0, 8).map((_, n) => <i key={n} className={n === i ? "on" : ""} />)}</span>
       </>}
     </div>
   );
@@ -263,9 +291,24 @@ function Chip({ deal, scope }: { deal: Row; scope: string }) {
   if (deal.votes_24h >= 3 && (scope === "all" ? deal.life_net : deal.week_net) > 0) return <span className="hv-chip is-hot"><Flame size={12} /> Trending</span>;
   return null;
 }
+function useRankMove(rank?: number) {
+  const prev = useRef(rank);
+  const [move, setMove] = useState(0);
+  useEffect(() => {
+    if (prev.current && rank && rank < prev.current) {
+      setMove(prev.current - rank);
+      const t = setTimeout(() => setMove(0), 4000);
+      prev.current = rank;
+      return () => clearTimeout(t);
+    }
+    prev.current = rank;
+  }, [rank]);
+  return move;
+}
 export function Card4({ deal, scope = "week", onChange }: { deal: Row; scope?: string; onChange?: () => void }) {
   const { call } = useCommunity();
   const v = useVote(deal, scope, onChange);
+  const move = useRankMove(deal.rank);
   const href = `/deal/${encodeURIComponent(deal.slug)}${scope === "all" ? "?tab=all" : ""}`;
   const where = deal.location_name && deal.country && !deal.location_name.includes(deal.country) ? `${deal.location_name}, ${deal.country}` : deal.location_name || deal.country;
   const warm = () => { prefetchDetail(deal.slug, call); preloadImages((deal.image_urls || []).slice(0, 3)); };
@@ -274,7 +317,7 @@ export function Card4({ deal, scope = "week", onChange }: { deal: Row; scope?: s
       <div className="hv-frame">
         <Photos deal={deal} href={href} onDouble={() => { if (!v.selected) v.vote(1); }} />
         <div className="hv-top">
-          {deal.rank ? <span className={"hv-rank" + (deal.rank <= 3 ? " is-podium" : "")}>#{deal.rank}</span> : null}
+          {deal.rank ? <span className={"hv-rank" + (deal.rank <= 3 ? " is-podium" : "") + (move ? " is-up" : "")}>#{deal.rank}{move ? <em> ▲{move}</em> : null}</span> : null}
           <Chip deal={deal} scope={scope} />
           <SaveHeart deal={deal} />
         </div>
@@ -323,8 +366,6 @@ export function Freshness({ feed, visitors }: { feed: any; visitors?: number }) 
 // ---------------------------------------------------------------- mobile tab bar
 export function TabBar() {
   const { pathname } = useLocation();
-  const { user, requireUser } = useCommunity();
-  const navigate = useNavigate();
   if (pathname.startsWith("/deal/")) return null; // the home page has its own action bar
   const is = (p: string) => (p === "/" ? pathname === "/" : pathname.startsWith(p));
   return (
@@ -333,9 +374,7 @@ export function TabBar() {
       <Link to="/swipe" aria-current={is("/swipe") ? "page" : undefined}><Layers size={21} /><span>Swipe</span></Link>
       <Link to="/map" aria-current={is("/map") ? "page" : undefined}><MapPin size={21} /><span>Map</span></Link>
       <Link to="/hunt/saved" aria-current={is("/hunt/saved") ? "page" : undefined}><Bookmark size={21} /><span>Saved</span></Link>
-      <button aria-current={is("/hunt/mine") || is("/hunter/") ? "page" : undefined} onClick={() => { if (user) navigate("/hunt/mine"); else requireUser(); }}>
-        <User size={21} /><span>{user ? "Profile" : "Sign in"}</span>
-      </button>
+      <Link to="/me" aria-current={is("/me") || is("/hunt/mine") ? "page" : undefined}><User size={21} /><span>Profile</span></Link>
     </nav>
   );
 }
