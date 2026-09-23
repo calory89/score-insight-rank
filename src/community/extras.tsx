@@ -179,6 +179,8 @@ export function CostPanel({ deal }: { deal: Row }) {
 export function Lightbox({ images, start = 0, title, onClose }: { images: string[]; start?: number; title: string; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const [i, setI] = useState(start);
+  const [zoom, setZoom] = useState<number | null>(null);
+  const [origin, setOrigin] = useState("50% 50%");
   useEffect(() => {
     const el = ref.current; if (el) el.scrollLeft = start * el.clientWidth;
     const key = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); if (e.key === "ArrowRight") go(1); if (e.key === "ArrowLeft") go(-1); };
@@ -189,8 +191,10 @@ export function Lightbox({ images, start = 0, title, onClose }: { images: string
   return (
     <div className="hunt-lightbox" role="dialog" aria-modal="true" aria-label={`${title} photos`}>
       <button className="hunt-lb-close" aria-label="Close photos" onClick={onClose}><X size={22} /></button>
-      <div className="hunt-lb-track" ref={ref} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
-        {images.map((src, n) => <div key={n} className="hunt-lb-slide"><img src={src} alt={`${title}, photo ${n + 1}`} loading={Math.abs(n - start) < 2 ? "eager" : "lazy"} /></div>)}
+      <div className={"hunt-lb-track" + (zoom !== null ? " is-zoomed" : "")} ref={ref} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
+        {images.map((src, n) => <div key={n} className={"hunt-lb-slide" + (zoom === n ? " is-zoom" : "")}><img src={src} alt={`${title}, photo ${n + 1}`} loading={Math.abs(n - start) < 2 ? "eager" : "lazy"}
+          style={zoom === n ? { transformOrigin: origin } : undefined}
+          onClick={(e) => { if (zoom === n) { setZoom(null); return; } const r = e.currentTarget.getBoundingClientRect(); setOrigin(`${((e.clientX - r.left) / r.width) * 100}% ${((e.clientY - r.top) / r.height) * 100}%`); setZoom(n); }} /></div>)}
       </div>
       {images.length > 1 && <>
         <button className="hunt-lb-prev" aria-label="Previous photo" onClick={() => go(-1)}><ChevronLeft size={26} /></button>
@@ -428,15 +432,17 @@ export function SwipePage() {
     window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k);
   });
   if (!rows) return <div className="hunt-wrap"><div className="hunt-skeleton-swipe" /></div>;
+  const next = list[i + 1];
   return (
-    <div className="hunt-wrap hunt-swipe">
-      <h1>{t("Swipe")}</h1>
-      <p className="hunt-fine">Right to vote, left to skip. {list.length} homes left.</p>
+    <div className="hunt-wrap hunt-swipe hv-swipe">
+      {d && <div className="hv-swipe-bg" style={{ backgroundImage: `url("${d.image_urls?.[0]}")` }} aria-hidden="true" />}
+      <div className="hv-swipe-top"><strong>{t("Swipe")}</strong><span>{list.length - i > 0 ? `${list.length - i} homes left` : ""}</span></div>
       {!d ? (
         <div className="hunt-empty"><h3>You have seen every home this week.</h3><p>New homes are added every week.</p><Link className="hunt-primary" to="/map">{t("Map")}</Link></div>
       ) : (
         <>
-          <div className="hunt-swipe-card" style={{ transform: `translateX(${dx}px) rotate(${dx / 25}deg)`, transition: start.current === null ? "transform .18s ease" : "none" }}
+          {next && <div className="hunt-swipe-card is-next" aria-hidden="true"><img src={next.image_urls?.[0]} alt="" draggable={false} /></div>}
+          <div className="hunt-swipe-card" key={d.id} style={{ transform: `translateX(${dx}px) rotate(${dx / 25}deg)`, transition: start.current === null ? "transform .18s ease" : "none" }}
             onPointerDown={(e) => { start.current = e.clientX; (e.target as HTMLElement).setPointerCapture?.(e.pointerId); }}
             onPointerMove={(e) => { if (start.current !== null) setDx(e.clientX - start.current); }}
             onPointerUp={() => { const v = dx; start.current = null; if (v > 110) decide(true); else if (v < -110) decide(false); else if (Math.abs(v) < 6) navigate(`/deal/${d.slug}`); else setDx(0); }}>
@@ -450,9 +456,9 @@ export function SwipePage() {
             </div>
           </div>
           <div className="hunt-swipe-actions">
-            <button aria-label="Skip" onClick={() => decide(false)}><X size={26} /></button>
-            <Link to={`/deal/${d.slug}`} className="hunt-link">Details</Link>
-            <button aria-label="Vote" className="is-like" onClick={() => decide(true)}><Heart size={26} /></button>
+            <button aria-label="Skip" onClick={() => decide(false)}><X size={30} /></button>
+            <Link to={`/deal/${d.slug}`} className="hv-swipe-info-btn" aria-label="Details">i</Link>
+            <button aria-label="Vote" className="is-like" onClick={() => decide(true)}><Heart size={30} fill="currentColor" /></button>
           </div>
         </>
       )}
@@ -619,7 +625,7 @@ export function GuidePage() {
 }
 export function HomesPage() {
   const { country = "", cap = "" } = useParams();
-  const name = country ? country.charAt(0).toUpperCase() + country.slice(1).toLowerCase() : "";
+  const name = decodeURIComponent(country).replace(/-/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
   const max = Number((cap.match(/\d+/) || [])[0]) || 100000;
   const [data, setData] = useState<{ rows: Row[]; total: number } | null>(null);
   useEffect(() => {
@@ -627,10 +633,17 @@ export function HomesPage() {
     const m = document.querySelector('meta[name="description"]'); if (m) m.setAttribute("content", `Houses for sale under ${money(max)} in ${name}, found by people and ranked by votes. Updated every day.`);
     setData(null); feed({ scope: "all", country: name, max_price: max, limit: 60 }).then(setData).catch(() => setData({ rows: [], total: 0 }));
   }, [country, cap]);
+  const top = data?.rows?.[0];
+  const avg = data?.rows?.length ? Math.round(data.rows.reduce((a, r) => a + (r.price_eur || 0), 0) / data.rows.length / 500) * 500 : 0;
+  const low = data?.rows?.length ? Math.min(...data.rows.map((r) => r.price_eur || 1e9)) : 0;
   return (
-    <div className="hunt-wrap hunt-page">
-      <span className="hunt-eyebrow">{name}</span>
-      <h1>Homes under {money(max)} in {name}</h1>
+    <div className="hunt-wrap hunt-page hv-country">
+      <header className="hv-country-hero" style={top ? { backgroundImage: `linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.72)),url("${top.image_urls?.[0]}")` } : undefined}>
+        <span className="hunt-eyebrow">{name}</span>
+        <h1>Homes under {money(max)} in {name}</h1>
+        {data && data.total > 0 && <div className="hv-country-stats"><span><b>{data.total}</b> homes</span><span>from <b>{money(low)}</b></span><span>average <b>{money(avg)}</b></span></div>}
+      </header>
+      {data && data.rows.length >= 3 && <><h2 className="hv-country-h2">Top 3 in {name}</h2><div className="hv-country-top">{data.rows.slice(0, 3).map((d, n) => <Link key={d.id} to={`/deal/${d.slug}`}><img src={d.image_urls?.[0]} alt="" /><span className="hv-pod-medal">{["🥇", "🥈", "🥉"][n]}</span><strong>{money(d.price_eur)}</strong><small>{d.location_name}</small></Link>)}</div><h2 className="hv-country-h2">All homes</h2></>}
       <p>{data ? `${data.total} homes, ranked by people's votes.` : "Loading…"} Every home links to its original listing.</p>
       <nav className="hunt-chips">{PRICE_CAPS.map((p) => <Link key={p} aria-current={p === max ? "page" : undefined} to={p === 100000 ? `/homes/${country}` : `/homes/${country}/under-${p}`}>{money(p)}</Link>)}</nav>
       {!data ? <div className="hunt-skeleton-list" /> : <div className="hunt-minigrid">{data.rows.map((d) => <MiniCard key={d.id} d={d} />)}</div>}

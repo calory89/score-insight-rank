@@ -25,8 +25,9 @@ import { lazy, Suspense } from "react";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
 import { Card4, CardSkeleton, Freshness, TabBar, DetailBar, HeartVote, ShareButton, SaveHeart, remember, rowCache, takeDetail, prefetchDetail, preloadImages } from "./v4";
-import { bumpIx } from "@/lib/rh";
+import { bumpIx, FLAG as FLAG_ } from "@/lib/rh";
 import { bumpStat } from "./v4";
+import { PodiumHero, Vibes, SmartSearch, EmptyState, DetailGallery, Amenities, Nearby, VideoTour, RentLine } from "./v6";
 import { useTheme, ThemeButton, Welcome, BoardButton, BoardsSection, BoardPage, CompareButton, ComparePage, MapFab, NotifBell, ProfilePage, saveOrder, useHomeSwipe, HomeNav } from "./v5";
 import { Ctx, useCommunity } from "./ctx";
 const MapView = lazy(() => import("./map"));
@@ -675,6 +676,14 @@ function Home() {
   };
   const displayedRows = feed?.rows;
   const plain = !country && !category && !q;
+  const vibe = params.get("vibe") || "";
+  const showPodium = !!feed && plain && !vibe && !maxPrice && !minSqm && sort === "rank" && feed.rows.length >= 6;
+  const pickVibe = (v: any) => {
+    const next = new URLSearchParams();
+    if (scope === "all") next.set("tab", "all");
+    if (v) { next.set("vibe", v.k); if (v.q) next.set("q", v.q); if (v.country) next.set("country", v.country); if (v.type) next.set("type", v.type); if (v.price) next.set("price", String(v.price)); }
+    setParams(next);
+  };
   return (
     <div className="hunt-wrap hunt-home hv-home">
       {!q && !country && <Welcome rows={feed?.rows} />}
@@ -682,15 +691,12 @@ function Home() {
       <section className="hv-hero">
         <h1>Homes under €100k you won’t believe are real.</h1>
         <p>Real listings from {feed ? Object.keys(feed.countries_count || {}).length : "10+"} countries. Ranked by people. Double-tap the ones you love.</p>
-        <form className="hv-search" role="search" onSubmit={(e) => { e.preventDefault(); search(qText); }}>
-          <Search size={18} aria-hidden="true" />
-          <input ref={searchRef} type="search" value={qText} onChange={(e) => setQText(e.target.value)}
-            placeholder="Search a country, town or lake, sea, cabin…" aria-label="Search homes" enterKeyHint="search" />
-          {q && <button type="button" aria-label="Clear search" onClick={() => { setQText(""); search(""); }}><X size={16} /></button>}
-        </form>
+        <SmartSearch value={q} onSearch={search} inputRef={searchRef} />
         <Freshness feed={feed} visitors={live?.today} />
       </section>
+      <Vibes active={vibe} onPick={pickVibe} />
       <ExploreLinks />
+      {showPodium && <PodiumHero rows={feed.rows.slice(0, 3)} scope={scope} endsAt={feed?.week?.ends_at} />}
       <div className="hv-feedbar">
         <nav className="hunt-tabs" aria-label="Browse rankings">
           <button aria-pressed={scope === "week"} onClick={() => update("tab", "")}>{t("This Week")}</button>
@@ -718,7 +724,7 @@ function Home() {
       <div className="hv-grid" aria-busy={!feed && busy}>
         {!feed && busy
           ? [0, 1, 2, 3, 4, 5].map((n) => <CardSkeleton key={n} />)
-          : displayedRows?.map((d: any, index: number) => (
+          : (showPodium ? displayedRows.slice(3) : displayedRows)?.map((d: any, index: number) => (
             <Fragment key={d.id}>
               <Card4 deal={d} scope={scope} onChange={() => load()} />
               {index === 8 && plain && <SponsoredCard />}
@@ -728,11 +734,9 @@ function Home() {
       </div>
       <div ref={sentinel} aria-hidden="true" />
       {feed?.rows.length === 0 && !error && (
-        <div className="hunt-empty">
-          <h3>{q ? `Nothing for “${q}” yet.` : "The next great find could be yours."}</h3>
-          <p>{q ? "Try a country or a simpler word." : "No homes match this view yet."}</p>
-          <Link to="/submit" className="hunt-primary">Submit a home</Link>
-        </div>
+        <EmptyState title={q ? `No homes for “${q}” yet` : "Nothing here yet"}
+          text={q ? "Try a country, a town or a simple word like sea, lake or cabin." : "No homes match these filters. Clear them, or post a home you found."}
+          action={<div className="hunt-row"><Link to="/" className="hunt-primary">See all homes</Link><Link to="/submit" className="hunt-secondary">Post a home</Link></div>} />
       )}
       {feed && feed.rows.length < feed.total && !busy && (
         <button className="hunt-more" onClick={() => load(true)}>{t("More discoveries")}</button>
@@ -844,29 +848,27 @@ function Detail() {
         ← {scope === "all" ? t("Back to all time") : t("Back to this week")}
       </Link>
       <div className="hunt-detail-grid">
-        <Media deal={d} detail scope={scope} />
+        <DetailGallery deal={d} />
         <section>
           <span className="hunt-eyebrow">
-            {d.country} · {d.category}
+            <Link to={`/homes/${encodeURIComponent((d.country || "").toLowerCase().replace(/ /g, "-"))}`}>{d.country}</Link> · {categories.find((c) => c[0] === d.category)?.[1] || d.category}
           </span>
           <h1>{cleanTitle(d)}</h1>
           <div className="hunt-price">{money(d.price_eur)}</div>
+          <RentLine price={d.price_eur} big />
           <LocalPrice eur={d.price_eur} sqm={d.sqm} />
           <StatusTags deal={d as Row} />
           <VerifiedLine deal={d as Row} />
           {d.price_eur != null && totalCost(d.price_eur, d.country) && (
             <p className="hunt-allin">Realistic all-in with taxes and notary: about <strong>{money(totalCost(d.price_eur, d.country))}</strong></p>
           )}
-          <p>
-            {d.location_name}
-            {d.sqm ? ` · ${d.sqm} m²` : ""}
-            {d.bedrooms ? ` · ${d.bedrooms} beds` : ""}
-          </p>
+          <p className="hv-detail-where">{FLAG_[d.country] || "📍"} {d.location_name}</p>
           <p>
             {isImported(d) ? "Spotted on" : "Found by"}{" "}
             <Link to={`/hunter/${d.hunter_handle}`}>@{d.hunter_handle}</Link>
             {d.is_editorial_pick ? " · ✦ RealHunt Pick" : ""}
           </p>
+          <Amenities deal={d} />
           {d.why_great && <blockquote>{d.why_great}</blockquote>}
           <div className="hunt-detail-actions hv-detail-actions">
             <HeartVote deal={d} scope={scope} onChange={load} big />
@@ -875,6 +877,7 @@ function Detail() {
             <ShareButton deal={d as Row} scope={scope} label />
           </div>
           <div className="hv-detail-more">
+            <VideoTour deal={d} />
             <BoardButton deal={d} />
             <CompareButton deal={d} />
           </div>
@@ -883,6 +886,7 @@ function Detail() {
             {num(d.life_up + d.life_down)} lifetime votes · {num(d.views)} views
             · {num(d.saves)} saves
           </p>
+          <Nearby deal={d} />
           <Availability dealId={d.id} />
           <CostPanel deal={d as Row} />
           <InfoRequest deal={d as Row} />

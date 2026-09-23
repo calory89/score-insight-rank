@@ -8,6 +8,7 @@ import { FLAG, bumpIx } from "@/lib/rh";
 import { money, votePreview, type Deal, type Session } from "./api";
 import { useCommunity } from "./ctx";
 import { bumpStreak, niceTitle, dealUrl, shareText, type Row } from "./extras";
+import { celebrate, cardColor, CardMeta } from "./v6";
 
 const num = (v: number = 0) => new Intl.NumberFormat("en").format(v);
 // Local activity counters for the profile badges (votes, saves, shares, homes opened).
@@ -63,6 +64,7 @@ export function useVote(deal: Deal, scope = "week", onChange?: () => void) {
       const place = deal.rank ? ` · #${deal.rank} ${scope === "all" ? "all time" : "this week"}` : "";
       setNotice(`❤ ${crowd}${place}.${days > 1 ? ` ${days}-day streak 🔥` : " Share it to push it up."}`);
       bumpStat("votes");
+      celebrate(days, stats().votes || 0);
       bumpIx();
       window.dispatchEvent(new CustomEvent("rh-voted", { detail: { id: deal.id, country: deal.country } }));
       onChange?.();
@@ -120,7 +122,7 @@ export async function storyCard(d: Row, scope = "week"): Promise<Blob | null> {
     c.width = W; c.height = H;
     const x = c.getContext("2d")!;
     x.fillStyle = "#0f0f0f"; x.fillRect(0, 0, W, H);
-    const src = (d.source_domain === "instagram.com" && (d.image_urls || []).length > 1 ? d.image_urls[1] : d.image_urls?.[0]);
+    const src = d.image_urls?.[0];
     if (src) {
       const img = await loadImg(src);
       const s = Math.max(W / img.width, (H * 0.78) / img.height);
@@ -229,7 +231,7 @@ function Photos({ deal, href, onDouble }: { deal: Row; href: string; onDouble: (
   const imgs = (deal.image_urls || []).filter(Boolean);
   // Instagram covers carry the poster's own price and captions printed on the photo; the second
   // photo is the house itself, so the feed opens on that one.
-  const [i, setI] = useState(() => (deal.source_domain === "instagram.com" && imgs.length > 1 ? 1 : 0));
+  const [i, setI] = useState(0);
   const [burst, setBurst] = useState(0);
   const navigate = useNavigate();
   const tap = useRef<{ t: number; timer?: any; x?: number }>({ t: 0 });
@@ -273,7 +275,7 @@ function Photos({ deal, href, onDouble }: { deal: Row; href: string; onDouble: (
         tap.current.timer = setTimeout(() => { tap.current.t = 0; navigate(href); }, 280);
       }}>
       <a href={href} onClick={(e) => e.preventDefault()} aria-label={niceTitle(deal)} tabIndex={-1}>
-        <img key={i} className="hv-fade" src={imgs[i] || "/favicon.png"} alt={niceTitle(deal)} loading="lazy" decoding="async"
+        <img key={i} className="hv-fade" onLoad={(e) => e.currentTarget.classList.add("is-in")} src={imgs[i] || "/favicon.png"} alt={niceTitle(deal)} loading="lazy" decoding="async"
           onError={(e) => { if (!e.currentTarget.src.endsWith("/favicon.png")) e.currentTarget.src = "/favicon.png"; }} />
       </a>
       {burst > 0 && <span key={burst} className="hv-burst" aria-hidden="true"><Heart size={96} fill="currentColor" /></span>}
@@ -314,7 +316,7 @@ export function Card4({ deal, scope = "week", onChange }: { deal: Row; scope?: s
   const warm = () => { prefetchDetail(deal.slug, call); preloadImages((deal.image_urls || []).slice(0, 3)); };
   return (
     <article className="hv-card" onMouseEnter={warm} onTouchStart={warm}>
-      <div className="hv-frame">
+      <div className="hv-frame" style={{ backgroundColor: cardColor(deal.slug) }}>
         <Photos deal={deal} href={href} onDouble={() => { if (!v.selected) v.vote(1); }} />
         <div className="hv-top">
           {deal.rank ? <span className={"hv-rank" + (deal.rank <= 3 ? " is-podium" : "") + (move ? " is-up" : "")}>#{deal.rank}{move ? <em> ▲{move}</em> : null}</span> : null}
@@ -323,16 +325,15 @@ export function Card4({ deal, scope = "week", onChange }: { deal: Row; scope?: s
         </div>
         <strong className="hv-price">{money(deal.price_eur)}</strong>
       </div>
-      <Link to={href} className="hv-info">
-        <span className="hv-title">{niceTitle(deal)}</span>
-        <span className="hv-where">{FLAG[deal.country] || "📍"} {where}{deal.sqm ? ` · ${deal.sqm} m²` : ""}{deal.bedrooms ? ` · ${deal.bedrooms} bd` : ""}</span>
+      <Link to={href} className="hv-info" aria-label={niceTitle(deal)}>
+        <CardMeta deal={deal} />
       </Link>
       <div className="hv-actions">
         <button className={"hv-heart" + (v.selected ? " is-on" : "")} disabled={!v.ready || v.busy} aria-pressed={v.selected}
           aria-label={v.selected ? "You voted for this home" : "Vote for this home"} onClick={() => v.vote(1)}>
-          <Heart size={19} fill={v.selected ? "currentColor" : "none"} /><strong>{num(v.total)}</strong>
+          <Heart size={19} fill={v.selected ? "currentColor" : "none"} /><strong key={v.total} className="hv-count">{num(v.total)}</strong>
         </button>
-        <span className="hv-hint">{v.selected ? "Voted" : "Double-tap the photo to vote"}</span>
+        <span className="hv-hint" />
         <ShareButton deal={deal} scope={scope} />
       </div>
     </article>

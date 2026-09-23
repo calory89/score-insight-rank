@@ -19,9 +19,10 @@ const rpc = async (fn: string, args: Record<string, unknown> = {}) => {
   if (data?.error) throw new Error(data.error);
   return data;
 };
+export const autoHandle = (h?: string | null) => !h || /^hunter_[0-9a-f]{6,}$/i.test(h);
 const cover = (d: Pick<Deal, "image_urls" | "source_domain">) => {
   const imgs = d.image_urls || [];
-  return d.source_domain === "instagram.com" && imgs.length > 1 ? imgs[1] : imgs[0];
+  return imgs[0];
 };
 
 // ---------------------------------------------------------------- theme and page motion
@@ -185,16 +186,30 @@ export function BoardsSection() {
 }
 export function BoardPage() {
   const { slug = "" } = useParams();
-  const { setNotice } = useCommunity();
+  const { setNotice, requireUser } = useCommunity();
+  const navigate = useNavigate();
+  const [copying, setCopying] = useState(false);
   const [data, setData] = useState<any>(null);
   useEffect(() => { rpc("community_board_public", { p_slug: slug }).then((d) => { setData(d); remember(d.rows); document.title = `${d.name} · RealHunt`; }).catch((e) => setData({ error: e.message })); }, [slug]);
   const url = `https://realhunt.co/b/${slug}`;
   return (
     <div className="hunt-wrap hunt-page hv-boardpage">
-      <span className="hunt-eyebrow">Board{data?.handle ? ` by @${data.handle}` : ""}</span>
-      <h1>{data?.name || "…"}</h1>
-      {data && !data.error && <p className="hunt-fine">{data.rows?.length || 0} homes under €100k</p>}
-      <button className="hv-share has-label" onClick={() => (navigator.share ? navigator.share({ title: `${data?.name} · RealHunt`, url }) : navigator.clipboard.writeText(url).then(() => setNotice("Board link copied ✓"))).catch(() => {})}><Share2 size={16} /><span>Share this board</span></button>
+      <div className="hv-board-hero">
+        <div className="hv-board-collage">{[0, 1, 2, 3].map((n) => data?.rows?.[n] ? <img key={n} src={cover(data.rows[n])} alt="" /> : <i key={n} />)}</div>
+        <div className="hv-board-hero-copy">
+          <span className="hunt-eyebrow">Board{data?.handle && !autoHandle(data.handle) ? ` by @${data.handle}` : ""}</span>
+          <h1>{data?.name || "…"}</h1>
+          {data && !data.error && <p className="hunt-fine">{data.rows?.length || 0} homes under €100k{data.rows?.length ? ` · from ${money(Math.min(...data.rows.map((r: Row) => r.price_eur || 1e9)))}` : ""}</p>}
+          <div className="hunt-row">
+            <button className="hv-share has-label" onClick={() => (navigator.share ? navigator.share({ title: `${data?.name} · RealHunt`, url }) : navigator.clipboard.writeText(url).then(() => setNotice("Board link copied ✓"))).catch(() => {})}><Share2 size={16} /><span>Share this board</span></button>
+            {data && !data.error && !data.mine && <button className="hunt-primary" disabled={copying} onClick={async () => {
+              if (!requireUser()) return;
+              setCopying(true);
+              try { const r = await rpc("community_board_copy", { p_slug: slug }); setNotice(`Copied to your boards ✓`); navigate(`/b/${r.slug}`); } catch (e) { setNotice((e as Error).message); } finally { setCopying(false); }
+            }}><Plus size={16} /> Copy this board</button>}
+          </div>
+        </div>
+      </div>
       {!data ? <div className="hunt-skeleton-list" /> : data.error ? <p>{data.error}</p> : (
         <div className="hv-minigrid">
           {(data.rows || []).map((d: Row) => (
@@ -204,7 +219,7 @@ export function BoardPage() {
               <span>{niceTitle(d)}</span>
             </Link>
           ))}
-          {!data.rows?.length && <p className="hunt-fine">This board is empty for now.</p>}
+          {!data.rows?.length && <p className="hunt-fine">This board is empty for now. Open any home and tap “Add to board”.</p>}
         </div>
       )}
     </div>
@@ -296,6 +311,14 @@ export function ComparePage() {
 
 // ---------------------------------------------------------------- 6: map button in the feed
 export function MapFab({ search }: { search: string }) {
+  // Shows once the visitor scrolls into the feed, so it never covers the podium.
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const on = () => setShow(window.scrollY > 1100);
+    on(); window.addEventListener("scroll", on, { passive: true });
+    return () => window.removeEventListener("scroll", on);
+  }, []);
+  if (!show) return null;
   return <Link to={`/map${search}`} className="hv-mapfab"><MapIcon size={18} /> Map</Link>;
 }
 
@@ -357,6 +380,32 @@ export function NotifBell() {
 }
 
 // ---------------------------------------------------------------- 8: profile with streaks and badges
+function NamePicker() {
+  const { session, setSession, call, setNotice } = useCommunity();
+  const [v, setV] = useState("");
+  const [busy, setBusy] = useState(false);
+  return (
+    <form className="hv-namepick" onSubmit={async (e) => {
+      e.preventDefault(); const h = v.trim().toLowerCase().replace(/[^a-z0-9_]/g, "");
+      if (h.length < 3) { setNotice("Use at least 3 letters or numbers."); return; }
+      setBusy(true);
+      try { const r = await call("profile", { handle: h, name: v.trim(), bio: session?.hunter?.bio || "" }); setSession((s: any) => ({ ...s, hunter: r.hunter })); setNotice(`Hi @${r.hunter?.handle || h} ✓`); }
+      catch (err) { setNotice((err as Error).message); } finally { setBusy(false); }
+    }}>
+      <label htmlFor="rh-name">Pick your name. It shows on your boards and the hunters board.</label>
+      <div><input id="rh-name" value={v} onChange={(e) => setV(e.target.value)} maxLength={24} placeholder="e.g. carlos" /><button className="hunt-primary" disabled={busy}>Save</button></div>
+    </form>
+  );
+}
+function VotedGrid() {
+  const { session } = useCommunity();
+  const ids = Object.keys(session?.votes || {}).filter((k) => session!.votes[k] === 1).slice(0, 100);
+  const [rows, setRows] = useState<Row[] | null>(null);
+  useEffect(() => { if (!ids.length) { setRows([]); return; } feed({ scope: "all", ids, limit: 100 }).then((f) => setRows(f.rows)).catch(() => setRows([])); }, [ids.length]);
+  if (!rows) return <div className="hv-igrid">{[0, 1, 2, 3, 4, 5].map((n) => <i key={n} className="hv-skel-tile" />)}</div>;
+  if (!rows.length) return <p className="hunt-fine">Homes you vote for show up here. <Link to="/" className="hunt-link">Start voting</Link></p>;
+  return <div className="hv-igrid">{rows.map((r) => <Link key={r.id} to={`/deal/${encodeURIComponent(r.slug)}`}><img src={cover(r)} alt="" loading="lazy" /><span>{money(r.price_eur)}</span></Link>)}</div>;
+}
 export function ProfilePage() {
   const { user, session, requireUser } = useCommunity();
   const s = stats();
@@ -380,9 +429,10 @@ export function ProfilePage() {
   return (
     <div className="hunt-wrap hv-me">
       <div className="hv-me-head">
-        <span className="hv-me-avatar">{(session?.hunter?.handle || user?.email || "?")[0].toUpperCase()}</span>
+        <span className="hv-me-avatar">{((!autoHandle(session?.hunter?.handle) && session?.hunter?.handle) || user?.email || "?")[0].toUpperCase()}</span>
         <div>
-          <h1>{session?.hunter?.display_name || session?.hunter?.handle || (user ? user.email?.split("@")[0] : "Your profile")}</h1>
+          <h1>{(!autoHandle(session?.hunter?.handle) && (session?.hunter?.display_name || session?.hunter?.handle)) || (user ? user.email?.split("@")[0] : "Your profile")}</h1>
+          {session?.hunter?.handle && !autoHandle(session.hunter.handle) && <p className="hunt-fine">@{session.hunter.handle}</p>}
           <p className="hunt-fine">{got} of {badges.length} badges · {streak > 0 ? `${streak}-day streak 🔥` : "Vote today to start a streak"}</p>
         </div>
         <ThemeButton label />
@@ -394,7 +444,10 @@ export function ProfilePage() {
         <div><strong>{num(saved)}</strong><span>Saved</span></div>
         <div><strong>{num(s.shares || 0)}</strong><span>Shares</span></div>
       </div>
-      <h2>Badges</h2>
+      {user && session?.hunter && autoHandle(session.hunter.handle) && <NamePicker />}
+      <h2>Homes you love</h2>
+      <VotedGrid />
+      <h2 style={{ marginTop: 26 }}>Badges</h2>
       <div className="hv-badges">
         {badges.map((b) => <div key={b.k} className={"hv-badge" + (b.ok ? " is-on" : "")} title={b.tip}><span>{b.icon}</span><strong>{b.k}</strong><small>{b.ok ? "Unlocked" : b.tip}</small></div>)}
       </div>
