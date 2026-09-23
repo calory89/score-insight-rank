@@ -721,7 +721,7 @@ function Home() {
               <Fragment key={d.id}>
                 <Card deal={d} scope={scope} onChange={() => load()} />
                 {index === 1 && !country && !category && <SponsoredCard />}
-                {index === 3 && <Personalise countries={Object.keys(feed?.countries_count || {})} onApply={setFilters} />}
+                
               </Fragment>
             ))}
           </div>
