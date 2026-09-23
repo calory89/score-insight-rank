@@ -503,7 +503,7 @@ export function InvitePage() {
     <div className="hunt-wrap hunt-page">
       <span className="hunt-eyebrow">{t("Invite")}</span>
       <h1>Bring friends who dream of a cheap house</h1>
-      <p>Every friend who joins with your link gives you 5 hunter points. Bring three and you get the Connector badge on the leaderboard. Your friends get the full listing links as soon as they sign in.</p>
+      <p>Every friend who joins with your link gives you 5 hunter points. Bring three and you become an Insider: every new home 48 hours before everyone else, plus the secret weekly Top 5. You also get the Connector badge. Your friends get the full listing links as soon as they sign in.</p>
       {!user ? <button className="hunt-primary" onClick={() => requireUser()}>{t("Sign in")}</button> : !me ? <div className="hunt-skeleton-list" /> : (
         <div className="hunt-invite">
           <code>{link}</code>

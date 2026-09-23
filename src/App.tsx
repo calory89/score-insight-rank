@@ -209,6 +209,11 @@ const AppRoutes = () => (
       <Route path="/b/:slug" element={<Community />} />
       <Route path="/vs/:a/:b" element={<Community />} />
       <Route path="/me" element={<Community />} />
+      <Route path="/insider" element={<Community />} />
+      <Route path="/blog" element={<Community />} />
+      <Route path="/blog/:slug" element={<Community />} />
+      <Route path="/cheap-houses" element={<Community />} />
+      <Route path="/cheap-houses/:slug" element={<Community />} />
       <Route path="/legal/cookies" element={<LegalPage page="cookies" />} />
       <Route path="/legal/takedown" element={<LegalPage page="takedown" />} />
       <Route path="/network" element={<Network />} />

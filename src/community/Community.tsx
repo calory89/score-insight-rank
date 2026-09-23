@@ -22,6 +22,7 @@ import OriginalListingLink from "@/components/realhunt/OriginalListingLink";
 import AuthModal from "@/components/realhunt/AuthModal";
 import { useLiveStats } from "@/components/realhunt/LiveStats";
 import { lazy, Suspense } from "react";
+import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
 import { Card4, CardSkeleton, Freshness, TabBar, DetailBar, HeartVote, ShareButton, SaveHeart, remember, rowCache, takeDetail, prefetchDetail, preloadImages } from "./v4";
@@ -129,7 +130,7 @@ function Shell({ children }: { children: ReactNode }) {
     };
   }, [user?.id]);
   useEffect(() => {
-    if (location.pathname.startsWith("/deal/")) return; // the listing sets its own title
+    if (/^\/(deal\/|insider|blog|cheap-houses)/.test(location.pathname)) return; // these pages set their own title
     document.title = "RealHunt — Homes under €100,000. Found by people. Ranked by you.";
   }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
@@ -237,6 +238,9 @@ function Shell({ children }: { children: ReactNode }) {
           </p>
           <div>
             <Link to="/">All homes</Link>
+            <Link to="/cheap-houses">Cheap houses</Link>
+            <Link to="/blog">Research</Link>
+            <Link to="/insider">Insider</Link>
             <Link to="/legal/privacy">Privacy</Link>
             <Link to="/legal/terms">Terms</Link>
             {session?.admin && <Link to="/hunt/admin">Moderation</Link>}
@@ -696,6 +700,7 @@ function Home() {
       </section>
       <Vibes active={vibe} onPick={pickVibe} />
       <ExploreLinks />
+      {!q && <InsiderStrip />}
       {showPodium && <PodiumHero rows={feed.rows.slice(0, 3)} scope={scope} endsAt={feed?.week?.ends_at} />}
       <div className="hv-feedbar">
         <nav className="hunt-tabs" aria-label="Browse rankings">
@@ -1809,6 +1814,16 @@ export default function Community() {
       <ComparePage />
     ) : path === "/me" ? (
       <ProfilePage />
+    ) : path === "/insider" ? (
+      <InsiderPage />
+    ) : path === "/blog" ? (
+      <BlogIndex />
+    ) : path.startsWith("/blog/") ? (
+      <BlogPost />
+    ) : path === "/cheap-houses" ? (
+      <CheapHousesIndex />
+    ) : path.startsWith("/cheap-houses/") ? (
+      <CheapHousesPage />
     ) : path === "/swipe" ? (
       <SwipePage />
     ) : path === "/map" ? (

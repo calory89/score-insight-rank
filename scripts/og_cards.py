@@ -138,6 +138,13 @@ def main():
         urls.append(f"{SITE}/homes/{c}")
         urls += [f"{SITE}/homes/{c}/under-{p}" for p in (20000, 40000, 60000, 80000)]
     urls += [f"{SITE}/deal/{d['slug']}" for d in rows]
+    # v7: research articles and search landing pages
+    try:
+        urls += [f"{SITE}/blog", f"{SITE}/cheap-houses", f"{SITE}/insider"]
+        urls += [f"{SITE}/blog/{p['slug']}" for p in json.load(open(os.path.join(ROOT, "src", "data", "blog.json")))]
+        urls += [f"{SITE}/cheap-houses/{p['slug']}" for p in json.load(open(os.path.join(ROOT, "src", "data", "search-pages.json")))["pages"]]
+    except Exception as e:
+        print("extra sitemap urls skipped:", e)
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "".join(
         f"  <url><loc>{u}</loc><lastmod>{today}</lastmod></url>\n" for u in urls) + "</urlset>\n"
     open(os.path.join(ROOT, "public", "sitemap.xml"), "w").write(xml)
