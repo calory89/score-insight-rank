@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FLAG } from "@/lib/rh";
 import { money } from "./api";
 import { useCommunity } from "./ctx";
+import { guestRef, guestDaysLeft } from "./extras";
 
 const rpc = async (fn: string, args: Record<string, unknown> = {}) => {
   const { data, error } = await (supabase as any).rpc(fn, args);
@@ -26,13 +27,14 @@ const setMeta = (title: string, desc?: string) => {
 
 // ---------------------------------------------------------------- Insider
 type Insider = {
-  insider: boolean; signed_in: boolean; count: number; needed: number; code: string | null; week: string;
+  insider: boolean; can_see: boolean; guest: boolean; host_name: string | null; signed_in: boolean; count: number; needed: number; code: string | null; week: string;
   early_count: number; early: any[]; top: any[]; next_week: string;
 };
 let insiderCache: Promise<Insider> | null = null;
 let insiderUser: string | null | undefined;
 export function loadInsider(uid: string | null, fresh = false) {
-  if (!insiderCache || fresh || insiderUser !== uid) { insiderUser = uid; insiderCache = rpc("community_insider"); insiderCache.catch(() => { insiderCache = null; }); }
+  const key = `${uid || ""}:${guestRef() || ""}`;
+  if (!insiderCache || fresh || insiderUser !== key) { insiderUser = key; insiderCache = rpc("community_insider", { p_ref: guestRef() }); insiderCache.catch(() => { insiderCache = null; }); }
   return insiderCache;
 }
 function useInsider() {
@@ -47,11 +49,11 @@ export function InsiderStrip() {
   const s = useInsider();
   if (!s) return null;
   return (
-    <Link to="/insider" className={"hv-insider-strip" + (s.insider ? " is-in" : "")}>
-      <span className="hv-ins-icon">{s.insider ? <Star size={16} fill="currentColor" /> : <Lock size={16} />}</span>
+    <Link to="/insider" className={"hv-insider-strip" + (s.can_see ? " is-in" : "")}>
+      <span className="hv-ins-icon">{s.can_see ? <Star size={16} fill="currentColor" /> : <Lock size={16} />}</span>
       <span>
-        <strong>{s.insider ? "You're an Insider" : s.early_count > 0 ? `${s.early_count} new ${s.early_count === 1 ? "home is" : "homes are"} Insider-only right now` : "The secret Top 5 of the week is out"}</strong>
-        <small>{s.insider ? `${s.early_count} early ${s.early_count === 1 ? "home" : "homes"} · Top 5 of week ${s.week.slice(-2)}` : "Invite 3 friends to see new homes 48h early. Free."}</small>
+        <strong>{s.insider ? "You're an Insider" : s.guest ? `${s.host_name || "A friend"} gave you Insider access` : s.early_count > 0 ? `${s.early_count} new ${s.early_count === 1 ? "home is" : "homes are"} Insider-only right now` : "The secret Top 5 of the week is out"}</strong>
+        <small>{s.insider ? `${s.early_count} early ${s.early_count === 1 ? "home" : "homes"} · Top 5 of week ${s.week.slice(-2)}` : s.guest ? `See the secret Top 5 and new homes early${guestDaysLeft() ? ` · ${guestDaysLeft()} days left` : ""}` : "Invite 3 friends to see new homes 48h early. Free."}</small>
       </span>
       <ChevronRight size={18} />
     </Link>
@@ -64,10 +66,10 @@ export function InsiderPage() {
   const [copied, setCopied] = useState(false);
   useEffect(() => { setMeta("RealHunt Insider · See new homes 48 hours early", "Invite 3 friends and see every new home 48 hours before everyone else, plus the secret weekly Top 5. Free."); }, []);
   useEffect(() => { loadInsider(user?.id || null, true).then(setS).catch(() => setS(null)); }, [user?.id]);
-  const link = s?.code ? `https://realhunt.co/?ref=${s.code}` : "";
+  const link = s?.code ? `https://realhunt.co/insider?ref=${s.code}` : "";
   const share = () => {
     if (!link) return;
-    const text = "I'm hunting homes under €100k on RealHunt. Join with my link and we both get closer to seeing new homes 48h early:";
+    const text = s?.insider ? "I get to see new homes under €100k 48h before everyone on RealHunt. This link lets you see them too, plus this week's secret Top 5:" : "I'm hunting homes under €100k on RealHunt. Join with my link and help me unlock new homes 48h early:";
     (navigator.share ? navigator.share({ title: "RealHunt", text, url: link }) : navigator.clipboard.writeText(`${text} ${link}`).then(() => setNotice("Link copied ✓"))).catch(() => {});
   };
   const copy = () => navigator.clipboard.writeText(link).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); }).catch(() => {});
@@ -78,6 +80,13 @@ export function InsiderPage() {
       <h1>See new homes 48 hours before everyone else.</h1>
       <p className="hv-ins-sub">Plus the secret Top 5 of the week: the homes furthest below their country's typical price. It's free. Invite 3 friends to unlock it for good.</p>
 
+      {s?.guest && (
+        <div className="hv-ins-guest">
+          <span>🎟️</span>
+          <div><strong>{s.host_name || "A friend"} gave you Insider access{guestDaysLeft() ? ` for ${guestDaysLeft()} days` : ""}.</strong>
+          <p>You can see the early homes and the secret Top 5 below. To keep it for good, invite 3 friends of your own.</p></div>
+        </div>
+      )}
       <section className={"hv-ins-card" + (s?.insider ? " is-in" : "")}>
         {!s ? <div className="hunt-skeleton-list" /> : s.insider ? (
           <div className="hv-ins-done"><span><Check size={20} /></span><div><strong>You're an Insider</strong><p>New homes show up in your feed with an Early access tag, 48 hours before they go public.</p></div></div>
@@ -108,7 +117,7 @@ export function InsiderPage() {
         <p className="hunt-fine">Nothing in early access this minute. New homes arrive most days and land here first, 48 hours before the public feed.</p>
       ) : (
         <div className="hv-ins-grid">
-          {(s?.early || []).map((d) => s!.insider ? (
+          {(s?.early || []).map((d) => s!.can_see ? (
             <Link key={d.id} to={`/deal/${encodeURIComponent(d.slug)}`} className="hv-ins-tile">
               <img src={d.image_urls?.[0]} alt="" loading="lazy" />
               <span className="hv-ins-badge">Public in {hoursLeft(d.publish_at)}h</span>
@@ -125,10 +134,10 @@ export function InsiderPage() {
         </div>
       )}
 
-      <h2><Star size={18} /> Secret Top 5 · week {s?.week.slice(-2) || ""}</h2>
+      <h2 className="hv-ins-h2"><span><Star size={18} /> Secret Top 5 · week {s?.week.slice(-2) || ""}</span>{s?.insider && link && <button className="hunt-secondary" onClick={share}><Share2 size={15} /> Share it</button>}</h2>
       <p className="hunt-fine">Picked every Monday from the homes with the biggest gap between their price and the median price of homes in the same country on RealHunt.</p>
       <ol className="hv-ins-top">
-        {(s?.top || []).map((d, i) => s!.insider ? (
+        {(s?.top || []).map((d, i) => s!.can_see ? (
           <li key={d.id}>
             <Link to={`/deal/${encodeURIComponent(d.slug)}`}>
               <b>{i + 1}</b><img src={d.image_urls?.[0]} alt="" loading="lazy" />

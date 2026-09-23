@@ -2546,3 +2546,11 @@ html.rh-dark, html.rh-dark body { background: #0E0E0C; }
 .hunt .hv-insider-strip, .hunt .hv-insider-strip strong, .hunt .hv-insider-strip small, .hunt .hv-ins-cta, .hunt .hv-ins-cta strong, .hunt .hv-ins-cta small { color: #fff !important; }
 .hunt .hv-insider-strip .hv-ins-icon { color: #FACC15 !important; }
 .hunt .hv-insider-strip.is-in .hv-ins-icon { color: #fff !important; }
+.hv-ins-guest { display: flex; gap: 12px; align-items: flex-start; margin: 16px 0 0; padding: 14px 16px; border-radius: 16px; background: #FEF9C3; border: 1px solid #FACC15; max-width: 560px; }
+.hv-ins-guest > span { font-size: 24px; line-height: 1; }
+.hv-ins-guest p { margin: 4px 0 0; font-size: 14px; color: #3A382F; }
+.hv-ins-h2 { justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.hv-ins-h2 > span { display: inline-flex; align-items: center; gap: 8px; }
+.hv-ins-h2 .hunt-secondary { min-height: 36px; padding: 7px 12px; font-size: 13px; font-family: inherit; }
+.hunt.is-dark .hv-ins-guest { background: #33300F; border-color: #A16207; }
+.hunt.is-dark .hv-ins-guest p { color: #E8E2C8; }

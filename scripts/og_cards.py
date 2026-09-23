@@ -23,7 +23,9 @@ def rpc(fn, args):
 def all_rows():
     rows, off = [], 0
     while True:
-        d = rpc("community_feed", {"p": {"scope": "all", "limit": 100, "offset": off}})
+        # "ref" is an Insider's invite code: homes still in their 48h Insider window get their share
+        # card and preview too, so a link an Insider shares never shows up as a blank preview.
+        d = rpc("community_feed", {"p": {"scope": "all", "limit": 100, "offset": off, "ref": os.environ.get("RH_PREVIEW_REF", "a6616356")}})
         rows += d["rows"]; off += 100
         if off >= d["total"] or not d["rows"]: return rows
 

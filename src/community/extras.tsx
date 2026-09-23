@@ -18,8 +18,28 @@ export type Row = Deal & {
   imported?: boolean;
 };
 export type FeedParams = { scope?: string; country?: string; category?: string; max_price?: number | null; min_sqm?: number | null; sort?: string; limit?: number; offset?: number; ids?: string[]; q?: string };
+// Guest pass: someone who opens an Insider's invite link (?ref=code) sees the Insider homes too, for
+// 7 days, so what an Insider shares never shows up blurred. The server checks the code belongs to an
+// Insider (community_can_see_early); this only remembers which code the visitor came with.
+const GUEST_DAYS = 7;
+export function guestRef(): string | null {
+  try {
+    const u = new URLSearchParams(location.search).get("ref");
+    const cur = JSON.parse(localStorage.getItem("rh_guest") || "null");
+    if (u && /^[0-9a-f]{8}$/.test(u)) {
+      if (!cur || cur.code !== u) localStorage.setItem("rh_guest", JSON.stringify({ code: u, until: Date.now() + GUEST_DAYS * 864e5 }));
+      return u;
+    }
+    if (cur && cur.until > Date.now()) return cur.code;
+  } catch { /* ignore */ }
+  return null;
+}
+export function guestDaysLeft(): number {
+  try { const cur = JSON.parse(localStorage.getItem("rh_guest") || "null"); return cur ? Math.max(0, Math.ceil((cur.until - Date.now()) / 864e5)) : 0; } catch { return 0; }
+}
 export async function feed(p: FeedParams) {
-  const { data, error } = await (supabase.rpc as any)("community_feed", { p });
+  const g = guestRef();
+  const { data, error } = await (supabase.rpc as any)("community_feed", { p: g ? { ...p, ref: g } : p });
   if (error) throw new Error("The homes could not load. Please try again.");
   return data as { rows: Row[]; total: number; week: any; next_drop: string; countries_count: Record<string, number>; weekly_votes: number; global_votes: number; global_deals: number; countries: string[] };
 }
@@ -523,6 +543,7 @@ export function useReferralCapture() {
     try {
       const r = new URLSearchParams(location.search).get("ref");
       if (r && /^[0-9a-f]{8}$/.test(r) && !localStorage.getItem("rh_ref")) localStorage.setItem("rh_ref", r);
+      guestRef();
     } catch { /* ignore */ }
   }, []);
   useEffect(() => {
