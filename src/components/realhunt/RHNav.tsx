@@ -6,7 +6,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Menu, X, Heart, Bell, MessageSquare, User, LogOut, ChevronDown, Briefcase, Search, MapPin } from "lucide-react";
 import { fbLead } from "@/lib/fbpixel";
 import AuthModal from "@/components/realhunt/AuthModal";
-import CookieBanner from "@/components/realhunt/CookieBanner";
 
 const NAV_ITEMS = [
   { to: "/", label: "Explore" },
@@ -84,7 +83,6 @@ const RHNav = () => {
       {onDeals && createPortal(<nav aria-label="Mobile navigation" className="rh-mobile-nav md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-hairline bg-white/95 backdrop-blur-md" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
         <div className="grid grid-cols-4 h-16">{mobileItems.map(({ to, label, icon: Icon }) => <Link key={to} to={to} aria-current={isActive(to) ? "page" : undefined} className={`flex flex-col items-center justify-center gap-1 text-[11px] font-medium ${isActive(to) ? "text-sky-600" : "text-ink-muted"}`}><Icon size={21} strokeWidth={isActive(to) ? 2.3 : 1.7} /><span>{label}</span></Link>)}</div>
       </nav>, document.body)}
-      <CookieBanner />
       <AuthModal open={auth} onClose={() => setAuth(false)} title="Sign in to RealHunt" subtitle="Free. Save homes, set alerts and get everything about any home by email." />
     </header>
   );

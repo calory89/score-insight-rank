@@ -24,6 +24,8 @@ import { useLiveStats } from "@/components/realhunt/LiveStats";
 import { lazy, Suspense } from "react";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
+import { Card4, CardSkeleton, Freshness, TabBar, DetailBar, HeartVote, ShareButton, SaveHeart, remember, rowCache, takeDetail, prefetchDetail, preloadImages } from "./v4";
+import { bumpIx } from "@/lib/rh";
 import { Ctx, useCommunity } from "./ctx";
 const MapView = lazy(() => import("./map"));
 import {
@@ -176,15 +178,15 @@ function Shell({ children }: { children: ReactNode }) {
         refreshSession: connect,
       }}
     >
-      <div className="hunt">
+      <div className="hunt has-tabbar">
         <header className="hunt-header">
           <Link to="/" className="hunt-brand">
             <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#141414" /><path d="M14 35 L32 17 L50 35" fill="none" stroke="#FFFFFF" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" /><circle cx="32" cy="43.5" r="6.5" fill="#0EA5E9" /></svg>RealHunt
           </Link>
           <nav aria-label="Main navigation">
-            <Link to="/browse" className="hunt-browse">
+            <Link to="/?search=1" className="hunt-browse">
               <Search size={16} />
-              {t("Browse homes")}
+              Search
             </Link>
             <Link to="/hunt/saved" aria-label="Saved deals">
               <Bookmark size={19} />
@@ -228,7 +230,7 @@ function Shell({ children }: { children: ReactNode }) {
             {t("Listings belong to their original publishers. RealHunt is not the seller.")}
           </p>
           <div>
-            <Link to="/browse">{t("Browse homes")}</Link>
+            <Link to="/">All homes</Link>
             <Link to="/legal/privacy">Privacy</Link>
             <Link to="/legal/terms">Terms</Link>
             {session?.admin && <Link to="/hunt/admin">Moderation</Link>}
@@ -243,6 +245,7 @@ function Shell({ children }: { children: ReactNode }) {
             <Link to="/invite">{t("Invite")}</Link>
           </div>
         </footer>
+        <TabBar />
         <AuthModal
           open={auth}
           onClose={() => setAuth(false)}
@@ -586,18 +589,23 @@ function Home() {
   const maxPrice = Number(params.get("price")) || null;
   const minSqm = Number(params.get("sqm")) || null;
   const sort = params.get("order") || "rank";
+  const q = params.get("q") || "";
+  const [qText, setQText] = useState(q);
   const [feed, setFeed] = useState<any>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const seq = useRef(0);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const sentinel = useRef<HTMLDivElement>(null);
   async function load(more = false) {
     const n = ++seq.current;
     setBusy(true);
     setError("");
     try {
-      const data: any = await feedV3({ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort, limit: 24, offset: more ? feed?.rows.length || 0 : 0 });
+      const data: any = await feedV3({ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort, q, limit: 24, offset: more ? feed?.rows.length || 0 : 0 } as any);
       if (n !== seq.current) return;
-      setFeed((f) =>
+      remember(data.rows);
+      setFeed((f: any) =>
         more && f ? { ...data, rows: [...f.rows, ...data.rows] } : data,
       );
     } catch (e) {
@@ -608,23 +616,40 @@ function Home() {
   }
   useEffect(() => {
     load();
-  }, [scope, country, category, maxPrice, minSqm, sort, user?.id]);
+  }, [scope, country, category, maxPrice, minSqm, sort, q, user?.id]);
+  useEffect(() => { setQText(q); }, [q]);
   useEffect(() => {
-    const on = (e: Event) => { const d = (e as CustomEvent).detail || {}; if (d.country) setMore({ country: d.country }); load(); };
+    if (params.get("search") === "1") {
+      searchRef.current?.focus();
+      searchRef.current?.scrollIntoView({ block: "center" });
+    }
+  }, [params.get("search")]);
+  useEffect(() => {
+    const on = (e: Event) => { const d = (e as CustomEvent).detail || {}; if (d.country) setMore({ country: d.country }); };
     window.addEventListener("rh-voted", on);
     return () => window.removeEventListener("rh-voted", on);
   }, [scope]);
-  const nextUp = more && feed ? feed.rows.filter((r) => r.country === more.country && !session?.votes?.[r.id]).slice(0, 3) : [];
-  const setCountry = (c: string) => {
-    const next = new URLSearchParams(params);
-    c ? next.set("country", c) : next.delete("country");
-    setParams(next);
-  };
+  // Photos of the next homes are fetched while the visitor is still looking at these ones.
+  useEffect(() => {
+    if (!feed?.rows?.length) return;
+    const idle = (window as any).requestIdleCallback || ((cb: () => void) => setTimeout(cb, 600));
+    idle(() => preloadImages(feed.rows.slice(0, 12).map((r: any) => r.image_urls?.[0])));
+  }, [feed?.rows?.length]);
+  // Endless feed: the next page loads before the visitor reaches the bottom.
+  useEffect(() => {
+    const el = sentinel.current;
+    if (!el || !feed || feed.rows.length >= feed.total) return;
+    const io = new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting) && !busy) load(true); }, { rootMargin: "900px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [feed?.rows?.length, feed?.total, busy]);
+  const nextUp = more && feed ? feed.rows.filter((r: any) => r.country === more.country && !session?.votes?.[r.id]).slice(0, 3) : [];
   const setFilters = (v: FeedParams) => {
     const next = new URLSearchParams(params);
     const put = (k: string, val: unknown) => (val ? next.set(k, String(val)) : next.delete(k));
     put("country", v.country); put("type", v.category); put("price", v.max_price); put("sqm", v.min_sqm);
     put("order", v.sort && v.sort !== "rank" ? v.sort : "");
+    next.delete("search");
     setParams(next);
   };
   const update = (key: string, val: string) => {
@@ -634,74 +659,42 @@ function Home() {
     val ? next.set(key, val) : next.delete(key);
     setParams(next);
   };
+  const search = (text: string) => {
+    const next = new URLSearchParams(params);
+    text.trim() ? next.set("q", text.trim()) : next.delete("q");
+    next.delete("search");
+    setParams(next);
+  };
   const displayedRows = feed?.rows;
+  const plain = !country && !category && !q;
   return (
-    <div className="hunt-wrap hunt-home">
-
-      <section className="hunt-hero">
-        <h1>
-          {t("Property worth finding.")}
-          <em>{t("You decide what rises.")}</em>
-        </h1>
-        <QuickSubmission />
-        <div className="hunt-hero-stats">
-          <span>
-            <strong>{feed ? num(feed.global_deals) : "—"}</strong> {t("deals")}
-          </span>
-          <i />
-          <span>
-            <strong>{feed ? num(feed.weekly_votes) : "—"}</strong> {t("votes this week")}
-          </span>
-          <i />
-          <span>
-            <strong>{feed ? num(feed.global_votes) : "—"}</strong> {t("total votes")}
-          </span>
-          {live && live.today > 0 && (<>
-            <i />
-            <span>
-              <strong>{num(live.today)}</strong> {t("visitors in 24h")}
-            </span>
-          </>)}
-          {streakNow() > 1 && (<><i /><span className="hunt-streak">{streakNow()} {t("days in a row")}</span></>)}
-        </div>
+    <div className="hunt-wrap hunt-home hv-home">
+      <section className="hv-hero">
+        <h1>Homes under €100k you won’t believe are real.</h1>
+        <p>Real listings from {feed ? Object.keys(feed.countries_count || {}).length : "10+"} countries. Ranked by people. Double-tap the ones you love.</p>
+        <form className="hv-search" role="search" onSubmit={(e) => { e.preventDefault(); search(qText); }}>
+          <Search size={18} aria-hidden="true" />
+          <input ref={searchRef} type="search" value={qText} onChange={(e) => setQText(e.target.value)}
+            placeholder="Search a country, town or lake, sea, cabin…" aria-label="Search homes" enterKeyHint="search" />
+          {q && <button type="button" aria-label="Clear search" onClick={() => { setQText(""); search(""); }}><X size={16} /></button>}
+        </form>
+        <Freshness feed={feed} visitors={live?.today} />
       </section>
       <ExploreLinks />
-      <DropBar next={feed?.next_drop} early={(feed?.rows || []).filter((r: any) => r.early).length} />
-      <div className="hunt-feed-header">
-        <div>
-          <h2>
-            {scope === "all" ? t("All-time favourites") : t("Top deals this week")}{" "}
-            <span>↗</span>
-          </h2>
-          <p>
-            {scope === "all" ? "All votes since launch" : `${feed?.week?.label?.replace("-", "–") || "This week"} · ${closesIn(feed?.week?.ends_at) || "UTC"}`}
-          </p>
-        </div>
+      <div className="hv-feedbar">
+        <nav className="hunt-tabs" aria-label="Browse rankings">
+          <button aria-pressed={scope === "week"} onClick={() => update("tab", "")}>{t("This Week")}</button>
+          <button aria-pressed={scope === "all"} onClick={() => update("tab", "all")}>{t("All Time")}</button>
+        </nav>
+        <span className="hv-closes">{scope === "all" ? "All votes since launch" : `Weekly board ${closesIn(feed?.week?.ends_at) || ""}`}</span>
       </div>
-      <nav className="hunt-tabs" aria-label="Browse rankings">
-        <button
-          aria-pressed={scope === "week"}
-          onClick={() => update("tab", "")}
-        >
-          {t("This Week")}
-        </button>
-        <button
-          aria-pressed={scope === "all"}
-          onClick={() => update("tab", "all")}
-        >
-          {t("All Time")}
-        </button>
-        <Link to="/browse" className="hunt-secondary-search">
-          <Search size={15} />
-          {t("Search listings")}
-        </Link>
-      </nav>
       <Filters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort }} onChange={setFilters} />
+      {q && feed && <p className="hv-searchnote">{feed.total} {feed.total === 1 ? "home" : "homes"} for “{q}”</p>}
       {nextUp.length > 0 && (
         <aside className="hunt-keepgoing" aria-label="More to vote on">
           <strong>Keep going: more in {more?.country}</strong>
           <div>
-            {nextUp.map((r) => (
+            {nextUp.map((r: any) => (
               <Link key={r.id} to={`/deal/${r.slug}`}>
                 <img src={r.image_urls?.[0]} alt="" loading="lazy" />
                 <span>{money(r.price_eur)}</span>
@@ -712,78 +705,39 @@ function Home() {
         </aside>
       )}
       {error && <ErrorBox error={error} retry={() => load()} />}
-      {!feed && busy ? (
-        <div className="hunt-skel-grid" aria-busy="true">{[0, 1, 2, 3, 4, 5].map((n) => <div key={n} className="hunt-skel-card" />)}</div>
-      ) : (
-        <>
-          <div className="hunt-grid">
-            {displayedRows?.map((d, index) => (
-              <Fragment key={d.id}>
-                <Card deal={d} scope={scope} onChange={() => load()} />
-                {index === 1 && !country && !category && <SponsoredCard />}
-                
-              </Fragment>
-            ))}
-          </div>
-          {feed?.rows.length === 0 && !error && (
-            <div className="hunt-empty">
-              <h3>The next great find could be yours.</h3>
-              <p>No deals match this view yet.</p>
-              <Link to="/submit" className="hunt-primary">
-                Submit a Deal
-              </Link>
-            </div>
-          )}
-          {feed && <p className="hunt-feed-count" role="status">Showing {num(feed.rows.length)} of {num(feed.total)} deals{!country && !category && feed.rows.length >= 2 ? " · plus 1 sponsored listing" : ""}</p>}
-          {feed && feed.rows.length < feed.total && (
-            <button
-              className="hunt-more"
-              onClick={() => load(true)}
-              disabled={busy}
-            >
-              {busy ? "Loading…" : t("More discoveries")}
-            </button>
-          )}
-        </>
-      )}
-      {feed && feed.picks?.length > 0 && (
-        <section className="hunt-picks">
-          <div>
-            <span className="hunt-eyebrow">A LITTLE HELP FROM THE EDITORS</span>
-            <h2>RealHunt Picks ✦</h2>
-            <p>Our editorial favourites. Your votes decide the leaderboard.</p>
-          </div>
-          <div className="hunt-pick-links">
-            {feed.picks.map((d) => (
-              <Link key={d.id} to={`/deal/${d.slug}`}>
-                <img src={d.image_urls[0]} alt="" loading="lazy" />
-                <span>
-                  <strong>{money(d.price_eur)}</strong>
-                  {d.title}
-                </span>
-                <ArrowUpRight size={18} />
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-      <section className="hunt-join">
-        <div>
-          <span className="hunt-eyebrow">GOOD FINDS DESERVE GOOD COMPANY</span>
-          <h2>Seen a deal worth sharing?</h2>
-          <p>
-            Paste the listing. Tell us why. Every submission gets a human
-            review.
-          </p>
+      <div className="hv-grid" aria-busy={!feed && busy}>
+        {!feed && busy
+          ? [0, 1, 2, 3, 4, 5].map((n) => <CardSkeleton key={n} />)
+          : displayedRows?.map((d: any, index: number) => (
+            <Fragment key={d.id}>
+              <Card4 deal={d} scope={scope} onChange={() => load()} />
+              {index === 8 && plain && <SponsoredCard />}
+            </Fragment>
+          ))}
+        {feed && busy && feed.rows.length > 0 && feed.rows.length < feed.total && [0, 1, 2].map((n) => <CardSkeleton key={"more" + n} />)}
+      </div>
+      <div ref={sentinel} aria-hidden="true" />
+      {feed?.rows.length === 0 && !error && (
+        <div className="hunt-empty">
+          <h3>{q ? `Nothing for “${q}” yet.` : "The next great find could be yours."}</h3>
+          <p>{q ? "Try a country or a simpler word." : "No homes match this view yet."}</p>
+          <Link to="/submit" className="hunt-primary">Submit a home</Link>
         </div>
-        <Link className="hunt-primary" to="/submit">
-          <Plus size={17} />
-          Submit a Deal
-        </Link>
+      )}
+      {feed && feed.rows.length < feed.total && !busy && (
+        <button className="hunt-more" onClick={() => load(true)}>{t("More discoveries")}</button>
+      )}
+      <section className="hunt-join hv-join">
+        <div>
+          <span className="hunt-eyebrow">FOUND ONE WE MISSED?</span>
+          <h2>Post it. If people love it, it rises.</h2>
+          <p>Paste the listing link. Every home gets a human check before it goes live.</p>
+        </div>
+        <QuickSubmission />
       </section>
       <p className="hunt-rules">
-        One vote per person, per home, each week. No account needed to vote — you only sign in when you open the original listing.
-        Only priced homes under €100,000 are ranked. The weekly board resets every Monday; All Time keeps the total.
+        One vote per person, per home, each week. No account needed to vote. You only sign in to open the original listing.
+        Only priced homes under €100,000 that are ready to live in are listed. The weekly board resets every Monday.
       </p>
     </div>
   );
@@ -830,16 +784,21 @@ function Detail() {
   const [report, setReport] = useState(false);
   async function load() {
     try {
-      setData(await call("detail", { slug }));
+      const pre = slug ? takeDetail(slug) : undefined;
+      setData(await (pre || call("detail", { slug })));
       setError("");
     } catch (e) {
-      setError((e as Error).message);
+      if (!cached) setError((e as Error).message);
     }
   }
+  // Paint at once from the row the feed already had; the full record fills in behind it.
+  const cached = slug ? rowCache.get(slug) : undefined;
+  useEffect(() => { setData(null); bumpIx(); window.scrollTo(0, 0); }, [slug]);
   useEffect(() => {
     if (session) load();
   }, [slug, session?.token, user?.id]);
-  const d: Deal = data?.deal;
+  const d: Deal = data?.deal || cached;
+  useEffect(() => { if (d?.image_urls) preloadImages(d.image_urls.slice(0, 8)); }, [d?.id]);
   useEffect(() => {
     if (!d) return;
     const where = d.location_name || d.country || "";
@@ -862,8 +821,14 @@ function Detail() {
       </div>
     );
   if (!d) return <Loading />;
+  const listing = (d.has_source || safeUrl(d.source_url)) ? (
+    <OriginalListingLink href={d.source_url || undefined} className="hunt-primary" target="_blank" rel="noopener noreferrer">
+      {t("View listing")} <ArrowUpRight size={17} />
+    </OriginalListingLink>
+  ) : null;
   return (
-    <div className="hunt-wrap hunt-detail">
+    <div className="hunt-wrap hunt-detail hv-detail">
+      <DetailBar deal={d as Row} scope={scope} onChange={load} listing={listing} />
       <Link to={scope === "all" ? "/?tab=all" : "/"} className="hunt-back">
         ← {scope === "all" ? t("Back to all time") : t("Back to this week")}
       </Link>
@@ -892,37 +857,13 @@ function Detail() {
             {d.is_editorial_pick ? " · ✦ RealHunt Pick" : ""}
           </p>
           {d.why_great && <blockquote>{d.why_great}</blockquote>}
-          <div className="hunt-detail-score">
-            <span className="hunt-score-period">{scope === "all" ? t("All-time points") : t("This week's points")}</span>
-            <Vote deal={d} scope={scope} onChange={load} />
+          <div className="hunt-detail-actions hv-detail-actions">
+            <HeartVote deal={d} scope={scope} onChange={load} big />
+            {listing}
+            <SaveHeart deal={d} className="hunt-save hv-save-inline" />
+            <ShareButton deal={d as Row} scope={scope} label />
           </div>
-          <div className="hunt-detail-actions">
-            <Vote deal={d} scope={scope} onChange={load} />
-            {(d.has_source || safeUrl(d.source_url)) && (
-              <OriginalListingLink
-                href={d.source_url || undefined}
-                className="hunt-primary"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {t("View listing")} <ArrowUpRight size={17} />
-              </OriginalListingLink>
-            )}
-            <Save deal={d} onChange={load} />
-            <button
-              aria-label="Share deal"
-              onClick={() =>
-                shareRow(d as Row, scope)
-                  .then(() => setNotice("Ready to share ✓"))
-                  .catch((e) => {
-                    if (e.name !== "AbortError")
-                      setNotice("Copy this page address to share.");
-                  })
-              }
-            >
-              <Share2 size={19} />
-            </button>
-          </div>
+          <p className="hv-votehint">{scope === "all" ? "All-time votes" : "Votes this week"} decide the ranking. Double-tap a photo in the feed to vote.</p>
           <p className="hunt-fine">
             {num(d.life_up + d.life_down)} lifetime votes · {num(d.views)} views
             · {num(d.saves)} saves
@@ -1028,19 +969,20 @@ function Detail() {
             {busy ? "Posting…" : "Post comment"}
           </button>
         </form>
-        {data.comments.length === 0 && (
+        {!data && <p className="hunt-fine">Loading comments…</p>}
+        {data && data.comments.length === 0 && (
           <p className="hunt-fine">
             No comments yet. Be the first to add useful context.
           </p>
         )}
-        {data.comments.map((c: any) => (
+        {(data?.comments || []).map((c: any) => (
           <article className="hunt-comment" key={c.id}>
             <div>
               <Link to={`/hunter/${c.handle}`}>@{c.handle || "hunter"}</Link>
               <time>{new Date(c.created_at).toLocaleDateString()}</time>
             </div>
             <p>{c.body}</p>
-            {session.admin && (
+            {session?.admin && (
               <button
                 onClick={async () => {
                   try {

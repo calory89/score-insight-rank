@@ -5,7 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { X, Check, ArrowRight, Sparkles } from "lucide-react";
-import { track, eur, subscribeEmail } from "@/lib/rh";
+import { track, eur, subscribeEmail, ixCount, consent } from "@/lib/rh";
 import { useAuth } from "@/contexts/AuthContext";
 import { useExperiment } from "@/lib/experiments";
 
@@ -96,21 +96,29 @@ const EmailCapture = () => {
   const popS = useSubscribe("popup");
   const popRef = useRef<HTMLDivElement>(null);
   const head = useExperiment("capture_headline", [{ id: "A", text: "The 10 best homes under €100,000. Free, in your inbox." }]);
-  const skip = SKIP.some((r) => r.test(pathname)) || get(localStorage, K_SUB) === "1";
+  // One notice at a time (23-sep-2026): the cookie choice comes first, and the email box only
+  // appears after the visitor has done two things (voted, saved, opened a home, shared, swiped).
+  const [ready, setReady] = useState(() => !!consent() && ixCount() >= 2);
+  useEffect(() => {
+    const check = () => setReady(!!consent() && ixCount() >= 2);
+    window.addEventListener("rh-ix", check); window.addEventListener("rh:consent", check);
+    return () => { window.removeEventListener("rh-ix", check); window.removeEventListener("rh:consent", check); };
+  }, []);
+  const skip = !ready || SKIP.some((r) => r.test(pathname)) || get(localStorage, K_SUB) === "1";
 
   // bar: after a short delay, unless dismissed in the last 7 days
   useEffect(() => {
     if (skip) { setBar(false); return; }
     const off = Number(get(localStorage, K_BAR) || 0);
     if (Date.now() - off < 7 * 86400e3) return;
-    const t = setTimeout(() => { setBar(true); track("capture_show", { meta: { kind: "banner" } }); }, 3500);
+    const t = setTimeout(() => { setBar(true); track("capture_show", { meta: { kind: "banner" } }); }, 1200);
     return () => clearTimeout(t);
   }, [skip, pathname]);
 
   // popup: 30 s on the site without subscribing, once per session, at most every 3 days
   useEffect(() => {
     if (skip) return;
-    if (get(sessionStorage, "rh_pop_seen") === "1") return;
+    if (get(sessionStorage, "rh_pop_seen") === "1" || !get(localStorage, K_BAR)) return;
     if (Date.now() - Number(get(localStorage, K_POP) || 0) < 3 * 86400e3) return;
     let t: any;
     let exitFired = false;
@@ -122,7 +130,7 @@ const EmailCapture = () => {
       set(sessionStorage, "rh_pop_seen", "1"); set(localStorage, K_POP, String(Date.now()));
       setPeek(feedPeek()); setPop(true); track("capture_show", { meta: { kind: "popup", exit: exitFired } });
     };
-    t = setTimeout(fire, 30000);
+    // no timed pop-up any more: only exit intent on desktop, after the bar was ignored
 
     // Exit intent, desktop only. A coarse pointer means a finger, and a finger leaving the top of
     // the screen means nothing at all, so we only listen where there is a real mouse.

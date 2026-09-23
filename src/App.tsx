@@ -95,24 +95,48 @@ const Extras = () => {
   return <Suspense fallback={null}><CommandPalette /><KeyboardShortcutsModal />{enabled && <OnboardingWizard />}</Suspense>;
 };
 
+const CookieBanner = L(() => import("@/components/realhunt/CookieBanner"));
 const CommunityEmailCapture = () => {
   const { pathname } = useLocation();
-  if (pathname === "/" || /^\/(deal|hunter|hunt|submit|winners|swipe|map|leaderboard|invite|alerts|help-buying|guide|homes|c)(\/|$)/.test(pathname)) return null;
+  if (/^\/(submit|hunt|alerts)(\/|$)/.test(pathname)) return null;
   return <EmailCapture />;
 };
 
+// One site, one feed (23-sep-2026): the old catalogue at /browse and its country pages now open the
+// same ranked feed as the home page, with their filters carried over.
+const toFeed = (search: string, extra: Record<string, string> = {}) => {
+  const p = new URLSearchParams(search);
+  const out = new URLSearchParams();
+  if (p.get("country") && p.get("country") !== "All") out.set("country", p.get("country")!);
+  if (p.get("beach") === "1") out.set("type", "beach");
+  const max = Number(p.get("max") || p.get("price")); if (max > 0 && max < 100000) out.set("price", String(max));
+  if (p.get("q")) out.set("q", p.get("q")!);
+  const sort = p.get("sort") || p.get("order");
+  if (sort) out.set("order", sort === "cheapest" || sort === "price" ? "price_asc" : sort === "newest" || sort === "new" ? "new" : sort);
+  Object.entries(extra).forEach(([k, v]) => v && out.set(k, v));
+  const qs = out.toString();
+  return "/" + (qs ? "?" + qs : "");
+};
 const CommunityRoot = () => {
   const { search } = useLocation();
   const p = new URLSearchParams(search);
-  return ["beach", "max", "q", "sort"].some(k => p.has(k))
-    ? <Navigate to={"/browse" + search} replace /> : <Community />;
+  return ["beach", "max", "sort"].some(k => p.has(k))
+    ? <Navigate to={toFeed(search)} replace /> : <Community />;
 };
+const ToFeed = () => { const { search } = useLocation(); return <Navigate to={toFeed(search)} replace />; };
+const CountryToFeed = () => {
+  const { pathname, search } = useLocation();
+  const raw = decodeURIComponent(pathname.split("/")[2] || "");
+  const name = raw.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()).replace(/^Usa$|^Us$/, "United States");
+  return <Navigate to={toFeed(search, { country: name })} replace />;
+};
+const FindToDeal = () => { const { pathname } = useLocation(); return <Navigate to={"/deal/" + pathname.split("/")[2]} replace />; };
 
 const AppRoutes = () => (
   <Suspense fallback={<SuspenseFallback />}>
     <Routes>
       <Route path="/" element={<CommunityRoot />} />
-      <Route path="/browse" element={<Home />} />
+      <Route path="/browse" element={<ToFeed />} />
       <Route path="/submit" element={<Community />} />
       <Route path="/deal/:slug" element={<Community />} />
       <Route path="/hunter/:handle" element={<Community />} />
@@ -165,7 +189,7 @@ const AppRoutes = () => (
       <Route path="/ecobeachcity" element={<Ebc />} />
       <Route path="/lake-como" element={<Como />} />
       <Route path="/saved" element={<Saved />} />
-      <Route path="/country/:country" element={<Home />} />
+      <Route path="/country/:country" element={<CountryToFeed />} />
       <Route path="/from/:account" element={<Home />} />
       <Route path="/account" element={<Account />} />
       <Route path="/account/:tab" element={<Account />} />
@@ -188,8 +212,8 @@ const AppRoutes = () => (
       <Route path="/network/agreement" element={<NetworkAgreement />} />
       <Route path="/network/app" element={<NetworkApp />} />
       <Route path="/network/app/:tab" element={<NetworkApp />} />
-      <Route path="/finds" element={<Finds />} />
-      <Route path="/find/:shortcode" element={<FindDetail />} />
+      <Route path="/finds" element={<ToFeed />} />
+      <Route path="/find/:shortcode" element={<FindToDeal />} />
       <Route path="/admin/activity" element={<AdminActivity />} />
       <Route path="/admin/activity/:tab" element={<AdminActivity />} />
       <Route path="*" element={<NotFound />} />
@@ -213,7 +237,7 @@ const App = () => (
                 <PageTracker>
                   <main id="main-content"><AppRoutes /></main>
                 </PageTracker>
-                <Suspense fallback={null}><CommunityEmailCapture /></Suspense>
+                <Suspense fallback={null}><CookieBanner /><CommunityEmailCapture /></Suspense>
               </BrowserRouter>
             </TooltipProvider>
           </SubscriptionProvider>

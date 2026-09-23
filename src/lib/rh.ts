@@ -4,7 +4,7 @@ export const db = supabase as any;
 export const MAX_PRICE = 100000;
 export const HOME_MAX_PRICE = 100000;
 export const eur = (n: number) => "€" + Math.round(n).toLocaleString("en-GB");
-export const FLAG: Record<string, string> = { Italy: "🇮🇹", Spain: "🇪🇸", Portugal: "🇵🇹", France: "🇫🇷", Greece: "🇬🇷", Croatia: "🇭🇷", Bulgaria: "🇧🇬", Romania: "🇷🇴", Japan: "🇯🇵", Sweden: "🇸🇪", Norway: "🇳🇴", Denmark: "🇩🇰", Finland: "🇫🇮", Germany: "🇩🇪", Turkey: "🇹🇷", Albania: "🇦🇱", Indonesia: "🇮🇩", Nordics: "❄️", Asia: "🌏", Other: "🌍" };
+export const FLAG: Record<string, string> = { Italy: "🇮🇹", Spain: "🇪🇸", Portugal: "🇵🇹", France: "🇫🇷", Greece: "🇬🇷", Croatia: "🇭🇷", Bulgaria: "🇧🇬", Romania: "🇷🇴", Japan: "🇯🇵", Sweden: "🇸🇪", Norway: "🇳🇴", Denmark: "🇩🇰", Finland: "🇫🇮", Germany: "🇩🇪", Turkey: "🇹🇷", Albania: "🇦🇱", Indonesia: "🇮🇩", "United States": "🇺🇸", Canada: "🇨🇦", Mexico: "🇲🇽", Scandinavia: "❄️", Nordics: "❄️", Asia: "🌏", Other: "🌍" };
 export const norm = (c: string | null | undefined) => { if (!c) return "Other"; if (c === "Scandinavia") return "Nordics"; if (c === "International" || c === "Europe") return "Other"; return c; };
 export const slug = (c: string) => c.toLowerCase().replace(/[^a-z]+/g, "-");
 export const unslug = (s: string, known: string[]) => known.find((k) => slug(k) === s) || s;
@@ -140,3 +140,8 @@ export const subscribeEmail = async (email: string, source: string, userId?: str
 };
 
 export const lastEmail = () => { try { return localStorage.getItem("rh_last_email") || ""; } catch { return ""; } };
+
+// Interactions (vote, save, share, opening a home, swiping). Pop-ups wait until a visitor has done
+// at least two of these, so nobody gets an email box before they have seen a single home.
+export const ixCount = () => { try { return Number(sessionStorage.getItem("rh_ix") || 0); } catch { return 0; } };
+export const bumpIx = () => { try { sessionStorage.setItem("rh_ix", String(ixCount() + 1)); } catch {} try { window.dispatchEvent(new Event("rh-ix")); } catch {} };

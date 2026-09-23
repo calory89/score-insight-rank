@@ -7,7 +7,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { ArrowUp, X, ChevronLeft, ChevronRight, MapPin, BadgeCheck, TrendingDown, Sparkles, Clock, Share2, Download, Mail, Check, Trophy, Users, Copy, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { COSTS, totalCost } from "@/lib/rh";
+import { COSTS, totalCost, bumpIx } from "@/lib/rh";
 import { categories, money, type Deal } from "./api";
 import { useCommunity } from "./ctx";
 import { t, LANGS, getLang, setLang, type Lang } from "./i18n";
@@ -17,7 +17,7 @@ export type Row = Deal & {
   publish_at?: string | null; early?: boolean; price_drop?: number; sold_reports?: number; available_reports?: number;
   imported?: boolean;
 };
-export type FeedParams = { scope?: string; country?: string; category?: string; max_price?: number | null; min_sqm?: number | null; sort?: string; limit?: number; offset?: number; ids?: string[] };
+export type FeedParams = { scope?: string; country?: string; category?: string; max_price?: number | null; min_sqm?: number | null; sort?: string; limit?: number; offset?: number; ids?: string[]; q?: string };
 export async function feed(p: FeedParams) {
   const { data, error } = await (supabase.rpc as any)("community_feed", { p });
   if (error) throw new Error("The homes could not load. Please try again.");
@@ -411,6 +411,7 @@ export function SwipePage() {
   const d = list[i];
   async function decide(like: boolean) {
     if (!d) return;
+    bumpIx();
     setDx(like ? 600 : -600);
     if (like && session) {
       try {
@@ -451,7 +452,7 @@ export function SwipePage() {
           <div className="hunt-swipe-actions">
             <button aria-label="Skip" onClick={() => decide(false)}><X size={26} /></button>
             <Link to={`/deal/${d.slug}`} className="hunt-link">Details</Link>
-            <button aria-label="Vote" className="is-like" onClick={() => decide(true)}><ArrowUp size={26} /></button>
+            <button aria-label="Vote" className="is-like" onClick={() => decide(true)}><Heart size={26} /></button>
           </div>
         </>
       )}
