@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import RHNav from "@/components/realhunt/RHNav";
 import { db, eur, FLAG, track } from "@/lib/rh";
-import { BadgeCheck, ExternalLink, Heart, Bookmark, Building2, Loader2 } from "lucide-react";
+import { BadgeCheck, ExternalLink, Heart, Bookmark, Building2, Loader2, Star } from "lucide-react";
+import { devBadges } from "@/community/v8";
 
 export default function DevPublic() {
   const { slug = "" } = useParams();
@@ -35,6 +36,7 @@ export default function DevPublic() {
           {d.signed && <span className="px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-700 text-[13px] font-semibold">Signed the RealHunt Network agreement</span>}
           {d.website && <a href={d.website} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-hairline bg-white text-[13px]">{d.website.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "")} <ExternalLink size={13} /></a>}
         </div>
+        {devBadges(d.stats, false).length > 0 && <div className="mt-3 flex flex-wrap gap-2">{devBadges(d.stats, false).map((b) => <span key={b.k} className={`px-3 py-1.5 rounded-full text-[13px] font-semibold ${b.k === "sales" ? "bg-ink text-paper" : b.k === "rating" ? "bg-yellow-100 text-yellow-900" : "bg-emerald-500/10 text-emerald-700"}`}>{b.label}</span>)}</div>}
         {d.about && <p className="mt-5 text-[16px] leading-relaxed max-w-[64ch]">{d.about}</p>}
         <div className="mt-6 grid grid-cols-3 gap-3 max-w-[520px]">
           <div className="rounded-2xl bg-white border border-hairline p-4"><p className="font-display text-[26px]">{d.projects.length}</p><p className="text-[12px] text-ink-muted">live projects</p></div>
@@ -59,6 +61,12 @@ export default function DevPublic() {
               </Link>
             ))}
           </div>
+        )}
+        <h2 className="font-display text-[24px] tracking-tight mt-10 inline-flex items-center gap-2">What buyers say {d.stats?.rating ? <span className="text-[18px] inline-flex items-center gap-1"><Star size={18} className="text-yellow-500" fill="currentColor" /> {d.stats.rating} · {d.stats.reviews}</span> : null}</h2>
+        {(d.reviews || []).length === 0 ? <p className="mt-2 text-ink-muted text-[14px]">No ratings yet. Buyers can rate a developer after asking about one of their projects.</p> : (
+          <div className="mt-3 grid md:grid-cols-2 gap-3">{d.reviews.map((r: any, i: number) => (
+            <div key={i} className="rounded-2xl bg-white border border-hairline p-4"><p className="text-yellow-500">{"★".repeat(r.rating)}<span className="text-hairline">{"★".repeat(5 - r.rating)}</span></p>{r.body && <p className="mt-1 text-[14px]">{r.body}</p>}<p className="text-[12px] text-ink-muted mt-1">A buyer on RealHunt · {new Date(r.at).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}</p></div>
+          ))}</div>
         )}
         <div className="mt-14 rounded-2xl bg-ink text-paper p-6 md:p-8 flex flex-col md:flex-row md:items-center gap-4">
           <div className="flex-1"><p className="font-display text-[22px]">Are you a developer too?</p><p className="opacity-75 text-[14px] mt-1">List your project free. You pay 5% only if a buyer we send you buys.</p></div>

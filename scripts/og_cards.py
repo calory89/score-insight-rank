@@ -143,6 +143,8 @@ def main():
     # v7: research articles and search landing pages
     try:
         urls += [f"{SITE}/blog", f"{SITE}/cheap-houses", f"{SITE}/insider"]
+        urls += [f"{SITE}/new-builds", f"{SITE}/developers", f"{SITE}/network", f"{SITE}/network/start"]
+        urls += [f"{SITE}/new-builds/{c}" for c in ("indonesia", "mexico", "albania", "spain", "portugal", "thailand", "turkey", "montenegro")]
         urls += [f"{SITE}/blog/{p['slug']}" for p in json.load(open(os.path.join(ROOT, "src", "data", "blog.json")))]
         urls += [f"{SITE}/cheap-houses/{p['slug']}" for p in json.load(open(os.path.join(ROOT, "src", "data", "search-pages.json")))["pages"]]
     except Exception as e:

@@ -73,6 +73,9 @@ const Network = L(() => import("./pages/Network"));
 const NetworkApp = L(() => import("./pages/NetworkApp"));
 const NetworkAgreement = L(() => import("./pages/NetworkAgreement"));
 const NetworkStart = L(() => import("./pages/NetworkStart"));
+const ClaimPage = L(() => import("./pages/ClaimPage"));
+const NetworkAdmin = L(() => import("./pages/NetworkAdmin"));
+const NetworkInvoice = L(() => import("./pages/NetworkInvoice"));
 const DevPublic = L(() => import("./pages/DevPublic"));
 const Finds = L(() => import("./pages/Finds"));
 const AdminActivity = L(() => import("./pages/AdminActivity"));
@@ -212,6 +215,12 @@ const AppRoutes = () => (
       <Route path="/vs/:a/:b" element={<Community />} />
       <Route path="/me" element={<Community />} />
       <Route path="/insider" element={<Community />} />
+      <Route path="/new-builds" element={<Community />} />
+      <Route path="/new-builds/:country" element={<Community />} />
+      <Route path="/developers" element={<Community />} />
+      <Route path="/claim/:code" element={<ClaimPage />} />
+      <Route path="/network/admin" element={<NetworkAdmin />} />
+      <Route path="/network/invoice/:id" element={<NetworkInvoice />} />
       <Route path="/blog" element={<Community />} />
       <Route path="/blog/:slug" element={<Community />} />
       <Route path="/cheap-houses" element={<Community />} />

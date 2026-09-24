@@ -10,6 +10,7 @@ import { money, type Deal } from "./api";
 import { useCommunity } from "./ctx";
 import { feed, niceTitle, streakNow, type Row } from "./extras";
 import { rowCache, remember, stats, preloadImages } from "./v4";
+import { BuyerPicks } from "./v8";
 
 const num = (v: number = 0) => new Intl.NumberFormat("en").format(v);
 const ls = { get(k: string) { try { return localStorage.getItem(k); } catch { return null; } }, set(k: string, v: string) { try { localStorage.setItem(k, v); } catch { /* ignore */ } } };
@@ -445,6 +446,7 @@ export function ProfilePage() {
         <div><strong>{num(s.shares || 0)}</strong><span>Shares</span></div>
       </div>
       {user && session?.hunter && autoHandle(session.hunter.handle) && <NamePicker />}
+      <BuyerPicks />
       <h2>Homes you love</h2>
       <VotedGrid />
       <h2 style={{ marginTop: 26 }}>Badges</h2>

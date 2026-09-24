@@ -221,6 +221,23 @@ const NetworkApp = () => {
   const waiting = received.filter((i) => i.status === "proposed").length;
   const overdue = received.filter((i) => i.next_action_at && new Date(i.next_action_at) < new Date(new Date().toDateString()) && !["sold", "lost"].includes(i.status)).length;
   const active = received.filter((i) => !["sold", "lost"].includes(i.status)).length;
+  // new buyers: count in the browser tab title and a dot on the favicon
+  useEffect(() => {
+    document.title = `${waiting ? `(${waiting}) ` : ""}Developer panel · RealHunt Network`;
+    try {
+      const link = (document.querySelector('link[rel="icon"]') as HTMLLinkElement) || Object.assign(document.createElement("link"), { rel: "icon" });
+      if (!(link as any).dataset.orig) (link as any).dataset.orig = link.href || "/favicon-32.png";
+      if (!waiting) { link.href = (link as any).dataset.orig; return; }
+      const img = new Image(); img.crossOrigin = "anonymous"; img.src = (link as any).dataset.orig;
+      img.onload = () => { const c = document.createElement("canvas"); c.width = c.height = 32; const g = c.getContext("2d")!; g.drawImage(img, 0, 0, 32, 32); g.fillStyle = "#E11D48"; g.beginPath(); g.arc(24, 8, 8, 0, Math.PI * 2); g.fill(); g.fillStyle = "#fff"; g.font = "bold 11px sans-serif"; g.textAlign = "center"; g.fillText(String(Math.min(waiting, 9)), 24, 12); link.href = c.toDataURL("image/png"); if (!link.parentNode) document.head.appendChild(link); };
+    } catch { /* ignore */ }
+  }, [waiting]);
+  const exportBuyers = (fmt: "hubspot" | "ghl") => {
+    const rows = received.filter((i) => i.contact);
+    const split = (c: string) => { const parts = String(c).split(" · "); const email = parts.find((x) => x.includes("@")) || ""; const phone = parts.find((x) => /\d{6,}/.test(x.replace(/\D/g, ""))) || ""; const name = parts.find((x) => x !== email && x !== phone) || ""; const [first, ...rest] = name.split(" "); return { first, last: rest.join(" "), email, phone }; };
+    const head = fmt === "hubspot" ? ["First Name", "Last Name", "Email", "Phone Number", "Lead Status", "Lead Source", "Notes"] : ["First Name", "Last Name", "Email", "Phone", "Tags", "Source", "Notes"];
+    downloadCsv(`realhunt-buyers-${fmt}.csv`, [head, ...rows.map((i) => { const c = split(i.contact); return [c.first, c.last, c.email, c.phone, fmt === "hubspot" ? (STATUS[i.status] || i.status) : `realhunt,${i.status}`, "RealHunt", (i.note || "").replace(/\n/g, " ")]; })]);
+  };
 
   if (authLoading) return <div className="min-h-screen bg-paper text-ink"><RHNav /><p role="status" className="p-8">Checking your session…</p></div>;
 
@@ -347,6 +364,12 @@ const NetworkApp = () => {
         {msg && <p role="status" className="mt-4 rounded-xl border border-hairline bg-white p-4 text-sm">{msg}</p>}
         <div className="mt-6 flex gap-1 overflow-x-auto scrollbar-none border-b border-hairline">{TABS.map(([k, l]) => <Link key={k} to={`/network/app/${k}`} className={`shrink-0 px-4 py-2.5 text-[14px] border-b-2 -mb-px inline-flex items-center gap-1.5 ${tab === k ? "border-ink text-ink font-medium" : "border-transparent text-ink-muted hover:text-ink"}`}>{l}{k === "buyers" && waiting > 0 && <span className="h-5 min-w-5 px-1.5 rounded-full bg-ink text-paper text-[11px] inline-flex items-center justify-center">{waiting}</span>}</Link>)}</div>
 
+        {waiting > 0 && tab !== "buyers" && (
+          <Link to="/network/app/buyers" className="mt-6 rounded-2xl bg-rose-600 text-white p-4 flex items-center gap-3"><Users size={20} /><span className="flex-1"><b>You have {waiting} new {waiting === 1 ? "buyer" : "buyers"} waiting.</b><span className="block text-[13px] opacity-90">Answer within 48 hours. After that, they are also shown similar projects from other developers.</span></span><ChevronRight size={18} /></Link>
+        )}
+        {received.some((i) => i.contact) && tab === "buyers" && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 text-[13px]"><span className="text-ink-muted">Export buyers with contact:</span><button onClick={() => exportBuyers("hubspot")} className="px-3 py-1.5 rounded-full border border-hairline bg-white inline-flex items-center gap-1.5"><Download size={13} /> HubSpot CSV</button><button onClick={() => exportBuyers("ghl")} className="px-3 py-1.5 rounded-full border border-hairline bg-white inline-flex items-center gap-1.5"><Download size={13} /> GoHighLevel CSV</button></div>
+        )}
         {!signed && tab !== "settings" && (
           <div className="mt-6 border border-amber-400 bg-amber-500/5 rounded-2xl p-5 flex flex-col md:flex-row md:items-center gap-3">
             <div className="flex-1"><p className="font-medium text-[15px] inline-flex items-center gap-2"><FileSignature size={16} /> Sign the network agreement to accept buyers</p><p className="text-[13px] text-ink-muted mt-0.5">One page. {COMMISSION_PCT}% only when a buyer we introduce buys, {SOURCE_SHARE_PCT}% to you when a shared lead of yours buys elsewhere. Upload your contacts first so the ones you already have stay yours.</p></div>
@@ -491,7 +514,7 @@ const NetworkApp = () => {
             <div className="border border-hairline rounded-2xl bg-white p-5 text-[14px] flex flex-col md:flex-row md:items-center gap-3"><BadgeEuro size={20} className="text-ink-muted shrink-0" /><p className="flex-1">A sale is reported from the buyer's card in <Link to="/network/app/buyers" className="underline">Buyers</Link>: set the price and we calculate the rest. If the fingerprint was in your list before we introduced the buyer, the sale is exempt automatically. Otherwise the rate recorded for that introduction applies. Payment terms remain those in your agreement.</p></div>
             {(ov.deals || []).length === 0 ? <div className="border border-hairline rounded-2xl bg-white p-10 text-center text-ink-muted">No sales reported yet.</div> : (
               <div className="border border-hairline rounded-2xl bg-white overflow-x-auto"><table className="w-full text-[13px]"><thead><tr className="text-[11px] uppercase tracking-wider text-ink-muted"><th className="text-left px-4 py-2.5">Buyer</th><th className="text-left px-3 py-2.5">Sale price</th><th className="text-left px-3 py-2.5">Commission</th><th className="text-left px-3 py-2.5">Status</th><th className="text-left px-3 py-2.5">Reported</th><th className="text-left px-3 py-2.5">Invoiced</th><th className="text-left px-3 py-2.5">Paid</th><th className="text-left px-3 py-2.5">Note</th></tr></thead><tbody>
-                {ov.deals.map((d: any) => <tr key={d.id} className="border-t border-hairline/70"><td className="px-4 py-2 font-mono">{d.buyer}…<br /><span className="font-sans text-[11px] text-ink-muted">{d.from === "RealHunt" ? "from RealHunt" : "via network"}</span></td><td className="px-3 py-2 tabular-nums">{eur(Number(d.sale_price))}</td><td className="px-3 py-2 tabular-nums">{d.exempt ? <span className="text-emerald-700">€0 · exempt</span> : <>{eur(Number(d.commission_eur))} <span className="text-ink-muted">({d.commission_pct}%)</span></>}{d.exempt_reason && <p className="text-[11px] text-ink-muted">{d.exempt_reason}</p>}</td><td className="px-3 py-2"><span className={`px-2 py-0.5 rounded-full text-[11px] ${d.status === "paid" ? "bg-emerald-500/10 text-emerald-700" : d.status === "invoiced" ? "bg-amber-500/10 text-amber-700" : d.status === "void" ? "bg-hairline text-ink-muted" : "bg-ink text-paper"}`}>{d.status}</span></td><td className="px-3 py-2 text-ink-muted">{fmtD(d.reported_at)}</td><td className="px-3 py-2 text-ink-muted">{fmtD(d.invoiced_at) || "—"}</td><td className="px-3 py-2 text-ink-muted">{fmtD(d.paid_at) || "—"}</td><td className="px-3 py-2 text-ink-muted">{d.notes || "—"}</td></tr>)}
+                {ov.deals.map((d: any) => <tr key={d.id} className="border-t border-hairline/70"><td className="px-4 py-2 font-mono">{d.buyer}…<br /><span className="font-sans text-[11px] text-ink-muted">{d.from === "RealHunt" ? "from RealHunt" : "via network"}</span></td><td className="px-3 py-2 tabular-nums">{eur(Number(d.sale_price))}</td><td className="px-3 py-2 tabular-nums">{d.exempt ? <span className="text-emerald-700">€0 · exempt</span> : <>{eur(Number(d.commission_eur))} <span className="text-ink-muted">({d.commission_pct}%)</span></>}{d.exempt_reason && <p className="text-[11px] text-ink-muted">{d.exempt_reason}</p>}</td><td className="px-3 py-2"><span className={`px-2 py-0.5 rounded-full text-[11px] ${d.status === "paid" ? "bg-emerald-500/10 text-emerald-700" : d.status === "invoiced" ? "bg-amber-500/10 text-amber-700" : d.status === "void" ? "bg-hairline text-ink-muted" : "bg-ink text-paper"}`}>{d.status}</span></td><td className="px-3 py-2 text-ink-muted">{fmtD(d.reported_at)}</td><td className="px-3 py-2 text-ink-muted">{fmtD(d.invoiced_at) || "—"}</td><td className="px-3 py-2 text-ink-muted">{fmtD(d.paid_at) || "—"}</td><td className="px-3 py-2 text-ink-muted">{d.notes || "—"}{!d.exempt && d.status !== "void" && <><br /><Link to={`/network/invoice/${d.id}`} className="underline text-ink">Invoice</Link></>}</td></tr>)}
               </tbody></table></div>
             )}
           </div>

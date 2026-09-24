@@ -256,6 +256,7 @@ export function InfoRequest({ deal, dev }: { deal: Row; dev?: { name: string; sl
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [f, setF] = useState({ name: "", phone: "", intent: "visit", message: "" });
+  const [consent, setConsent] = useState(false);
   if (done) return <p className="hunt-info-done"><Check size={16} /> {dev ? `Sent to ${dev.name}. They have your details and usually answer within one or two working days.` : "Request sent. We check it is still available and put you in touch with the seller, usually within two working days."}</p>;
   return (
     <div className="hunt-info">
@@ -264,7 +265,8 @@ export function InfoRequest({ deal, dev }: { deal: Row; dev?: { name: string; sl
       ) : (
         <form onSubmit={async (e) => {
           e.preventDefault(); setBusy(true);
-          try { await rpc("community_request_info", { p_deal: deal.id, p_name: f.name, p_phone: f.phone, p_intent: f.intent, p_message: f.message }); setDone(true); }
+          if (dev && !consent) { setBusy(false); setNotice("Tick the box so we can send your details to the developer."); return; }
+          try { const r = await rpc("community_request_info", { p_deal: deal.id, p_name: f.name, p_phone: f.phone, p_intent: f.intent, p_message: f.message, p_consent: dev ? consent : null }); if (r?.error) { setNotice(r.error); return; } try { (window as any).clarity?.("event", dev ? "buyer_ask_dev_sent" : "buyer_ask_sent"); } catch { /* ignore */ } setDone(true); }
           catch (err) { setNotice((err as Error).message); } finally { setBusy(false); }
         }}>
           <strong>{dev ? `Ask ${dev.name}` : t("Ask about this home")}</strong>
@@ -277,6 +279,7 @@ export function InfoRequest({ deal, dev }: { deal: Row; dev?: { name: string; sl
             <option value="questions">I have questions</option>
           </select>
           <textarea placeholder="Anything the seller should know? (optional)" value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} />
+          {dev && <label className="hv-consent"><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} /> <span>I agree that RealHunt sends my name, email and phone to {dev.name} so they can answer me.</span></label>}
           <div className="hunt-row"><button className="hunt-primary" disabled={busy}>{busy ? "Sending…" : "Send request"}</button><button type="button" className="hunt-link" onClick={() => setOpen(false)}>Cancel</button></div>
         </form>
       )}

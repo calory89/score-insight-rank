@@ -12,7 +12,7 @@ import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
 import { db, track, eur, FLAG } from "@/lib/rh";
 import { AGREEMENT, AGREEMENT_SUMMARY, AGREEMENT_VERSION, COMMISSION_PCT, SOURCE_SHARE_PCT } from "@/lib/agreement";
-import { Simulator } from "@/components/realhunt/DevGrowth";
+import { Simulator, PhotoDrop } from "@/components/realhunt/DevGrowth";
 import { Check, ChevronLeft, ChevronRight, Loader2, Link2, Mail, Phone, Users, Coins, Sparkles, FileSignature, Copy, ExternalLink, ImageOff, PencilLine, Upload, Share2, ShieldCheck } from "lucide-react";
 
 type Draft = {
@@ -91,7 +91,7 @@ export default function NetworkStart() {
     const { data, error } = await db.rpc("dev_onboard", { p: {
       mode, company: d.company || d.site_name, project_name: d.title, project_url: d.url, price_eur: d.price ? Number(d.price) : null,
       country: d.country, location: d.location, category: d.category, description: d.description, images: imgs, email: d.email, phone: d.phone, ref_dev: ref,
-      site_name: d.site_name } });
+      site_name: d.site_name, claim_code: (() => { try { return localStorage.getItem("rh_dev_claim"); } catch { return null; } })() } });
     setBusy(false);
     if (error || data?.error) { setErr(data?.error || error.message || "Could not save. Try again."); if (data?.auth) setAuth(true); return; }
     setResult(data); cl(`dev_goal_${mode}`);
@@ -133,8 +133,8 @@ export default function NetworkStart() {
         {step === 0 && (
           <div className="grid lg:grid-cols-[1fr_380px] gap-8 items-start">
             <div>
-              <h1 className="font-display text-[clamp(28px,4.4vw,44px)] leading-[1.05] tracking-tight">Paste your project link. We do the rest.</h1>
-              <p className="mt-3 text-[16px] text-ink-muted max-w-[56ch]">We read your page and build your listing in seconds. Free to list. You pay {COMMISSION_PCT}% only if a buyer we send you buys.</p>
+              <h1 className="font-display text-[clamp(28px,4.4vw,44px)] leading-[1.05] tracking-tight">{params.get("claim") ? "Check your listing, then go live." : "Paste your project link. We do the rest."}</h1>
+              <p className="mt-3 text-[16px] text-ink-muted max-w-[56ch]">{params.get("claim") ? "We built it from your website. Fix anything below, add your own photos, and continue." : <>We read your page and build your listing in seconds. Free to list. You pay {COMMISSION_PCT}% only if a buyer we send you buys.</>}</p>
               <form onSubmit={(e) => { e.preventDefault(); runPreview(d.url); }} className="mt-6 flex flex-col sm:flex-row gap-2">
                 <label className="relative flex-1"><Link2 size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted" />
                   <input autoFocus value={d.url} onChange={(e) => up({ url: e.target.value })} inputMode="url" autoCapitalize="none" autoCorrect="off" spellCheck={false} placeholder="yourproject.com/the-project-page" aria-label="Project link" className={`${inp} !pl-11 !py-3.5 !text-[16px]`} /></label>
@@ -165,13 +165,14 @@ export default function NetworkStart() {
                     <div className="flex flex-wrap gap-2">{[["beach", "Beach or sea"], ["village", "Countryside or village"], ["city", "Town or city"]].map(([k, l]) => <button key={k} type="button" onClick={() => up({ category: k })} className={`px-3.5 py-2 rounded-full border text-[14px] ${d.category === k ? "bg-ink text-paper border-ink" : "bg-white border-hairline"}`}>{l}</button>)}</div>
                   </div>
                   <label className="flex flex-col gap-1 text-[13px] text-ink-muted">One or two lines buyers should read<textarea className={`${inp} h-24`} value={d.description} onChange={(e) => up({ description: e.target.value })} placeholder="Studios 200 m from the beach, pool, ready June 2027." /></label>
+                  {user ? <PhotoDrop images={d.images} onChange={(images) => up({ images, cover: 0 })} /> : <p className="text-[13px] text-ink-muted">You can add your own photos right after creating your free account.</p>}
                   {preview === "manual" && <label className="flex flex-col gap-1 text-[13px] text-ink-muted">Photo link (optional)<input className={inp} placeholder="https://…/photo.jpg" onBlur={(e) => { const v = e.target.value.trim(); if (/^https:\/\//.test(v)) up({ images: [v, ...d.images], cover: 0 }); }} /></label>}
                   <button onClick={goAccount} className="rh-btn-primary self-start inline-flex items-center gap-2">Looks good <ChevronRight size={16} /></button>
                 </div>
               )}
             </div>
             {/* live preview card */}
-            <aside className="lg:sticky lg:top-24">
+            <aside className={`lg:sticky lg:top-24 ${preview === "idle" ? "" : "order-first lg:order-none"}`}>
               <p className="text-[12px] uppercase tracking-[0.14em] text-ink-muted mb-2">How buyers will see it</p>
               <div className="rounded-3xl bg-white border border-hairline overflow-hidden shadow-sm">
                 <div className="relative aspect-[4/3] bg-[#E9E4D8] grid place-items-center">
@@ -252,7 +253,7 @@ export default function NetworkStart() {
         )}
 
         {/* ------------------------------------------------ 5 done */}
-        {step === 4 && <Done result={result} draft={d} copy={copy} copied={copied} onPanel={() => { try { localStorage.removeItem(KEY); } catch { /* ignore */ } nav("/network/app/projects"); }} />}
+        {step === 4 && <Done result={result} draft={d} copy={copy} copied={copied} onPanel={() => { try { localStorage.removeItem(KEY); localStorage.removeItem("rh_dev_claim"); } catch { /* ignore */ } nav("/network/app/projects"); }} />}
       </main>
       <AuthModal open={auth} onClose={() => setAuth(false)} initialMode="up" title="Create your free developer account" subtitle="No password. Google, or a sign-in link to your email. We bring you right back here." redirect="/network/start?step=2" />
     </div>

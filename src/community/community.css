@@ -2569,3 +2569,48 @@ html.rh-dark, html.rh-dark body { background: #0E0E0C; }
 .hv-devblock .hv-ask-dev { width: 100%; justify-content: center; }
 .hunt.is-dark .hv-devblock { background: #1B1A17; border-color: #2F2D28; }
 .hunt.is-dark .hv-devblock-icon { background: #F2EFE8; color: #16150F; }
+
+/* ---------------------------------------------------------------- v9: developer pack (buyer side) */
+.hv-devbadges { display: flex; flex-wrap: wrap; gap: 6px; }
+.hv-devbadge { padding: 4px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 700; background: #F3F0E8; color: #3A382F; }
+.hv-devbadge.is-verified { background: #E0F2FE; color: #0369A1; }
+.hv-devbadge.is-fast, .hv-devbadge.is-day { background: #DCFCE7; color: #15803D; }
+.hv-devbadge.is-sales { background: #16150F; color: #fff; }
+.hv-devbadge.is-rating { background: #FEF9C3; color: #854D0E; }
+.hv-plan { border-radius: 14px; background: #F7F5EF; padding: 12px 14px; display: grid; gap: 4px; }
+.hv-plan strong { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
+.hv-plan p { margin: 0; font-size: 14px; }
+.hv-plan-big { font-size: 15px !important; }
+.hv-units { width: 100%; border-collapse: collapse; font-size: 14px; }
+.hv-units th { text-align: left; font-size: 11.5px; color: #6B675C; font-weight: 600; padding: 4px 6px; }
+.hv-units td { padding: 7px 6px; border-top: 1px solid #ECE7DC; }
+.hv-units small { color: #6B675C; }
+.hv-consent { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.45; color: #3A382F; }
+.hv-consent input { margin-top: 3px; width: auto !important; }
+.hv-claim { margin: 10px 0; }
+.hv-claim form { display: grid; gap: 8px; padding: 14px; border-radius: 16px; border: 1px solid #ECE7DC; background: #fff; }
+.hv-claim-done { display: inline-flex; gap: 6px; align-items: flex-start; }
+.hv-buyerpicks { margin: 14px 0 6px; display: grid; gap: 8px; }
+.hv-buyerpicks h2 { display: flex; align-items: center; gap: 8px; font-size: 18px; margin: 10px 0 2px; }
+.hv-minidev-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(170px, 210px); gap: 12px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+.hv-minidev { display: grid; gap: 3px; text-decoration: none; color: inherit; }
+.hv-minidev-img { position: relative; display: block; aspect-ratio: 4/3; border-radius: 14px; overflow: hidden; background: #E9E4D8; }
+.hv-minidev-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hv-minidev-img b { position: absolute; left: 8px; bottom: 8px; padding: 3px 8px; border-radius: 999px; background: #fff; font-size: 13px; }
+.hv-minidev strong { font-size: 13.5px; line-height: 1.3; }
+.hv-minidev small { font-size: 12px; color: #6B675C; }
+.hv-rate { padding: 12px 14px; border-radius: 14px; border: 1px solid #ECE7DC; background: #fff; display: grid; gap: 8px; }
+.hv-rate p { margin: 0; font-size: 14px; }
+.hv-stars { display: flex; gap: 4px; }
+.hv-stars button { background: none; border: 0; padding: 2px; color: #D9D3C5; cursor: pointer; }
+.hv-stars button.is-on { color: #EAB308; }
+.hv-devrank { list-style: none; padding: 0; margin: 16px 0; display: grid; gap: 10px; max-width: 720px; }
+.hv-devrank li { display: flex; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 16px; border: 1px solid #ECE7DC; background: #fff; }
+.hv-devrank li > b { width: 28px; text-align: center; font-family: var(--hv-display); font-size: 20px; }
+.hv-devrank a { display: grid; gap: 4px; text-decoration: none; color: inherit; flex: 1; }
+.hv-devrank strong { display: inline-flex; align-items: center; gap: 5px; font-size: 16px; }
+.hv-devrank small { color: #6B675C; font-size: 12.5px; }
+.hv-empty-dev { padding: 28px; border-radius: 18px; border: 1px dashed #D9D3C5; text-align: center; display: grid; gap: 12px; justify-items: center; margin-top: 16px; }
+.hunt.is-dark .hv-plan, .hunt.is-dark .hv-devbadge { background: #22211D; color: #E8E2D6; }
+.hunt.is-dark .hv-claim form, .hunt.is-dark .hv-rate, .hunt.is-dark .hv-devrank li { background: #1B1A17; border-color: #2F2D28; }
+.hunt.is-dark .hv-consent { color: #D9D4C8; }

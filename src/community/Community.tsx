@@ -22,7 +22,7 @@ import OriginalListingLink from "@/components/realhunt/OriginalListingLink";
 import AuthModal from "@/components/realhunt/AuthModal";
 import { useLiveStats } from "@/components/realhunt/LiveStats";
 import { lazy, Suspense } from "react";
-import { DevBlock } from "./v8";
+import { DevBlock, ClaimListing, BuyerPicks, NewBuildsPage, DevLeaderboard } from "./v8";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
@@ -131,7 +131,7 @@ function Shell({ children }: { children: ReactNode }) {
     };
   }, [user?.id]);
   useEffect(() => {
-    if (/^\/(deal\/|insider|blog|cheap-houses)/.test(location.pathname)) return; // these pages set their own title
+    if (/^\/(deal\/|insider|blog|cheap-houses|new-builds|developers)/.test(location.pathname)) return; // these pages set their own title
     document.title = "RealHunt — Homes under €100,000. Found by people. Ranked by you.";
   }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
@@ -242,6 +242,8 @@ function Shell({ children }: { children: ReactNode }) {
             <Link to="/cheap-houses">Cheap houses</Link>
             <Link to="/blog">Research</Link>
             <Link to="/insider">Insider</Link>
+            <Link to="/new-builds">New builds</Link>
+            <Link to="/network">For developers</Link>
             <Link to="/legal/privacy">Privacy</Link>
             <Link to="/legal/terms">Terms</Link>
             {session?.admin && <Link to="/hunt/admin">Moderation</Link>}
@@ -702,6 +704,7 @@ function Home() {
       <Vibes active={vibe} onPick={pickVibe} />
       <ExploreLinks />
       {!q && <InsiderStrip />}
+      {!q && <BuyerPicks compact />}
       {showPodium && <PodiumHero rows={feed.rows.slice(0, 3)} scope={scope} endsAt={feed?.week?.ends_at} />}
       <div className="hv-feedbar">
         <nav className="hunt-tabs" aria-label="Browse rankings">
@@ -897,6 +900,7 @@ function Detail() {
           <Availability dealId={d.id} />
           <CostPanel deal={d as Row} />
           {!(d as any).developer && <InfoRequest deal={d as Row} />}
+          <ClaimListing deal={d as Row} />
           <p className="hunt-fine">Buying from abroad? <Link to={`/help-buying?country=${encodeURIComponent(d.country || "")}`}>Get a local lawyer, translator or survey</Link>{["Italy", "Spain", "Portugal"].includes(d.country) && <> · <Link to={`/guide/${d.country.toLowerCase()}`}>How to buy in {d.country}</Link></>}</p>
           <AdminVerify deal={d as Row} onDone={load} />
           <p className="hunt-fine">
@@ -1818,6 +1822,10 @@ export default function Community() {
       <ProfilePage />
     ) : path === "/insider" ? (
       <InsiderPage />
+    ) : path === "/new-builds" || path.startsWith("/new-builds/") ? (
+      <NewBuildsPage />
+    ) : path === "/developers" ? (
+      <DevLeaderboard />
     ) : path === "/blog" ? (
       <BlogIndex />
     ) : path.startsWith("/blog/") ? (
