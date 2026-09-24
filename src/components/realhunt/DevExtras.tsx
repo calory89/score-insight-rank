@@ -11,7 +11,6 @@ export default function DevExtras() {
   const [data, setData] = useState<any>(null);
   const [boosts, setBoosts] = useState<any[]>([]);
   const [pick, setPick] = useState("");
-  const [weeks, setWeeks] = useState(2);
   const [msg, setMsg] = useState("");
   const [copied, setCopied] = useState(false);
   const [reelFor, setReelFor] = useState("");
@@ -26,8 +25,8 @@ export default function DevExtras() {
   const snippet = slug ? `<div data-realhunt-dev="${slug}"></div>\n<script src="https://realhunt.co/embed.js" async></script>` : "";
   const boost = async () => {
     if (!pick) return;
-    const { data: r, error } = await db.rpc("dev_boost_request", { p_deal: pick, p_weeks: weeks });
-    setMsg(error ? error.message : r?.error || (r?.already ? "You already asked for this one. We will be in touch." : "Request sent. We email you the price and dates; nothing is charged until you agree."));
+    const { data: r, error } = await db.rpc("dev_boost_request", { p_deal: pick, p_weeks: 2 });
+    setMsg(error ? error.message : r?.error || (r?.already ? "This project is already featured or in the queue." : r?.status === "active" ? "Done. Your project is featured first in its country for the next 2 weeks. Free." : "You are in the queue. One project per country is featured at a time; yours goes up as soon as the current one ends. Free."));
     try { (window as any).clarity?.("event", "boost_request"); } catch { /* ignore */ }
     load();
   };
@@ -46,17 +45,16 @@ export default function DevExtras() {
       </section>
 
       <section className="rounded-2xl bg-white border border-hairline p-5">
-        <p className="font-semibold inline-flex items-center gap-2"><Rocket size={17} /> Featured spot in your destination</p>
-        <p className="text-[13px] text-ink-muted mt-1">Your project shows first on the new-builds page of its country, marked “Sponsored”. You get the price and dates by email before anything is charged.</p>
+        <p className="font-semibold inline-flex items-center gap-2"><Rocket size={17} /> Featured spot in your destination, free</p>
+        <p className="text-[13px] text-ink-muted mt-1">Your project shows first on the new-builds page of its country for 2 weeks, marked “Featured”. It costs nothing: one project per country at a time, in turns, once a month per developer.</p>
         {projects.length === 0 ? <p className="text-[13px] text-ink-muted mt-3">Available once a project is live.</p> : (
           <div className="mt-3 flex flex-wrap gap-2 items-center">
             <select value={pick} onChange={(e) => setPick(e.target.value)} className="h-10 px-3 rounded-xl border border-hairline bg-white text-[14px] max-w-[220px]"><option value="">Pick a project</option>{projects.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}</select>
-            <select value={weeks} onChange={(e) => setWeeks(Number(e.target.value))} className="h-10 px-3 rounded-xl border border-hairline bg-white text-[14px]">{[1, 2, 4, 8].map((w) => <option key={w} value={w}>{w} {w === 1 ? "week" : "weeks"}</option>)}</select>
-            <button disabled={!pick} onClick={boost} className="rh-btn-primary !py-2 !px-4 !text-[14px] disabled:opacity-40">Ask for it</button>
+            <button disabled={!pick} onClick={boost} className="rh-btn-primary !py-2 !px-4 !text-[14px] disabled:opacity-40">Feature it free</button>
           </div>
         )}
         {msg && <p className="text-[13px] mt-2">{msg}</p>}
-        {boosts.length > 0 && <ul className="mt-3 text-[13px] text-ink-muted">{boosts.map((b) => <li key={b.id}>{projects.find((p) => p.id === b.deal_id)?.title || "Project"} · {b.weeks} wk · {b.status}{b.ends_at && b.status === "active" ? ` until ${new Date(b.ends_at).toLocaleDateString("en-GB")}` : ""}</li>)}</ul>}
+        {boosts.length > 0 && <ul className="mt-3 text-[13px] text-ink-muted">{boosts.map((b) => <li key={b.id}>{projects.find((p) => p.id === b.deal_id)?.title || "Project"} · {b.status === "requested" ? "in the queue" : b.status}{b.ends_at && b.status === "active" ? ` until ${new Date(b.ends_at).toLocaleDateString("en-GB")}` : ""}</li>)}</ul>}
       </section>
 
       <section className="rounded-2xl bg-white border border-hairline p-5">

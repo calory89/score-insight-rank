@@ -164,7 +164,7 @@ export function NewBuildsPage() {
       ) : (
         <div className="hv-sp-grid" style={{ marginTop: 18 }}>{d.rows.map((x: any) => (
           <Link key={x.slug} to={`/deal/${encodeURIComponent(x.slug)}`} className="hv-sp-card">
-            <span className="hv-sp-img"><img src={x.image} alt={x.title} loading="lazy" /><b>{money(x.price_eur)}</b>{x.sponsored && <i className="hv-sponsored">Sponsored</i>}</span>
+            <span className="hv-sp-img"><img src={x.image} alt={x.title} loading="lazy" /><b>{money(x.price_eur)}</b>{x.sponsored && <i className="hv-sponsored">Featured</i>}</span>
             <strong>{x.title}</strong>
             <small>{flag(x.country)} {x.location || x.country} · {x.developer}{x.verified ? " ✓" : ""}</small>
             {x.plan?.deposit_pct ? <small>{x.plan.deposit_pct}% to reserve{x.plan.months ? `, ${x.plan.months} months` : ""}</small> : null}

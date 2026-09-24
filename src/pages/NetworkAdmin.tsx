@@ -83,8 +83,8 @@ export default function NetworkAdmin() {
 
         <section className="grid md:grid-cols-2 gap-4">
           <div>
-            <h2 className="font-display text-[22px]">Featured spot requests ({boosts.filter((b) => b.status === "requested").length})</h2>
-            <p className="text-[13px] text-ink-muted">Agree the price with the developer by email first, then switch it on here.</p>
+            <h2 className="font-display text-[22px]">Featured spots ({boosts.filter((b) => b.status === "active").length} live · {boosts.filter((b) => b.status === "requested").length} queued)</h2>
+            <p className="text-[13px] text-ink-muted">Free and automatic: one per country for 2 weeks, in turns. You can stop one or switch a queued one on early.</p>
             {boosts.length === 0 ? <p className="text-ink-muted text-[14px] mt-1">None yet.</p> : <div className="mt-2 flex flex-col gap-2">{boosts.map((b: any) => (
               <div key={b.id} className="rounded-xl bg-white border border-hairline p-3 text-[13px]"><b>{b.company}</b> · {b.deal} ({b.country}) · {b.weeks} wk · <i>{b.status}</i>{b.ends_at ? ` until ${new Date(b.ends_at).toLocaleDateString("en-GB")}` : ""}<p className="text-ink-muted">{b.email}</p>
                 <div className="mt-1 flex gap-2">{b.status === "requested" && <button onClick={() => boostDecide(b.id, true)} className="rh-btn-primary !py-1 !px-3 !text-[12px]">Switch on</button>}{(b.status === "requested" || b.status === "active") && <button onClick={() => boostDecide(b.id, false)} className="px-3 py-1 rounded-full border border-hairline text-[12px]">{b.status === "active" ? "Stop" : "Decline"}</button>}</div></div>
