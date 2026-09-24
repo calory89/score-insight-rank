@@ -162,7 +162,7 @@ const Network = () => {
               <>{formError && <p role="alert" className="text-red-700 mt-3">{formError}</p>}<form onSubmit={start} className="flex flex-col sm:flex-row gap-2">
                 <input required type="text" inputMode="url" autoCapitalize="none" autoCorrect="off" spellCheck={false} value={url} onChange={(e) => setUrl(e.target.value)} placeholder="your-project.com" aria-label="Project URL" className="flex-1 border border-hairline rounded-full px-5 py-3.5 text-[15px] bg-paper outline-none focus:border-ink" />
                 <button disabled={saving} type="submit" className="rh-btn-primary !px-6 inline-flex items-center justify-center gap-2"><Search size={16} /> {cta.text || "Submit my project, free"}</button>
-              </form></>
+              </form><p className="text-[13px] text-ink-muted mt-3"><Link to="/network/example" className="underline">See an example listing</Link> · <Link to="/network/reservation-contract" className="underline">Free reservation contract</Link> · <Link to="/agents" className="underline">For agents</Link></p></>
             )}
             {stage === "email" && (
               <form id="gate" onSubmit={sendEmail} className="flex flex-col gap-3">

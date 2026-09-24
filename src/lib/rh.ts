@@ -4,7 +4,7 @@ export const db = supabase as any;
 export const MAX_PRICE = 100000;
 export const HOME_MAX_PRICE = 100000;
 export const eur = (n: number) => "€" + Math.round(n).toLocaleString("en-GB");
-export const FLAG: Record<string, string> = { Italy: "🇮🇹", Spain: "🇪🇸", Portugal: "🇵🇹", France: "🇫🇷", Greece: "🇬🇷", Croatia: "🇭🇷", Bulgaria: "🇧🇬", Romania: "🇷🇴", Japan: "🇯🇵", Sweden: "🇸🇪", Norway: "🇳🇴", Denmark: "🇩🇰", Finland: "🇫🇮", Germany: "🇩🇪", Turkey: "🇹🇷", Albania: "🇦🇱", Indonesia: "🇮🇩", "United States": "🇺🇸", Canada: "🇨🇦", Mexico: "🇲🇽", Scandinavia: "❄️", Nordics: "❄️", Asia: "🌏", Other: "🌍" };
+export const FLAG: Record<string, string> = { Italy: "🇮🇹", Spain: "🇪🇸", Portugal: "🇵🇹", France: "🇫🇷", Greece: "🇬🇷", Croatia: "🇭🇷", Bulgaria: "🇧🇬", Romania: "🇷🇴", Japan: "🇯🇵", Sweden: "🇸🇪", Norway: "🇳🇴", Denmark: "🇩🇰", Finland: "🇫🇮", Germany: "🇩🇪", Turkey: "🇹🇷", Albania: "🇦🇱", Indonesia: "🇮🇩", "United States": "🇺🇸", Canada: "🇨🇦", Mexico: "🇲🇽", Scandinavia: "❄️", Nordics: "❄️", Asia: "🌏", Other: "🌍", "Georgia": "🇬🇪", "Vietnam": "🇻🇳", "Montenegro": "🇲🇪", "Cyprus": "🇨🇾", "Northern Cyprus": "🇨🇾" };
 export const norm = (c: string | null | undefined) => { if (!c) return "Other"; if (c === "Scandinavia") return "Nordics"; if (c === "International" || c === "Europe") return "Other"; return c; };
 export const slug = (c: string) => c.toLowerCase().replace(/[^a-z]+/g, "-");
 export const unslug = (s: string, known: string[]) => known.find((k) => slug(k) === s) || s;

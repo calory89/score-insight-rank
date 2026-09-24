@@ -257,7 +257,8 @@ export function InfoRequest({ deal, dev }: { deal: Row; dev?: { name: string; sl
   const [done, setDone] = useState(false);
   const [f, setF] = useState({ name: "", phone: "", intent: "visit", message: "" });
   const [consent, setConsent] = useState(false);
-  if (done) return <p className="hunt-info-done"><Check size={16} /> {dev ? `Sent to ${dev.name}. They have your details and usually answer within one or two working days.` : "Request sent. We check it is still available and put you in touch with the seller, usually within two working days."}</p>;
+  const [q, setQ] = useState({ budget: "", timeframe: "", financing: "", video: false, slots: "" });
+  if (done) return <p className="hunt-info-done"><Check size={16} /> {dev ? <>Sent to {dev.name}. They have your details and usually answer within one or two working days. Follow the conversation in your <Link to="/inbox">inbox</Link>.</> : "Request sent. We check it is still available and put you in touch with the seller, usually within two working days."}</p>;
   return (
     <div className="hunt-info">
       {!open ? (
@@ -266,7 +267,7 @@ export function InfoRequest({ deal, dev }: { deal: Row; dev?: { name: string; sl
         <form onSubmit={async (e) => {
           e.preventDefault(); setBusy(true);
           if (dev && !consent) { setBusy(false); setNotice("Tick the box so we can send your details to the developer."); return; }
-          try { const r = await rpc("community_request_info", { p_deal: deal.id, p_name: f.name, p_phone: f.phone, p_intent: f.intent, p_message: f.message, p_consent: dev ? consent : null }); if (r?.error) { setNotice(r.error); return; } try { (window as any).clarity?.("event", dev ? "buyer_ask_dev_sent" : "buyer_ask_sent"); } catch { /* ignore */ } setDone(true); }
+          try { const r = await rpc("community_request_info", { p_deal: deal.id, p_name: f.name, p_phone: f.phone, p_intent: f.intent, p_message: f.message, p_consent: dev ? consent : null, p_budget: q.budget ? Number(q.budget) : null, p_timeframe: q.timeframe || null, p_financing: q.financing || null, p_video: q.video || null, p_slots: q.video ? q.slots : null }); if (r?.error) { setNotice(r.error); return; } try { (window as any).clarity?.("event", dev ? "buyer_ask_dev_sent" : "buyer_ask_sent"); } catch { /* ignore */ } setDone(true); }
           catch (err) { setNotice((err as Error).message); } finally { setBusy(false); }
         }}>
           <strong>{dev ? `Ask ${dev.name}` : t("Ask about this home")}</strong>
@@ -278,6 +279,13 @@ export function InfoRequest({ deal, dev }: { deal: Row; dev?: { name: string; sl
             <option value="buy">I want to make an offer</option>
             <option value="questions">I have questions</option>
           </select>
+          <div className="hv-qual">
+            <select aria-label="Budget" value={q.budget} onChange={(e) => setQ({ ...q, budget: e.target.value })}><option value="">Budget (optional)</option>{[40000, 60000, 80000, 100000, 150000].map((b) => <option key={b} value={b}>Up to €{b.toLocaleString("en-GB")}</option>)}</select>
+            <select aria-label="When" value={q.timeframe} onChange={(e) => setQ({ ...q, timeframe: e.target.value })}><option value="">When do you want to buy?</option><option value="now">In the next 3 months</option><option value="6m">Within 6 months</option><option value="12m">Within a year</option><option value="browsing">Just looking for now</option></select>
+            <select aria-label="How will you pay" value={q.financing} onChange={(e) => setQ({ ...q, financing: e.target.value })}><option value="">How will you pay?</option><option value="cash">Cash</option><option value="mortgage_ok">Mortgage, pre-approved</option><option value="mortgage">I need a mortgage</option><option value="plan">Developer payment plan</option></select>
+          </div>
+          {dev && <label className="hv-consent"><input type="checkbox" checked={q.video} onChange={(e) => setQ({ ...q, video: e.target.checked })} /> <span>I would like a video-call tour</span></label>}
+          {dev && q.video && <input placeholder="Best days and times for you, e.g. weekday evenings CET" value={q.slots} onChange={(e) => setQ({ ...q, slots: e.target.value })} />}
           <textarea placeholder="Anything the seller should know? (optional)" value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} />
           {dev && <label className="hv-consent"><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} /> <span>I agree that RealHunt sends my name, email and phone to {dev.name} so they can answer me.</span></label>}
           <div className="hunt-row"><button className="hunt-primary" disabled={busy}>{busy ? "Sending…" : "Send request"}</button><button type="button" className="hunt-link" onClick={() => setOpen(false)}>Cancel</button></div>

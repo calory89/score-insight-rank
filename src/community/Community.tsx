@@ -23,6 +23,7 @@ import AuthModal from "@/components/realhunt/AuthModal";
 import { useLiveStats } from "@/components/realhunt/LiveStats";
 import { lazy, Suspense } from "react";
 import { DevBlock, ClaimListing, BuyerPicks, NewBuildsPage, DevLeaderboard } from "./v8";
+import { InboxPage, CompareBuilds, CostsIndex, CostsPage, NewBuildReport, AgentsPage, TranslateBar, InboxLink } from "./v10";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
@@ -131,7 +132,7 @@ function Shell({ children }: { children: ReactNode }) {
     };
   }, [user?.id]);
   useEffect(() => {
-    if (/^\/(deal\/|insider|blog|cheap-houses|new-builds|developers)/.test(location.pathname)) return; // these pages set their own title
+    if (/^\/(deal\/|insider|blog|cheap-houses|new-builds|developers|inbox|compare-new-builds|costs|research|agents)/.test(location.pathname)) return; // these pages set their own title
     document.title = "RealHunt — Homes under €100,000. Found by people. Ranked by you.";
   }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
@@ -198,6 +199,7 @@ function Shell({ children }: { children: ReactNode }) {
               <Bookmark size={19} />
             </Link>
             <NotifBell />
+            <InboxLink />
             <span className="hv-theme-head"><ThemeButton /></span>
             {user ? (
               <Link to="/hunt/mine" className="hunt-account">
@@ -243,6 +245,9 @@ function Shell({ children }: { children: ReactNode }) {
             <Link to="/blog">Research</Link>
             <Link to="/insider">Insider</Link>
             <Link to="/new-builds">New builds</Link>
+            <Link to="/costs">Real costs</Link>
+            <Link to="/research/new-builds">New-build report</Link>
+            <Link to="/agents">For agents</Link>
             <Link to="/network">For developers</Link>
             <Link to="/legal/privacy">Privacy</Link>
             <Link to="/legal/terms">Terms</Link>
@@ -880,6 +885,7 @@ function Detail() {
           </p>
           <Amenities deal={d} />
           {d.why_great && <blockquote>{d.why_great}</blockquote>}
+          <TranslateBar text={[cleanTitle(d), d.why_great].filter(Boolean).join("\n\n")} />
           <div className="hunt-detail-actions hv-detail-actions">
             <HeartVote deal={d} scope={scope} onChange={load} big />
             {listing}
@@ -1824,6 +1830,18 @@ export default function Community() {
       <InsiderPage />
     ) : path === "/new-builds" || path.startsWith("/new-builds/") ? (
       <NewBuildsPage />
+    ) : path === "/inbox" ? (
+      <InboxPage />
+    ) : path === "/compare-new-builds" ? (
+      <CompareBuilds />
+    ) : path === "/costs" ? (
+      <CostsIndex />
+    ) : path.startsWith("/costs/") ? (
+      <CostsPage />
+    ) : path === "/research/new-builds" ? (
+      <NewBuildReport />
+    ) : path === "/agents" ? (
+      <AgentsPage />
     ) : path === "/developers" ? (
       <DevLeaderboard />
     ) : path === "/blog" ? (

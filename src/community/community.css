@@ -2614,3 +2614,70 @@ html.rh-dark, html.rh-dark body { background: #0E0E0C; }
 .hunt.is-dark .hv-plan, .hunt.is-dark .hv-devbadge { background: #22211D; color: #E8E2D6; }
 .hunt.is-dark .hv-claim form, .hunt.is-dark .hv-rate, .hunt.is-dark .hv-devrank li { background: #1B1A17; border-color: #2F2D28; }
 .hunt.is-dark .hv-consent { color: #D9D4C8; }
+
+/* ---------------------------------------------------------------- v10: inbox, compare, costs, report, agents, translate */
+.hv-inbox-link { position: relative; display: inline-flex; align-items: center; color: inherit; }
+.hv-inbox-link b { position: absolute; top: -6px; right: -8px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px; background: #0EA5E9; color: #fff; font-size: 10.5px; display: inline-flex; align-items: center; justify-content: center; }
+.hv-inbox h2 { display: flex; align-items: center; gap: 8px; font-size: 19px; margin: 18px 0 8px; }
+.hv-inbox h2 small { font-size: 14px; font-weight: 400; color: #6B675C; }
+.hv-inbox-list, .hv-alerts { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; max-width: 720px; }
+.hv-inbox-list button { width: 100%; display: flex; gap: 12px; align-items: center; text-align: left; padding: 10px 12px; border-radius: 16px; border: 1px solid #ECE7DC; background: #fff; cursor: pointer; color: inherit; font: inherit; }
+.hv-inbox-list button > span:last-child { display: grid; gap: 2px; min-width: 0; }
+.hv-inbox-list strong { display: inline-flex; gap: 6px; align-items: center; }
+.hv-inbox-list small { color: #6B675C; font-size: 12.5px; }
+.hv-inbox-last { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 52ch; }
+.hv-dot { min-width: 18px; height: 18px; border-radius: 999px; background: #0EA5E9; color: #fff; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; padding: 0 5px; }
+.hv-inbox-thread { max-width: 720px; display: grid; gap: 10px; }
+.hv-alerts a { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 14px; border: 1px solid #ECE7DC; background: #fff; text-decoration: none; color: inherit; }
+.hv-alerts li.is-new a { border-color: #0EA5E9; }
+.hv-alerts a > span { display: grid; gap: 2px; }
+.hv-alerts small { color: #6B675C; font-size: 12.5px; }
+.hv-serious { max-width: 720px; display: grid; gap: 8px; padding: 14px 16px; border-radius: 16px; border: 1px solid #ECE7DC; background: #fff; margin: 8px 0 4px; }
+.hv-serious strong { display: inline-flex; gap: 6px; align-items: center; }
+.hv-serious p { margin: 0; }
+.hv-serious.is-ok { display: flex; gap: 8px; align-items: center; background: #ECFDF5; border-color: #A7F3D0; color: #065F46; }
+.hv-serious select { height: 40px; border-radius: 12px; border: 1px solid #ECE7DC; padding: 0 10px; }
+.hv-qual { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.hv-cmp-toggle { justify-self: start; display: inline-flex; gap: 5px; align-items: center; margin-top: 4px; padding: 4px 10px; border-radius: 999px; border: 1px solid #D9D3C5; background: #fff; font-size: 12px; cursor: pointer; color: #16150F; }
+.hv-cmp-toggle.is-on { background: #16150F; color: #fff; border-color: #16150F; }
+.hv-cmp-bar { position: sticky; bottom: 76px; z-index: 5; margin: 18px auto 0; max-width: 560px; display: flex; gap: 12px; align-items: center; justify-content: center; flex-wrap: wrap; padding: 10px 14px; border-radius: 999px; background: #fff; border: 1px solid #ECE7DC; box-shadow: 0 8px 24px rgba(0,0,0,.08); font-size: 14px; }
+.hv-sponsored { position: absolute; right: 8px; top: 8px; font-style: normal; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,.92); color: #6B675C; }
+.hv-cmpb-scroll { overflow-x: auto; margin-top: 14px; }
+.hv-cmpb table { border-collapse: collapse; min-width: 560px; width: 100%; }
+.hv-cmpb th, .hv-cmpb td { padding: 10px 10px; border-top: 1px solid #ECE7DC; text-align: left; vertical-align: top; font-size: 14px; }
+.hv-cmpb thead th { border-top: 0; }
+.hv-cmpb thead a { display: grid; gap: 4px; text-decoration: none; color: inherit; }
+.hv-cmpb thead img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 12px; background: #E9E4D8; }
+.hv-cmpb thead small { color: #6B675C; font-weight: 400; }
+.hv-cmpb tbody th { color: #6B675C; font-weight: 500; font-size: 13px; white-space: nowrap; }
+.hv-cmpb td.is-best { color: #15803D; font-weight: 700; }
+.hv-costs-table { overflow-x: auto; margin: 14px 0; }
+.hv-costs-table table { border-collapse: collapse; width: 100%; min-width: 520px; }
+.hv-costs-table th, .hv-costs-table td { text-align: left; padding: 9px 10px; border-top: 1px solid #ECE7DC; font-size: 14px; }
+.hv-costs-table thead th { border-top: 0; font-size: 12px; color: #6B675C; font-weight: 600; }
+.hv-costcalc { margin: 14px 0; padding: 14px 16px; border-radius: 16px; background: #F7F5EF; display: grid; gap: 8px; max-width: 720px; }
+.hv-costcalc label { display: flex; gap: 10px; align-items: center; font-size: 14px; flex-wrap: wrap; }
+.hv-costcalc input { height: 40px; width: 150px; border-radius: 12px; border: 1px solid #D9D3C5; padding: 0 10px; font-size: 16px; }
+.hv-costcalc p { margin: 0; }
+.hv-costs-dl { display: grid; gap: 10px; max-width: 760px; margin: 12px 0; }
+.hv-costs-dl div { padding: 12px 14px; border-radius: 14px; border: 1px solid #ECE7DC; background: #fff; }
+.hv-costs-dl dt { font-size: 12px; color: #6B675C; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; }
+.hv-costs-dl dd { margin: 4px 0 0; font-size: 15px; line-height: 1.5; }
+.hv-sources { font-size: 13px; display: grid; gap: 4px; padding-left: 18px; }
+.hv-sources a { word-break: break-all; }
+.hv-report-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 16px 0; }
+.hv-report-kpis div { padding: 14px; border-radius: 16px; border: 1px solid #ECE7DC; background: #fff; display: grid; gap: 2px; }
+.hv-report-kpis b { font-family: var(--hv-display); font-size: 28px; }
+.hv-report-kpis small { color: #6B675C; font-size: 12.5px; }
+.hv-steps { display: grid; gap: 6px; padding-left: 20px; margin: 12px 0 18px; }
+.hv-form { display: grid; gap: 8px; max-width: 560px; padding: 16px; border-radius: 16px; border: 1px solid #ECE7DC; background: #fff; margin: 10px 0 18px; }
+.hv-form select, .hv-form input, .hv-form textarea { width: 100%; }
+.hv-translate { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 6px 0 10px; font-size: 13px; color: #6B675C; }
+.hv-translate > span { display: inline-flex; gap: 5px; align-items: center; }
+.hv-translate > button { padding: 4px 10px; border-radius: 999px; border: 1px solid #D9D3C5; background: #fff; font-size: 12.5px; cursor: pointer; color: #16150F; display: inline-flex; align-items: center; }
+.hv-translate > button.is-on { background: #16150F; color: #fff; }
+.hv-translate-out { position: relative; flex-basis: 100%; padding: 12px 34px 12px 14px; border-radius: 14px; background: #F7F5EF; color: #16150F; }
+.hv-translate-out p { margin: 0; white-space: pre-wrap; font-size: 15px; line-height: 1.55; }
+.hv-translate-out button { position: absolute; top: 8px; right: 8px; background: none; border: 0; cursor: pointer; }
+.hunt.is-dark .hv-inbox-list button, .hunt.is-dark .hv-alerts a, .hunt.is-dark .hv-serious, .hunt.is-dark .hv-costs-dl div, .hunt.is-dark .hv-report-kpis div, .hunt.is-dark .hv-form, .hunt.is-dark .hv-cmp-bar, .hunt.is-dark .hv-cmp-toggle, .hunt.is-dark .hv-translate > button { background: #1B1A17; border-color: #2F2D28; color: #E8E2D6; }
+.hunt.is-dark .hv-costcalc, .hunt.is-dark .hv-translate-out { background: #22211D; color: #E8E2D6; }

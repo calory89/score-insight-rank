@@ -12,6 +12,7 @@ import { FLAG } from "@/lib/rh";
 import { money } from "./api";
 import { useCommunity } from "./ctx";
 import { InfoRequest, type Row } from "./extras";
+import { CompareToggle, CompareBar, DEST_NAMES } from "./v10";
 
 const rpc = async (fn: string, args: Record<string, unknown> = {}) => {
   const { data, error } = await (supabase as any).rpc(fn, args);
@@ -163,14 +164,16 @@ export function NewBuildsPage() {
       ) : (
         <div className="hv-sp-grid" style={{ marginTop: 18 }}>{d.rows.map((x: any) => (
           <Link key={x.slug} to={`/deal/${encodeURIComponent(x.slug)}`} className="hv-sp-card">
-            <span className="hv-sp-img"><img src={x.image} alt={x.title} loading="lazy" /><b>{money(x.price_eur)}</b></span>
+            <span className="hv-sp-img"><img src={x.image} alt={x.title} loading="lazy" /><b>{money(x.price_eur)}</b>{x.sponsored && <i className="hv-sponsored">Sponsored</i>}</span>
             <strong>{x.title}</strong>
             <small>{flag(x.country)} {x.location || x.country} · {x.developer}{x.verified ? " ✓" : ""}</small>
             {x.plan?.deposit_pct ? <small>{x.plan.deposit_pct}% to reserve{x.plan.months ? `, ${x.plan.months} months` : ""}</small> : null}
+            <CompareToggle slug={x.slug} />
           </Link>
         ))}</div>
       )}
-      <p style={{ marginTop: 28 }}><Link to="/developers" className="hunt-link">See the developer ranking →</Link></p>
+      <CompareBar />
+      <p style={{ marginTop: 28 }}><Link to="/developers" className="hunt-link">See the developer ranking →</Link>{" · "}{(() => { const k = Object.keys(DEST_NAMES).find((z) => DEST_NAMES[z][2] === country); return k ? <Link to={`/costs/${k}`} className="hunt-link">Real buying costs in {DEST_NAMES[k][0]} →</Link> : <Link to="/costs" className="hunt-link">Real buying costs by country →</Link>; })()}{" · "}<Link to="/research/new-builds" className="hunt-link">Monthly report →</Link></p>
     </div>
   );
 }

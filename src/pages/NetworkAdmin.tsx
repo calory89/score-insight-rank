@@ -12,7 +12,24 @@ export default function NetworkAdmin() {
   const [msg, setMsg] = useState("");
   const [arm, setArm] = useState("");
   const [filter, setFilter] = useState("all");
-  const load = () => db.rpc("dev_admin_funnel").then(({ data, error }: any) => setD(error ? null : data), () => setD(null));
+  const [pend, setPend] = useState<any[]>([]);
+  const [boosts, setBoosts] = useState<any[]>([]);
+  const [proofs, setProofs] = useState<any[]>([]);
+  const load = () => {
+    db.rpc("dev_admin_pending_projects").then(({ data }: any) => setPend(data || []), () => {});
+    db.rpc("dev_admin_boosts").then(({ data }: any) => setBoosts(data || []), () => {});
+    db.rpc("dev_admin_proofs").then(({ data }: any) => setProofs(data || []), () => {});
+    return db.rpc("dev_admin_funnel").then(({ data, error }: any) => setD(error ? null : data), () => setD(null));
+  };
+  const moderate = async (id: string, ok: boolean) => {
+    const reason = ok ? null : window.prompt("Why? The developer sees this.", "Photos or price could not be checked");
+    if (!ok && reason === null) return;
+    const { error } = await db.rpc("community_moderate_deal", { p_deal: id, p_action: ok ? "approve" : "reject", p_reason: reason, p_pick: false, p_pick_note: null });
+    setMsg(error ? error.message : ok ? "Approved and live" : "Rejected"); load();
+  };
+  const boostDecide = async (id: number, on: boolean) => { const { error } = await db.rpc("dev_admin_boost_decide", { p_id: id, p_on: on }); setMsg(error ? error.message : on ? "Boost active" : "Boost stopped"); load(); };
+  const proofOpen = async (path: string) => { const { data, error } = await (db as any).storage.from("buyer-proof").createSignedUrl(path, 300); if (error) setMsg(error.message); else window.open(data.signedUrl, "_blank", "noopener"); };
+  const proofDecide = async (u: string, ok: boolean) => { const note = ok ? null : window.prompt("What should the buyer fix?", "Upload a clearer bank statement or a mortgage pre-approval letter."); if (!ok && note === null) return; const { error } = await db.rpc("dev_admin_proof_decide", { p_user: u, p_ok: ok, p_note: note }); setMsg(error ? error.message : ok ? "Buyer verified" : "Rejected"); load(); };
   useEffect(() => { document.title = "Network admin · RealHunt"; load(); }, []);
   if (d === undefined) return <div className="min-h-screen bg-paper"><RHNav /><div className="p-10"><Loader2 className="animate-spin" /></div></div>;
   if (!d) return <div className="min-h-screen bg-paper"><RHNav /><div className="p-10">Admins only. <Link to="/network" className="underline">Back</Link></div></div>;
@@ -53,6 +70,37 @@ export default function NetworkAdmin() {
         </section>
 
         <section>
+          <h2 className="font-display text-[22px]">Developer projects to approve ({pend.length})</h2>
+          {pend.length === 0 ? <p className="text-ink-muted text-[14px] mt-1">None right now.</p> : <div className="mt-3 grid md:grid-cols-2 gap-3">{pend.map((p: any) => (
+            <div key={p.id} className="rounded-2xl bg-white border border-hairline overflow-hidden flex">
+              <div className="w-[120px] shrink-0 bg-[#E9E4D8]">{p.image && <img src={p.image} alt="" className="w-full h-full object-cover" />}</div>
+              <div className="p-3 text-[13px] flex-1 min-w-0"><p className="font-semibold text-[14px] truncate">{p.title}</p><p className="text-ink-muted">{p.company}{p.signed ? " · signed" : " · not signed"} · {p.location || p.country} · {p.price_eur ? eur(p.price_eur) : "no price"} · {p.images} photos</p>
+                {p.source_url && <a href={p.source_url} target="_blank" rel="noreferrer" className="underline inline-flex items-center gap-1">their page <ExternalLink size={11} /></a>}
+                <div className="mt-2 flex gap-2"><button onClick={() => moderate(p.id, true)} className="rh-btn-primary !py-1.5 !px-3 !text-[13px] inline-flex items-center gap-1"><Check size={14} /> Approve</button><button onClick={() => moderate(p.id, false)} className="px-3 py-1.5 rounded-full border border-hairline text-[13px] inline-flex items-center gap-1"><X size={14} /> Reject</button><Link to={`/deal/${p.slug}`} className="text-[12px] underline self-center">preview</Link></div></div>
+            </div>
+          ))}</div>}
+        </section>
+
+        <section className="grid md:grid-cols-2 gap-4">
+          <div>
+            <h2 className="font-display text-[22px]">Featured spot requests ({boosts.filter((b) => b.status === "requested").length})</h2>
+            <p className="text-[13px] text-ink-muted">Agree the price with the developer by email first, then switch it on here.</p>
+            {boosts.length === 0 ? <p className="text-ink-muted text-[14px] mt-1">None yet.</p> : <div className="mt-2 flex flex-col gap-2">{boosts.map((b: any) => (
+              <div key={b.id} className="rounded-xl bg-white border border-hairline p-3 text-[13px]"><b>{b.company}</b> · {b.deal} ({b.country}) · {b.weeks} wk · <i>{b.status}</i>{b.ends_at ? ` until ${new Date(b.ends_at).toLocaleDateString("en-GB")}` : ""}<p className="text-ink-muted">{b.email}</p>
+                <div className="mt-1 flex gap-2">{b.status === "requested" && <button onClick={() => boostDecide(b.id, true)} className="rh-btn-primary !py-1 !px-3 !text-[12px]">Switch on</button>}{(b.status === "requested" || b.status === "active") && <button onClick={() => boostDecide(b.id, false)} className="px-3 py-1 rounded-full border border-hairline text-[12px]">{b.status === "active" ? "Stop" : "Decline"}</button>}</div></div>
+            ))}</div>}
+          </div>
+          <div>
+            <h2 className="font-display text-[22px]">Serious-buyer checks ({proofs.filter((p) => p.status === "pending").length})</h2>
+            <p className="text-[13px] text-ink-muted">Open the file, check the name and that the funds cover a home under €100,000.</p>
+            {proofs.length === 0 ? <p className="text-ink-muted text-[14px] mt-1">None yet.</p> : <div className="mt-2 flex flex-col gap-2">{proofs.map((p: any) => (
+              <div key={p.user_id} className="rounded-xl bg-white border border-hairline p-3 text-[13px]"><b>{p.email}</b> · {p.kind} · <i>{p.status}</i>
+                <div className="mt-1 flex gap-2"><button onClick={() => proofOpen(p.path)} className="px-3 py-1 rounded-full border border-hairline text-[12px]">Open file</button>{p.status === "pending" && <><button onClick={() => proofDecide(p.user_id, true)} className="rh-btn-primary !py-1 !px-3 !text-[12px]">Verify</button><button onClick={() => proofDecide(p.user_id, false)} className="px-3 py-1 rounded-full border border-hairline text-[12px]">Reject</button></>}</div></div>
+            ))}</div>}
+          </div>
+        </section>
+
+        <section>
           <h2 className="font-display text-[22px]">Listing claims to review ({d.claims.length})</h2>
           {d.claims.length === 0 ? <p className="text-ink-muted text-[14px] mt-1">None right now.</p> : <div className="mt-3 flex flex-col gap-3">{d.claims.map((c: any) => (
             <div key={c.id} className="rounded-2xl bg-white border border-hairline p-4 text-[14px] flex flex-col md:flex-row md:items-center gap-3">
@@ -68,8 +116,9 @@ export default function NetworkAdmin() {
             {arm === "send" ? <div className="flex gap-2 items-center"><span className="text-[13px] inline-flex items-center gap-1"><AlertTriangle size={14} /> Sends 20 real emails.</span><button onClick={send} className="rh-btn-primary !py-2 !px-4 !text-[13px]">Yes, send</button><button onClick={() => setArm("")} className="text-[13px] underline">Cancel</button></div>
               : <button disabled={!S.prospect_emails} onClick={() => setArm("send")} className="px-4 py-2 rounded-full border border-ink text-[13px] font-medium disabled:opacity-40" title={S.prospect_emails ? "" : "Switch outreach emails on first"}>Send next 20 emails</button>}
           </div>
+          <p className="text-[13px] text-ink-muted">Automatic: every day at 10:00 (Spain) 20 more are sent while the switch is on, and whoever opened their listing 4+ days ago without claiming gets one reminder. <Link to="/research/new-builds" className="underline">Monthly report</Link> · <Link to="/network/example" className="underline">Example listing</Link></p>
           <p className="text-[13px] text-ink-muted">Status: {Object.entries(d.prospects || {}).map(([k, v]) => `${k} ${v}`).join(" · ") || "empty"}. Each claim link opens the ready listing; nothing is public until they claim it.</p>
-          <div className="mt-2 flex flex-wrap gap-2 text-[13px]">{["all", "previewed", "emailed", "opened", "claimed", "optout", "Indonesia", "Mexico", "Albania", "Spain"].map((k) => <button key={k} onClick={() => setFilter(k)} className={`px-3 py-1.5 rounded-full border ${filter === k ? "bg-ink text-paper border-ink" : "bg-white border-hairline"}`}>{k}</button>)}</div>
+          <div className="mt-2 flex flex-wrap gap-2 text-[13px]">{["all", "previewed", "emailed", "opened", "claimed", "optout", "Indonesia", "Albania", "Mexico", "Georgia", "Vietnam", "Spain"].map((k) => <button key={k} onClick={() => setFilter(k)} className={`px-3 py-1.5 rounded-full border ${filter === k ? "bg-ink text-paper border-ink" : "bg-white border-hairline"}`}>{k}</button>)}</div>
           <div className="mt-3 rounded-2xl bg-white border border-hairline overflow-x-auto"><table className="w-full text-[13px]"><thead><tr className="text-left text-[11px] uppercase tracking-wider text-ink-muted"><th className="px-3 py-2">Developer</th><th className="px-3 py-2">Project</th><th className="px-3 py-2">Where</th><th className="px-3 py-2">From</th><th className="px-3 py-2">Email</th><th className="px-3 py-2">Status</th><th className="px-3 py-2">Claim link</th></tr></thead>
             <tbody>{prospects.map((p: any) => (
               <tr key={p.claim_code} className="border-t border-hairline/70"><td className="px-3 py-2">{p.company}</td><td className="px-3 py-2">{p.project_name}{p.kind === "lots" ? <span className="ml-1 px-1.5 rounded bg-amber-100 text-[11px]">land</span> : null}</td><td className="px-3 py-2">{p.area || p.country}</td><td className="px-3 py-2 tabular-nums">{p.price_from_eur ? eur(p.price_from_eur) : "—"}</td><td className="px-3 py-2">{p.has_email ? "✓" : "—"}</td><td className="px-3 py-2">{p.status}</td>

@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import RHNav from "@/components/realhunt/RHNav";
 import { db, eur, FLAG, track } from "@/lib/rh";
 import { Check, ChevronRight, Loader2, ShieldCheck, Users, Coins, ImageOff } from "lucide-react";
+import Reel from "@/components/realhunt/Reel";
 
 export default function ClaimPage() {
   const { code = "" } = useParams();
@@ -48,6 +49,7 @@ export default function ClaimPage() {
           </ul>
           <button onClick={claim} className="rh-btn-primary inline-flex items-center gap-2 mt-8 !text-[17px] !px-7 !py-4">Claim my listing, free <ChevronRight size={18} /></button>
           <p className="text-[13px] text-ink-muted mt-3 inline-flex items-center gap-1.5"><Check size={14} /> Takes a minute · you can change or remove it any time</p>
+          <p className="text-[14px] mt-6">Want to see a finished one first? <Link to="/network/example" className="underline font-medium">See an example listing</Link></p>
           <p className="text-[12px] text-ink-muted mt-8">Not interested? <Link to={`/claim/${code}?optout=1`} className="underline">Tell us and we will not write again</Link>.</p>
         </div>
         <aside className="order-1 lg:order-2">
@@ -65,6 +67,7 @@ export default function ClaimPage() {
               <p className="text-[13px] text-ink-muted mt-2">by <b className="text-ink">{p.company}</b></p>
             </div>
           </div>
+          {imgs.length > 0 && <div className="mt-4"><Reel images={imgs} title={p.title || p.project_name || p.company} price={p.price_eur} place={[p.area, p.country].filter(Boolean).join(", ")} company={p.company} /></div>}
         </aside>
       </main>
     </div>

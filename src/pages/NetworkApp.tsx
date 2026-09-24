@@ -4,6 +4,8 @@ import { contactCandidates } from "@/lib/contact-import";
 import Pagination from "@/components/realhunt/Pagination";
 import { DevProjects, BulkShare, Simulator } from "@/components/realhunt/DevGrowth";
 import BuyerHistory from "@/components/realhunt/BuyerHistory";
+import IntroChat from "@/components/realhunt/IntroChat";
+import DevExtras from "@/components/realhunt/DevExtras";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -221,6 +223,8 @@ const NetworkApp = () => {
   const waiting = received.filter((i) => i.status === "proposed").length;
   const overdue = received.filter((i) => i.next_action_at && new Date(i.next_action_at) < new Date(new Date().toDateString()) && !["sold", "lost"].includes(i.status)).length;
   const active = received.filter((i) => !["sold", "lost"].includes(i.status)).length;
+  // a notification link /network/app/buyers?i=<introduction> opens that buyer
+  useEffect(() => { const q = new URLSearchParams(window.location.search).get("i"); if (q && received.length) { const x = received.find((r) => r.id === q); if (x) setOpen(x); } }, [received.length]);
   // new buyers: count in the browser tab title and a dot on the favicon
   useEffect(() => {
     document.title = `${waiting ? `(${waiting}) ` : ""}Developer panel · RealHunt Network`;
@@ -378,6 +382,7 @@ const NetworkApp = () => {
         )}
 
         {tab === "projects" && <DevProjects />}
+        {tab === "projects" && <DevExtras />}
         {tab === "today" && <div className="mt-6 space-y-5"><NetworkTasks buyers={received} onOpen={setOpen} /><SourceContactRequests given={ov.given || []} onChange={load} /></div>}
 
         {tab === "overview" && (
@@ -556,6 +561,8 @@ const NetworkApp = () => {
             <div className="flex items-start justify-between gap-3"><div><p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted">Buyer</p><p className="font-display text-[26px] tracking-tight font-mono">{i.buyer}</p><p className="text-[13px] text-ink-muted">Introduced {fmtD(i.created_at)} · {i.from}{i.was_mine ? " · already in your list, exempt" : ""}</p></div><button onClick={() => setOpen(null)} className="h-9 w-9 rounded-full border border-hairline inline-flex items-center justify-center" aria-label="Close"><X size={16} /></button></div>
             <div className="flex flex-wrap items-center gap-2"><Pill s={i.status} />{i.buyer_country && <span className="px-2 py-0.5 rounded-full bg-white border border-hairline text-[11px]">{i.buyer_country}</span>}{i.buyer_budget && <span className="px-2 py-0.5 rounded-full bg-white border border-hairline text-[11px] tabular-nums">budget {eur(i.buyer_budget)}</span>}</div>
             {i.note && <div className="border border-hairline rounded-2xl bg-white p-4 text-[14px]"><p className="text-[11px] uppercase tracking-wider text-ink-muted mb-1">From RealHunt</p>{i.note}</div>}
+
+            <IntroChat id={i.id} compact />
 
             <IntroductionTerms buyer={i} />
 

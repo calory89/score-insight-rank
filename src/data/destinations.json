@@ -1,0 +1,235 @@
+{
+  "_meta": {
+    "compiled": "2026-09-24",
+    "notes": "All yields are GROSS unless stated. long_term_gross_yield_pct is Global Property Guide (GPG) long-term residential yield, included as a fallback where no credible holiday-rental yield was found. Many STR 'yields' online come from developers/agents and are marked as such. Where sources disagree a range is given. null = not found in a source actually opened."
+  },
+  "bali": {
+    "can_foreigners_buy": "No freehold (Hak Milik) for foreigners: leasehold, Hak Pakai (right-to-use, 30 yrs + renewals), or HGB title via a PT PMA foreign-owned company.",
+    "purchase_costs_pct": "6.5-18",
+    "purchase_costs_breakdown": "BPHTB transfer tax 5% + notary 1-2.5% + legal 0.5-1.5% (GPG: 6.5-9%); new developer units add 11% PPN/VAT (stack ~17-18% without the 2026 PPN-DTP incentive, ~6-9% with it). Plain leasehold deals mostly notary/legal.",
+    "annual_property_tax": "PBB land & building tax, up to ~0.5% of assessed NJOP-based value (low hundreds USD on a $300k villa).",
+    "rental_income_tax": "Non-residents: 20% withholding on gross rent (10% possible under a tax treaty); PT PMA companies 22% corporate tax.",
+    "holiday_rental_gross_yield_pct": "8-15",
+    "holiday_rental_yield_note": "Gross. Industry-quoted range for well-located villas (Global Investments guide 8-15%; Kinnara.Asia blended ~8.5% via Paradyse Homes). Operating costs typically 35-45% of revenue, net ~5-10%. Sources are agents/developers, treat as optimistic.",
+    "long_term_gross_yield_pct": null,
+    "holiday_rental_rules": "Short-term renting requires a Pondok Wisata (homestay) licence; foreigners cannot hold it personally and need a PT PMA with the right KBLI code plus PBG/SLF building permits.",
+    "sources": [
+      "https://www.globalpropertyguide.com/asia/indonesia/buying-guide",
+      "https://anteyac.com/en/blog/bali-property-taxes-fees-ppn-bphtb-closing-costs",
+      "https://ownpropertyabroad.com/indonesia/property-taxes-indonesia-guide/",
+      "https://ownpropertyabroad.com/indonesia/pondok-wisata-license/",
+      "https://www.globalinvestments.net/properties/guides/bali-rental-yields-and-returns",
+      "https://www.paradysehomes.com/blog/bali-villa-rental-yields-in-2026-whats-real-whats-hype-and-what-the-data-actually-shows"
+    ],
+    "as_of": 2026
+  },
+  "lombok": {
+    "can_foreigners_buy": "Same Indonesian rules as Bali: no freehold; leasehold, Hak Pakai, or HGB via a PT PMA.",
+    "purchase_costs_pct": "6.5-18",
+    "purchase_costs_breakdown": "BPHTB 5% + notary 1-2.5% + legal 0.5-1.5%; +11% PPN/VAT on new developer units unless the 2026 VAT incentive applies.",
+    "annual_property_tax": "PBB, up to ~0.5% of assessed (NJOP-based) value.",
+    "rental_income_tax": "Non-residents: 20% withholding on gross rent (10% possible under a treaty); PT PMA 22% corporate tax.",
+    "holiday_rental_gross_yield_pct": null,
+    "holiday_rental_yield_note": "No independent gross-yield figure found. Airbtics (Feb 2025-Jan 2026) South Lombok: 64% occupancy, ADR ~US$78, median revenue ~US$18k/yr, graded C+ and in the lowest 48% for STR yield in Southeast Asia. Developer projections (Lombok International Development) of 6.8-14.8% NET are not independent.",
+    "long_term_gross_yield_pct": null,
+    "holiday_rental_rules": "Pondok Wisata licence required for short-term rental; foreigners must operate through a PT PMA.",
+    "sources": [
+      "https://www.globalpropertyguide.com/asia/indonesia/buying-guide",
+      "https://anteyac.com/en/blog/bali-property-taxes-fees-ppn-bphtb-closing-costs",
+      "https://ownpropertyabroad.com/indonesia/property-taxes-indonesia-guide/",
+      "https://ownpropertyabroad.com/indonesia/pondok-wisata-license/",
+      "https://airbtics.com/annual-airbnb-revenue-in-lombok-south-indonesia",
+      "https://lombokid.com/en/blog/lombok-rental-yield-analysis-2026",
+      "https://www.nourestates.com/occupancy-rate-in-lombok"
+    ],
+    "as_of": 2026
+  },
+  "albania": {
+    "can_foreigners_buy": "Yes, apartments and houses freely; agricultural land is excluded. Title risk from communist-era confiscations.",
+    "purchase_costs_pct": "1.3-1.9",
+    "purchase_costs_breakdown": "Notary 0.23-0.35% + lawyer 0.1-0.5% + agent 1-2%; transfer tax (0.5-3%) is paid by the seller (GPG, 2021).",
+    "annual_property_tax": "Local property tax ~0.05% of cadastral value (about EUR 75/yr on EUR 150k).",
+    "rental_income_tax": "Flat 15% on rental income, including short-term, declared via the DIVA platform.",
+    "holiday_rental_gross_yield_pct": null,
+    "holiday_rental_yield_note": "No sourced STR gross yield. Airbtics 2025: national occupancy 56%, Durres 53%, Tirana 62%; AirROI (via internationalinvestment.biz, Dec 2025) Tirana ~40% occupancy, ~US$6,600/yr typical income.",
+    "long_term_gross_yield_pct": "4.2-6.1 (GPG Sep 2022: Tirana 6.09, Vlore 4.81, Durres 4.51)",
+    "holiday_rental_rules": "No licence or business tax ID (NIPT) required for individuals; income must be declared on DIVA, with new reporting obligations from 2026.",
+    "sources": [
+      "https://www.globalpropertyguide.com/europe/albania/buying-guide",
+      "https://albanian.properties/taxes-on-rental-income-in-albania-the-foreign-investors-fiscal-guide/",
+      "https://www.hlb.al/short-term-rentals-in-albania-new-tax-reporting-obligations-from-2026/",
+      "https://www.globalpropertyguide.com/europe/albania/rental-yields",
+      "https://airbtics.com/short-term-rental-market-report-2025-albania",
+      "https://internationalinvestment.biz/en/business/6684-the-short-term-rental-market-in-tirana-yields-seasonality-and-risks.html"
+    ],
+    "as_of": 2026
+  },
+  "mexico": {
+    "can_foreigners_buy": "Yes, but in the Restricted Zone (within 50 km of the coast or 100 km of borders, which covers Tulum and Playa del Carmen) only through a fideicomiso bank trust or a Mexican company; direct ownership elsewhere.",
+    "purchase_costs_pct": "3.5-8",
+    "purchase_costs_breakdown": "Acquisition tax 2-5% + notary 0.5-1% + legal 1-1.5% (GPG 3.5-7.5%), plus 0.5-1.5% for fideicomiso/permit setup; TheLatinvestor budgets 5-8%.",
+    "annual_property_tax": "Municipal predial, set locally on cadastral value; usually small, often less than HOA fees.",
+    "rental_income_tax": "Non-residents: 25% ISR withholding on gross rent; plus 16% IVA on short-term stays (Airbnb remits on its bookings).",
+    "holiday_rental_gross_yield_pct": null,
+    "holiday_rental_yield_note": "No sourced STR gross yield. AirDNA (early 2026, via Virestia): Tulum average occupancy 44%, 8,000+ listings, bottom 80% of condos earn US$13-18k/yr at 31-44% occupancy. TheLatinvestor: Tulum ADR US$125, down 23% YoY.",
+    "long_term_gross_yield_pct": "4.6-6.1 (GPG Q2 2026: Merida 6.08, Cancun 4.60, national 5.79)",
+    "holiday_rental_rules": "Quintana Roo: mandatory RETUR-Q registration (since Aug 2025, renewed annually) plus a state operating licence and RFC tax ID; 6% lodging tax; fines up to MXN 100,000.",
+    "sources": [
+      "https://www.globalpropertyguide.com/north-america/mexico/buying-guide",
+      "https://thelatinvestor.com/blogs/news/full-list-property-taxes-mexico",
+      "https://olahabitat.com/blog/str-taxes-mexico/",
+      "https://mayankey.com/blog/retur-q-vacation-rental-laws-quintana-roo-2026/",
+      "https://virestia.com/insights/tulum-two-speed-rental-market/",
+      "https://thelatinvestor.com/blogs/news/tulum-rental-yields-villa",
+      "https://www.globalpropertyguide.com/north-america/mexico/rental-yields"
+    ],
+    "as_of": 2026
+  },
+  "spain": {
+    "can_foreigners_buy": "Yes, no restrictions at present; the government has proposed a 100% tax on (or ban for) non-EU non-resident buyers, not enacted.",
+    "purchase_costs_pct": "7.5-14",
+    "purchase_costs_breakdown": "New build: 10% IVA + 0.5-1.5% AJD stamp duty + notary 0.5-1% + legal 1-2%; resale: ITP transfer tax 6-11% instead of IVA/AJD.",
+    "annual_property_tax": "IBI 0.4-1.1% of cadastral value (municipal), plus imputed income tax on unlet homes.",
+    "rental_income_tax": "Non-residents: EU/EEA 19% on net income; non-EU 24% on gross with no deductions.",
+    "holiday_rental_gross_yield_pct": "5-7",
+    "holiday_rental_yield_note": "Gross, Global Investments guide 2026 for Costa del Sol, Valencia, Canary Islands; realistic net 3-4.5% before tax. GPG long-term: national 5.51%, Alicante 6.80, Murcia 6.06, Malaga 4.97.",
+    "long_term_gross_yield_pct": "4.7-6.8 (GPG Q3 2026, national 5.51)",
+    "holiday_rental_rules": "Regional tourist licence plus the national single rental registry number (mandatory since 1 Jul 2025); new tourist lets in apartment blocks need 3/5 owners' approval (since 3 Apr 2025).",
+    "sources": [
+      "https://www.globalpropertyguide.com/europe/spain/buying-guide",
+      "https://www.taxesforexpats.com/country-guides/spain/property-tax-in-spain-non-residents.html",
+      "https://www.globalpropertyguide.com/europe/spain/rental-yields",
+      "https://www.globalinvestments.net/properties/guides/spain-rental-yields-and-returns",
+      "https://www.hostaway.com/blog/airbnb-rules-in-spain/"
+    ],
+    "as_of": 2026
+  },
+  "montenegro": {
+    "can_foreigners_buy": "Yes, houses and apartments freely; land requires a local company.",
+    "purchase_costs_pct": "1-4",
+    "purchase_costs_breakdown": "New build: 21% VAT is normally included in the developer price, buyer pays notary + ~1% legal; resale: 3% transfer tax (progressive on higher values) + notary + ~1% legal (GPG 4.01%).",
+    "annual_property_tax": "Municipal, ~0.25-1% of assessed value (higher rates possible for tourist properties).",
+    "rental_income_tax": "Around 15% withholding for non-residents.",
+    "holiday_rental_gross_yield_pct": null,
+    "holiday_rental_yield_note": "No sourced STR gross yield found.",
+    "long_term_gross_yield_pct": "4.4-5.2 (GPG Q2 2026: Podgorica 5.15, Budva 5.01, Tivat 4.36, national 4.84)",
+    "holiday_rental_rules": "Short-term rentals must be registered and pay a municipal tourist tax per guest-night.",
+    "sources": [
+      "https://www.globalpropertyguide.com/europe/montenegro/buying-guide",
+      "https://sothebysrealty.me/blog/montenegro-real-estate-taxes/",
+      "https://www.globalpropertyguide.com/europe/montenegro/rental-yields"
+    ],
+    "as_of": 2026
+  },
+  "georgia": {
+    "can_foreigners_buy": "Yes, residential and commercial property freely; agricultural land is reserved for citizens.",
+    "purchase_costs_pct": "0.6-1.1",
+    "purchase_costs_breakdown": "No transfer tax or stamp duty; registry fee 50-200 GEL, notary under 0.1%, legal 0.5-1%; agent 2-3% if buyer-paid.",
+    "annual_property_tax": "Only for tax residents: 0.05-1% of value depending on household income; non-residents generally exempt.",
+    "rental_income_tax": "5% of gross rent on residential property (long- or short-term), residents and non-residents alike.",
+    "holiday_rental_gross_yield_pct": null,
+    "holiday_rental_yield_note": "No sourced STR gross yield. Airbtics (Feb 2025-Jan 2026): Batumi 53% occupancy, ADR US$43, median revenue ~US$8k/yr, listings +46% YoY, graded D and ranked in the lowest 4% for STR yield in Eastern Europe.",
+    "long_term_gross_yield_pct": "7.2-7.3 (GPG Q3 2026: Tbilisi 7.23, Batumi 7.28)",
+    "holiday_rental_rules": "No specific short-term rental licence found in sources; the 5% rental tax applies.",
+    "sources": [
+      "https://www.globalpropertyguide.com/europe/georgia/buying-guide",
+      "https://georgiahandbook.com/the-complete-guide-to-property-and-transaction-taxes-in-georgia-2026/",
+      "https://www.bookkeeping.ge/landlord-tax-returns-rental-property-geo",
+      "https://www.globalpropertyguide.com/europe/georgia/rental-yields",
+      "https://airbtics.com/annual-airbnb-revenue-in-batumi-georgia/"
+    ],
+    "as_of": 2026
+  },
+  "northern-cyprus": {
+    "can_foreigners_buy": "Yes, up to 3 properties (land cap ~1,338 m2), but each needs Council of Ministers Permission to Purchase (1-6 months); title-deed history risk.",
+    "purchase_costs_pct": "12-22",
+    "purchase_costs_breakdown": "Title deed transfer fee for foreigners 6-12% (sources disagree: 9% most cited, 12% in one 2026 guide) + 5% VAT on new builds (one source says 19%) + 0.5% stamp duty + legal GBP 1,000-2,500 + transformer fee GBP 1,500-3,000 on new builds.",
+    "annual_property_tax": "Per m2, very low: about GBP 10-100/yr for a typical apartment or villa.",
+    "rental_income_tax": "10% of gross rental income (Investra, 2026).",
+    "holiday_rental_gross_yield_pct": null,
+    "holiday_rental_yield_note": "No sourced gross yield; data conflict. Airbtics Jan 2026 Iskele: 75% occupancy, ADR EUR 84, ~EUR 24k/yr, 'top 1%' for STR yield in Southern Europe. AirROI 2025-26 Kyrenia: 37.1% occupancy, ADR US$99, ~US$10k/yr.",
+    "long_term_gross_yield_pct": null,
+    "holiday_rental_rules": "Must register with the Ministry of Tourism and hold a licence for short-term letting; monthly tax reporting.",
+    "sources": [
+      "https://terrarealestate.com/buying-real-estate-in-cyprus",
+      "https://investra.io/en/media/blogs/north-cyprus-tax-guide-property-investors",
+      "https://northcyprusproperty.com/north-cyprus-property-costs/",
+      "https://airbtics.com/annual-airbnb-revenue-in-iskele-cyprus",
+      "https://www.airroi.com/report/world/cyprus/northern-cyprus/kyrenia"
+    ],
+    "as_of": 2026
+  },
+  "vietnam": {
+    "can_foreigners_buy": "Only buildings (mostly condos) on a 50-year renewable term, never land; caps of 30% of units per apartment building and 250 houses per ward.",
+    "purchase_costs_pct": "2.5-3.1",
+    "purchase_costs_breakdown": "New developer apartment: 10% VAT usually already in the price + 0.5% registration fee + 2% maintenance fund + notary/admin; GPG lists 2.55-3.1% buyer costs.",
+    "annual_property_tax": "Non-agricultural land-use tax 0.03-0.15% of state land value; negligible for apartments.",
+    "rental_income_tax": "10% of gross rent (5% VAT + 5% PIT) above the exemption threshold; threshold raised to VND 1 billion/yr from 1 Jan 2026 (older guides say VND 100 million).",
+    "holiday_rental_gross_yield_pct": null,
+    "holiday_rental_yield_note": "No sourced STR gross yield found.",
+    "long_term_gross_yield_pct": "3.5-4.2 (GPG Q3 2025: HCMC 4.16, Hanoi 3.54)",
+    "holiday_rental_rules": "Guests must be registered with local police; HCMC (Decision 19/2026, from 25 Apr 2026) allows apartment short-lets only as registered, licensed accommodation providers; frequent/multi-unit renting needs a business registration.",
+    "sources": [
+      "https://www.globalpropertyguide.com/asia/vietnam/buying-guide",
+      "https://stanbrinkman.com/vietnam-property-tax-foreigner-guide",
+      "https://www.vietnam-briefing.com/news/rental-property-foreigners-tax-obligations-vietnam.html/",
+      "https://www.vietnam-briefing.com/news/vietnams-property-tax-regime-2025-agricultural-land-use-tax-exempted-2030.html/",
+      "https://www.dedica-law.com/en/articles/new-legal-framework-for-investing-in-airbnb-and-shortterm-rentals-in-vietnam",
+      "https://vietcetera.com/en/ho-chi-minh-city-re-allows-airbnb-in-apartments-with-tighter-control",
+      "https://www.globalpropertyguide.com/asia/vietnam/rental-yields"
+    ],
+    "as_of": 2026
+  },
+  "italy": {
+    "can_foreigners_buy": "Yes for EU citizens; non-EU buyers need reciprocity (US, UK, Canada, Australia qualify).",
+    "purchase_costs_pct": "4-15",
+    "purchase_costs_breakdown": "Registration tax 9% on a second home (resale), or VAT on new builds; notary 1-2% + legal ~1% + agent ~3% (GPG roundtrip 10-18%).",
+    "annual_property_tax": "IMU 0.4-1.06% on second homes (on cadastral value).",
+    "rental_income_tax": "Optional flat 'cedolare secca' on short lets: 21% for one property, 26% from the second.",
+    "holiday_rental_gross_yield_pct": null,
+    "holiday_rental_yield_note": "No sourced STR gross yield found. Cheap Italian homes are usually old stock in depopulating towns, not new builds.",
+    "long_term_gross_yield_pct": "5.0-8.8 (GPG Q3 2026: national 6.61, Catania 8.75, Palermo 7.84, Milan 4.97)",
+    "holiday_rental_rules": "Every tourist let needs a national CIN code shown on listings and at the property; from the 3rd property it is treated as a business (VAT registration).",
+    "sources": [
+      "https://www.globalpropertyguide.com/europe/italy/buying-guide",
+      "https://www.tuscanhouses.com/blog/2026/regulations-tips/short-term-rentals-italy-2026-tax-legal-requirements",
+      "https://www.globalpropertyguide.com/europe/italy/rental-yields"
+    ],
+    "as_of": 2026
+  },
+  "portugal": {
+    "can_foreigners_buy": "Yes, same rights as Portuguese citizens (IMT increase for foreign second-home buyers announced Sept 2025).",
+    "purchase_costs_pct": "3-12",
+    "purchase_costs_breakdown": "IMT transfer tax 0-8% (progressive) + stamp duty 0.8% + notary/registry 0.9-1.2% + legal 1.25-2%.",
+    "annual_property_tax": "IMI 0.3-0.45% of taxable value (urban), set by municipality.",
+    "rental_income_tax": "Long-term: 25% flat for non-residents; short-term (AL) under the simplified regime only 35-50% of gross is taxable.",
+    "holiday_rental_gross_yield_pct": null,
+    "holiday_rental_yield_note": "No sourced STR gross yield found.",
+    "long_term_gross_yield_pct": "3.8-4.9 (GPG Q2 2026: national 4.29, Lisbon 3.76, Porto 3.96, Faro 4.48)",
+    "holiday_rental_rules": "Alojamento Local (AL) registration is mandatory; since Nov 2024 municipalities can freeze new AL licences in containment zones (Lisbon, Porto use this); condominiums can object with >50% of owners.",
+    "sources": [
+      "https://www.globalpropertyguide.com/europe/portugal/buying-guide",
+      "https://www.oncorporate.com/news/rental-income-tax-portugal",
+      "https://www.sovereigngroup.com/portugal/private-clients/new-rules-for-alojamento-local-al-licensing-in-portugal-2025/",
+      "https://www.globalpropertyguide.com/europe/portugal/rental-yields"
+    ],
+    "as_of": 2026
+  },
+  "bulgaria": {
+    "can_foreigners_buy": "Yes, buildings and apartments, with rights similar to locals; per GPG, foreigners can't own land directly, so a Bulgarian company is the usual route.",
+    "purchase_costs_pct": "3.2-8.5",
+    "purchase_costs_breakdown": "Transfer tax 0.1-3% (municipal; Sofia 2.5%) + notary 0.1-1.5% + legal 0.5-1% + agent 2.5-3%.",
+    "annual_property_tax": "0.01-0.45% of the property's tax value plus a municipal garbage fee.",
+    "rental_income_tax": "Non-residents: 10% final tax on gross rent, paid quarterly, no deductions.",
+    "holiday_rental_gross_yield_pct": null,
+    "holiday_rental_yield_note": "No sourced STR gross yield found.",
+    "long_term_gross_yield_pct": "3.8-4.7 (GPG Q3 2026: Burgas 4.72, Varna 4.29, Sofia 3.84, national 4.27)",
+    "holiday_rental_rules": "Tourist accommodation must be categorised or registered with the municipality under the Tourism Act; tourist tax BGN 0.20-3.00 per night.",
+    "sources": [
+      "https://www.globalpropertyguide.com/europe/bulgaria/buying-guide",
+      "https://assets.airbnb.com/help/Airbnb_TaxGuide2026_Bulgaria_ENGLISH.pdf",
+      "https://www.globalpropertyguide.com/europe/bulgaria/rental-yields"
+    ],
+    "as_of": 2026
+  }
+}
