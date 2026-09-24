@@ -22,6 +22,7 @@ import OriginalListingLink from "@/components/realhunt/OriginalListingLink";
 import AuthModal from "@/components/realhunt/AuthModal";
 import { useLiveStats } from "@/components/realhunt/LiveStats";
 import { lazy, Suspense } from "react";
+import { DevBlock } from "./v8";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
@@ -864,6 +865,7 @@ function Detail() {
           <LocalPrice eur={d.price_eur} sqm={d.sqm} />
           <StatusTags deal={d as Row} />
           <VerifiedLine deal={d as Row} />
+          {(d as any).developer && <DevBlock deal={d as Row} />}
           {d.price_eur != null && totalCost(d.price_eur, d.country) && (
             <p className="hunt-allin">Realistic all-in with taxes and notary: about <strong>{money(totalCost(d.price_eur, d.country))}</strong></p>
           )}
@@ -894,7 +896,7 @@ function Detail() {
           <Nearby deal={d} />
           <Availability dealId={d.id} />
           <CostPanel deal={d as Row} />
-          <InfoRequest deal={d as Row} />
+          {!(d as any).developer && <InfoRequest deal={d as Row} />}
           <p className="hunt-fine">Buying from abroad? <Link to={`/help-buying?country=${encodeURIComponent(d.country || "")}`}>Get a local lawyer, translator or survey</Link>{["Italy", "Spain", "Portugal"].includes(d.country) && <> · <Link to={`/guide/${d.country.toLowerCase()}`}>How to buy in {d.country}</Link></>}</p>
           <AdminVerify deal={d as Row} onDone={load} />
           <p className="hunt-fine">

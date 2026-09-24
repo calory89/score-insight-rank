@@ -2,6 +2,7 @@ import { NetworkPreferences, NetworkTasks, IntroductionTerms, SourceContactReque
 import { saveChange, fetchAll, downloadCsv, safeProjectUrl } from "@/lib/platform";
 import { contactCandidates } from "@/lib/contact-import";
 import Pagination from "@/components/realhunt/Pagination";
+import { DevProjects, BulkShare, Simulator } from "@/components/realhunt/DevGrowth";
 import BuyerHistory from "@/components/realhunt/BuyerHistory";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -25,8 +26,8 @@ const COUNTRIES = ["", "Spain", "Portugal", "Italy", "France", "Greece", "Indone
 const STATUS: Record<string, string> = { proposed: "New", accepted: "Accepted", contacted: "Contacted", visited: "Visited", reserved: "Reserved", sold: "Sold", lost: "Lost" };
 const STAGES = ["proposed", "accepted", "contacted", "visited", "reserved", "sold", "lost"];
 const NEXT: Record<string, string[]> = { proposed: ["accepted", "lost"], accepted: ["contacted", "lost"], contacted: ["visited", "reserved", "lost"], visited: ["reserved", "lost"], reserved: ["sold", "lost"], sold: [], lost: ["accepted"] };
-type Tab = "today" | "overview" | "buyers" | "upload" | "leads" | "deals" | "earnings" | "settings" | "privacy";
-const TABS: [Tab, string][] = [["today", "My day"], ["overview", "Network overview"], ["buyers", "Buyers received"], ["upload", "Protect contacts"], ["leads", "Protected / shared"], ["deals", "Commissions payable"], ["earnings", "Referrals & earnings"], ["settings", "Settings"], ["privacy", "How it works"]];
+type Tab = "today" | "projects" | "overview" | "buyers" | "upload" | "leads" | "deals" | "earnings" | "settings" | "privacy";
+const TABS: [Tab, string][] = [["today", "My day"], ["projects", "My projects"], ["overview", "Network overview"], ["buyers", "Buyers received"], ["upload", "Protect contacts"], ["leads", "Protected / shared"], ["deals", "Commissions payable"], ["earnings", "Referrals & earnings"], ["settings", "Settings"], ["privacy", "How it works"]];
 const fmtD = (s?: string | null) => (s ? new Date(s).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) : "");
 const daysAgo = (s: string) => Math.max(0, Math.round((Date.now() - new Date(s).getTime()) / 86400000));
 
@@ -310,6 +311,8 @@ const NetworkApp = () => {
     <div className="min-h-screen bg-paper text-ink"><RHNav />
       <div className="max-w-[860px] mx-auto px-6 py-12 flex flex-col gap-6">
         <div><p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-2">RealHunt Network</p><h1 className="font-display text-[34px] tracking-tight">Create your network profile.</h1><p className="text-[15px] text-ink-muted mt-2">Upload privately to protect existing contacts, choose which contacts to share, and independently enable new buyers. Approval and a signed agreement are required before receiving introductions.</p></div>
+        <Link to="/network/start" className="rounded-2xl bg-ink text-paper p-5 flex items-center gap-4"><Sparkles size={22} /><span className="flex-1"><b className="text-[16px]">Faster: paste your project link</b><span className="block text-[13px] opacity-75">We build your listing and your panel from your website in about a minute.</span></span><ChevronRight size={18} /></Link>
+        <p className="text-[13px] text-ink-muted">Or fill it in by hand:</p>
         {RegisterForm}
       </div>
     </div>
@@ -351,6 +354,7 @@ const NetworkApp = () => {
           </div>
         )}
 
+        {tab === "projects" && <DevProjects />}
         {tab === "today" && <div className="mt-6 space-y-5"><NetworkTasks buyers={received} onOpen={setOpen} /><SourceContactRequests given={ov.given || []} onChange={load} /></div>}
 
         {tab === "overview" && (
@@ -446,6 +450,7 @@ const NetworkApp = () => {
               {msg && <p className="text-[13px] text-red-600">{msg}</p>}
             </div>
             <aside className="flex flex-col gap-3">
+              <Simulator />
               <div className="border border-hairline rounded-2xl bg-white p-5"><p className="font-medium text-[15px] inline-flex items-center gap-2"><Search size={16} /> Is this contact known?</p><p className="text-[13px] text-ink-muted mt-1">Type an email or phone. It is fingerprinted here and only the fingerprint is checked.</p>
                 <form onSubmit={check} className="mt-3 flex gap-2"><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="name@mail.com" className={`${inp} flex-1 min-w-0`} /><button className="px-4 rounded-xl border border-ink text-[13px] font-medium">Check</button></form>
                 {checkRes && (checkRes.restricted ? <p className="text-sm">Upload this contact to your own list before checking matches.</p> : checkRes.bad ? <p className="text-[13px] text-red-600 mt-2">Not an email or phone.</p> : <ul className="mt-3 text-[13px] flex flex-col gap-1"><li>{checkRes.mine ? "✓ In your list, protected" : "· Not in your list"}</li><li>{checkRes.realhunt ? "✓ Active RealHunt buyer" : "· Not a RealHunt buyer yet"}</li><li>{Number(checkRes.network) > 0 ? `✓ With ${checkRes.network} other developer${checkRes.network > 1 ? "s" : ""}` : "· No other developer has them"}</li><li>{Number(checkRes.introduced) > 0 ? `✓ Introduced ${checkRes.introduced}×` : "· Never introduced"}</li></ul>)}
@@ -456,7 +461,7 @@ const NetworkApp = () => {
         )}
 
         {tab === "leads" && (
-          <div className="mt-6 flex flex-col gap-4"><div className="rounded-2xl border border-hairline bg-white p-5"><h2 className="font-display text-xl">Every uploaded contact is protected. Sharing is optional.</h2><p className="text-sm text-ink-muted mt-2">Private contacts are only used to check prior ownership. Shared contacts can generate introductions and referral earnings. Sharing can be withdrawn for future introductions.</p></div>
+          <div className="mt-6 flex flex-col gap-4"><BulkShare onDone={() => setContactRevision((x) => x + 1)} /><div className="rounded-2xl border border-hairline bg-white p-5"><h2 className="font-display text-xl">Every uploaded contact is protected. Sharing is optional.</h2><p className="text-sm text-ink-muted mt-2">Private contacts are only used to check prior ownership. Shared contacts can generate introductions and referral earnings. Sharing can be withdrawn for future introductions.</p></div>
             <div className="flex flex-wrap items-center gap-2">
               {(["all", "shared", "private"] as const).map((k) => <button key={k} onClick={() => setOnlyShared(k)} className={`px-3.5 py-2 rounded-full border text-[13px] ${onlyShared === k ? "bg-ink text-paper border-ink" : "border-hairline bg-white"}`}>{k === "all" ? `All (${ov.leads})` : k === "shared" ? `Shared (${ov.shared})` : `Private (${ov.leads - ov.shared})`}</button>)}
               <span className="flex-1" />

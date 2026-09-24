@@ -1,6 +1,7 @@
 import { saveChange, safeProjectUrl } from "@/lib/platform";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Simulator } from "@/components/realhunt/DevGrowth";
 import { supabase } from "@/integrations/supabase/client";
 import RHNav from "@/components/realhunt/RHNav";
 import { Check, Search, Users, Coins, Lock, Phone, Mail, FileSignature } from "lucide-react";
@@ -31,9 +32,11 @@ const Network = () => {
   useEffect(() => { document.title = "RealHunt Network · Free buyers for your project"; }, []);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+  const navigate = useNavigate();
+  useEffect(() => { try { const r = new URLSearchParams(location.search).get("dref"); if (r && /^[0-9a-f]{8}$/.test(r)) localStorage.setItem("rh_dref", r); } catch { /* ignore */ } }, []);
   const start = (e: React.FormEvent) => {
     e.preventDefault(); setFormError("");
-    try { setUrl(safeProjectUrl(url)); setStage("email"); track("network_start"); }
+    try { const u = safeProjectUrl(url); track("network_start"); try { (window as any).clarity?.("event", "dev_landing_submit"); } catch { /* ignore */ } navigate(`/network/start?url=${encodeURIComponent(u)}`); }
     catch { setFormError("Enter a valid project website, for example yourproject.com."); }
   };
   const sendEmail = async (e: React.FormEvent) => {
@@ -196,6 +199,8 @@ const Network = () => {
           <img src={pics[2]} alt="" className="rounded-2xl object-cover w-full aspect-[4/3]" />
         </div>
       </section>
+
+      <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-14"><Simulator dark /></section>
 
       {(order.id === "B" ? [math, opts, where, how] : order.id === "C" ? [where, opts, math, how] : [opts, where, how, math]).map((S, i) => <div key={i}>{S()}</div>)}
 

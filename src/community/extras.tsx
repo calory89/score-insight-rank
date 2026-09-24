@@ -247,26 +247,26 @@ export function SimilarHomes({ slug }: { slug: string }) {
 }
 
 // ---------------------------------------------------------------- ask the seller
-export function InfoRequest({ deal }: { deal: Row }) {
+export function InfoRequest({ deal, dev }: { deal: Row; dev?: { name: string; slug: string; verified?: boolean } | null }) {
   const { user } = useAuth();
   const { requireUser, setNotice } = useCommunity();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [f, setF] = useState({ name: "", phone: "", intent: "visit", message: "" });
-  if (done) return <p className="hunt-info-done"><Check size={16} /> Request sent. We check it is still available and put you in touch with the seller, usually within two working days.</p>;
+  if (done) return <p className="hunt-info-done"><Check size={16} /> {dev ? `Sent to ${dev.name}. They have your details and usually answer within one or two working days.` : "Request sent. We check it is still available and put you in touch with the seller, usually within two working days."}</p>;
   return (
     <div className="hunt-info">
       {!open ? (
-        <button className="hunt-secondary" onClick={() => { if (!user) { requireUser(); return; } setOpen(true); }}><Mail size={16} /> {t("Ask about this home")}</button>
+        <button className={dev ? "hunt-primary hv-ask-dev" : "hunt-secondary"} onClick={() => { try { (window as any).clarity?.("event", dev ? "buyer_ask_dev_open" : "buyer_ask_open"); } catch { /* ignore */ } if (!user) { requireUser(); return; } setOpen(true); }}><Mail size={16} /> {dev ? `Ask ${dev.name}` : t("Ask about this home")}</button>
       ) : (
         <form onSubmit={async (e) => {
           e.preventDefault(); setBusy(true);
           try { await rpc("community_request_info", { p_deal: deal.id, p_name: f.name, p_phone: f.phone, p_intent: f.intent, p_message: f.message }); setDone(true); }
           catch (err) { setNotice((err as Error).message); } finally { setBusy(false); }
         }}>
-          <strong>{t("Ask about this home")}</strong>
-          <p className="hunt-fine">We check it is still for sale and put you in touch with the seller. Your email stays private until you agree.</p>
+          <strong>{dev ? `Ask ${dev.name}` : t("Ask about this home")}</strong>
+          <p className="hunt-fine">{dev ? `Your name, email and phone go to ${dev.name}, the developer, so they can answer you. Nobody else gets them.` : "We check it is still for sale and put you in touch with the seller. Your email stays private until you agree."}</p>
           <input required placeholder="Your name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
           <input placeholder="Phone or WhatsApp (optional)" value={f.phone} onChange={(e) => setF({ ...f, phone: e.target.value })} />
           <select value={f.intent} onChange={(e) => setF({ ...f, intent: e.target.value })}>

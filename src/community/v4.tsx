@@ -321,6 +321,7 @@ export function Card4({ deal, scope = "week", onChange }: { deal: Row; scope?: s
         <div className="hv-top">
           {deal.rank ? <span className={"hv-rank" + (deal.rank <= 3 ? " is-podium" : "") + (move ? " is-up" : "")}>#{deal.rank}{move ? <em> ▲{move}</em> : null}</span> : null}
           <Chip deal={deal} scope={scope} />
+          {(deal as any).developer ? <span className="hv-newbuild">New build</span> : null}
           <SaveHeart deal={deal} />
         </div>
         <strong className="hv-price">{money(deal.price_eur)}</strong>

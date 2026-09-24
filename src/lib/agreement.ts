@@ -1,6 +1,6 @@
 // RealHunt Network Agreement. One source of truth for the page, the panel and the signature record.
 // Bump AGREEMENT_VERSION whenever the text changes: developers who signed an older version are asked to sign again.
-export const AGREEMENT_VERSION = "2026-09-17";
+export const AGREEMENT_VERSION = "2026-09-24";
 export const COMMISSION_PCT = 5;
 export const SOURCE_SHARE_PCT = 3;
 export const PRIOR_CONTACT_MONTHS = 3;
@@ -49,6 +49,14 @@ export const AGREEMENT: Clause[] = [
     title: "10. Law and disputes",
     body: "This agreement is governed by the laws of the State of Wyoming, United States. Before any legal step, both sides talk for 30 days to solve the issue. Signing is done electronically inside the developer panel by typing the signer's full name; that signature, with its timestamp and version number, is a valid record of acceptance.",
   },
+  {
+    title: "11. Your projects on RealHunt",
+    body: "The Developer may list its projects on RealHunt from its panel. The Developer confirms it has the right to publish the photos, prices and text it submits and that they are accurate; it corrects or removes anything out of date within 7 days of noticing. RealHunt reviews every listing, may edit it for clarity, and decides at its own discretion whether and where to show it; projects priced above €100,000 are not shown in the main RealHunt feed. The Verified developer badge means RealHunt has checked the Developer's company details and website; it is not a guarantee of the project. A buyer who asks about a listed project is an introduction under clause 2, and clauses 3 and 4 apply.",
+  },
+  {
+    title: "12. Inviting other developers",
+    body: `A developer who joins the network from the Developer's invite link is "invited by" the Developer. For 24 months after the invited developer signs this agreement, the Developer receives 0.5% of the sale price of every sale on which the invited developer pays RealHunt a commission, paid out of RealHunt's share within ${PAYMENT_DAYS} days of RealHunt receiving that commission. The invited developer pays nothing extra. This reward is not due on sales that are exempt, refunded or unpaid.`,
+  },
 ];
 
 export const AGREEMENT_SUMMARY = [
@@ -57,5 +65,6 @@ export const AGREEMENT_SUMMARY = [
   `Buyers you had but never uploaded count as ours. That is the whole reason to upload.`,
   `Share a dead lead, it buys another project in the network, you get ${SOURCE_SHARE_PCT}% of that sale. RealHunt keeps ${COMMISSION_PCT - SOURCE_SHARE_PCT}%. The other developer paid ${COMMISSION_PCT}% in total, nothing more.`,
   "Receive buyers, share leads, or both. Each one is a separate choice, and you can change your mind any time.",
+  "Invite another developer and get 0.5% of their sales with RealHunt buyers, paid from our share.",
   `Report each sale in the panel. We invoice, you pay in ${PAYMENT_DAYS} days.`,
 ];

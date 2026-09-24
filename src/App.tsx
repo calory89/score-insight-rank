@@ -72,6 +72,8 @@ const LegalPage = L(() => import("./pages/legal/Legal"));
 const Network = L(() => import("./pages/Network"));
 const NetworkApp = L(() => import("./pages/NetworkApp"));
 const NetworkAgreement = L(() => import("./pages/NetworkAgreement"));
+const NetworkStart = L(() => import("./pages/NetworkStart"));
+const DevPublic = L(() => import("./pages/DevPublic"));
 const Finds = L(() => import("./pages/Finds"));
 const AdminActivity = L(() => import("./pages/AdminActivity"));
 const FindDetail = L(() => import("./pages/FindDetail"));
@@ -218,6 +220,8 @@ const AppRoutes = () => (
       <Route path="/legal/takedown" element={<LegalPage page="takedown" />} />
       <Route path="/network" element={<Network />} />
       <Route path="/network/agreement" element={<NetworkAgreement />} />
+      <Route path="/network/start" element={<NetworkStart />} />
+      <Route path="/dev/:slug" element={<DevPublic />} />
       <Route path="/network/app" element={<NetworkApp />} />
       <Route path="/network/app/:tab" element={<NetworkApp />} />
       <Route path="/finds" element={<ToFeed />} />
