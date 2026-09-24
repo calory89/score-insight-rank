@@ -50,7 +50,7 @@ beforeEach(() => {
   failVote = false;
   mocks.rpc.mockReset();
   mocks.rpc.mockImplementation(async (name: string, p: any) => {
-    if (name === "community_rankings")
+    if ((name === "community_rankings" || name === "community_feed"))
       return {
         data: {
           rows: [deal],
@@ -119,7 +119,7 @@ test("week and all-time use their own counts without hidden filters", async () =
   const previous = mocks.rpc.getMockImplementation()!;
   mocks.rpc.mockImplementation(async (name:string,p:any) => {
     const response = await previous(name,p);
-    if(name === 'community_rankings') response.data = {...response.data,weekly_votes:2,global_votes:9,rows:[{...deal,life_up:9,life_net:9}]};
+    if((name === 'community_rankings' || name === 'community_feed')) response.data = {...response.data,weekly_votes:2,global_votes:9,rows:[{...deal,life_up:9,life_net:9}]};
     return response;
   });
   open('/?country=Italy&category=beach');
@@ -168,7 +168,7 @@ test("Sumba is the third card, labelled sponsored and outside voting", async () 
   const previous = mocks.rpc.getMockImplementation()!;
   mocks.rpc.mockImplementation(async (name: string, p: any) => {
     const response = await previous(name, p);
-    if (name === "community_rankings") response.data.rows = [deal, {...deal, id: "deal-2", slug: "second-home", rank: 2}, {...deal, id: "deal-3", slug: "third-home", rank: 3}];
+    if ((name === "community_rankings" || name === "community_feed")) response.data.rows = [deal, {...deal, id: "deal-2", slug: "second-home", rank: 2}, {...deal, id: "deal-3", slug: "third-home", rank: 3}];
     return response;
   });
   open();

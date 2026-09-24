@@ -41,6 +41,8 @@ export async function feed(p: FeedParams) {
   const g = guestRef();
   const { data, error } = await (supabase.rpc as any)("community_feed", { p: g ? { ...p, ref: g } : p });
   if (error) throw new Error("The homes could not load. Please try again.");
+  /* A reply without rows (an error object, an old function) must not crash the page. */
+  if (!data || !Array.isArray((data as any).rows)) return { ...(data || {}), rows: [], total: 0 } as any;
   return data as { rows: Row[]; total: number; week: any; next_drop: string; countries_count: Record<string, number>; weekly_votes: number; global_votes: number; global_deals: number; countries: string[] };
 }
 export async function feedAll(p: FeedParams) {
