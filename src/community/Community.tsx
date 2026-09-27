@@ -1,3 +1,5 @@
+import { CatalogBack, UnavailableHome, DecisionFacts, QuickHome, ComparisonTray, EmptyAlternatives, RankingExplanation, MotionControl, RentPreference } from "./BuyerTools";
+import { storage, rememberCatalog, usePreference } from "./buyer-state";
 import {
   Fragment,
   createContext,
@@ -66,6 +68,7 @@ import {
   votePreview,
 } from "./api";
 import "./community.css";
+import "./buyer-tools.css";
 // Imported titles often repeat the price ("€35,000 · Your own home") right under the big price, or
 // say nothing at all ("Property - Japan"). Show something a person would actually write.
 function cleanTitle(d: Pick<Deal, "title" | "location_name" | "country" | "sqm">) {
@@ -611,7 +614,16 @@ function Home() {
   const q = params.get("q") || "";
   const location = useLocation();
   const [qText, setQText] = useState(q);
-  const [feed, setFeed] = useState<any>(null);
+  const cacheKey = "rh.feed." + location.search + "." + (user?.id || "anon");
+  const initial = storage.get<any>(cacheKey, null);
+  const [feed, setFeed] = useState<any>(() => initial && Date.now()-initial.at<300000 ? initial.feed : null);
+  const [quick, setQuick] = useState<number | null>(null);
+  const [podium, setPodium] = usePreference("rh.podium", false);
+  const restored = useRef(false);
+  const feedKey = useRef(cacheKey);
+  useEffect(() => { if (!feed || restored.current) return; restored.current=true; const y=storage.get<number>(cacheKey+".scroll",0); requestAnimationFrame(()=>window.scrollTo(0,y)); }, [feed]);
+  useEffect(() => { if(feed && feedKey.current===cacheKey) storage.set(cacheKey,{at:Date.now(),feed}); }, [feed,cacheKey]);
+  useEffect(() => { const save=()=>storage.set(cacheKey+".scroll",window.scrollY); window.addEventListener("scroll",save,{passive:true}); return()=>window.removeEventListener("scroll",save); }, [cacheKey]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const seq = useRef(0);
@@ -620,11 +632,13 @@ function Home() {
   async function load(more = false) {
     const n = ++seq.current;
     setBusy(true);
+    if (!more) setFeed(null);
     setError("");
     try {
       const data: any = await feedV3({ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort, q, limit: 24, offset: more ? feed?.rows.length || 0 : 0 } as any);
       if (n !== seq.current) return;
       remember(data.rows);
+      feedKey.current=cacheKey;
       setFeed((f: any) =>
         more && f ? { ...data, rows: [...f.rows, ...data.rows] } : data,
       );
@@ -635,7 +649,8 @@ function Home() {
     }
   }
   useEffect(() => {
-    load();
+    const cached=storage.get<any>(cacheKey,null);
+    if(cached && Date.now()-cached.at<300000) {seq.current++; feedKey.current=cacheKey;setFeed(cached.feed);setBusy(false);setError("");} else load();
   }, [scope, country, category, maxPrice, minSqm, sort, q, user?.id]);
   useEffect(() => { setQText(q); }, [q]);
   useEffect(() => { if (feed?.rows) saveOrder(feed.rows.map((r: any) => r.slug)); }, [feed?.rows?.length, feed?.rows?.[0]?.id]);
@@ -654,7 +669,7 @@ function Home() {
   useEffect(() => {
     if (!feed?.rows?.length) return;
     const idle = (window as any).requestIdleCallback || ((cb: () => void) => setTimeout(cb, 600));
-    idle(() => preloadImages(feed.rows.slice(0, 12).map((r: any) => r.image_urls?.[0])));
+    idle(() => preloadImages(feed.rows.slice(0, 2).map((r: any) => r.image_urls?.[0])));
   }, [feed?.rows?.length]);
   // Endless feed: the next page loads before the visitor reaches the bottom.
   useEffect(() => {
@@ -689,7 +704,7 @@ function Home() {
   const displayedRows = feed?.rows;
   const plain = !country && !category && !q;
   const vibe = params.get("vibe") || "";
-  const showPodium = !!feed && plain && !vibe && !maxPrice && !minSqm && sort === "rank" && feed.rows.length >= 6;
+  const showPodium = podium && !!feed && plain && !vibe && !maxPrice && !minSqm && sort === "rank" && feed.rows.length >= 6;
   const pickVibe = (v: any) => {
     const next = new URLSearchParams();
     if (scope === "all") next.set("tab", "all");
@@ -697,19 +712,20 @@ function Home() {
     setParams(next);
   };
   return (
-    <div className="hunt-wrap hunt-home hv-home">
+    <div className="hunt-wrap hunt-home hv-home" onClickCapture={rememberCatalog}>
       {!q && !country && <Welcome rows={feed?.rows} />}
       <MapFab search={location.search} />
       <section className="hv-hero">
-        <h1>Homes under €100k you won’t believe are real.</h1>
-        <p>Real listings from {feed ? Object.keys(feed.countries_count || {}).length : "10+"} countries. Ranked by people. Double-tap the ones you love.</p>
+        <h1>{t("Homes under €100k you won’t believe are real.")}</h1>
+        <p>{t("Real homes. Clear facts. Ranked by people.")}</p>
         <SmartSearch value={q} onSearch={search} inputRef={searchRef} />
         <Freshness feed={feed} visitors={live?.today} />
       </section>
-      <Vibes active={vibe} onPick={pickVibe} />
+      <Vibes rows={feed?.rows||[]} active={vibe} onPick={pickVibe} />
       <ExploreLinks />
-      {!q && <InsiderStrip />}
+
       {!q && <BuyerPicks compact />}
+      <div className="rh-row"><button className="hunt-link" aria-expanded={podium} onClick={()=>setPodium(!podium)}>{t(podium?"Hide weekly podium":"Show weekly podium")}</button><MotionControl/></div>
       {showPodium && <PodiumHero rows={feed.rows.slice(0, 3)} scope={scope} endsAt={feed?.week?.ends_at} />}
       <div className="hv-feedbar">
         <nav className="hunt-tabs" aria-label="Browse rankings">
@@ -718,7 +734,9 @@ function Home() {
         </nav>
         <span className="hv-closes">{scope === "all" ? "All votes since launch" : `Weekly board ${closesIn(feed?.week?.ends_at) || ""}`}</span>
       </div>
-      <Filters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort }} onChange={setFilters} />
+      <div className="rh-sticky-filters"><Filters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort, q }} onChange={setFilters} /></div>
+      <p role="status" aria-live="polite">{busy ? t("Updating results…") : feed ? `${feed.total} ${t("homes")}${country ? ` · ${country}` : ""}` : ""}</p>
+      <RankingExplanation/>
       {q && feed && <p className="hv-searchnote">{feed.total} {feed.total === 1 ? "home" : "homes"} for “{q}”</p>}
       {nextUp.length > 0 && (
         <aside className="hunt-keepgoing" aria-label="More to vote on">
@@ -740,7 +758,7 @@ function Home() {
           ? [0, 1, 2, 3, 4, 5].map((n) => <CardSkeleton key={n} />)
           : (showPodium ? displayedRows.slice(3) : displayedRows)?.map((d: any, index: number) => (
             <Fragment key={d.id}>
-              <Card4 deal={d} scope={scope} onChange={() => load()} />
+              <Card4 deal={d} scope={scope} onChange={() => load()} onQuick={()=>setQuick(feed.rows.findIndex((r:any)=>r.id===d.id))} />
               {index === 8 && plain && <SponsoredCard />}
             </Fragment>
           ))}
@@ -750,7 +768,7 @@ function Home() {
       {feed?.rows.length === 0 && !error && (
         <EmptyState title={q ? `No homes for “${q}” yet` : "Nothing here yet"}
           text={q ? "Try a country, a town or a simple word like sea, lake or cabin." : "No homes match these filters. Clear them, or post a home you found."}
-          action={<div className="hunt-row"><Link to="/" className="hunt-primary">See all homes</Link><Link to="/submit" className="hunt-secondary">Post a home</Link></div>} />
+          action={<div className="hunt-row"><Link to="/" className="hunt-primary">See all homes</Link><Link to="/submit" className="hunt-secondary">{t("Post a home")}</Link><EmptyAlternatives params={{scope,country,category,max_price:maxPrice,min_sqm:minSqm,sort,q}}/></div>} />
       )}
       {feed && feed.rows.length < feed.total && !busy && (
         <button className="hunt-more" onClick={() => load(true)}>{t("More discoveries")}</button>
@@ -763,8 +781,10 @@ function Home() {
         </div>
         <QuickSubmission />
       </section>
+      {quick!==null && feed?.rows?.[quick] && <QuickHome rows={feed.rows} index={quick} onIndex={setQuick} onClose={()=>setQuick(null)}/>}
+      <ComparisonTray/>
       <p className="hunt-rules">
-        One vote per person, per home, each week. No account needed to vote. You only sign in to open the original listing.
+        {t("One anonymous vote per browser and home each week. Sign in to save homes, contribute or open the original listing.")}
         Only priced homes under €100,000 that are ready to live in are listed. The weekly board resets every Monday.
       </p>
     </div>
@@ -810,13 +830,16 @@ function Detail() {
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [report, setReport] = useState(false);
+  const detailSequence = useRef(0);
   async function load() {
+    const request = ++detailSequence.current;
     try {
       const pre = slug ? takeDetail(slug) : undefined;
-      setData(await (pre || call("detail", { slug })));
-      setError("");
+      const result = (pre ? await pre : null) || await call("detail", { slug });
+      if(request!==detailSequence.current)return;
+      setData(result); setError("");
     } catch (e) {
-      if (!cached) setError((e as Error).message);
+      if(request===detailSequence.current)setError((e as Error).message);
     }
   }
   // Paint at once from the row the feed already had; the full record fills in behind it.
@@ -825,8 +848,10 @@ function Detail() {
   const swipe = useHomeSwipe(slug);
   useEffect(() => {
     if (session) load();
+    return ()=>{detailSequence.current++;};
   }, [slug, session?.token, user?.id]);
   const d: Deal = data?.deal || cached;
+  useEffect(()=>{if(user && data?.deal?.slug)(supabase as any).rpc("rh_seen",{p_slug:data.deal.slug}).then(()=>{},()=>{});},[data?.deal?.slug,user?.id]);
   useEffect(() => { if (d?.image_urls) preloadImages(d.image_urls.slice(0, 8)); }, [d?.id]);
   useEffect(() => {
     if (!d) return;
@@ -843,6 +868,7 @@ function Detail() {
     set('meta[property="og:description"]', "property", "og:description", desc);
     if (d.image_urls?.[0]) set('meta[property="og:image"]', "property", "og:image", new URL(d.image_urls[0], location.origin).href);
   }, [d?.id]);
+  if (/Deal not found/i.test(error)) return <UnavailableHome/>;
   if (error)
     return (
       <div className="hunt-wrap">
@@ -852,17 +878,15 @@ function Detail() {
   if (!d) return <Loading />;
   const listing = (d.has_source || safeUrl(d.source_url)) ? (
     <OriginalListingLink href={d.source_url || undefined} className="hunt-primary" target="_blank" rel="noopener noreferrer">
-      {t("View listing")} <ArrowUpRight size={17} />
+      {t(user ? "View listing" : "View listing · free account")} <ArrowUpRight size={17} />
     </OriginalListingLink>
   ) : null;
   return (
     <div className="hunt-wrap hunt-detail hv-detail" {...swipe.handlers}>
       <DetailBar deal={d as Row} scope={scope} onChange={load} listing={listing} />
-      <Link to={scope === "all" ? "/?tab=all" : "/"} className="hunt-back">
-        ← {scope === "all" ? t("Back to all time") : t("Back to this week")}
-      </Link>
+      <CatalogBack/>
       <div className="hunt-detail-grid">
-        <DetailGallery deal={d} />
+        <DetailGallery key={d.id} deal={d} />
         <section>
           <span className="hunt-eyebrow">
             <Link to={`/homes/${encodeURIComponent((d.country || "").toLowerCase().replace(/ /g, "-"))}`}>{d.country}</Link> · {categories.find((c) => c[0] === d.category)?.[1] || d.category}
@@ -902,7 +926,7 @@ function Detail() {
             {num(d.life_up + d.life_down)} lifetime votes · {num(d.views)} views
             · {num(d.saves)} saves
           </p>
-          <Nearby deal={d} />
+          <DecisionFacts deal={d as Row}/><RentPreference/><Nearby deal={d} />
           <Availability dealId={d.id} />
           <CostPanel deal={d as Row} />
           {!(d as any).developer && <InfoRequest deal={d as Row} />}

@@ -6,12 +6,13 @@ import {
   within,
   cleanup,
 } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Routes, Route } from "react-router-dom";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import Community from "@/community/Community";
+import {rowCache} from "@/community/v4";
 const mocks = vi.hoisted(() => ({ rpc: vi.fn(), user: null as any }));
 vi.mock("@/integrations/supabase/client", () => ({
-  supabase: { rpc: mocks.rpc },
+  supabase: { rpc: mocks.rpc, from: () => {const q:any={then:(ok:any)=>Promise.resolve({data:[],count:0}).then(ok)};for(const m of ['select','eq','in','order','limit','update'])q[m]=()=>q;return q;} },
 }));
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({ user: mocks.user }),
@@ -44,6 +45,7 @@ const deal = {
 };
 let failVote = false;
 beforeEach(() => {
+  rowCache.clear();
   localStorage.clear();
   sessionStorage.clear();
   mocks.user = null;
@@ -63,11 +65,11 @@ beforeEach(() => {
           week: { label: "Sep 21–28, 2026" },
         },
       };
-    if (p.p_action === "session")
+    if (p?.p_action === "session")
       return {
         data: { token: "issued-token", admin: false, votes: {}, saved: [] },
       };
-    if (p.p_action === "vote")
+    if (p?.p_action === "vote")
       return failVote
         ? {
             data: {
@@ -75,8 +77,8 @@ beforeEach(() => {
             },
           }
         : { data: { ok: true } };
-    if (p.p_action === "detail") return {data: {deal, comments: []}};
-    if (p.p_action === "import") return { data: { data: null, manual: true } };
+    if (p?.p_action === "detail") return {data: {deal, comments: []}};
+    if (p?.p_action === "import") return { data: { data: null, manual: true } };
     return { data: { ok: true } };
   });
 });
@@ -84,22 +86,22 @@ afterEach(cleanup);
 const open = (path = "/") =>
   render(
     <MemoryRouter initialEntries={[path]}>
-      <Community />
+      <Routes><Route path="/deal/:slug" element={<Community/>}/><Route path="*" element={<Community/>}/></Routes>
     </MemoryRouter>,
   );
 test("voting without registration acknowledges success and exposes sharing", async () => {
   open();
-  const up = await screen.findByRole("button", { name: "Upvote deal" });
+  const up = await screen.findByRole("button", { name: "Vote for this home" });
   await waitFor(() => expect(up).not.toBeDisabled());
   fireEvent.click(up);
-  await screen.findByText(/Vote counted ✓ Share this find/);
-  expect(up).toHaveAttribute("aria-pressed", "true");
+  await screen.findByText(/You and 2 others love this/);
+  expect(await screen.findByRole("button",{name:"You voted for this home"})).toHaveAttribute("aria-pressed", "true");
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 });
 test("failed vote rolls back optimistic state and does not claim success", async () => {
   failVote = true;
   open();
-  const up = await screen.findByRole("button", { name: "Upvote deal" });
+  const up = await screen.findByRole("button", { name: "Vote for this home" });
   await waitFor(() => expect(up).not.toBeDisabled());
   fireEvent.click(up);
   await screen.findByText(/Voting is temporarily limited/);
@@ -109,30 +111,17 @@ test("failed vote rolls back optimistic state and does not claim success", async
 });
 test("saving requires sign-in and never writes for an anonymous visitor", async () => {
   open();
-  fireEvent.click(await screen.findByRole("button", { name: "Save deal" }));
+  fireEvent.click(await screen.findByRole("button", { name: "Save this home" }));
   await screen.findByRole("dialog");
-  expect(mocks.rpc.mock.calls.some(([, p]) => p.p_action === "save")).toBe(
+  expect(mocks.rpc.mock.calls.some(([, p]) => p?.p_action === "save")).toBe(
     false,
   );
 });
-test("week and all-time use their own counts without hidden filters", async () => {
-  const previous = mocks.rpc.getMockImplementation()!;
-  mocks.rpc.mockImplementation(async (name:string,p:any) => {
-    const response = await previous(name,p);
-    if((name === 'community_rankings' || name === 'community_feed')) response.data = {...response.data,weekly_votes:2,global_votes:9,rows:[{...deal,life_up:9,life_net:9}]};
-    return response;
-  });
-  open('/?country=Italy&category=beach');
-  const up = await screen.findByRole('button',{name:'Upvote deal'});
-  expect(up).toHaveTextContent('2');
-  for(const name of ['Countries','Categories','Today']) expect(screen.queryByRole('button',{name})).toBeNull();
-  expect(screen.queryByRole('link',{name:'Past winners'})).toBeNull();
-  expect(mocks.rpc).toHaveBeenCalledWith('community_rankings',expect.objectContaining({p_country:null,p_category:null,p_scope:'week'}));
-  fireEvent.click(screen.getByRole('button',{name:'All Time'}));
-  await screen.findByRole('heading',{name:'All-time favourites ↗'});
-  expect(up).toHaveTextContent('9');
-  expect(screen.getByText('All votes since launch')).toBeInTheDocument();
-  await waitFor(()=>expect(mocks.rpc).toHaveBeenCalledWith('community_rankings',expect.objectContaining({p_scope:'all'})));
+test('week and all time preserve country filters and request their own counts', async()=>{
+ open('/?country=Italy');await screen.findByRole('button',{name:'Vote for this home'});
+ expect(mocks.rpc).toHaveBeenCalledWith('community_feed',expect.objectContaining({p:expect.objectContaining({country:'Italy',scope:'week'})}));
+ fireEvent.click(screen.getByRole('button',{name:'All Time'}));
+ await waitFor(()=>expect(mocks.rpc).toHaveBeenCalledWith('community_feed',expect.objectContaining({p:expect.objectContaining({country:'Italy',scope:'all'})})));
 });
 test("unsupported import falls back to manual details and keeps the draft through sign-in", async () => {
   open("/submit?details=1");
@@ -159,55 +148,48 @@ test("unsupported import falls back to manual details and keeps the draft throug
   expect(JSON.parse(sessionStorage.getItem("rh_hunt_submission")!).title).toBe(
     "A village home",
   );
-  expect(mocks.rpc.mock.calls.some(([, p]) => p.p_action === "submit")).toBe(
+  expect(mocks.rpc.mock.calls.some(([, p]) => p?.p_action === "submit")).toBe(
     false,
   );
 });
 
-test("Sumba is the third card, labelled sponsored and outside voting", async () => {
+test("Sumba is labelled sponsored and outside voting", async () => {
   const previous = mocks.rpc.getMockImplementation()!;
   mocks.rpc.mockImplementation(async (name: string, p: any) => {
     const response = await previous(name, p);
-    if ((name === "community_rankings" || name === "community_feed")) response.data.rows = [deal, {...deal, id: "deal-2", slug: "second-home", rank: 2}, {...deal, id: "deal-3", slug: "third-home", rank: 3}];
+    if ((name === "community_rankings" || name === "community_feed")) response.data.rows = Array.from({length:10},(_,i)=>({...deal,id:"deal-"+i,slug:"home-"+i,rank:i+1}));
     return response;
   });
   open();
   const ad = await screen.findByRole("article", {name: "Sponsored: Eco Beach City, Sumba"});
-  expect(screen.getAllByRole("article")[2]).toBe(ad);
+  expect(screen.getAllByRole("article")[9]).toBe(ad);
   expect(ad.textContent).toContain("Sponsored");
   expect(ad.querySelector("button")).toBeNull();
   expect(ad.querySelector("a")?.getAttribute("href")).toBe("/ecobeachcity");
-  expect(screen.getAllByRole("button", {name: "Upvote deal"})).toHaveLength(3);
+  expect(screen.getAllByRole("button", {name: "Vote for this home"})).toHaveLength(10);
 });
 
 for (const path of ['/deal/stone-home']) {
   test(`original listings require an account on ${path}`, async () => {
     open(path);
-    const source = await screen.findByRole('button', {name:'View listing'});
-    expect(screen.queryByRole('link',{name:'View listing'})).toBeNull();
+    const source = (await screen.findAllByRole('button', {name:/View listing/}))[0];
+    expect(screen.queryByRole('link',{name:/View listing/})).toBeNull();
     fireEvent.click(source);
     expect(await screen.findByRole('dialog')).toHaveAttribute('data-return-to','/deal/stone-home');
   });
   test(`signed-in visitors can open the original listing on ${path}`, async () => {
     mocks.user = {id:'signed-in'};
     open(path);
-    expect(await screen.findByRole('link',{name:'View listing'})).toHaveAttribute('href',deal.source_url);
+    expect((await screen.findAllByRole('link',{name:/View listing/}))[0]).toHaveAttribute('href',deal.source_url);
   });
 }
-test('the full catalog stays available beyond the first page', async () => {
-  const previous=mocks.rpc.getMockImplementation()!;
-  mocks.rpc.mockImplementation(async (name:string,p:any)=>{
-    const response=await previous(name,p);
-    if(name==='community_rankings') response.data={...response.data,total:349,global_deals:349,rows:[{...deal,id:'deal-'+p.p_offset,slug:'home-'+p.p_offset,rank:p.p_offset+1}]};
-    return response;
-  });
-  open();
-  expect(await screen.findByText('Showing 1 of 349 deals')).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button',{name:'More discoveries'}));
-  expect(await screen.findByText('Showing 2 of 349 deals · plus 1 sponsored listing')).toBeInTheDocument();
-  expect(screen.queryByRole('button',{name:'View listing'})).toBeNull();
+test('the complete catalogue remains accessible beyond its first page',async()=>{
+ const previous=mocks.rpc.getMockImplementation()!;
+ mocks.rpc.mockImplementation(async(name,p)=>{const r=await previous(name,p);if(name==='community_feed')r.data={...r.data,total:49,rows:[{...deal,id:'deal-'+(p.p.offset||0),slug:'home-'+(p.p.offset||0)}]};return r;});
+ open();await screen.findByRole('button',{name:'More discoveries'});
+ fireEvent.click(screen.getByRole('button',{name:'More discoveries'}));
+ await waitFor(()=>expect(screen.getAllByRole('button',{name:'Vote for this home'})).toHaveLength(2));
 });
-
 test('the home removes the old copy and asks for registration before a link submission', async () => {
   open();
   expect(screen.queryByText('THE WORLD IS FULL OF GOOD FINDS')).toBeNull();
@@ -215,7 +197,7 @@ test('the home removes the old copy and asks for registration before a link subm
   fireEvent.change(screen.getByRole('textbox',{name:'Property listing URL'}),{target:{value:'https://example.org/new-home'}});
   fireEvent.submit(screen.getByRole('button',{name:'Send property'}).closest('form')!);
   expect(await screen.findByRole('dialog')).toHaveAttribute('data-return-to','/submit?quick=1&url=https%3A%2F%2Fexample.org%2Fnew-home');
-  expect(mocks.rpc.mock.calls.some(([,p])=>p.p_action==='quick_submit')).toBe(false);
+  expect(mocks.rpc.mock.calls.some(([,p])=>p?.p_action==='quick_submit')).toBe(false);
 });
 test('a signed-in visitor submits just a link for private review', async () => {
   mocks.user={id:'signed-in'};
@@ -223,7 +205,7 @@ test('a signed-in visitor submits just a link for private review', async () => {
   const button=screen.getByRole('button',{name:'Send property'});
   await waitFor(()=>expect(button).not.toBeDisabled());
   expect(screen.getByRole('textbox',{name:'Property listing URL'})).toHaveValue('https://example.org/new-home');
-  expect(mocks.rpc.mock.calls.some(([,p])=>p.p_action==='quick_submit')).toBe(false);
+  expect(mocks.rpc.mock.calls.some(([,p])=>p?.p_action==='quick_submit')).toBe(false);
   fireEvent.click(button);
   expect(await screen.findByRole('status')).toHaveTextContent('pending admin review');
   expect(mocks.rpc).toHaveBeenCalledWith('community_api',expect.objectContaining({p_action:'quick_submit',p_payload:expect.objectContaining({url:'https://example.org/new-home'})}));
@@ -232,7 +214,7 @@ test('a signed-in visitor submits just a link for private review', async () => {
 test('submission failures preserve the link and never claim it was received', async () => {
   mocks.user={id:'signed-in'};
   const previous=mocks.rpc.getMockImplementation()!;
-  mocks.rpc.mockImplementation((name:string,p:any)=>p.p_action==='quick_submit'?Promise.resolve({data:{error:'You have reached the submission limit'}}):previous(name,p));
+  mocks.rpc.mockImplementation((name:string,p:any)=>p?.p_action==='quick_submit'?Promise.resolve({data:{error:'You have reached the submission limit'}}):previous(name,p));
   open('/submit?quick=1&url=https%3A%2F%2Fexample.org%2Fnew-home');
   const button=screen.getByRole('button',{name:'Send property'});await waitFor(()=>expect(button).not.toBeDisabled());fireEvent.click(button);
   expect(await screen.findByRole('alert')).toHaveTextContent('submission limit');
@@ -241,7 +223,7 @@ test('submission failures preserve the link and never claim it was received', as
 });
 test('my submissions shows statuses, review feedback and real property data', async () => {
   mocks.user={id:'signed-in'};const previous=mocks.rpc.getMockImplementation()!;
-  mocks.rpc.mockImplementation((name:string,p:any)=>p.p_action==='dashboard'?Promise.resolve({data:{saved:[],deals:[{...deal,status:'approved',created_at:'2026-09-20T12:00:00Z',approved_at:'2026-09-20T13:00:00Z',week_score:4,lifetime_votes:6,views:20},{...deal,id:'pending',title:'New submitted home',status:'pending',created_at:'2026-09-20T14:00:00Z'},{...deal,id:'rejected',title:'Unavailable home',status:'rejected',reject_reason:'No longer available',created_at:'2026-09-20T14:00:00Z'}]}}):previous(name,p));
+  mocks.rpc.mockImplementation((name:string,p:any)=>p?.p_action==='dashboard'?Promise.resolve({data:{saved:[],deals:[{...deal,status:'approved',created_at:'2026-09-20T12:00:00Z',approved_at:'2026-09-20T13:00:00Z',week_score:4,lifetime_votes:6,views:20},{...deal,id:'pending',title:'New submitted home',status:'pending',created_at:'2026-09-20T14:00:00Z'},{...deal,id:'rejected',title:'Unavailable home',status:'rejected',reject_reason:'No longer available',created_at:'2026-09-20T14:00:00Z'}]}}):previous(name,p));
   open('/hunt/mine');
   expect(await screen.findByText('New submitted home')).toBeInTheDocument();
   expect(screen.getByText('Review note: No longer available')).toBeInTheDocument();
@@ -253,25 +235,25 @@ test('initial points preserve live voting even on old demo links', async () => {
   const previous=mocks.rpc.getMockImplementation()!;
   mocks.rpc.mockImplementation(async(name:string,p:any)=>{
     const response=await previous(name,p);
-    if(name==='community_rankings') response.data={...response.data,weekly_points:372,rows:[{...deal,launch_points:370,launch_week_points:370,week_net:372,life_net:372}]};
+    if(name==='community_rankings'||name==='community_feed') response.data={...response.data,weekly_points:372,rows:[{...deal,launch_points:370,launch_week_points:370,week_net:372,life_net:372}]};
     return response;
   });
   open('/?demo=1');
-  const up=await screen.findByRole('button',{name:'Upvote deal'});
+  const up=await screen.findByRole('button',{name:'Vote for this home'});
   await waitFor(()=>expect(up).not.toBeDisabled());
   expect(up).toHaveTextContent('372');
-  expect(screen.getByText('Includes initial points')).toHaveAttribute('title','370 initial points + 2 real votes');
+  expect(up).toHaveAttribute('title','370 initial points + 2 real votes');
   expect(screen.queryByRole('link',{name:'Weekly winners'})).toBeNull();
   fireEvent.click(up);
-  await screen.findByText(/Vote counted ✓ Share this find/);
-  expect(mocks.rpc.mock.calls.some(([,p])=>p.p_action==='vote' && p.p_payload.value===1)).toBe(true);
+  await screen.findByText(/You and 2 others love this/);
+  expect(mocks.rpc.mock.calls.some(([,p])=>p?.p_action==='vote' && p.p_payload.value===1)).toBe(true);
   expect(screen.queryByText(/Real voting is disabled/)).toBeNull();
 });
 
 test('submission workspace shows photos, source links, status filters and image fallback', async()=>{
   mocks.user={id:'signed-in'};
   const previous=mocks.rpc.getMockImplementation()!;
-  mocks.rpc.mockImplementation((name:string,p:any)=>p.p_action==='dashboard'?Promise.resolve({data:{saved:[],deals:[{...deal,status:'approved',created_at:'2026-09-20'},{...deal,id:'pending',title:'Farm awaiting review',status:'pending',image_urls:[],created_at:'2026-09-20'}]}}):previous(name,p));
+  mocks.rpc.mockImplementation((name:string,p:any)=>p?.p_action==='dashboard'?Promise.resolve({data:{saved:[],deals:[{...deal,status:'approved',created_at:'2026-09-20'},{...deal,id:'pending',title:'Farm awaiting review',status:'pending',image_urls:[],created_at:'2026-09-20'}]}}):previous(name,p));
   open('/hunt/mine');
   const title=await screen.findByRole('heading',{name:'Stone home by the sea'});
   const card=title.closest('article')!;
@@ -289,8 +271,8 @@ test('admin workspace previews source photos and retains explicit approval actio
   mocks.user={id:'admin'};
   const previous=mocks.rpc.getMockImplementation()!;
   mocks.rpc.mockImplementation(async(name:string,p:any)=>{
-    if(p.p_action==='session') return {data:{token:'admin-token',admin:true,votes:{},saved:[]}};
-    if(p.p_action==='queue') return {data:{pending:[{...deal,status:'pending',created_at:'2026-09-20'}],approved:[],reports:[]}};
+    if(p?.p_action==='session') return {data:{token:'admin-token',admin:true,votes:{},saved:[]}};
+    if(p?.p_action==='queue') return {data:{pending:[{...deal,status:'pending',created_at:'2026-09-20'}],approved:[],reports:[]}};
     return previous(name,p);
   });
   open('/hunt/admin');
@@ -307,22 +289,22 @@ test('admin workspace previews source photos and retains explicit approval actio
 
 test('detail keeps server points including launch allocation instead of recalculating ballots',async()=>{
   const previous=mocks.rpc.getMockImplementation()!;
-  mocks.rpc.mockImplementation((name:string,p:any)=>p.p_action==='detail'?Promise.resolve({data:{deal:{...deal,week_up:1,week_net:371,life_up:5,life_net:375,launch_points:370,launch_week_points:370,sqm:78},comments:[]}}):previous(name,p));
+  mocks.rpc.mockImplementation((name:string,p:any)=>p?.p_action==='detail'?Promise.resolve({data:{deal:{...deal,week_up:1,week_net:371,life_up:5,life_net:375,launch_points:370,launch_week_points:370,sqm:78},comments:[]}}):previous(name,p));
   open('/deal/stone-home');
-  expect(await screen.findByRole('button',{name:'Upvote deal'})).toHaveTextContent('371');
-  expect(screen.queryByText(/per m²|\/m²/)).toBeNull();
+  expect((await screen.findAllByRole('button',{name:'Vote for this home'}))[0]).toHaveTextContent('371');
+  expect(screen.getByText(/\/m²/)).toHaveTextContent('500');
 });
 test('all-time card links retain the scoring period when opening detail',async()=>{
   open('/?tab=all');
-  const title=within(await screen.findByRole('heading',{name:deal.title})).getByRole('link');
+  const title=(await screen.findAllByRole('link',{name:deal.title})).find(el=>el.classList.contains('hv-info'))!;
   expect(title).toHaveAttribute('href','/deal/stone-home?tab=all');
   fireEvent.click(title);
-  await screen.findByRole('link',{name:'← Back to all time'});
-  expect(screen.getByText('All-time points')).toBeInTheDocument();
+  await screen.findByRole('link',{name:'← Back to your results'});
+  expect(screen.getByText(/All-time votes/)).toBeInTheDocument();
 });
 test('all-time detail displays the cumulative points from the server',async()=>{
   const previous=mocks.rpc.getMockImplementation()!;
-  mocks.rpc.mockImplementation((name:string,p:any)=>p.p_action==='detail'?Promise.resolve({data:{deal:{...deal,week_net:1,life_net:375,life_up:5,launch_points:370,launch_week_points:0},comments:[]}}):previous(name,p));
+  mocks.rpc.mockImplementation((name:string,p:any)=>p?.p_action==='detail'?Promise.resolve({data:{deal:{...deal,week_net:1,life_net:375,life_up:5,launch_points:370,launch_week_points:0},comments:[]}}):previous(name,p));
   open('/deal/stone-home?tab=all');
-  expect(await screen.findByRole('button',{name:'Upvote deal'})).toHaveTextContent('375');
+  expect((await screen.findAllByRole('button',{name:'Vote for this home'}))[0]).toHaveTextContent('375');
 });

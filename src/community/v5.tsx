@@ -1,3 +1,4 @@
+import {BoardWorkspace, AccountNotifications} from "./OperationsTools";
 // RealHunt v5 (23-sep-2026): welcome screen, boards, compare two homes, map button, in-app
 // notifications, profile with streaks and badges, swipe between homes, dark mode and page motion.
 // Nothing here sends email or push: notifications live only inside the site.
@@ -190,11 +191,13 @@ export function BoardPage() {
   const { setNotice, requireUser } = useCommunity();
   const navigate = useNavigate();
   const [copying, setCopying] = useState(false);
+  const [boardRevision,setBoardRevision]=useState(0);
+  useEffect(()=>{const refresh=()=>setBoardRevision(n=>n+1);window.addEventListener("rh-board-updated",refresh);return()=>window.removeEventListener("rh-board-updated",refresh);},[]);
   const [data, setData] = useState<any>(null);
-  useEffect(() => { rpc("community_board_public", { p_slug: slug }).then((d) => { setData(d); remember(d.rows); document.title = `${d.name} · RealHunt`; }).catch((e) => setData({ error: e.message })); }, [slug]);
+  useEffect(() => { rpc("community_board_public", { p_slug: slug }).then((d) => { setData(d); remember(d.rows); document.title = `${d.name} · RealHunt`; }).catch((e) => setData({ error: e.message })); }, [slug,boardRevision]);
   const url = `https://realhunt.co/b/${slug}`;
   return (
-    <div className="hunt-wrap hunt-page hv-boardpage">
+    <div className="hunt-wrap hunt-page hv-boardpage"><BoardWorkspace slug={slug}/>
       <div className="hv-board-hero">
         <div className="hv-board-collage">{[0, 1, 2, 3].map((n) => data?.rows?.[n] ? <img key={n} src={cover(data.rows[n])} alt="" /> : <i key={n} />)}</div>
         <div className="hv-board-hero-copy">
@@ -296,11 +299,11 @@ export function ComparePage() {
         {[x, y].map((d, n) => {
           const o = n ? x : y;
           return (
-            <div key={d.id} className={"hv-vs-col" + (score(d, o) > score(o, d) ? " is-lead" : "")}>
+            <div key={d.id} className="hv-vs-col">
               <Link to={`/deal/${d.slug}`} className="hv-vs-photo"><img src={cover(d)} alt="" /><em>{FLAG[d.country] || "📍"} {d.country}</em></Link>
               <h2><Link to={`/deal/${d.slug}`}>{niceTitle(d)}</Link></h2>
               <dl>{rows.map((r) => <div key={r.k} className={win(r, d, o) ? "is-win" : ""}><dt>{r.k}</dt><dd>{r.f(d)}</dd></div>)}</dl>
-              <p className="hv-vs-score">Wins {score(d, o)} of {rows.length}</p>
+              <p className="hunt-fine">Compare the facts against your priorities. Popularity is not investment quality.</p>
             </div>
           );
         })}
@@ -366,7 +369,7 @@ export function NotifBell() {
       </button>
       {open && (
         <div className="hv-bell-pop" role="dialog" aria-label="Notifications">
-          <strong>Updates on your homes</strong>
+          <strong>Updates on your homes</strong><AccountNotifications/>
           {notes.length === 0 ? <p className="hunt-fine">Vote for or save homes and we will tell you here when they climb the ranking or drop in price.</p> :
             notes.map((n) => (
               <Link key={n.id} to={`/deal/${n.slug}`} onClick={() => setOpen(false)}>

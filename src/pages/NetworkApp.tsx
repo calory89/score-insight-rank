@@ -1,3 +1,4 @@
+import {NetworkHealth, NetworkCases} from "@/community/OperationsTools";
 import { NetworkPreferences, NetworkTasks, IntroductionTerms, SourceContactRequests, NetworkStatement, sourcePaymentLabel } from "@/components/realhunt/NetworkTools";
 import { saveChange, fetchAll, downloadCsv, safeProjectUrl } from "@/lib/platform";
 import { contactCandidates } from "@/lib/contact-import";
@@ -383,7 +384,7 @@ const NetworkApp = () => {
 
         {tab === "projects" && <DevProjects />}
         {tab === "projects" && <DevExtras />}
-        {tab === "today" && <div className="mt-6 space-y-5"><NetworkTasks buyers={received} onOpen={setOpen} /><SourceContactRequests given={ov.given || []} onChange={load} /></div>}
+        {tab === "today" && <div className="mt-6 space-y-5"><NetworkTasks buyers={received} onOpen={setOpen} /><NetworkHealth/><SourceContactRequests given={ov.given || []} onChange={load} /></div>}
 
         {tab === "overview" && (
           <div className="mt-6 flex flex-col gap-6">
@@ -564,7 +565,7 @@ const NetworkApp = () => {
 
             <IntroChat id={i.id} compact />
 
-            <IntroductionTerms buyer={i} />
+            <IntroductionTerms buyer={i} /><section className="border border-hairline rounded-2xl bg-white p-4 text-sm"><h3 className="font-medium">Why this introduction may fit</h3><p>{!i.buyer_country?'Buyer location not provided':i.buyer_country===ov.developer.country?'Buyer country matches your project':`Buyer asked for ${i.buyer_country}; confirm flexibility for ${ov.developer.country||'your location'}.`}</p><p>{i.buyer_budget==null||ov.developer.price_from==null?'Budget comparison unavailable':i.buyer_budget>=ov.developer.price_from?'Buyer budget covers your stated starting price':'Your starting price exceeds the stated budget. Confirm before proceeding.'}</p><p className="text-ink-muted">A match is a suggestion, not confirmation of purchase intent.</p></section><NetworkCases intro={i.id}/>
 
             {/* contact */}
             <div className="border border-hairline rounded-2xl bg-white p-4">

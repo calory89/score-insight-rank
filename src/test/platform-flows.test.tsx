@@ -12,13 +12,14 @@ vi.mock("@/lib/rh", () => ({ track: vi.fn(), eur: (n: number) => `€${n}`, db: 
   rpc: state.rpc,
   from: () => ({ insert: state.insert }),
 } }));
-vi.mock("@/integrations/supabase/client", () => ({ supabase: { from: () => ({ insert: state.insert }) } }));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: { rpc: state.rpc, from: () => ({ insert: state.insert }) } }));
+import { AGREEMENT_VERSION } from "@/lib/agreement";
 import Network from "@/pages/Network";
 import NetworkApp from "@/pages/NetworkApp";
 beforeEach(() => {
   sessionStorage.clear(); localStorage.clear(); state.insertFails = false; state.mutationFails = false;
   state.toastError.mockClear(); state.insert.mockReset().mockImplementation(async () => ({ error: state.insertFails ? { message: "Connection failed" } : null }));
-  state.overview = { developer: { id: "qa-dev", project_name: "QA project", status: "approved", agreement_version: "2026-09-17", email: "qa@example.test", mode: "both" }, signed: true, leads: 2051, shared: 500, received: [{ id: "qa-intro", buyer: "QA buyer", status: "proposed", created_at: "2026-09-20", note: "Interested in Italy" }], given: [], deals: [], by_month: [] };
+  state.overview = { developer: { id: "qa-dev", project_name: "QA project", status: "approved", agreement_version: AGREEMENT_VERSION, email: "qa@example.test", mode: "both" }, signed: true, leads: 2051, shared: 500, received: [{ id: "qa-intro", buyer: "QA buyer", status: "proposed", created_at: "2026-09-20", note: "Interested in Italy" }], given: [], deals: [], by_month: [] };
   state.rpc.mockReset().mockImplementation(async (name, params) => {
     if (name === "dev_overview") return { data: structuredClone(state.overview) };
     if (name === "dev_buyer_history") return { data: [] };
@@ -31,18 +32,12 @@ beforeEach(() => {
   });
 });
 afterEach(cleanup);
-it("does not invent analysis or buyers and does not acknowledge a failed lead capture", async () => {
-  render(<MemoryRouter><Network /></MemoryRouter>);
-  fireEvent.change(screen.getByLabelText("Project URL"), { target: { value: "project.example.com" } });
-  fireEvent.click(screen.getByRole("button", { name: "Submit my project, free" }));
-  expect(screen.getByText(/No buyer matches have been generated yet/)).toBeInTheDocument();
-  fireEvent.change(screen.getByLabelText("Email"), { target: { value: "qa@example.test" } });
-  state.insertFails = true; fireEvent.click(screen.getByRole("button", { name: "Submit for review, €0" }));
-  await waitFor(() => expect(state.toastError).toHaveBeenCalled());
-  expect(screen.getByLabelText("Email")).toHaveValue("qa@example.test");
-  expect(screen.queryByText(/Request saved/)).toBeNull();
-  state.insertFails = false; fireEvent.click(screen.getByRole("button", { name: "Submit for review, €0" }));
-  expect(await screen.findByText(/Request saved/)).toBeInTheDocument();
+it("validates the project URL and routes to the current onboarding flow", async () => {
+ render(<MemoryRouter><Routes><Route path="/" element={<Network/>}/><Route path="/network/start" element={<p>Project onboarding</p>}/></Routes></MemoryRouter>);
+ fireEvent.change(screen.getByLabelText('Project URL'),{target:{value:'project.example.com'}});
+ fireEvent.click(screen.getByRole('button',{name:'Submit my project, free'}));
+ expect(await screen.findByText('Project onboarding')).toBeInTheDocument();
+ expect(state.insert).not.toHaveBeenCalled();
 });
 it("keeps the buyer in its original stage when a save fails, then supports a successful retry", async () => {
   render(<MemoryRouter initialEntries={["/network/app/buyers"]}><Routes><Route path="/network/app/:tab" element={<NetworkApp />} /></Routes></MemoryRouter>);

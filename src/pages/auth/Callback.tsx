@@ -1,3 +1,4 @@
+import {track} from "@/lib/rh";
 // Where the confirmation link lands. Two jobs: finish the sign-in, and — the first time someone
 // confirms their email — let them choose a password so they never need a link again.
 //
@@ -30,7 +31,8 @@ const Callback = () => {
     const handle = (session: Session | null) => {
       if (done || !active) return;
       done = true;
-      if (!session) { setPhase("error"); return; }
+      if (!session) { track("auth_confirmation_failed");setPhase("error"); return; }
+      track("auth_confirmed");
       if (session.user?.user_metadata?.has_password) { finish(); return; }
       setPhase("password");
     };

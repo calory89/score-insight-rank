@@ -39,6 +39,7 @@ export function contactCandidates(text: string) {
       const digits = cell.replace(/\D/g, "").replace(/^00/, "");
       const phone = /^[+\d\s().-]+$/.test(cell) && digits.length >= 7 && digits.length <= 15;
       if (!email && !phone) return;
+      if(phone && !/^\s*(\+|00)/.test(cell)) issues.push({row:index+1,message:"Phone has no international prefix; confirm its country before importing."});
       found++;
       const key = email ? cell.toLowerCase() : "p:" + digits;
       if (contacts.has(key)) duplicates++; else contacts.set(key, cell);

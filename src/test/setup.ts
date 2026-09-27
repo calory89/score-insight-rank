@@ -13,3 +13,7 @@ Object.defineProperty(window, "matchMedia", {
     dispatchEvent: () => {},
   }),
 });
+
+Object.defineProperty(window,"scrollTo",{value:()=>{},writable:true});
+Object.defineProperty(HTMLElement.prototype,"scrollIntoView",{value:()=>{},writable:true});
+globalThis.IntersectionObserver = class {observe(){} unobserve(){} disconnect(){} takeRecords(){return [];} root=null;rootMargin='';thresholds=[];} as any;

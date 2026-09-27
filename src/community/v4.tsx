@@ -1,10 +1,13 @@
+import {PropertyImage, ComparePick} from "./BuyerTools";
+import {storage, usePreference} from "./buyer-state";
+import {t} from "./i18n";
 // RealHunt v4 UX (23-sep-2026): visual cards with the price on the photo, double tap to vote,
 // one-tap story sharing, a mobile tab bar, a sticky action bar on the home page and instant
 // navigation (cached rows, prefetched detail, preloaded photos).
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Heart, Share2, Bookmark, Home as HomeIcon, Layers, MapPin, User, ArrowUpRight, TrendingDown, BadgeCheck, Flame } from "lucide-react";
-import { FLAG, bumpIx } from "@/lib/rh";
+import { Heart, Share2, Bookmark, Home as HomeIcon, Layers, MapPin, User, Bell, ArrowUpRight, TrendingDown, BadgeCheck, Flame } from "lucide-react";
+import { FLAG, bumpIx, track } from "@/lib/rh";
 import { money, votePreview, type Deal, type Session } from "./api";
 import { useCommunity } from "./ctx";
 import { bumpStreak, niceTitle, dealUrl, shareText, type Row } from "./extras";
@@ -23,7 +26,7 @@ export const remember = (rows: Row[] | undefined) => (rows || []).forEach((r) =>
 const detailCache = new Map<string, Promise<any>>();
 export function prefetchDetail(slug: string, call: ((a: string, p?: Record<string, unknown>) => Promise<any>) | undefined) {
   if (!call || detailCache.has(slug)) return;
-  const p = call("detail", { slug }).catch((e) => { detailCache.delete(slug); throw e; });
+  const p = call("detail", { slug }).catch(() => { detailCache.delete(slug); return null; });
   detailCache.set(slug, p);
 }
 export function takeDetail(slug: string) {
@@ -33,7 +36,8 @@ export function takeDetail(slug: string) {
 }
 const preloaded = new Set<string>();
 export function preloadImages(urls: (string | undefined)[]) {
-  for (const u of urls) {
+  if ((navigator as any).connection?.saveData || /2g/.test((navigator as any).connection?.effectiveType || "")) return;
+  for (const u of urls.slice(0,2)) {
     if (!u || preloaded.has(u)) continue;
     preloaded.add(u);
     const img = new Image();
@@ -59,11 +63,11 @@ export function useVote(deal: Deal, scope = "week", onChange?: () => void) {
       await call("vote", { id: deal.id, value });
       setSession((s: Session) => ({ ...s, votes: { ...s.votes, [deal.id]: value } }));
       const days = bumpStreak();
-      const others = Math.max(0, (scope === "all" ? deal.life_net : deal.week_net) || 0);
+      const others = Math.max(0, (scope === "all" ? deal.life_up : deal.week_up) || 0);
       const crowd = others > 0 ? `You and ${num(others)} ${others === 1 ? "other" : "others"} love this` : "You are the first to love this";
       const place = deal.rank ? ` · #${deal.rank} ${scope === "all" ? "all time" : "this week"}` : "";
       setNotice(`❤ ${crowd}${place}.${days > 1 ? ` ${days}-day streak 🔥` : " Share it to push it up."}`);
-      bumpStat("votes");
+      bumpStat("votes");track("community_vote",{find:deal.slug});
       celebrate(days, stats().votes || 0);
       bumpIx();
       window.dispatchEvent(new CustomEvent("rh-voted", { detail: { id: deal.id, country: deal.country } }));
@@ -143,6 +147,7 @@ export async function storyCard(d: Row, scope = "week"): Promise<Blob | null> {
       const label = `#${d.rank} ${scope === "all" ? "all time" : "this week"}`;
       x.fillText(label, W - 64 - 130 - x.measureText(label).width / 2, 116);
     }
+    x.fillStyle="#fff";x.font="400 28px system-ui";x.fillText(d.verified_at?`Team check: ${new Date(d.verified_at).toLocaleDateString("en-GB")}`:"Availability not independently confirmed",64,H-70);
     let y = H - 560;
     x.fillStyle = "#fff";
     x.font = "800 150px system-ui, -apple-system, Segoe UI, sans-serif";
@@ -217,7 +222,7 @@ export function SaveHeart({ deal, className = "hv-save" }: { deal: Deal; classNa
           await call("save", { id: deal.id, saved: !saved });
           setSession((s: Session) => ({ ...s, saved: saved ? s.saved.filter((x) => x !== deal.id) : [...s.saved, deal.id] }));
           setNotice(saved ? "Removed from saved." : "Saved ✓ Add it to a board from its page.");
-          if (!saved) bumpStat("saves");
+          if (!saved) {bumpStat("saves");track("community_save",{find:deal.slug});}
           bumpIx();
         } catch (err) { setNotice((err as Error).message); } finally { setBusy(false); }
       }}>
@@ -231,7 +236,9 @@ function Photos({ deal, href, onDouble }: { deal: Row; href: string; onDouble: (
   const imgs = (deal.image_urls || []).filter(Boolean);
   // Instagram covers carry the poster's own price and captions printed on the photo; the second
   // photo is the house itself, so the feed opens on that one.
-  const [i, setI] = useState(0);
+  const [i, setI] = useState(()=>storage.get<number>("rh.photo."+deal.slug,0));
+  const [paused] = usePreference("rh.motion.paused",false);
+  useEffect(()=>storage.set("rh.photo."+deal.slug,i),[i,deal.slug]);
   const [burst, setBurst] = useState(0);
   const navigate = useNavigate();
   const tap = useRef<{ t: number; timer?: any; x?: number }>({ t: 0 });
@@ -251,10 +258,10 @@ function Photos({ deal, href, onDouble }: { deal: Row; href: string; onDouble: (
     return () => io.disconnect();
   }, [imgs.length]);
   useEffect(() => {
-    if (!seen || held || imgs.length < 2) return;
+    if (!seen || held || paused || document.hidden || imgs.length < 2) return;
     const t = setTimeout(() => go(i + 1), i === 0 ? 1400 : 2400);
     return () => clearTimeout(t);
-  }, [seen, held, i, imgs.length]);
+  }, [seen, held, paused, i, imgs.length]);
   return (
     <div className={"hv-photos" + (seen && !held && imgs.length > 1 ? " is-playing" : "")} ref={box}
       onMouseDown={() => setHeld(true)}
@@ -275,7 +282,7 @@ function Photos({ deal, href, onDouble }: { deal: Row; href: string; onDouble: (
         tap.current.timer = setTimeout(() => { tap.current.t = 0; navigate(href); }, 280);
       }}>
       <a href={href} onClick={(e) => e.preventDefault()} aria-label={niceTitle(deal)} tabIndex={-1}>
-        <img key={i} className="hv-fade" onLoad={(e) => e.currentTarget.classList.add("is-in")} src={imgs[i] || "/favicon.png"} alt={niceTitle(deal)} loading="lazy" decoding="async"
+        <PropertyImage key={i} fallback={imgs.find((_,n)=>n!==i)} className="hv-fade is-in" onLoad={(e) => e.currentTarget.classList.add("is-in")} src={imgs[i]} alt={niceTitle(deal)} loading="lazy" decoding="async"
           onError={(e) => { if (!e.currentTarget.src.endsWith("/favicon.png")) e.currentTarget.src = "/favicon.png"; }} />
       </a>
       {burst > 0 && <span key={burst} className="hv-burst" aria-hidden="true"><Heart size={96} fill="currentColor" /></span>}
@@ -289,7 +296,7 @@ function Photos({ deal, href, onDouble }: { deal: Row; href: string; onDouble: (
 }
 function Chip({ deal, scope }: { deal: Row; scope: string }) {
   if ((deal.price_drop || 0) > 0) return <span className="hv-chip is-drop"><TrendingDown size={12} /> −{money(deal.price_drop!)}</span>;
-  if (deal.verified_at) return <span className="hv-chip is-ok"><BadgeCheck size={12} /> Verified</span>;
+  if (deal.verified_at) return <span className="hv-chip is-ok" title={`Price and availability checked ${new Date(deal.verified_at).toLocaleDateString()}`}><BadgeCheck size={12} /> Checked</span>;
   if (deal.votes_24h >= 3 && (scope === "all" ? deal.life_net : deal.week_net) > 0) return <span className="hv-chip is-hot"><Flame size={12} /> Trending</span>;
   return null;
 }
@@ -307,13 +314,13 @@ function useRankMove(rank?: number) {
   }, [rank]);
   return move;
 }
-export function Card4({ deal, scope = "week", onChange }: { deal: Row; scope?: string; onChange?: () => void }) {
+export function Card4({ deal, scope = "week", onChange, onQuick }: { deal: Row; scope?: string; onChange?: () => void; onQuick?:()=>void }) {
   const { call } = useCommunity();
   const v = useVote(deal, scope, onChange);
   const move = useRankMove(deal.rank);
   const href = `/deal/${encodeURIComponent(deal.slug)}${scope === "all" ? "?tab=all" : ""}`;
   const where = deal.location_name && deal.country && !deal.location_name.includes(deal.country) ? `${deal.location_name}, ${deal.country}` : deal.location_name || deal.country;
-  const warm = () => { prefetchDetail(deal.slug, call); preloadImages((deal.image_urls || []).slice(0, 3)); };
+  const warm = () => { prefetchDetail(deal.slug, call); preloadImages((deal.image_urls || []).slice(0, 1)); };
   return (
     <article className="hv-card" onMouseEnter={warm} onTouchStart={warm}>
       <div className="hv-frame" style={{ backgroundColor: cardColor(deal.slug) }}>
@@ -324,17 +331,17 @@ export function Card4({ deal, scope = "week", onChange }: { deal: Row; scope?: s
           {(deal as any).developer ? <span className="hv-newbuild">New build</span> : null}
           <SaveHeart deal={deal} />
         </div>
-        <strong className="hv-price">{money(deal.price_eur)}</strong>
+
       </div>
       <Link to={href} className="hv-info" aria-label={niceTitle(deal)}>
-        <CardMeta deal={deal} />
+        <strong className="rh-card-price">{money(deal.price_eur)}</strong><span className="rh-card-title">{niceTitle(deal)}</span><CardMeta deal={deal} />
       </Link>
       <div className="hv-actions">
         <button className={"hv-heart" + (v.selected ? " is-on" : "")} disabled={!v.ready || v.busy} aria-pressed={v.selected}
-          aria-label={v.selected ? "You voted for this home" : "Vote for this home"} onClick={() => v.vote(1)}>
+          title={(deal.launch_points||0)>0?`${scope==="all"?deal.launch_points:deal.launch_week_points||0} initial points + ${scope==="all"?deal.life_up:deal.week_up} real votes`:undefined} aria-label={v.selected ? "You voted for this home" : "Vote for this home"} onClick={() => v.vote(1)}>
           <Heart size={19} fill={v.selected ? "currentColor" : "none"} /><strong key={v.total} className="hv-count">{num(v.total)}</strong>
         </button>
-        <span className="hv-hint" />
+        <ComparePick deal={deal}/>{onQuick && <button className="rh-card-tool" onClick={onQuick}>{t("Quick view")}</button>}
         <ShareButton deal={deal} scope={scope} />
       </div>
     </article>
@@ -372,8 +379,8 @@ export function TabBar() {
   const is = (p: string) => (p === "/" ? pathname === "/" : pathname.startsWith(p));
   return (
     <nav className="hv-tabbar" aria-label="App navigation">
-      <Link to="/" aria-current={is("/") ? "page" : undefined}><HomeIcon size={21} /><span>Feed</span></Link>
-      <Link to="/swipe" aria-current={is("/swipe") ? "page" : undefined}><Layers size={21} /><span>Swipe</span></Link>
+      <Link to="/" aria-current={is("/") ? "page" : undefined}><HomeIcon size={21} /><span>Explore</span></Link>
+      <Link to="/alerts" aria-current={is("/alerts") ? "page" : undefined}><Bell size={21} /><span>Alerts</span></Link>
       <Link to="/map" aria-current={is("/map") ? "page" : undefined}><MapPin size={21} /><span>Map</span></Link>
       <Link to="/hunt/saved" aria-current={is("/hunt/saved") ? "page" : undefined}><Bookmark size={21} /><span>Saved</span></Link>
       <Link to="/me" aria-current={is("/me") || is("/hunt/mine") ? "page" : undefined}><User size={21} /><span>Profile</span></Link>

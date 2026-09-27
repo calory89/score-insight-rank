@@ -1,3 +1,4 @@
+import {track} from "@/lib/rh";
 import { useEffect, useState, type ComponentProps } from "react";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -21,7 +22,7 @@ export default function OriginalListingLink({ href, children, className, onClick
     } catch { /* storage blocked */ }
   }, [user?.id]);
   if (user && href && /^https?:\/\//i.test(href)) {
-    return <a {...props} href={href} className={(className || "") + (fresh ? " hunt-open-now" : "")} onClick={onClick} target="_blank" rel="noopener noreferrer nofollow">{children}</a>;
+    return <a {...props} href={href} className={(className || "") + (fresh ? " hunt-open-now" : "")} onClick={e=>{track("original_listing_opened",{meta:{source:"detail"}});onClick?.(e);}} target="_blank" rel="noopener noreferrer nofollow">{children}</a>;
   }
   return <>
     <button type="button" className={className} disabled={loading || !!user} onClick={() => { try { sessionStorage.setItem("rh_open_listing", route.pathname); } catch { /* ignore */ } setOpen(true); }}>{children}</button>

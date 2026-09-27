@@ -1,3 +1,6 @@
+import {BuyerAlertPreferences} from "./OperationsTools";
+import {PropertyImage, RentPreference} from "./BuyerTools";
+import {userRent} from "./buyer-state";
 // RealHunt v3 features (22-sep-2026): filters, status tags, local price, real cost, gallery, similar
 // homes, ask-the-seller, daily drop, swipe, leaderboard, invites, public collections, guides, SEO
 // country pages, help buying, alerts (saved only, nothing is emailed until Carlos switches it on),
@@ -77,7 +80,7 @@ export function dealUrl(slug: string) {
 export function shareText(d: Row, scope = "week") {
   const price = d.price_eur != null ? money(d.price_eur) : "";
   const rank = d.rank ? ` · #${d.rank} ${scope === "all" ? "all time" : "this week"} on RealHunt` : " on RealHunt";
-  return `${niceTitle(d)}${price && !niceTitle(d).includes(price) ? ` for ${price}` : ""}${rank}`;
+  return `${niceTitle(d)}${price && !niceTitle(d).includes(price) ? ` for ${price}` : ""}${rank}. ${d.verified_at ? "Team check: "+new Date(d.verified_at).toLocaleDateString("en-GB") : "Availability not independently confirmed"}.`;
 }
 export async function shareRow(d: Row, scope = "week") {
   const url = dealUrl(d.slug);
@@ -173,8 +176,9 @@ const RUNNING: Record<string, { tax: number; insurance: number; utilities: numbe
   Australia: { tax: 1400, insurance: 900, utilities: 2000, taxName: "council rates" },
 };
 export function CostPanel({ deal }: { deal: Row }) {
-  const [rent, setRent] = useState(() => { try { return Number(localStorage.getItem("rh_rent")) || 900; } catch { return 900; } });
-  useEffect(() => { try { localStorage.setItem("rh_rent", String(rent)); } catch { /* ignore */ } }, [rent]);
+  const [rent, setRent] = useState(() => { return userRent() || 0; });
+  useEffect(() => { try { localStorage.setItem("rh_rent", String(rent)); window.dispatchEvent(new Event("rh-rent")); } catch { /* ignore */ } }, [rent]);
+  useEffect(()=>{const on=()=>setRent(userRent()||0);window.addEventListener("rh-rent",on);return()=>window.removeEventListener("rh-rent",on);},[]);
   if (deal.price_eur == null) return null;
   const allin = totalCost(deal.price_eur, deal.country) || deal.price_eur;
   const run = RUNNING[deal.country] || { tax: 300, insurance: 200, utilities: 1200, taxName: "property tax" };
@@ -186,12 +190,12 @@ export function CostPanel({ deal }: { deal: Row }) {
       <h3>{t("What it really costs")}</h3>
       <dl>
         <div><dt>Asking price</dt><dd>{money(deal.price_eur)}</dd></div>
-        <div><dt>Taxes, notary and registry</dt><dd>+{money(allin - deal.price_eur)}</dd></div>
-        <div className="is-total"><dt>All-in to buy</dt><dd>{money(allin)}</dd></div>
+        <div><dt>Estimated purchase costs</dt><dd>+{money(allin - deal.price_eur)}</dd></div>
+        <div className="is-total"><dt>Estimated total before renovation</dt><dd>{money(allin)}</dd></div>
         {reno && deal.sqm ? <div><dt>Renovation, typical range</dt><dd>{money(deal.sqm * 400)}–{money(deal.sqm * 900)}</dd></div> : null}
         <div><dt>Keeping it ({run.taxName}, insurance, basic water and power)</dt><dd>≈ {money(Math.round(yearly / 12))}/month</dd></div>
       </dl>
-      <label className="hunt-rent">If you pay rent of <input type="number" min={100} step={50} value={rent} onChange={(e) => setRent(Math.max(0, Number(e.target.value)))} /> € a month, buying this all-in equals <strong>{months} months of rent</strong>.</label>
+      <label className="hunt-rent">If you pay rent of <input type="number" min={0} placeholder="Your rent" step={50} value={rent} onChange={(e) => setRent(Math.max(0, Number(e.target.value)))} /> € a month, the estimated purchase total equals <strong>{rent > 0 ? `${months} ${t("months of your rent")}` : t("Enter your monthly rent")}</strong>.</label>
       <p className="hunt-fine">{COSTS[deal.country]?.note || "Purchase costs vary by country."} {run.extra || ""} Running costs are a rough guide for a small house; ask the seller for the real bills.{reno ? " Renovation ranges are ballpark figures; get a local quote." : ""}</p>
     </section>
   );
@@ -200,6 +204,8 @@ export function CostPanel({ deal }: { deal: Row }) {
 // ---------------------------------------------------------------- fullscreen gallery
 export function Lightbox({ images, start = 0, title, onClose }: { images: string[]; start?: number; title: string; onClose: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  useEffect(()=>{const previous=document.activeElement as HTMLElement;closeRef.current?.focus();return()=>previous?.focus();},[]);
   const [i, setI] = useState(start);
   const [zoom, setZoom] = useState<number | null>(null);
   const [origin, setOrigin] = useState("50% 50%");
@@ -211,10 +217,10 @@ export function Lightbox({ images, start = 0, title, onClose }: { images: string
   }, []);
   const go = (n: number) => { const el = ref.current; if (!el) return; el.scrollBy({ left: n * el.clientWidth, behavior: "smooth" }); };
   return (
-    <div className="hunt-lightbox" role="dialog" aria-modal="true" aria-label={`${title} photos`}>
-      <button className="hunt-lb-close" aria-label="Close photos" onClick={onClose}><X size={22} /></button>
+    <div onKeyDown={e=>{if(e.key!=="Tab")return;const nodes=Array.from(e.currentTarget.querySelectorAll<HTMLElement>("button:not([disabled]), [tabindex=\"0\"]"));const first=nodes[0],last=nodes[nodes.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}} className="hunt-lightbox" role="dialog" aria-modal="true" aria-label={`${title} photos`}>
+      <button ref={closeRef} className="hunt-lb-close" aria-label="Close photos" onClick={onClose}><X size={22} /></button>
       <div className={"hunt-lb-track" + (zoom !== null ? " is-zoomed" : "")} ref={ref} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
-        {images.map((src, n) => <div key={n} className={"hunt-lb-slide" + (zoom === n ? " is-zoom" : "")}><img src={src} alt={`${title}, photo ${n + 1}`} loading={Math.abs(n - start) < 2 ? "eager" : "lazy"}
+        {images.map((src, n) => <div key={n} className={"hunt-lb-slide" + (zoom === n ? " is-zoom" : "")}><PropertyImage src={src} fallback={images.find(x=>x!==src)} sizes="100vw" alt={`${title}, photo ${n + 1}`} loading={Math.abs(n - start) < 2 ? "eager" : "lazy"}
           style={zoom === n ? { transformOrigin: origin } : undefined}
           onClick={(e) => { if (zoom === n) { setZoom(null); return; } const r = e.currentTarget.getBoundingClientRect(); setOrigin(`${((e.clientX - r.left) / r.width) * 100}% ${((e.clientY - r.top) / r.height) * 100}%`); setZoom(n); }} /></div>)}
       </div>
@@ -231,7 +237,7 @@ export function Lightbox({ images, start = 0, title, onClose }: { images: string
 export function MiniCard({ d }: { d: Row }) {
   return (
     <Link className="hunt-minicard" to={`/deal/${d.slug}`}>
-      <img src={d.image_urls?.[0] || "/favicon.png"} alt="" loading="lazy" decoding="async" />
+      <PropertyImage src={d.image_urls?.[0]} fallback={d.image_urls?.[1]} alt={niceTitle(d)} loading="lazy" />
       <div><strong>{money(d.price_eur)}</strong><span>{niceTitle(d)}</span><small><MapPin size={11} /> {d.location_name || d.country}</small></div>
     </Link>
   );
@@ -296,8 +302,14 @@ export function InfoRequest({ deal, dev }: { deal: Row; dev?: { name: string; sl
 }
 
 // ---------------------------------------------------------------- filters
-const PRICE_CAPS = [20000, 40000, 60000, 80000, 100000];
-export function Filters({ countries, value, onChange }: { countries: Record<string, number>; value: FeedParams; onChange: (v: FeedParams) => void }) {
+const PRICE_CAPS = [20000, 30000, 40000, 60000, 80000, 100000];
+export function Filters({ countries, value: applied, onChange }: { countries: Record<string, number>; value: FeedParams; onChange: (v: FeedParams) => void }) {
+  const [value,setDraft]=useState(applied);
+  const [count,setCount]=useState<number|null>(null);
+  const [countError,setCountError]=useState(false);
+  const pending=JSON.stringify(value)!==JSON.stringify(applied);
+  useEffect(()=>setDraft(applied),[JSON.stringify(applied)]);
+  useEffect(()=>{if(!pending)return;let active=true;setCount(null);setCountError(false);const timer=setTimeout(()=>feed({...value,limit:1}).then(r=>{if(active)setCount(r.total);}).catch(()=>{if(active)setCountError(true);}),180);return()=>{active=false;clearTimeout(timer);};},[JSON.stringify(value),pending]);
   const list = Object.entries(countries || {}).sort((a, b) => b[1] - a[1]);
   const active = !!(value.country || value.category || value.max_price || value.min_sqm || (value.sort && value.sort !== "rank"));
   const extra = [value.category, value.max_price, value.min_sqm, value.sort && value.sort !== "rank" ? value.sort : ""].filter(Boolean).length;
@@ -305,33 +317,35 @@ export function Filters({ countries, value, onChange }: { countries: Record<stri
   return (
     <div className={"hunt-filters" + (open ? " is-open" : "")}>
       <div className="hunt-chips" role="group" aria-label="Country">
-        <button aria-pressed={!value.country} onClick={() => onChange({ ...value, country: "" })}>{t("All countries")}</button>
-        {list.map(([c, n]) => <button key={c} aria-pressed={value.country === c} onClick={() => onChange({ ...value, country: c })}>{c} <small>{n}</small></button>)}
+        <button aria-pressed={!value.country} onClick={() => setDraft({ ...value, country: "" })}>{t("All countries")}</button>
+        {list.map(([c, n]) => <button key={c} aria-pressed={value.country === c} onClick={() => setDraft({ ...value, country: c })}>{c === "Scandinavia" ? t("Scandinavia · region") : c} <small>{n}</small></button>)}
       </div>
+      <div className="rh-active-filters">{([ ["country",applied.country], ["category",applied.category], ["max_price",applied.max_price?money(applied.max_price):null], ["min_sqm",applied.min_sqm?`${applied.min_sqm} m²+`:null] ] as const).filter(([,v])=>v).map(([k,v])=><button key={k} aria-label={`${t("Remove")} ${v}`} onClick={()=>onChange({...applied,[k]:null})}>{v} ×</button>)}</div>
       <button type="button" className="hunt-link hunt-filter-toggle" aria-expanded={open} onClick={() => setOpen((o) => !o)}>{open ? t("Hide filters") : t("More filters")}{extra > 0 ? ` (${extra})` : ""}</button>
       {open && <div className="hunt-filter-row">
         <label><span>{t("Max price")}</span>
-          <select value={value.max_price || ""} onChange={(e) => onChange({ ...value, max_price: e.target.value ? Number(e.target.value) : null })}>
+          <select value={value.max_price || ""} onChange={(e) => setDraft({ ...value, max_price: e.target.value ? Number(e.target.value) : null })}>
             <option value="">€100,000</option>
-            {PRICE_CAPS.slice(0, -1).map((p) => <option key={p} value={p}>{money(p)}</option>)}
+            {Array.from(new Set([...PRICE_CAPS.slice(0, -1),...(value.max_price?[value.max_price]:[])])).sort((a,b)=>a-b).map((p) => <option key={p} value={p}>{money(p)}</option>)}
           </select></label>
         <label><span>{t("Any type")}</span>
-          <select value={value.category || ""} onChange={(e) => onChange({ ...value, category: e.target.value })}>
+          <select value={value.category || ""} onChange={(e) => setDraft({ ...value, category: e.target.value })}>
             <option value="">{t("Any type")}</option>
             {categories.map(([k, l]) => <option key={k} value={k}>{l}</option>)}
           </select></label>
         <label><span>{t("Min size")}</span>
-          <select value={value.min_sqm || ""} onChange={(e) => onChange({ ...value, min_sqm: e.target.value ? Number(e.target.value) : null })}>
+          <select value={value.min_sqm || ""} onChange={(e) => setDraft({ ...value, min_sqm: e.target.value ? Number(e.target.value) : null })}>
             <option value="">—</option>
             {[40, 60, 80, 100, 150].map((s) => <option key={s} value={s}>{s} m²+</option>)}
           </select></label>
         <label><span>{t("Sort")}</span>
-          <select value={value.sort || "rank"} onChange={(e) => onChange({ ...value, sort: e.target.value })}>
+          <select value={value.sort || "rank"} onChange={(e) => setDraft({ ...value, sort: e.target.value })}>
             <option value="rank">{t("Top voted")}</option><option value="new">{t("Newest")}</option>
             <option value="price_asc">{t("Cheapest")}</option><option value="sqm">{t("Biggest")}</option>
           </select></label>
         {active && <button className="hunt-link" onClick={() => onChange({ scope: value.scope })}>{t("Clear filters")}</button>}
       </div>}
+      {pending&&<div className="rh-row" role="status"><button className="hunt-primary" disabled={count===null&&!countError} onClick={()=>onChange(value)}>{countError?'Apply filters':count===null?'Counting homes…':`View ${count} homes`}</button><button className="hunt-link" onClick={()=>setDraft(applied)}>Cancel changes</button></div>}
     </div>
   );
 }
@@ -386,7 +400,7 @@ export function AlertForm({ countries, initial, compact = false, onApply }: { co
         <label><span>{t("Any type")}</span><select value={cat} onChange={(e) => setCat(e.target.value)}><option value="">{t("Any type")}</option>{categories.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>
       </div>
       {onApply && <button type="button" className="hunt-secondary" onClick={() => { prefs(); onApply({ country: picked.length === 1 ? picked[0] : "", max_price: max < 100000 ? max : null, category: cat }); }}>{t("Show my homes")}</button>}
-      {state === "ok" ? <p className="hunt-info-done"><Check size={16} /> Saved. We will email you new matches, one email a day at most.</p> : (
+      {state === "ok" ? <p className="hunt-info-done"><Check size={16} /> Saved. Sign in with this email to manage daily or weekly alerts. Emails go only to confirmed accounts.</p> : (
         <div className="hunt-row">
           <input type="email" required placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="Email" />
           <button className="hunt-primary" disabled={state === "busy"}>{t("Email me new matches")}</button>
@@ -415,8 +429,8 @@ export function AlertsPage() {
     <div className="hunt-wrap hunt-page">
       <span className="hunt-eyebrow">{t("Alerts")}</span>
       <h1>Get new homes that match you</h1>
-      <p>Choose countries, budget and type. One email a day at most, only when something new matches. Unsubscribe with one click.</p>
-      <AlertForm countries={countries} />
+      <p>Choose countries, budget and type. Confirmed accounts can choose daily or weekly updates, or switch them off. New matches you have already opened are excluded.</p>
+      <AlertForm countries={countries} /><BuyerAlertPreferences/>
     </div>
   );
 }

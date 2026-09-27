@@ -39,10 +39,10 @@ export default function AuthModal({ open, onClose, title = "Sign in to see the o
     e?.preventDefault(); if (busyRef.current || Date.now() < deadline.current) return;
     const address = email.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) { setErr("Enter a valid email address."); return; }
-    busyRef.current = true; setBusy(true); setErr(""); rememberReturn(to);
+    busyRef.current = true; setBusy(true); setErr(""); rememberReturn(to);track("auth_link_requested",{find});
     try {
       const { error } = await supabase.auth.signInWithOtp({ email: address, options: { emailRedirectTo: confirmationUrl(location.origin, to), shouldCreateUser: true, data: { auth_return_to: to } } });
-      if (error) { setErr(authError(error)); if (error.status === 429) { deadline.current = Date.now() + 60000; setRemaining(60); } return; }
+      if (error) { track("auth_link_failed",{find,meta:{status:String(error.status||0)}});setErr(authError(error)); if (error.status === 429) { deadline.current = Date.now() + 60000; setRemaining(60); } return; }
       setSentTo(address); deadline.current = Date.now() + 60000; setRemaining(60); track("auth_magic", { find });
     } catch { setErr(authError(null)); } finally { busyRef.current = false; setBusy(false); }
   };

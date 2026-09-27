@@ -1,3 +1,7 @@
+import {feed} from "./extras";
+import {PropertyImage} from "./BuyerTools";
+import {storage, safeFacts, userRent} from "./buyer-state";
+import {t} from "./i18n";
 // RealHunt v6 (23-sep-2026): the visual pass. Weekly podium hero, vibe chips with photos, rent
 // comparison, Airbnb-style gallery with zoom, mini map with what is nearby, amenity icons, video
 // tour, confetti and haptics, search suggestions with photos, friendly empty states.
@@ -58,14 +62,9 @@ export function rentCity(): { city: string; rent: number } | null {
   } catch { return null; }
 }
 export function RentLine({ price, big = false }: { price: number | null | undefined; big?: boolean }) {
-  const rc = useMemo(rentCity, []);
-  if (!price || !rc) return null;
-  const months = Math.round(price / rc.rent);
-  return (
-    <span className={"hv-rent" + (big ? " is-big" : "")} title={`Typical 1-bedroom rent in ${rc.city}: about ${money(rc.rent)} a month`}>
-      ≈ {months} months of rent in {rc.city}
-    </span>
-  );
+ const [rent,setRent]=useState(userRent); useEffect(()=>{const h=()=>setRent(userRent());window.addEventListener('rh-rent',h);return()=>window.removeEventListener('rh-rent',h);},[]);
+ if(!price || !rent)return null;
+ return <span className={"hv-rent"+(big?" is-big":"")} title={t('Asking price only; purchase and running costs are additional.')}>≈ {Math.round(price/rent)} {t('months of your rent')}</span>;
 }
 
 // ---------------------------------------------------------------- 3: vibe chips with photos
@@ -79,9 +78,8 @@ const VIBES: { k: string; label: string; q?: string; country?: string; type?: st
   { k: "terrace", label: "Big terrace", q: "terrace" },
   { k: "cheap", label: "Under €30k", price: 30000 },
 ];
-export function Vibes({ active, onPick }: { active: string; onPick: (v: { q?: string; country?: string; type?: string; price?: number; k: string } | null) => void }) {
-  const [all, setAll] = useState<Row[]>(() => Array.from(rowCache.values()));
-  useEffect(() => { if (all.length < 60) feedAll({ scope: "all" }).then((f) => { remember(f.rows); setAll(f.rows); }).catch(() => {}); }, []);
+export function Vibes({ active, onPick, rows=[] }: { rows?: Row[]; active: string; onPick: (v: { q?: string; country?: string; type?: string; price?: number; k: string } | null) => void }) {
+  const all=rows.length ? rows : Array.from(rowCache.values());
   const used = new Set<string>();
   const pick = (v: (typeof VIBES)[number]) => {
     const hit = all.find((r) => {
@@ -166,19 +164,21 @@ export function PodiumHero({ rows, scope, endsAt }: { rows: Row[]; scope: string
 export function DetailGallery({ deal }: { deal: Deal }) {
   const imgs = (deal.image_urls || []).filter(Boolean);
   const [lb, setLb] = useState<number | null>(null);
-  const [i, setI] = useState(0);
+  const [i, setI] = useState(()=>Math.min(storage.get<number>("rh.photo."+deal.slug,0),Math.max(0,imgs.length-1)));
+  useEffect(()=>storage.set("rh.photo."+deal.slug,i),[deal.slug,i]);
   const track = useRef<HTMLDivElement>(null);
-  useEffect(() => { preloadImages(imgs.slice(0, 6)); }, [deal.id]);
+  useEffect(() => {if(track.current)track.current.scrollLeft=track.current.clientWidth*i;}, [deal.id]);
+  useEffect(() => { preloadImages(imgs.slice(i+1,i+2)); }, [deal.id,i]);
   if (!imgs.length) return null;
   const open = (n: number) => { setLb(n); bumpIx(); };
   return (
     <div className="hv-gallery" style={{ backgroundColor: cardColor(deal.slug) }}>
       <div className={"hv-mosaic n" + Math.min(imgs.length, 5)}>
-        {imgs.slice(0, 5).map((u, n) => <button key={u + n} onClick={() => open(n)} aria-label={`Open photo ${n + 1}`}><img src={u} alt={n ? "" : niceTitle(deal)} loading={n < 3 ? "eager" : "lazy"} /></button>)}
+        {imgs.slice(0, 5).map((u, n) => <button key={u + n} onClick={() => open(n)} aria-label={`Open photo ${n + 1}`}><PropertyImage sizes="100vw" src={u} fallback={imgs.find(x=>x!==u)} alt={`${niceTitle(deal)}, ${n+1}`} loading={n===0?"eager":"lazy"} /></button>)}
         {imgs.length > 1 && <button className="hv-mosaic-all" onClick={() => open(0)}><Grid2x2 size={16} /> Show all {imgs.length} photos</button>}
       </div>
       <div className="hv-carousel" ref={track} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
-        {imgs.map((u, n) => <button key={u + n} onClick={() => open(n)} aria-label={`Open photo ${n + 1}`}><img src={u} alt={n ? "" : niceTitle(deal)} loading={n < 2 ? "eager" : "lazy"} /></button>)}
+        {imgs.map((u, n) => <button key={u + n} onClick={() => open(n)} aria-label={`Open photo ${n + 1}`}><PropertyImage sizes="100vw" src={u} fallback={imgs.find(x=>x!==u)} alt={`${niceTitle(deal)}, ${n+1}`} loading={n===0?"eager":"lazy"} /></button>)}
       </div>
       {imgs.length > 1 && <span className="hv-carousel-count">{i + 1} / {imgs.length}</span>}
       {lb !== null && <Lightbox images={imgs} start={lb} title={niceTitle(deal)} onClose={() => setLb(null)} />}
@@ -204,10 +204,10 @@ const AMENITIES: [RegExp, string, ReactNode][] = [
   [/forest|woodland|nature|countryside/i, "Nature", <Trees size={18} />],
 ];
 export function Amenities({ deal }: { deal: Deal }) {
-  const txt = `${deal.title} ${deal.why_great || ""}`;
+  const txt = safeFacts(deal);
   const list = AMENITIES.filter(([re]) => re.test(txt)).slice(0, 8);
   const facts: [string, ReactNode][] = [];
-  if (deal.bedrooms) facts.push([`${deal.bedrooms} ${deal.bedrooms === 1 ? "bedroom" : "bedrooms"}`, <BedDouble size={18} />]);
+  if (deal.bedrooms != null) facts.push([`${deal.bedrooms} ${deal.bedrooms === 1 ? "bedroom" : "bedrooms"}`, <BedDouble size={18} />]);
   if (deal.sqm) facts.push([`${deal.sqm} m²`, <Ruler size={18} />]);
   if (!list.length && !facts.length) return null;
   return (
@@ -256,7 +256,7 @@ export function VideoTour({ deal }: { deal: Deal }) {
   if (imgs.length < 2) return null;
   return (
     <>
-      <button className="hv-share has-label" onClick={() => { setOpen(true); bumpIx(); }}><Play size={17} /><span>Video tour</span></button>
+      <button className="hv-share has-label" onClick={() => { setOpen(true); bumpIx(); }}><Play size={17} /><span>{t("Photo slideshow")}</span></button>
       {open && <TourPlayer deal={deal} imgs={imgs} onClose={() => setOpen(false)} />}
     </>
   );
@@ -337,9 +337,10 @@ export function SmartSearch({ value, onSearch, inputRef }: { value: string; onSe
   const [text, setText] = useState(value);
   const [all, setAll] = useState<Row[]>([]);
   const [open, setOpen] = useState(false);
+  const [active,setActive]=useState(-1);
   const navigate = useNavigate();
   useEffect(() => setText(value), [value]);
-  const load = () => { if (!all.length) feedAll({ scope: "all" }).then((f) => { remember(f.rows); setAll(f.rows); }).catch(() => {}); };
+  useEffect(()=>{let alive=true;if(text.trim().length<2){setAll([]);return;}const timer=setTimeout(()=>feed({scope:"all",q:text.trim(),limit:8}).then(f=>{if(alive){remember(f.rows);setAll(f.rows);}}).catch(()=>{if(alive)setAll([]);}),180);return()=>{alive=false;clearTimeout(timer);};},[text]);
   const q = text.trim().toLowerCase();
   const sugg = useMemo(() => {
     if (q.length < 2) return { places: [] as { label: string; img?: string; n: number }[], homes: [] as Row[] };
@@ -351,22 +352,22 @@ export function SmartSearch({ value, onSearch, inputRef }: { value: string; onSe
       if (`${r.title} ${r.why_great || ""}`.toLowerCase().includes(q)) homes.push(r);
     }
     return { places: Array.from(places.values()).sort((a, b) => b.n - a.n).slice(0, 4), homes: homes.slice(0, 4) };
-  }, [q, all.length]);
+  }, [q, all]);
   const go = (s: string) => { setText(s); setOpen(false); onSearch(s); };
   return (
     <div className="hv-smart">
       <form className="hv-search" role="search" onSubmit={(e) => { e.preventDefault(); go(text); }}>
         <Search size={18} aria-hidden="true" />
-        <input ref={inputRef} type="search" value={text} onFocus={() => { load(); setOpen(true); }} onBlur={() => setTimeout(() => setOpen(false), 180)}
-          onChange={(e) => { setText(e.target.value); setOpen(true); }} placeholder="Search a country, town or lake, sea, cabin…" aria-label="Search homes" enterKeyHint="search" autoComplete="off" />
+        <input ref={inputRef} type="search" value={text} onFocus={() => { setOpen(true); }} onBlur={() => setTimeout(() => setOpen(false), 180)}
+          onKeyDown={(e)=>{ const items=[...sugg.places.map(p=>({label:p.label})),...sugg.homes.map(r=>({slug:r.slug}))] as any[]; if(e.key==='Escape'){setOpen(false);setActive(-1);} if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();setOpen(true);setActive(n=>Math.max(0,Math.min(items.length-1,n+(e.key==='ArrowDown'?1:-1))));} if(e.key==='Enter'&&open&&active>=0&&items[active]){e.preventDefault();const x=items[active];x.slug?navigate('/deal/'+encodeURIComponent(x.slug)):go(x.label);setOpen(false);} }} role="combobox" aria-activedescendant={active>=0?`rh-suggestion-${active}`:undefined} aria-expanded={open} aria-controls="rh-search-options" aria-autocomplete="list" onChange={(e) => { setText(e.target.value); setOpen(true);setActive(-1); }} placeholder="Search a country, town or lake, sea, cabin…" aria-label="Search homes" enterKeyHint="search" autoComplete="off" />
         {text && <button type="button" aria-label="Clear search" onClick={() => go("")}><X size={16} /></button>}
       </form>
       {open && (q.length < 2 ? (
-        <div className="hv-sugg"><small>Try</small><div className="hv-sugg-pills">{["sea view", "lake", "sauna", "Italy", "Japan", "Sweden", "terrace", "stone"].map((s) => <button key={s} onMouseDown={() => go(s)}>{s}</button>)}</div></div>
+        <div className="hv-sugg" id="rh-search-options"><small>Try</small><div className="hv-sugg-pills">{["sea view", "lake", "sauna", "Italy", "Japan", "Sweden", "terrace", "stone"].map((s) => <button key={s} onClick={() => go(s)}>{s}</button>)}</div></div>
       ) : (sugg.places.length + sugg.homes.length > 0) && (
-        <div className="hv-sugg">
-          {sugg.places.map((p) => <button key={p.label} className="hv-sugg-row" onMouseDown={() => go(p.label)}><span className="hv-sugg-img">{p.img ? <img src={p.img} alt="" /> : <MapPin size={16} />}</span><span><strong>{p.label}</strong><small>{p.n} {p.n === 1 ? "home" : "homes"}</small></span></button>)}
-          {sugg.homes.map((r) => <button key={r.id} className="hv-sugg-row" onMouseDown={() => { setOpen(false); navigate(`/deal/${encodeURIComponent(r.slug)}`); }}><span className="hv-sugg-img"><img src={r.image_urls?.[0]} alt="" /></span><span><strong>{money(r.price_eur)} · {niceTitle(r)}</strong><small>{r.location_name}</small></span></button>)}
+        <div className="hv-sugg" id="rh-search-options" role="listbox">
+          {sugg.places.map((p,index) => <button role="option" aria-selected={active===index} id={`rh-suggestion-${index}`} key={p.label} className={"hv-sugg-row"+(active===index?" rh-search-active":"")} onClick={() => go(p.label)}><span className="hv-sugg-img">{p.img ? <img src={p.img} alt="" /> : <MapPin size={16} />}</span><span><strong>{p.label}</strong><small>{p.n} matching {p.n === 1 ? "suggestion" : "suggestions"}</small></span></button>)}
+          {sugg.homes.map((r,index) => <button role="option" aria-selected={active===index+sugg.places.length} id={`rh-suggestion-${index+sugg.places.length}`} key={r.id} className={"hv-sugg-row"+(active===index+sugg.places.length?" rh-search-active":"")} onClick={() => { setOpen(false); navigate(`/deal/${encodeURIComponent(r.slug)}`); }}><span className="hv-sugg-img"><img src={r.image_urls?.[0]} alt="" /></span><span><strong>{money(r.price_eur)} · {niceTitle(r)}</strong><small>{r.location_name}</small></span></button>)}
         </div>
       ))}
     </div>
@@ -398,7 +399,7 @@ export function CardMeta({ deal }: { deal: Row }) {
   return (
     <>
       <span className="hv-where">{FLAG[deal.country] || "📍"} {where}</span>
-      <RentLine price={deal.price_eur} />
+      <span className="rh-card-facts">{deal.sqm!=null?`${deal.sqm} m²`:t("Size unknown")} · {deal.bedrooms!=null?`${deal.bedrooms} ${t("beds")}`:t("Beds unknown")}</span><RentLine price={deal.price_eur} />
     </>
   );
 }

@@ -18,11 +18,7 @@ jobs:
       - run: npm ci --legacy-peer-deps
       - run: npx tsc -p tsconfig.app.json --noEmit
       - run: npx tsc -p tsconfig.node.json --noEmit
-      # 24-sep-2026: the unit tests describe screens that were redesigned since and
-      # fail on every push (one failure email each time). They still run and show
-      # in the log, but they no longer block; types, build and bundle checks do.
       - run: npm test
-        continue-on-error: true
-      - run: node --test tests/auth-email.test.mjs tests/community-db.test.mjs
+      - run: node --test tests/auth-email.test.mjs tests/community-db.test.mjs tests/buyer-operations-db.test.mjs
       - run: npm run build
       - run: node scripts/check-bundle.mjs

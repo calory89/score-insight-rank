@@ -1,3 +1,4 @@
+import {NetworkHealth, NetworkCases, FinanceJournal} from "@/community/OperationsTools";
 import { AdminNetworkDay, DeveloperProfile, NetworkAudit } from "./AdminNetworkTools";
 import { todayDate } from "./NetworkTools";
 import Pagination from "./Pagination";
@@ -76,8 +77,8 @@ const AdminNetwork = () => {
   return (
     <div className="flex flex-col gap-6">
       <nav aria-label="Network management" className="flex gap-2 overflow-x-auto pb-2">{[["today","Work queues"],["developers","Developers"],["matching","Make introductions"],["introductions","Introductions"],["deals","Commissions & payouts"],["audit","Audit"]].map(([key,label])=><button key={key} onClick={()=>{setSection(key);setQueue("all");setSearch("");}} aria-pressed={section===key} className={`shrink-0 min-h-11 rounded-full border px-4 text-sm ${section===key?"bg-ink text-paper border-ink":"border-hairline"}`}>{label}</button>)}</nav>
-      {section==="today"&&<AdminNetworkDay data={d} onQueue={openQueue}/>}
-      {section==="audit"&&<NetworkAudit/>}
+      {section==="today"&&<><AdminNetworkDay data={d} onQueue={openQueue}/><NetworkHealth/><NetworkCases admin/></>}
+      {section==="audit"&&<><NetworkAudit/><FinanceJournal/></>}
       {!["today","audit","matching"].includes(section)&&<div className="flex gap-3"><input aria-label="Search network records" className="border border-hairline rounded-xl px-4 min-h-11 flex-1" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search company, buyer or country"/>{queue!=="all"&&<button className="underline text-sm" onClick={()=>setQueue("all")}>Clear {queue} filter ×</button>}</div>}
       <DeveloperProfile developer={profile} data={d} onClose={()=>setProfile(null)}/>
 
