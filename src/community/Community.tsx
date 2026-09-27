@@ -21,6 +21,7 @@ import { listingVideo } from "@/lib/listing-media";
 import OriginalListingLink from "@/components/realhunt/OriginalListingLink";
 import AuthModal from "@/components/realhunt/AuthModal";
 import { useLiveStats } from "@/components/realhunt/LiveStats";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { lazy, Suspense } from "react";
 import { DevBlock, ClaimListing, BuyerPicks, NewBuildsPage, DevLeaderboard } from "./v8";
 import { InboxPage, CompareBuilds, CostsIndex, CostsPage, NewBuildReport, AgentsPage, TranslateBar, InboxLink } from "./v10";
@@ -102,6 +103,58 @@ function Loading() {
     </div>
   );
 }
+const STATIC_META: Record<string, { title: string; description: string; robots?: "index, follow" | "noindex, nofollow" }> = {
+  "/": {
+    title: "RealHunt: real homes under €100,000, ranked by people",
+    description: "Compare real homes under €100,000 worldwide, ranked by people, with original listings and realistic buying costs.",
+  },
+  "/submit": {
+    title: "Submit a home under €100,000 · RealHunt",
+    description: "Share a property listing. RealHunt checks it before the community votes.",
+  },
+  "/map": {
+    title: "Map of homes under €100,000 · RealHunt",
+    description: "Explore mapped homes under €100,000 and open the original property listings.",
+  },
+  "/swipe": {
+    title: "Swipe homes under €100,000 · RealHunt",
+    description: "Discover and vote for real homes under €100,000, one property at a time.",
+  },
+  "/leaderboard": {
+    title: "Top property hunters · RealHunt",
+    description: "Meet the people finding the most-loved homes under €100,000.",
+  },
+  "/alerts": {
+    title: "Property alerts under €100,000 · RealHunt",
+    description: "Create a free alert for affordable homes that match your country, price and property preferences.",
+  },
+  "/help-buying": {
+    title: "Help buying a home abroad · RealHunt",
+    description: "Find independent local help for legal checks, surveys, translation and taxes when buying abroad.",
+  },
+  "/account/saved": {
+    title: "Saved homes · RealHunt",
+    description: "Your saved RealHunt properties.",
+    robots: "noindex, nofollow",
+  },
+};
+function RouteMeta({ path }: { path: string }) {
+  const privateRoute = /^\/(hunt|inbox)(\/|$)/.test(path);
+  const meta = STATIC_META[path] || (privateRoute ? {
+    title: "Your RealHunt account",
+    description: "Your private RealHunt activity.",
+    robots: "noindex, nofollow" as const,
+  } : null);
+  useDocumentMeta(meta ? {
+    ...meta,
+    canonicalUrl: `https://realhunt.co${path}`,
+  } : {
+    title: "RealHunt — Homes under €100,000",
+    description: "Real homes under €100,000, found by people and ranked by votes.",
+    canonicalUrl: `https://realhunt.co${path}`,
+  });
+  return null;
+}
 function Shell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const langV = useLangVersion();
@@ -131,10 +184,6 @@ function Shell({ children }: { children: ReactNode }) {
       sequence.current++;
     };
   }, [user?.id]);
-  useEffect(() => {
-    if (/^\/(deal\/|insider|blog|cheap-houses|new-builds|developers|inbox|compare-new-builds|costs|research|agents)/.test(location.pathname)) return; // these pages set their own title
-    document.title = "RealHunt — Homes under €100,000. Found by people. Ranked by you.";
-  }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
   // has to find the home again and click twice.
   useEffect(() => {
@@ -186,6 +235,7 @@ function Shell({ children }: { children: ReactNode }) {
       }}
     >
       <div className={"hunt has-tabbar" + (dark ? " is-dark" : "")}>
+        {!/^\/(deal\/|insider|blog|cheap-houses|new-builds|developers|compare-new-builds|costs|research|agents)(\/|$)/.test(location.pathname) && <RouteMeta path={location.pathname} />}
         <header className="hunt-header">
           <Link to="/" className="hunt-brand">
             <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#141414" /><path d="M14 35 L32 17 L50 35" fill="none" stroke="#FFFFFF" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" /><circle cx="32" cy="43.5" r="6.5" fill="#0EA5E9" /></svg>RealHunt
@@ -195,7 +245,7 @@ function Shell({ children }: { children: ReactNode }) {
               <Search size={16} />
               Search
             </Link>
-            <Link to="/hunt/saved" aria-label="Saved deals">
+            <Link to="/account/saved" aria-label="Saved deals">
               <Bookmark size={19} />
             </Link>
             <NotifBell />
@@ -539,7 +589,7 @@ function SponsoredCard() {
         <Link to="/ecobeachcity" className="hunt-media">
           <img src={EBC.image_urls![0]} alt="Eco Beach City cabin in Sumba" loading="lazy" />
         </Link>
-        <span className="hunt-sponsored-label">Sponsored</span>
+        <span className="hunt-sponsored-label">Paid placement · Eco Beach City</span>
       </div>
       <div className="hunt-card-body">
         <div className="hunt-card-location">Indonesia <span>· Beach</span></div>
@@ -547,6 +597,7 @@ function SponsoredCard() {
         <h2><Link to="/ecobeachcity">Beachfront cabin + land in Sumba</Link></h2>
         <p className="hunt-metrics">Mamboro, Sumba · Eco Beach City</p>
         <p>Cabin plus second-line plot. Renewable 80-year lease. Instalments available.</p>
+        <p className="hunt-sponsored-note">Advertisement. Payment does not affect RealHunt’s community ranking.</p>
         <Link to="/ecobeachcity" className="hunt-primary">Explore Eco Beach City <ArrowUpRight size={16} /></Link>
       </div>
     </article>
@@ -573,7 +624,7 @@ function QuickSubmission({ initialUrl = "", standalone = false }: { initialUrl?:
     finally { submitting.current = false; setBusy(false); }
   }
   return <section className={"hunt-quick-submit" + (standalone ? " hunt-quick-standalone" : "")} aria-label="Share a property">
-    <h2>Found a great property?</h2>
+    {standalone ? <h1>Submit a home under €100,000</h1> : <h2>Found a great property?</h2>}
     <p>Share a link. We review. Everyone votes.</p>
     {result ? <div role="status" className="hunt-quick-success">
       <strong>{result.duplicate ? "This property is already published." : result.already ? "This property is already in your submissions." : "Received. Your property is pending admin review."}</strong>
@@ -654,7 +705,7 @@ function Home() {
   useEffect(() => {
     if (!feed?.rows?.length) return;
     const idle = (window as any).requestIdleCallback || ((cb: () => void) => setTimeout(cb, 600));
-    idle(() => preloadImages(feed.rows.slice(0, 12).map((r: any) => r.image_urls?.[0])));
+    idle(() => preloadImages(feed.rows.slice(0, 3).map((r: any) => r.image_urls?.[0])));
   }, [feed?.rows?.length]);
   // Endless feed: the next page loads before the visitor reaches the bottom.
   useEffect(() => {
@@ -706,7 +757,7 @@ function Home() {
         <SmartSearch value={q} onSearch={search} inputRef={searchRef} />
         <Freshness feed={feed} visitors={live?.today} />
       </section>
-      <Vibes active={vibe} onPick={pickVibe} />
+      <Vibes rows={feed?.rows || []} active={vibe} onPick={pickVibe} />
       <ExploreLinks />
       {!q && <InsiderStrip />}
       {!q && <BuyerPicks compact />}
@@ -718,8 +769,8 @@ function Home() {
         </nav>
         <span className="hv-closes">{scope === "all" ? "All votes since launch" : `Weekly board ${closesIn(feed?.week?.ends_at) || ""}`}</span>
       </div>
-      <Filters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort }} onChange={setFilters} />
-      {q && feed && <p className="hv-searchnote">{feed.total} {feed.total === 1 ? "home" : "homes"} for “{q}”</p>}
+      <Filters countries={country && feed ? { ...(feed.countries_count || {}), [country]: feed.total } : (feed?.countries_count || {})} value={{ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort }} onChange={setFilters} />
+      {feed && <p className="hv-searchnote" aria-live="polite">{feed.total} {feed.total === 1 ? "home" : "homes"}{q ? ` for “${q}”` : country ? ` in ${country}` : " available"}</p>}
       {nextUp.length > 0 && (
         <aside className="hunt-keepgoing" aria-label="More to vote on">
           <strong>Keep going: more in {more?.country}</strong>
@@ -740,7 +791,7 @@ function Home() {
           ? [0, 1, 2, 3, 4, 5].map((n) => <CardSkeleton key={n} />)
           : (showPodium ? displayedRows.slice(3) : displayedRows)?.map((d: any, index: number) => (
             <Fragment key={d.id}>
-              <Card4 deal={d} scope={scope} onChange={() => load()} />
+              <Card4 deal={d} scope={scope} onChange={() => load()} priority={index < 2} />
               {index === 8 && plain && <SponsoredCard />}
             </Fragment>
           ))}
@@ -828,21 +879,32 @@ function Detail() {
   }, [slug, session?.token, user?.id]);
   const d: Deal = data?.deal || cached;
   useEffect(() => { if (d?.image_urls) preloadImages(d.image_urls.slice(0, 8)); }, [d?.id]);
-  useEffect(() => {
-    if (!d) return;
-    const where = d.location_name || d.country || "";
-    document.title = `${d.price_eur != null ? money(d.price_eur) + " · " : ""}${cleanTitle(d)}${where && !cleanTitle(d).includes(where) ? " · " + where : ""} · RealHunt`;
-    const desc = `${cleanTitle(d)}${d.price_eur != null ? " for " + money(d.price_eur) : ""}. Voted by the RealHunt community. Homes under €100,000.`;
-    const set = (sel: string, attr: string, key: string, val: string) => {
-      let m = document.head.querySelector(sel) as HTMLMetaElement | null;
-      if (!m) { m = document.createElement("meta"); m.setAttribute(attr, key); document.head.appendChild(m); }
-      m.setAttribute("content", val);
-    };
-    set('meta[name="description"]', "name", "description", desc);
-    set('meta[property="og:title"]', "property", "og:title", document.title);
-    set('meta[property="og:description"]', "property", "og:description", desc);
-    if (d.image_urls?.[0]) set('meta[property="og:image"]', "property", "og:image", new URL(d.image_urls[0], location.origin).href);
-  }, [d?.id]);
+  const detailTitle = d
+    ? `${d.price_eur != null ? money(d.price_eur) + " · " : ""}${cleanTitle(d)} · RealHunt`
+    : "Property details · RealHunt";
+  const detailDescription = d
+    ? `${cleanTitle(d)}${d.price_eur != null ? " for " + money(d.price_eur) : ""}. Community-ranked property with the original listing and buying-cost context.`
+    : "Loading this RealHunt property.";
+  const detailUrl = `https://realhunt.co/deal/${slug || ""}`;
+  const detailImage = d?.image_urls?.[0] ? new URL(d.image_urls[0], window.location.origin).href : undefined;
+  useDocumentMeta({
+    title: detailTitle,
+    description: detailDescription,
+    canonicalUrl: detailUrl,
+    ogImage: detailImage,
+    ogType: "product",
+    robots: d ? "index, follow" : "noindex, nofollow",
+    jsonLd: d ? {
+      "@context": "https://schema.org",
+      "@type": "RealEstateListing",
+      name: cleanTitle(d),
+      description: detailDescription,
+      url: detailUrl,
+      image: (d.image_urls || []).slice(0, 8).map((image: string) => new URL(image, window.location.origin).href),
+      offers: d.price_eur != null ? { "@type": "Offer", price: d.price_eur, priceCurrency: "EUR", url: detailUrl } : undefined,
+      address: { "@type": "PostalAddress", addressLocality: d.location_name || undefined, addressCountry: d.country || undefined },
+    } : null,
+  });
   if (error)
     return (
       <div className="hunt-wrap">
@@ -1524,7 +1586,7 @@ function Mine() {
       {pathname.endsWith("saved") && <ShareSavedToggle />}
       <nav className="hunt-tabs">
         <Link to="/hunt/mine">My submissions</Link>
-        <Link to="/hunt/saved">Saved deals</Link>
+        <Link to="/account/saved">Saved deals</Link>
         {session?.hunter && (
           <Link to={`/hunter/${session.hunter.handle}`}>Public profile ↗</Link>
         )}
@@ -1870,7 +1932,7 @@ export default function Community() {
       <HomesPage />
     ) : path.startsWith("/c/") ? (
       <CollectionPage />
-    ) : path.startsWith("/hunt/") ? (
+    ) : path === "/account/saved" || path.startsWith("/hunt/") ? (
       <Mine />
     ) : (
       <Home />

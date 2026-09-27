@@ -7,6 +7,7 @@ import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom"
 import { ArrowUp, X, ChevronLeft, ChevronRight, MapPin, BadgeCheck, TrendingDown, Sparkles, Clock, Share2, Download, Mail, Check, Trophy, Users, Copy, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { COSTS, totalCost, bumpIx } from "@/lib/rh";
 import { categories, money, type Deal } from "./api";
 import { useCommunity } from "./ctx";
@@ -469,7 +470,7 @@ export function SwipePage() {
   return (
     <div className="hunt-wrap hunt-swipe hv-swipe">
       {d && <div className="hv-swipe-bg" style={{ backgroundImage: `url("${d.image_urls?.[0]}")` }} aria-hidden="true" />}
-      <div className="hv-swipe-top"><strong>{t("Swipe")}</strong><span>{list.length - i > 0 ? `${list.length - i} homes left` : ""}</span></div>
+      <div className="hv-swipe-top"><h1>{t("Swipe homes")}</h1><span>{list.length - i > 0 ? `${list.length - i} homes left` : ""}</span></div>
       {!d ? (
         <div className="hunt-empty"><h3>You have seen every home this week.</h3><p>New homes are added every week.</p><Link className="hunt-primary" to="/map">{t("Map")}</Link></div>
       ) : (
@@ -638,9 +639,20 @@ export function GuidePage() {
   const { country = "italy" } = useParams();
   const g = GUIDES[country.toLowerCase()];
   const [homes, setHomes] = useState<Row[]>([]);
+  useDocumentMeta({
+    title: g ? `How to buy a cheap home in ${g.name} as a foreigner · RealHunt` : "Buying guides · RealHunt",
+    description: g ? `Steps, documents and taxes for buying a home in ${g.name} from abroad. General information in plain English.` : "Plain-English guides to buying an affordable home abroad.",
+    canonicalUrl: `https://realhunt.co/guide${g ? `/${country.toLowerCase()}` : ""}`,
+    jsonLd: g ? {
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      name: `How to buy a cheap home in ${g.name} as a foreigner`,
+      description: `General steps for buying a home in ${g.name} from abroad.`,
+      step: g.steps.map(([name, text]) => ({ "@type": "HowToStep", name, text })),
+    } : null,
+  });
   useEffect(() => {
     if (!g) return;
-    document.title = `How to buy a cheap home in ${g.name} as a foreigner · RealHunt`;
     feed({ country: g.name, limit: 6 }).then((f) => setHomes(f.rows)).catch(() => {});
   }, [country]);
   if (!g) return <div className="hunt-wrap hunt-page"><h1>Guides</h1><p>{Object.values(GUIDES).map((x) => <Link key={x.name} to={`/guide/${x.name.toLowerCase()}`} className="hunt-link">{x.name} </Link>)}</p></div>;
@@ -662,9 +674,12 @@ export function HomesPage() {
   const name = decodeURIComponent(country).replace(/-/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
   const max = Number((cap.match(/\d+/) || [])[0]) || 100000;
   const [data, setData] = useState<{ rows: Row[]; total: number } | null>(null);
+  useDocumentMeta({
+    title: `Homes under ${money(max)} in ${name} · RealHunt`,
+    description: `Houses for sale under ${money(max)} in ${name}, found by people, ranked by votes and linked to their original listings.`,
+    canonicalUrl: `https://realhunt.co/homes/${country}${cap ? `/${cap}` : ""}`,
+  });
   useEffect(() => {
-    document.title = `Homes under ${money(max)} in ${name} · RealHunt`;
-    const m = document.querySelector('meta[name="description"]'); if (m) m.setAttribute("content", `Houses for sale under ${money(max)} in ${name}, found by people and ranked by votes. Updated every day.`);
     setData(null); feed({ scope: "all", country: name, max_price: max, limit: 60 }).then(setData).catch(() => setData({ rows: [], total: 0 }));
   }, [country, cap]);
   const top = data?.rows?.[0];
@@ -714,7 +729,7 @@ export function ServicesPage() {
           catch (err) { setState((err as Error).message); }
         }}>
           <fieldset><legend>What do you need?</legend>
-            {SERVICES.map(([k, l]) => <label key={k} className="hunt-check"><input type="checkbox" checked={f.services.includes(k)} onChange={(e) => setF({ ...f, services: e.target.checked ? [...f.services, k] : f.services.filter((x) => x !== k) })} /> {l}</label>)}
+            {SERVICES.map(([k, l]) => <label key={k} className="hunt-check"><input type="checkbox" checked={f.services.includes(k)} onChange={(e) => setF({ ...f, services: e.target.checked ? [...f.services, k] : f.services.filter((x) => x !== k) })} /><span>{l}</span></label>)}
           </fieldset>
           <label>Country<select value={f.country} onChange={(e) => setF({ ...f, country: e.target.value })}><option value="">Choose</option>{["Italy", "Spain", "Portugal", "France", "Greece", "Other"].map((c) => <option key={c}>{c}</option>)}</select></label>
           <label>Email<input type="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></label>

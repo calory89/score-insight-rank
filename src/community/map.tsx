@@ -19,7 +19,7 @@ export default function MapView() {
     return { scope: "all", country: p.get("country") || "", category: p.get("type") || "", max_price: Number(p.get("price")) || null, min_sqm: Number(p.get("sqm")) || null, q: p.get("q") || undefined } as FeedParams;
   });
   const [counts, setCounts] = useState<Record<string, number>>({});
-  const [n, setN] = useState<number | null>(null);
+  const [stats, setStats] = useState<{ mapped: number; total: number } | null>(null);
   const navigate = useNavigate();
   useEffect(() => {
     document.title = "Map of homes under €100,000 · RealHunt";
@@ -36,9 +36,13 @@ export default function MapView() {
   }, []);
   useEffect(() => {
     feedAll(f).then((data) => {
-      setCounts(data.countries_count || {});
       const rows = data.rows.filter((r: Row) => r.lat != null && r.lng != null);
-      setN(rows.length);
+      const mappedCounts = rows.reduce((acc: Record<string, number>, row: Row) => {
+        if (row.country) acc[row.country] = (acc[row.country] || 0) + 1;
+        return acc;
+      }, {});
+      setCounts(mappedCounts);
+      setStats({ mapped: rows.length, total: Number(data.total ?? data.rows.length) });
       if (!layer.current || !map.current) return;
       layer.current.clearLayers();
       const pts: L.LatLngExpression[] = [];
@@ -50,13 +54,13 @@ export default function MapView() {
       });
       map.current.invalidateSize();
       if (pts.length) { const fit = () => { if (!map.current) return; map.current.invalidateSize(); map.current.fitBounds(L.latLngBounds(pts), { padding: [6, 6], maxZoom: 9 }); }; fit(); setTimeout(fit, 250); }
-    }).catch(() => setN(0));
+    }).catch(() => setStats({ mapped: 0, total: 0 }));
   }, [JSON.stringify(f)]);
   return (
     <div className="hunt-wrap hunt-mappage">
-      <h1>{t("Map")}</h1>
+      <h1>{t("Map")} of homes under €100k</h1>
       <Filters countries={counts} value={f} onChange={(v) => setF({ ...v, scope: "all" })} />
-      <p className="hunt-fine">{n === null ? "Loading…" : `${n} homes. Pins show the village, not the exact house.`}</p>
+      <p className="hunt-fine" aria-live="polite">{stats === null ? "Loading…" : `${stats.mapped} mapped${stats.total > stats.mapped ? ` · ${stats.total - stats.mapped} more without an approximate location` : ""}. Pins show the village, never the exact house.`}</p>
       <div ref={el} className="hunt-map" />
     </div>
   );

@@ -7,6 +7,7 @@ import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
 import { Heart, Bell, MessageSquare, User, LogOut, Check, Trash2, Share2, Gift, Columns, LayoutDashboard, Sparkles, Clock, ChevronRight, Map } from "lucide-react";
 import { db, eur, FLAG, norm, IG, srcSet, track, MAX_PRICE } from "@/lib/rh";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
 
 const TABS = [["home", "Overview", LayoutDashboard], ["saved", "Saved homes", Heart], ["alerts", "Alerts", Bell], ["requests", "My requests", MessageSquare], ["profile", "Profile", User]] as const;
 const COUNTRIES = ["Any", "Italy", "Spain", "Portugal", "France", "Greece", "Japan", "Sweden", "Norway", "Denmark", "Finland", "Indonesia"];
@@ -20,6 +21,12 @@ const Card = ({ f, badge }: { f: IG; badge?: string }) => { const c = norm(f.cou
 
 const Account = () => {
   const { tab = "home" } = useParams();
+  useDocumentMeta({
+    title: "Your account · RealHunt",
+    description: "Your private RealHunt account, alerts, requests and profile.",
+    canonicalUrl: "https://realhunt.co/account",
+    robots: "noindex, nofollow",
+  });
   const nav = useNavigate();
   const { user } = useAuth();
   const [auth, setAuth] = useState(false);
@@ -35,7 +42,6 @@ const Account = () => {
   const [copied, setCopied] = useState("");
   const copy = (t: string, k: string) => { navigator.clipboard?.writeText(t).then(() => { setCopied(k); setTimeout(() => setCopied(""), 1600); }); };
 
-  useEffect(() => { document.title = "Your account · RealHunt"; }, []);
   useEffect(() => {
     if (!user) { setAuth(true); return; }
     setAuth(false);

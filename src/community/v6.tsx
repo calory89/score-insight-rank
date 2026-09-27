@@ -7,8 +7,8 @@ import { Heart, Search, X, Plane, Waves, ShoppingBasket, TrainFront, Trees, Play
 import { supabase } from "@/integrations/supabase/client";
 import { FLAG, bumpIx } from "@/lib/rh";
 import { money, type Deal } from "./api";
-import { feedAll, niceTitle, Lightbox, type Row } from "./extras";
-import { useVote, SaveHeart, ShareButton, remember, rowCache, preloadImages } from "./v4";
+import { feed, niceTitle, Lightbox, type Row } from "./extras";
+import { useVote, SaveHeart, ShareButton, preloadImages } from "./v4";
 import COLORS from "@/data/card-colors.json";
 
 const MiniMap = lazy(() => import("./minimap"));
@@ -79,12 +79,10 @@ const VIBES: { k: string; label: string; q?: string; country?: string; type?: st
   { k: "terrace", label: "Big terrace", q: "terrace" },
   { k: "cheap", label: "Under €30k", price: 30000 },
 ];
-export function Vibes({ active, onPick }: { active: string; onPick: (v: { q?: string; country?: string; type?: string; price?: number; k: string } | null) => void }) {
-  const [all, setAll] = useState<Row[]>(() => Array.from(rowCache.values()));
-  useEffect(() => { if (all.length < 60) feedAll({ scope: "all" }).then((f) => { remember(f.rows); setAll(f.rows); }).catch(() => {}); }, []);
+export function Vibes({ rows, active, onPick }: { rows: Row[]; active: string; onPick: (v: { q?: string; country?: string; type?: string; price?: number; k: string } | null) => void }) {
   const used = new Set<string>();
   const pick = (v: (typeof VIBES)[number]) => {
-    const hit = all.find((r) => {
+    const hit = rows.find((r) => {
       if (used.has(r.id)) return false;
       const txt = `${r.title} ${r.location_name} ${r.why_great || ""}`.toLowerCase();
       return (!v.q || txt.includes(v.q)) && (!v.country || r.country === v.country) && (!v.type || r.category === v.type) && (!v.price || (r.price_eur || 0) <= v.price);
@@ -99,7 +97,7 @@ export function Vibes({ active, onPick }: { active: string; onPick: (v: { q?: st
         const on = active === v.k;
         return (
           <button key={v.k} aria-pressed={on} onClick={() => onPick(on ? null : v)} className={on ? "is-on" : ""}>
-            <span className="hv-vibe-img" style={{ backgroundColor: "#E9E4D8" }}>{img && <img src={img} alt="" loading="lazy" />}</span>
+            <span className="hv-vibe-img" style={{ backgroundColor: "#E9E4D8" }}>{img && <img src={img} alt="" loading="lazy" decoding="async" />}</span>
             <span>{v.label}</span>
           </button>
         );
@@ -121,6 +119,7 @@ function HeroVote({ deal, scope }: { deal: Row; scope: string }) {
   const v = useVote(deal, scope);
   return (
     <button className={"hv-heart is-big" + (v.selected ? " is-on" : "")} disabled={!v.ready || v.busy} aria-pressed={v.selected}
+      aria-label={`${v.selected ? "You voted for this home" : "Vote for this home"} · ${num(v.total)} votes`}
       onClick={(e) => { e.preventDefault(); e.stopPropagation(); v.vote(1); }}>
       <Heart size={20} fill={v.selected ? "currentColor" : "none"} /><strong>{num(v.total)}</strong>
     </button>
@@ -146,7 +145,7 @@ export function PodiumHero({ rows, scope, endsAt }: { rows: Row[]; scope: string
       </div>
       <div className="hv-podium-grid">
         <Link to={`/deal/${encodeURIComponent(a.slug)}`} className="hv-pod-big" style={{ backgroundColor: cardColor(a.slug) }}>
-          <img src={a.image_urls?.[0]} alt={niceTitle(a)} />
+          <img src={a.image_urls?.[0]} alt={niceTitle(a)} loading="eager" fetchPriority="high" decoding="async" />
           <span className="hv-pod-medal is-gold">{medal[0]} #1 {scope === "all" ? "all time" : "this week"}</span>
           <div className="hv-pod-copy">
             <strong className="hv-pod-price">{money(a.price_eur)}</strong>
@@ -335,39 +334,64 @@ function TourPlayer({ deal, imgs, onClose }: { deal: Deal; imgs: string[]; onClo
 // ---------------------------------------------------------------- 19: search with suggestions
 export function SmartSearch({ value, onSearch, inputRef }: { value: string; onSearch: (q: string) => void; inputRef?: React.RefObject<HTMLInputElement> }) {
   const [text, setText] = useState(value);
-  const [all, setAll] = useState<Row[]>([]);
+  const [results, setResults] = useState<Row[]>([]);
   const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const request = useRef(0);
   const navigate = useNavigate();
   useEffect(() => setText(value), [value]);
-  const load = () => { if (!all.length) feedAll({ scope: "all" }).then((f) => { remember(f.rows); setAll(f.rows); }).catch(() => {}); };
   const q = text.trim().toLowerCase();
+  useEffect(() => {
+    if (!open || q.length < 2) { setResults([]); setBusy(false); return; }
+    const id = ++request.current;
+    const timer = window.setTimeout(async () => {
+      setBusy(true);
+      try {
+        const found = await feed({ scope: "all", q, limit: 12 });
+        if (id === request.current) setResults(found.rows || []);
+      } catch {
+        if (id === request.current) setResults([]);
+      } finally {
+        if (id === request.current) setBusy(false);
+      }
+    }, 220);
+    return () => window.clearTimeout(timer);
+  }, [q, open]);
   const sugg = useMemo(() => {
     if (q.length < 2) return { places: [] as { label: string; img?: string; n: number }[], homes: [] as Row[] };
     const places = new Map<string, { label: string; img?: string; n: number }>();
     const homes: Row[] = [];
-    for (const r of all) {
-      const parts = [r.country, ...(r.location_name || "").split(",").map((s) => s.trim())].filter(Boolean);
-      for (const p of parts) if (p.toLowerCase().includes(q)) { const e = places.get(p) || { label: p, img: r.image_urls?.[0], n: 0 }; e.n++; places.set(p, e); }
-      if (`${r.title} ${r.why_great || ""}`.toLowerCase().includes(q)) homes.push(r);
+    for (const r of results) {
+      const parts = [r.country, ...(r.location_name || "").split(",").map((part) => part.trim())].filter(Boolean);
+      for (const place of parts) if (place.toLowerCase().includes(q)) {
+        const entry = places.get(place) || { label: place, img: r.image_urls?.[0], n: 0 };
+        entry.n++;
+        places.set(place, entry);
+      }
+      homes.push(r);
     }
     return { places: Array.from(places.values()).sort((a, b) => b.n - a.n).slice(0, 4), homes: homes.slice(0, 4) };
-  }, [q, all.length]);
-  const go = (s: string) => { setText(s); setOpen(false); onSearch(s); };
+  }, [q, results]);
+  const go = (query: string) => { setText(query); setOpen(false); onSearch(query); };
   return (
     <div className="hv-smart">
       <form className="hv-search" role="search" onSubmit={(e) => { e.preventDefault(); go(text); }}>
         <Search size={18} aria-hidden="true" />
-        <input ref={inputRef} type="search" value={text} onFocus={() => { load(); setOpen(true); }} onBlur={() => setTimeout(() => setOpen(false), 180)}
+        <input ref={inputRef} type="search" value={text} onFocus={() => setOpen(true)} onBlur={() => window.setTimeout(() => setOpen(false), 180)}
           onChange={(e) => { setText(e.target.value); setOpen(true); }} placeholder="Search a country, town or lake, sea, cabin…" aria-label="Search homes" enterKeyHint="search" autoComplete="off" />
         {text && <button type="button" aria-label="Clear search" onClick={() => go("")}><X size={16} /></button>}
       </form>
       {open && (q.length < 2 ? (
-        <div className="hv-sugg"><small>Try</small><div className="hv-sugg-pills">{["sea view", "lake", "sauna", "Italy", "Japan", "Sweden", "terrace", "stone"].map((s) => <button key={s} onMouseDown={() => go(s)}>{s}</button>)}</div></div>
-      ) : (sugg.places.length + sugg.homes.length > 0) && (
+        <div className="hv-sugg"><small>Try</small><div className="hv-sugg-pills">{["sea view", "lake", "sauna", "Italy", "Japan", "Sweden", "terrace", "stone"].map((suggestion) => <button key={suggestion} onMouseDown={() => go(suggestion)}>{suggestion}</button>)}</div></div>
+      ) : busy ? (
+        <div className="hv-sugg hv-sugg-status" role="status">Searching homes…</div>
+      ) : (sugg.places.length + sugg.homes.length > 0) ? (
         <div className="hv-sugg">
-          {sugg.places.map((p) => <button key={p.label} className="hv-sugg-row" onMouseDown={() => go(p.label)}><span className="hv-sugg-img">{p.img ? <img src={p.img} alt="" /> : <MapPin size={16} />}</span><span><strong>{p.label}</strong><small>{p.n} {p.n === 1 ? "home" : "homes"}</small></span></button>)}
-          {sugg.homes.map((r) => <button key={r.id} className="hv-sugg-row" onMouseDown={() => { setOpen(false); navigate(`/deal/${encodeURIComponent(r.slug)}`); }}><span className="hv-sugg-img"><img src={r.image_urls?.[0]} alt="" /></span><span><strong>{money(r.price_eur)} · {niceTitle(r)}</strong><small>{r.location_name}</small></span></button>)}
+          {sugg.places.map((place) => <button key={place.label} className="hv-sugg-row" onMouseDown={() => go(place.label)}><span className="hv-sugg-img">{place.img ? <img src={place.img} alt="" loading="lazy" /> : <MapPin size={16} />}</span><span><strong>{place.label}</strong><small>{place.n} matching {place.n === 1 ? "home" : "homes"}</small></span></button>)}
+          {sugg.homes.map((home) => <button key={home.id} className="hv-sugg-row" onMouseDown={() => { setOpen(false); navigate(`/deal/${encodeURIComponent(home.slug)}`); }}><span className="hv-sugg-img"><img src={home.image_urls?.[0]} alt="" loading="lazy" /></span><span><strong>{money(home.price_eur)} · {niceTitle(home)}</strong><small>{home.location_name}</small></span></button>)}
         </div>
+      ) : (
+        <div className="hv-sugg hv-sugg-status">No instant matches. Press Enter to search the full catalogue.</div>
       ))}
     </div>
   );

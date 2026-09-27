@@ -83,7 +83,7 @@ export function HeartVote({ deal, scope = "week", onChange, big = false }: { dea
   const [pop, setPop] = useState(0);
   return (
     <button className={"hv-heart" + (v.selected ? " is-on" : "") + (big ? " is-big" : "")} disabled={!v.ready || v.busy}
-      aria-pressed={v.selected} aria-label={v.selected ? "You voted for this home" : "Vote for this home"}
+      aria-pressed={v.selected} aria-label={`${v.selected ? "You voted for this home" : "Vote for this home"} · ${num(v.total)} votes`}
       onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!v.selected) { setPop((n) => n + 1); v.vote(1); } }}>
       <Heart key={pop} size={big ? 22 : 19} fill={v.selected ? "currentColor" : "none"} className={pop ? "hv-beat" : ""} />
       <strong>{num(v.total)}</strong>
@@ -227,7 +227,7 @@ export function SaveHeart({ deal, className = "hv-save" }: { deal: Deal; classNa
 }
 
 // ---------------------------------------------------------------- the card
-function Photos({ deal, href, onDouble }: { deal: Row; href: string; onDouble: () => void }) {
+function Photos({ deal, href, onDouble, priority = false }: { deal: Row; href: string; onDouble: () => void; priority?: boolean }) {
   const imgs = (deal.image_urls || []).filter(Boolean);
   // Instagram covers carry the poster's own price and captions printed on the photo; the second
   // photo is the house itself, so the feed opens on that one.
@@ -275,7 +275,7 @@ function Photos({ deal, href, onDouble }: { deal: Row; href: string; onDouble: (
         tap.current.timer = setTimeout(() => { tap.current.t = 0; navigate(href); }, 280);
       }}>
       <a href={href} onClick={(e) => e.preventDefault()} aria-label={niceTitle(deal)} tabIndex={-1}>
-        <img key={i} className="hv-fade" onLoad={(e) => e.currentTarget.classList.add("is-in")} src={imgs[i] || "/favicon.png"} alt={niceTitle(deal)} loading="lazy" decoding="async"
+        <img key={i} className="hv-fade" onLoad={(e) => e.currentTarget.classList.add("is-in")} src={imgs[i] || "/favicon.png"} alt={niceTitle(deal)} loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : "auto"} decoding="async"
           onError={(e) => { if (!e.currentTarget.src.endsWith("/favicon.png")) e.currentTarget.src = "/favicon.png"; }} />
       </a>
       {burst > 0 && <span key={burst} className="hv-burst" aria-hidden="true"><Heart size={96} fill="currentColor" /></span>}
@@ -307,7 +307,7 @@ function useRankMove(rank?: number) {
   }, [rank]);
   return move;
 }
-export function Card4({ deal, scope = "week", onChange }: { deal: Row; scope?: string; onChange?: () => void }) {
+export function Card4({ deal, scope = "week", onChange, priority = false }: { deal: Row; scope?: string; onChange?: () => void; priority?: boolean }) {
   const { call } = useCommunity();
   const v = useVote(deal, scope, onChange);
   const move = useRankMove(deal.rank);
@@ -317,7 +317,7 @@ export function Card4({ deal, scope = "week", onChange }: { deal: Row; scope?: s
   return (
     <article className="hv-card" onMouseEnter={warm} onTouchStart={warm}>
       <div className="hv-frame" style={{ backgroundColor: cardColor(deal.slug) }}>
-        <Photos deal={deal} href={href} onDouble={() => { if (!v.selected) v.vote(1); }} />
+        <Photos deal={deal} href={href} priority={priority} onDouble={() => { if (!v.selected) v.vote(1); }} />
         <div className="hv-top">
           {deal.rank ? <span className={"hv-rank" + (deal.rank <= 3 ? " is-podium" : "") + (move ? " is-up" : "")}>#{deal.rank}{move ? <em> ▲{move}</em> : null}</span> : null}
           <Chip deal={deal} scope={scope} />
@@ -326,12 +326,12 @@ export function Card4({ deal, scope = "week", onChange }: { deal: Row; scope?: s
         </div>
         <strong className="hv-price">{money(deal.price_eur)}</strong>
       </div>
-      <Link to={href} className="hv-info" aria-label={niceTitle(deal)}>
+      <Link to={href} className="hv-info">
         <CardMeta deal={deal} />
       </Link>
       <div className="hv-actions">
         <button className={"hv-heart" + (v.selected ? " is-on" : "")} disabled={!v.ready || v.busy} aria-pressed={v.selected}
-          aria-label={v.selected ? "You voted for this home" : "Vote for this home"} onClick={() => v.vote(1)}>
+          aria-label={`${v.selected ? "You voted for this home" : "Vote for this home"} · ${num(v.total)} votes`} onClick={() => v.vote(1)}>
           <Heart size={19} fill={v.selected ? "currentColor" : "none"} /><strong key={v.total} className="hv-count">{num(v.total)}</strong>
         </button>
         <span className="hv-hint" />
@@ -375,7 +375,7 @@ export function TabBar() {
       <Link to="/" aria-current={is("/") ? "page" : undefined}><HomeIcon size={21} /><span>Feed</span></Link>
       <Link to="/swipe" aria-current={is("/swipe") ? "page" : undefined}><Layers size={21} /><span>Swipe</span></Link>
       <Link to="/map" aria-current={is("/map") ? "page" : undefined}><MapPin size={21} /><span>Map</span></Link>
-      <Link to="/hunt/saved" aria-current={is("/hunt/saved") ? "page" : undefined}><Bookmark size={21} /><span>Saved</span></Link>
+      <Link to="/account/saved" aria-current={is("/account/saved") ? "page" : undefined}><Bookmark size={21} /><span>Saved</span></Link>
       <Link to="/me" aria-current={is("/me") || is("/hunt/mine") ? "page" : undefined}><User size={21} /><span>Profile</span></Link>
     </nav>
   );

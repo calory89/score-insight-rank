@@ -13,6 +13,7 @@ import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
 import { db, eur, track } from "@/lib/rh";
 import { AGREEMENT_VERSION, COMMISSION_PCT, SOURCE_SHARE_PCT, PAYMENT_DAYS } from "@/lib/agreement";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { Lock, Upload, Users, Search, Check, Download, Trash2, ShieldCheck, Handshake, Fingerprint, Loader2, ToggleLeft, ToggleRight, ChevronRight, FileSignature, LayoutGrid, List, Phone, Mail, CalendarClock, BadgeEuro, AlertTriangle, X, Receipt, Sparkles, Copy } from "lucide-react";
 
 // ── fingerprints, not contacts ─────────────────────────────────────────────────
@@ -43,6 +44,12 @@ const NetworkApp = () => {
   const { tab: tParam } = useParams();
   const nav = useNavigate();
   const tab: Tab = (TABS.find(([k]) => k === tParam)?.[0] || "overview") as Tab;
+  useDocumentMeta({
+    title: "Developer panel · RealHunt Network",
+    description: "Private RealHunt Network workspace for projects, buyer introductions and referral attribution.",
+    canonicalUrl: "https://realhunt.co/network/app",
+    robots: "noindex, nofollow",
+  });
   const [ov, setOv] = useState<any | null | undefined>(undefined); // undefined = loading, null = no profile
   const [auth, setAuth] = useState(false);
   const [loadErr, setLoadErr] = useState(false);
@@ -100,7 +107,7 @@ const NetworkApp = () => {
       if (data) { const f = data.developer; setForm({ company: f.company || "", contact_name: f.contact_name || "", email: f.email || "", phone: f.phone || "", website: f.website || "", country: f.country || "", project_name: f.project_name || "", project_url: f.project_url || "", price_from: f.price_from || "", share_default: !!f.share_default }); }
     } catch { setLoadErr(true); } finally { clearTimeout(timeout); }
   };
-  useEffect(() => { document.title = "Developer panel · RealHunt Network"; track("devapp_view", { meta: { tab } }); }, [tab]);
+  useEffect(() => { track("devapp_view", { meta: { tab } }); }, [tab]);
   useEffect(() => { if (!user) { setOv(undefined); return; } load(); try { const p = JSON.parse(sessionStorage.getItem("rh_dev_prefill") || "null"); if (p) setForm((f: any) => ({ ...f, email: p.email || user.email || "", phone: p.phone || "", project_url: p.project_url || "" })); else setForm((f: any) => ({ ...f, email: user.email || "" })); } catch {} }, [user]);
   const contactsQuery = (offset: number, size: number) => db.rpc("dev_contacts_page", { p_query: contactQuery, p_mode: onlyShared, p_offset: offset, p_limit: size });
   useEffect(() => { setContactPage(0); }, [contactQuery, onlyShared]);

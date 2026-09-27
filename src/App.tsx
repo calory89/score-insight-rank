@@ -60,7 +60,6 @@ const NotFound = L(() => import("./pages/NotFound"));
 const Fit = L(() => import("./pages/Fit"));
 const Ebc = L(() => import("./pages/Ebc"));
 const Como = L(() => import("./pages/Como"));
-const Saved = L(() => import("./pages/Saved"));
 const Account = L(() => import("./pages/Account"));
 const MapPage = L(() => import("./pages/MapPage"));
 const Swipe = L(() => import("./pages/Swipe"));
@@ -96,10 +95,16 @@ const SuspenseFallback = () => <div className="min-h-[60vh] bg-paper" aria-busy=
 // Power-user extras load only once the browser is idle, never before the page you came for.
 const Extras = () => {
   const [on, setOn] = useState(false);
+  const { pathname } = useLocation();
   const { enabled } = useFeatureFlag("onboarding_tour");
-  useEffect(() => { const idle = (window as any).requestIdleCallback || ((cb: () => void) => setTimeout(cb, 2500)); idle(() => setOn(true)); }, []);
+  const showLegacyOnboarding = /^\/(app|dashboard|analysis|settings|admin|rankings|leads|tickets)(\/|$)/.test(pathname);
+  useEffect(() => {
+    const idle = (window as any).requestIdleCallback || ((cb: () => void) => setTimeout(cb, 2500));
+    const id = idle(() => setOn(true));
+    return () => { if ((window as any).cancelIdleCallback) (window as any).cancelIdleCallback(id); else clearTimeout(id); };
+  }, []);
   if (!on) return null;
-  return <Suspense fallback={null}><CommandPalette /><KeyboardShortcutsModal />{enabled && <OnboardingWizard />}</Suspense>;
+  return <Suspense fallback={null}><CommandPalette /><KeyboardShortcutsModal />{enabled && showLegacyOnboarding && <OnboardingWizard />}</Suspense>;
 };
 
 const CookieBanner = L(() => import("@/components/realhunt/CookieBanner"));
@@ -148,6 +153,7 @@ const AppRoutes = () => (
       <Route path="/deal/:slug" element={<Community />} />
       <Route path="/hunter/:handle" element={<Community />} />
       <Route path="/winners" element={<Community />} />
+      <Route path="/hunt/saved" element={<Navigate to="/account/saved" replace />} />
       <Route path="/hunt/:section" element={<Community />} />
       <Route path="/score" element={<IndexNew />} />
       <Route path="/homescoring" element={<HomeScoring />} />
@@ -195,10 +201,11 @@ const AppRoutes = () => (
       <Route path="/fit" element={<Fit />} />
       <Route path="/ecobeachcity" element={<Ebc />} />
       <Route path="/lake-como" element={<Como />} />
-      <Route path="/saved" element={<Saved />} />
+      <Route path="/saved" element={<Navigate to="/account/saved" replace />} />
       <Route path="/country/:country" element={<CountryToFeed />} />
       <Route path="/from/:account" element={<Home />} />
       <Route path="/account" element={<Account />} />
+      <Route path="/account/saved" element={<Community />} />
       <Route path="/account/:tab" element={<Account />} />
       <Route path="/map" element={<Community />} />
       <Route path="/swipe" element={<Community />} />

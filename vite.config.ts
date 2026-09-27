@@ -4,37 +4,6 @@ import path from "path";
 import fs from "fs";
 import { componentTagger } from "lovable-tagger";
 
-// Start the current catalogue/detail page's static imports while the HTML is being
-// parsed, instead of waiting for React -> router -> lazy page -> dependencies.
-// Other routes and all dynamic features stay lazy; URLs come from this build.
-function preloadPublicRoute() {
-  return {
-    name: "preload-public-route",
-    transformIndexHtml: {
-      order: "post" as const,
-      handler(_html: string, context: import("vite").IndexHtmlTransformContext) {
-        if (!context.bundle) return;
-        const bundle = context.bundle;
-        const routes: Record<string, string[]> = {};
-        for (const page of ["Home", "FindDetail"]) {
-          const entry = Object.values(bundle).find(item => item.type === "chunk" && item.facadeModuleId?.endsWith(`/pages/${page}.tsx`));
-          if (!entry || entry.type !== "chunk") continue;
-          const seen = new Set<string>();
-          const visit = (file: string) => {
-            if (seen.has(file)) return;
-            const chunk = bundle[file];
-            if (!chunk || chunk.type !== "chunk") return;
-            seen.add(file); chunk.imports.forEach(visit);
-          };
-          visit(entry.fileName);
-          routes[page] = [...seen].map(file => `/${file}`);
-        }
-        return [{ tag: "script", injectTo: "head" as const, children: `(()=>{const p=location.pathname,r=${JSON.stringify(routes)},k=p==='/'||/^\\/(country|from)\\//.test(p)?'Home':/^\\/find\\//.test(p)?'FindDetail':null;for(const href of r[k]||[]){const l=document.createElement('link');l.rel='modulepreload';l.href=href;l.crossOrigin='';document.head.appendChild(l)}})();` }];
-      },
-    },
-  };
-}
-
 // Share previews and SEO for a single-page app: WhatsApp, X, Facebook and LinkedIn do not run
 // JavaScript, so every listing gets its own copy of index.html with its title, description and
 // share card already in the <head>. Data comes from src/data/deal-meta.json, refreshed daily by
@@ -52,7 +21,7 @@ function prerenderPages() {
         const indexFile = path.join(root, "index.html");
         if (!fs.existsSync(indexFile)) return;
         const html = fs.readFileSync(indexFile, "utf8");
-        const page = (url: string, title: string, desc: string, image: string, body?: string, ld?: object[]) => {
+        const page = (url: string, title: string, desc: string, image: string, body?: string, ld?: object[], robots = "index, follow") => {
           let h = html;
           // Search engines and AI crawlers read this without running JavaScript. React replaces it on load.
           if (body) h = h.replace('<div id="root"></div>', () => `<div id="root">${body}</div>`);
@@ -60,6 +29,7 @@ function prerenderPages() {
           const rep = (re: RegExp, val: string) => { h = h.replace(re, val); };
           rep(/<title>[^<]*<\/title>/, `<title>${esc(title)}</title>`);
           rep(/<meta name="description" content="[^"]*"\s*\/?>/, `<meta name="description" content="${esc(desc)}" />`);
+          rep(/<meta name="robots" content="[^"]*"\s*\/?>/, `<meta name="robots" content="${esc(robots)}" />`);
           rep(/<link rel="canonical" href="[^"]*"\s*\/?>/, `<link rel="canonical" href="${esc(url)}" />`);
           rep(/<meta property="og:title" content="[^"]*"\s*\/?>/, `<meta property="og:title" content="${esc(title)}" />`);
           rep(/<meta property="og:description" content="[^"]*"\s*\/?>/, `<meta property="og:description" content="${esc(desc)}" />`);
@@ -79,7 +49,11 @@ function prerenderPages() {
         const deals: any[] = fs.existsSync(metaFile) ? JSON.parse(fs.readFileSync(metaFile, "utf8")) : [];
         for (const d of deals) {
           if (!d?.slug || !/^[A-Za-z0-9_-]+$/.test(d.slug)) continue;
-          page(`${SITE}/deal/${d.slug}`, `${d.title} · RealHunt`, d.desc, d.image || DEF);
+          const dealUrl = `${SITE}/deal/${d.slug}`;
+          page(dealUrl, `${d.title} · RealHunt`, d.desc, d.image || DEF, undefined, [{
+            "@context": "https://schema.org", "@type": "RealEstateListing", name: d.title,
+            description: d.desc, url: dealUrl, image: d.image ? [d.image] : [DEF]
+          }]);
         }
         const countries = Array.from(new Set(deals.map((d) => String(d.country || "").toLowerCase()).filter(Boolean)));
         const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -87,10 +61,23 @@ function prerenderPages() {
           page(`${SITE}/homes/${c}`, `Homes under €100,000 in ${cap(c)} · RealHunt`, `Houses for sale under €100,000 in ${cap(c)}, found by people and ranked by votes. New homes every day.`, DEF);
           for (const p of [20000, 40000, 60000, 80000]) page(`${SITE}/homes/${c}/under-${p}`, `Homes under €${p.toLocaleString("en")} in ${cap(c)} · RealHunt`, `Houses for sale under €${p.toLocaleString("en")} in ${cap(c)}, ranked by people's votes.`, DEF);
         }
-        for (const [c, n] of [["italy", "Italy"], ["spain", "Spain"], ["portugal", "Portugal"]]) page(`${SITE}/guide/${c}`, `How to buy a cheap home in ${n} as a foreigner · RealHunt`, `Steps, papers and taxes to buy a house in ${n} from abroad, in plain words.`, DEF);
+        for (const [c, n] of [["italy", "Italy"], ["spain", "Spain"], ["portugal", "Portugal"]]) {
+          const guideUrl = `${SITE}/guide/${c}`;
+          page(guideUrl, `How to buy a cheap home in ${n} as a foreigner · RealHunt`, `Steps, papers and taxes to buy a house in ${n} from abroad, in plain words.`, DEF, undefined, [{
+            "@context": "https://schema.org", "@type": "Article", headline: `How to buy a cheap home in ${n} as a foreigner`,
+            description: `Steps, papers and taxes to buy a house in ${n} from abroad.`, mainEntityOfPage: guideUrl,
+            author: { "@type": "Organization", name: "RealHunt" }, publisher: { "@type": "Organization", name: "RealHunt" }
+          }]);
+        }
         page(`${SITE}/map`, "Map of homes under €100,000 · RealHunt", "Every home under €100,000 on one map. Italy, Spain, Portugal and more.", DEF);
         page(`${SITE}/swipe`, "Swipe homes under €100,000 · RealHunt", "Swipe right to vote. The most voted homes rise to the top every week.", DEF);
         page(`${SITE}/leaderboard`, "Top hunters · RealHunt", "The people who find the best homes under €100,000.", DEF);
+        page(`${SITE}/alerts`, "Property alerts under €100,000 · RealHunt", "Create a free alert for affordable homes matching your country, budget and property preferences.", DEF);
+        page(`${SITE}/submit`, "Submit a home under €100,000 · RealHunt", "Share a property listing. RealHunt checks it before the community votes.", DEF);
+        page(`${SITE}/network`, "RealHunt Network · Buyer introductions for approved projects", `Performance-based buyer introductions for approved real-estate projects. No upfront platform fee; 5% applies only to an eligible completed sale under signed terms.`, DEF);
+        page(`${SITE}/network/app`, "Developer panel · RealHunt Network", "Private RealHunt Network workspace.", DEF, undefined, undefined, "noindex, nofollow");
+        page(`${SITE}/account`, "Your account · RealHunt", "Your private RealHunt account.", DEF, undefined, undefined, "noindex, nofollow");
+        page(`${SITE}/account/saved`, "Saved homes · RealHunt", "Your private saved homes.", DEF, undefined, undefined, "noindex, nofollow");
         // v7: blog, search pages, insider
         const readJson = (f: string, d: any) => { const p = path.resolve(__dirname, f); return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : d; };
         const abs = (u: string) => (u.startsWith("http") ? u : SITE + u);
@@ -159,7 +146,7 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  plugins: [react(), preloadPublicRoute(), prerenderPages(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [react(), prerenderPages(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     dedupe: ["react", "react-dom"],
     alias: {
