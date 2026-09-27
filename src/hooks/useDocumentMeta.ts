@@ -21,6 +21,20 @@ const useDocumentMeta = ({ title, description, ogImage, canonicalUrl, ogType, ro
   const json = JSON.stringify(jsonLd ?? null);
 
   useEffect(() => {
+    const previous = {
+      title: document.title,
+      description: document.querySelector('meta[name="description"]')?.getAttribute("content"),
+      ogDescription: document.querySelector('meta[property="og:description"]')?.getAttribute("content"),
+      twitterDescription: document.querySelector('meta[name="twitter:description"]')?.getAttribute("content"),
+      ogTitle: document.querySelector('meta[property="og:title"]')?.getAttribute("content"),
+      twitterTitle: document.querySelector('meta[name="twitter:title"]')?.getAttribute("content"),
+      robots: document.querySelector('meta[name="robots"]')?.getAttribute("content"),
+      canonical: document.querySelector('link[rel="canonical"]')?.getAttribute("href"),
+      ogUrl: document.querySelector('meta[property="og:url"]')?.getAttribute("content"),
+      ogType: document.querySelector('meta[property="og:type"]')?.getAttribute("content"),
+      ogImage: document.querySelector('meta[property="og:image"]')?.getAttribute("content"),
+      twitterImage: document.querySelector('meta[name="twitter:image"]')?.getAttribute("content"),
+    };
     document.title = title;
 
     if (description) {
@@ -56,7 +70,22 @@ const useDocumentMeta = ({ title, description, ogImage, canonicalUrl, ogType, ro
 
     return () => {
       scripts.forEach((script) => script.remove());
-      if (ogType && ogType !== "website") setMeta('meta[property="og:type"]', "content", "website");
+      document.title = previous.title;
+      const restore = (selector: string, value: string | null | undefined) => {
+        if (value != null) setMeta(selector, "content", value);
+      };
+      restore('meta[name="description"]', previous.description);
+      restore('meta[property="og:description"]', previous.ogDescription);
+      restore('meta[name="twitter:description"]', previous.twitterDescription);
+      restore('meta[property="og:title"]', previous.ogTitle);
+      restore('meta[name="twitter:title"]', previous.twitterTitle);
+      restore('meta[name="robots"]', previous.robots);
+      restore('meta[property="og:url"]', previous.ogUrl);
+      restore('meta[property="og:type"]', previous.ogType);
+      restore('meta[property="og:image"]', previous.ogImage);
+      restore('meta[name="twitter:image"]', previous.twitterImage);
+      const link = document.querySelector('link[rel="canonical"]');
+      if (link && previous.canonical) link.setAttribute("href", previous.canonical);
     };
   }, [title, description, ogImage, canonicalUrl, ogType, robots, json]);
 

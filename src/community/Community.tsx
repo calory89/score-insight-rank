@@ -235,7 +235,7 @@ function Shell({ children }: { children: ReactNode }) {
       }}
     >
       <div className={"hunt has-tabbar" + (dark ? " is-dark" : "")}>
-        {!/^\/(deal\/|insider|blog|cheap-houses|new-builds|developers|compare-new-builds|costs|research|agents)(\/|$)/.test(location.pathname) && <RouteMeta path={location.pathname} />}
+        {!/^\/(deal\/|guide|homes|insider|blog|cheap-houses|new-builds|developers|compare-new-builds|costs|research|agents)(\/|$)/.test(location.pathname) && <RouteMeta path={location.pathname} />}
         <header className="hunt-header">
           <Link to="/" className="hunt-brand">
             <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#141414" /><path d="M14 35 L32 17 L50 35" fill="none" stroke="#FFFFFF" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" /><circle cx="32" cy="43.5" r="6.5" fill="#0EA5E9" /></svg>RealHunt

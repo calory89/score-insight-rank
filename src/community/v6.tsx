@@ -342,7 +342,7 @@ export function SmartSearch({ value, onSearch, inputRef }: { value: string; onSe
   useEffect(() => setText(value), [value]);
   const q = text.trim().toLowerCase();
   useEffect(() => {
-    if (!open || q.length < 2) { setResults([]); setBusy(false); return; }
+    if (!open || q.length < 2) { request.current++; setResults([]); setBusy(false); return; }
     const id = ++request.current;
     const timer = window.setTimeout(async () => {
       setBusy(true);
