@@ -8,6 +8,7 @@ import { Check, Search, Users, Coins, Lock, Phone, Mail, FileSignature } from "l
 import { track } from "@/lib/rh";
 import { COMMISSION_PCT, SOURCE_SHARE_PCT, PAYMENT_DAYS } from "@/lib/agreement";
 import { useExperiment } from "@/lib/experiments";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
 
 const db = supabase as any;
 
@@ -18,8 +19,8 @@ const Network = () => {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [share, setShare] = useState<null | boolean>(null);
-  const headline = useExperiment("network_headline", [{ id: "A", text: `Free buyers for your project. You pay ${COMMISSION_PCT}% only when one buys.` }]);
-  const cta = useExperiment("network_cta", [{ id: "A", text: "Submit my project, free" }]);
+  const headline = useExperiment("network_headline", [{ id: "A", text: "Performance-based buyer introductions for approved projects." }]);
+  const cta = useExperiment("network_cta", [{ id: "A", text: "Submit project for review" }]);
   const photos = useExperiment("network_photos", [{ id: "A" }]);
   const order = useExperiment("network_order", [{ id: "A" }]);
   const PHOTOS: Record<string, [string, string, string]> = {
@@ -29,7 +30,11 @@ const Network = () => {
     D: ["/images/ebc/ebc-founder.jpg", "/images/ebc/ebc-deck.jpg", "/images/ebc/ebc-coast.jpg"],
   };
   const pics = PHOTOS[photos.id] || PHOTOS.A;
-  useEffect(() => { document.title = "RealHunt Network · Free buyers for your project"; }, []);
+  useDocumentMeta({
+    title: "RealHunt Network · Buyer introductions for approved projects",
+    description: `Performance-based buyer introductions for approved real-estate projects. No upfront platform fee; ${COMMISSION_PCT}% applies only to an eligible completed sale under the signed agreement.`,
+    canonicalUrl: "https://realhunt.co/network",
+  });
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
   const navigate = useNavigate();
@@ -63,22 +68,22 @@ const Network = () => {
 
   const opts = () => (
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-14">
-        <H>Two ways to make money here. Pick one, or both.</H>
-        <p className="mt-2 text-[15px] text-ink-muted max-w-[62ch]">Nothing to pay to join. Every option below is a separate switch inside your panel, and you can flip it on or off whenever you want.</p>
+        <H>Two optional network services</H>
+        <p className="mt-2 text-[15px] text-ink-muted max-w-[68ch]">Apply to receive buyer introductions, protect existing contacts, or share eligible referrals. There is no upfront platform fee. Commission and referral terms apply only under the signed agreement and where legally permitted.</p>
         <div className="mt-6 grid md:grid-cols-3 gap-4">
           <div className="border border-hairline rounded-2xl bg-white p-6 flex flex-col">
             <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted">Option A</p>
             <p className="font-display text-[24px] tracking-tight mt-1">Receive buyers</p>
-            <p className="text-[15px] text-ink-muted mt-2 leading-relaxed">We send you people who already told us they want to buy where you build. You sell to them as you would to anyone else.</p>
+            <p className="text-[15px] text-ink-muted mt-2 leading-relaxed">For approved projects, we can introduce opt-in buyers whose stated criteria match your market. Availability and buyer fit vary by project.</p>
             <div className="mt-4 rounded-xl bg-paper border border-hairline p-4 text-[14px]"><p><b>You pay:</b> {COMMISSION_PCT}% of the sale, only if one of them buys.</p><p className="mt-1"><b>You pay if nobody buys:</b> €0.</p></div>
-            <p className="text-[13px] text-ink-muted mt-3">Example: a buyer we sent you pays €200,000. You pay us €10,000 once the deal is done. That is all.</p>
+            <p className="text-[13px] text-ink-muted mt-3">Illustration: if an eligible introduced buyer completes a €200,000 purchase, a 5% success fee would be €10,000 under the signed terms.</p>
           </div>
           <div className="border border-hairline rounded-2xl bg-white p-6 flex flex-col">
             <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted">Option B</p>
             <p className="font-display text-[24px] tracking-tight mt-1">Earn from leads you could not sell to</p>
-            <p className="text-[15px] text-ink-muted mt-2 leading-relaxed">You already paid for thousands of contacts who never bought from you. Mark them as shared. If one of them buys a different project in the network, you get paid.</p>
+            <p className="text-[15px] text-ink-muted mt-2 leading-relaxed">You may mark eligible, permissioned contacts as shared. If an attributed contact later completes a qualifying purchase elsewhere in the network, the agreement defines the referral payment.</p>
             <div className="mt-4 rounded-xl bg-paper border border-hairline p-4 text-[14px]"><p><b>You earn:</b> {SOURCE_SHARE_PCT}% of that sale.</p><p className="mt-1"><b>You pay:</b> nothing. The other developer pays the {COMMISSION_PCT}%, and {SOURCE_SHARE_PCT}% of it comes to you.</p></div>
-            <p className="text-[13px] text-ink-muted mt-3">Example: one of your old leads buys a €200,000 villa somewhere else. You receive €6,000 for a contact you had written off.</p>
+            <p className="text-[13px] text-ink-muted mt-3">Illustration: on a qualifying €200,000 sale, a 3% source share would be €6,000. Attribution, consent, completion and local rules must all be satisfied.</p>
           </div>
           <div className="border-2 border-ink rounded-2xl bg-white p-6 flex flex-col relative">
             <span className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-ink text-paper text-[11px] font-medium">You can combine both</span>
@@ -96,7 +101,7 @@ const Network = () => {
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-14">
         <div className="border border-hairline rounded-2xl bg-white p-6 md:p-10">
           <H>Where the {COMMISSION_PCT}% goes</H>
-          <p className="mt-2 text-[15px] text-ink-muted max-w-[62ch]">There is only one payment in the whole system: the developer who sells pays {COMMISSION_PCT}% of the sale. Nobody pays anything else, ever. That {COMMISSION_PCT}% is then split like this.</p>
+          <p className="mt-2 text-[15px] text-ink-muted max-w-[62ch]">For an eligible completed sale, the selling developer pays the success fee set out in the signed agreement. The examples below show the current commercial model; taxes, local licensing and transaction-specific terms may also apply.</p>
           <div className="mt-6 grid md:grid-cols-[1fr_1fr] gap-6">
             <div>
               <p className="text-[13px] font-medium mb-2">When the buyer came from another developer's shared leads</p>
@@ -136,12 +141,16 @@ const Network = () => {
   );
   const math = () => (
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-14">
-        <div className="rounded-2xl bg-ink text-paper p-8 md:p-12 grid md:grid-cols-[1fr_auto] gap-8 items-center">
-          <div className="text-[17px] leading-relaxed"><p className="opacity-80">Say you spent €100,000 on ads. 5,000 contacts. You sold 20.</p><p className="mt-2 font-medium">The other 4,980 are sitting dead in your CRM right now.</p><p className="mt-4 opacity-80">Share them. If just 1 in 100 buys another project in the network at €200,000, your {SOURCE_SHARE_PCT}% on each of those ~50 sales adds up to:</p></div>
-          <div className="text-center md:text-right"><p className="font-display text-[clamp(44px,7vw,80px)] leading-none tracking-tight tabular-nums">€300,000</p><p className="text-[13px] opacity-70 mt-2">without selling one more unit of your own, and without paying a cent</p></div>
+        <div className="rounded-2xl bg-ink text-paper p-8 md:p-12">
+          <H>Model the economics. Do not guess.</H>
+          <div className="mt-6 grid md:grid-cols-3 gap-4 text-[15px]">
+            <div className="rounded-xl border border-white/20 p-5"><p className="text-[12px] opacity-65">1 · Eligible attributed sales</p><p className="mt-2">Count only completed purchases that satisfy consent, attribution and agreement rules.</p></div>
+            <div className="rounded-xl border border-white/20 p-5"><p className="text-[12px] opacity-65">2 · Completed sale value</p><p className="mt-2">Use the documented transaction value, not pipeline value or projected reservations.</p></div>
+            <div className="rounded-xl border border-white/20 p-5"><p className="text-[12px] opacity-65">3 · Source share</p><p className="mt-2">Illustrative referral = eligible sale value × {SOURCE_SHARE_PCT}%.</p></div>
+          </div>
+          <p className="mt-5 text-[13px] opacity-70">No conversion rate, sale volume or referral income is promised. The simulator is illustrative and should be replaced with your own verified assumptions.</p>
         </div>
       </section>
-
   );
 
   return (
@@ -152,8 +161,8 @@ const Network = () => {
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pt-8 md:pt-14 pb-10 grid md:grid-cols-[1.1fr_1fr] gap-8 items-center">
         <div>
           <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted mb-4">RealHunt Network · developers and agencies</p>
-          <h1 className="font-display text-[clamp(34px,5.6vw,60px)] leading-[1.0] tracking-tight text-balance">{headline.text || `Free buyers for your project. You pay ${COMMISSION_PCT}% only when one buys.`}</h1>
-          <p className="mt-5 text-[17px] text-ink-muted max-w-[52ch] leading-relaxed">Receive buyers and earn referral commission, independently: <b className="text-ink">receive buyers</b> for your project (you pay {COMMISSION_PCT}% only when one buys), and <b className="text-ink">earn {SOURCE_SHARE_PCT}%</b> every time a lead you could not sell to buys another project in the network.</p>
+          <h1 className="font-display text-[clamp(34px,5.6vw,60px)] leading-[1.0] tracking-tight text-balance">{headline.text || "Performance-based buyer introductions for approved projects."}</h1>
+          <p className="mt-5 text-[17px] text-ink-muted max-w-[52ch] leading-relaxed">Apply for two independent services: <b className="text-ink">buyer introductions</b> for an approved project, with a {COMMISSION_PCT}% success fee only on an eligible completed sale; and <b className="text-ink">referral attribution</b>, with a {SOURCE_SHARE_PCT}% source share when an eligible shared contact completes a qualifying purchase.</p>
 
           <div className="mt-5 rounded-xl border border-hairline bg-white p-4 text-sm"><b>Only want to protect your existing contacts?</b><p className="mt-1 text-ink-muted">Upload them privately. Sharing is optional, and receiving buyers does not require sharing. Prior matching contacts are exempt from commission on that introduction.</p><Link to="/network/app" className="inline-block underline mt-3 min-h-11">Open my network panel →</Link></div>
 
@@ -161,7 +170,7 @@ const Network = () => {
             {stage === "idle" && (
               <>{formError && <p role="alert" className="text-red-700 mt-3">{formError}</p>}<form onSubmit={start} className="flex flex-col sm:flex-row gap-2">
                 <input required type="text" inputMode="url" autoCapitalize="none" autoCorrect="off" spellCheck={false} value={url} onChange={(e) => setUrl(e.target.value)} placeholder="your-project.com" aria-label="Project URL" className="flex-1 border border-hairline rounded-full px-5 py-3.5 text-[15px] bg-paper outline-none focus:border-ink" />
-                <button disabled={saving} type="submit" className="rh-btn-primary !px-6 inline-flex items-center justify-center gap-2"><Search size={16} /> {cta.text || "Submit my project, free"}</button>
+                <button disabled={saving} type="submit" className="rh-btn-primary !px-6 inline-flex items-center justify-center gap-2"><Search size={16} /> {cta.text || "Submit project for review"}</button>
               </form><p className="text-[13px] text-ink-muted mt-3"><Link to="/network/example" className="underline">See an example listing</Link> · <Link to="/network/reservation-contract" className="underline">Free reservation contract</Link> · <Link to="/agents" className="underline">For agents</Link></p></>
             )}
             {stage === "email" && (
@@ -194,7 +203,7 @@ const Network = () => {
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2 md:gap-3">
-          <img src={pics[0]} alt="Project" className="rounded-2xl object-cover w-full aspect-[4/5] col-span-1 row-span-2 h-full" loading="eager" />
+          <img src={pics[0]} alt="Project" className="rounded-2xl object-cover w-full aspect-[4/5] col-span-1 row-span-2 h-full" loading="eager" fetchPriority="high" decoding="async" />
           <img src={pics[1]} alt="" className="rounded-2xl object-cover w-full aspect-[4/3]" />
           <img src={pics[2]} alt="" className="rounded-2xl object-cover w-full aspect-[4/3]" />
         </div>
@@ -225,12 +234,12 @@ const Network = () => {
       </section>
 
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-24 text-center">
-        <H>You already paid for those buyers. Collect.</H>
-        <p className="mt-3 text-[15px] text-ink-muted">Opening market by market. Right now: Bali, Dubai, Albania and Costa del Sol.</p>
-        <a href="#analyze" className="rh-btn-primary inline-flex mt-6">{cta.text || "Submit my project, free"}</a>
+        <H>See whether your project fits the network.</H>
+        <p className="mt-3 text-[15px] text-ink-muted">Applications are reviewed market by market. Approval and introduction volume are not guaranteed.</p>
+        <a href="#analyze" className="rh-btn-primary inline-flex mt-6">{cta.text || "Submit project for review"}</a>
       </section>
 
-      <footer className="border-t border-hairline"><div className="max-w-[1240px] mx-auto px-4 md:px-6 py-8 flex flex-wrap gap-x-8 gap-y-3 text-[13px] text-ink-muted"><Link to="/" className="hover:text-ink">Deals</Link><Link to="/score" className="hover:text-ink">Score a listing</Link><Link to="/network/agreement" className="hover:text-ink">Network agreement</Link><Link to="/legal/terms" className="hover:text-ink">Terms</Link><span className="ml-auto">Referral payouts subject to local licensing rules in each market.</span></div></footer>
+      <footer className="border-t border-hairline"><div className="max-w-[1240px] mx-auto px-4 md:px-6 py-8 flex flex-wrap gap-x-8 gap-y-3 text-[13px] text-ink-muted"><Link to="/" className="hover:text-ink">Deals</Link><Link to="/score" className="hover:text-ink">Score a listing</Link><Link to="/network/agreement" className="hover:text-ink">Network agreement</Link><Link to="/legal/terms" className="hover:text-ink">Terms</Link><span className="ml-auto">Commercial terms, attribution, consent and referral payouts are subject to the signed agreement and local law.</span></div></footer>
     </div>
   );
 };

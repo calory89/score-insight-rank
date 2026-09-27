@@ -79,7 +79,7 @@ export default function AuthModal({ open, onClose, title = "Sign in to see the o
         <div className="mt-5 pt-4 border-t border-hairline"><button onClick={() => { setMode(mode === "in" ? "up" : "in"); setErr(""); }} className="w-full text-left flex items-center justify-between gap-3 min-h-11 text-sm"><span>{mode === "in" ? "New here or forgot your password?" : "Already have a password?"}<span className="block text-ink-muted mt-1">{mode === "in" ? "Email me a sign-in link" : "Sign in with email and password"}</span></span><ArrowRight size={17} /></button></div>
       </>}
       {err && <p role="alert" className="text-sm text-red-700 mt-3">{err}</p>}
-      <p className="text-xs text-ink-muted mt-5">Your place in the catalogue is saved.</p>
+      <p className="text-xs text-ink-muted mt-5">Free account. Your saved homes and votes stay with you.</p>
     </Dialog.Content>
   </Dialog.Portal></Dialog.Root>;
 }

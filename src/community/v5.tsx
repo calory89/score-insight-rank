@@ -55,38 +55,23 @@ export function ThemeButton({ label = false }: { label?: boolean }) {
 }
 
 // ---------------------------------------------------------------- 3: first-visit welcome
-export function Welcome({ rows }: { rows: Row[] | undefined }) {
+export function Welcome({ rows: _rows }: { rows: Row[] | undefined }) {
   const [open, setOpen] = useState(() => !ls.get("rh_welcome"));
-  const [i, setI] = useState(0);
-  const picks = useMemo(() => (rows || []).filter((r) => cover(r)).slice(0, 3), [rows]);
-  useEffect(() => { if (open) preloadImages(picks.map(cover)); }, [open, picks.length]);
-  useEffect(() => {
-    if (!open || picks.length < 3) return;
-    const t = setTimeout(() => (i < 2 ? setI(i + 1) : null), 1600);
-    return () => clearTimeout(t);
-  }, [open, i, picks.length]);
-  useEffect(() => {
-    if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, [open]);
   const close = () => { ls.set("rh_welcome", "1"); setOpen(false); bumpIx(); };
-  if (!open || picks.length < 3) return null;
-  const d = picks[i];
+  if (!open) return null;
   return (
-    <div className="hv-welcome" role="dialog" aria-modal="true" aria-label="Welcome to RealHunt" onClick={() => (i < 2 ? setI(i + 1) : null)}>
-      {picks.map((p, n) => <img key={p.id} src={cover(p)} alt="" className={n === i ? "on" : ""} />)}
-      <div className="hv-welcome-bars">{[0, 1, 2].map((n) => <i key={n} className={n < i ? "done" : n === i ? "run" : ""} />)}</div>
-      <button className="hv-welcome-skip" onClick={(e) => { e.stopPropagation(); close(); }}>Skip</button>
+    <aside className="hv-welcome" aria-label="Welcome to RealHunt">
       <div className="hv-welcome-copy">
-        <span>{FLAG[d.country] || "📍"} {d.location_name || d.country}</span>
-        <strong>{money(d.price_eur)}</strong>
-        <p>{niceTitle(d)}</p>
-        <h2>Real homes under €100k. You vote which ones rise.</h2>
-        <button className="hv-welcome-go" onClick={(e) => { e.stopPropagation(); close(); }}>Start voting <Heart size={18} fill="currentColor" /></button>
+        <span className="hunt-eyebrow">NEW HERE?</span>
+        <h2>Find remarkable homes under €100k.</h2>
+        <p>Compare real listings, vote for the best and open the original source when you are ready. No tour required.</p>
       </div>
-    </div>
+      <div className="hv-welcome-actions">
+        <button className="hunt-primary" onClick={close}>Explore homes <Heart size={17} /></button>
+        <Link to="/guide" onClick={close}>Buying guides</Link>
+      </div>
+      <button className="hv-welcome-skip" aria-label="Dismiss welcome message" onClick={close}><X size={18} /></button>
+    </aside>
   );
 }
 
@@ -454,7 +439,7 @@ export function ProfilePage() {
         {badges.map((b) => <div key={b.k} className={"hv-badge" + (b.ok ? " is-on" : "")} title={b.tip}><span>{b.icon}</span><strong>{b.k}</strong><small>{b.ok ? "Unlocked" : b.tip}</small></div>)}
       </div>
       <div className="hv-me-links">
-        <Link to="/hunt/saved" className="hunt-secondary">Saved homes and boards</Link>
+        <Link to="/account/saved" className="hunt-secondary">Saved homes and boards</Link>
         {user ? <Link to="/hunt/mine" className="hunt-secondary">My submissions</Link> : <button className="hunt-primary" onClick={requireUser}>Sign in to keep your streak on every device</button>}
         {session?.hunter && <Link to={`/hunter/${session.hunter.handle}`} className="hunt-secondary">Public profile ↗</Link>}
         <Link to="/leaderboard" className="hunt-secondary">Top hunters</Link>

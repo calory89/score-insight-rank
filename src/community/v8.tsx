@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FLAG } from "@/lib/rh";
 import { money } from "./api";
 import { useCommunity } from "./ctx";
+import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { InfoRequest, type Row } from "./extras";
 import { CompareToggle, CompareBar, DEST_NAMES } from "./v10";
 
@@ -144,13 +145,16 @@ export function BuyerPicks({ compact = false }: { compact?: boolean }) {
 }
 
 // ---------------------------------------------------------------- /new-builds
-const setMeta = (title: string, desc: string) => { document.title = title; document.querySelector('meta[name="description"]')?.setAttribute("content", desc); };
 export function NewBuildsPage() {
   const { country = "" } = useParams();
   const [d, setD] = useState<any>(null);
   const name = country ? country.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ") : "";
+  useDocumentMeta({
+    title: name ? `New builds under €100,000 in ${name} · RealHunt` : "New-build homes under €100,000 · RealHunt",
+    description: `Approved new-build projects from ${name || "developers around the world"} with units under €100,000, payment plans and direct enquiries.`,
+    canonicalUrl: `https://realhunt.co/new-builds${country ? `/${country}` : ""}`,
+  });
   useEffect(() => {
-    setMeta(name ? `New builds under €100,000 in ${name} · RealHunt` : "New-build homes under €100,000 · RealHunt", `New-build projects from ${name || "developers around the world"} with units under €100,000, payment plans and verified developers. Ask the developer directly.`);
     rpc("community_new_builds", { p_country: country || null }).then(setD).catch(() => setD({ countries: [], rows: [] }));
   }, [country]);
   return (
@@ -158,13 +162,14 @@ export function NewBuildsPage() {
       <nav className="hv-crumbs"><Link to="/">RealHunt</Link> › <Link to="/new-builds">New builds</Link>{name && <> › <span>{name}</span></>}</nav>
       <h1>{name ? `New builds under €100,000 in ${name}` : "New-build homes under €100,000"}</h1>
       <p>Projects listed by their own developers. Ask them directly: your request goes straight to the developer, and many offer payment plans.</p>
+      <p className="hunt-fine">Featured means paid placement. It never changes community votes or developer performance data.</p>
       <div className="hv-chips">{(d?.countries || []).map((c: any) => <Link key={c.country} to={`/new-builds/${c.country.toLowerCase().replace(/ /g, "-")}`}>{flag(c.country)} {c.country} <small>{c.n}</small></Link>)}</div>
       {!d ? <div className="hunt-skeleton-list" /> : d.rows.length === 0 ? (
-        <div className="hv-empty-dev"><p>No new builds listed here yet.</p><Link to="/network/start" className="hunt-primary">Are you a developer? List your project free</Link></div>
+        <div className="hv-empty-dev"><p>No approved new-build projects match this destination yet.</p><div className="hunt-row">{country && <Link to="/new-builds" className="hunt-secondary">Explore every country</Link>}<Link to="/network/start" className="hunt-primary">Submit a project for review</Link></div></div>
       ) : (
         <div className="hv-sp-grid" style={{ marginTop: 18 }}>{d.rows.map((x: any) => (
           <Link key={x.slug} to={`/deal/${encodeURIComponent(x.slug)}`} className="hv-sp-card">
-            <span className="hv-sp-img"><img src={x.image} alt={x.title} loading="lazy" /><b>{money(x.price_eur)}</b>{x.sponsored && <i className="hv-sponsored">Featured</i>}</span>
+            <span className="hv-sp-img"><img src={x.image} alt={x.title} loading="lazy" /><b>{money(x.price_eur)}</b>{x.sponsored && <i className="hv-sponsored">Paid placement</i>}</span>
             <strong>{x.title}</strong>
             <small>{flag(x.country)} {x.location || x.country} · {x.developer}{x.verified ? " ✓" : ""}</small>
             {x.plan?.deposit_pct ? <small>{x.plan.deposit_pct}% to reserve{x.plan.months ? `, ${x.plan.months} months` : ""}</small> : null}
@@ -180,13 +185,18 @@ export function NewBuildsPage() {
 
 export function DevLeaderboard() {
   const [rows, setRows] = useState<any[] | null>(null);
-  useEffect(() => { setMeta("Developer ranking · RealHunt", "Developers ranked by sales, buyer ratings and how fast they answer buyers on RealHunt."); rpc("community_dev_leaderboard").then(setRows).catch(() => setRows([])); }, []);
+  useDocumentMeta({
+    title: "Developer activity · RealHunt",
+    description: "Compare approved developers using documented RealHunt sales, buyer ratings and response times.",
+    canonicalUrl: "https://realhunt.co/developers",
+  });
+  useEffect(() => { rpc("community_dev_leaderboard").then(setRows).catch(() => setRows([])); }, []);
   return (
     <div className="hunt-wrap hunt-page hv-sp">
       <span className="hunt-eyebrow"><Trophy size={13} /> Developers</span>
-      <h1>The developers buyers trust most</h1>
-      <p>Ranked by sales through RealHunt, then by buyer ratings. Badges show who answers fast.</p>
-      {!rows ? <div className="hunt-skeleton-list" /> : rows.length === 0 ? <div className="hv-empty-dev"><p>The first developers are joining now.</p><Link to="/network/start" className="hunt-primary">List your project free</Link></div> : (
+      <h1>Developer activity on RealHunt</h1>
+      <p>Ranked only from documented sales through RealHunt, then buyer ratings and response times. No developer can pay for a higher position.</p>
+      {!rows ? <div className="hunt-skeleton-list" /> : rows.length === 0 ? <div className="hv-empty-dev"><p>There is not enough verified activity to publish a fair ranking yet.</p><Link to="/new-builds" className="hunt-secondary">Browse approved projects</Link><Link to="/network/start" className="hunt-primary">Submit a project for review</Link></div> : (
         <ol className="hv-devrank">{rows.map((r, i) => (
           <li key={r.slug}><b>{i + 1}</b><Link to={`/dev/${r.slug}`}><strong>{r.company}{r.verified ? <BadgeCheck size={15} className="hv-devblock-check" /> : null}</strong>
             <small>{flag(r.country)} {r.country || ""} · {r.projects} {r.projects === 1 ? "project" : "projects"}</small>
