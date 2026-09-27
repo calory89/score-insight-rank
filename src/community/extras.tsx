@@ -195,7 +195,7 @@ export function CostPanel({ deal }: { deal: Row }) {
         {reno && deal.sqm ? <div><dt>Renovation, typical range</dt><dd>{money(deal.sqm * 400)}–{money(deal.sqm * 900)}</dd></div> : null}
         <div><dt>Keeping it ({run.taxName}, insurance, basic water and power)</dt><dd>≈ {money(Math.round(yearly / 12))}/month</dd></div>
       </dl>
-      <label className="hunt-rent">If you pay rent of <input type="number" min={0} placeholder="Your rent" step={50} value={rent} onChange={(e) => setRent(Math.max(0, Number(e.target.value)))} /> € a month, the estimated purchase total equals <strong>{rent > 0 ? `${months} ${t("months of your rent")}` : t("Enter your monthly rent")}</strong>.</label>
+      <label className="hunt-rent">If you pay rent of <input type="number" min={0} placeholder="Your rent" step={50} value={rent} onChange={(e) => {try{localStorage.setItem("rh_rent_explicit","1");}catch{}setRent(Math.max(0, Number(e.target.value)));}} /> € a month, the estimated purchase total equals <strong>{rent > 0 ? `${months} ${t("months of your rent")}` : t("Enter your monthly rent")}</strong>.</label>
       <p className="hunt-fine">{COSTS[deal.country]?.note || "Purchase costs vary by country."} {run.extra || ""} Running costs are a rough guide for a small house; ask the seller for the real bills.{reno ? " Renovation ranges are ballpark figures; get a local quote." : ""}</p>
     </section>
   );

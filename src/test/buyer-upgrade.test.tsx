@@ -41,8 +41,9 @@ test('return location refuses external redirects and preserves the entire filter
  sessionStorage.setItem('rh.catalog.return',JSON.stringify('//evil.test'));expect(backToCatalog()).toBe('/');
 });
 test('rent comparisons stay hidden until chosen and use the same user amount in cards and costs',()=>{
+ localStorage.setItem('rh_rent','900');
  render(<><RentPreference/><RentLine price={35000}/><CostPanel deal={house()}/></>);
- expect(screen.queryByText('≈ 35 months of your rent')).toBeNull();fireEvent.change(screen.getByLabelText(/Your monthly rent/),{target:{value:'1000'}});
+ expect(screen.queryByText(/≈ .*months of your rent/)).toBeNull();fireEvent.change(screen.getByLabelText(/Your monthly rent/),{target:{value:'1000'}});
  expect(screen.getByText('≈ 35 months of your rent')).toBeInTheDocument();expect(localStorage.getItem('rh_rent')).toBe('1000');
 });
 test('negated, nearby and future amenities do not become confirmed features',()=>{

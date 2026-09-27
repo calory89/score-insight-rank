@@ -16,7 +16,7 @@ export function usePreference<T>(key: string, fallback: T) {
   const update = (next: T) => { try { localStorage.setItem(key, JSON.stringify(next)); } catch { /* storage disabled */ } setValue(next); window.dispatchEvent(new Event(key)); };
   return [value, update] as const;
 }
-export const userRent = () => { try { const n = Number(localStorage.getItem("rh_rent")); return Number.isFinite(n) && n > 0 ? n : null; } catch { return null; } };
+export const userRent = () => { try { if(localStorage.getItem("rh_rent_explicit")!=="1")return null; const n = Number(localStorage.getItem("rh_rent")); return Number.isFinite(n) && n > 0 ? n : null; } catch { return null; } };
 export function safeFacts(deal: {title?: string; why_great?: string}) {
   // Negations, nearby amenities and future works must not become property features.
   return `${deal.title || ""}. ${deal.why_great || ""}`.split(/[.!?;\n]/).filter(s => !/\b(no|not|without|unfurnished|nearby|near |shared|communal|could|potential|planned|needs?|requires?)\b/i.test(s)).join(". ");

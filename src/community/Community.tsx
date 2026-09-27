@@ -784,7 +784,7 @@ function Home() {
       {quick!==null && feed?.rows?.[quick] && <QuickHome rows={feed.rows} index={quick} onIndex={setQuick} onClose={()=>setQuick(null)}/>}
       <ComparisonTray/>
       <p className="hunt-rules">
-        {t("One anonymous vote per browser and home each week. Sign in to save homes, contribute or open the original listing.")}
+        {t("One anonymous vote per browser and home each week. Sign in to save homes, contribute or open the original listing.")} {" "}
         Only priced homes under €100,000 that are ready to live in are listed. The weekly board resets every Monday.
       </p>
     </div>
@@ -899,7 +899,7 @@ function Detail() {
           <VerifiedLine deal={d as Row} />
           {(d as any).developer && <DevBlock deal={d as Row} />}
           {d.price_eur != null && totalCost(d.price_eur, d.country) && (
-            <p className="hunt-allin">Realistic all-in with taxes and notary: about <strong>{money(totalCost(d.price_eur, d.country))}</strong></p>
+            <p className="hunt-allin">Illustrative purchase estimate before renovation: <strong>{money(totalCost(d.price_eur, d.country))}</strong></p>
           )}
           <p className="hv-detail-where">{FLAG_[d.country] || "📍"} {d.location_name}</p>
           <p>
