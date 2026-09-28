@@ -141,10 +141,10 @@ export function votePreview(
   const delta = up - deal.week_up;
   return { ...deal, week_up: up, week_down: down, week_net: deal.week_net + delta, life_up: deal.life_up + delta, life_net: deal.life_net + delta };
 }
-export function badge(deal: Deal, scope = "week") {
+export function badge(deal: Deal, scope = "all") {
   if (deal.rank === 1 && (scope === "all" ? deal.life_net : deal.week_net) > 0)
     return scope === "all" ? "#1 all time" : "#1 this week";
-  if (deal.votes_24h >= 10 && deal.week_net > 0) return "Trending";
-  if (deal.votes_24h >= 3 && deal.week_net > 0) return "Rising";
+  if (deal.votes_24h >= 10 && deal.life_net > 0) return "Trending";
+  if (deal.votes_24h >= 3 && deal.life_net > 0) return "Rising";
   return "";
 }

@@ -341,7 +341,7 @@ export function NotifBell() {
     const key = ids.join(",");
     if (!ids.length || ran.current === key) return;
     ran.current = key;
-    feed({ scope: "week", ids, limit: 100 }).then((f) => {
+    feed({ scope: "all", ids, limit: 100 }).then((f) => {
       let watch: Record<string, { rank: number; price: number }> = {};
       try { watch = JSON.parse(ls.get("rh_watch") || "{}"); } catch { /* ignore */ }
       const fresh: Note[] = [];

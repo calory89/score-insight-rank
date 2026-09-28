@@ -47,7 +47,7 @@ export function preloadImages(urls: (string | undefined)[]) {
 }
 
 // ---------------------------------------------------------------- voting
-export function useVote(deal: Deal, scope = "week", onChange?: () => void) {
+export function useVote(deal: Deal, scope = "all", onChange?: () => void) {
   const { session, setSession, call, setNotice } = useCommunity();
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<Deal | null>(null);
@@ -82,7 +82,7 @@ export function useVote(deal: Deal, scope = "week", onChange?: () => void) {
   const total = scope === "all" ? d.life_net : d.week_net;
   return { vote, selected: selected === 1, total: total || 0, busy, ready: !!session };
 }
-export function HeartVote({ deal, scope = "week", onChange, big = false }: { deal: Deal; scope?: string; onChange?: () => void; big?: boolean }) {
+export function HeartVote({ deal, scope = "all", onChange, big = false }: { deal: Deal; scope?: string; onChange?: () => void; big?: boolean }) {
   const v = useVote(deal, scope, onChange);
   const [pop, setPop] = useState(0);
   return (
@@ -118,7 +118,7 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, max: number, lines: n
   if (out.length === lines && words.join(" ").length > out.join(" ").length) out[lines - 1] = out[lines - 1].replace(/\s*\S*$/, "") + "…";
   return out;
 }
-export async function storyCard(d: Row, scope = "week"): Promise<Blob | null> {
+export async function storyCard(d: Row, scope = "all"): Promise<Blob | null> {
   try {
     await (document as any).fonts?.ready;
     const W = 1080, H = 1920;
@@ -164,7 +164,7 @@ export async function storyCard(d: Row, scope = "week"): Promise<Blob | null> {
     return null; // a photo from another site can block the canvas; plain link sharing still works
   }
 }
-export async function shareStory(d: Row, scope = "week"): Promise<"shared" | "copied" | "downloaded"> {
+export async function shareStory(d: Row, scope = "all"): Promise<"shared" | "copied" | "downloaded"> {
   bumpIx();
   bumpStat("shares");
   const url = dealUrl(d.slug);
@@ -187,7 +187,7 @@ export async function shareStory(d: Row, scope = "week"): Promise<"shared" | "co
   try { await navigator.clipboard.writeText(`${text}\n${url}`); } catch { /* ignore */ }
   return blob ? "downloaded" : "copied";
 }
-export function ShareButton({ deal, scope = "week", label = false }: { deal: Row; scope?: string; label?: boolean }) {
+export function ShareButton({ deal, scope = "all", label = false }: { deal: Row; scope?: string; label?: boolean }) {
   const { setNotice } = useCommunity();
   const [busy, setBusy] = useState(false);
   return (
@@ -314,7 +314,7 @@ function useRankMove(rank?: number) {
   }, [rank]);
   return move;
 }
-export function Card4({ deal, scope = "week", onChange, onQuick }: { deal: Row; scope?: string; onChange?: () => void; onQuick?:()=>void }) {
+export function Card4({ deal, scope = "all", onChange, onQuick }: { deal: Row; scope?: string; onChange?: () => void; onQuick?:()=>void }) {
   const { call } = useCommunity();
   const v = useVote(deal, scope, onChange);
   const move = useRankMove(deal.rank);
@@ -389,7 +389,7 @@ export function TabBar() {
 }
 
 // ---------------------------------------------------------------- mobile action bar on a home page
-export function DetailBar({ deal, scope = "week", onChange, listing }: { deal: Row; scope?: string; onChange?: () => void; listing: ReactNode }) {
+export function DetailBar({ deal, scope = "all", onChange, listing }: { deal: Row; scope?: string; onChange?: () => void; listing: ReactNode }) {
   return (
     <div className="hv-detailbar" role="region" aria-label="Actions for this home">
       <div className="hv-detailbar-price"><strong>{money(deal.price_eur)}</strong><span>{deal.location_name || deal.country}</span></div>

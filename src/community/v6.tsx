@@ -137,15 +137,15 @@ export function PodiumHero({ rows, scope, endsAt }: { rows: Row[]; scope: string
     </Link>
   );
   return (
-    <section className="hv-podium" aria-label="This week's podium">
+    <section className="hv-podium" aria-label="Top 3 homes">
       <div className="hv-podium-head">
-        <span className="hv-live"><i />{scope === "all" ? "All-time top 3" : "This week's top 3"}</span>
+        <span className="hv-live"><i />{scope === "all" ? "Top 3 · total votes" : "This week's top 3"}</span>
         {scope !== "all" && left && <span className="hv-countdown">Voting closes in <b>{left}</b></span>}
       </div>
       <div className="hv-podium-grid">
         <Link to={`/deal/${encodeURIComponent(a.slug)}`} className="hv-pod-big" style={{ backgroundColor: cardColor(a.slug) }}>
           <img src={a.image_urls?.[0]} alt={niceTitle(a)} />
-          <span className="hv-pod-medal is-gold">{medal[0]} #1 {scope === "all" ? "all time" : "this week"}</span>
+          <span className="hv-pod-medal is-gold">{medal[0]} #1{scope === "all" ? "" : " this week"}</span>
           <div className="hv-pod-copy">
             <strong className="hv-pod-price">{money(a.price_eur)}</strong>
             <span className="hv-pod-title">{niceTitle(a)}</span>

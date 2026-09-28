@@ -77,12 +77,12 @@ export function dealUrl(slug: string) {
   const ref = myRef();
   return `https://realhunt.co/deal/${encodeURIComponent(slug)}${ref ? `?ref=${ref}` : ""}`;
 }
-export function shareText(d: Row, scope = "week") {
+export function shareText(d: Row, scope = "all") {
   const price = d.price_eur != null ? money(d.price_eur) : "";
   const rank = d.rank ? ` · #${d.rank} ${scope === "all" ? "all time" : "this week"} on RealHunt` : " on RealHunt";
   return `${niceTitle(d)}${price && !niceTitle(d).includes(price) ? ` for ${price}` : ""}${rank}. ${d.verified_at ? "Team check: "+new Date(d.verified_at).toLocaleDateString("en-GB") : "Availability not independently confirmed"}.`;
 }
-export async function shareRow(d: Row, scope = "week") {
+export async function shareRow(d: Row, scope = "all") {
   const url = dealUrl(d.slug);
   const text = shareText(d, scope);
   if (navigator.share) return navigator.share({ title: niceTitle(d), text, url });
@@ -827,13 +827,13 @@ export function LivePodium() {
   if (rows.length < 3) return null;
   const order = [rows[1], rows[0], rows[2]];
   return (
-    <section className="hunt-podium" aria-label="This week so far">
-      <h2>This week so far</h2>
+    <section className="hunt-podium" aria-label="Top homes">
+      <h2>Top homes right now</h2>
       <div>{order.map((d, n) => (
         <Link key={d.id} to={`/deal/${d.slug}`} className={"hunt-podium-" + (n === 1 ? 1 : n === 0 ? 2 : 3)}>
           <img src={d.image_urls?.[0]} alt="" loading="lazy" />
           <strong>#{d.rank} · {money(d.price_eur)}</strong>
-          <span>{d.week_net} {d.week_net === 1 ? "vote" : "votes"}</span>
+          <span>{d.life_net} {d.life_net === 1 ? "vote" : "votes"}</span>
           <i />
         </Link>
       ))}</div>

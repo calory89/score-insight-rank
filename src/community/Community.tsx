@@ -287,7 +287,7 @@ async function shareDeal(d: Pick<Deal, "slug" | "title">, message: string) {
     await navigator.clipboard.writeText(`${message}\n${url}`);
   }
 }
-function Media({ deal, detail = false, scope = "week" }: { deal: Deal; detail?: boolean; scope?: string }) {
+function Media({ deal, detail = false, scope = "all" }: { deal: Deal; detail?: boolean; scope?: string }) {
   const [index, setIndex] = useState(0);
   const [play, setPlay] = useState(false);
   const [lb, setLb] = useState(false);
@@ -353,7 +353,7 @@ function Media({ deal, detail = false, scope = "week" }: { deal: Deal; detail?: 
 function Vote({
   deal,
   onChange,
-  scope = "week",
+  scope = "all",
 }: {
   deal: Deal;
   onChange?: () => void;
@@ -381,7 +381,7 @@ function Vote({
         votes: { ...s.votes, [deal.id]: value },
       }));
       setShared(true);
-      { const days = bumpStreak(); setNotice(`${t("Your vote counts.")}${days > 1 ? ` ${days} ${t("days in a row")}.` : " Thanks for helping rank this week’s discoveries."}`); }
+      { const days = bumpStreak(); setNotice(`${t("Your vote counts.")}${days > 1 ? ` ${days} ${t("days in a row")}.` : " Thanks for helping rank the discoveries."}`); }
       window.dispatchEvent(new CustomEvent("rh-voted", { detail: { id: deal.id, country: deal.country } }));
       onChange?.();
     } catch (e) {
@@ -459,7 +459,7 @@ function Save({ deal, onChange }: { deal: Deal; onChange?: () => void }) {
 function Card({
   deal,
   onChange,
-  scope = "week",
+  scope = "all",
   pick = false,
 }: {
   deal: Deal;
@@ -605,7 +605,7 @@ function Home() {
   const [more, setMore] = useState<{ country?: string } | null>(null);
   const live = useLiveStats();
   const [params, setParams] = useSearchParams();
-  const scope = params.get("tab") === "all" ? "all" : "week";
+  const scope = "all"; // votes are totals and never reset (Carlos, 28-sep-2026)
   const country = params.get("country") || "";
   const category = params.get("type") || "";
   const maxPrice = Number(params.get("price")) || null;
@@ -725,14 +725,10 @@ function Home() {
       <ExploreLinks />
 
       {!q && <BuyerPicks compact />}
-      <div className="rh-row"><button className="hunt-link" aria-expanded={podium} onClick={()=>setPodium(!podium)}>{t(podium?"Hide weekly podium":"Show weekly podium")}</button><MotionControl/></div>
+      <div className="rh-row"><button className="hunt-link" aria-expanded={podium} onClick={()=>setPodium(!podium)}>{podium?"Hide the top 3":"Show the top 3"}</button><MotionControl/></div>
       {showPodium && <PodiumHero rows={feed.rows.slice(0, 3)} scope={scope} endsAt={feed?.week?.ends_at} />}
       <div className="hv-feedbar">
-        <nav className="hunt-tabs" aria-label="Browse rankings">
-          <button aria-pressed={scope === "week"} onClick={() => update("tab", "")}>{t("This Week")}</button>
-          <button aria-pressed={scope === "all"} onClick={() => update("tab", "all")}>{t("All Time")}</button>
-        </nav>
-        <span className="hv-closes">{scope === "all" ? "All votes since launch" : `Weekly board ${closesIn(feed?.week?.ends_at) || ""}`}</span>
+        <span className="hv-closes">Total votes since each home was added. They never reset.</span>
       </div>
       <div className="rh-sticky-filters"><Filters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort, q }} onChange={setFilters} /></div>
       <p role="status" aria-live="polite">{busy ? t("Updating results…") : feed ? `${feed.total} ${t("homes")}${country ? ` · ${country}` : ""}` : ""}</p>
@@ -821,7 +817,7 @@ function Availability({ dealId }: { dealId: string }) {
 
 function Detail() {
   const [detailParams] = useSearchParams();
-  const scope = detailParams.get("tab") === "all" ? "all" : "week";
+  const scope = "all"; void detailParams;
   const { user } = useAuth();
   const { slug } = useParams();
   const { session, call, requireUser, setNotice } = useCommunity();
@@ -921,7 +917,7 @@ function Detail() {
             <BoardButton deal={d} />
             <CompareButton deal={d} />
           </div>
-          <p className="hv-votehint">{scope === "all" ? "All-time votes" : "Votes this week"} decide the ranking. Double-tap a photo in the feed to vote.</p>
+          <p className="hv-votehint">Total votes decide the ranking; they never reset. Double-tap a photo in the feed to vote.</p>
           <p className="hunt-fine">
             {num(d.life_up + d.life_down)} lifetime votes · {num(d.views)} views
             · {num(d.saves)} saves
@@ -1195,7 +1191,7 @@ function Submit() {
   return (
     <div className="hunt-form-page">
       <Link to="/" className="hunt-back">
-        ← Back to this week
+        ← Back to the ranking
       </Link>
       <span className="hunt-eyebrow">PASS A GOOD FIND ALONG</span>
       <h1>Submit a Deal</h1>
@@ -1455,7 +1451,7 @@ function Winners() {
             The results will appear here after the competition closes.
           </p>
           <Link className="hunt-primary" to="/">
-            Help choose this week’s winners
+            Vote for the best homes
           </Link>
         </div>
       ) : (
@@ -1538,7 +1534,7 @@ function Mine() {
         <button className="hunt-primary" onClick={requireUser}>
           Sign in
         </button>
-        <p><Link to="/">Or see this week’s top homes first →</Link></p>
+        <p><Link to="/">Or see the top homes first →</Link></p>
       </div>
     );
   return (
@@ -1612,7 +1608,7 @@ function Mine() {
                     onClick={() =>
                       shareDeal(
                         d,
-                        `I found this property deal on RealHunt. Help it climb this week’s ranking!`,
+                        `I found this property deal on RealHunt. Help it climb the ranking!`,
                       )
                         .then(() => setNotice("Ready to share ✓"))
                         .catch(() => {})
