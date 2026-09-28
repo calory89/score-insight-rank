@@ -1,0 +1,32 @@
+name: rh-v11
+on:
+  push:
+    paths: [.github/workflows/rh-v11.yml]
+permissions:
+  contents: write
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: fetch patch
+        run: |
+          curl -sSL -X POST -o /tmp/p.zip https://temp.sh/sKJCl/v11.zip
+          echo "116fdf92ea31f1394a6975836b4f89a3  /tmp/p.zip" | md5sum -c -
+          mkdir -p /tmp/p && unzip -o -q /tmp/p.zip -d /tmp/p
+      - name: apply
+        run: python3 /tmp/p/apply.py
+      - name: syntax
+        run: |
+          for f in src/community/Community.tsx src/community/api.ts src/community/extras.tsx src/community/v4.tsx src/community/v5.tsx src/community/v6.tsx; do
+            npx --yes esbuild@0.23.1 --jsx=automatic --bundle --external:* --loader:.css=empty --loader:.json=json --outfile=/dev/null "$f"
+          done
+          ! grep -q 'scope = "week"' src/community/Community.tsx
+      - name: commit
+        run: |
+          rm -f .github/workflows/rh-v11.yml
+          git config user.name "realhunt-bot"
+          git config user.email "bot@realhunt.co"
+          git add -A
+          git commit -m "RealHunt v11: votes are totals and never reset; ranking and counts use all-time votes"
+          git push
