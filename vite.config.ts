@@ -123,6 +123,22 @@ function prerenderPages() {
                itemListElement: (p.homes || []).slice(0, 30).map((s: string, i: number) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/deal/${s}`, name: sp.homes?.[s]?.t })) },
              { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: (p.faq || []).map(([q, a]: [string, string]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) }]);
         }
+        // Top 100 rankings of new builds by destination (/top/bali). Static snapshot for crawlers; React loads the live order.
+        const topBali: any[] = readJson("src/data/top-bali.json", []);
+        if (topBali.length) {
+          const tUrl = `${SITE}/top/bali`;
+          page(tUrl, "Top 100 new builds in Bali, ranked by buyers · RealHunt", "The 100 best new-build villas and apartments in Bali, from 502 projects checked. Ranked by price, area and build stage, then by what buyers vote, save and ask about.", `${tUrl}/og.jpg`,
+            `<main class="rh-static"><h1>Top 100 new builds in Bali</h1><p>Ranked by demand: base score from price, price per m², area and build stage, then buyer votes, saves and questions.</p><ol>${topBali.map((t) => `<li><a href="/top/bali/${esc(t.slug)}">${esc(t.name)}</a>, ${esc(t.locality)}, from €${Number(t.price_eur).toLocaleString("en")} (${esc(t.developer)})</li>`).join("")}</ol></main>`,
+            [crumbs([["RealHunt", SITE + "/"], ["Bali Top 100", tUrl]]),
+             { "@context": "https://schema.org", "@type": "ItemList", name: "Top 100 new builds in Bali", numberOfItems: topBali.length, itemListElement: topBali.map((t, i) => ({ "@type": "ListItem", position: i + 1, url: `${tUrl}/${t.slug}`, name: t.name })) }]);
+          for (const t of topBali) {
+            if (!/^[a-z0-9-]+$/.test(t.slug)) continue;
+            const u = `${tUrl}/${t.slug}`;
+            page(u, `${t.name}, ${t.locality}: Bali Top 100 · RealHunt`, `${t.blurb} Ranked in the Bali Top 100 new builds by RealHunt buyers.`, `${u}-og.jpg`,
+              `<main class="rh-static"><nav><a href="/">RealHunt</a> › <a href="/top/bali">Bali Top 100</a></nav><h1>${esc(t.name)}</h1><p>${esc(t.blurb)}</p></main>`,
+              [crumbs([["RealHunt", SITE + "/"], ["Bali Top 100", tUrl], [t.name, u]])]);
+          }
+        }
         page(`${SITE}/new-builds`, "New-build homes under €100,000 · RealHunt", "New-build projects with units under €100,000, payment plans and verified developers. Ask the developer directly.", DEF);
         for (const [c, n] of [["indonesia", "Indonesia"], ["mexico", "Mexico"], ["albania", "Albania"], ["spain", "Spain"], ["portugal", "Portugal"], ["thailand", "Thailand"], ["turkey", "Turkey"], ["montenegro", "Montenegro"]]) page(`${SITE}/new-builds/${c}`, `New builds under €100,000 in ${n} · RealHunt`, `New-build projects in ${n} with units under €100,000, payment plans and verified developers. Ask the developer directly.`, DEF);
         page(`${SITE}/developers`, "Developer ranking · RealHunt", "Developers ranked by sales, buyer ratings and how fast they answer buyers on RealHunt.", DEF);

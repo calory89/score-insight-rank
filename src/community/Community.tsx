@@ -26,6 +26,7 @@ import { useLiveStats } from "@/components/realhunt/LiveStats";
 import { lazy, Suspense } from "react";
 import { DevBlock, ClaimListing, BuyerPicks, NewBuildsPage, DevLeaderboard } from "./v8";
 import { InboxPage, CompareBuilds, CostsIndex, CostsPage, NewBuildReport, AgentsPage, TranslateBar, InboxLink } from "./v10";
+import { TopListPage, TopProjectPage } from "./top";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
@@ -248,6 +249,7 @@ function Shell({ children }: { children: ReactNode }) {
             <Link to="/blog">Research</Link>
             <Link to="/insider">Insider</Link>
             <Link to="/new-builds">New builds</Link>
+            <Link to="/top/bali">Bali Top 100</Link>
             <Link to="/costs">Real costs</Link>
             <Link to="/research/new-builds">New-build report</Link>
             <Link to="/agents">For agents</Link>
@@ -1868,6 +1870,10 @@ export default function Community() {
       <NewBuildReport />
     ) : path === "/agents" ? (
       <AgentsPage />
+    ) : /^\/top\/[a-z-]+\/?$/.test(path) ? (
+      <TopListPage />
+    ) : path.startsWith("/top/") ? (
+      <TopProjectPage />
     ) : path === "/developers" ? (
       <DevLeaderboard />
     ) : path === "/blog" ? (
