@@ -322,7 +322,7 @@ const IndexNew = () => {
     title: "RealHunt — Is this listing actually a good deal?",
     description:
       "Paste any Zillow, Rightmove, Idealista, Redfin, Airbnb or PropertyFinder URL. Get a forensic real-estate score in under 10 seconds. Every number sourced.",
-    ogImage: "https://score-insight-rank.lovable.app/og-default.jpg",
+    ogImage: "https://realhunt.co/og-default-100k.jpg",
   });
 
   const { user } = useAuth();

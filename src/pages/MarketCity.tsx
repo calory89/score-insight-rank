@@ -34,7 +34,7 @@ const MarketCity = () => {
     title: `${title} — RealHunt`,
     description,
     canonicalUrl: `https://realhunt.co/market/${encodeURIComponent(city.toLowerCase())}`,
-    ogImage: "https://realhunt.co/og-default.jpg",
+    ogImage: "https://realhunt.co/og-default-100k.jpg",
   });
 
   useEffect(() => {
