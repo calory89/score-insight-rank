@@ -15,10 +15,12 @@ export default function NetworkAdmin() {
   const [pend, setPend] = useState<any[]>([]);
   const [boosts, setBoosts] = useState<any[]>([]);
   const [proofs, setProofs] = useState<any[]>([]);
+  const [topAsks, setTopAsks] = useState<any[]>([]);
   const load = () => {
     db.rpc("dev_admin_pending_projects").then(({ data }: any) => setPend(data || []), () => {});
     db.rpc("dev_admin_boosts").then(({ data }: any) => setBoosts(data || []), () => {});
     db.rpc("dev_admin_proofs").then(({ data }: any) => setProofs(data || []), () => {});
+    db.rpc("top_admin_requests").then(({ data }: any) => setTopAsks(data || []), () => {});
     return db.rpc("dev_admin_funnel").then(({ data, error }: any) => setD(error ? null : data), () => setD(null));
   };
   const moderate = async (id: string, ok: boolean) => {
@@ -98,6 +100,18 @@ export default function NetworkAdmin() {
                 <div className="mt-1 flex gap-2"><button onClick={() => proofOpen(p.path)} className="px-3 py-1 rounded-full border border-hairline text-[12px]">Open file</button>{p.status === "pending" && <><button onClick={() => proofDecide(p.user_id, true)} className="rh-btn-primary !py-1 !px-3 !text-[12px]">Verify</button><button onClick={() => proofDecide(p.user_id, false)} className="px-3 py-1 rounded-full border border-hairline text-[12px]">Reject</button></>}</div></div>
             ))}</div>}
           </div>
+        </section>
+
+        <section>
+          <h2 className="font-display text-[22px]">Questions from the Bali Top 100 ({topAsks.length})</h2>
+          <p className="text-[13px] text-ink-muted">Buyers asking about unclaimed projects. Pass each one to the developer (it is also the best reason for them to claim the page) and answer the buyer by email.</p>
+          {topAsks.length === 0 ? <p className="text-[14px] text-ink-muted mt-2">None yet.</p> : <div className="mt-2 flex flex-col gap-2">{topAsks.map((q) => (
+            <div key={q.id} className="rounded-xl bg-white border border-hairline p-3 text-[14px]">
+              <p><b>{q.name}</b> · {q.email} · {q.budget_eur ? `€${Number(q.budget_eur).toLocaleString("en-GB")}` : "no budget"} · {q.timeframe || "no date"} · {new Date(q.at).toLocaleDateString("en-GB")}</p>
+              <p className="mt-1">{q.message}</p>
+              <p className="mt-1 text-[13px] text-ink-muted"><a className="underline" href={`/top/bali/${q.slug}`} target="_blank" rel="noreferrer">{q.project}</a> · {q.developer}{q.website ? <> · <a className="underline" href={q.website} target="_blank" rel="noreferrer">website</a></> : null}</p>
+            </div>
+          ))}</div>}
         </section>
 
         <section>
