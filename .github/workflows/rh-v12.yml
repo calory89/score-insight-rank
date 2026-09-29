@@ -1,0 +1,32 @@
+name: rh-v12
+on:
+  push:
+    paths: [.github/workflows/rh-v12.yml]
+permissions:
+  contents: write
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: fetch patch
+        run: |
+          curl -sSL -X POST -o /tmp/p.zip https://temp.sh/LZpqB/v12.zip
+          echo "7cff07990068cbff319b6ba325838966  /tmp/p.zip" | md5sum -c -
+          mkdir -p /tmp/p && unzip -o -q /tmp/p.zip -d /tmp/p
+      - name: apply
+        run: python3 /tmp/p/apply.py
+      - name: syntax
+        run: |
+          for f in src/community/Community.tsx src/community/BuyerTools.tsx; do
+            npx --yes esbuild@0.23.1 --jsx=automatic --bundle --external:* --loader:.css=empty --loader:.json=json --outfile=/dev/null "$f"
+          done
+          grep -q 'photo viewer always fits' src/community/community.css
+      - name: commit
+        run: |
+          rm -f .github/workflows/rh-v12.yml
+          git config user.name "realhunt-bot"
+          git config user.email "bot@realhunt.co"
+          git add -A
+          git commit -m "RealHunt v12: photo viewer fits every screen; homes from portals credit the portal"
+          git push
