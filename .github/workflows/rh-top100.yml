@@ -1,0 +1,28 @@
+name: rh-top100
+on:
+  push:
+    paths: ['.github/workflows/rh-top100.yml']
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply patch
+        run: |
+          set -e
+          curl -sSL -X POST https://temp.sh/MUPAD/top.zip -o /tmp/p.zip
+          echo "a6d5b988c3793bc8cba9c201ecead835  /tmp/p.zip" | md5sum -c
+          mkdir -p /tmp/p && unzip -q /tmp/p.zip -d /tmp/p
+          python3 /tmp/p/apply.py
+          for f in src/community/top.tsx src/community/Community.tsx src/App.tsx; do npx -y esbuild@0.23.0 "$f" --loader:.tsx=tsx --log-level=error > /dev/null; done
+          python3 -c "import ast;ast.parse(open('scripts/og_cards.py').read())"
+          python3 -c "import json;assert len(json.load(open('src/data/top-bali.json')))==100"
+          test -f public/top/bali/og.jpg
+          git rm -q .github/workflows/rh-top100.yml
+          git config user.name realhunt-bot
+          git config user.email bot@realhunt.co
+          git add -A
+          git commit -qm "Bali Top 100: ranking page, 100 project pages, photos and share cards"
+          git push
