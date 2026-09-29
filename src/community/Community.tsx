@@ -287,6 +287,12 @@ async function shareDeal(d: Pick<Deal, "slug" | "title">, message: string) {
     await navigator.clipboard.writeText(`${message}\n${url}`);
   }
 }
+// Homes imported from a portal credit the portal (e.g. immobiliare.it), not the Instagram account that shared them.
+const sourceSite = (d: any): string => {
+  if (!isImported(d)) return "";
+  const dom = String(d.source_domain || "").replace(/^www\./, "").toLowerCase();
+  return dom && !/instagram\.com|facebook\.com|tiktok\.com/.test(dom) ? dom : "";
+};
 function Media({ deal, detail = false, scope = "all" }: { deal: Deal; detail?: boolean; scope?: string }) {
   const [index, setIndex] = useState(0);
   const [play, setPlay] = useState(false);
@@ -502,9 +508,9 @@ function Card({
             {(deal.hunter_handle || "r")[0].toUpperCase()}
           </span>
           {isImported(deal) ? "Spotted on" : "Found by"}{" "}
-          <Link to={`/hunter/${deal.hunter_handle || "realhunt"}`}>
+          {sourceSite(deal) ? <a href={`https://www.${sourceSite(deal)}/`} target="_blank" rel="noopener noreferrer nofollow">{sourceSite(deal)}</a> : <Link to={`/hunter/${deal.hunter_handle || "realhunt"}`}>
             @{deal.hunter_handle || "realhunt"}
-          </Link>
+          </Link>}
           {deal.is_editorial_pick && (
             <span title="Editorial selection, independent of community rank">
               ✦ Pick
@@ -900,7 +906,7 @@ function Detail() {
           <p className="hv-detail-where">{FLAG_[d.country] || "📍"} {d.location_name}</p>
           <p>
             {isImported(d) ? "Spotted on" : "Found by"}{" "}
-            <Link to={`/hunter/${d.hunter_handle}`}>@{d.hunter_handle}</Link>
+            {sourceSite(d) ? <a href={`https://www.${sourceSite(d)}/`} target="_blank" rel="noopener noreferrer nofollow">{sourceSite(d)}</a> : <Link to={`/hunter/${d.hunter_handle}`}>@{d.hunter_handle}</Link>}
             {d.is_editorial_pick ? " · ✦ RealHunt Pick" : ""}
           </p>
           <Amenities deal={d} />

@@ -2681,3 +2681,9 @@ html.rh-dark, html.rh-dark body { background: #0E0E0C; }
 .hv-translate-out button { position: absolute; top: 8px; right: 8px; background: none; border: 0; cursor: pointer; }
 .hunt.is-dark .hv-inbox-list button, .hunt.is-dark .hv-alerts a, .hunt.is-dark .hv-serious, .hunt.is-dark .hv-costs-dl div, .hunt.is-dark .hv-report-kpis div, .hunt.is-dark .hv-form, .hunt.is-dark .hv-cmp-bar, .hunt.is-dark .hv-cmp-toggle, .hunt.is-dark .hv-translate > button { background: #1B1A17; border-color: #2F2D28; color: #E8E2D6; }
 .hunt.is-dark .hv-costcalc, .hunt.is-dark .hv-translate-out { background: #22211D; color: #E8E2D6; }
+
+/* v12: the photo viewer always fits the screen (PC and mobile), whatever the photo size */
+.hunt-lightbox { height: 100vh; height: 100dvh; }
+.hunt-lb-slide { box-sizing: border-box; padding: 64px 12px 56px; }
+.hunt-lb-slide img { width: auto; height: auto; max-width: 100%; max-height: calc(100vh - 120px); max-height: calc(100dvh - 120px); object-fit: contain; margin: auto; }
+@media (max-width: 760px) { .hunt-lb-slide { padding: 56px 0 48px; } .hunt-lb-slide img { max-height: calc(100vh - 104px); max-height: calc(100dvh - 104px); } }
