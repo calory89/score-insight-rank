@@ -53,7 +53,7 @@ function HowItWorks({ dest }: { dest: string }) {
       <p>Each project gets a grade from 60 to 90. It compares the project with the other 99: the leader gets 90 and number 100 gets 60. Every project here is already among the best {Math.round(100 / D.checked * 100)}% of what we checked.</p>
       <div className="tp-how-grid">
         <div><strong>Base score (up to 100)</strong><ul>{PARTS.map(([, l, m]) => <li key={l}>{l}: up to {m}</li>)}</ul><small>Cheaper entry price and a lower price per m² score more. Areas near the busiest beaches and towns score more. Ready homes score more than homes still on plans.</small></div>
-        <div><strong>Buyer demand (no limit)</strong><ul><li>Vote: +3</li><li>Save: +2</li><li>Question to the developer: +4</li><li>Click to the developer's website or share: +1</li><li>Every 20 visitors: +1</li></ul><small>One vote and one save per person. Nobody can pay to move up.</small><strong className="tp-how-v">Verified developer: +5</strong><small>The developer showed us their company papers and answers buyers directly. Verifying is free.</small></div>
+        <div><strong>Buyer demand (no limit)</strong><ul><li>Vote: +3</li><li>Save: +2</li><li>Question to the developer: +4</li><li>Click to the developer's website or share: +1</li><li>Every 20 visitors: +1</li></ul><small>One vote and one save per person. Nobody can pay to move up. Only projects whose developer has a working website and a phone or WhatsApp can enter.</small><strong className="tp-how-v">Verified developer: +5</strong><small>The developer showed us their company papers and answers buyers directly. Verifying is free.</small></div>
       </div>
       <p className="hunt-fine">Prices, sizes and dates come from the public listings on {D.date}. {D.fx ? D.fx + " " : ""}They change, so check with the developer before you decide. This is a ranking, not advice to buy.</p>
     </details>
@@ -320,7 +320,7 @@ export function TopClaimPage() {
           <input placeholder="Legal company name (for example PT …)" value={f.legal_name} onChange={(e) => setF({ ...f, legal_name: e.target.value })} />
           <input placeholder={`Registration number (${D.reg})`} value={f.reg_number} onChange={(e) => setF({ ...f, reg_number: e.target.value })} />
           <input placeholder="Country of the company" value={f.country} onChange={(e) => setF({ ...f, country: e.target.value })} />
-          <input placeholder="Website (https://…)" value={f.website} onChange={(e) => setF({ ...f, website: e.target.value })} />
+          <input required type="url" placeholder="Website of the company or project (https://…)" value={f.website} onChange={(e) => setF({ ...f, website: e.target.value })} />
           <strong>Documents</strong>
           <p className="hunt-fine">1) The company registration ({D.reg}, deed or certificate). 2) One thing that links you to {p.name}: {D.permit}, a sales contract template or brochure with your company name, or a letter from the company saying you represent it. PDF or photo, up to 10 MB each. Only the RealHunt team sees them.</p>
           <label className="hunt-secondary tp-file">{<FileUp size={15} />} Add documents<input type="file" multiple accept="application/pdf,image/*" hidden onChange={(e) => { add(e.target.files); e.currentTarget.value = ""; }} /></label>
