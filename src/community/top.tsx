@@ -1,5 +1,5 @@
-// RealHunt Top 100 (30-sep-2026): the best new-build projects of a destination, starting with Bali.
-// Lives on its own pages (/top/bali and /top/bali/:slug), never in the main feed.
+// RealHunt Top 100 (30-sep-2026): the best new-build projects of each destination (Bali, Phuket, Tulum, Batumi).
+// Lives on its own pages (/top, /top/:dest and /top/:dest/:slug), never in the main feed.
 // Order = a base score (price, price per m², area, build stage, how complete the listing is, developer track record)
 // plus buyer demand (votes, saves, questions, website clicks, views), so the list moves with what people choose.
 import { useEffect, useMemo, useState } from "react";
@@ -21,11 +21,21 @@ const setMeta = (title: string, desc: string, url: string, image?: string) => {
   if (image) { set('meta[property="og:image"]', "content", image); set('meta[name="twitter:image"]', "content", image); }
 };
 
-export const TOP_DESTS: Record<string, { name: string; checked: number; date: string }> = {
-  bali: { name: "Bali", checked: 502, date: "29 September 2026" },
+export const TOP_DESTS: Record<string, { name: string; country: string; checked: number; date: string; reg: string; permit: string; fx?: string }> = {
+  bali: { name: "Bali", country: "Indonesia", checked: 502, date: "29 September 2026", reg: "NIB in Indonesia", permit: "the building permit (PBG)" },
+  phuket: { name: "Phuket", country: "Thailand", checked: 468, date: "30 September 2026", reg: "company registration number (DBD)", permit: "the building permit or EIA approval", fx: "Prices converted from Thai baht at about 38 THB per euro." },
+  tulum: { name: "Tulum", country: "Mexico", checked: 425, date: "30 September 2026", reg: "RFC", permit: "the construction licence", fx: "Prices converted from US dollars or pesos at the rate of 30 September 2026." },
+  batumi: { name: "Batumi", country: "Georgia", checked: 563, date: "30 September 2026", reg: "company ID (identification code)", permit: "the construction permit", fx: "Prices converted from US dollars at about 1.13 USD per euro." },
 };
-const AREAS: [string, RegExp][] = [["Canggu", /canggu|pererenan|berawa|umalas|kerobokan|seminyak|north kuta|seseh|cemagi|nyanyi|kedungu|tabanan|beraban/i], ["Uluwatu & Bukit", /uluwatu|ungasan|pecatu|bingin|melasti|balangan|pandawa|kutuh|nyang/i], ["Ubud", /ubud|sayan|tegallalang|kedewatan|gianyar/i], ["Nusa Dua & Jimbaran", /nusa dua|benoa|jimbaran|kampial|sawangan/i], ["Sanur & Denpasar", /sanur|denpasar/i]];
-const areaOf = (loc?: string) => AREAS.find(([, re]) => re.test(loc || ""))?.[0] || "Other";
+export const TOP_ORDER = ["bali", "phuket", "tulum", "batumi"];
+const AREAS_BY: Record<string, [string, RegExp][]> = {
+  phuket: [["Bang Tao & Laguna", /bang tao|laguna|cherng talay|layan/i], ["Surin & Kamala", /surin|kamala/i], ["Patong, Kata & Karon", /patong|kata|karon|kalim/i], ["Rawai & Nai Harn", /rawai|nai ?harn|naiharn|chalong|panwa/i], ["North (Nai Yang, Mai Khao)", /nai yang|mai khao|nai thon|thalang/i], ["Town & east", /town|kathu|koh kaew|yamu|ao po/i]],
+  tulum: [["La Veleta", /veleta/i], ["Aldea Zama & Selvazama", /zama/i], ["Region 15 & Holistika", /region 15|holistika/i], ["Centro", /centro|aldea tulum/i], ["Beach & coast", /beach|tankah|soliman|akumal|chemuyil/i]],
+  batumi: [["Airport district", /airport/i], ["Batumi Boulevard", /boulevard/i], ["Centre & old town", /old city|rustaveli|downtown|khimshiashvili|tamar|agmashenebeli|centre/i], ["Bagrationi & Javakhishvili", /bagrationi|javakhishvili|kakhaberi/i], ["Makhinjauri & north", /makhinjauri|chakvi|green cape|mtsvane/i]],
+};
+const AREAS_BALI: [string, RegExp][] = [["Canggu", /canggu|pererenan|berawa|umalas|kerobokan|seminyak|north kuta|seseh|cemagi|nyanyi|kedungu|tabanan|beraban/i], ["Uluwatu & Bukit", /uluwatu|ungasan|pecatu|bingin|melasti|balangan|pandawa|kutuh|nyang/i], ["Ubud", /ubud|sayan|tegallalang|kedewatan|gianyar/i], ["Nusa Dua & Jimbaran", /nusa dua|benoa|jimbaran|kampial|sawangan/i], ["Sanur & Denpasar", /sanur|denpasar/i]];
+const areasFor = (dest: string) => AREAS_BY[dest] || AREAS_BALI;
+const areaOf = (dest: string, loc?: string) => areasFor(dest).find(([, re]) => re.test(loc || ""))?.[0] || "Other";
 const PARTS: [string, string, number][] = [["entry", "Entry price", 20], ["value", "Price per m²", 25], ["location", "Area", 20], ["stage", "Build stage", 15], ["info", "Listing detail", 10], ["developer", "Developer track record", 10]];
 
 function Move({ rank, base }: { rank: number; base: number }) {
@@ -45,7 +55,7 @@ function HowItWorks({ dest }: { dest: string }) {
         <div><strong>Base score (up to 100)</strong><ul>{PARTS.map(([, l, m]) => <li key={l}>{l}: up to {m}</li>)}</ul><small>Cheaper entry price and a lower price per m² score more. Areas near the busiest beaches and towns score more. Ready homes score more than homes still on plans.</small></div>
         <div><strong>Buyer demand (no limit)</strong><ul><li>Vote: +3</li><li>Save: +2</li><li>Question to the developer: +4</li><li>Click to the developer's website or share: +1</li><li>Every 20 visitors: +1</li></ul><small>One vote and one save per person. Nobody can pay to move up.</small><strong className="tp-how-v">Verified developer: +5</strong><small>The developer showed us their company papers and answers buyers directly. Verifying is free.</small></div>
       </div>
-      <p className="hunt-fine">Prices, sizes and dates come from the public listings on {D.date}. They change, so check with the developer before you decide. This is a ranking, not advice to buy.</p>
+      <p className="hunt-fine">Prices, sizes and dates come from the public listings on {D.date}. {D.fx ? D.fx + " " : ""}They change, so check with the developer before you decide. This is a ranking, not advice to buy.</p>
     </details>
   );
 }
@@ -67,7 +77,7 @@ export function TopListPage() {
   }, [dest, user?.id]);
   useEffect(() => { if (D && rows) document.title = `Top 100 new builds in ${D.name}, ranked by buyers · RealHunt`; }, [rows]);
   const list = useMemo(() => {
-    let r = (rows || []).filter((x) => (area === "All" || areaOf(x.locality) === area) && (kind === "All" || (kind === "Under €100k" ? x.price_eur <= 100000 : x.ptype === kind)));
+    let r = (rows || []).filter((x) => (area === "All" || areaOf(dest, x.locality) === area) && (kind === "All" || (kind === "Under €100k" ? x.price_eur <= 100000 : x.ptype === kind)));
     if (sort === "price") r = [...r].sort((a, b) => a.price_eur - b.price_eur);
     if (sort === "votes") r = [...r].sort((a, b) => b.votes - a.votes || a.rank - b.rank);
     return r;
@@ -76,15 +86,16 @@ export function TopListPage() {
     if (!user) { setNotice(k === "vote" ? "Sign in to vote. One vote per person keeps the ranking fair." : "Sign in to save projects."); requireUser(); return; }
     try { const r = await rpc("top_toggle", { p_slug: x.slug, p_kind: k }); if (r?.error) setNotice(r.error); else { ev("top_" + k); load(); } } catch (e) { setNotice((e as Error).message); }
   };
-  if (!D) return <div className="hunt-wrap hunt-page"><h1>Ranking not found</h1><Link to="/top/bali" className="hunt-link">See the Bali Top 100</Link></div>;
+  if (!D) return <TopIndexPage />;
   return (
     <div className="hunt-wrap hunt-page tp">
-      <span className="hunt-eyebrow"><Trophy size={13} /> REALHUNT RANKINGS</span>
+      <span className="hunt-eyebrow"><Trophy size={13} /> <Link to="/top">REALHUNT RANKINGS</Link></span>
       <h1>Top 100 new builds in {D.name}</h1>
+      <div className="tp-chips tp-dests">{TOP_ORDER.map((k) => <Link key={k} to={`/top/${k}`} aria-current={k === dest ? "page" : undefined} className={k === dest ? "is-on" : ""}>{TOP_DESTS[k].name}</Link>)}</div>
       <p>The ranking is made by demand. We picked the 100 best of {D.checked} projects on price, price per m², area and build stage. From there, the projects buyers vote for, save and ask about climb.</p>
       <HowItWorks dest={dest} />
       <div className="tp-filters">
-        <div className="tp-chips">{["All", ...AREAS.map((a) => a[0]), "Other"].map((a) => <button key={a} aria-pressed={area === a} onClick={() => setArea(a)}>{a}</button>)}</div>
+        <div className="tp-chips">{["All", ...areasFor(dest).map((a) => a[0]), "Other"].map((a) => <button key={a} aria-pressed={area === a} onClick={() => setArea(a)}>{a}</button>)}</div>
         <div className="tp-chips">{["All", "Under €100k", "Villas", "Apartments", "Townhouses"].map((a) => <button key={a} aria-pressed={kind === a} onClick={() => setKind(a)}>{a}</button>)}
           <select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort"><option value="rank">Rank</option><option value="price">Lowest price</option><option value="votes">Most votes</option></select></div>
       </div>
@@ -240,7 +251,7 @@ export function TopProjectPage() {
 
 // ---------------------------------------------------------------- developer verification (/top/claim/:slug)
 const BENEFITS: [string, string][] = [
-  ["Verified badge", "Buyers see that RealHunt checked your company. It is the first thing they look for in Bali."],
+  ["Verified badge", "Buyers see that RealHunt checked your company. It is the first thing buyers from abroad look for."],
   ["+5 points in the ranking", "Verified projects move up. The badge also shows on the list and on every share."],
   ["Buyers' questions go straight to you", "Name, email, budget and when they want to buy. No middleman, no cost per lead."],
   ["Your page, your numbers", "Update the price, build stage, website, WhatsApp and a note to buyers from your panel at realhunt.co/top/mine."],
@@ -252,12 +263,12 @@ export function TopClaimPage() {
   const slug = loc.pathname.split("/")[3] || "";
   const { user, requireUser, setNotice } = useCommunity();
   const [p, setP] = useState<any>(undefined);
-  const [f, setF] = useState({ full_name: "", role: "", company: "", legal_name: "", reg_number: "", country: "Indonesia", phone: "", website: "", message: "" });
+  const [f, setF] = useState({ full_name: "", role: "", company: "", legal_name: "", reg_number: "", country: "", phone: "", website: "", message: "" });
   const [files, setFiles] = useState<File[]>([]);
   const [ok, setOk] = useState(false);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
-  useEffect(() => { window.scrollTo(0, 0); rpc("top_project", { p_slug: slug }).then((x) => { setP(x); if (x) setF((v) => ({ ...v, company: v.company || x.developer || "", website: v.website || x.website || "" })); }).catch(() => setP(null)); ev("top_claim_view"); }, [slug, user?.id]);
+  useEffect(() => { window.scrollTo(0, 0); rpc("top_project", { p_slug: slug }).then((x) => { setP(x); if (x) setF((v) => ({ ...v, company: v.company || x.developer || "", website: v.website || x.website || "", country: v.country || (TOP_DESTS[x.dest] || TOP_DESTS.bali).country })); }).catch(() => setP(null)); ev("top_claim_view"); }, [slug, user?.id]);
   useEffect(() => { if (p) document.title = `Verify ${p.name} · RealHunt Top 100`; }, [p?.slug]);
   const add = (list: FileList | null) => {
     const next = [...files];
@@ -285,7 +296,7 @@ export function TopClaimPage() {
     } catch (err) { setNotice((err as Error).message); } finally { setBusy(false); }
   };
   if (p === undefined) return <div className="hunt-wrap hunt-page"><Loader2 className="animate-spin" /></div>;
-  if (!p) return <div className="hunt-wrap hunt-page"><h1>Project not found</h1><Link to="/top/bali" className="hunt-link">Bali Top 100</Link></div>;
+  if (!p) return <div className="hunt-wrap hunt-page"><h1>Project not found</h1><Link to="/top" className="hunt-link">All Top 100 rankings</Link></div>;
   const dest = p.dest || "bali"; const D = TOP_DESTS[dest] || TOP_DESTS.bali;
   return (
     <div className="hunt-wrap hunt-page tp tp-claim">
@@ -307,11 +318,11 @@ export function TopClaimPage() {
           <strong>The company</strong>
           <input required placeholder="Brand name buyers know" value={f.company} onChange={(e) => setF({ ...f, company: e.target.value })} />
           <input placeholder="Legal company name (for example PT …)" value={f.legal_name} onChange={(e) => setF({ ...f, legal_name: e.target.value })} />
-          <input placeholder="Registration number (NIB in Indonesia)" value={f.reg_number} onChange={(e) => setF({ ...f, reg_number: e.target.value })} />
+          <input placeholder={`Registration number (${D.reg})`} value={f.reg_number} onChange={(e) => setF({ ...f, reg_number: e.target.value })} />
           <input placeholder="Country of the company" value={f.country} onChange={(e) => setF({ ...f, country: e.target.value })} />
           <input placeholder="Website (https://…)" value={f.website} onChange={(e) => setF({ ...f, website: e.target.value })} />
           <strong>Documents</strong>
-          <p className="hunt-fine">1) The company registration (NIB, deed or certificate). 2) One thing that links you to {p.name}: the building permit (PBG), a sales contract template or brochure with your company name, or a letter from the company saying you represent it. PDF or photo, up to 10 MB each. Only the RealHunt team sees them.</p>
+          <p className="hunt-fine">1) The company registration ({D.reg}, deed or certificate). 2) One thing that links you to {p.name}: {D.permit}, a sales contract template or brochure with your company name, or a letter from the company saying you represent it. PDF or photo, up to 10 MB each. Only the RealHunt team sees them.</p>
           <label className="hunt-secondary tp-file">{<FileUp size={15} />} Add documents<input type="file" multiple accept="application/pdf,image/*" hidden onChange={(e) => { add(e.target.files); e.currentTarget.value = ""; }} /></label>
           {files.length > 0 && <ul className="tp-files">{files.map((x, i) => <li key={i}>{x.name}<button type="button" aria-label="Remove" onClick={() => setFiles(files.filter((_, k) => k !== i))}><X size={14} /></button></li>)}</ul>}
           <textarea placeholder="Anything we should know (optional): units left, what changed since the listing…" value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} />
@@ -365,9 +376,33 @@ export function TopMinePage() {
       <h1>My Top 100 pages</h1>
       {!user ? <><p>Sign in with the account you used to verify your business.</p><button className="hunt-primary" onClick={() => requireUser()}>Sign in</button></> : d === undefined ? <Loader2 className="animate-spin" /> : (<>
         {(d?.pages || []).map((pg: any) => <MyPage key={pg.slug} pg={pg} onSaved={load} />)}
-        {(d?.claims || []).filter((c: any) => c.status !== "approved").length > 0 && <><h2>Verification requests</h2><ul className="tp-qs">{d.claims.filter((c: any) => c.status !== "approved").map((c: any, i: number) => <li key={i}><Link to={`/top/bali/${c.slug}`}><b>{c.project}</b></Link> · {c.status === "pending" ? "being checked (up to two working days)" : `not approved${c.reason ? `: ${c.reason}` : ""}`} · {new Date(c.at).toLocaleDateString("en-GB")}</li>)}</ul></>}
-        {!(d?.pages || []).length && !(d?.claims || []).length && <p>No pages yet. Find your project in the <Link className="hunt-link" to="/top/bali">Bali Top 100</Link> and press "Verify it".</p>}
+        {(d?.claims || []).filter((c: any) => c.status !== "approved").length > 0 && <><h2>Verification requests</h2><ul className="tp-qs">{d.claims.filter((c: any) => c.status !== "approved").map((c: any, i: number) => <li key={i}><Link to={`/top/${c.dest || "bali"}/${c.slug}`}><b>{c.project}</b></Link> · {c.status === "pending" ? "being checked (up to two working days)" : `not approved${c.reason ? `: ${c.reason}` : ""}`} · {new Date(c.at).toLocaleDateString("en-GB")}</li>)}</ul></>}
+        {!(d?.pages || []).length && !(d?.claims || []).length && <p>No pages yet. Find your project in the <Link className="hunt-link" to="/top">Top 100 rankings</Link> and press "Verify it".</p>}
       </>)}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- /top: every ranking
+export function TopIndexPage() {
+  const [tops, setTops] = useState<Record<string, any[]>>({});
+  useEffect(() => {
+    setMeta("Top 100 new builds by destination: Bali, Phuket, Tulum, Batumi · RealHunt", "The 100 best new-build projects in Bali, Phuket, Tulum and Batumi, ranked on price, area and build stage, then by what buyers vote, save and ask about.", "https://realhunt.co/top", "https://realhunt.co/top/bali/og.jpg");
+    TOP_ORDER.forEach((k) => rpc("top_list", { p_dest: k }).then((r) => setTops((t) => ({ ...t, [k]: (r || []).slice(0, 3) }))).catch(() => {}));
+  }, []);
+  useEffect(() => { document.title = "Top 100 new builds by destination: Bali, Phuket, Tulum, Batumi · RealHunt"; }, [tops]);
+  return (
+    <div className="hunt-wrap hunt-page tp">
+      <span className="hunt-eyebrow"><Trophy size={13} /> REALHUNT RANKINGS</span>
+      <h1>Top 100 new builds, by destination</h1>
+      <p>In each destination we checked every new-build project listed for sale and kept the best 100 on price, price per m², area and build stage. Then buyers decide: every vote, save and question moves a project up.</p>
+      <div className="tp-index">{TOP_ORDER.map((k) => (
+        <Link key={k} to={`/top/${k}`} className="tp-index-card">
+          <img src={`/top/${k}/og.jpg`} alt={`Top 100 new builds in ${TOP_DESTS[k].name}`} loading="lazy" />
+          <div><strong>{TOP_DESTS[k].name}, {TOP_DESTS[k].country}</strong><small>Best 100 of {TOP_DESTS[k].checked} projects</small>
+            <ol>{(tops[k] || []).map((x) => <li key={x.slug}>#{x.rank} {x.name} <em>from {eur(x.price_eur)}</em></li>)}</ol></div>
+        </Link>
+      ))}</div>
     </div>
   );
 }

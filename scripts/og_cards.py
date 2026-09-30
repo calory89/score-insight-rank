@@ -147,8 +147,12 @@ def main():
         urls += [f"{SITE}/costs", f"{SITE}/research/new-builds", f"{SITE}/agents", f"{SITE}/network/example", f"{SITE}/network/reservation-contract"]
         urls += [f"{SITE}/costs/{c}" for c in ("bali", "lombok", "albania", "mexico", "spain", "montenegro", "georgia", "northern-cyprus", "vietnam", "italy", "portugal", "bulgaria")]
         urls += [f"{SITE}/new-builds/{c}" for c in ("indonesia", "mexico", "albania", "spain", "portugal", "thailand", "turkey", "montenegro")]
-        top = json.load(open(os.path.join(ROOT, "src", "data", "top-bali.json")))
-        urls += [f"{SITE}/top/bali"] + [f"{SITE}/top/bali/{t['slug']}" for t in top]
+        urls += [f"{SITE}/top"]
+        for k in ("bali", "phuket", "tulum", "batumi"):
+            fp = os.path.join(ROOT, "src", "data", f"top-{k}.json")
+            if os.path.exists(fp):
+                top = json.load(open(fp))
+                urls += [f"{SITE}/top/{k}"] + [f"{SITE}/top/{k}/{t['slug']}" for t in top]
         urls += [f"{SITE}/blog/{p['slug']}" for p in json.load(open(os.path.join(ROOT, "src", "data", "blog.json")))]
         urls += [f"{SITE}/cheap-houses/{p['slug']}" for p in json.load(open(os.path.join(ROOT, "src", "data", "search-pages.json")))["pages"]]
     except Exception as e:

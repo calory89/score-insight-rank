@@ -17,12 +17,15 @@ export default function NetworkAdmin() {
   const [proofs, setProofs] = useState<any[]>([]);
   const [topAsks, setTopAsks] = useState<any[]>([]);
   const [topClaims, setTopClaims] = useState<any[]>([]);
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [cDest, setCDest] = useState("all");
   const load = () => {
     db.rpc("dev_admin_pending_projects").then(({ data }: any) => setPend(data || []), () => {});
     db.rpc("dev_admin_boosts").then(({ data }: any) => setBoosts(data || []), () => {});
     db.rpc("dev_admin_proofs").then(({ data }: any) => setProofs(data || []), () => {});
     db.rpc("top_admin_requests").then(({ data }: any) => setTopAsks(data || []), () => {});
     db.rpc("top_admin_claims").then(({ data }: any) => setTopClaims(data || []), () => {});
+    db.rpc("top_admin_contacts", { p_dest: null }).then(({ data }: any) => setContacts(data || []), () => {});
     return db.rpc("dev_admin_funnel").then(({ data, error }: any) => setD(error ? null : data), () => setD(null));
   };
   const moderate = async (id: string, ok: boolean) => {
@@ -37,6 +40,13 @@ export default function NetworkAdmin() {
     if (!ok && reason === null) return;
     const { error } = await db.rpc("top_admin_claim_decide", { p_id: id, p_ok: ok, p_reason: reason });
     setMsg(error ? error.message : ok ? "Verified: badge on, +5 in the ranking, questions go to the developer" : "Rejected"); load();
+  };
+  const contactMark = async (id: string, status: string) => { const { error } = await db.rpc("top_admin_contact_mark", { p_id: id, p_status: status }); setMsg(error ? error.message : `Marked ${status}`); load(); };
+  const contactsCsv = () => {
+    const rows = contacts.filter((c) => cDest === "all" || c.dest === cDest);
+    const esc = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const csv = ["destination,type,company,projects,website,emails,phones,whatsapp,status"].concat(rows.map((c) => [c.dest, c.kind, c.company, (c.projects || []).join(" | "), c.website, (c.emails || []).join(" "), (c.phones || []).join(" "), (c.whatsapp || []).join(" "), c.status].map(esc).join(","))).join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = `realhunt-contacts-${cDest}.csv`; a.click();
   };
   const boostDecide = async (id: number, on: boolean) => { const { error } = await db.rpc("dev_admin_boost_decide", { p_id: id, p_on: on }); setMsg(error ? error.message : on ? "Boost active" : "Boost stopped"); load(); };
   const proofOpen = async (path: string) => { const { data, error } = await (db as any).storage.from("buyer-proof").createSignedUrl(path, 300); if (error) setMsg(error.message); else window.open(data.signedUrl, "_blank", "noopener"); };
@@ -112,11 +122,25 @@ export default function NetworkAdmin() {
         </section>
 
         <section>
+          <h2 className="font-display text-[22px]">Top 100 contacts ({contacts.length})</h2>
+          <p className="text-[13px] text-ink-muted">Emails, phones and WhatsApp numbers found on developer and agency websites and on the listing portals, for the four rankings. Use them to tell each developer their rank and invite them to verify.</p>
+          <div className="mt-2 flex flex-wrap gap-2 items-center text-[13px]">{["all", "bali", "phuket", "tulum", "batumi"].map((k) => <button key={k} onClick={() => setCDest(k)} className={`px-3 py-1 rounded-full border ${cDest === k ? "bg-ink text-paper border-ink" : "border-hairline bg-white"}`}>{k} ({k === "all" ? contacts.length : contacts.filter((c) => c.dest === k).length})</button>)}<button onClick={contactsCsv} className="px-3 py-1 rounded-full border border-hairline bg-white">Download CSV</button></div>
+          <div className="mt-2 max-h-[520px] overflow-y-auto flex flex-col gap-1.5">{contacts.filter((c) => cDest === "all" || c.dest === cDest).map((c) => (
+            <div key={c.id} className="rounded-xl bg-white border border-hairline p-2.5 text-[13px]">
+              <p><b>{c.company}</b> · {c.dest} · {c.kind} · <span className={c.status === "contacted" ? "text-emerald-700" : "text-ink-muted"}>{c.status}</span>{c.website ? <> · <a className="underline" href={c.website} target="_blank" rel="noreferrer">{c.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}</a></> : null}</p>
+              {(c.projects || []).length > 0 && <p className="text-ink-muted">{c.projects.join(", ")}</p>}
+              <p>{(c.emails || []).map((e: string) => <a key={e} className="underline mr-2" href={`mailto:${e}`}>{e}</a>)}{(c.whatsapp || []).map((w: string) => <a key={w} className="underline mr-2 text-emerald-700" href={`https://wa.me/${w.replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer">WA {w}</a>)}{(c.phones || []).filter((x: string) => !(c.whatsapp || []).includes(x)).map((x: string) => <a key={x} className="mr-2" href={`tel:${x}`}>{x}</a>)}</p>
+              {c.status !== "contacted" && <button onClick={() => contactMark(c.id, "contacted")} className="mt-1 px-2 py-0.5 rounded-full border border-hairline text-[12px]">Mark contacted</button>}
+            </div>
+          ))}</div>
+        </section>
+
+        <section>
           <h2 className="font-display text-[22px]">Top 100 verifications ({topClaims.filter((c) => c.status === "pending").length} to check)</h2>
           <p className="text-[13px] text-ink-muted">Check the company registration (NIB) and that the person is linked to the project (permit, brochure with the company name, letter of authority). Approve = Verified badge, +5 points, and buyer questions go to them.</p>
           {topClaims.length === 0 ? <p className="text-[14px] text-ink-muted mt-2">None yet.</p> : <div className="mt-2 flex flex-col gap-2">{topClaims.map((c) => (
             <div key={c.id} className="rounded-xl bg-white border border-hairline p-3 text-[14px]">
-              <p><a className="underline font-medium" href={`/top/bali/${c.slug}`} target="_blank" rel="noreferrer">{c.project}</a> · listed as {c.listed_developer} · <b>{c.status}</b>{c.reason ? ` (${c.reason})` : ""}</p>
+              <p><a className="underline font-medium" href={`/top/${c.dest || "bali"}/${c.slug}`} target="_blank" rel="noreferrer">{c.project}</a> · listed as {c.listed_developer} · <b>{c.status}</b>{c.reason ? ` (${c.reason})` : ""}</p>
               <p className="mt-1">{c.full_name}{c.role ? `, ${c.role}` : ""} · {c.email} · {c.phone}</p>
               <p className="text-[13px] text-ink-muted">{c.company}{c.legal_name ? ` · ${c.legal_name}` : ""}{c.reg_number ? ` · reg. ${c.reg_number}` : ""}{c.country ? ` · ${c.country}` : ""}{c.website ? <> · <a className="underline" href={c.website} target="_blank" rel="noreferrer">{c.website}</a></> : null}{c.listed_website ? <> · listed site <a className="underline" href={c.listed_website} target="_blank" rel="noreferrer">{c.listed_website}</a></> : null}</p>
               {c.message && <p className="mt-1 text-[13px]">{c.message}</p>}
@@ -133,7 +157,7 @@ export default function NetworkAdmin() {
             <div key={q.id} className="rounded-xl bg-white border border-hairline p-3 text-[14px]">
               <p><b>{q.name}</b> · {q.email} · {q.budget_eur ? `€${Number(q.budget_eur).toLocaleString("en-GB")}` : "no budget"} · {q.timeframe || "no date"} · {new Date(q.at).toLocaleDateString("en-GB")}</p>
               <p className="mt-1">{q.message}</p>
-              <p className="mt-1 text-[13px] text-ink-muted"><a className="underline" href={`/top/bali/${q.slug}`} target="_blank" rel="noreferrer">{q.project}</a> · {q.developer}{q.website ? <> · <a className="underline" href={q.website} target="_blank" rel="noreferrer">website</a></> : null}</p>
+              <p className="mt-1 text-[13px] text-ink-muted"><a className="underline" href={`/top/${q.dest || "bali"}/${q.slug}`} target="_blank" rel="noreferrer">{q.project}</a> · {q.developer}{q.website ? <> · <a className="underline" href={q.website} target="_blank" rel="noreferrer">website</a></> : null}</p>
             </div>
           ))}</div>}
         </section>
