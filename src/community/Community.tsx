@@ -26,7 +26,7 @@ import { useLiveStats } from "@/components/realhunt/LiveStats";
 import { lazy, Suspense } from "react";
 import { DevBlock, ClaimListing, BuyerPicks, NewBuildsPage, DevLeaderboard } from "./v8";
 import { InboxPage, CompareBuilds, CostsIndex, CostsPage, NewBuildReport, AgentsPage, TranslateBar, InboxLink } from "./v10";
-import { TopListPage, TopProjectPage } from "./top";
+import { TopListPage, TopProjectPage, TopClaimPage, TopMinePage } from "./top";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
@@ -1870,6 +1870,10 @@ export default function Community() {
       <NewBuildReport />
     ) : path === "/agents" ? (
       <AgentsPage />
+    ) : path === "/top/mine" ? (
+      <TopMinePage />
+    ) : path.startsWith("/top/claim/") ? (
+      <TopClaimPage />
     ) : /^\/top\/[a-z-]+\/?$/.test(path) ? (
       <TopListPage />
     ) : path.startsWith("/top/") ? (

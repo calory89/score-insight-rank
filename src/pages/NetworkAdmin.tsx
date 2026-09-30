@@ -16,11 +16,13 @@ export default function NetworkAdmin() {
   const [boosts, setBoosts] = useState<any[]>([]);
   const [proofs, setProofs] = useState<any[]>([]);
   const [topAsks, setTopAsks] = useState<any[]>([]);
+  const [topClaims, setTopClaims] = useState<any[]>([]);
   const load = () => {
     db.rpc("dev_admin_pending_projects").then(({ data }: any) => setPend(data || []), () => {});
     db.rpc("dev_admin_boosts").then(({ data }: any) => setBoosts(data || []), () => {});
     db.rpc("dev_admin_proofs").then(({ data }: any) => setProofs(data || []), () => {});
     db.rpc("top_admin_requests").then(({ data }: any) => setTopAsks(data || []), () => {});
+    db.rpc("top_admin_claims").then(({ data }: any) => setTopClaims(data || []), () => {});
     return db.rpc("dev_admin_funnel").then(({ data, error }: any) => setD(error ? null : data), () => setD(null));
   };
   const moderate = async (id: string, ok: boolean) => {
@@ -28,6 +30,13 @@ export default function NetworkAdmin() {
     if (!ok && reason === null) return;
     const { error } = await db.rpc("community_moderate_deal", { p_deal: id, p_action: ok ? "approve" : "reject", p_reason: reason, p_pick: false, p_pick_note: null });
     setMsg(error ? error.message : ok ? "Approved and live" : "Rejected"); load();
+  };
+  const claimFile = async (path: string) => { const { data, error } = await (db as any).storage.from("top-claims").createSignedUrl(path, 300); if (error) setMsg(error.message); else window.open(data.signedUrl, "_blank", "noopener"); };
+  const claimDecide = async (id: string, ok: boolean) => {
+    const reason = ok ? null : window.prompt("Why? The developer sees this.", "The documents do not show that you represent this company");
+    if (!ok && reason === null) return;
+    const { error } = await db.rpc("top_admin_claim_decide", { p_id: id, p_ok: ok, p_reason: reason });
+    setMsg(error ? error.message : ok ? "Verified: badge on, +5 in the ranking, questions go to the developer" : "Rejected"); load();
   };
   const boostDecide = async (id: number, on: boolean) => { const { error } = await db.rpc("dev_admin_boost_decide", { p_id: id, p_on: on }); setMsg(error ? error.message : on ? "Boost active" : "Boost stopped"); load(); };
   const proofOpen = async (path: string) => { const { data, error } = await (db as any).storage.from("buyer-proof").createSignedUrl(path, 300); if (error) setMsg(error.message); else window.open(data.signedUrl, "_blank", "noopener"); };
@@ -100,6 +109,21 @@ export default function NetworkAdmin() {
                 <div className="mt-1 flex gap-2"><button onClick={() => proofOpen(p.path)} className="px-3 py-1 rounded-full border border-hairline text-[12px]">Open file</button>{p.status === "pending" && <><button onClick={() => proofDecide(p.user_id, true)} className="rh-btn-primary !py-1 !px-3 !text-[12px]">Verify</button><button onClick={() => proofDecide(p.user_id, false)} className="px-3 py-1 rounded-full border border-hairline text-[12px]">Reject</button></>}</div></div>
             ))}</div>}
           </div>
+        </section>
+
+        <section>
+          <h2 className="font-display text-[22px]">Top 100 verifications ({topClaims.filter((c) => c.status === "pending").length} to check)</h2>
+          <p className="text-[13px] text-ink-muted">Check the company registration (NIB) and that the person is linked to the project (permit, brochure with the company name, letter of authority). Approve = Verified badge, +5 points, and buyer questions go to them.</p>
+          {topClaims.length === 0 ? <p className="text-[14px] text-ink-muted mt-2">None yet.</p> : <div className="mt-2 flex flex-col gap-2">{topClaims.map((c) => (
+            <div key={c.id} className="rounded-xl bg-white border border-hairline p-3 text-[14px]">
+              <p><a className="underline font-medium" href={`/top/bali/${c.slug}`} target="_blank" rel="noreferrer">{c.project}</a> · listed as {c.listed_developer} · <b>{c.status}</b>{c.reason ? ` (${c.reason})` : ""}</p>
+              <p className="mt-1">{c.full_name}{c.role ? `, ${c.role}` : ""} · {c.email} · {c.phone}</p>
+              <p className="text-[13px] text-ink-muted">{c.company}{c.legal_name ? ` · ${c.legal_name}` : ""}{c.reg_number ? ` · reg. ${c.reg_number}` : ""}{c.country ? ` · ${c.country}` : ""}{c.website ? <> · <a className="underline" href={c.website} target="_blank" rel="noreferrer">{c.website}</a></> : null}{c.listed_website ? <> · listed site <a className="underline" href={c.listed_website} target="_blank" rel="noreferrer">{c.listed_website}</a></> : null}</p>
+              {c.message && <p className="mt-1 text-[13px]">{c.message}</p>}
+              <div className="mt-2 flex flex-wrap gap-2">{(c.files || []).map((f: string, i: number) => <button key={f} onClick={() => claimFile(f)} className="px-3 py-1 rounded-full border border-hairline text-[12px]">Document {i + 1}</button>)}
+                {c.status === "pending" && <><button onClick={() => claimDecide(c.id, true)} className="rh-btn-primary !py-1 !px-3 !text-[12px]">Verify</button><button onClick={() => claimDecide(c.id, false)} className="px-3 py-1 rounded-full border border-hairline text-[12px]">Reject</button></>}</div>
+            </div>
+          ))}</div>}
         </section>
 
         <section>
