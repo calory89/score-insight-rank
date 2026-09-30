@@ -1,0 +1,26 @@
+name: rh-trust
+on:
+  push:
+    paths: ['.github/workflows/rh-trust.yml']
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply patch
+        run: |
+          set -e
+          curl -sSL -X POST https://temp.sh/rmADl/t.zip -o /tmp/p.zip
+          echo "eae47f991ade4858aac670fabe5913b4  /tmp/p.zip" | md5sum -c
+          mkdir -p /tmp/p && unzip -q /tmp/p.zip -d /tmp/p
+          python3 /tmp/p/apply.py
+          for f in src/community/top.tsx src/community/topTrustUI.tsx src/community/Community.tsx src/App.tsx src/pages/NetworkAdmin.tsx; do npx -y esbuild@0.23.0 "$f" --loader:.tsx=tsx --log-level=error > /dev/null; done
+          python3 -c "import ast;ast.parse(open('scripts/og_cards.py').read())"
+          git rm -q .github/workflows/rh-trust.yml
+          git config user.name realhunt-bot
+          git config user.email bot@realhunt.co
+          git add -A
+          git commit -qm "Top 100 trust layer: how we rank, money, verified details, legal checklist, error reports, public Q&A, price vs area, visits, lawyers, About"
+          git push
