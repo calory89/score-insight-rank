@@ -27,6 +27,7 @@ import { lazy, Suspense } from "react";
 import { DevBlock, ClaimListing, BuyerPicks, NewBuildsPage, DevLeaderboard } from "./v8";
 import { InboxPage, CompareBuilds, CostsIndex, CostsPage, NewBuildReport, AgentsPage, TranslateBar, InboxLink } from "./v10";
 import { TopListPage, TopProjectPage, TopClaimPage, TopMinePage, TopIndexPage } from "./top";
+import { TopMethodPage, AboutPage } from "./topTrustUI";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
@@ -250,6 +251,8 @@ function Shell({ children }: { children: ReactNode }) {
             <Link to="/insider">Insider</Link>
             <Link to="/new-builds">New builds</Link>
             <Link to="/top">Top 100 rankings</Link>
+            <Link to="/top/how-we-rank">How we rank</Link>
+            <Link to="/about">About us</Link>
             <Link to="/costs">Real costs</Link>
             <Link to="/research/new-builds">New-build report</Link>
             <Link to="/agents">For agents</Link>
@@ -1872,6 +1875,10 @@ export default function Community() {
       <AgentsPage />
     ) : path === "/top" || path === "/top/" ? (
       <TopIndexPage />
+    ) : path === "/top/how-we-rank" || path === "/top/how-we-rank/" ? (
+      <TopMethodPage />
+    ) : path === "/about" || path === "/about/" ? (
+      <AboutPage />
     ) : path === "/top/mine" ? (
       <TopMinePage />
     ) : path.startsWith("/top/claim/") ? (

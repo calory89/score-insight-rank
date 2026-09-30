@@ -8,7 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { sid } from "@/lib/rh";
 import { useCommunity } from "./ctx";
 import { Lightbox } from "./extras";
-import { ArrowDown, ArrowUp, BadgeCheck, Bookmark, Building2, Check, ChevronLeft, ExternalLink, FileUp, Heart, Loader2, MapPin, MessageCircle, Share2, ShieldCheck, Trophy, X } from "lucide-react";
+import { LegalBox, MoneyNote, PriceVsArea, QaList, ReviewAndReport, VerifiedBox, VisitBadge, VisitBox } from "./topTrustUI";
+import { ArrowDown, ArrowUp, BadgeCheck, Camera, Bookmark, Building2, Check, ChevronLeft, ExternalLink, FileUp, Heart, Loader2, MapPin, MessageCircle, Share2, ShieldCheck, Trophy, X } from "lucide-react";
 
 const rpc = async (fn: string, args: Record<string, unknown> = {}) => { const { data, error } = await (supabase as any).rpc(fn, args); if (error) throw error; return data; };
 const ev = (n: string) => { try { (window as any).clarity?.("event", n); } catch { /* ignore */ } };
@@ -35,7 +36,7 @@ const AREAS_BY: Record<string, [string, RegExp][]> = {
 };
 const AREAS_BALI: [string, RegExp][] = [["Canggu", /canggu|pererenan|berawa|umalas|kerobokan|seminyak|north kuta|seseh|cemagi|nyanyi|kedungu|tabanan|beraban/i], ["Uluwatu & Bukit", /uluwatu|ungasan|pecatu|bingin|melasti|balangan|pandawa|kutuh|nyang/i], ["Ubud", /ubud|sayan|tegallalang|kedewatan|gianyar/i], ["Nusa Dua & Jimbaran", /nusa dua|benoa|jimbaran|kampial|sawangan/i], ["Sanur & Denpasar", /sanur|denpasar/i]];
 const areasFor = (dest: string) => AREAS_BY[dest] || AREAS_BALI;
-const areaOf = (dest: string, loc?: string) => areasFor(dest).find(([, re]) => re.test(loc || ""))?.[0] || "Other";
+export const areaOf = (dest: string, loc?: string) => areasFor(dest).find(([, re]) => re.test(loc || ""))?.[0] || "Other";
 const PARTS: [string, string, number][] = [["entry", "Entry price", 20], ["value", "Price per m²", 25], ["location", "Area", 20], ["stage", "Build stage", 15], ["info", "Listing detail", 10], ["developer", "Developer track record", 10]];
 
 function Move({ rank, base }: { rank: number; base: number }) {
@@ -55,7 +56,7 @@ function HowItWorks({ dest }: { dest: string }) {
         <div><strong>Base score (up to 100)</strong><ul>{PARTS.map(([, l, m]) => <li key={l}>{l}: up to {m}</li>)}</ul><small>Cheaper entry price and a lower price per m² score more. Areas near the busiest beaches and towns score more. Ready homes score more than homes still on plans.</small></div>
         <div><strong>Buyer demand (no limit)</strong><ul><li>Vote: +3</li><li>Save: +2</li><li>Question to the developer: +4</li><li>Click to the developer's website or share: +1</li><li>Every 20 visitors: +1</li></ul><small>One vote and one save per person. Nobody can pay to move up. Only projects whose developer has a working website and a phone or WhatsApp can enter.</small><strong className="tp-how-v">Verified developer: +5</strong><small>The developer showed us their company papers and answers buyers directly. Verifying is free.</small></div>
       </div>
-      <p className="hunt-fine">Prices, sizes and dates come from the public listings on {D.date}. {D.fx ? D.fx + " " : ""}They change, so check with the developer before you decide. This is a ranking, not advice to buy.</p>
+      <p className="hunt-fine">Prices, sizes and dates come from the public listings on {D.date}. {D.fx ? D.fx + " " : ""}They change, so check with the developer before you decide. This is a ranking, not advice to buy. <Link className="hunt-link" to="/top/how-we-rank">The full formula, sources and how we make money</Link></p>
     </details>
   );
 }
@@ -105,7 +106,7 @@ export function TopListPage() {
             <div className="tp-rank"><b>#{x.rank}</b><Move rank={x.rank} base={x.base_rank} /></div>
             <Link to={`/top/${dest}/${x.slug}`} className="tp-thumb"><img src={x.image} alt={x.name} loading={x.rank <= 6 ? "eager" : "lazy"} /></Link>
             <Link to={`/top/${dest}/${x.slug}`} className="tp-main">
-              <strong>{x.name}{x.verified && <BadgeCheck size={16} className="tp-ver" aria-label="Verified developer" />}</strong>
+              <strong>{x.name}{x.verified && <BadgeCheck size={16} className="tp-ver" aria-label="Verified developer" />}{x.visited && <span className="tp-chip-visit" title="The RealHunt team visited this project"><Camera size={12} /> Visited</span>}</strong>
               <span className="tp-sub"><MapPin size={12} /> {x.locality} · {x.developer}</span>
               <span className="tp-facts"><b>from {eur(x.price_eur)}</b>{x.ppsqm_eur ? <span>{eur(x.ppsqm_eur)}/m²</span> : null}<span>{x.ptype}</span><span>{x.completion?.startsWith("Ready") ? "Ready" : x.completion ? `Ready ${x.completion}` : "Date not published"}</span></span>
             </Link>
@@ -122,6 +123,7 @@ export function TopListPage() {
         <div><strong>Developer in {D.name}? Is one of these your business?</strong><p>Verify it for free: you get the Verified badge, +5 points in the ranking and the buyers' questions straight to you. Open your project and press "Verify it". Not in the list? List it free and it enters the ranking.</p></div>
         <Link className="hunt-primary" to="/network/start">List a project</Link>
       </div>
+      <MoneyNote compact />
     </div>
   );
 }
@@ -134,7 +136,7 @@ export function TopProjectPage() {
   const [p, setP] = useState<any>(undefined);
   const [lb, setLb] = useState<number | null>(null);
   const [ask, setAsk] = useState(false);
-  const [f, setF] = useState({ name: "", budget: "", timeframe: "", message: "" });
+  const [f, setF] = useState({ name: "", budget: "", timeframe: "", message: "", pub: false });
   const [busy, setBusy] = useState(false);
   const load = () => rpc("top_project", { p_slug: slug }).then(setP).catch(() => setP(null));
   useEffect(() => { window.scrollTo(0, 0); load(); rpc("top_track", { p_slug: slug, p_kind: "view", p_anon: sid() }).catch(() => {}); ev("top_project_view"); }, [slug, user?.id]);
@@ -154,7 +156,7 @@ export function TopProjectPage() {
   const send = async (e: React.FormEvent) => {
     e.preventDefault(); if (!user) { requireUser(); return; }
     setBusy(true);
-    try { const r = await rpc("top_ask", { p_slug: slug, p_name: f.name, p_budget: f.budget ? Number(f.budget) : null, p_timeframe: f.timeframe, p_message: f.message }); if (r?.error) setNotice(r.error); else { ev("top_ask"); setAsk(false); setNotice(p.verified ? "Sent to the developer. They answer you by email." : "Sent. RealHunt passes it to the developer and gets back to you by email."); load(); } }
+    try { const r = await rpc("top_ask", { p_slug: slug, p_name: f.name, p_budget: f.budget ? Number(f.budget) : null, p_timeframe: f.timeframe, p_message: f.message, p_public: f.pub }); if (r?.error) setNotice(r.error); else { ev("top_ask"); setAsk(false); setNotice(p.verified ? "Sent to the developer. They answer you by email." : "Sent. RealHunt passes it to the developer and gets back to you by email."); load(); } }
     catch (err) { setNotice((err as Error).message); } finally { setBusy(false); }
   };
   if (p === undefined) return <div className="hunt-wrap hunt-page"><Loader2 className="animate-spin" /></div>;
@@ -176,6 +178,7 @@ export function TopProjectPage() {
           <span className="tp-badge"><Trophy size={14} /> #{p.rank} of {p.of} in {D.name}</span>
           <span className="tp-badge is-grade">{p.nota}/100</span>
           {p.verified ? <span className="tp-badge is-ver"><BadgeCheck size={14} /> Verified developer</span> : <span className="tp-badge is-muted" title="The developer has not verified this page yet. Details come from the public listing.">Not verified yet</span>}
+          <VisitBadge p={p} />
           <h1>{p.name}</h1>
           <p className="tp-sub"><MapPin size={14} /> {p.locality}, {D.name} · by {p.developer}</p>
         </div>
@@ -196,6 +199,7 @@ export function TopProjectPage() {
           <input type="number" min="0" placeholder="Budget in € (optional)" value={f.budget} onChange={(e) => setF({ ...f, budget: e.target.value })} />
           <select value={f.timeframe} onChange={(e) => setF({ ...f, timeframe: e.target.value })}><option value="">When do you want to buy?</option><option>Now</option><option>In 3 months</option><option>In 6 months</option><option>In a year or more</option><option>Just looking</option></select>
           <textarea required placeholder="Your question: units left, payment plan, rental income, a video call…" value={f.message} onChange={(e) => setF({ ...f, message: e.target.value })} />
+          <label className="hv-consent"><input type="checkbox" checked={f.pub} onChange={(e) => setF({ ...f, pub: e.target.checked })} /> <span>Show my question and the developer's answer on this page, with my first name only. It helps other buyers.</span></label>
           <p className="hunt-fine">Your name, email and question go to this developer only, so they can answer you. We never sell your details.</p>
           <button className="hunt-primary" disabled={busy}>{busy ? "Sending…" : "Send question"}</button>
         </form>
@@ -224,6 +228,9 @@ export function TopProjectPage() {
         <table className="tp-units"><thead><tr><th>Unit size</th><th>Price from</th><th>Per m²</th></tr></thead>
           <tbody>{p.layouts.map((l: any, i: number) => <tr key={i}><td>{l.size} m²</td><td>{eur(l.price_eur)}</td><td>{eur(l.price_eur / l.size)}</td></tr>)}</tbody></table>
       )}
+      <PriceVsArea p={p} dest={dest} />
+      <VerifiedBox p={p} dest={dest} />
+      <VisitBox p={p} />
       <section className="tp-score">
         <h2>Why it is #{p.rank}</h2>
         <p className="tp-bignota"><b>{p.nota}</b>/100 <small>#{p.rank} of {p.of} in {D.name}</small></p>
@@ -233,6 +240,8 @@ export function TopProjectPage() {
         <p className="hunt-fine">{p.votes} votes · {p.saves} saves · {p.asks} questions · {p.views} visitors.</p>
         <HowItWorks dest={dest} />
       </section>
+      <LegalBox p={p} dest={dest} />
+      <QaList p={p} />
       {p.lat && p.lng && <p><a className="hunt-link" href={`https://www.google.com/maps?q=${p.lat},${p.lng}`} target="_blank" rel="noopener"><MapPin size={14} /> See it on Google Maps</a></p>}
       <div className="tp-dev-cta">
         <Building2 size={20} />
@@ -244,6 +253,8 @@ export function TopProjectPage() {
         <div className="tp-near">{p.near.map((n: any) => <Link key={n.slug} to={`/top/${dest}/${n.slug}`}><img src={n.image} alt={n.name} loading="lazy" /><b>#{n.rank} {n.name}{n.verified && <BadgeCheck size={13} className="tp-ver" />}</b><small>{n.locality} · from {eur(n.price_eur)}</small></Link>)}</div>
       </>)}
       <p className="hunt-fine tp-source">Details and photos: public listing{srcHost ? <> on <a href={src} target="_blank" rel="noopener nofollow">{srcHost}</a></> : null}, {D.date}. Photos belong to the developer. Prices and availability change; confirm them with the developer. RealHunt is not the seller.</p>
+      <ReviewAndReport p={p} dest={dest} />
+      <MoneyNote compact />
     </div>
   );
 }
@@ -335,6 +346,23 @@ export function TopClaimPage() {
 }
 
 // ---------------------------------------------------------------- the developer's own pages (/top/mine)
+function Answer({ q, onSaved }: { q: any; onSaved: () => void }) {
+  const { setNotice } = useCommunity();
+  const [a, setA] = useState(q.answer || "");
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    setBusy(true);
+    try { const r = await rpc("top_answer", { p_id: q.id, p_answer: a }); if (r?.error) setNotice(r.error); else { setNotice(q.is_public ? "Answer saved. It shows on your page, because the buyer allowed it." : "Answer saved. The buyer asked to keep it private, so it does not show on your page. Email them too."); ev("top_dev_answer"); onSaved(); } }
+    catch (err) { setNotice((err as Error).message); } finally { setBusy(false); }
+  };
+  return (
+    <div className="tp-answer">
+      <small>{q.is_public ? "The buyer allowed this question to be public: your answer shows on your page with their first name." : "Private question: your answer is saved here but not shown on the page. Reply by email."}</small>
+      <textarea maxLength={2000} placeholder="Your answer" value={a} onChange={(e) => setA(e.target.value)} />
+      <button className="hunt-secondary" disabled={busy || a.trim().length < 2} onClick={save}>{busy ? "Saving…" : q.answer ? "Update answer" : "Save answer"}</button>
+    </div>
+  );
+}
 function MyPage({ pg, onSaved }: { pg: any; onSaved: () => void }) {
   const { setNotice } = useCommunity();
   const [e, setE] = useState({ price: String(pg.price_eur || ""), completion: pg.completion || "", website: pg.website || "", whatsapp: pg.whatsapp || "", note: pg.dev_note || "" });
@@ -351,7 +379,7 @@ function MyPage({ pg, onSaved }: { pg: any; onSaved: () => void }) {
       <div className="tp-dl"><div><dt>Visitors</dt><dd>{pg.views}</dd></div><div><dt>Votes</dt><dd>{pg.votes}</dd></div><div><dt>Saves</dt><dd>{pg.saves}</dd></div><div><dt>Questions</dt><dd>{pg.asks}</dd></div></div>
       <div className="tp-claim-strip"><Share2 size={18} /><div><strong>Bring your buyers, climb the ranking</strong><span>Send this link to your leads and followers. Every vote +3, every save +2, every question +4.</span></div><button className="hunt-primary" onClick={() => { navigator.clipboard.writeText(url); setNotice("Link copied."); ev("top_dev_copy"); }}>Copy link</button></div>
       <h3>Buyers' questions ({pg.questions.length})</h3>
-      {pg.questions.length === 0 ? <p className="hunt-fine">None yet. Share your page to get the first ones.</p> : <ul className="tp-qs">{pg.questions.map((q: any, i: number) => <li key={i}><b>{q.name}</b> · <a href={`mailto:${q.email}?subject=${encodeURIComponent(pg.name + " – your question on RealHunt")}`}>{q.email}</a> · {q.budget_eur ? eur(q.budget_eur) : "no budget given"} · {q.timeframe || "no date"} · {new Date(q.at).toLocaleDateString("en-GB")}<p>{q.message}</p></li>)}</ul>}
+      {pg.questions.length === 0 ? <p className="hunt-fine">None yet. Share your page to get the first ones.</p> : <ul className="tp-qs">{pg.questions.map((q: any) => <li key={q.id}><b>{q.name}</b> · <a href={`mailto:${q.email}?subject=${encodeURIComponent(pg.name + " – your question on RealHunt")}`}>{q.email}</a> · {q.budget_eur ? eur(q.budget_eur) : "no budget given"} · {q.timeframe || "no date"} · {new Date(q.at).toLocaleDateString("en-GB")}<p>{q.message}</p><Answer q={q} onSaved={onSaved} /></li>)}</ul>}
       <form className="hv-form" onSubmit={save}>
         <strong>Edit your page</strong>
         <input type="number" min="5000" placeholder="Price from in €" value={e.price} onChange={(x) => setE({ ...e, price: x.target.value })} />
@@ -395,7 +423,7 @@ export function TopIndexPage() {
     <div className="hunt-wrap hunt-page tp">
       <span className="hunt-eyebrow"><Trophy size={13} /> REALHUNT RANKINGS</span>
       <h1>Top 100 new builds, by destination</h1>
-      <p>In each destination we checked every new-build project listed for sale and kept the best 100 on price, price per m², area and build stage. Then buyers decide: every vote, save and question moves a project up.</p>
+      <p>In each destination we checked every new-build project listed for sale and kept the best 100 on price, price per m², area and build stage. Then buyers decide: every vote, save and question moves a project up. Nobody can pay to be listed or to rank higher: <Link className="hunt-link" to="/top/how-we-rank">see how we rank</Link>.</p>
       <div className="tp-index">{TOP_ORDER.map((k) => (
         <Link key={k} to={`/top/${k}`} className="tp-index-card">
           <img src={`/top/${k}/og.jpg`} alt={`Top 100 new builds in ${TOP_DESTS[k].name}`} loading="lazy" />

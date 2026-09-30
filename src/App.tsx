@@ -202,6 +202,7 @@ const AppRoutes = () => (
       <Route path="/account/:tab" element={<Account />} />
       <Route path="/map" element={<Community />} />
       <Route path="/top" element={<Community />} />
+      <Route path="/about" element={<Community />} />
       <Route path="/top/:dest" element={<Community />} />
       <Route path="/top/:dest/:slug" element={<Community />} />
       <Route path="/swipe" element={<Community />} />

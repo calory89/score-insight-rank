@@ -19,12 +19,17 @@ export default function NetworkAdmin() {
   const [topClaims, setTopClaims] = useState<any[]>([]);
   const [contacts, setContacts] = useState<any[]>([]);
   const [cDest, setCDest] = useState("all");
+  const [reports, setReports] = useState<any[]>([]);
+  const [tSlug, setTSlug] = useState("");
+  const [tr, setTr] = useState<any>(null);
+  const [tFiles, setTFiles] = useState<File[]>([]);
   const load = () => {
     db.rpc("dev_admin_pending_projects").then(({ data }: any) => setPend(data || []), () => {});
     db.rpc("dev_admin_boosts").then(({ data }: any) => setBoosts(data || []), () => {});
     db.rpc("dev_admin_proofs").then(({ data }: any) => setProofs(data || []), () => {});
     db.rpc("top_admin_requests").then(({ data }: any) => setTopAsks(data || []), () => {});
     db.rpc("top_admin_claims").then(({ data }: any) => setTopClaims(data || []), () => {});
+    db.rpc("top_admin_reports").then(({ data }: any) => setReports(data || []), () => {});
     db.rpc("top_admin_contacts", { p_dest: null }).then(({ data }: any) => setContacts(data || []), () => {});
     return db.rpc("dev_admin_funnel").then(({ data, error }: any) => setD(error ? null : data), () => setD(null));
   };
@@ -40,6 +45,28 @@ export default function NetworkAdmin() {
     if (!ok && reason === null) return;
     const { error } = await db.rpc("top_admin_claim_decide", { p_id: id, p_ok: ok, p_reason: reason });
     setMsg(error ? error.message : ok ? "Verified: badge on, +5 in the ranking, questions go to the developer" : "Rejected"); load();
+  };
+  const reportResolve = async (id: string, status: string) => {
+    const resp = window.prompt(status === "fixed" ? "What did you fix? This shows on the project page." : "Why is no change needed? This shows on the project page.", status === "fixed" ? "Price updated to the developer's current price list." : "We checked the developer's price list and it matches.");
+    if (resp === null) return;
+    const { error } = await db.rpc("top_admin_report_resolve", { p_id: id, p_status: status, p_response: resp });
+    setMsg(error ? error.message : "Report answered. Email the reporter if they left an email."); load();
+  };
+  const trustLoad = async () => { const s = tSlug.trim().replace(/^.*\/top\/[a-z-]+\//, "").replace(/\/$/, ""); setTSlug(s); const { data, error } = await db.rpc("top_admin_trust", { p_slug: s }); if (error || !data) { setMsg(error?.message || "No project with that slug"); setTr(null); } else { setTr({ ...data, visit_photos: data.visit_photos || [] }); setTFiles([]); } };
+  const trustSave = async () => {
+    try {
+      const photos = [...(tr.visit_photos || [])];
+      for (const f of tFiles) {
+        const ext = (f.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5);
+        const path = `${tr.slug}/${Date.now()}-${photos.length}.${ext}`;
+        const up = await (db as any).storage.from("top-visits").upload(path, f, { contentType: f.type || undefined });
+        if (up.error) throw up.error;
+        photos.push((db as any).storage.from("top-visits").getPublicUrl(path).data.publicUrl);
+      }
+      const { data, error } = await db.rpc("top_admin_set_trust", { p_slug: tr.slug, p_ver_legal_name: tr.ver_legal_name || "", p_ver_reg: tr.ver_reg || "", p_ver_license: tr.ver_license || "", p_permit_status: tr.permit_status || "unknown", p_permit_ref: tr.permit_ref || "", p_visited_at: tr.visited_at || null, p_visit_note: tr.visit_note || "", p_visit_photos: photos, p_reviewed_at: tr.reviewed_at || null });
+      if (error || data?.error) throw new Error(error?.message || data.error);
+      setMsg("Saved. The project page shows it now."); trustLoad();
+    } catch (e) { setMsg((e as Error).message); }
   };
   const contactMark = async (id: string, status: string) => { const { error } = await db.rpc("top_admin_contact_mark", { p_id: id, p_status: status }); setMsg(error ? error.message : `Marked ${status}`); load(); };
   const contactsCsv = () => {
@@ -133,6 +160,40 @@ export default function NetworkAdmin() {
               {c.status !== "contacted" && <button onClick={() => contactMark(c.id, "contacted")} className="mt-1 px-2 py-0.5 rounded-full border border-hairline text-[12px]">Mark contacted</button>}
             </div>
           ))}</div>
+        </section>
+
+        <section>
+          <h2 className="font-display text-[22px]">Top 100 error reports ({reports.filter((r) => r.status === "open").length} open)</h2>
+          <p className="text-[13px] text-ink-muted">Promise on every page: we answer within 3 working days and the correction shows on the page. Fix the data first (SQL or the trust editor below), then answer here.</p>
+          {reports.length === 0 ? <p className="text-[14px] text-ink-muted mt-2">None yet.</p> : <div className="mt-2 flex flex-col gap-2">{reports.map((r) => (
+            <div key={r.id} className="rounded-xl bg-white border border-hairline p-3 text-[14px]">
+              <p><a className="underline font-medium" href={`/top/${r.dest}/${r.slug}`} target="_blank" rel="noreferrer">{r.project}</a> · {r.kind} · <b>{r.status}</b> · {new Date(r.created_at).toLocaleDateString("en-GB")}{r.email ? <> · <a className="underline" href={`mailto:${r.email}`}>{r.email}</a></> : null}</p>
+              <p className="mt-1">{r.message}</p>
+              {r.response && <p className="mt-1 text-[13px] text-ink-muted">Answer: {r.response}</p>}
+              {r.status === "open" && <div className="mt-2 flex gap-2"><button onClick={() => reportResolve(r.id, "fixed")} className="rh-btn-primary !py-1 !px-3 !text-[12px]">Fixed</button><button onClick={() => reportResolve(r.id, "no_change")} className="px-3 py-1 rounded-full border border-hairline text-[12px]">No change needed</button></div>}
+            </div>
+          ))}</div>}
+        </section>
+
+        <section>
+          <h2 className="font-display text-[22px]">Top 100 trust details</h2>
+          <p className="text-[13px] text-ink-muted">Per project: what the verification checked, the building permit, our own visit (date, note, photos) and the review date. Paste the project link or slug.</p>
+          <div className="mt-2 flex gap-2"><input className="flex-1 rounded-xl border border-hairline px-3 py-2 text-[14px]" placeholder="https://realhunt.co/top/bali/… or slug" value={tSlug} onChange={(e) => setTSlug(e.target.value)} /><button onClick={trustLoad} className="rh-btn-primary !py-2 !px-4 !text-[13px]">Load</button></div>
+          {tr && (
+            <div className="mt-3 rounded-xl bg-white border border-hairline p-4 text-[14px] grid md:grid-cols-2 gap-3">
+              <p className="md:col-span-2"><a className="underline font-medium" href={`/top/${tr.dest}/${tr.slug}`} target="_blank" rel="noreferrer">{tr.name}</a> · {tr.verified ? "verified" : "not verified"}</p>
+              {([["ver_legal_name", "Legal company name (shown if verified)"], ["ver_reg", "Registration number (shown if verified)"], ["ver_license", "Licence or permit checked (shown if verified)"], ["permit_ref", "Building permit number or note"]] as [string, string][]).map(([k, l]) => (
+                <label key={k} className="flex flex-col gap-1 text-[12px] text-ink-muted">{l}<input className="rounded-xl border border-hairline px-3 py-2 text-[14px] text-ink" value={tr[k] || ""} onChange={(e) => setTr({ ...tr, [k]: e.target.value })} /></label>
+              ))}
+              <label className="flex flex-col gap-1 text-[12px] text-ink-muted">Building permit<select className="rounded-xl border border-hairline px-3 py-2 text-[14px] text-ink" value={tr.permit_status || "unknown"} onChange={(e) => setTr({ ...tr, permit_status: e.target.value })}><option value="unknown">Not confirmed</option><option value="yes">Confirmed (we saw it)</option><option value="no">No permit yet</option></select></label>
+              <label className="flex flex-col gap-1 text-[12px] text-ink-muted">Last reviewed<input type="date" className="rounded-xl border border-hairline px-3 py-2 text-[14px] text-ink" value={tr.reviewed_at || ""} onChange={(e) => setTr({ ...tr, reviewed_at: e.target.value })} /></label>
+              <label className="flex flex-col gap-1 text-[12px] text-ink-muted">We visited on (empty = no visit badge)<input type="date" className="rounded-xl border border-hairline px-3 py-2 text-[14px] text-ink" value={tr.visited_at || ""} onChange={(e) => setTr({ ...tr, visited_at: e.target.value })} /></label>
+              <label className="flex flex-col gap-1 text-[12px] text-ink-muted md:col-span-2">Visit note (what we saw)<textarea className="rounded-xl border border-hairline px-3 py-2 text-[14px] text-ink" value={tr.visit_note || ""} onChange={(e) => setTr({ ...tr, visit_note: e.target.value })} /></label>
+              <div className="md:col-span-2 flex flex-wrap gap-2 items-center">{(tr.visit_photos || []).map((u: string) => <span key={u} className="relative"><img src={u} alt="" className="w-20 h-16 object-cover rounded-lg" /><button onClick={() => setTr({ ...tr, visit_photos: tr.visit_photos.filter((x: string) => x !== u) })} className="absolute -top-1 -right-1 bg-white rounded-full border border-hairline"><X size={12} /></button></span>)}
+                <label className="px-3 py-1.5 rounded-full border border-hairline text-[12px] cursor-pointer">Add our visit photos{tFiles.length ? ` (${tFiles.length} new)` : ""}<input type="file" multiple accept="image/*" hidden onChange={(e) => setTFiles([...tFiles, ...Array.from(e.target.files || [])])} /></label></div>
+              <div className="md:col-span-2"><button onClick={trustSave} className="rh-btn-primary !py-2 !px-4 !text-[13px]">Save</button></div>
+            </div>
+          )}
         </section>
 
         <section>

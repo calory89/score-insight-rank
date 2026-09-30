@@ -147,7 +147,7 @@ def main():
         urls += [f"{SITE}/costs", f"{SITE}/research/new-builds", f"{SITE}/agents", f"{SITE}/network/example", f"{SITE}/network/reservation-contract"]
         urls += [f"{SITE}/costs/{c}" for c in ("bali", "lombok", "albania", "mexico", "spain", "montenegro", "georgia", "northern-cyprus", "vietnam", "italy", "portugal", "bulgaria")]
         urls += [f"{SITE}/new-builds/{c}" for c in ("indonesia", "mexico", "albania", "spain", "portugal", "thailand", "turkey", "montenegro")]
-        urls += [f"{SITE}/top"]
+        urls += [f"{SITE}/top", f"{SITE}/top/how-we-rank", f"{SITE}/about"]
         for k in ("bali", "phuket", "tulum", "batumi"):
             fp = os.path.join(ROOT, "src", "data", f"top-{k}.json")
             if os.path.exists(fp):

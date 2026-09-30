@@ -128,6 +128,12 @@ function prerenderPages() {
         page(`${SITE}/top`, "Top 100 new builds by destination: Bali, Phuket, Tulum, Batumi · RealHunt", "The 100 best new-build projects in Bali, Phuket, Tulum and Batumi, ranked by price, area and build stage, then by buyers.", `${SITE}/top/bali/og.jpg`,
           `<main class="rh-static"><h1>Top 100 new builds by destination</h1><ul>${TOPS.map(([k, n]) => `<li><a href="/top/${k}">Top 100 new builds in ${n}</a></li>`).join("")}</ul></main>`,
           [crumbs([["RealHunt", SITE + "/"], ["Top 100 rankings", SITE + "/top"]])]);
+        page(`${SITE}/top/how-we-rank`, "How we rank the Top 100 · RealHunt", "The exact formula behind the RealHunt Top 100 rankings, our sources and review dates, and how we make money. Nobody pays to be listed or to rank higher.", `${SITE}/top/bali/og.jpg`,
+          `<main class="rh-static"><h1>How we rank</h1><p>Nobody pays to be listed or to rank higher.</p><p>Base score up to 100: entry price 20, price per m² 25, area 20, build stage 15, listing detail 10, developer track record 10. Buyer demand: vote +3, save +2, question +4, website click or share +1, every 20 visitors +1. Verified developer +5. Grade from 60 to 90.</p><p>Buyers pay nothing. Developers pay nothing to be listed, verify or rank. RealHunt earns 5% from the developer only if a buyer it introduced buys.</p></main>`,
+          [crumbs([["RealHunt", SITE + "/"], ["Top 100 rankings", SITE + "/top"], ["How we rank", SITE + "/top/how-we-rank"]])]);
+        page(`${SITE}/about`, "About RealHunt: who we are and how we work", "Who runs RealHunt, the company behind it, how we make money and what you should know about our founder before you trust us.", DEF,
+          `<main class="rh-static"><h1>Who we are</h1><p>RealHunt is run by Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, United States. Founder and CEO: Carlos de Ory. Co-founder: Lisa Mikolajewicz. Contact: hello@realhunt.co.</p></main>`,
+          [crumbs([["RealHunt", SITE + "/"], ["About", SITE + "/about"]])]);
         for (const [k, n, checked] of TOPS) {
           const list: any[] = readJson(`src/data/top-${k}.json`, []);
           if (!list.length) continue;
