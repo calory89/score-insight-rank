@@ -44,6 +44,11 @@ const Ebc = () => {
               <span className="inline-flex items-center gap-1.5"><Plane size={14} /> 1 hour flight from Bali</span>
             </div>
 
+            <a href="https://ecobeachcity.com" target="_blank" rel="noreferrer" onClick={() => track("ebc_site")} className="mt-5 flex items-center justify-between gap-3 rounded-2xl border border-ink bg-white px-4 py-3 text-[15px] font-medium hover:bg-ink hover:text-paper transition-colors">
+              <span>Visit the Eco Beach City website<span className="block text-[12px] font-normal opacity-70">ecobeachcity.com · the village, the map and every price</span></span>
+              <ExternalLink size={18} className="shrink-0" />
+            </a>
+
             <DecisionSummary home={EBC} />
             <div className="mt-8">
               <h2 className="font-display text-[20px] tracking-tight mb-3">What it is</h2>
@@ -85,7 +90,7 @@ const Ebc = () => {
             <div className="sticky top-24 border border-hairline rounded-2xl bg-white p-6 flex flex-col gap-3">
               <p className="font-display text-[18px] tracking-tight">15-minute call with the founder</p>
               <a href={CALENDLY} target="_blank" rel="noreferrer" onClick={() => track("ebc_call")} className="rh-btn-primary inline-flex items-center justify-center gap-2"><CalendarCheck size={15} /> Book a call, free</a>
-              <a href="https://ecobeachcity.com" target="_blank" rel="noreferrer" className="h-11 rounded-xl border border-hairline hover:border-ink inline-flex items-center justify-center gap-2 text-[14px]">See the village <ExternalLink size={15} /></a>
+              <a href="https://ecobeachcity.com" target="_blank" rel="noreferrer" onClick={() => track("ebc_site")} className="h-11 rounded-xl border border-hairline hover:border-ink inline-flex items-center justify-center gap-2 text-[14px]">See the village <ExternalLink size={15} /></a>
               <button onClick={share} className="h-11 rounded-xl border border-hairline hover:border-ink inline-flex items-center justify-center gap-2 text-[14px]">{copied ? <Check size={15} /> : <Share2 size={15} />} {copied ? "Copied" : "Share"}</button>
               <Link to="/fit?d=2300&m=500&t=24" className="text-[13px] underline text-ink-muted text-center">Can I afford it?</Link>
               <p className="text-[12px] text-ink-muted leading-relaxed">Eco Beach City is developed by the team behind RealHunt. We say so here so you know where the commission goes.</p>
@@ -96,6 +101,7 @@ const Ebc = () => {
 
       <div className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur border-t border-hairline px-4 py-3 flex items-center gap-3">
         <button onClick={share} aria-label="Share" className="h-11 w-11 rounded-full border border-hairline inline-flex items-center justify-center">{copied ? <Check size={16} /> : <Share2 size={16} />}</button>
+        <a href="https://ecobeachcity.com" target="_blank" rel="noreferrer" onClick={() => track("ebc_site")} className="h-11 px-3 rounded-full border border-ink inline-flex items-center justify-center gap-1.5 text-[13px] font-medium shrink-0">Website <ExternalLink size={14} /></a>
         <a href={CALENDLY} target="_blank" rel="noreferrer" onClick={() => track("ebc_call")} className="rh-btn-primary flex-1 !py-3 inline-flex items-center justify-center gap-2"><CalendarCheck size={15} /> Book a free call</a>
       </div>
     </div>
