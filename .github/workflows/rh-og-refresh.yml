@@ -1,0 +1,25 @@
+name: rh-og-refresh
+# One-shot (1-oct-2026): redraw every share card and the default card with the new orange brand.
+on:
+  push:
+    paths: [".github/workflows/rh-og-refresh.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  cards:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install pillow==11.0.0
+      - run: python3 scripts/og_cards.py --force --default
+      - name: commit
+        run: |
+          git config user.name "realhunt-bot"
+          git config user.email "bot@realhunt.co"
+          git rm -q .github/workflows/rh-og-refresh.yml
+          git add public/og/deal src/data/deal-meta.json public/sitemap.xml public/og-default-100k.jpg
+          git commit -m "Share cards redrawn with the new RealHunt brand" && git push
