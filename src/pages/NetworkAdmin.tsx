@@ -20,6 +20,7 @@ export default function NetworkAdmin() {
   const [contacts, setContacts] = useState<any[]>([]);
   const [cDest, setCDest] = useState("all");
   const [reports, setReports] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [tSlug, setTSlug] = useState("");
   const [tr, setTr] = useState<any>(null);
   const [tFiles, setTFiles] = useState<File[]>([]);
@@ -29,6 +30,7 @@ export default function NetworkAdmin() {
     db.rpc("dev_admin_proofs").then(({ data }: any) => setProofs(data || []), () => {});
     db.rpc("top_admin_requests").then(({ data }: any) => setTopAsks(data || []), () => {});
     db.rpc("top_admin_claims").then(({ data }: any) => setTopClaims(data || []), () => {});
+    db.rpc("top_admin_reviews").then(({ data }: any) => setReviews(data || []), () => {});
     db.rpc("top_admin_reports").then(({ data }: any) => setReports(data || []), () => {});
     db.rpc("top_admin_contacts", { p_dest: null }).then(({ data }: any) => setContacts(data || []), () => {});
     return db.rpc("dev_admin_funnel").then(({ data, error }: any) => setD(error ? null : data), () => setD(null));
@@ -67,6 +69,12 @@ export default function NetworkAdmin() {
       if (error || data?.error) throw new Error(error?.message || data.error);
       setMsg("Saved. The project page shows it now."); trustLoad();
     } catch (e) { setMsg((e as Error).message); }
+  };
+  const reviewHide = async (id: string, hide: boolean) => {
+    const reason = hide ? window.prompt("Why is it hidden? Only for breaking the rules (insults, personal data, spam, not a real experience). Never for being negative.", "Personal data") : null;
+    if (hide && reason === null) return;
+    const { error } = await db.rpc("top_admin_review_hide", { p_id: id, p_hide: hide, p_reason: reason });
+    setMsg(error ? error.message : hide ? "Review hidden" : "Review visible again"); load();
   };
   const contactMark = async (id: string, status: string) => { const { error } = await db.rpc("top_admin_contact_mark", { p_id: id, p_status: status }); setMsg(error ? error.message : `Marked ${status}`); load(); };
   const contactsCsv = () => {
@@ -171,6 +179,19 @@ export default function NetworkAdmin() {
               <p className="mt-1">{r.message}</p>
               {r.response && <p className="mt-1 text-[13px] text-ink-muted">Answer: {r.response}</p>}
               {r.status === "open" && <div className="mt-2 flex gap-2"><button onClick={() => reportResolve(r.id, "fixed")} className="rh-btn-primary !py-1 !px-3 !text-[12px]">Fixed</button><button onClick={() => reportResolve(r.id, "no_change")} className="px-3 py-1 rounded-full border border-hairline text-[12px]">No change needed</button></div>}
+            </div>
+          ))}</div>}
+        </section>
+
+        <section>
+          <h2 className="font-display text-[22px]">Top 100 buyer reviews ({reviews.length})</h2>
+          <p className="text-[13px] text-ink-muted">Good and bad stay up. Hide only reviews that break the rules: insults, personal data, spam, or not a real experience.</p>
+          {reviews.length === 0 ? <p className="text-[14px] text-ink-muted mt-2">None yet.</p> : <div className="mt-2 flex flex-col gap-2 max-h-[520px] overflow-y-auto">{reviews.map((r) => (
+            <div key={r.id} className="rounded-xl bg-white border border-hairline p-3 text-[14px]">
+              <p><a className="underline font-medium" href={`/top/${r.dest}/${r.slug}`} target="_blank" rel="noreferrer">{r.project}</a> · {"★".repeat(r.rating)} · {r.name || "no name"} · {r.email} · <b>{r.status}</b>{r.hide_reason ? ` (${r.hide_reason})` : ""} · {new Date(r.created_at).toLocaleDateString("en-GB")}</p>
+              <p className="mt-1">{r.body}</p>
+              {r.reply && <p className="mt-1 text-[13px] text-ink-muted">Developer reply: {r.reply}</p>}
+              <button onClick={() => reviewHide(r.id, r.status === "visible")} className="mt-2 px-3 py-1 rounded-full border border-hairline text-[12px]">{r.status === "visible" ? "Hide (breaks rules)" : "Show again"}</button>
             </div>
           ))}</div>}
         </section>

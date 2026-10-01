@@ -2904,3 +2904,24 @@ html.rh-dark, html.rh-dark body { background: #0E0E0C; }
 .tp-team.is-one { grid-template-columns: minmax(0, 420px); }
 .tp-team.is-one .tp-person { align-items: center; }
 .hunt-top100 { display: inline-flex; align-items: center; gap: 6px; }
+/* Top 100 buyer reviews */
+.tp-reviews { max-width: 760px; margin: 28px 0; }
+.tp-reviews h2 { display: flex; align-items: center; gap: 8px; }
+.tp-reviews h2 svg, .tp-stars svg, .tp-star-pick svg, .tp-rev-actions svg, .tp-rev-badge svg { display: inline-block; }
+.tp-rev-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.tp-rev-head p { margin: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tp-rev-avg { font-size: 26px; letter-spacing: -.5px; }
+.tp-rev-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.tp-stars { display: inline-flex; gap: 1px; color: #D9D3C4; }
+.tp-stars .is-on, .tp-star-pick .is-on { color: #E8A317; fill: #E8A317; }
+.tp-star-pick { display: flex; gap: 4px; }
+.tp-star-pick button { background: none; border: 0; padding: 4px; color: #D9D3C4; cursor: pointer; }
+.tp-rev-form { max-width: 560px; margin: 12px 0; }
+.tp-rev-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px; margin: 12px 0; }
+.tp-rev-list li { background: #fff; border: 1px solid #ECE7DC; border-radius: 14px; padding: 12px 16px; font-size: 14px; line-height: 1.5; }
+.tp-rev-list li p { margin: 4px 0; }
+.tp-rev-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; color: #6B675C; }
+.tp-rev-meta b { color: #16150F; }
+.tp-rev-badge { display: inline-flex; align-items: center; gap: 4px; background: #E8F1FB; color: #1D5FA8; font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 8px; }
+.tp-rev-reply { margin-top: 8px; background: #FAF8F3; border-left: 3px solid #16150F; border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+.tp-chip-rev { display: inline-flex; align-items: center; margin-left: 6px; font-size: 11px; font-weight: 700; color: #8A5A00; background: #FDF1D6; border-radius: 999px; padding: 2px 7px; vertical-align: 2px; }

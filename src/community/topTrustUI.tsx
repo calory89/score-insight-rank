@@ -9,7 +9,7 @@ import { useCommunity } from "./ctx";
 import { Lightbox } from "./extras";
 import { TOP_TRUST } from "./topTrust";
 import { TOP_DESTS, TOP_ORDER, areaOf } from "./top";
-import { AlertTriangle, BadgeCheck, BarChart3, Camera, CheckCircle2, CircleHelp, Coins, ExternalLink, Flag, Mail, MessageCircle, Scale, ShieldCheck, Trophy, Users, XCircle } from "lucide-react";
+import { AlertTriangle, BadgeCheck, BarChart3, Camera, CheckCircle2, CircleHelp, Coins, ExternalLink, Flag, Mail, MapPin, MessageCircle, Scale, ShieldCheck, Star, Trophy, Users, XCircle } from "lucide-react";
 
 const rpc = async (fn: string, args: Record<string, unknown> = {}) => { const { data, error } = await (supabase as any).rpc(fn, args); if (error) throw error; return data; };
 const eur = (n?: number | null) => (n == null ? "–" : "€" + Math.round(n).toLocaleString("en-GB"));
@@ -277,6 +277,71 @@ export function AboutPage() {
         <li>Each destination has a legal checklist and a list of independent lawyers who have no deal with us.</li>
       </ul>
       <p><Link className="hunt-primary" to="/top"><ShieldCheck size={15} /> See the Top 100 rankings</Link> <a className="hunt-secondary" href="mailto:hello@realhunt.co"><Mail size={15} /> Write to us</a></p>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- buyer reviews (good and bad, never filtered) + Google Maps link
+const Stars = ({ n, size = 15 }: { n: number; size?: number }) => <span className="tp-stars" aria-label={`${n} out of 5 stars`}>{[1, 2, 3, 4, 5].map((i) => <Star key={i} size={size} className={i <= Math.round(n) ? "is-on" : ""} />)}</span>;
+export function ReviewsBox({ p, dest, onChange }: { p: any; dest: string; onChange: () => void }) {
+  const { user, requireUser, setNotice } = useCommunity();
+  const R = p.reviews || { list: [], count: 0 };
+  const mine = R.mine;
+  const [open, setOpen] = useState(false);
+  const [f, setF] = useState({ rating: mine?.rating || 0, body: mine?.body || "", name: mine?.name || "" });
+  const [busy, setBusy] = useState(false);
+  const gmaps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.developer} ${TOP_DESTS[dest]?.name || ""}`)}`;
+  const send = async (e: React.FormEvent) => {
+    e.preventDefault(); if (!user) { requireUser(); return; }
+    if (!f.rating) { setNotice("Pick from 1 to 5 stars."); return; }
+    setBusy(true);
+    try { const r = await rpc("top_review_submit", { p_slug: p.slug, p_rating: f.rating, p_body: f.body, p_name: f.name }); if (r?.error) setNotice(r.error); else { setOpen(false); setNotice("Thanks. Your review is on the page."); try { (window as any).clarity?.("event", "top_review"); } catch { /* ignore */ } onChange(); } }
+    catch (err) { setNotice((err as Error).message); } finally { setBusy(false); }
+  };
+  return (
+    <section className="tp-reviews">
+      <h2><Star size={20} /> Buyer reviews</h2>
+      <div className="tp-rev-head">
+        {R.count > 0 ? <p><b className="tp-rev-avg">{Number(R.avg).toFixed(1)}</b> <Stars n={Number(R.avg)} /> <span className="hunt-fine">{R.count} review{R.count > 1 ? "s" : ""} on RealHunt</span></p> : <p className="hunt-fine">No reviews yet. If you have dealt with {p.developer}, tell other buyers how it went.</p>}
+        <div className="tp-rev-actions">
+          <button className="hunt-secondary" onClick={() => { if (!user) { requireUser(); return; } setOpen(!open); }}>{mine ? "Edit your review" : "Write a review"}</button>
+          <a className="tp-web" href={gmaps} target="_blank" rel="noopener nofollow"><MapPin size={15} /> {p.developer} on Google Maps</a>
+        </div>
+      </div>
+      {open && (
+        <form className="hv-form tp-rev-form" onSubmit={send}>
+          <strong>Your review of {p.name}</strong>
+          <div className="tp-star-pick" role="radiogroup" aria-label="Rating">{[1, 2, 3, 4, 5].map((i) => <button type="button" key={i} role="radio" aria-checked={f.rating === i} aria-label={`${i} star${i > 1 ? "s" : ""}`} onClick={() => setF({ ...f, rating: i })}><Star size={26} className={i <= f.rating ? "is-on" : ""} /></button>)}</div>
+          <input maxLength={60} placeholder="Your first name (shown)" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+          <textarea required minLength={20} maxLength={2000} placeholder="What happened? Visit, answers, contract, payments, build quality, handover…" value={f.body} onChange={(e) => setF({ ...f, body: e.target.value })} />
+          <p className="hunt-fine">Your own experience only, good or bad. No insults and no personal details of anyone. We never remove a review for being negative, only for breaking these rules.</p>
+          <button className="hunt-primary" disabled={busy}>{busy ? "Sending…" : mine ? "Update review" : "Publish review"}</button>
+        </form>
+      )}
+      {R.list.length > 0 && <ul className="tp-rev-list">{R.list.map((r: any) => (
+        <li key={r.id}>
+          <p className="tp-rev-meta"><Stars n={r.rating} size={14} /> <b>{r.name}</b> · {day(r.at)}{r.asked && <span className="tp-rev-badge"><MessageCircle size={12} /> Asked the developer through RealHunt</span>}</p>
+          <p>{r.body}</p>
+          {r.reply && <div className="tp-rev-reply"><b>Reply from {p.developer}</b> · {day(r.replied_at)}<p>{r.reply}</p></div>}
+        </li>
+      ))}</ul>}
+      <p className="hunt-fine">{p.verified ? `${p.developer} is verified and can reply to every review.` : `Only the verified developer can reply to reviews. ${p.developer} has not verified this page yet.`} Google reviews are on Google Maps: we link to them and do not copy them.</p>
+    </section>
+  );
+}
+export function ReviewReply({ r, onSaved }: { r: any; onSaved: () => void }) {
+  const { setNotice } = useCommunity();
+  const [a, setA] = useState(r.reply || "");
+  const [busy, setBusy] = useState(false);
+  const save = async () => {
+    setBusy(true);
+    try { const x = await rpc("top_review_reply", { p_id: r.id, p_reply: a }); if (x?.error) setNotice(x.error); else { setNotice("Reply published under the review."); onSaved(); } }
+    catch (err) { setNotice((err as Error).message); } finally { setBusy(false); }
+  };
+  return (
+    <div className="tp-answer">
+      <textarea maxLength={2000} placeholder="Your public reply" value={a} onChange={(e) => setA(e.target.value)} />
+      <button className="hunt-secondary" disabled={busy || a.trim().length < 2} onClick={save}>{busy ? "Saving…" : r.reply ? "Update reply" : "Publish reply"}</button>
     </div>
   );
 }

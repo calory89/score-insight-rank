@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { sid } from "@/lib/rh";
 import { useCommunity } from "./ctx";
 import { Lightbox } from "./extras";
-import { LegalBox, MoneyNote, PriceVsArea, QaList, ReviewAndReport, VerifiedBox, VisitBadge, VisitBox } from "./topTrustUI";
+import { LegalBox, MoneyNote, PriceVsArea, QaList, ReviewAndReport, ReviewReply, ReviewsBox, VerifiedBox, VisitBadge, VisitBox } from "./topTrustUI";
 import { ArrowDown, ArrowUp, BadgeCheck, Camera, Bookmark, Building2, Check, ChevronLeft, ExternalLink, FileUp, Heart, Loader2, MapPin, MessageCircle, Share2, ShieldCheck, Trophy, X } from "lucide-react";
 
 const rpc = async (fn: string, args: Record<string, unknown> = {}) => { const { data, error } = await (supabase as any).rpc(fn, args); if (error) throw error; return data; };
@@ -106,7 +106,7 @@ export function TopListPage() {
             <div className="tp-rank"><b>#{x.rank}</b><Move rank={x.rank} base={x.base_rank} /></div>
             <Link to={`/top/${dest}/${x.slug}`} className="tp-thumb"><img src={x.image} alt={x.name} loading={x.rank <= 6 ? "eager" : "lazy"} /></Link>
             <Link to={`/top/${dest}/${x.slug}`} className="tp-main">
-              <strong>{x.name}{x.verified && <BadgeCheck size={16} className="tp-ver" aria-label="Verified developer" />}{x.visited && <span className="tp-chip-visit" title="The RealHunt team visited this project"><Camera size={12} /> Visited</span>}</strong>
+              <strong>{x.name}{x.verified && <BadgeCheck size={16} className="tp-ver" aria-label="Verified developer" />}{x.review_count > 0 && <span className="tp-chip-rev" title={`${x.review_count} buyer reviews`}>★ {Number(x.review_avg).toFixed(1)} ({x.review_count})</span>}{x.visited && <span className="tp-chip-visit" title="The RealHunt team visited this project"><Camera size={12} /> Visited</span>}</strong>
               <span className="tp-sub"><MapPin size={12} /> {x.locality} · {x.developer}</span>
               <span className="tp-facts"><b>from {eur(x.price_eur)}</b>{x.ppsqm_eur ? <span>{eur(x.ppsqm_eur)}/m²</span> : null}<span>{x.ptype}</span><span>{x.completion?.startsWith("Ready") ? "Ready" : x.completion ? `Ready ${x.completion}` : "Date not published"}</span></span>
             </Link>
@@ -240,6 +240,7 @@ export function TopProjectPage() {
         <p className="hunt-fine">{p.votes} votes · {p.saves} saves · {p.asks} questions · {p.views} visitors.</p>
         <HowItWorks dest={dest} />
       </section>
+      <ReviewsBox p={p} dest={dest} onChange={load} />
       <LegalBox p={p} dest={dest} />
       <QaList p={p} />
       {p.lat && p.lng && <p><a className="hunt-link" href={`https://www.google.com/maps?q=${p.lat},${p.lng}`} target="_blank" rel="noopener"><MapPin size={14} /> See it on Google Maps</a></p>}
@@ -380,6 +381,8 @@ function MyPage({ pg, onSaved }: { pg: any; onSaved: () => void }) {
       <div className="tp-claim-strip"><Share2 size={18} /><div><strong>Bring your buyers, climb the ranking</strong><span>Send this link to your leads and followers. Every vote +3, every save +2, every question +4.</span></div><button className="hunt-primary" onClick={() => { navigator.clipboard.writeText(url); setNotice("Link copied."); ev("top_dev_copy"); }}>Copy link</button></div>
       <h3>Buyers' questions ({pg.questions.length})</h3>
       {pg.questions.length === 0 ? <p className="hunt-fine">None yet. Share your page to get the first ones.</p> : <ul className="tp-qs">{pg.questions.map((q: any) => <li key={q.id}><b>{q.name}</b> · <a href={`mailto:${q.email}?subject=${encodeURIComponent(pg.name + " – your question on RealHunt")}`}>{q.email}</a> · {q.budget_eur ? eur(q.budget_eur) : "no budget given"} · {q.timeframe || "no date"} · {new Date(q.at).toLocaleDateString("en-GB")}<p>{q.message}</p><Answer q={q} onSaved={onSaved} /></li>)}</ul>}
+      <h3>Buyer reviews ({(pg.reviews || []).length})</h3>
+      {(pg.reviews || []).length === 0 ? <p className="hunt-fine">No reviews yet. Reviews from buyers, good and bad, show on your page; you can reply to each one publicly.</p> : <ul className="tp-qs">{pg.reviews.map((r: any) => <li key={r.id}><b>{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</b> · {r.name || "A buyer"} · {new Date(r.at).toLocaleDateString("en-GB")}<p>{r.body}</p><ReviewReply r={r} onSaved={onSaved} /></li>)}</ul>}
       <form className="hv-form" onSubmit={save}>
         <strong>Edit your page</strong>
         <input type="number" min="5000" placeholder="Price from in €" value={e.price} onChange={(x) => setE({ ...e, price: x.target.value })} />
