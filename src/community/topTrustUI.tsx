@@ -248,8 +248,7 @@ export function TopMethodPage() {
 
 // ---------------------------------------------------------------- /about
 const TEAM: { name: string; role: string; photo?: string; linkedin?: string; bio: string }[] = [
-  { name: "Carlos de Ory", role: "Founder & CEO", bio: "Spanish entrepreneur. He started in talent acquisition at Robert Half and Kraft Heinz, and has spent the last years building and selling homes abroad, which is where RealHunt comes from." },
-  { name: "Lisa Mikolajewicz", role: "Co-founder", bio: "Co-founder of RealHunt." },
+  { name: "Carlos de Ory Gordillo", role: "Founder", bio: "" },
 ];
 export function AboutPage() {
   useEffect(() => { window.scrollTo(0, 0); setDoc("About RealHunt: who we are and how we work", "Who runs RealHunt, the company behind it, how we make money and what you should know about our founder before you trust us.", "https://realhunt.co/about"); }, []);
@@ -258,17 +257,17 @@ export function AboutPage() {
       <span className="hunt-eyebrow"><Users size={13} /> ABOUT REALHUNT</span>
       <h1>Who we are</h1>
       <p>RealHunt finds homes and new builds abroad that are good value, and lets buyers rank them. You should know exactly who is behind it before you trust a ranking, so here it is.</p>
-      <div className="tp-team">{TEAM.map((t) => (
+      <div className="tp-team is-one">{TEAM.map((t) => (
         <div key={t.name} className="tp-person">
-          {t.photo ? <img src={t.photo} alt={t.name} /> : <span className="tp-initials" aria-hidden>{(() => { const w = t.name.split(" "); return (w[0][0] + w[w.length - 1][0]).toUpperCase(); })()}</span>}
-          <div><strong>{t.name}</strong><small>{t.role}</small><p>{t.bio}</p>{t.linkedin && <a className="hunt-link" href={t.linkedin} target="_blank" rel="noopener">LinkedIn <ExternalLink size={12} /></a>}</div>
+          {t.photo ? <img src={t.photo} alt={t.name} /> : <span className="tp-initials" aria-hidden>{(() => { const w = t.name.split(" ").filter((x, i) => i === 0 || /^[A-Z]/.test(x)); return (w[0][0] + (w[1] || w[0])[0]).toUpperCase(); })()}</span>}
+          <div><strong>{t.name}</strong><small>{t.role}</small>{t.bio && <p>{t.bio}</p>}{t.linkedin && <a className="hunt-link" href={t.linkedin} target="_blank" rel="noopener">LinkedIn <ExternalLink size={12} /></a>}</div>
         </div>
       ))}</div>
       <h2>The company</h2>
       <p>RealHunt is run by <b>Equinox Investment Group LLC</b>, 30 N Gould St Ste N, Sheridan, WY 82801, United States. Write to us at <a className="hunt-link" href="mailto:hello@realhunt.co">hello@realhunt.co</a>.</p>
       <MoneyNote />
       <h2>What you will find if you search our founder</h2>
-      <p>Carlos also founded Eco Beach City, a property development in Sumba, Indonesia. It is a separate company. If you search his name you will find press coverage about Eco Beach City, including legal complaints from some of its buyers. We would rather you hear it from us than find it on your own.</p>
+      <p>Carlos de Ory Gordillo also founded Eco Beach City, a property development in Sumba, Indonesia. It is a separate company. If you search his name you will find press coverage about Eco Beach City, including legal complaints from some of its buyers. We would rather you hear it from us than find it on your own.</p>
       <p>What it means for RealHunt: Eco Beach City is never part of any Top 100 ranking, and when an Eco Beach City home appears in the RealHunt feed, it is our founder's own project. If you have questions about any of this, ask us at <a className="hunt-link" href="mailto:hello@realhunt.co">hello@realhunt.co</a>.</p>
       <h2>How we keep the rankings honest</h2>
       <ul className="tp-law">

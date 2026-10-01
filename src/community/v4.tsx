@@ -6,7 +6,7 @@ import {t} from "./i18n";
 // navigation (cached rows, prefetched detail, preloaded photos).
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Heart, Share2, Bookmark, Home as HomeIcon, Layers, MapPin, User, Bell, ArrowUpRight, TrendingDown, BadgeCheck, Flame } from "lucide-react";
+import { Heart, Share2, Bookmark, Home as HomeIcon, Layers, MapPin, User, Bell, Trophy, ArrowUpRight, TrendingDown, BadgeCheck, Flame } from "lucide-react";
 import { FLAG, bumpIx, track } from "@/lib/rh";
 import { money, votePreview, type Deal, type Session } from "./api";
 import { useCommunity } from "./ctx";
@@ -380,7 +380,7 @@ export function TabBar() {
   return (
     <nav className="hv-tabbar" aria-label="App navigation">
       <Link to="/" aria-current={is("/") ? "page" : undefined}><HomeIcon size={21} /><span>Explore</span></Link>
-      <Link to="/alerts" aria-current={is("/alerts") ? "page" : undefined}><Bell size={21} /><span>Alerts</span></Link>
+      <Link to="/top" aria-current={is("/top") ? "page" : undefined}><Trophy size={21} /><span>Top 100</span></Link>
       <Link to="/map" aria-current={is("/map") ? "page" : undefined}><MapPin size={21} /><span>Map</span></Link>
       <Link to="/hunt/saved" aria-current={is("/hunt/saved") ? "page" : undefined}><Bookmark size={21} /><span>Saved</span></Link>
       <Link to="/me" aria-current={is("/me") || is("/hunt/mine") ? "page" : undefined}><User size={21} /><span>Profile</span></Link>

@@ -2901,3 +2901,6 @@ html.rh-dark, html.rh-dark body { background: #0E0E0C; }
 .tp-legal-dl dd svg, .tp-how summary svg, .tp-checks svg, .tp-review-line svg, .tp-legal h2 svg, .tp-qa h2 svg { display: inline-block; }
 .tp-how summary { display: list-item; }
 .tp-legal-dl dd svg { margin-right: 4px; }
+.tp-team.is-one { grid-template-columns: minmax(0, 420px); }
+.tp-team.is-one .tp-person { align-items: center; }
+.hunt-top100 { display: inline-flex; align-items: center; gap: 6px; }

@@ -132,7 +132,7 @@ function prerenderPages() {
           `<main class="rh-static"><h1>How we rank</h1><p>Nobody pays to be listed or to rank higher.</p><p>Base score up to 100: entry price 20, price per m² 25, area 20, build stage 15, listing detail 10, developer track record 10. Buyer demand: vote +3, save +2, question +4, website click or share +1, every 20 visitors +1. Verified developer +5. Grade from 60 to 90.</p><p>Buyers pay nothing. Developers pay nothing to be listed, verify or rank. RealHunt earns 5% from the developer only if a buyer it introduced buys.</p></main>`,
           [crumbs([["RealHunt", SITE + "/"], ["Top 100 rankings", SITE + "/top"], ["How we rank", SITE + "/top/how-we-rank"]])]);
         page(`${SITE}/about`, "About RealHunt: who we are and how we work", "Who runs RealHunt, the company behind it, how we make money and what you should know about our founder before you trust us.", DEF,
-          `<main class="rh-static"><h1>Who we are</h1><p>RealHunt is run by Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, United States. Founder and CEO: Carlos de Ory. Co-founder: Lisa Mikolajewicz. Contact: hello@realhunt.co.</p></main>`,
+          `<main class="rh-static"><h1>Who we are</h1><p>RealHunt is run by Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, United States. Founder: Carlos de Ory Gordillo. Contact: hello@realhunt.co.</p></main>`,
           [crumbs([["RealHunt", SITE + "/"], ["About", SITE + "/about"]])]);
         for (const [k, n, checked] of TOPS) {
           const list: any[] = readJson(`src/data/top-${k}.json`, []);

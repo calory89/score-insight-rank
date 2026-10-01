@@ -196,6 +196,7 @@ function Shell({ children }: { children: ReactNode }) {
             <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#141414" /><path d="M14 35 L32 17 L50 35" fill="none" stroke="#FFFFFF" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" /><circle cx="32" cy="43.5" r="6.5" fill="#0EA5E9" /></svg>RealHunt
           </Link>
           <nav aria-label="Main navigation">
+            <Link to="/top" className="hunt-browse hunt-top100"><Trophy size={16} /> Top 100</Link>
             <Link to="/?search=1" className="hunt-browse">
               <Search size={16} />
               Search

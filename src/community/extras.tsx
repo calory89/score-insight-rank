@@ -439,6 +439,7 @@ export function AlertsPage() {
 export function ExploreLinks() {
   return (
     <nav className="hunt-explore" aria-label={t("Explore")}>
+      <Link to="/top"><Trophy size={15} /> Top 100</Link>
       <Link to="/swipe"><Heart size={15} /> {t("Swipe")}</Link>
       <Link to="/map"><MapPin size={15} /> {t("Map")}</Link>
       <Link to="/leaderboard"><Trophy size={15} /> {t("Hunters")}</Link>
