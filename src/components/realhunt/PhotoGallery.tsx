@@ -59,7 +59,7 @@ export default function PhotoGallery({ images, title, compact = false, href, eag
   }, [compact, eager]);
   if (!count) return <div className={`${compact ? "absolute inset-0" : "aspect-[4/3] rounded-2xl"} grid place-items-center bg-hairline/40 text-ink-muted text-sm`}>Photos not available</div>;
   const markFailed = (url: string) => setFailed(previous => previous.has(url) ? previous : new Set([...previous, url]));
-  const unavailable = (label = "Photo unavailable") => <div role="img" aria-label={label} className="w-full h-full grid place-items-center bg-[#e9e7e2] text-ink-muted text-sm">Photo unavailable</div>;
+  const unavailable = (label = "Photo unavailable") => <div role="img" aria-label={label} className="w-full h-full grid place-items-center bg-[#e4e5e7] text-ink-muted text-sm">Photo unavailable</div>;
   const image = (url: string, i: number) => {
     // Keep every slide's geometry and controls. Only the current/next/previously viewed
     // photos get a URL. The next slide itself preloads the correct responsive candidate,
@@ -70,7 +70,7 @@ export default function PhotoGallery({ images, title, compact = false, href, eag
   };
   return <>
     <div role="region" aria-label={`${title} photos`} aria-roledescription="carousel" className={compact ? "absolute inset-0" : "overflow-hidden md:rounded-2xl bg-hairline/30"}>
-      <div className={compact ? "relative h-full" : "relative aspect-[4/3] md:aspect-[16/9] bg-[#e9e7e2]"}>
+      <div className={compact ? "relative h-full" : "relative aspect-[4/3] md:aspect-[16/9] bg-[#e4e5e7]"}>
         <div ref={rail} tabIndex={0} aria-label="Photo gallery. Swipe or use arrow keys."
           onKeyDown={e => { if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); go(index + (e.key === "ArrowRight" ? 1 : -1)); } }}
           onPointerDown={e => { gesture.current = { x: e.clientX, y: e.clientY, moved: false }; }}

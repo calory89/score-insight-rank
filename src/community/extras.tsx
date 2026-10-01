@@ -800,15 +800,12 @@ export function InstallButton() {
     </span>
   );
 }
-export function LangSwitch() {
-  if (true as boolean) return null; // English only for now
-  const [l, setL] = useState<Lang>(getLang());
+export function LangSwitch({ compact = false }: { compact?: boolean }) {
+  const l = getLang();
   return (
-    <label className="hunt-lang"><span className="sr-only">{t("Language")}</span>
-      <select value={l} onChange={(e) => { const v = e.target.value as Lang; setL(v); setLang(v); }}>
-        {LANGS.map((x) => <option key={x.code} value={x.code}>{x.label}</option>)}
-      </select>
-    </label>
+    <span className={"rh-lang" + (compact ? " is-compact" : "")} role="group" aria-label="Language" translate="no">
+      {LANGS.map((x) => <button key={x.code} type="button" className={l === x.code ? "is-on" : ""} aria-pressed={l === x.code} onClick={() => setLang(x.code)} title={x.label}>{x.code.toUpperCase()}</button>)}
+    </span>
   );
 }
 export function useLangVersion() {

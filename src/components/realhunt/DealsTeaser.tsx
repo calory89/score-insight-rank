@@ -26,7 +26,7 @@ const DealsTeaser = () => {
             to="/deals"
             className="rh-card flex flex-col h-full !p-0 overflow-hidden hover:border-hairline-strong transition-colors"
           >
-            <div className="bg-[#F4F0E6]">
+            <div className="bg-[#ECEDEE]">
               <img
                 src={d.image}
                 alt={`${d.title} — ${d.city}, ${d.country}`}

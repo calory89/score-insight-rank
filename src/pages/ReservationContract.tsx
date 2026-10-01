@@ -18,7 +18,7 @@ export default function ReservationContract() {
   useEffect(() => { document.title = "Free reservation contract template · RealHunt Network"; }, []);
   const x = (k: string) => (v[k] ? <b>{v[k]}</b> : <span className="inline-block min-w-[140px] border-b border-dotted border-[#999]">&nbsp;</span>);
   return (
-    <div className="min-h-screen bg-[#F4F2EC] py-8 px-4 print:bg-white print:p-0">
+    <div className="min-h-screen bg-[#EFF0F1] py-8 px-4 print:bg-white print:p-0">
       <div className="max-w-[860px] mx-auto print:hidden">
         <Link to="/network" className="inline-flex items-center gap-1 text-[14px]"><ChevronLeft size={16} /> RealHunt Network</Link>
         <h1 className="font-display text-[34px] tracking-tight mt-3">Reservation contract template</h1>
@@ -29,9 +29,9 @@ export default function ReservationContract() {
         ))}</div>
         <button onClick={() => window.print()} className="rh-btn-primary inline-flex items-center gap-2 mt-5"><Printer size={16} /> Print or save as PDF</button>
       </div>
-      <article className="max-w-[860px] mx-auto mt-8 print:mt-0 bg-white rounded-2xl print:rounded-none p-8 md:p-12 text-[14px] leading-relaxed text-[#16150F] shadow-sm print:shadow-none">
+      <article className="max-w-[860px] mx-auto mt-8 print:mt-0 bg-white rounded-2xl print:rounded-none p-8 md:p-12 text-[14px] leading-relaxed text-[#111214] shadow-sm print:shadow-none">
         <h2 className="text-center font-display text-[24px]">Reservation Agreement</h2>
-        <p className="text-center text-[12px] text-[#6B675C]">{x("project")} · {x("unit")}</p>
+        <p className="text-center text-[12px] text-[#5E6269]">{x("project")} · {x("unit")}</p>
         <p className="mt-6"><b>Between</b> {x("seller")}, of {x("seller_addr")} (the “Developer”), and {x("buyer")}, ID {x("buyer_id")}, of {x("buyer_addr")} (the “Buyer”).</p>
         <ol className="mt-4 list-decimal pl-5 flex flex-col gap-3">
           <li><b>The unit.</b> The Developer reserves for the Buyer unit {x("unit")} of about {x("size")} m² in {x("project")}, at {x("address")}, as shown in the plans and specifications attached.</li>
@@ -45,11 +45,11 @@ export default function ReservationContract() {
           <li><b>Law.</b> This agreement follows the law of {x("law")}. Where that law requires a specific form (for example a notary), both sides will use it.</li>
         </ol>
         <div className="mt-10 grid grid-cols-2 gap-10">
-          <div><p className="border-t border-[#16150F] pt-2">Developer</p></div>
-          <div><p className="border-t border-[#16150F] pt-2">Buyer</p></div>
+          <div><p className="border-t border-[#111214] pt-2">Developer</p></div>
+          <div><p className="border-t border-[#111214] pt-2">Buyer</p></div>
         </div>
         <p className="mt-6">{x("place_date")}</p>
-        <p className="mt-8 text-[11px] text-[#6B675C]">Template provided by RealHunt (realhunt.co) as a free starting point. It is not legal advice; check it with a local lawyer.</p>
+        <p className="mt-8 text-[11px] text-[#5E6269]">Template provided by RealHunt (realhunt.co) as a free starting point. It is not legal advice; check it with a local lawyer.</p>
       </article>
     </div>
   );

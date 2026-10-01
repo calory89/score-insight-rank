@@ -1,3 +1,4 @@
+import { isEs } from "@/lib/lang";
 // RealHunt v7 (23-sep-2026): growth pass.
 //  - Insider: new homes are visible to Insiders 48h before everyone else, plus a secret weekly Top 5
 //    (the homes furthest below their country's median). Free: invite 3 friends who sign up.
@@ -180,7 +181,7 @@ const fmtDate = (iso: string) => new Date(iso + "T12:00:00Z").toLocaleDateString
 // ---------------------------------------------------------------- Blog
 type Post = { slug: string; title: string; desc: string; date: string; author: string; image: string; tags: string[]; minutes: number; html: string };
 let blogP: Promise<Post[]> | null = null;
-const loadBlog = () => (blogP ||= import("@/data/blog.json").then((m: any) => (m.default || m) as Post[]));
+const loadBlog = () => (blogP ||= (isEs() ? import("@/data/blog-es.json") : import("@/data/blog.json")).then((m: any) => (m.default || m) as Post[]));
 function usePosts() {
   const [p, setP] = useState<Post[] | null>(null);
   useEffect(() => { loadBlog().then(setP).catch(() => setP([])); }, []);

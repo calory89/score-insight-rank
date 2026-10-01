@@ -141,7 +141,7 @@ export async function storyCard(d: Row, scope = "all"): Promise<Blob | null> {
     x.beginPath(); (x as any).roundRect ? (x as any).roundRect(64, 72, 250, 64, 32) : x.rect(64, 72, 250, 64); x.fill();
     x.fillStyle = "#111"; x.font = "700 34px system-ui, -apple-system, Segoe UI, sans-serif"; x.fillText("RealHunt", 92, 116);
     if (d.rank && d.rank <= 10) {
-      x.fillStyle = "#0EA5E9";
+      x.fillStyle = "#D4420C";
       x.beginPath(); (x as any).roundRect ? (x as any).roundRect(W - 64 - 260, 72, 260, 64, 32) : x.rect(W - 324, 72, 260, 64); x.fill();
       x.fillStyle = "#fff"; x.font = "700 32px system-ui, -apple-system, Segoe UI, sans-serif";
       const label = `#${d.rank} ${scope === "all" ? "all time" : "this week"}`;

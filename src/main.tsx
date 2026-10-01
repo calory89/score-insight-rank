@@ -1,5 +1,9 @@
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import { initLang, startLang } from "./lib/lang";
 
-createRoot(document.getElementById("root")!).render(<App />);
+initLang().finally(() => {
+  startLang();
+  createRoot(document.getElementById("root")!).render(<App />);
+});

@@ -26,8 +26,8 @@ const BadgeEmbedDialog = ({ open, onClose, slug, address, score }: Props) => {
   const iframeSnippet = `<iframe src="${embedUrl}" width="540" height="110" frameborder="0" style="border:0;max-width:100%;" loading="lazy" title="${alt}"></iframe>
 <p><a href="${reportUrl}" target="_blank">View full RealHunt report</a></p>`;
 
-  const linkSnippet = `<a href="${reportUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid #16150F1f;border-radius:999px;background:#FAF8F3;color:#16150F;font-family:Georgia,serif;text-decoration:none;">
-  <strong style="color:#B8893B;letter-spacing:1.5px;font-size:11px;text-transform:uppercase;">Scored by RealHunt</strong>
+  const linkSnippet = `<a href="${reportUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid #16150F1f;border-radius:999px;background:#FFFFFF;color:#111214;font-family:Georgia,serif;text-decoration:none;">
+  <strong style="color:#D4420C;letter-spacing:1.5px;font-size:11px;text-transform:uppercase;">Scored by RealHunt</strong>
   <span style="font-weight:700;">${score}/100</span>
 </a>`;
 
@@ -58,7 +58,7 @@ const BadgeEmbedDialog = ({ open, onClose, slug, address, score }: Props) => {
           {/* Live preview */}
           <div>
             <p className="text-[10px] uppercase tracking-[2px] text-muted-foreground font-semibold mb-2">Preview</p>
-            <div className="rounded-xl border border-border bg-[#FAF8F3] p-3 overflow-hidden">
+            <div className="rounded-xl border border-border bg-[#FFFFFF] p-3 overflow-hidden">
               <iframe
                 src={embedUrl}
                 width="540"

@@ -57,7 +57,7 @@ async function renderCard(props: ShareScoreCardProps): Promise<string> {
   const ctx = canvas.getContext("2d")!;
 
   // Background — warm paper
-  ctx.fillStyle = "#FAF8F3";
+  ctx.fillStyle = "#FFFFFF";
   ctx.fillRect(0, 0, SIZE, SIZE);
 
   // Subtle inner card
@@ -65,22 +65,22 @@ async function renderCard(props: ShareScoreCardProps): Promise<string> {
   ctx.fillStyle = "#FFFFFF";
   roundRect(ctx, pad, pad, SIZE - pad * 2, SIZE - pad * 2, 28);
   ctx.fill();
-  ctx.strokeStyle = "#ECE7DC";
+  ctx.strokeStyle = "#E2E3E6";
   ctx.lineWidth = 1;
   ctx.stroke();
 
   // Top eyebrow
-  ctx.fillStyle = "#8A8678";
+  ctx.fillStyle = "#797E89";
   ctx.font = "600 22px 'Inter', system-ui, sans-serif";
   ctx.textBaseline = "top";
   ctx.fillText("FORENSIC PROPERTY SCORE", pad + 48, pad + 48);
   // gold bar
-  ctx.fillStyle = "#B8893B";
+  ctx.fillStyle = "#D4420C";
   ctx.fillRect(pad + 48, pad + 84, 60, 3);
 
   // Title (truncate to fit)
   const title = props.title || "Property";
-  ctx.fillStyle = "#16150F";
+  ctx.fillStyle = "#111214";
   ctx.font = "700 38px 'Georgia', 'Times New Roman', serif";
   const maxTitleW = SIZE - (pad + 48) * 2;
   let displayTitle = title;
@@ -91,7 +91,7 @@ async function renderCard(props: ShareScoreCardProps): Promise<string> {
   ctx.fillText(displayTitle, pad + 48, pad + 110);
 
   if (props.location) {
-    ctx.fillStyle = "#3A382F";
+    ctx.fillStyle = "#313338";
     ctx.font = "400 22px 'Inter', system-ui, sans-serif";
     ctx.fillText(props.location, pad + 48, pad + 160);
   }
@@ -99,14 +99,14 @@ async function renderCard(props: ShareScoreCardProps): Promise<string> {
   // Score — huge gold
   const scoreY = 290;
   const scoreStr = props.scoreOutOf10.toFixed(1);
-  ctx.fillStyle = "#B8893B";
+  ctx.fillStyle = "#D4420C";
   ctx.font = "700 280px 'Georgia', 'Times New Roman', serif";
   ctx.textBaseline = "alphabetic";
   const scoreMetrics = ctx.measureText(scoreStr);
   ctx.fillText(scoreStr, pad + 56, scoreY + 240);
 
   // "/ 10" suffix
-  ctx.fillStyle = "#8A8678";
+  ctx.fillStyle = "#797E89";
   ctx.font = "500 36px 'Inter', system-ui, sans-serif";
   ctx.fillText("/ 10", pad + 56 + scoreMetrics.width + 16, scoreY + 240);
 
@@ -117,7 +117,7 @@ async function renderCard(props: ShareScoreCardProps): Promise<string> {
     const gw = ctx.measureText(gradeText).width + 32;
     const gx = pad + 56;
     const gy = scoreY + 260;
-    ctx.fillStyle = "#16150F";
+    ctx.fillStyle = "#111214";
     roundRect(ctx, gx, gy, gw, 42, 999);
     ctx.fill();
     ctx.fillStyle = "#FFFFFF";
@@ -135,14 +135,14 @@ async function renderCard(props: ShareScoreCardProps): Promise<string> {
   props.dims.slice(0, 5).forEach((d, i) => {
     const y = barsTopY + i * rowH;
     // label
-    ctx.fillStyle = "#8A8678";
+    ctx.fillStyle = "#797E89";
     ctx.font = "600 16px 'Inter', system-ui, sans-serif";
     ctx.fillText(d.label.toUpperCase(), barsX, y);
     // track
     const trackX = barsX + 170;
     const trackY = y - 14;
     const trackW = barsW - 170 - 70;
-    ctx.fillStyle = "#F0EBDE";
+    ctx.fillStyle = "#E6E7E8";
     roundRect(ctx, trackX, trackY, trackW, 12, 999);
     ctx.fill();
     // fill
@@ -151,7 +151,7 @@ async function renderCard(props: ShareScoreCardProps): Promise<string> {
     roundRect(ctx, trackX, trackY, Math.max(12, trackW * pct), 12, 999);
     ctx.fill();
     // value
-    ctx.fillStyle = "#16150F";
+    ctx.fillStyle = "#111214";
     ctx.font = "700 20px 'Georgia', serif";
     ctx.textAlign = "right";
     ctx.fillText(d.value.toFixed(1), barsX + barsW, y);
@@ -160,7 +160,7 @@ async function renderCard(props: ShareScoreCardProps): Promise<string> {
 
   // Verdict
   if (props.verdict) {
-    ctx.fillStyle = "#16150F";
+    ctx.fillStyle = "#111214";
     ctx.font = "italic 600 26px 'Georgia', serif";
     const maxW = barsW;
     let line = props.verdict;
@@ -173,10 +173,10 @@ async function renderCard(props: ShareScoreCardProps): Promise<string> {
 
   // Footer — wordmark + domain
   const footY = SIZE - pad - 56;
-  ctx.fillStyle = "#16150F";
+  ctx.fillStyle = "#111214";
   ctx.font = "700 28px 'Georgia', serif";
   ctx.fillText("RealHunt", pad + 56, footY);
-  ctx.fillStyle = "#8A8678";
+  ctx.fillStyle = "#797E89";
   ctx.font = "500 18px 'Inter', system-ui, sans-serif";
   ctx.textAlign = "right";
   ctx.fillText(props.domain || "realhunt.co", SIZE - pad - 56, footY);

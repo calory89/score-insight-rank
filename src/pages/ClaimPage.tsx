@@ -54,7 +54,7 @@ export default function ClaimPage() {
         </div>
         <aside className="order-1 lg:order-2">
           <div className="rounded-3xl bg-white border border-hairline overflow-hidden shadow-sm">
-            <div className="relative aspect-[4/3] bg-[#E9E4D8] grid place-items-center">
+            <div className="relative aspect-[4/3] bg-[#DFE0E2] grid place-items-center">
               {imgs[i] ? <img src={imgs[i]} alt="" className="absolute inset-0 w-full h-full object-cover" onError={() => setI((x) => (x + 1 < imgs.length ? x + 1 : x))} /> : <ImageOff className="text-ink-muted" />}
               <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/95 text-[12px] font-semibold">New build</span>
               {p.price_eur ? <span className="absolute bottom-3 left-3 px-3 py-1.5 rounded-full bg-white text-[17px] font-display">{eur(p.price_eur)}</span> : null}

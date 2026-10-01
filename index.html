@@ -11,7 +11,7 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/favicon.png" type="image/png" sizes="512x512" />
     <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
-    <meta name="theme-color" content="#FAFAF7" />
+    <meta name="theme-color" content="#FFFFFF" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>RealHunt: real homes under €100,000, ranked by people</title>
     <meta name="description" content="Real homes under €100,000 in Europe, the US, Canada, Mexico and beyond, found by people and ranked by votes. New homes every day at 18:00." />
@@ -43,7 +43,14 @@
     <script type="application/ld+json">
     {"@context":"https://schema.org","@type":"WebSite","name":"RealHunt","url":"https://realhunt.co"}
     </script>
-    <style>html{background:#FAFAF7}#root:empty{min-height:100vh}</style>
+    <script>
+    /* Language (1-oct-2026): Spanish for visitors from Spain or a Spanish-speaking country, English otherwise. Mirrors src/lib/lang.ts. */
+    (function(){var d=document.documentElement,l="en";try{var q=new URLSearchParams(location.search).get("lang"),s=null;try{s=localStorage.getItem("rh_lang")}catch(e){}
+    if(q==="es"||q==="en")l=q;else if(s==="es"||s==="en")l=s;else{var n=(navigator.languages&&navigator.languages[0])||navigator.language||"";var tz="";try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||""}catch(e){}
+    if(/^es/i.test(n)||/^(Europe\/Madrid|Africa\/Ceuta|Atlantic\/Canary|Africa\/Malabo|America\/(Mexico_City|Cancun|Merida|Monterrey|Matamoros|Chihuahua|Ciudad_Juarez|Ojinaga|Mazatlan|Bahia_Banderas|Hermosillo|Tijuana|Bogota|Lima|Santiago|Punta_Arenas|Argentina\/.+|Buenos_Aires|Cordoba|Mendoza|Caracas|Montevideo|Asuncion|La_Paz|Guayaquil|Guatemala|El_Salvador|Tegucigalpa|Managua|Costa_Rica|Panama|Havana|Santo_Domingo|Puerto_Rico)|Pacific\/(Easter|Galapagos))$/.test(tz))l="es"}}catch(e){}
+    d.setAttribute("data-lang",l);d.lang=l;if(l==="es"){d.className+=" rh-i18n-wait";var k=document.createElement("link");k.rel="preload";k.as="fetch";k.href="/i18n/es-core.json?v=1";k.crossOrigin="anonymous";document.head.appendChild(k);var k2=k.cloneNode();k2.href="/i18n/es-listings.json?v=1";document.head.appendChild(k2);setTimeout(function(){d.classList.remove("rh-i18n-wait")},2500)}})();
+    </script>
+    <style>html{background:#FFFFFF}#root:empty{min-height:100vh}html.rh-i18n-wait #root{visibility:hidden}</style>
     <!-- Meta Pixel: the script is only downloaded after the visitor accepts cookies -->
     <script>
     window.rhEnablePixel=function(){if(window.__rhpx)return;window.__rhpx=1;

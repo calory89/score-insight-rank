@@ -106,7 +106,7 @@ const MarketCity = () => {
                     {r.price ? ` · ${formatPrice(r.price, r.currency || "EUR")}` : ""}
                   </div>
                 </div>
-                <div className="font-display tabular text-[28px]" style={{ color: (r.global_score || 0) >= 80 ? "#1E6B4F" : (r.global_score || 0) >= 60 ? "#B8893B" : "#B7791F" }}>
+                <div className="font-display tabular text-[28px]" style={{ color: (r.global_score || 0) >= 80 ? "#1E6B4F" : (r.global_score || 0) >= 60 ? "#D4420C" : "#B7791F" }}>
                   {r.global_score}
                 </div>
                 <ArrowRight size={16} className="text-ink-soft" />

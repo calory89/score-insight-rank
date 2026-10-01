@@ -20,7 +20,7 @@ const DealCard = ({ deal }: { deal: Deal }) => {
         href={deal.url}
         target="_blank"
         rel="noopener noreferrer nofollow"
-        className="block bg-[#F4F0E6]"
+        className="block bg-[#ECEDEE]"
       >
         <img
           src={deal.image}
@@ -60,7 +60,7 @@ const DealCard = ({ deal }: { deal: Deal }) => {
 
         <p className="mt-5 text-ink-muted text-[14px] leading-relaxed flex-1">{deal.angle}</p>
 
-        <div className="mt-4 rounded-xl bg-[#F4F0E6] px-4 py-3">
+        <div className="mt-4 rounded-xl bg-[#ECEDEE] px-4 py-3">
           <div className="text-[11px] uppercase tracking-[0.14em] text-ink-soft">The catch</div>
           <p className="text-[13px] text-ink-muted leading-relaxed mt-1">{deal.risk}</p>
         </div>

@@ -42,7 +42,7 @@ export function DevProjects() {
         <div className="grid md:grid-cols-2 gap-4">
           {data.projects.map((p: any) => (
             <div key={p.id} className="border border-hairline rounded-2xl bg-white overflow-hidden flex">
-              <div className="relative w-36 shrink-0 bg-[#E9E4D8]">{p.image && <img src={p.image} alt="" className="absolute inset-0 w-full h-full object-cover" />}</div>
+              <div className="relative w-36 shrink-0 bg-[#DFE0E2]">{p.image && <img src={p.image} alt="" className="absolute inset-0 w-full h-full object-cover" />}</div>
               <div className="p-4 flex-1 min-w-0">
                 <div className="flex items-center gap-2"><span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${(STATUS[p.status] || STATUS.pending)[1]}`}>{(STATUS[p.status] || STATUS.pending)[0]}</span>{p.status === "approved" && !p.in_feed && <span className="text-[11px] text-ink-muted">Own page only (over €100k)</span>}</div>
                 <p className="font-semibold mt-1.5 truncate">{p.title}</p>
@@ -219,7 +219,7 @@ export function PhotoDrop({ images, onChange }: { images: string[]; onChange: (i
       <p className="text-[13px] text-ink-muted mb-2">Your photos ({images.length}/12). The first one is the cover.</p>
       <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
         {images.map((src, i) => (
-          <div key={src + i} className="relative rounded-xl overflow-hidden aspect-[4/3] bg-[#E9E4D8]">
+          <div key={src + i} className="relative rounded-xl overflow-hidden aspect-[4/3] bg-[#DFE0E2]">
             <img src={src} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
             <div className="absolute top-1 right-1 flex gap-1">
               {i > 0 && <button type="button" aria-label="Make cover" onClick={() => onChange([src, ...images.filter((_, k) => k !== i)])} className="w-7 h-7 rounded-full bg-white/90 grid place-items-center"><ArrowUp size={14} /></button>}

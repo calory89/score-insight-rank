@@ -43,7 +43,7 @@ export default function MapView() {
       layer.current.clearLayers();
       const pts: L.LatLngExpression[] = [];
       rows.forEach((d) => {
-        const m = L.circleMarker([d.lat!, d.lng!], { radius: 8, color: "#fff", weight: 2, fillColor: "#16150F", fillOpacity: 0.9 });
+        const m = L.circleMarker([d.lat!, d.lng!], { radius: 8, color: "#fff", weight: 2, fillColor: "#111214", fillOpacity: 0.9 });
         m.bindTooltip(esc(money(d.price_eur)), { direction: "top", offset: [0, -6], className: "hunt-pin-tip" });
         m.bindPopup(`<a data-slug="${esc(d.slug)}" href="/deal/${esc(d.slug)}" class="hunt-pin-pop"><img src="${esc(d.image_urls?.[0] || "")}" alt=""><b>${esc(money(d.price_eur))}</b><span>${esc(niceTitle(d))}</span><small>${esc(d.location_name || "")} · approximate location</small></a>`);
         m.addTo(layer.current!); pts.push([d.lat!, d.lng!]);

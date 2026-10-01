@@ -23,7 +23,7 @@ type BrandRow = {
 
 const empty: BrandRow = {
   agent_name: "", agency_name: "", phone_e164: "", whatsapp_e164: "",
-  email: "", logo_url: "", accent_hex: "#B8924A", slug: "", bio: "", website_url: "",
+  email: "", logo_url: "", accent_hex: "#D4420C", slug: "", bio: "", website_url: "",
 };
 
 const Field = ({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) => (
@@ -64,7 +64,7 @@ const Brand = () => {
           whatsapp_e164: data.whatsapp_e164 || "",
           email: data.email || user.email || "",
           logo_url: data.logo_url || "",
-          accent_hex: data.accent_hex || "#B8924A",
+          accent_hex: data.accent_hex || "#D4420C",
           slug: data.slug || "",
           bio: data.bio || "",
           website_url: data.website_url || "",

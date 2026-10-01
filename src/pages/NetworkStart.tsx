@@ -175,7 +175,7 @@ export default function NetworkStart() {
             <aside className={`lg:sticky lg:top-24 ${preview === "idle" ? "" : "order-first lg:order-none"}`}>
               <p className="text-[12px] uppercase tracking-[0.14em] text-ink-muted mb-2">How buyers will see it</p>
               <div className="rounded-3xl bg-white border border-hairline overflow-hidden shadow-sm">
-                <div className="relative aspect-[4/3] bg-[#E9E4D8] grid place-items-center">
+                <div className="relative aspect-[4/3] bg-[#DFE0E2] grid place-items-center">
                   {preview === "loading" ? <Loader2 className="animate-spin text-ink-muted" /> : cover ? <img src={cover} alt="" className="absolute inset-0 w-full h-full object-cover" /> : <ImageOff className="text-ink-muted" />}
                   <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/95 text-[12px] font-semibold">New build</span>
                   {priceNum > 0 && <span className="absolute bottom-3 left-3 px-3 py-1.5 rounded-full bg-white text-[16px] font-display">{eur(priceNum)}</span>}
@@ -297,7 +297,7 @@ function Done({ result, draft, copy, copied, onPanel }: { result: any; draft: Dr
       <aside>
         <p className="text-[12px] uppercase tracking-[0.14em] text-ink-muted mb-2">Your listing</p>
         <div className="rounded-3xl bg-white border border-hairline overflow-hidden">
-          <div className="relative aspect-[4/3] bg-[#E9E4D8]">{(p?.image || draft.images[draft.cover]) && <img src={p?.image || draft.images[draft.cover]} alt="" className="absolute inset-0 w-full h-full object-cover" />}
+          <div className="relative aspect-[4/3] bg-[#DFE0E2]">{(p?.image || draft.images[draft.cover]) && <img src={p?.image || draft.images[draft.cover]} alt="" className="absolute inset-0 w-full h-full object-cover" />}
             <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-amber-400 text-[12px] font-semibold">{p?.status === "approved" ? "Live" : "In review"}</span></div>
           <div className="p-4"><p className="font-semibold">{p?.title || draft.title}</p><p className="text-[13px] text-ink-muted mt-1">{p?.price_eur ? eur(p.price_eur) + " · " : ""}{FLAG[p?.country || draft.country] || "🌍"} {p?.country || draft.country}</p></div>
         </div>

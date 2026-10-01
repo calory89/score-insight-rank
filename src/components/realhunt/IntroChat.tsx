@@ -30,7 +30,7 @@ export default function IntroChat({ id, compact = false }: { id: string; compact
       <div className={`flex flex-col gap-2 overflow-y-auto ${compact ? "max-h-[260px]" : "max-h-[420px]"}`}>
         {msgs.length === 0 && <p className="text-[13px] text-ink-muted">{t.role === "developer" ? "Write to the buyer here. They see it in their RealHunt inbox." : "Ask anything here. The developer sees it in their RealHunt panel."}</p>}
         {msgs.map((m) => (
-          <div key={m.id} className={`max-w-[85%] rounded-2xl px-3 py-2 text-[14px] whitespace-pre-wrap ${m.mine ? "self-end bg-ink text-paper" : "self-start bg-[#F3F0E8]"}`}>
+          <div key={m.id} className={`max-w-[85%] rounded-2xl px-3 py-2 text-[14px] whitespace-pre-wrap ${m.mine ? "self-end bg-ink text-paper" : "self-start bg-[#ECEDEF]"}`}>
             {!m.mine && <p className="text-[11px] opacity-70">{WHO[m.role] || m.role}</p>}
             {m.body}
             <p className="text-[10px] opacity-60 mt-0.5">{new Date(m.at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}</p>

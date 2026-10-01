@@ -73,7 +73,7 @@ const CaptureCard = () => {
     // invalid, and the card rendered transparent — white text on cream paper, i.e. invisible.
     // tailwind.config.ts now declares ink/paper/hairline, but this stays inline so the card can
     // never silently disappear again.
-    <div ref={ref} style={{ background: "linear-gradient(140deg,#16150F 0%,#232220 55%,#141414 100%)" }}
+    <div ref={ref} style={{ background: "linear-gradient(140deg,#111214 0%,#202123 55%,#141414 100%)" }}
       className="col-span-2 sm:col-span-1 relative rounded-2xl overflow-hidden min-h-[300px] sm:min-h-[360px] h-full text-white p-5 md:p-6 flex flex-col justify-between shadow-sm [content-visibility:auto]">
       <div>
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-[11px] font-medium"><Sparkles size={11} /> Free</span>

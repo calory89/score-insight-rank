@@ -110,7 +110,7 @@ export default function NetworkAdmin() {
         <section className="rounded-2xl bg-white border border-hairline p-5 md:p-6">
           <p className="text-[13px] text-ink-muted mb-3">Wizard steps: unique visitors in the last 30 days who accepted analytics cookies (Clarity shows everyone). The rest: all time.</p>
           <div className="flex flex-col gap-2">{steps.map(([t, n], i) => (
-            <div key={t} className="grid grid-cols-[210px_1fr_60px] items-center gap-3 text-[14px]"><span>{t}</span><span className="h-6 rounded-lg bg-[#F3F0E8] overflow-hidden"><span className="block h-full rounded-lg" style={{ width: `${Math.max(2, (n / max) * 100)}%`, background: i < 3 ? "#0EA5E9" : i < 6 ? "#16150F" : "#16A34A" }} /></span><b className="text-right tabular-nums">{n}</b></div>
+            <div key={t} className="grid grid-cols-[210px_1fr_60px] items-center gap-3 text-[14px]"><span>{t}</span><span className="h-6 rounded-lg bg-[#ECEDEF] overflow-hidden"><span className="block h-full rounded-lg" style={{ width: `${Math.max(2, (n / max) * 100)}%`, background: i < 3 ? "#D4420C" : i < 6 ? "#111214" : "#16A34A" }} /></span><b className="text-right tabular-nums">{n}</b></div>
           ))}</div>
           <p className="text-[13px] text-ink-muted mt-4">Commission earned so far: <b className="text-ink">{eur(Number(d.commission_eur || 0))}</b> · verified developers: {d.verified} · projects waiting for review: <b className="text-ink">{d.projects_pending}</b> (<Link to="/hunt/admin" className="underline">moderation</Link>)</p>
         </section>
@@ -129,7 +129,7 @@ export default function NetworkAdmin() {
           <h2 className="font-display text-[22px]">Developer projects to approve ({pend.length})</h2>
           {pend.length === 0 ? <p className="text-ink-muted text-[14px] mt-1">None right now.</p> : <div className="mt-3 grid md:grid-cols-2 gap-3">{pend.map((p: any) => (
             <div key={p.id} className="rounded-2xl bg-white border border-hairline overflow-hidden flex">
-              <div className="w-[120px] shrink-0 bg-[#E9E4D8]">{p.image && <img src={p.image} alt="" className="w-full h-full object-cover" />}</div>
+              <div className="w-[120px] shrink-0 bg-[#DFE0E2]">{p.image && <img src={p.image} alt="" className="w-full h-full object-cover" />}</div>
               <div className="p-3 text-[13px] flex-1 min-w-0"><p className="font-semibold text-[14px] truncate">{p.title}</p><p className="text-ink-muted">{p.company}{p.signed ? " · signed" : " · not signed"} · {p.location || p.country} · {p.price_eur ? eur(p.price_eur) : "no price"} · {p.images} photos</p>
                 {p.source_url && <a href={p.source_url} target="_blank" rel="noreferrer" className="underline inline-flex items-center gap-1">their page <ExternalLink size={11} /></a>}
                 <div className="mt-2 flex gap-2"><button onClick={() => moderate(p.id, true)} className="rh-btn-primary !py-1.5 !px-3 !text-[13px] inline-flex items-center gap-1"><Check size={14} /> Approve</button><button onClick={() => moderate(p.id, false)} className="px-3 py-1.5 rounded-full border border-hairline text-[13px] inline-flex items-center gap-1"><X size={14} /> Reject</button><Link to={`/deal/${p.slug}`} className="text-[12px] underline self-center">preview</Link></div></div>

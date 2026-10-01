@@ -54,7 +54,7 @@ export default function Reel({ images, title, price, place, company, cta = "Clai
     const draw = () => {
       const t = (performance.now() - t0) / 1000;
       setPct(Math.min(100, Math.round((t / SECONDS) * 100)));
-      ctx.fillStyle = "#16150F"; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = "#111214"; ctx.fillRect(0, 0, W, H);
       if (t < slides) {
         const i = Math.min(order.length - 1, Math.floor(t / per)); const local = (t - i * per) / per;
         const im = order[i]; const z = 1.04 + 0.12 * local; const dir = i % 2 ? -1 : 1;
@@ -70,7 +70,7 @@ export default function Reel({ images, title, price, place, company, cta = "Clai
         if (price) { ctx.font = "700 64px Helvetica, Arial, sans-serif"; ctx.fillStyle = "#FDE68A"; ctx.fillText("from " + eur(price), 44, H - 140); }
         if (company) { ctx.font = "500 26px Helvetica, Arial, sans-serif"; ctx.fillStyle = "rgba(255,255,255,0.85)"; ctx.fillText(("by " + company).slice(0, 44), 44, H - 84); }
       } else {
-        ctx.fillStyle = "#16150F"; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = "#111214"; ctx.fillRect(0, 0, W, H);
         ctx.fillStyle = "#fff"; ctx.textAlign = "center";
         ctx.font = "700 58px Helvetica, Arial, sans-serif"; wrap(ctx, title, W - 120).forEach((l, k) => ctx.fillText(l, W / 2, 470 + k * 66));
         if (price) { ctx.font = "700 72px Helvetica, Arial, sans-serif"; ctx.fillStyle = "#FDE68A"; ctx.fillText("from " + eur(price), W / 2, 740); }
@@ -89,7 +89,7 @@ export default function Reel({ images, title, price, place, company, cta = "Clai
       <p className="text-[13px] text-ink-muted mt-1">A vertical video of this listing for Instagram, TikTok or WhatsApp, made from your photos. It takes 30 seconds to record; keep this tab open.</p>
       <canvas ref={canvas} className={state === "rec" ? "mt-3 w-full max-w-[220px] rounded-xl bg-ink" : "hidden"} />
       {state === "done" && url && <video src={url} controls playsInline className="mt-3 w-full max-w-[220px] rounded-xl bg-ink" />}
-      {state === "rec" && <div className="mt-2 h-2 rounded-full bg-[#F3F0E8] overflow-hidden max-w-[220px]"><div className="h-full bg-ink" style={{ width: pct + "%" }} /></div>}
+      {state === "rec" && <div className="mt-2 h-2 rounded-full bg-[#ECEDEF] overflow-hidden max-w-[220px]"><div className="h-full bg-ink" style={{ width: pct + "%" }} /></div>}
       {state === "error" && <p className="text-[13px] text-red-700 mt-2">{err}</p>}
       <div className="mt-3 flex flex-wrap gap-2">
         {(state === "idle" || state === "error") && <button onClick={make} className="rh-btn-primary !py-2 !px-4 !text-[14px] inline-flex items-center gap-2"><Film size={15} /> Make the video</button>}

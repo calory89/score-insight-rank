@@ -65,6 +65,13 @@ def wrap(draw, text, font, maxw, lines=2):
         out[-1] += "…"
     return out
 
+BRAND = (212, 66, 12)  # RealHunt orange, strong shade (#D4420C)
+_LOGO = {}
+def logo(size):
+    if size not in _LOGO:
+        _LOGO[size] = Image.open(os.path.join(ROOT, "scripts", "logo-mark-128.png")).convert("RGBA").resize((size, size), Image.LANCZOS)
+    return _LOGO[size]
+
 def card(d, dest):
     img = fetch_img(d["image_urls"][0])
     base = cover(img, W, H)
@@ -72,45 +79,45 @@ def card(d, dest):
     for y in range(H):
         shade.putpixel((0, y), int(max(0, (y - 220) / (H - 220)) ** 1.3 * 235))
     shade = shade.resize((W, H))
-    base = Image.composite(Image.new("RGB", (W, H), (14, 13, 10)), base, shade)
+    base = Image.composite(Image.new("RGB", (W, H), (12, 13, 15)), base, shade)
     dr = ImageDraw.Draw(base)
     fb = ImageFont.truetype(os.path.join(FONT, "Poppins-Bold.ttf"), 92)
     fm = ImageFont.truetype(os.path.join(FONT, "Poppins-Medium.ttf"), 40)
     fr = ImageFont.truetype(os.path.join(FONT, "Poppins-Regular.ttf"), 28)
     fs = ImageFont.truetype(os.path.join(FONT, "Poppins-Bold.ttf"), 30)
-    # brand pill
-    dr.rounded_rectangle((48, 44, 318, 104), radius=30, fill=(255, 255, 255))
-    dr.rounded_rectangle((62, 54, 102, 94), radius=10, fill=(20, 20, 20))
-    dr.line([(71, 80), (82, 68), (93, 80)], fill=(255, 255, 255), width=5)
-    dr.ellipse((78, 81, 86, 89), fill=(14, 165, 233))
-    dr.text((114, 55), "RealHunt", font=fs, fill=(20, 20, 20))
+    # brand pill (1-oct-2026 design: orange house-and-arrow mark, white pill)
+    dr.rounded_rectangle((48, 44, 296, 108), radius=32, fill=(255, 255, 255))
+    base.paste(logo(44), (58, 54), logo(44))
+    dr.text((114, 55), "RealHunt", font=fs, fill=(17, 18, 20))
     y = H - 60
     loc = (d.get("location_name") or d.get("country") or "")
     meta = loc + (f"  ·  {d['sqm']} m²" if d.get("sqm") else "")
-    dr.text((56, y - 34), meta, font=fr, fill=(235, 232, 224))
+    dr.text((56, y - 34), meta, font=fr, fill=(236, 237, 238))
     import re
     title = re.sub(r"\s+for\s+€[\d,.]+$", "", nice_title(d))
     lines = wrap(dr, title, fm, W - 112, 2)
     y2 = y - 44 - 52 * len(lines)
     for i, ln in enumerate(lines): dr.text((56, y2 + i * 52), ln, font=fm, fill=(255, 255, 255))
-    dr.text((52, y2 - 118), money(d["price_eur"]), font=fb, fill=(255, 255, 255))
+    price = money(d["price_eur"])
+    pw = dr.textlength(price, font=fb)
+    dr.rounded_rectangle((44, y2 - 132, 44 + pw + 40, y2 - 14), radius=22, fill=BRAND)
+    dr.text((64, y2 - 128), price, font=fb, fill=(255, 255, 255))
     base.save(dest, "JPEG", quality=78, optimize=True, progressive=True)
 
 def default_card(rows):
     top = rows[:3]
-    base = Image.new("RGB", (W, H), (250, 248, 243))
+    base = Image.new("RGB", (W, H), (255, 255, 255))
     for i, d in enumerate(top):
-        try: base.paste(cover(fetch_img(d["image_urls"][0]), 400, 380), (i * 400, 250))
+        try: base.paste(cover(fetch_img(d["image_urls"][0]), 392, 352), (8 + i * 397, 270))
         except Exception: pass
     dr = ImageDraw.Draw(base)
     fb = ImageFont.truetype(os.path.join(FONT, "Poppins-Bold.ttf"), 64)
     fm = ImageFont.truetype(os.path.join(FONT, "Poppins-Medium.ttf"), 32)
-    dr.rounded_rectangle((56, 50, 104, 98), radius=12, fill=(20, 20, 20))
-    dr.line([(67, 81), (80, 67), (93, 81)], fill=(255, 255, 255), width=6)
-    dr.ellipse((75, 83, 85, 93), fill=(14, 165, 233))
-    dr.text((118, 52), "RealHunt", font=fm, fill=(20, 20, 20))
-    dr.text((56, 110), "Real homes under €100,000.", font=fb, fill=(22, 21, 15))
-    dr.text((56, 186), "Found by people. Ranked by your votes.", font=fm, fill=(58, 56, 47))
+    base.paste(logo(52), (56, 46), logo(52))
+    dr.text((122, 52), "RealHunt", font=fm, fill=(17, 18, 20))
+    dr.text((56, 114), "Real homes under €100,000.", font=fb, fill=(17, 18, 20))
+    dr.text((56, 196), "Found by people. Ranked by your votes.", font=fm, fill=(64, 68, 76))
+    dr.rectangle((0, H - 8, W, H), fill=BRAND)
     base.save(os.path.join(ROOT, "public", "og-default-100k.jpg"), "JPEG", quality=82, optimize=True)
 
 def main():
@@ -128,7 +135,7 @@ def main():
         t = nice_title(d); p = money(d["price_eur"]); loc = d.get("location_name") or d.get("country") or ""
         title = f"{p} · {t}" if p not in t else t
         desc = f"{t}{'' if p in t else ' for ' + p}. {loc}. Voted by people on RealHunt, where every home costs under €100,000."
-        img = f"{SITE}/og/deal/{d['slug']}.jpg" if os.path.exists(os.path.join(outdir, f"{d['slug']}.jpg")) else (SITE + d["image_urls"][0] if d["image_urls"][0].startswith("/") else d["image_urls"][0])
+        img = f"{SITE}/og/deal/{d['slug']}.jpg?v=2" if os.path.exists(os.path.join(outdir, f"{d['slug']}.jpg")) else (SITE + d["image_urls"][0] if d["image_urls"][0].startswith("/") else d["image_urls"][0])
         meta.append({"slug": d["slug"], "title": title, "desc": desc, "image": img, "country": d.get("country")})
     os.makedirs(os.path.join(ROOT, "src", "data"), exist_ok=True)
     json.dump(meta, open(os.path.join(ROOT, "src", "data", "deal-meta.json"), "w"), ensure_ascii=False, indent=0)

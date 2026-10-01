@@ -78,7 +78,7 @@ export default function HeroLiveDemo({ runKey }: { runKey: number }) {
         <div className="md:col-span-4">
           <div
             className="font-display tabular leading-none"
-            style={{ color: "#B8893B", fontSize: 92 }}
+            style={{ color: "#D4420C", fontSize: 92 }}
           >
             {score.toFixed(1)}
           </div>
@@ -94,7 +94,7 @@ export default function HeroLiveDemo({ runKey }: { runKey: number }) {
                 <div className="col-span-3 text-[11px] uppercase tracking-wider text-ink-soft">
                   {d.l}
                 </div>
-                <div className="col-span-7 h-3 rounded-full bg-[#E8E1D0] overflow-hidden ring-1 ring-black/[0.04]">
+                <div className="col-span-7 h-3 rounded-full bg-[#DADBDE] overflow-hidden ring-1 ring-black/[0.04]">
                   <motion.div
                     className="h-full rounded-full shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]"
                     initial={{ width: "0%" }}

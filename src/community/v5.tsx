@@ -38,7 +38,7 @@ export function useTheme() {
   useEffect(() => {
     document.documentElement.classList.toggle("rh-dark", dark);
     const m = document.querySelector('meta[name="theme-color"]');
-    if (m) m.setAttribute("content", dark ? "#0E0E0C" : "#FAF8F3");
+    if (m) m.setAttribute("content", dark ? "#0C0D0E" : "#FFFFFF");
   }, [dark]);
   return dark;
 }

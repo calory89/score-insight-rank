@@ -18,8 +18,8 @@
 .rh-sticky-filters .rh-active-filters:empty { display: none; }
 
 /* back to top */
-.rh-to-top { position: fixed; right: 18px; bottom: 24px; z-index: 80; width: 46px; height: 46px; border-radius: 50%; border: 1px solid #E2DDD0; background: #fff; color: #16150F; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(0,0,0,.12); cursor: pointer; }
-.hunt.is-dark .rh-to-top { background: #1B1A17; color: #F2EFE8; border-color: #2F2D28; }
+.rh-to-top { position: fixed; right: 18px; bottom: 24px; z-index: 80; width: 46px; height: 46px; border-radius: 50%; border: 1px solid #D7D8DB; background: #fff; color: #111214; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 20px rgba(0,0,0,.12); cursor: pointer; }
+.hunt.is-dark .rh-to-top { background: #17181A; color: #ECEDEE; border-color: #292B2E; }
 
 /* hero a bit tighter on laptops so the first homes start higher */
 .hv-home .hv-hero { padding-top: 22px; }

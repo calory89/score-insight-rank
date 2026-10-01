@@ -6,7 +6,7 @@ const RHFooter = () => (
     <div className="max-w-[1140px] mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="flex flex-wrap items-center gap-3">
         <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-hairline bg-surface text-[12px] text-ink-muted">
-          <FileSearch size={13} className="text-[#B8893B]" />
+          <FileSearch size={13} className="text-[#D4420C]" />
           No black box — every number sourced
         </span>
         <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-hairline bg-surface text-[12px] text-ink-muted">

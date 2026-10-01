@@ -37,7 +37,7 @@ export default function DevExtras() {
         <p className="font-semibold inline-flex items-center gap-2"><Trophy size={17} /> Your rank in your country</p>
         {rank === null ? <p className="text-[13px] text-ink-muted mt-2">Loading…</p> : rank.length === 0 ? <p className="text-[13px] text-ink-muted mt-2">Once a project is live you see here where it ranks against every home in its country, and how many votes you need to climb.</p> : (
           <ul className="mt-3 flex flex-col gap-2 text-[14px]">{rank.map((r) => (
-            <li key={r.slug} className="rounded-xl bg-[#F6F3EC] p-3"><b>#{r.rank}</b> of {r.of} homes in {r.country} · <span className="text-ink-muted">#{r.rank_new} of {r.of_new} new builds</span>
+            <li key={r.slug} className="rounded-xl bg-[#F0F1F2] p-3"><b>#{r.rank}</b> of {r.of} homes in {r.country} · <span className="text-ink-muted">#{r.rank_new} of {r.of_new} new builds</span>
               <p className="text-[13px] text-ink-muted">{r.title} · {r.views30} views in 30 days{r.gap != null && r.gap > 0 ? ` · ${r.gap} more points (votes, or saves ×2) to move up` : r.rank === 1 ? " · you are #1" : ""}</p></li>
           ))}</ul>
         )}
@@ -61,7 +61,7 @@ export default function DevExtras() {
         <p className="font-semibold inline-flex items-center gap-2"><Code2 size={17} /> Show your RealHunt projects on your website</p>
         <p className="text-[13px] text-ink-muted mt-1">Paste this where you want the cards. It shows your live projects with a “View on RealHunt” button, your rating and badges, and updates by itself.</p>
         {slug ? <>
-          <pre className="mt-3 text-[12px] bg-[#16150F] text-[#F4F2EC] rounded-xl p-3 overflow-x-auto whitespace-pre-wrap">{snippet}</pre>
+          <pre className="mt-3 text-[12px] bg-[#111214] text-[#EFF0F1] rounded-xl p-3 overflow-x-auto whitespace-pre-wrap">{snippet}</pre>
           <button onClick={() => { navigator.clipboard.writeText(snippet); setCopied(true); setTimeout(() => setCopied(false), 1500); }} className="mt-2 px-3 py-1.5 rounded-full border border-hairline text-[13px] inline-flex items-center gap-1">{copied ? <Check size={13} /> : <Copy size={13} />} {copied ? "Copied" : "Copy code"}</button>
         </> : <p className="text-[13px] text-ink-muted mt-3">Available once your developer page exists.</p>}
       </section>

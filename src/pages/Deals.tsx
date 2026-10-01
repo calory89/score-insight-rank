@@ -43,7 +43,7 @@ const Chip = ({
     onClick={onClick}
     className={`text-[13px] rounded-full px-3.5 py-2 border transition-colors ${
       active
-        ? "bg-[#16150F] text-white border-[#16150F]"
+        ? "bg-[#111214] text-white border-[#111214]"
         : "bg-surface text-ink-muted border-hairline hover:border-hairline-strong"
     }`}
   >

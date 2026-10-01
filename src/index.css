@@ -7,31 +7,31 @@
 /* ============================================================
    RealHunt — Paper, Notarial, Light. No dark mode.
    Colors are exact HEX from spec, mapped to HSL for shadcn.
-   --bg #FAFAF7 · --surface #FFFFFF · --surface-2 #F4F2EC
+   --bg #FFFFFF · --surface #FFFFFF · --surface-2 #EFF0F1
    --ink #0F1115 · --ink-muted #5C6271 · --ink-soft #8C92A0
-   --accent #B8924A (notarial gold) · --good #1F8A4C · --warn #B57700 · --bad #B23A2E
+   --accent #D4420C (RealHunt orange) · --good #1F8A4C · --warn #B57700 · --bad #B23A2E
    ============================================================ */
 
 @layer base {
   :root {
     /* Raw RH brand vars (HEX, used inline where needed) */
-    --rh-bg: #FAF8F3;
+    --rh-bg: #FFFFFF;
     --rh-surface: #FFFFFF;
-    --rh-surface-2: #F4F0E6;
-    --rh-ink: #16150F;
-    --rh-ink-muted: #3A382F;
-    --rh-ink-soft: #8A8678;
-    --rh-accent: #B8893B;
-    --rh-accent-soft: #d4ad6b;
+    --rh-surface-2: #ECEDEE;
+    --rh-ink: #111214;
+    --rh-ink-muted: #313338;
+    --rh-ink-soft: #797E89;
+    --rh-accent: #D4420C;
+    --rh-accent-soft: #ff8a5c;
     --rh-good: #1E6B4F;
     --rh-warn: #B7791F;
     --rh-bad: #B23A3A;
-    --rh-hairline: #ECE7DC;
+    --rh-hairline: #E2E3E6;
     --rh-hairline-strong: rgba(22, 21, 15, 0.18);
     --rh-shadow-soft: 0 8px 30px rgba(20, 18, 10, 0.06);
 
     /* shadcn HSL tokens (mapped to RH palette) */
-    --background: 60 20% 98%;          /* #FAFAF7 */
+    --background: 0 0% 100%;          /* #FFFFFF */
     --foreground: 222 17% 8%;          /* #0F1115 */
 
     --card: 0 0% 100%;
@@ -40,16 +40,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 17% 8%;
 
-    --primary: 36 45% 51%;             /* #B8924A notarial gold */
-    --primary-foreground: 222 17% 8%;
+    --primary: 16 89% 44%;             /* #D4420C RealHunt orange */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 45 22% 94%;           /* #F4F2EC */
+    --secondary: 220 9% 95%;           /* #EFF0F1 */
     --secondary-foreground: 222 17% 8%;
 
-    --muted: 45 22% 94%;
+    --muted: 220 9% 95%;
     --muted-foreground: 222 9% 40%;    /* #5C6271 */
 
-    --accent: 36 45% 51%;
+    --accent: 220 9% 95%;
     --accent-foreground: 222 17% 8%;
 
     --destructive: 6 56% 44%;          /* #B23A2E */
@@ -57,7 +57,7 @@
 
     --border: 222 17% 92%;
     --input: 222 17% 92%;
-    --ring: 36 45% 51%;
+    --ring: 16 89% 44%;
 
     --radius: 0.75rem;
 
@@ -69,38 +69,38 @@
     --score-bad: 6 56% 44%;            /* bad */
 
     /* Sidebar (kept for shadcn sidebar primitive) */
-    --sidebar-background: 60 20% 98%;
+    --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 17% 8%;
-    --sidebar-primary: 36 45% 51%;
+    --sidebar-primary: 16 89% 44%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 45 22% 94%;
+    --sidebar-accent: 220 9% 95%;
     --sidebar-accent-foreground: 222 17% 8%;
     --sidebar-border: 222 17% 92%;
-    --sidebar-ring: 36 45% 51%;
+    --sidebar-ring: 16 89% 44%;
   }
 
   /* Dark mode is forbidden in this product. .dark is intentionally a no-op
      so any stray class doesn't flip the palette. */
   .dark {
-    --background: 60 20% 98%;
+    --background: 0 0% 100%;
     --foreground: 222 17% 8%;
     --card: 0 0% 100%;
     --card-foreground: 222 17% 8%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 17% 8%;
-    --primary: 36 45% 51%;
-    --primary-foreground: 222 17% 8%;
-    --secondary: 45 22% 94%;
+    --primary: 16 89% 44%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 9% 95%;
     --secondary-foreground: 222 17% 8%;
-    --muted: 45 22% 94%;
+    --muted: 220 9% 95%;
     --muted-foreground: 222 9% 40%;
-    --accent: 36 45% 51%;
+    --accent: 220 9% 95%;
     --accent-foreground: 222 17% 8%;
     --destructive: 6 56% 44%;
     --destructive-foreground: 0 0% 100%;
     --border: 222 17% 92%;
     --input: 222 17% 92%;
-    --ring: 36 45% 51%;
+    --ring: 16 89% 44%;
   }
 }
 
@@ -208,7 +208,7 @@
   }
 
   .rh-btn-primary {
-    background-color: #16150F;
+    background-color: #111214;
     color: #FFFFFF;
     border-radius: 14px;
     padding: 16px 24px;
@@ -222,9 +222,9 @@
     gap: 8px;
     box-shadow: 0 6px 20px rgba(20, 18, 10, 0.18);
   }
-  .rh-btn-primary:hover { background-color: #2A2820; box-shadow: 0 10px 28px rgba(20, 18, 10, 0.28); }
+  .rh-btn-primary:hover { background-color: #232427; box-shadow: 0 10px 28px rgba(20, 18, 10, 0.28); }
   .rh-btn-primary:active { transform: translateY(1px); }
-  .rh-btn-primary:disabled { background-color: #2A2820; color: rgba(255,255,255,0.7); cursor: not-allowed; box-shadow: 0 6px 20px rgba(20, 18, 10, 0.18); }
+  .rh-btn-primary:disabled { background-color: #232427; color: rgba(255,255,255,0.7); cursor: not-allowed; box-shadow: 0 6px 20px rgba(20, 18, 10, 0.18); }
 
   .rh-btn-secondary {
     background-color: transparent;
@@ -281,12 +281,12 @@
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    background: #FAF8F3 !important;
-    color: #5C5848 !important;
+    background: #FFFFFF !important;
+    color: #4D5057 !important;
     border-top: 1px solid rgba(22,21,15,0.12) !important;
     z-index: 9999;
   }
-  .rh-print-footer strong { color: #16150F !important; }
+  .rh-print-footer strong { color: #111214 !important; }
 }
 
 /* Hero Analyze scanning bar */

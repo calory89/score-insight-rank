@@ -30,7 +30,7 @@ const MapPage = () => {
         g.addLayer(m);
       });
       map.addLayer(g);
-      const eb = L.marker([-9.4, 119.6], { icon: L.divIcon({ className: "", html: `<div style="background:#0ea5e9;color:#fff;font:600 12px Inter,system-ui;padding:4px 8px;border-radius:999px;white-space:nowrap">€11,500 beach cabin</div>`, iconAnchor: [50, 12] }) });
+      const eb = L.marker([-9.4, 119.6], { icon: L.divIcon({ className: "", html: `<div style="background:#d4420c;color:#fff;font:600 12px Inter,system-ui;padding:4px 8px;border-radius:999px;white-space:nowrap">€11,500 beach cabin</div>`, iconAnchor: [50, 12] }) });
       eb.on("click", () => nav("/ecobeachcity")); eb.addTo(map);
     });
     return () => { try { map && map.remove(); } catch {} };

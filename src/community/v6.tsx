@@ -17,7 +17,7 @@ import COLORS from "@/data/card-colors.json";
 
 const MiniMap = lazy(() => import("./minimap"));
 const num = (v: number = 0) => new Intl.NumberFormat("en").format(v);
-export const cardColor = (slug: string) => (COLORS as Record<string, string>)[slug] || "#E9E4D8";
+export const cardColor = (slug: string) => (COLORS as Record<string, string>)[slug] || "#DFE0E2";
 
 // ---------------------------------------------------------------- 12: confetti and haptics
 export function buzz(ms = 12) { try { navigator.vibrate?.(ms); } catch { /* ignore */ } }
@@ -25,7 +25,7 @@ export function confetti(n = 70) {
   if (typeof document === "undefined" || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
   const box = document.createElement("div");
   box.className = "hv-confetti";
-  const colors = ["#FF5C7A", "#0EA5E9", "#FACC15", "#16A34A", "#F97316", "#A855F7"];
+  const colors = ["#FF5C7A", "#D4420C", "#FACC15", "#16A34A", "#F97316", "#A855F7"];
   for (let i = 0; i < n; i++) {
     const s = document.createElement("i");
     s.style.left = Math.random() * 100 + "vw";
@@ -97,7 +97,7 @@ export function Vibes({ active, onPick, rows=[] }: { rows?: Row[]; active: strin
         const on = active === v.k;
         return (
           <button key={v.k} aria-pressed={on} onClick={() => onPick(on ? null : v)} className={on ? "is-on" : ""}>
-            <span className="hv-vibe-img" style={{ backgroundColor: "#E9E4D8" }}>{img && <img src={img} alt="" loading="lazy" />}</span>
+            <span className="hv-vibe-img" style={{ backgroundColor: "#DFE0E2" }}>{img && <img src={img} alt="" loading="lazy" />}</span>
             <span>{v.label}</span>
           </button>
         );
@@ -381,10 +381,10 @@ export function EmptyState({ title, text, action }: { title: string; text: strin
       <svg viewBox="0 0 220 140" aria-hidden="true" className="hv-empty-art">
         <circle cx="170" cy="36" r="18" fill="#FACC15" opacity=".85" />
         <path d="M0 118 Q55 92 110 112 T220 104 V140 H0Z" fill="#CFE8D8" />
-        <path d="M60 116 V76 L92 50 L124 76 V116Z" fill="#fff" stroke="#16150F" strokeWidth="3" strokeLinejoin="round" />
-        <path d="M52 80 L92 44 L132 80" fill="none" stroke="#16150F" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-        <rect x="84" y="90" width="16" height="26" rx="2" fill="#0EA5E9" />
-        <circle cx="150" cy="100" r="11" fill="none" stroke="#16150F" strokeWidth="3" /><path d="M158 108 L168 118" stroke="#16150F" strokeWidth="4" strokeLinecap="round" />
+        <path d="M60 116 V76 L92 50 L124 76 V116Z" fill="#fff" stroke="#111214" strokeWidth="3" strokeLinejoin="round" />
+        <path d="M52 80 L92 44 L132 80" fill="none" stroke="#111214" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+        <rect x="84" y="90" width="16" height="26" rx="2" fill="#D4420C" />
+        <circle cx="150" cy="100" r="11" fill="none" stroke="#111214" strokeWidth="3" /><path d="M158 108 L168 118" stroke="#111214" strokeWidth="4" strokeLinecap="round" />
       </svg>
       <h3>{title}</h3>
       <p>{text}</p>

@@ -31,6 +31,7 @@ import { TopMethodPage, AboutPage } from "./topTrustUI";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
+import { LogoMark } from "@/components/realhunt/Logo";
 import { Card4, CardSkeleton, Freshness, TabBar, DetailBar, HeartVote, ShareButton, SaveHeart, remember, rowCache, takeDetail, prefetchDetail, preloadImages } from "./v4";
 import { bumpIx, FLAG as FLAG_ } from "@/lib/rh";
 import { bumpStat } from "./v4";
@@ -72,6 +73,7 @@ import {
 import "./community.css";
 import "./buyer-tools.css";
 import "./ux-oct.css";
+import "./brand-oct.css";
 // Imported titles often repeat the price ("€35,000 · Your own home") right under the big price, or
 // say nothing at all ("Property - Japan"). Show something a person would actually write.
 function cleanTitle(d: Pick<Deal, "title" | "location_name" | "country" | "sqm">) {
@@ -194,7 +196,7 @@ function Shell({ children }: { children: ReactNode }) {
       <div className={"hunt has-tabbar" + (dark ? " is-dark" : "")}>
         <header className="hunt-header">
           <Link to="/" className="hunt-brand">
-            <svg width="28" height="28" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#141414" /><path d="M14 35 L32 17 L50 35" fill="none" stroke="#FFFFFF" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" /><circle cx="32" cy="43.5" r="6.5" fill="#0EA5E9" /></svg>RealHunt
+            <LogoMark />RealHunt
           </Link>
           <nav aria-label="Main navigation">
             <Link to="/top" className="hunt-browse hunt-top100"><Trophy size={16} /> Top 100</Link>
@@ -208,6 +210,7 @@ function Shell({ children }: { children: ReactNode }) {
             <NotifBell />
             <InboxLink />
             <span className="hv-theme-head"><ThemeButton /></span>
+            <LangSwitch compact />
             {user ? (
               <Link to="/hunt/mine" className="hunt-account">
                 {t("My submissions")}
@@ -550,12 +553,12 @@ function Card({
 }
 function SponsoredCard() {
   return (
-    <article className="hunt-card hunt-sponsored" aria-label="Sponsored: Eco Beach City, Sumba">
+    <article className="hunt-card hunt-sponsored" aria-label="Our founder's project: Eco Beach City, Sumba">
       <div className="hunt-card-photo">
         <Link to="/ecobeachcity" className="hunt-media">
           <img src={EBC.image_urls![0]} alt="Eco Beach City cabin in Sumba" loading="lazy" />
         </Link>
-        <span className="hunt-sponsored-label">Sponsored</span>
+        <span className="hunt-sponsored-label" title="Eco Beach City is developed by RealHunt's founder. It never takes part in the rankings.">Our founder's project</span>
       </div>
       <div className="hunt-card-body">
         <div className="hunt-card-location">Indonesia <span>· Beach</span></div>
@@ -922,7 +925,7 @@ function Detail() {
   if (!d) return <Loading />;
   const listing = (d.has_source || safeUrl(d.source_url)) ? (
     <OriginalListingLink href={d.source_url || undefined} className="hunt-primary" target="_blank" rel="noopener noreferrer">
-      {t(user ? "View listing" : "View listing · free account")} <ArrowUpRight size={17} />
+      {t(user || d.source_url ? "View listing" : "View listing · free account")} <ArrowUpRight size={17} />
     </OriginalListingLink>
   ) : null;
   return (

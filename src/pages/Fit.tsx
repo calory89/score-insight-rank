@@ -246,7 +246,7 @@ const Fit = () => {
   return (
     <div className="min-h-screen bg-paper text-ink pb-20 lg:pb-0">
       <style>{`
-        .rh-range{-webkit-appearance:none;appearance:none;height:2px;background:#e6e6e3;border-radius:2px;outline:none}
+        .rh-range{-webkit-appearance:none;appearance:none;height:2px;background:#e3e4e6;border-radius:2px;outline:none}
         .rh-range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:currentColor;cursor:pointer;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.25)}
         .rh-range::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:currentColor;cursor:pointer;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.25)}
         .rh-range:focus-visible{box-shadow:0 0 0 3px rgba(0,0,0,.15)}

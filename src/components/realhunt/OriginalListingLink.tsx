@@ -4,7 +4,8 @@ import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthModal from "./AuthModal";
 
-// Anonymous visitors never receive an outbound anchor, including via context menus.
+// Anonymous visitors only get an outbound anchor when the server sends the URL (homes from public
+// portals like Fotocasa, 1-oct-2026); otherwise the button asks for a free account.
 export default function OriginalListingLink({ href, children, className, onClick, returnTo, ...props }: ComponentProps<"a"> & { returnTo?: string }) {
   const { user, loading } = useAuth();
   const route = useLocation();
@@ -21,7 +22,7 @@ export default function OriginalListingLink({ href, children, className, onClick
       }
     } catch { /* storage blocked */ }
   }, [user?.id]);
-  if (user && href && /^https?:\/\//i.test(href)) {
+  if (href && /^https?:\/\//i.test(href)) {
     return <a {...props} href={href} className={(className || "") + (fresh ? " hunt-open-now" : "")} onClick={e=>{track("original_listing_opened",{meta:{source:"detail"}});onClick?.(e);}} target="_blank" rel="noopener noreferrer nofollow">{children}</a>;
   }
   return <>

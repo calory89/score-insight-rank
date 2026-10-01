@@ -21,27 +21,27 @@ export default {
       },
       colors: {
         rh: {
-          bg: "#FAF8F3",
+          bg: "#FFFFFF",
           surface: "#FFFFFF",
-          "surface-2": "#F4F0E6",
-          ink: "#16150F",
-          "ink-muted": "#3A382F",
-          "ink-soft": "#8A8678",
-          accent: "#B8893B",
-          "accent-soft": "#d4ad6b",
+          "surface-2": "#ECEDEE",
+          ink: "#111214",
+          "ink-muted": "#313338",
+          "ink-soft": "#797E89",
+          accent: "#D4420C",
+          "accent-soft": "#ff8a5c",
           good: "#1E6B4F",
           warn: "#B7791F",
           bad: "#B23A3A",
-          hairline: "#ECE7DC",
+          hairline: "#E2E3E6",
         },
         // Design tokens the RealHunt pages use as text-ink / bg-paper / border-hairline.
         // They also exist as flat hand-written utilities in index.css, but only declaring
         // them here makes the Tailwind variants resolve: bg-ink/60, from-ink, ring-ink/10,
         // text-paper, bg-hairline/50. Without this they silently compile to nothing, which
         // is how the email capture card ended up transparent (white text on cream paper).
-        ink: { DEFAULT: "#16150F", muted: "#3A382F", soft: "#8A8678" },
-        paper: "#FAF8F3",
-        hairline: { DEFAULT: "#ECE7DC", strong: "rgba(22, 21, 15, 0.18)" },
+        ink: { DEFAULT: "#111214", muted: "#313338", soft: "#797E89" },
+        paper: "#FFFFFF",
+        hairline: { DEFAULT: "#E2E3E6", strong: "rgba(22, 21, 15, 0.18)" },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

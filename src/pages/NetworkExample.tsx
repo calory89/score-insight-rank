@@ -24,7 +24,7 @@ export default function NetworkExample() {
 
         <div className="mt-8 grid lg:grid-cols-[1fr_380px] gap-8 items-start">
           <section className="rounded-3xl bg-white border border-hairline overflow-hidden">
-            <div className="relative aspect-[16/10] bg-[#E9E4D8]"><img src={PHOTOS[i]} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="relative aspect-[16/10] bg-[#DFE0E2]"><img src={PHOTOS[i]} alt="" className="absolute inset-0 w-full h-full object-cover" />
               <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/95 text-[12px] font-semibold">New build</span>
               <span className="absolute bottom-3 left-3 px-3 py-1.5 rounded-full bg-white text-[18px] font-display">from {eur(58000)}</span></div>
             <div className="flex gap-1.5 p-2 overflow-x-auto">{PHOTOS.map((p, k) => <button key={p} onClick={() => setI(k)} className={`shrink-0 rounded-lg overflow-hidden border-2 ${k === i ? "border-ink" : "border-transparent"}`}><img src={p.replace(".webp", "-s.webp")} alt="" className="w-20 h-14 object-cover" /></button>)}</div>
@@ -36,7 +36,7 @@ export default function NetworkExample() {
                 <div><p className="text-[12px] text-ink-muted">New build by</p><p className="font-semibold inline-flex items-center gap-1.5">Sample Developments <BadgeCheck size={15} className="text-sky-600" /></p></div>
               </div>
               <div className="mt-3 flex flex-wrap gap-2 text-[12px] font-semibold"><span className="px-2.5 py-1 rounded-full bg-sky-500/10 text-sky-700">Verified developer</span><span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-700">Replies in under 2 h</span><span className="px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-900">★ 4.8 (12)</span></div>
-              <div className="mt-4 rounded-2xl bg-[#F6F3EC] p-4">
+              <div className="mt-4 rounded-2xl bg-[#F0F1F2] p-4">
                 <p className="font-semibold inline-flex items-center gap-2"><CalendarClock size={16} /> Payment plan</p>
                 <p className="text-[14px] mt-1">30% to reserve · the rest over 24 months, 0% interest · ready Q4 2027</p>
                 <p className="text-[15px] mt-2">From <b>{eur(17400)}</b> to reserve, then about <b>{eur(1692)}</b>/month</p>

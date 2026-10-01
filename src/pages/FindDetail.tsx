@@ -86,7 +86,7 @@ const FindDetail = () => {
   useEffect(() => {
     if (!user || !f || !f.lat || !mapRef.current) return;
     let map: any;
-    loadLeaflet().then((L) => { if (!mapRef.current) return; map = L.map(mapRef.current, { scrollWheelZoom: false }).setView([f.lat, f.lng], 9); L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap" }).addTo(map); L.circle([f.lat, f.lng], { radius: 3000, color: "#0ea5e9", fillOpacity: 0.2 }).addTo(map); });
+    loadLeaflet().then((L) => { if (!mapRef.current) return; map = L.map(mapRef.current, { scrollWheelZoom: false }).setView([f.lat, f.lng], 9); L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap" }).addTo(map); L.circle([f.lat, f.lng], { radius: 3000, color: "#d4420c", fillOpacity: 0.2 }).addTo(map); });
     return () => { try { map && map.remove(); } catch {} };
   }, [user, f]);
 

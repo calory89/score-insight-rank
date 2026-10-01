@@ -54,7 +54,7 @@ export default function DevPublic() {
           <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {d.projects.map((p: any) => (
               <Link key={p.slug} to={`/deal/${encodeURIComponent(p.slug)}`} className="group">
-                <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-[#E9E4D8]">{p.image && <img src={p.image} alt={p.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition" loading="lazy" />}
+                <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-[#DFE0E2]">{p.image && <img src={p.image} alt={p.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition" loading="lazy" />}
                   {p.price_eur && <span className="absolute left-3 bottom-3 px-3 py-1 rounded-full bg-white font-display">{eur(p.price_eur)}</span>}</div>
                 <p className="mt-2 font-semibold">{p.title}</p>
                 <p className="text-[13px] text-ink-muted">{FLAG[p.country] || "🌍"} {p.location || p.country}</p>

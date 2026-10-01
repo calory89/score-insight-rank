@@ -168,7 +168,7 @@ const FeatureTile = ({
   body: string;
 }) => (
   <div className="rh-card">
-    <div className="w-10 h-10 rounded-xl bg-[#F4F0E6] flex items-center justify-center text-ink">
+    <div className="w-10 h-10 rounded-xl bg-[#ECEDEE] flex items-center justify-center text-ink">
       {icon}
     </div>
     <h3 className="font-display text-[22px] text-ink leading-tight mt-5">{title}</h3>
@@ -206,10 +206,10 @@ const PriceCard = ({
   const btnClass = highlight ? "rh-btn-primary mt-6" : "rh-btn-secondary mt-6 justify-center";
   return (
     <div
-      className={`rh-card flex flex-col h-full relative ${highlight ? "ring-2 ring-[#16150F] shadow-[0_14px_40px_rgba(20,18,10,0.12)]" : ""}`}
+      className={`rh-card flex flex-col h-full relative ${highlight ? "ring-2 ring-[#111214] shadow-[0_14px_40px_rgba(20,18,10,0.12)]" : ""}`}
     >
       {badge && (
-        <div className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-[#16150F] text-white text-[11px] font-medium tracking-wide uppercase">
+        <div className="absolute -top-3 left-6 px-3 py-1 rounded-full bg-[#111214] text-white text-[11px] font-medium tracking-wide uppercase">
           {badge}
         </div>
       )}
@@ -379,14 +379,14 @@ const IndexNew = () => {
       <section className="max-w-[1140px] mx-auto px-5 sm:px-6 pt-8 sm:pt-16 md:pt-24 pb-12 md:pb-16">
         <div className="max-w-[820px]">
           <div className="inline-flex items-center gap-2 text-[10px] sm:text-[11px] uppercase tracking-[0.2em] sm:tracking-[0.22em] text-ink-soft mb-4 sm:mb-6">
-            <span className="w-6 h-px bg-[#B8893B]" />
+            <span className="w-6 h-px bg-[#D4420C]" />
             The trust score for property deals
           </div>
           <h1
             className="font-display text-ink leading-[1.03] tracking-[-0.02em]"
             style={{ fontSize: "clamp(34px, 8.5vw, 72px)" }}
           >
-            Is this listing <span className="italic text-[#B8893B]">actually</span> a good deal?
+            Is this listing <span className="italic text-[#D4420C]">actually</span> a good deal?
           </h1>
           <p className="mt-4 sm:mt-6 text-ink-muted text-[16px] sm:text-[20px] leading-relaxed max-w-[640px]">
             Paste any listing. Forensic score in 10 seconds. Every number sourced.
@@ -481,7 +481,7 @@ const IndexNew = () => {
                 </div>
                 <div className="mt-6 flex items-end gap-6">
                   <div>
-                    <div className="font-display text-[88px] leading-none tabular" style={{ color: "#B8893B" }}>
+                    <div className="font-display text-[88px] leading-none tabular" style={{ color: "#D4420C" }}>
                       7.4
                     </div>
                     <div className="text-[12px] text-ink-soft mt-1 uppercase tracking-wider">RH Score / 10</div>
@@ -498,7 +498,7 @@ const IndexNew = () => {
                       <div className="col-span-3 text-[12px] uppercase tracking-wider text-ink-soft">
                         {d.l}
                       </div>
-                      <div className="col-span-7 h-3 rounded-full bg-[#E8E1D0] overflow-hidden ring-1 ring-black/[0.04]">
+                      <div className="col-span-7 h-3 rounded-full bg-[#DADBDE] overflow-hidden ring-1 ring-black/[0.04]">
                         <div
                           className="h-full rounded-full transition-all shadow-[inset_0_1px_0_rgba(255,255,255,0.18)]"
                           style={{
@@ -582,7 +582,7 @@ const IndexNew = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {TESTIMONIALS.map((t) => (
               <figure key={t.name} className="rh-card flex flex-col h-full">
-                <div className="flex items-center gap-1 text-[#B8893B]">
+                <div className="flex items-center gap-1 text-[#D4420C]">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Star key={i} size={14} fill="currentColor" stroke="none" />
                   ))}
@@ -591,7 +591,7 @@ const IndexNew = () => {
                   "{t.quote}"
                 </blockquote>
                 <figcaption className="mt-6 flex items-center gap-3 pt-5 hairline-t">
-                  <div className="w-10 h-10 rounded-full bg-[#16150F] text-white flex items-center justify-center font-display text-[16px]">
+                  <div className="w-10 h-10 rounded-full bg-[#111214] text-white flex items-center justify-center font-display text-[16px]">
                     {t.initial}
                   </div>
                   <div>
@@ -712,7 +712,7 @@ const IndexNew = () => {
       </Section>
 
       {/* FINAL CTA */}
-      <div className="border-t border-hairline bg-[#16150F]">
+      <div className="border-t border-hairline bg-[#111214]">
         <Section className="!py-20">
           <div className="max-w-[720px]">
             <h2 className="font-display text-[40px] md:text-[56px] text-white leading-[1.05] tracking-[-0.02em]">
