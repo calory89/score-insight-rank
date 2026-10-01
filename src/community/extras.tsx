@@ -311,19 +311,19 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
   const list = Object.entries(countries || {}).sort((a, b) => b[1] - a[1]);
   const active = !!(value.country || value.category || value.max_price || value.min_sqm || (value.sort && value.sort !== "rank"));
   const extra = [value.category, value.max_price, value.min_sqm, value.sort && value.sort !== "rank" ? value.sort : ""].filter(Boolean).length;
-  const [open, setOpen] = useState(() => (typeof window !== "undefined" && window.innerWidth > 700) || extra > 0);
+  const [open, setOpen] = useState(() => extra > 0);
   return (
     <div className={"hunt-filters" + (open ? " is-open" : "")}>
       <div className="hunt-chips" role="group" aria-label="Country">
         <button aria-pressed={!value.country} onClick={() => setDraft({ ...value, country: "" })}>{t("All countries")}</button>
         {list.map(([c, n]) => <button key={c} aria-pressed={value.country === c} onClick={() => setDraft({ ...value, country: c })}>{c === "Scandinavia" ? t("Scandinavia · region") : c} <small>{n}</small></button>)}
       </div>
-      <div className="rh-active-filters">{([ ["country",applied.country], ["category",applied.category], ["max_price",applied.max_price?money(applied.max_price):null], ["min_sqm",applied.min_sqm?`${applied.min_sqm} m²+`:null] ] as const).filter(([,v])=>v).map(([k,v])=><button key={k} aria-label={`${t("Remove")} ${v}`} onClick={()=>onChange({...applied,[k]:null})}>{v} ×</button>)}</div>
+      <div className="rh-active-filters">{([ ["category",applied.category], ["max_price",applied.max_price?money(applied.max_price):null], ["min_sqm",applied.min_sqm?`${applied.min_sqm} m²+`:null] ] as const).filter(([,v])=>v).map(([k,v])=><button key={k} aria-label={`${t("Remove")} ${v}`} onClick={()=>onChange({...applied,[k]:null})}>{v} ×</button>)}</div>
       <button type="button" className="hunt-link hunt-filter-toggle" aria-expanded={open} onClick={() => setOpen((o) => !o)}>{open ? t("Hide filters") : t("More filters")}{extra > 0 ? ` (${extra})` : ""}</button>
       {open && <div className="hunt-filter-row">
         <label><span>{t("Max price")}</span>
           <select value={value.max_price || ""} onChange={(e) => setDraft({ ...value, max_price: e.target.value ? Number(e.target.value) : null })}>
-            <option value="">€100,000</option>
+            <option value="">{t("Any price")}</option>
             {Array.from(new Set([...PRICE_CAPS.slice(0, -1),...(value.max_price?[value.max_price]:[])])).sort((a,b)=>a-b).map((p) => <option key={p} value={p}>{money(p)}</option>)}
           </select></label>
         <label><span>{t("Any type")}</span>
@@ -341,7 +341,6 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
             <option value="rank">{t("Top voted")}</option><option value="new">{t("Newest")}</option>
             <option value="price_asc">{t("Cheapest")}</option><option value="sqm">{t("Biggest")}</option>
           </select></label>
-        {active && <button className="hunt-link" onClick={() => onChange({ scope: value.scope })}>{t("Clear filters")}</button>}
       </div>}
     </div>
   );

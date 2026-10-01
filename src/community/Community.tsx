@@ -71,6 +71,7 @@ import {
 } from "./api";
 import "./community.css";
 import "./buyer-tools.css";
+import "./ux-oct.css";
 // Imported titles often repeat the price ("€35,000 · Your own home") right under the big price, or
 // say nothing at all ("Property - Japan"). Show something a person would actually write.
 function cleanTitle(d: Pick<Deal, "title" | "location_name" | "country" | "sqm">) {
@@ -671,6 +672,28 @@ function Home() {
     }
   }
   const loadRef = useRef(load); loadRef.current = load;
+  // 1-oct-2026 UX: a new filter, search or vibe takes the visitor straight to the first homes, just under
+  // the sticky filter bar, instead of leaving them mid-page (or at the footer while the list reloads).
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const shownKey = useRef(cacheKey);
+  const pendingScroll = useRef(false);
+  const toResults = (behavior: ScrollBehavior) => {
+    const el = resultsRef.current; if (!el) return;
+    const sticky = document.querySelector(".rh-sticky-filters") as HTMLElement | null;
+    const off = (sticky ? (parseFloat(getComputedStyle(sticky).top) || 0) + sticky.offsetHeight : 0) + 6;
+    const y = Math.max(0, el.getBoundingClientRect().top + window.scrollY - off);
+    if (Math.abs(window.scrollY - y) > 12) window.scrollTo({ top: y, behavior });
+  };
+  useEffect(() => {
+    if (shownKey.current === cacheKey) return;
+    shownKey.current = cacheKey;
+    pendingScroll.current = true;
+    requestAnimationFrame(() => toResults("auto"));
+  }, [cacheKey]);
+  // once the new homes are in, correct for anything above the list that changed height while loading
+  useEffect(() => { if (feed && pendingScroll.current) { pendingScroll.current = false; requestAnimationFrame(() => requestAnimationFrame(() => toResults("auto"))); } }, [feed]);
+  const [showTop, setShowTop] = useState(false);
+  useEffect(() => { const on = () => setShowTop(window.scrollY > 1600); on(); window.addEventListener("scroll", on, { passive: true }); return () => window.removeEventListener("scroll", on); }, []);
   useEffect(() => {
     const cached=storage.get<any>(cacheKey,null);
     if(cached && Date.now()-cached.at<300000) {seq.current++; freshPending.current=false; feedKey.current=cacheKey;setFeed({ ...cached.feed, _key: cacheKey });setBusy(false);setError("");} else load();
@@ -750,14 +773,13 @@ function Home() {
       <ExploreLinks />
 
       {!q && <BuyerPicks compact />}
-      <div className="rh-row"><button className="hunt-link" aria-expanded={podium} onClick={()=>setPodium(!podium)}>{podium?"Hide the top 3":"Show the top 3"}</button><MotionControl/></div>
-      {showPodium && <PodiumHero rows={feed.rows.slice(0, 3)} scope={scope} endsAt={feed?.week?.ends_at} />}
-      <div className="hv-feedbar">
-        <span className="hv-closes">Total votes since each home was added. They never reset.</span>
-      </div>
       <div className="rh-sticky-filters"><Filters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort, q }} onChange={setFilters} /></div>
-      <p role="status" aria-live="polite">{busy ? t("Updating results…") : feed ? `${feed.total} ${t("homes")}${country ? ` · ${country}` : ""}` : ""}</p>
-      <RankingExplanation/>
+      <div className="rh-results-bar" ref={resultsRef}>
+        <p role="status" aria-live="polite"><strong>{busy && !feed ? t("Updating results…") : feed ? `${num(feed.total)} ${t("homes")}${country ? ` in ${country}` : ""}` : ""}</strong>
+          {(country || category || maxPrice || minSqm || q || sort !== "rank") && <Link to="/" className="hunt-link rh-clear">{t("Clear filters")}</Link>}</p>
+        <div className="rh-results-tools"><RankingExplanation/>{plain && <button className="hunt-link" aria-expanded={podium} onClick={()=>setPodium(!podium)}>{podium?"Hide the top 3":"Show the top 3"}</button>}<span className="rh-motion"><MotionControl/></span></div>
+      </div>
+      {showPodium && <PodiumHero rows={feed.rows.slice(0, 3)} scope={scope} endsAt={feed?.week?.ends_at} />}
       {q && feed && <p className="hv-searchnote">{feed.total} {feed.total === 1 ? "home" : "homes"} for “{q}”</p>}
       {nextUp.length > 0 && (
         <aside className="hunt-keepgoing" aria-label="More to vote on">
@@ -786,6 +808,7 @@ function Home() {
         {feed && busy && feed.rows.length > 0 && feed.rows.length < feed.total && [0, 1, 2].map((n) => <CardSkeleton key={"more" + n} />)}
       </div>
       <div ref={sentinel} aria-hidden="true" />
+      {showTop && <button className="rh-to-top" aria-label="Back to the top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}><ArrowUp size={18} /></button>}
       {feed?.rows.length === 0 && !error && (
         <EmptyState title={q ? `No homes for “${q}” yet` : "Nothing here yet"}
           text={q ? "Try a country, a town or a simple word like sea, lake or cabin." : "No homes match these filters. Clear them, or post a home you found."}

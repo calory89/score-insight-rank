@@ -341,7 +341,7 @@ export function Card4({ deal, scope = "all", onChange, onQuick }: { deal: Row; s
           title={(deal.launch_points||0)>0?`${scope==="all"?deal.launch_points:deal.launch_week_points||0} initial points + ${scope==="all"?deal.life_up:deal.week_up} real votes`:undefined} aria-label={v.selected ? "You voted for this home" : "Vote for this home"} onClick={() => v.vote(1)}>
           <Heart size={19} fill={v.selected ? "currentColor" : "none"} /><strong key={v.total} className="hv-count">{num(v.total)}</strong>
         </button>
-        <ComparePick deal={deal}/>{onQuick && <button className="rh-card-tool" onClick={onQuick}>{t("Quick view")}</button>}
+        <ComparePick deal={deal}/>{onQuick && <button className="rh-card-tool rh-quick-btn" onClick={onQuick}>{t("Quick view")}</button>}
         <ShareButton deal={deal} scope={scope} />
       </div>
     </article>
@@ -379,7 +379,7 @@ export function TabBar() {
   const is = (p: string) => (p === "/" ? pathname === "/" : pathname.startsWith(p));
   return (
     <nav className="hv-tabbar" aria-label="App navigation">
-      <Link to="/" aria-current={is("/") ? "page" : undefined}><HomeIcon size={21} /><span>Explore</span></Link>
+      <Link to="/" aria-current={is("/") ? "page" : undefined} onClick={() => { if (pathname === "/") window.scrollTo({ top: 0, behavior: "smooth" }); }}><HomeIcon size={21} /><span>Explore</span></Link>
       <Link to="/top" aria-current={is("/top") ? "page" : undefined}><Trophy size={21} /><span>Top 100</span></Link>
       <Link to="/map" aria-current={is("/map") ? "page" : undefined}><MapPin size={21} /><span>Map</span></Link>
       <Link to="/hunt/saved" aria-current={is("/hunt/saved") ? "page" : undefined}><Bookmark size={21} /><span>Saved</span></Link>

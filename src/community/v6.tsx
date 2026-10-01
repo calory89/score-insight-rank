@@ -399,7 +399,7 @@ export function CardMeta({ deal }: { deal: Row }) {
   return (
     <>
       <span className="hv-where">{FLAG[deal.country] || "📍"} {where}</span>
-      <span className="rh-card-facts">{deal.sqm!=null?`${deal.sqm} m²`:t("Size unknown")} · {deal.bedrooms!=null?`${deal.bedrooms} ${t(deal.bedrooms===1?"bed":"beds")}`:t("Beds unknown")}</span><RentLine price={deal.price_eur} />
+      {(deal.sqm != null || deal.bedrooms != null) && <span className="rh-card-facts">{[deal.sqm != null ? `${deal.sqm} m²` : "", deal.bedrooms != null ? `${deal.bedrooms} ${t(deal.bedrooms === 1 ? "bed" : "beds")}` : ""].filter(Boolean).join(" · ")}</span>}<RentLine price={deal.price_eur} />
     </>
   );
 }
