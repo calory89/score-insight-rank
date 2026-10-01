@@ -628,7 +628,12 @@ function Home() {
   const [qText, setQText] = useState(q);
   const cacheKey = "rh.feed." + location.search + "." + (user?.id || "anon");
   const initial = storage.get<any>(cacheKey, null);
-  const [feed, setFeed] = useState<any>(() => initial && Date.now()-initial.at<300000 ? initial.feed : null);
+  // Every feed is tagged with the filters (cacheKey) it was loaded for, so rows of one filter can never
+  // be shown or appended under another (1-oct-2026 fix).
+  const [feedState, setFeed] = useState<any>(() => initial && Date.now()-initial.at<300000 ? { ...initial.feed, _key: cacheKey } : null);
+  const feed = feedState && feedState._key === cacheKey ? feedState : null;
+  const feedRef = useRef<any>(null); feedRef.current = feed;
+  const freshPending = useRef(false);
   const [quick, setQuick] = useState<number | null>(null);
   const [podium, setPodium] = usePreference("rh.podium", false);
   const restored = useRef(false);
@@ -642,17 +647,22 @@ function Home() {
   const searchRef = useRef<HTMLInputElement>(null);
   const sentinel = useRef<HTMLDivElement>(null);
   async function load(more = false) {
+    const key = cacheKey;
+    const base = feedRef.current;
+    if (more && (!base || freshPending.current)) return;
     const n = ++seq.current;
+    if (!more) freshPending.current = true;
     setBusy(true);
     if (!more) setFeed(null);
     setError("");
     try {
-      const data: any = await feedV3({ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort, q, limit: 24, offset: more ? feed?.rows.length || 0 : 0 } as any);
+      const data: any = await feedV3({ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort, q, limit: 24, offset: more ? base.rows.length : 0 } as any);
       if (n !== seq.current) return;
+      if (!more) freshPending.current = false;
       remember(data.rows);
-      feedKey.current=cacheKey;
+      feedKey.current=key;
       setFeed((f: any) =>
-        more && f ? { ...data, rows: [...f.rows, ...data.rows] } : data,
+        more ? (f && f._key === key ? { ...data, _key: key, rows: [...f.rows, ...data.rows.filter((r: any) => !f.rows.some((x: any) => x.id === r.id))] } : f) : { ...data, _key: key },
       );
     } catch (e) {
       if (n === seq.current) setError((e as Error).message);
@@ -660,9 +670,10 @@ function Home() {
       if (n === seq.current) setBusy(false);
     }
   }
+  const loadRef = useRef(load); loadRef.current = load;
   useEffect(() => {
     const cached=storage.get<any>(cacheKey,null);
-    if(cached && Date.now()-cached.at<300000) {seq.current++; feedKey.current=cacheKey;setFeed(cached.feed);setBusy(false);setError("");} else load();
+    if(cached && Date.now()-cached.at<300000) {seq.current++; freshPending.current=false; feedKey.current=cacheKey;setFeed({ ...cached.feed, _key: cacheKey });setBusy(false);setError("");} else load();
   }, [scope, country, category, maxPrice, minSqm, sort, q, user?.id]);
   useEffect(() => { setQText(q); }, [q]);
   useEffect(() => { if (feed?.rows) saveOrder(feed.rows.map((r: any) => r.slug)); }, [feed?.rows?.length, feed?.rows?.[0]?.id]);
@@ -687,10 +698,12 @@ function Home() {
   useEffect(() => {
     const el = sentinel.current;
     if (!el || !feed || feed.rows.length >= feed.total) return;
-    const io = new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting) && !busy) load(true); }, { rootMargin: "900px 0px" });
+    const io = new IntersectionObserver((es) => { if (es.some((x) => x.isIntersecting) && !busy) loadRef.current(true); }, { rootMargin: "900px 0px" });
     io.observe(el);
     return () => io.disconnect();
-  }, [feed?.rows?.length, feed?.total, busy]);
+    // cacheKey: a new filter must get a new observer, or the old one keeps loading pages of the
+    // previous filter into the new list (1-oct-2026: Spain at €30k showed €90k homes after scrolling).
+  }, [feed?.rows?.length, feed?.total, busy, cacheKey]);
   const nextUp = more && feed ? feed.rows.filter((r: any) => r.country === more.country && !session?.votes?.[r.id]).slice(0, 3) : [];
   const setFilters = (v: FeedParams) => {
     const next = new URLSearchParams(params);

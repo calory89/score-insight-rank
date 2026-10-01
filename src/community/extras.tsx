@@ -304,12 +304,10 @@ export function InfoRequest({ deal, dev }: { deal: Row; dev?: { name: string; sl
 // ---------------------------------------------------------------- filters
 const PRICE_CAPS = [20000, 30000, 40000, 60000, 80000, 100000];
 export function Filters({ countries, value: applied, onChange }: { countries: Record<string, number>; value: FeedParams; onChange: (v: FeedParams) => void }) {
-  const [value,setDraft]=useState(applied);
-  const [count,setCount]=useState<number|null>(null);
-  const [countError,setCountError]=useState(false);
-  const pending=JSON.stringify(value)!==JSON.stringify(applied);
-  useEffect(()=>setDraft(applied),[JSON.stringify(applied)]);
-  useEffect(()=>{if(!pending)return;let active=true;setCount(null);setCountError(false);const timer=setTimeout(()=>feed({...value,limit:1}).then(r=>{if(active)setCount(r.total);}).catch(()=>{if(active)setCountError(true);}),180);return()=>{active=false;clearTimeout(timer);};},[JSON.stringify(value),pending]);
+  // 1-oct-2026: every filter applies at once. The old draft + "View N homes" step made a tap on a
+  // country look broken (the grid kept showing every country until the second button was pressed).
+  const value = applied;
+  const setDraft = (v: FeedParams) => onChange(v);
   const list = Object.entries(countries || {}).sort((a, b) => b[1] - a[1]);
   const active = !!(value.country || value.category || value.max_price || value.min_sqm || (value.sort && value.sort !== "rank"));
   const extra = [value.category, value.max_price, value.min_sqm, value.sort && value.sort !== "rank" ? value.sort : ""].filter(Boolean).length;
@@ -345,7 +343,6 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
           </select></label>
         {active && <button className="hunt-link" onClick={() => onChange({ scope: value.scope })}>{t("Clear filters")}</button>}
       </div>}
-      {pending&&<div className="rh-row" role="status"><button className="hunt-primary" disabled={count===null&&!countError} onClick={()=>onChange(value)}>{countError?'Apply filters':count===null?'Counting homes…':`View ${count} homes`}</button><button className="hunt-link" onClick={()=>setDraft(applied)}>Cancel changes</button></div>}
     </div>
   );
 }
