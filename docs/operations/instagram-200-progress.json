@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "campaignId": "instagram-200-2026-10-02",
-  "updatedAt": "2026-10-02T19:13:24Z",
+  "updatedAt": "2026-10-02T19:29:44.785Z",
   "goal": {
     "additionalSpain": 100,
     "additionalInternational": 100,
@@ -717,13 +717,13 @@
     ]
   },
   "progress": {
-    "publishedSpain": 0,
+    "publishedSpain": 2,
     "publishedInternational": 0,
-    "approvedForPublicationSpain": 0,
+    "approvedForPublicationSpain": 2,
     "approvedForPublicationInternational": 0,
     "legacyUniqueCandidates": 37,
-    "sourceCheckedCandidates": 3,
-    "photosVisuallyInspected": 12
+    "sourceCheckedCandidates": 56,
+    "photosVisuallyInspected": 49
   },
   "countingRules": [
     "Count only new distinct properties added by this campaign, absent from baseline, with confirmed live detail/feed visibility and photo review.",
@@ -1680,9 +1680,26 @@
       ]
     }
   ],
-  "publicationLog": [],
+  "publicationLog": [
+    {
+      "batch": "es-001",
+      "publishedAt": "2026-10-02T19:26:59Z",
+      "count": 2,
+      "ids": [
+        "1ef3213a-421f-4475-a93f-3164fb52b526",
+        "55e720cf-77b9-464c-8473-3c48ce7a3ada"
+      ],
+      "slugs": [
+        "galera-rooftop-patio-95000",
+        "freila-cave-courtyard-89000"
+      ],
+      "dataPath": "docs/operations/instagram-200/batch-es-001.json",
+      "sqlPath": "docs/operations/instagram-200/batch-es-001.sql",
+      "verification": "Both rows returned by public community_feed; Freila detail and all 5 chosen photos rendered successfully in live browser."
+    }
+  ],
   "automationId": "6abfff41d214819185e6f285d495c4a9",
-  "nextAction": "Prioritize Spain. Replace generic search links with direct listings and search fresh agencies/portals. Seek high-quality move-in-ready homes; do not force these legacy candidates into publication. For Alamedilla, inspect remaining patio/terrace images and current agent page. Save each batch and exact SQL to GitHub before applying through authorized database operations, then verify the actual feed/details.",
+  "nextAction": "Continue interactive visual review and publication. No scheduled task.",
   "automation": {
     "title": "RealHunt: 200 casas top",
     "cadence": "hourly",
