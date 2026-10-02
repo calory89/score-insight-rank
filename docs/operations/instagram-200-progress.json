@@ -1681,6 +1681,14 @@
     }
   ],
   "publicationLog": [],
-  "automationId": null,
-  "nextAction": "Prioritize Spain. Replace generic search links with direct listings and search fresh agencies/portals. Seek high-quality move-in-ready homes; do not force these legacy candidates into publication. For Alamedilla, inspect remaining patio/terrace images and current agent page. Save each batch and exact SQL to GitHub before applying through authorized database operations, then verify the actual feed/details."
+  "automationId": "6abfff41d214819185e6f285d495c4a9",
+  "nextAction": "Prioritize Spain. Replace generic search links with direct listings and search fresh agencies/portals. Seek high-quality move-in-ready homes; do not force these legacy candidates into publication. For Alamedilla, inspect remaining patio/terrace images and current agent page. Save each batch and exact SQL to GitHub before applying through authorized database operations, then verify the actual feed/details.",
+  "automation": {
+    "title": "RealHunt: 200 casas top",
+    "cadence": "hourly",
+    "timezone": "Europe/Copenhagen",
+    "enabled": true,
+    "completion": "Disable when additional publishedSpain >= 100 and additional publishedInternational >= 100 have been verified."
+  },
+  "initialCommit": "f19125e7673d3493efe43ae9772ec77f6b6a399a"
 }
