@@ -326,7 +326,7 @@ export function Card4({ deal, scope = "all", onChange, onQuick }: { deal: Row; s
       <div className="hv-frame" style={{ backgroundColor: cardColor(deal.slug) }}>
         <Photos deal={deal} href={href} onDouble={() => { if (!v.selected) v.vote(1); }} />
         <div className="hv-top">
-          {deal.rank ? <span className={"hv-rank" + (deal.rank <= 3 ? " is-podium" : "") + (move ? " is-up" : "")}>#{deal.rank}{move ? <em> ▲{move}</em> : null}</span> : null}
+          {deal.rank && deal.rank <= 3 ? <span className={"hv-rank" + (deal.rank <= 3 ? " is-podium" : "") + (move ? " is-up" : "")}>#{deal.rank}{move ? <em> ▲{move}</em> : null}</span> : null}
           <Chip deal={deal} scope={scope} />
           {(deal as any).developer ? <span className="hv-newbuild">New build</span> : null}
           <SaveHeart deal={deal} />

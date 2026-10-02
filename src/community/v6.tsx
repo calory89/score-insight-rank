@@ -78,6 +78,8 @@ const VIBES: { k: string; label: string; q?: string; country?: string; type?: st
   { k: "terrace", label: "Big terrace", q: "terrace" },
   { k: "cheap", label: "Under €30k", price: 30000 },
 ];
+// A photo for every vibe even when the feed is filtered to a country that has none (2-oct-2026).
+const VIBE_FALLBACK: Record<string, string> = { sea: "/finds/DdOGB56ABXI-0.webp", lake: "/finds/lake-como-peglio-85000-0.webp", stone: "/finds/lake-como-plesio-89000-0.webp", nordic: "/finds/DcAr2EbIAqx-1.webp", japan: "/finds/Dc56aI-icMP-1.webp", sauna: "/finds/DdPBLT2CLlb-1.webp", terrace: "/finds/acquappesa-sea-view-39000.webp", cheap: "/finds/grotte-santo-stefano-13000.webp" };
 export function Vibes({ active, onPick, rows=[] }: { rows?: Row[]; active: string; onPick: (v: { q?: string; country?: string; type?: string; price?: number; k: string } | null) => void }) {
   const all=rows.length ? rows : Array.from(rowCache.values());
   const used = new Set<string>();
@@ -88,7 +90,7 @@ export function Vibes({ active, onPick, rows=[] }: { rows?: Row[]; active: strin
       return (!v.q || txt.includes(v.q)) && (!v.country || r.country === v.country) && (!v.type || r.category === v.type) && (!v.price || (r.price_eur || 0) <= v.price);
     });
     if (hit) used.add(hit.id);
-    return hit?.image_urls?.[0];
+    return hit?.image_urls?.[0] || VIBE_FALLBACK[v.k];
   };
   return (
     <nav className="hv-vibes" aria-label="Browse by vibe">
@@ -399,7 +401,7 @@ export function CardMeta({ deal }: { deal: Row }) {
   return (
     <>
       <span className="hv-where">{FLAG[deal.country] || "📍"} {where}</span>
-      {(deal.sqm != null || deal.bedrooms != null) && <span className="rh-card-facts">{[deal.sqm != null ? `${deal.sqm} m²` : "", deal.bedrooms != null ? `${deal.bedrooms} ${t(deal.bedrooms === 1 ? "bed" : "beds")}` : ""].filter(Boolean).join(" · ")}</span>}<RentLine price={deal.price_eur} />
+      {(deal.sqm != null || deal.bedrooms != null) && <span className="rh-card-facts">{[deal.sqm != null ? `${deal.sqm} m²` : "", deal.bedrooms != null ? `${deal.bedrooms} ${t(deal.bedrooms === 1 ? "bed" : "beds")}` : "", deal.sqm && deal.price_eur && deal.sqm >= 15 ? `€${Math.round(deal.price_eur / deal.sqm).toLocaleString("en-GB")}/m²` : ""].filter(Boolean).join(" · ")}</span>}<RentLine price={deal.price_eur} />
     </>
   );
 }

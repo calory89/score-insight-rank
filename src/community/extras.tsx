@@ -195,7 +195,7 @@ export function CostPanel({ deal }: { deal: Row }) {
         {reno && deal.sqm ? <div><dt>Renovation, typical range</dt><dd>{money(deal.sqm * 400)}–{money(deal.sqm * 900)}</dd></div> : null}
         <div><dt>Keeping it ({run.taxName}, insurance, basic water and power)</dt><dd>≈ {money(Math.round(yearly / 12))}/month</dd></div>
       </dl>
-      <label className="hunt-rent">If you pay rent of <input type="number" min={0} placeholder="Your rent" step={50} value={rent} onChange={(e) => {try{localStorage.setItem("rh_rent_explicit","1");}catch{}setRent(Math.max(0, Number(e.target.value)));}} /> € a month, the estimated purchase total equals <strong>{rent > 0 ? `${months} ${t("months of your rent")}` : t("Enter your monthly rent")}</strong>.</label>
+      <label className="hunt-rent">If you pay rent of <input type="number" min={0} placeholder="800" step={50} value={rent || ""} onChange={(e) => {try{localStorage.setItem("rh_rent_explicit","1");}catch{}setRent(Math.max(0, Number(e.target.value)));}} /> € a month{rent > 0 ? <>, the estimated purchase total equals <strong>{`${months} ${t("months of your rent")}`}</strong>.</> : <span className="hunt-rent-hint">{" "}and see how many months of rent this home is worth.</span>}</label>
       <p className="hunt-fine">{COSTS[deal.country]?.note || "Purchase costs vary by country."} {run.extra || ""} Running costs are a rough guide for a small house; ask the seller for the real bills.{reno ? " Renovation ranges are ballpark figures; get a local quote." : ""}</p>
     </section>
   );
@@ -455,21 +455,27 @@ export function SwipePage() {
   const start = useRef<number | null>(null);
   const navigate = useNavigate();
   useEffect(() => { document.title = "Swipe homes under €100,000 · RealHunt"; feedAll({}).then((f) => setRows(f.rows)).catch(() => setRows([])); }, []);
-  const list = useMemo(() => (rows || []).filter((r) => !session?.votes?.[r.id]), [rows, session?.token]);
+  // The deck is fixed when it loads: homes already voted are left out once, then every like or skip
+  // moves to the next card. (Before 2-oct-2026 a like re-filtered the deck and the same card stayed.)
+  const votedAtLoad = useRef<Record<string, number> | null>(null);
+  if (rows && votedAtLoad.current === null) votedAtLoad.current = { ...(session?.votes || {}) };
+  const list = useMemo(() => (rows || []).filter((r) => !votedAtLoad.current?.[r.id]), [rows]);
   const d = list[i];
-  async function decide(like: boolean) {
-    if (!d) return;
+  const busy = useRef(false);
+  function decide(like: boolean) {
+    if (!d || busy.current) return;
+    busy.current = true;
     bumpIx();
     setDx(like ? 600 : -600);
-    if (like && session) {
-      try {
-        await call("vote", { id: d.id, value: 1 });
-        setSession((s: any) => ({ ...s, votes: { ...s.votes, [d.id]: 1 } }));
+    const id = d.id;
+    if (like) {
+      call("vote", { id, value: 1 }).then(() => {
+        setSession((s: any) => (s ? { ...s, votes: { ...(s.votes || {}), [id]: 1 } } : s));
         const days = bumpStreak();
-        setNotice(`${t("Your vote counts.")}${days > 1 ? ` ${days} ${t("days in a row")}.` : ""}`);
-      } catch (e) { setNotice((e as Error).message); }
+        setNotice(days > 1 ? `Your vote counts. ${days} days in a row.` : t("Your vote counts."));
+      }).catch((e) => setNotice((e as Error).message));
     }
-    setTimeout(() => { setDx(0); if (!like) setI((n) => n + 1); }, 180);
+    setTimeout(() => { setDx(0); setI((n) => n + 1); busy.current = false; }, 200);
   }
   useEffect(() => {
     const k = (e: KeyboardEvent) => { if (e.key === "ArrowRight") decide(true); if (e.key === "ArrowLeft") decide(false); };
@@ -480,7 +486,7 @@ export function SwipePage() {
   return (
     <div className="hunt-wrap hunt-swipe hv-swipe">
       {d && <div className="hv-swipe-bg" style={{ backgroundImage: `url("${d.image_urls?.[0]}")` }} aria-hidden="true" />}
-      <div className="hv-swipe-top"><strong>{t("Swipe")}</strong><span>{list.length - i > 0 ? `${list.length - i} homes left` : ""}</span></div>
+      <div className="hv-swipe-top"><strong>{t("Swipe")}</strong><span>{list.length - i > 0 ? `${list.length - i} homes left` : ""}</span>{i > 0 && <button className="hunt-link hv-swipe-undo" onClick={() => setI((n) => Math.max(0, n - 1))}>Back</button>}</div>
       {!d ? (
         <div className="hunt-empty"><h3>You have seen every home this week.</h3><p>New homes are added every week.</p><Link className="hunt-primary" to="/map">{t("Map")}</Link></div>
       ) : (

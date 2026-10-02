@@ -87,6 +87,10 @@ function places(s: string): string { return /[A-Z]/.test(s) ? s.replace(PLACE_RE
 const COUNTS: [RegExp, (m: RegExpExecArray) => string][] = [
   [/^([\d.,]+) homes? in (.+)$/, (m) => `${m[1]} ${m[1] === "1" ? "casa" : "casas"} en ${lookup(m[2], 1) ?? places(m[2])}`],
   [/^([\d.,]+) homes?$/, (m) => `${m[1]} ${m[1] === "1" ? "casa" : "casas"}`],
+  [/^(\d+) ?(min|m|h|d) ago$/, (m) => `hace ${m[1]} ${m[2] === "m" ? "min" : m[2]}`],
+  [/^(\d+) (minute|hour|day|week|month|year)s? ago$/, (m) => { const one = m[1] === "1"; const w: Record<string, [string, string]> = { minute: ["minuto", "minutos"], hour: ["hora", "horas"], day: ["día", "días"], week: ["semana", "semanas"], month: ["mes", "meses"], year: ["año", "años"] }; return `hace ${m[1]} ${w[m[2]][one ? 0 : 1]}`; }],
+  [/^(\d+) of (\d+)$/, (m) => `${m[1]} de ${m[2]}`],
+  [/^(Updated|Last updated) (\d+ ?\w+ ago)$/, (m) => `Actualizada ${lookup(m[2], 1) ?? m[2]}`],
   [/^([\d.,]+) (votes?|points?|photos?|bedrooms?|beds?|days?|hours?|minutes?|projects?|reviews?|questions?|answers?|developers?|buyers?|people|views?|saves?|new)$/, (m) => {
     const one = m[1] === "1"; const w: Record<string, [string, string]> = { vote: ["voto", "votos"], point: ["punto", "puntos"], photo: ["foto", "fotos"], bedroom: ["dormitorio", "dormitorios"], bed: ["dorm.", "dorm."], day: ["día", "días"], hour: ["hora", "horas"], minute: ["minuto", "minutos"], project: ["proyecto", "proyectos"], review: ["opinión", "opiniones"], question: ["pregunta", "preguntas"], answer: ["respuesta", "respuestas"], developer: ["promotora", "promotoras"], buyer: ["comprador", "compradores"], people: ["personas", "personas"], view: ["visita", "visitas"], save: ["guardado", "guardados"], new: ["nueva", "nuevas"] };
     const k = m[2].replace(/s$/, "") in w ? m[2].replace(/s$/, "") : m[2]; const x = w[k]; return x ? `${m[1]} ${one ? x[0] : x[1]}` : m[0]; }],

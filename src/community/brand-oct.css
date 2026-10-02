@@ -73,3 +73,36 @@ html.rh-i18n-wait #root { visibility: hidden; }
 .hv-card .rh-card-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .hv-card .hv-where { font-weight: 500; color: #5E6269; }
 .hunt.is-dark .hv-card .hv-where { color: #A8ACB3; }
+
+/* ---- 2-oct-2026 UX pass ---- */
+/* swipe: back button next to the counter */
+.hv-swipe-top { display: flex; align-items: center; gap: 12px; }
+.hv-swipe-top > span { margin-left: auto; }
+.hv-swipe-undo { padding: 6px 10px; min-height: 36px; }
+
+/* footer: logo + comfortable tap targets on phones */
+.hunt-footer-brand { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: -0.4px; }
+@media (max-width: 700px) {
+  .hunt-footer a { display: inline-flex; align-items: center; min-height: 36px; font-size: 13px; }
+}
+
+/* detail: the rent line reads as one sentence */
+.hunt-rent input { width: 96px; }
+.hunt-rent-hint { color: #5E6269; }
+
+/* Top 100: no grey dot for "no change", tidy rows on phones */
+.tp-move.is-flat { display: none; }
+@media (max-width: 760px) {
+  .tp-row { position: relative; grid-template-columns: 96px 1fr; grid-template-areas: "t m" "a a"; gap: 8px 12px; padding: 10px; }
+  .tp-rank { position: absolute; top: 16px; left: 16px; z-index: 1; flex-direction: row; gap: 4px; background: rgba(255,255,255,.95); border-radius: 999px; padding: 2px 8px; box-shadow: 0 1px 4px rgba(0,0,0,.18); }
+  .tp-rank b { font-size: 13px; }
+  .tp-thumb img { width: 96px; height: 96px; }
+  .tp-main strong { font-size: 15px; }
+  .tp-sub { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tp-sub svg { display: inline-block; vertical-align: -1px; margin-right: 3px; }
+  .tp-act { grid-area: a; flex-direction: row; align-items: center; justify-content: space-between; border-top: 1px solid #EEEFF1; padding-top: 8px; }
+  .tp-dests { padding-left: 0; margin-left: 0; justify-content: flex-start; }
+}
+.hunt.is-dark .tp-rank { background: rgba(23,24,26,.95); }
+.hunt .hunt-rent { display: block !important; }
+.hunt .hunt-rent > span, .hunt .hunt-rent > strong { display: inline !important; }

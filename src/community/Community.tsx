@@ -32,6 +32,7 @@ import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapH
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
 import { LogoMark } from "@/components/realhunt/Logo";
+import { isEs } from "@/lib/lang";
 import { Card4, CardSkeleton, Freshness, TabBar, DetailBar, HeartVote, ShareButton, SaveHeart, remember, rowCache, takeDetail, prefetchDetail, preloadImages } from "./v4";
 import { bumpIx, FLAG as FLAG_ } from "@/lib/rh";
 import { bumpStat } from "./v4";
@@ -243,7 +244,7 @@ function Shell({ children }: { children: ReactNode }) {
         )}
         <div className="hunt-main hv-page" key={location.pathname + langV}>{children}</div>
         <footer className="hunt-footer">
-          <Link to="/">RealHunt</Link>
+          <Link to="/" className="hunt-footer-brand"><LogoMark size={26} />RealHunt</Link>
           <p>
             {t("Found by people. Ranked by you.")}
             <br />
@@ -805,7 +806,7 @@ function Home() {
           : (showPodium ? displayedRows.slice(3) : displayedRows)?.map((d: any, index: number) => (
             <Fragment key={d.id}>
               <Card4 deal={d} scope={scope} onChange={() => load()} onQuick={()=>setQuick(feed.rows.findIndex((r:any)=>r.id===d.id))} />
-              {index === 8 && plain && <SponsoredCard />}
+              {index === 11 && plain && <SponsoredCard />}
             </Fragment>
           ))}
         {feed && busy && feed.rows.length > 0 && feed.rows.length < feed.total && [0, 1, 2].map((n) => <CardSkeleton key={"more" + n} />)}
@@ -956,7 +957,7 @@ function Detail() {
           </p>
           <Amenities deal={d} />
           {d.why_great && <blockquote>{d.why_great}</blockquote>}
-          <TranslateBar text={[cleanTitle(d), d.why_great].filter(Boolean).join("\n\n")} />
+          {!isEs() && <TranslateBar text={[cleanTitle(d), d.why_great].filter(Boolean).join("\n\n")} />}
           <div className="hunt-detail-actions hv-detail-actions">
             <HeartVote deal={d} scope={scope} onChange={load} big />
             {listing}
@@ -973,7 +974,7 @@ function Detail() {
             {num(d.life_up + d.life_down)} lifetime votes · {num(d.views)} views
             · {num(d.saves)} saves
           </p>
-          <DecisionFacts deal={d as Row}/><RentPreference/><Nearby deal={d} />
+          <DecisionFacts deal={d as Row}/><Nearby deal={d} />
           <Availability dealId={d.id} />
           <CostPanel deal={d as Row} />
           {!(d as any).developer && <InfoRequest deal={d as Row} />}
