@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "campaignId": "instagram-200-2026-10-02",
-  "updatedAt": "2026-10-02 18:46:12.637054+00",
+  "updatedAt": "2026-10-02T19:13:24Z",
   "goal": {
     "additionalSpain": 100,
     "additionalInternational": 100,
@@ -1687,8 +1687,9 @@
     "title": "RealHunt: 200 casas top",
     "cadence": "hourly",
     "timezone": "Europe/Copenhagen",
-    "enabled": true,
+    "enabled": false,
     "completion": "Disable when additional publishedSpain >= 100 and additional publishedInternational >= 100 have been verified."
   },
-  "initialCommit": "f19125e7673d3493efe43ae9772ec77f6b6a399a"
+  "initialCommit": "f19125e7673d3493efe43ae9772ec77f6b6a399a",
+  "executionMode": "interactive-session"
 }
