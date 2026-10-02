@@ -1,3 +1,4 @@
+import { isGuestSaved, toggleGuestSave } from "./guestSaves";
 import {PropertyImage, ComparePick} from "./BuyerTools";
 import {storage, usePreference} from "./buyer-state";
 import {t} from "./i18n";
@@ -209,14 +210,23 @@ export function ShareButton({ deal, scope = "all", label = false }: { deal: Row;
 
 // ---------------------------------------------------------------- saving
 export function SaveHeart({ deal, className = "hv-save" }: { deal: Deal; className?: string }) {
-  const { session, setSession, call, requireUser, setNotice } = useCommunity();
+  const { user, session, setSession, call, setNotice } = useCommunity();
   const [busy, setBusy] = useState(false);
-  const saved = !!session?.saved.includes(deal.id);
+  const [, bump] = useState(0);
+  useEffect(() => { const on = () => bump((n) => n + 1); window.addEventListener("rh-guest-saves", on); return () => window.removeEventListener("rh-guest-saves", on); }, []);
+  const saved = user ? !!session?.saved.includes(deal.id) : isGuestSaved(deal.id);
   return (
     <button className={className + (saved ? " is-on" : "")} disabled={busy} aria-pressed={saved} aria-label={saved ? "Remove from saved" : "Save this home"}
       onClick={async (e) => {
         e.preventDefault(); e.stopPropagation();
-        if (!requireUser()) return;
+        if (!user) {
+          // No account needed to save: kept in this browser and moved to the account on sign-in.
+          const now = toggleGuestSave(deal as any);
+          setNotice(now ? "Saved on this device. Create a free account to keep it everywhere." : "Removed from saved.");
+          if (now) { bumpStat("saves"); track("community_save", { find: deal.slug, meta: { guest: true } }); }
+          bumpIx();
+          return;
+        }
         setBusy(true);
         try {
           await call("save", { id: deal.id, saved: !saved });

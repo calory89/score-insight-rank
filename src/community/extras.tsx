@@ -486,7 +486,7 @@ export function SwipePage() {
   return (
     <div className="hunt-wrap hunt-swipe hv-swipe">
       {d && <div className="hv-swipe-bg" style={{ backgroundImage: `url("${d.image_urls?.[0]}")` }} aria-hidden="true" />}
-      <div className="hv-swipe-top"><strong>{t("Swipe")}</strong><span>{list.length - i > 0 ? `${list.length - i} homes left` : ""}</span>{i > 0 && <button className="hunt-link hv-swipe-undo" onClick={() => setI((n) => Math.max(0, n - 1))}>Back</button>}</div>
+      <div className="hv-swipe-top"><h1 className="hv-swipe-h1">{t("Swipe")}</h1><span>{list.length - i > 0 ? `${list.length - i} homes left` : ""}</span>{i > 0 && <button className="hunt-link hv-swipe-undo" onClick={() => setI((n) => Math.max(0, n - 1))}>Back</button>}</div>
       {!d ? (
         <div className="hunt-empty"><h3>You have seen every home this week.</h3><p>New homes are added every week.</p><Link className="hunt-primary" to="/map">{t("Map")}</Link></div>
       ) : (

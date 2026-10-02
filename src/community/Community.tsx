@@ -33,6 +33,7 @@ import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, Verifie
 import { t } from "./i18n";
 import { LogoMark } from "@/components/realhunt/Logo";
 import { isEs } from "@/lib/lang";
+import { guestSaves, isGuestSaved, toggleGuestSave, clearGuestSaves, type GuestSave } from "./guestSaves";
 import { Card4, CardSkeleton, Freshness, TabBar, DetailBar, HeartVote, ShareButton, SaveHeart, remember, rowCache, takeDetail, prefetchDetail, preloadImages } from "./v4";
 import { bumpIx, FLAG as FLAG_ } from "@/lib/rh";
 import { bumpStat } from "./v4";
@@ -159,6 +160,18 @@ function Shell({ children }: { children: ReactNode }) {
         window.dispatchEvent(new CustomEvent("rh-voted", { detail: { id } }));
       })
       .catch((e) => setNotice((e as Error).message));
+  }, [user?.id, session?.token]);
+  // Homes saved without an account move into the account as soon as the person signs in.
+  useEffect(() => {
+    if (!user || !session) return;
+    const g = guestSaves();
+    if (!g.length) return;
+    (async () => {
+      for (const x of g) { if (!session.saved.includes(x.id)) { try { await api("save", session.token, { id: x.id, saved: true }); } catch { /* gone or already saved */ } } }
+      setSession((s: Session | null) => s ? { ...s, saved: Array.from(new Set([...s.saved, ...g.map((x) => x.id)])) } : s);
+      clearGuestSaves();
+      setNotice(g.length === 1 ? "Your saved home is now in your account." : `Your ${g.length} saved homes are now in your account.`);
+    })();
   }, [user?.id, session?.token]);
   useEffect(() => {
     if (!session?.admin) return;
@@ -436,9 +449,11 @@ function Vote({
   );
 }
 function Save({ deal, onChange }: { deal: Deal; onChange?: () => void }) {
-  const { session, setSession, call, requireUser, setNotice } = useCommunity();
+  const { user, session, setSession, call, setNotice } = useCommunity();
   const [busy, setBusy] = useState(false);
-  const saved = session?.saved.includes(deal.id);
+  const [, bumpG] = useState(0);
+  useEffect(() => { const on = () => bumpG((n) => n + 1); window.addEventListener("rh-guest-saves", on); return () => window.removeEventListener("rh-guest-saves", on); }, []);
+  const saved = user ? session?.saved.includes(deal.id) : isGuestSaved(deal.id);
   return (
     <button
       className="hunt-save"
@@ -446,7 +461,7 @@ function Save({ deal, onChange }: { deal: Deal; onChange?: () => void }) {
       aria-label={saved ? "Unsave deal" : "Save deal"}
       aria-pressed={!!saved}
       onClick={async () => {
-        if (!requireUser()) return;
+        if (!user) { const now = toggleGuestSave(deal as any); setNotice(now ? "Saved on this device. Create a free account to keep it everywhere." : "Removed from saved."); return; }
         setBusy(true);
         try {
           await call("save", { id: deal.id, saved: !saved });
@@ -593,7 +608,7 @@ function QuickSubmission({ initialUrl = "", standalone = false }: { initialUrl?:
     finally { submitting.current = false; setBusy(false); }
   }
   return <section className={"hunt-quick-submit" + (standalone ? " hunt-quick-standalone" : "")} aria-label="Share a property">
-    <h2>Found a great property?</h2>
+    {standalone ? <h1>Found a great property?</h1> : <h2>Found a great property?</h2>}
     <p>Share a link. We review. Everyone votes.</p>
     {result ? <div role="status" className="hunt-quick-success">
       <strong>{result.duplicate ? "This property is already published." : result.already ? "This property is already in your submissions." : "Received. Your property is pending admin review."}</strong>
@@ -765,7 +780,6 @@ function Home() {
   };
   return (
     <div className="hunt-wrap hunt-home hv-home" onClickCapture={rememberCatalog}>
-      {!q && !country && <Welcome rows={feed?.rows} />}
       <MapFab search={location.search} />
       <section className="hv-hero">
         <h1>{t("Homes under €100k you won’t believe are real.")}</h1>
@@ -800,6 +814,7 @@ function Home() {
         </aside>
       )}
       {error && <ErrorBox error={error} retry={() => load()} />}
+      {!q && !country && <Welcome rows={feed?.rows} />}
       <div className="hv-grid" aria-busy={!feed && busy}>
         {!feed && busy
           ? [0, 1, 2, 3, 4, 5].map((n) => <CardSkeleton key={n} />)
@@ -1578,6 +1593,23 @@ function Mine() {
   }
   useEffect(() => { if(session && user) refresh(); }, [session?.token, user?.id]);
   const submissions = (data?.deals || []).filter((d:any) => (status === "all" || d.status === status) && matchesSubmission(d, query));
+  const [guest, setGuest] = useState<GuestSave[]>(() => guestSaves());
+  useEffect(() => { const on = () => setGuest(guestSaves()); window.addEventListener("rh-guest-saves", on); return () => window.removeEventListener("rh-guest-saves", on); }, []);
+  if (!user && pathname.endsWith("saved") && guest.length)
+    return (
+      <div className="hunt-wrap hunt-profile">
+        <h1>Saved homes</h1>
+        <p className="hunt-guest-note">Saved on this device. <button className="hunt-link" onClick={requireUser}>Create a free account</button> to keep them on your phone and computer and get an email if the price drops.</p>
+        <div className="hunt-small-grid">
+          {guest.map((d) => (
+            <Link className="hunt-mini" to={`/deal/${d.slug}`} key={d.id}>
+              <img src={d.image || "/favicon.png"} alt={d.title} />
+              <div><strong>{d.price_eur ? money(d.price_eur) : ""}</strong><h2>{d.title}</h2></div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    );
   if (!user)
     return (
       <div className="hunt-empty">

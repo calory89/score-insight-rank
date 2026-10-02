@@ -57,36 +57,22 @@ export function ThemeButton({ label = false }: { label?: boolean }) {
 
 // ---------------------------------------------------------------- 3: first-visit welcome
 export function Welcome({ rows }: { rows: Row[] | undefined }) {
+  // 2-oct-2026: no more full-screen intro. The homes are visible from the first second and a slim
+  // note explains voting once; it goes away on its own after the first vote or save.
   const [open, setOpen] = useState(() => !ls.get("rh_welcome"));
-  const [i, setI] = useState(0);
-  const picks = useMemo(() => (rows || []).filter((r) => cover(r)).slice(0, 3), [rows]);
-  useEffect(() => { if (open) preloadImages(picks.map(cover)); }, [open, picks.length]);
-  useEffect(() => {
-    if (!open || picks.length < 3) return;
-    const t = setTimeout(() => (i < 2 ? setI(i + 1) : null), 1600);
-    return () => clearTimeout(t);
-  }, [open, i, picks.length]);
   useEffect(() => {
     if (!open) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
+    const done = () => { ls.set("rh_welcome", "1"); setOpen(false); };
+    window.addEventListener("rh-ix", done);
+    return () => window.removeEventListener("rh-ix", done);
   }, [open]);
-  const close = () => { ls.set("rh_welcome", "1"); setOpen(false); bumpIx(); };
-  if (!open || picks.length < 3) return null;
-  const d = picks[i];
+  const close = () => { ls.set("rh_welcome", "1"); setOpen(false); };
+  if (!open || !rows?.length) return null;
   return (
-    <div className="hv-welcome" role="dialog" aria-modal="true" aria-label="Welcome to RealHunt" onClick={() => (i < 2 ? setI(i + 1) : null)}>
-      {picks.map((p, n) => <img key={p.id} src={cover(p)} alt="" className={n === i ? "on" : ""} />)}
-      <div className="hv-welcome-bars">{[0, 1, 2].map((n) => <i key={n} className={n < i ? "done" : n === i ? "run" : ""} />)}</div>
-      <button className="hv-welcome-skip" onClick={(e) => { e.stopPropagation(); close(); }}>Skip</button>
-      <div className="hv-welcome-copy">
-        <span>{FLAG[d.country] || "📍"} {d.location_name || d.country}</span>
-        <strong>{money(d.price_eur)}</strong>
-        <p>{niceTitle(d)}</p>
-        <h2>Real homes under €100k. You vote which ones rise.</h2>
-        <button className="hv-welcome-go" onClick={(e) => { e.stopPropagation(); close(); }}>Start voting <Heart size={18} fill="currentColor" /></button>
-      </div>
+    <div className="hv-welcome-strip" role="note">
+      <Heart size={18} fill="currentColor" aria-hidden="true" />
+      <p><strong>Real homes under €100k.</strong> Tap the heart on the ones you love. The most voted rise to the top.</p>
+      <button onClick={close} aria-label="Close">Got it</button>
     </div>
   );
 }

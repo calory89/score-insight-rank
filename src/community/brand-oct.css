@@ -106,3 +106,13 @@ html.rh-i18n-wait #root { visibility: hidden; }
 .hunt.is-dark .tp-rank { background: rgba(23,24,26,.95); }
 .hunt .hunt-rent { display: block !important; }
 .hunt .hunt-rent > span, .hunt .hunt-rent > strong { display: inline !important; }
+
+/* first-visit note (replaces the full-screen intro, 2-oct-2026) */
+.hv-welcome-strip { display: flex; align-items: center; gap: 10px; margin: 6px 0 10px; padding: 10px 12px; border-radius: 14px; background: var(--rh-brand-soft); color: #111214; border: 1px solid #FFD9C8; }
+.hv-welcome-strip > svg { color: var(--rh-brand-strong); flex: none; }
+.hv-welcome-strip p { margin: 0; font-size: 13.5px; line-height: 1.35; flex: 1; }
+.hv-welcome-strip button { flex: none; border: 0; background: #111214; color: #fff; font-weight: 700; font-size: 12.5px; padding: 8px 12px; border-radius: 999px; min-height: 36px; cursor: pointer; }
+.hunt.is-dark .hv-welcome-strip { background: #2A1A12; border-color: #4A2A1B; color: #ECEDEE; }
+.hunt-guest-note { color: #40444C; margin: 4px 0 14px; }
+.hv-swipe-top .hv-swipe-h1 { font-size: 26px; margin: 0; letter-spacing: -0.6px; font-weight: 800; }
+.hunt-quick-standalone h1 { font-size: 28px; letter-spacing: -0.8px; margin: 0 0 8px; }
