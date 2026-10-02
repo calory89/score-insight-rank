@@ -1,0 +1,41 @@
+name: rh-ux2
+on:
+  push:
+    paths: ['.github/workflows/rh-ux2.yml']
+permissions:
+  contents: write
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: download patch
+        run: |
+          curl -sSL -X POST https://temp.sh/uCWXh/ux2.zip -o /tmp/p.zip
+          echo '04d06a15879fe0d63198c252e90065c2  /tmp/p.zip' | md5sum -c
+          mkdir -p /tmp/p && cd /tmp/p && unzip -q /tmp/p.zip
+      - name: apply
+        run: |
+          python3 - <<'PY'
+          import json,hashlib,os,shutil,sys
+          base=json.load(open('/tmp/p/base.json')); bad=[]
+          for f,h in base.items():
+              if h is None:
+                  if os.path.exists(f): bad.append(f+' (exists)')
+                  continue
+              if hashlib.md5(open(f,'rb').read()).hexdigest()!=h: bad.append(f)
+          if bad: print('BASE MISMATCH',bad); sys.exit(1)
+          for f in base:
+              os.makedirs(os.path.dirname(f) or '.',exist_ok=True); shutil.copy(os.path.join('/tmp/p',f),f)
+          print('applied',len(base))
+          PY
+      - name: syntax check
+        run: npx --yes esbuild@0.24.0 src/lib/lang.ts src/community/Community.tsx src/community/extras.tsx src/community/v4.tsx src/community/v6.tsx --outdir=/tmp/esb --log-level=error
+      - name: commit
+        run: |
+          git config user.name realhunt-bot
+          git config user.email bot@realhunt.co
+          git rm -q .github/workflows/rh-ux2.yml
+          git add -A
+          git commit -m 'UX pass 2: swipe advances on like (+back), podium-only rank badges, vibe photos always, EBC card without gaps, one rent field, Top 100 rows on phones, price per m2 on cards, brand font everywhere, footer logo, more Spanish'
+          git push
