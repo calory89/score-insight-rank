@@ -20,7 +20,7 @@ export type Row = Deal & {
   publish_at?: string | null; early?: boolean; price_drop?: number; sold_reports?: number; available_reports?: number;
   imported?: boolean;
 };
-export type FeedParams = { scope?: string; country?: string; category?: string; max_price?: number | null; min_sqm?: number | null; sort?: string; limit?: number; offset?: number; ids?: string[]; q?: string };
+export type FeedParams = { scope?: string; country?: string; category?: string; max_price?: number | null; min_sqm?: number | null; sort?: string; limit?: number; offset?: number; ids?: string[]; q?: string; terms?: string[] };
 // Guest pass: someone who opens an Insider's invite link (?ref=code) sees the Insider homes too, for
 // 7 days, so what an Insider shares never shows up blurred. The server checks the code belongs to an
 // Insider (community_can_see_early); this only remembers which code the visitor came with.
@@ -316,7 +316,7 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
     <div className={"hunt-filters" + (open ? " is-open" : "")}>
       <div className="hunt-chips" role="group" aria-label="Country">
         <button aria-pressed={!value.country} onClick={() => setDraft({ ...value, country: "" })}>{t("All countries")}</button>
-        {list.map(([c, n]) => <button key={c} aria-pressed={value.country === c} onClick={() => setDraft({ ...value, country: c })}>{c === "Scandinavia" ? t("Scandinavia · region") : c} <small>{n}</small></button>)}
+        {list.map(([c, n]) => { const sel = (value.country || "").split(",").filter(Boolean); const on = sel.includes(c); return <button key={c} aria-pressed={on} onClick={() => setDraft({ ...value, country: (on ? sel.filter((x) => x !== c) : [...sel, c]).join(",") })}>{c === "Scandinavia" ? t("Scandinavia · region") : c} <small>{n}</small></button>; })}
       </div>
       <div className="rh-active-filters">{([ ["category",applied.category], ["max_price",applied.max_price?money(applied.max_price):null], ["min_sqm",applied.min_sqm?`${applied.min_sqm} m²+`:null] ] as const).filter(([,v])=>v).map(([k,v])=><button key={k} aria-label={`${t("Remove")} ${v}`} onClick={()=>onChange({...applied,[k]:null})}>{v} ×</button>)}</div>
       <button type="button" className="hunt-link hunt-filter-toggle" aria-expanded={open} onClick={() => setOpen((o) => !o)}>{open ? t("Hide filters") : t("More filters")}{extra > 0 ? ` (${extra})` : ""}</button>

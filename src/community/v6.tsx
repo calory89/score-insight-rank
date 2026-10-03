@@ -68,7 +68,7 @@ export function RentLine({ price, big = false }: { price: number | null | undefi
 }
 
 // ---------------------------------------------------------------- 3: vibe chips with photos
-const VIBES: { k: string; label: string; q?: string; country?: string; type?: string; price?: number }[] = [
+export const VIBES: { k: string; label: string; q?: string; country?: string; type?: string; price?: number }[] = [
   { k: "sea", label: "By the sea", type: "beach" },
   { k: "lake", label: "Lake life", q: "lake" },
   { k: "stone", label: "Stone village", q: "stone" },
@@ -80,7 +80,9 @@ const VIBES: { k: string; label: string; q?: string; country?: string; type?: st
 ];
 // A photo for every vibe even when the feed is filtered to a country that has none (2-oct-2026).
 const VIBE_FALLBACK: Record<string, string> = { sea: "/finds/DdOGB56ABXI-0.webp", lake: "/finds/lake-como-peglio-85000-0.webp", stone: "/finds/lake-como-plesio-89000-0.webp", nordic: "/finds/DcAr2EbIAqx-1.webp", japan: "/finds/Dc56aI-icMP-1.webp", sauna: "/finds/DdPBLT2CLlb-1.webp", terrace: "/finds/acquappesa-sea-view-39000.webp", cheap: "/finds/grotte-santo-stefano-13000.webp" };
-export function Vibes({ active, onPick, rows=[] }: { rows?: Row[]; active: string; onPick: (v: { q?: string; country?: string; type?: string; price?: number; k: string } | null) => void }) {
+// 3-oct-2026: vibes combine with every other filter (Spain + by the sea, Italy + stone + terrace...)
+// and each one can be switched on and off on its own.
+export function Vibes({ isOn, onToggle, rows=[] }: { rows?: Row[]; isOn: (k: string) => boolean; onToggle: (v: (typeof VIBES)[number]) => void }) {
   const all=rows.length ? rows : Array.from(rowCache.values());
   const used = new Set<string>();
   const pick = (v: (typeof VIBES)[number]) => {
@@ -96,9 +98,9 @@ export function Vibes({ active, onPick, rows=[] }: { rows?: Row[]; active: strin
     <nav className="hv-vibes" aria-label="Browse by vibe">
       {VIBES.map((v) => {
         const img = pick(v);
-        const on = active === v.k;
+        const on = isOn(v.k);
         return (
-          <button key={v.k} aria-pressed={on} onClick={() => onPick(on ? null : v)} className={on ? "is-on" : ""}>
+          <button key={v.k} aria-pressed={on} onClick={() => onToggle(v)} className={on ? "is-on" : ""}>
             <span className="hv-vibe-img" style={{ backgroundColor: "#DFE0E2" }}>{img && <img src={img} alt="" loading="lazy" />}</span>
             <span>{v.label}</span>
           </button>

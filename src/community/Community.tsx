@@ -37,7 +37,7 @@ import { guestSaves, isGuestSaved, toggleGuestSave, clearGuestSaves, type GuestS
 import { Card4, CardSkeleton, Freshness, TabBar, DetailBar, HeartVote, ShareButton, SaveHeart, remember, rowCache, takeDetail, prefetchDetail, preloadImages } from "./v4";
 import { bumpIx, FLAG as FLAG_ } from "@/lib/rh";
 import { bumpStat } from "./v4";
-import { PodiumHero, Vibes, SmartSearch, EmptyState, DetailGallery, Amenities, Nearby, VideoTour, RentLine } from "./v6";
+import { PodiumHero, Vibes, VIBES, SmartSearch, EmptyState, DetailGallery, Amenities, Nearby, VideoTour, RentLine } from "./v6";
 import { useTheme, ThemeButton, Welcome, BoardButton, BoardsSection, BoardPage, CompareButton, ComparePage, MapFab, NotifBell, ProfilePage, saveOrder, useHomeSwipe, HomeNav } from "./v5";
 import { Ctx, useCommunity } from "./ctx";
 const MapView = lazy(() => import("./map"));
@@ -644,6 +644,8 @@ function Home() {
   const minSqm = Number(params.get("sqm")) || null;
   const sort = params.get("order") || "rank";
   const q = params.get("q") || "";
+  const vibeList = (params.get("vibe") || "").split(",").filter((k) => VIBES.some((v) => v.k === k && v.q));
+  const terms = vibeList.map((k) => VIBES.find((v) => v.k === k)!.q!);
   const location = useLocation();
   const [qText, setQText] = useState(q);
   const cacheKey = "rh.feed." + location.search + "." + (user?.id || "anon");
@@ -676,7 +678,7 @@ function Home() {
     if (!more) setFeed(null);
     setError("");
     try {
-      const data: any = await feedV3({ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort, q, limit: 24, offset: more ? base.rows.length : 0 } as any);
+      const data: any = await feedV3({ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort, q, terms, limit: 24, offset: more ? base.rows.length : 0 } as any);
       if (n !== seq.current) return;
       if (!more) freshPending.current = false;
       remember(data.rows);
@@ -716,7 +718,7 @@ function Home() {
   useEffect(() => {
     const cached=storage.get<any>(cacheKey,null);
     if(cached && Date.now()-cached.at<300000) {seq.current++; freshPending.current=false; feedKey.current=cacheKey;setFeed({ ...cached.feed, _key: cacheKey });setBusy(false);setError("");} else load();
-  }, [scope, country, category, maxPrice, minSqm, sort, q, user?.id]);
+  }, [scope, country, category, maxPrice, minSqm, sort, q, terms.join(","), user?.id]);
   useEffect(() => { setQText(q); }, [q]);
   useEffect(() => { if (feed?.rows) saveOrder(feed.rows.map((r: any) => r.slug)); }, [feed?.rows?.length, feed?.rows?.[0]?.id]);
   useEffect(() => {
@@ -769,13 +771,22 @@ function Home() {
     setParams(next);
   };
   const displayedRows = feed?.rows;
-  const plain = !country && !category && !q;
+  const plain = !country && !category && !q && !vibeList.length;
   const vibe = params.get("vibe") || "";
   const showPodium = podium && !!feed && plain && !vibe && !maxPrice && !minSqm && sort === "rank" && feed.rows.length >= 6;
-  const pickVibe = (v: any) => {
-    const next = new URLSearchParams();
-    if (scope === "all") next.set("tab", "all");
-    if (v) { next.set("vibe", v.k); if (v.q) next.set("q", v.q); if (v.country) next.set("country", v.country); if (v.type) next.set("type", v.type); if (v.price) next.set("price", String(v.price)); }
+  // Each vibe switches its own piece of the filter on or off and keeps everything else:
+  // by the sea = type beach, Nordic/Japanese = adds Sweden/Japan to the countries, under €30k = price,
+  // lake/stone/sauna/terrace = words the listing must contain (all of them).
+  const countries = country.split(",").filter(Boolean);
+  const vibeOn = (k: string) => { const v = VIBES.find((x) => x.k === k); if (!v) return false; if (v.q) return vibeList.includes(k); if (v.type) return category === v.type; if (v.country) return countries.includes(v.country); if (v.price) return maxPrice === v.price; return false; };
+  const toggleVibe = (v: (typeof VIBES)[number]) => {
+    const next = new URLSearchParams(params);
+    const on = vibeOn(v.k);
+    if (v.q) { const l = on ? vibeList.filter((x) => x !== v.k) : [...vibeList, v.k]; l.length ? next.set("vibe", l.join(",")) : next.delete("vibe"); }
+    else if (v.type) { on ? next.delete("type") : next.set("type", v.type); }
+    else if (v.country) { const l = on ? countries.filter((x) => x !== v.country) : [...countries, v.country]; l.length ? next.set("country", l.join(",")) : next.delete("country"); }
+    else if (v.price) { on ? next.delete("price") : next.set("price", String(v.price)); }
+    next.delete("search");
     setParams(next);
   };
   return (
@@ -787,14 +798,14 @@ function Home() {
         <SmartSearch value={q} onSearch={search} inputRef={searchRef} />
         <Freshness feed={feed} visitors={live?.today} />
       </section>
-      <Vibes rows={feed?.rows||[]} active={vibe} onPick={pickVibe} />
+      <Vibes rows={feed?.rows||[]} isOn={vibeOn} onToggle={toggleVibe} />
       <ExploreLinks />
 
       {!q && <BuyerPicks compact />}
       <div className="rh-sticky-filters"><Filters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort, q }} onChange={setFilters} /></div>
       <div className="rh-results-bar" ref={resultsRef}>
-        <p role="status" aria-live="polite"><strong>{busy && !feed ? t("Updating results…") : feed ? `${num(feed.total)} ${t("homes")}${country ? ` in ${country}` : ""}` : ""}</strong>
-          {(country || category || maxPrice || minSqm || q || sort !== "rank") && <Link to="/" className="hunt-link rh-clear">{t("Clear filters")}</Link>}</p>
+        <p role="status" aria-live="polite"><strong>{busy && !feed ? t("Updating results…") : feed ? `${num(feed.total)} ${t("homes")}${country ? ` in ${country.split(",").join(", ")}` : ""}` : ""}</strong>
+          {(country || category || maxPrice || minSqm || q || vibeList.length > 0 || sort !== "rank") && <Link to="/" className="hunt-link rh-clear">{t("Clear filters")}</Link>}</p>
         <div className="rh-results-tools"><RankingExplanation/>{plain && <button className="hunt-link" aria-expanded={podium} onClick={()=>setPodium(!podium)}>{podium?"Hide the top 3":"Show the top 3"}</button>}<span className="rh-motion"><MotionControl/></span></div>
       </div>
       {showPodium && <PodiumHero rows={feed.rows.slice(0, 3)} scope={scope} endsAt={feed?.week?.ends_at} />}
