@@ -235,3 +235,20 @@ export function startLang() {
   const go = () => { start(); requestAnimationFrame(reveal); };
   if (document.body) go(); else addEventListener("DOMContentLoaded", go);
 }
+
+// Search in Spanish (4-oct-2026): listings are stored in English, so Spanish words in the search box
+// are turned into the English words the data uses. Generic words ("casa", "barata") are dropped so
+// "casa en la playa" finds beach homes instead of nothing.
+const ES_DROP = new Set(["casa","casas","vivienda","viviendas","inmueble","propiedad","barata","baratas","barato","baratos","en","la","el","los","las","de","del","con","y","a","al","por","para","un","una","cerca","junto","venta","comprar","menos","euros","€"]);
+const ES_WORDS: Record<string, string> = { playa: "beach", mar: "sea", costa: "coast", pueblo: "village", aldea: "village", ciudad: "city", piscina: "pool", jardín: "garden", jardin: "garden", terraza: "terrace", montaña: "mountain", montana: "mountain", montañas: "mountain", lago: "lake", río: "river", rio: "river", campo: "countryside", rural: "rural", reformar: "renovat", reforma: "renovat", ruina: "ruin", piso: "apartment", apartamento: "apartment", estudio: "studio", chalet: "chalet", finca: "farm", granja: "farm", isla: "island", castillo: "castle", cabaña: "cabin", cabana: "cabin", bosque: "forest", vistas: "view", vista: "view", nieve: "ski", esquí: "ski", esqui: "ski", nueva: "new", nuevo: "new", obra: "build", madera: "wood", piedra: "stone", molino: "mill", iglesia: "church", japonesa: "Japan", japón: "Japan", japon: "Japan", italia: "Italy", francia: "France", españa: "Spain", espana: "Spain", suiza: "Switzerland", suecia: "Sweden", grecia: "Greece", alemania: "Germany", portugal: "Portugal" };
+export function searchQuery(q: string): string {
+  const raw = (q || "").trim();
+  if (!raw) return "";
+  const rev: Record<string, string> = {};
+  for (const [en, es] of Object.entries(COUNTRIES)) rev[es.toLowerCase()] = en;
+  let s = raw.toLowerCase();
+  // multi-word Spanish place names first (Estados Unidos, Lago de Como, Reino Unido…)
+  for (const es of Object.keys(rev).filter((k) => k.includes(" ")).sort((a, b) => b.length - a.length)) if (s.includes(es)) s = s.replace(es, " " + rev[es].toLowerCase() + " ");
+  const out = s.split(/[\s,]+/).filter(Boolean).map((w) => rev[w] ? rev[w].toLowerCase() : ES_WORDS[w] ? ES_WORDS[w].toLowerCase() : ES_DROP.has(w) ? "" : w).filter(Boolean);
+  return out.join(" ") || (ES_DROP.has(s.trim()) ? "" : raw);
+}

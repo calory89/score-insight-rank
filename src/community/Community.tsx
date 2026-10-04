@@ -32,7 +32,7 @@ import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapH
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
 import { LogoMark } from "@/components/realhunt/Logo";
-import { isEs } from "@/lib/lang";
+import { isEs, searchQuery } from "@/lib/lang";
 import { guestSaves, isGuestSaved, toggleGuestSave, clearGuestSaves, type GuestSave } from "./guestSaves";
 import { Card4, CardSkeleton, Freshness, TabBar, DetailBar, HeartVote, ShareButton, SaveHeart, remember, rowCache, takeDetail, prefetchDetail, preloadImages } from "./v4";
 import { bumpIx, FLAG as FLAG_ } from "@/lib/rh";
@@ -398,14 +398,17 @@ function Vote({
   useEffect(() => setPreview(null), [deal.week_up, deal.week_down]);
   async function vote(value: number) {
     if (busy) return;
-    if (selected === value) {
-      setNotice("You already voted on this deal ✓");
-      return;
-    }
+    if (selected === value) value = 0; // second tap takes the vote back
     setBusy(true);
-    setPreview(votePreview(deal, selected, value));
+    setPreview(votePreview(d, selected, value));
     try {
       await call("vote", { id: deal.id, value });
+      if (value === 0) {
+        setSession((s: Session) => { const votes = { ...(s.votes || {}) }; delete votes[deal.id]; return { ...s, votes }; });
+        setNotice(t("Vote removed."));
+        onChange?.();
+        return;
+      }
       setSession((s: Session) => ({
         ...s,
         votes: { ...s.votes, [deal.id]: value },
@@ -678,7 +681,7 @@ function Home() {
     if (!more) setFeed(null);
     setError("");
     try {
-      const data: any = await feedV3({ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort, q, terms, limit: 24, offset: more ? base.rows.length : 0 } as any);
+      const data: any = await feedV3({ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort, q: searchQuery(q), terms, limit: 24, offset: more ? base.rows.length : 0 } as any);
       if (n !== seq.current) return;
       if (!more) freshPending.current = false;
       remember(data.rows);
@@ -728,7 +731,7 @@ function Home() {
     }
   }, [params.get("search")]);
   useEffect(() => {
-    const on = (e: Event) => { const d = (e as CustomEvent).detail || {}; if (d.country) setMore({ country: d.country }); };
+    const on = (e: Event) => { const d = (e as CustomEvent).detail || {}; if (d.country && !d.removed) setMore({ country: d.country }); };
     window.addEventListener("rh-voted", on);
     return () => window.removeEventListener("rh-voted", on);
   }, [scope]);
@@ -831,7 +834,7 @@ function Home() {
           ? [0, 1, 2, 3, 4, 5].map((n) => <CardSkeleton key={n} />)
           : (showPodium ? displayedRows.slice(3) : displayedRows)?.map((d: any, index: number) => (
             <Fragment key={d.id}>
-              <Card4 deal={d} scope={scope} onChange={() => load()} onQuick={()=>setQuick(feed.rows.findIndex((r:any)=>r.id===d.id))} />
+              <Card4 deal={d} scope={scope} onQuick={()=>setQuick(feed.rows.findIndex((r:any)=>r.id===d.id))} />
               {index === 11 && plain && <SponsoredCard />}
             </Fragment>
           ))}
@@ -952,7 +955,7 @@ function Detail() {
   if (!d) return <Loading />;
   const listing = (d.has_source || safeUrl(d.source_url)) ? (
     <OriginalListingLink href={d.source_url || undefined} className="hunt-primary" target="_blank" rel="noopener noreferrer">
-      {t(user || d.source_url ? "View listing" : "View listing · free account")} <ArrowUpRight size={17} />
+      {t("View listing")}{!(user || d.source_url) && <span className="rh-cta-extra"><span aria-hidden="true"> · </span>{t("free account")}</span>} <ArrowUpRight size={17} />
     </OriginalListingLink>
   ) : null;
   return (

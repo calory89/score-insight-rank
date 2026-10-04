@@ -468,7 +468,15 @@ export function SwipePage() {
     bumpIx();
     setDx(like ? 600 : -600);
     const id = d.id;
-    if (like) {
+    const had = session?.votes?.[id] === 1;
+    if (!like && had) {
+      // Back + Skip on a home you liked by mistake takes the vote back (4-oct-2026).
+      call("vote", { id, value: 0 }).then(() => {
+        setSession((s: any) => { if (!s) return s; const votes = { ...(s.votes || {}) }; delete votes[id]; return { ...s, votes }; });
+        setNotice(t("Vote removed."));
+      }).catch((e) => setNotice((e as Error).message));
+    }
+    if (like && !had) {
       call("vote", { id, value: 1 }).then(() => {
         setSession((s: any) => (s ? { ...s, votes: { ...(s.votes || {}), [id]: 1 } } : s));
         const days = bumpStreak();

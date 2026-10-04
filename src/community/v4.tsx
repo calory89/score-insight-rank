@@ -2,6 +2,7 @@ import { isGuestSaved, toggleGuestSave } from "./guestSaves";
 import {PropertyImage, ComparePick} from "./BuyerTools";
 import {storage, usePreference} from "./buyer-state";
 import {t} from "./i18n";
+import { isEs } from "@/lib/lang";
 // RealHunt v4 UX (23-sep-2026): visual cards with the price on the photo, double tap to vote,
 // one-tap story sharing, a mobile tab bar, a sticky action bar on the home page and instant
 // navigation (cached rows, prefetched detail, preloaded photos).
@@ -55,19 +56,32 @@ export function useVote(deal: Deal, scope = "all", onChange?: () => void) {
   const selected = session?.votes?.[deal.id];
   const d = preview || deal;
   useEffect(() => setPreview(null), [deal.week_up, deal.week_down]);
-  async function vote(value = 1) {
+  // Tapping the heart again takes the vote back (4-oct-2026). Double tap on the photo only ever likes.
+  async function vote(want = 1, toggle = true) {
     if (busy || !session) return;
-    if (selected === value) return;
+    if (selected === want && !toggle) return;
+    const value = selected === want ? 0 : want;
     setBusy(true);
-    setPreview(votePreview(deal, selected, value));
+    setPreview(votePreview(d, selected, value));
     try {
       await call("vote", { id: deal.id, value });
+      if (value === 0) {
+        setSession((s: Session) => { const votes = { ...(s.votes || {}) }; delete votes[deal.id]; return { ...s, votes }; });
+        setNotice(t("Vote removed."));
+        track("community_unvote", { find: deal.slug });
+        window.dispatchEvent(new CustomEvent("rh-voted", { detail: { id: deal.id, country: deal.country, removed: true } }));
+        onChange?.();
+        return;
+      }
       setSession((s: Session) => ({ ...s, votes: { ...s.votes, [deal.id]: value } }));
       const days = bumpStreak();
       const others = Math.max(0, (scope === "all" ? deal.life_up : deal.week_up) || 0);
-      const crowd = others > 0 ? `You and ${num(others)} ${others === 1 ? "other" : "others"} love this` : "You are the first to love this";
-      const place = deal.rank ? ` · #${deal.rank} ${scope === "all" ? "all time" : "this week"}` : "";
-      setNotice(`❤ ${crowd}${place}.${days > 1 ? ` ${days}-day streak 🔥` : " Share it to push it up."}`);
+      const es = isEs();
+      const crowd = others > 0
+        ? (es ? `A ti y a ${num(others)} ${others === 1 ? "persona más" : "personas más"} os encanta` : `You and ${num(others)} ${others === 1 ? "other" : "others"} love this`)
+        : (es ? "Eres el primero en votarla" : "You are the first to love this");
+      const place = deal.rank ? ` · #${deal.rank} ${scope === "all" ? (es ? "de todos los tiempos" : "all time") : (es ? "esta semana" : "this week")}` : "";
+      setNotice(`❤ ${crowd}${place}.${days > 1 ? (es ? ` ${days} días seguidos 🔥` : ` ${days}-day streak 🔥`) : (es ? " Compártela para que suba." : " Share it to push it up.")}`);
       bumpStat("votes");track("community_vote",{find:deal.slug});
       celebrate(days, stats().votes || 0);
       bumpIx();
@@ -88,8 +102,8 @@ export function HeartVote({ deal, scope = "all", onChange, big = false }: { deal
   const [pop, setPop] = useState(0);
   return (
     <button className={"hv-heart" + (v.selected ? " is-on" : "") + (big ? " is-big" : "")} disabled={!v.ready || v.busy}
-      aria-pressed={v.selected} aria-label={v.selected ? "You voted for this home" : "Vote for this home"}
-      onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!v.selected) { setPop((n) => n + 1); v.vote(1); } }}>
+      aria-pressed={v.selected} aria-label={v.selected ? "Remove your vote" : "Vote for this home"}
+      onClick={(e) => { e.preventDefault(); e.stopPropagation(); if (!v.selected) setPop((n) => n + 1); v.vote(1); }}>
       <Heart key={pop} size={big ? 22 : 19} fill={v.selected ? "currentColor" : "none"} className={pop ? "hv-beat" : ""} />
       <strong>{num(v.total)}</strong>
     </button>
@@ -334,7 +348,7 @@ export function Card4({ deal, scope = "all", onChange, onQuick }: { deal: Row; s
   return (
     <article className="hv-card" onMouseEnter={warm} onTouchStart={warm}>
       <div className="hv-frame" style={{ backgroundColor: cardColor(deal.slug) }}>
-        <Photos deal={deal} href={href} onDouble={() => { if (!v.selected) v.vote(1); }} />
+        <Photos deal={deal} href={href} onDouble={() => { if (!v.selected) v.vote(1, false); }} />
         <div className="hv-top">
           {deal.rank && deal.rank <= 3 ? <span className={"hv-rank" + (deal.rank <= 3 ? " is-podium" : "") + (move ? " is-up" : "")}>#{deal.rank}{move ? <em> ▲{move}</em> : null}</span> : null}
           <Chip deal={deal} scope={scope} />
@@ -348,7 +362,7 @@ export function Card4({ deal, scope = "all", onChange, onQuick }: { deal: Row; s
       </Link>
       <div className="hv-actions">
         <button className={"hv-heart" + (v.selected ? " is-on" : "")} disabled={!v.ready || v.busy} aria-pressed={v.selected}
-          title={(deal.launch_points||0)>0?`${scope==="all"?deal.launch_points:deal.launch_week_points||0} initial points + ${scope==="all"?deal.life_up:deal.week_up} real votes`:undefined} aria-label={v.selected ? "You voted for this home" : "Vote for this home"} onClick={() => v.vote(1)}>
+          title={(deal.launch_points||0)>0?`${scope==="all"?deal.launch_points:deal.launch_week_points||0} initial points + ${scope==="all"?deal.life_up:deal.week_up} real votes`:undefined} aria-label={v.selected ? "Remove your vote" : "Vote for this home"} onClick={() => v.vote(1)}>
           <Heart size={19} fill={v.selected ? "currentColor" : "none"} /><strong key={v.total} className="hv-count">{num(v.total)}</strong>
         </button>
         <ComparePick deal={deal}/>{onQuick && <button className="rh-card-tool rh-quick-btn" onClick={onQuick}>{t("Quick view")}</button>}

@@ -116,3 +116,10 @@ html.rh-i18n-wait #root { visibility: hidden; }
 .hunt-guest-note { color: #40444C; margin: 4px 0 14px; }
 .hv-swipe-top .hv-swipe-h1 { font-size: 26px; margin: 0; letter-spacing: -0.6px; font-weight: 800; }
 .hunt-quick-standalone h1 { font-size: 28px; letter-spacing: -0.8px; margin: 0 0 8px; }
+
+/* 4-oct-2026: the phone action bar never overflows. The "· free account" hint is dropped there
+   (the button already opens the free sign-up) and the button can shrink instead of pushing the price out. */
+.hv-detailbar .rh-cta-extra { display: none; }
+.hv-detailbar .hunt-primary { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.hv-detailbar-price { min-width: 72px; }
+.rh-quick-dialog .rh-row .hv-heart { min-height: 40px; }
