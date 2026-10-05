@@ -109,14 +109,14 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
         { maxWidth: 240, minWidth: 220, autoPanPadding: [24, 24], closeButton: true }
       );
       // Tap a pin: fly in so you can see exactly where it is.
-      mk.on("click", () => { const z = Math.max(m.getZoom(), 12); m.flyTo([d.lat!, d.lng!], z, { duration: 0.6 }); });
+      mk.on("click", () => { const z = Math.max(m.getZoom(), 12); const h = m.getSize().y; const up = Math.min(140, h * 0.3); const c = m.unproject(m.project([d.lat!, d.lng!], z).subtract([0, up]), z); m.flyTo(c, z, { duration: 0.6 }); });
       if (isF) focusedMk = mk;
       return mk;
     };
     const draw = () => {
       const open = (m as any)._popup && m.hasLayer((m as any)._popup) ? (m as any)._popup._source?.options?.title : null;
       g.clearLayers(); focusedMk = null;
-      const cell = 52, cells = new Map<string, Row[]>();
+      const cell = 66, cells = new Map<string, Row[]>();
       for (const d of list) {
         if (focus && d.slug === focus) { g.addLayer(pinFor(d)); continue; }
         const p = m.latLngToLayerPoint([d.lat!, d.lng!]);

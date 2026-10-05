@@ -113,3 +113,4 @@ html.hm-lock, html.hm-lock body { overflow: hidden; }
 .hm-cl small { font-size: 9.5px; font-weight: 600; opacity: .92; margin-top: 2px; }
 .hm-cl:hover { transform: translate(-50%, -50%) scale(1.07); }
 @media (max-width: 700px) { .hm-tools button { padding: 7px 10px; font-size: 12px; min-height: 34px; } .hm-tools { max-width: calc(100% - 20px); } }
+@media (max-width: 700px) { .hm.hm-feed { height: 380px; } .hm.hm-detail { height: 340px; } .hm-pop, .hm-pop img { width: 200px; } .hm-pop img { height: 112px; } }
