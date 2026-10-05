@@ -107,3 +107,9 @@ html.hm-lock, html.hm-lock body { overflow: hidden; }
 .hunt.is-dark .hm-pin { border-color: #1A1B1E; }
 .hunt.is-dark .hm-tools button { background: #1A1B1E; color: #ECEDEE; border-color: #33363A; }
 .hunt.is-dark .hm-tools button:first-child { background: #ECEDEE; color: #111214; }
+/* Grouped pins: number of homes and the lowest price; tap zooms in. */
+.hm-cl { position: absolute; transform: translate(-50%, -50%); display: grid; place-items: center; min-width: 46px; height: 46px; padding: 0 8px; border-radius: 999px; background: #D4420C; color: #fff; border: 3px solid #fff; box-shadow: 0 3px 12px rgba(0,0,0,.3); cursor: pointer; font-family: Inter, system-ui, sans-serif; line-height: 1; text-align: center; white-space: nowrap; }
+.hm-cl b { font-size: 15px; font-weight: 800; }
+.hm-cl small { font-size: 9.5px; font-weight: 600; opacity: .92; margin-top: 2px; }
+.hm-cl:hover { transform: translate(-50%, -50%) scale(1.07); }
+@media (max-width: 700px) { .hm-tools button { padding: 7px 10px; font-size: 12px; min-height: 34px; } .hm-tools { max-width: calc(100% - 20px); } }

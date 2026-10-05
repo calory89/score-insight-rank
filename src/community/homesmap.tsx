@@ -48,7 +48,7 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
     const sat = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { attribution: "Imagery © Esri", maxZoom: 19 });
     street.addTo(m);
     L.control.zoom({ position: "bottomright", zoomInTitle: t("Zoom in"), zoomOutTitle: t("Zoom out") }).addTo(m);
-    L.control.layers({ [t("Map")]: street, [t("Satellite")]: sat }, undefined, { position: "topright", collapsed: false }).addTo(m);
+    (m as any)._hmLayers = { street, sat };
     layer.current = L.layerGroup().addTo(m);
     map.current = m;
     const click = (e: Event) => {
@@ -88,16 +88,20 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
     return () => { live = false; };
   }, [JSON.stringify(params), rows]);
 
-  // Pins.
+  // Pins. Close pins are grouped into a round counter that zooms in when tapped, so a country never
+  // turns into a pile of overlapping prices; at street level every home has its own price pin.
+  const sat = useRef(false);
+  const [isSat, setIsSat] = useState(false);
   useEffect(() => {
     const m = map.current, g = layer.current; if (!m || !g || !data) return;
-    g.clearLayers();
-    const pts: L.LatLngExpression[] = [];
-    let focused: L.Marker | null = null;
     const list = data.filter((d) => d.lat != null && d.lng != null);
     onCount?.(list.length);
-    list.forEach((d) => {
-      const isF = focus && d.slug === focus;
+    const pts: L.LatLngExpression[] = list.map((d) => [d.lat!, d.lng!]);
+    bounds.current = pts.length ? L.latLngBounds(pts) : null;
+    setNb(pts.length);
+    let focusedMk: L.Marker | null = null;
+    const pinFor = (d: Row) => {
+      const isF = !!focus && d.slug === focus;
       const icon = L.divIcon({ className: "hm-pin-wrap", html: `<span class="hm-pin${isF ? " is-focus" : ""}">${esc(short(d.price_eur))}</span>`, iconSize: [0, 0] });
       const mk = L.marker([d.lat!, d.lng!], { icon, zIndexOffset: isF ? 1000 : 0, riseOnHover: true, keyboard: true, title: `${money(d.price_eur)} · ${d.location_name || ""}` });
       mk.bindPopup(
@@ -106,19 +110,50 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
       );
       // Tap a pin: fly in so you can see exactly where it is.
       mk.on("click", () => { const z = Math.max(m.getZoom(), 12); m.flyTo([d.lat!, d.lng!], z, { duration: 0.6 }); });
-      mk.addTo(g); pts.push([d.lat!, d.lng!]);
-      if (isF) focused = mk;
-    });
-    bounds.current = pts.length ? L.latLngBounds(pts) : null;
-    setNb(pts.length);
+      if (isF) focusedMk = mk;
+      return mk;
+    };
+    const draw = () => {
+      const open = (m as any)._popup && m.hasLayer((m as any)._popup) ? (m as any)._popup._source?.options?.title : null;
+      g.clearLayers(); focusedMk = null;
+      const cell = 52, cells = new Map<string, Row[]>();
+      for (const d of list) {
+        if (focus && d.slug === focus) { g.addLayer(pinFor(d)); continue; }
+        const p = m.latLngToLayerPoint([d.lat!, d.lng!]);
+        const k = m.getZoom() >= 13 ? d.slug : `${Math.floor(p.x / cell)}:${Math.floor(p.y / cell)}`;
+        (cells.get(k) || cells.set(k, []).get(k)!).push(d);
+      }
+      cells.forEach((grp) => {
+        if (grp.length === 1) { const mk = pinFor(grp[0]); g.addLayer(mk); if (open && mk.options.title === open) mk.openPopup(); return; }
+        const b = L.latLngBounds(grp.map((d) => [d.lat!, d.lng!] as L.LatLngExpression));
+        const from = Math.min(...grp.map((d) => d.price_eur || 0));
+        const icon = L.divIcon({ className: "hm-pin-wrap", html: `<span class="hm-cl"><b>${grp.length}</b><small>${esc(t("from"))} ${esc(short(from))}</small></span>`, iconSize: [0, 0] });
+        const c = L.marker(b.getCenter(), { icon, title: `${grp.length} homes` });
+        c.on("click", () => { const z = m.getBoundsZoom(b, false, L.point(60, 60)); if (z > m.getZoom()) m.flyToBounds(b, { padding: [60, 60], maxZoom: 14, duration: 0.6 }); else m.flyTo(b.getCenter(), Math.min(m.getZoom() + 3, 16), { duration: 0.6 }); });
+        g.addLayer(c);
+      });
+    };
+    m.on("zoomend", draw);
     const place = () => {
       m.invalidateSize();
-      if (focused) { m.setView((focused as L.Marker).getLatLng(), around?.zoom ?? 11); if (openFocus) (focused as L.Marker).openPopup(); }
+      const f = list.find((d) => focus && d.slug === focus);
+      if (f) m.setView([f.lat!, f.lng!], around?.zoom ?? 11);
       else if (around) m.setView([around.lat, around.lng], around.zoom ?? 11);
       else if (bounds.current) m.fitBounds(bounds.current, { padding: [30, 30], maxZoom: 10 });
+      draw();
+      if (focusedMk && openFocus) (focusedMk as L.Marker).openPopup();
     };
-    place(); setTimeout(place, 250);
+    place(); const tm = setTimeout(place, 250);
+    return () => { clearTimeout(tm); m.off("zoomend", draw); };
   }, [data, focus]);
+
+  // Street or satellite.
+  const toggleSat = () => {
+    const m = map.current; if (!m) return;
+    const tl = (m as any)._hmLayers as { street: L.TileLayer; sat: L.TileLayer };
+    sat.current = !sat.current; setIsSat(sat.current);
+    if (sat.current) { m.removeLayer(tl.street); tl.sat.addTo(m); } else { m.removeLayer(tl.sat); tl.street.addTo(m); }
+  };
 
   const fitAll = () => { const m = map.current; if (m && bounds.current) m.flyToBounds(bounds.current, { padding: [30, 30], maxZoom: 10, duration: 0.6 }); };
   const myPlace = () => {
@@ -131,6 +166,7 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
       <div className="hm-tools">
         <button type="button" onClick={(e) => { e.stopPropagation(); setFull(!full); }} aria-pressed={full}>{full ? t("Close map") : t("Full screen")}</button>
         {nb > 1 && <button type="button" onClick={(e) => { e.stopPropagation(); fitAll(); }}>{t("See all homes")}</button>}
+        <button type="button" onClick={(e) => { e.stopPropagation(); toggleSat(); }} aria-pressed={isSat}>{isSat ? t("Map view") : t("Satellite")}</button>
         {"geolocation" in navigator && <button type="button" onClick={(e) => { e.stopPropagation(); myPlace(); }}>{t("Near me")}</button>}
       </div>
       {data === null && <div className="hm-loading">{t("Loading map…")}</div>}
