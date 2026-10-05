@@ -15,7 +15,7 @@ import { feedAll, niceTitle, Lightbox, type Row } from "./extras";
 import { useVote, SaveHeart, ShareButton, remember, rowCache, preloadImages } from "./v4";
 import COLORS from "@/data/card-colors.json";
 
-const MiniMap = lazy(() => import("./minimap"));
+const HomesMap = lazy(() => import("./homesmap"));
 const num = (v: number = 0) => new Intl.NumberFormat("en").format(v);
 export const cardColor = (slug: string) => (COLORS as Record<string, string>)[slug] || "#DFE0E2";
 
@@ -242,8 +242,11 @@ export function Nearby({ deal }: { deal: Deal }) {
   return (
     <section className="hv-nearby">
       <h2>Where it is</h2>
-      <Suspense fallback={<div className="hv-minimap" />}><MiniMap lat={n.lat} lng={n.lng} zoom={regionOnly ? 7 : 11} /></Suspense>
-      <p className="hunt-fine"><MapPin size={13} /> {deal.location_name}{regionOnly ? " · the seller only gives the region" : " · approximate area, not the exact house"}</p>
+      {/* Every home in the same country on one map, this one in orange and open; zoom and drag freely. */}
+      <Suspense fallback={<div className="hm is-embedded hm-detail"><div className="hm-map" /></div>}>
+        <HomesMap params={{ scope: "all", country: deal.country }} focus={deal.slug} openFocus={false} around={{ lat: n.lat, lng: n.lng, zoom: regionOnly ? 7 : 11 }} embedded className="hm-detail" />
+      </Suspense>
+      <p className="hunt-fine"><MapPin size={13} /> {deal.location_name}{regionOnly ? " · the seller only gives the region" : " · approximate area, not the exact house"} · <Link to={`/map?country=${encodeURIComponent(deal.country)}&focus=${encodeURIComponent(deal.slug)}`}>{t("Open the big map")}</Link></p>
       {items.length > 0 && <ul>{items.map(([i, a, b]) => <li key={a}>{i}<span>{a}</span><b>{b}</b></li>)}</ul>}
       <p className="hunt-fine">Distances are straight lines, measured from the town.</p>
     </section>

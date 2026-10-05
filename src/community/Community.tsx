@@ -41,6 +41,7 @@ import { PodiumHero, Vibes, VIBES, SmartSearch, EmptyState, DetailGallery, Ameni
 import { useTheme, ThemeButton, Welcome, BoardButton, BoardsSection, BoardPage, CompareButton, ComparePage, MapFab, NotifBell, ProfilePage, saveOrder, useHomeSwipe, HomeNav } from "./v5";
 import { Ctx, useCommunity } from "./ctx";
 const MapView = lazy(() => import("./map"));
+const HomesMap = lazy(() => import("./homesmap"));
 import {
   ArrowUp,
   ArrowUpRight,
@@ -661,6 +662,10 @@ function Home() {
   const freshPending = useRef(false);
   const [quick, setQuick] = useState<number | null>(null);
   const [podium, setPodium] = usePreference("rh.podium", false);
+  // Map above the results: opens by itself when a country is picked; the button shows or hides it.
+  const [mapMode, setMapMode] = useState<"auto" | "on" | "off">("auto");
+  useEffect(() => { setMapMode("auto"); }, [country]);
+  const showMap = mapMode === "on" || (mapMode === "auto" && !!country);
   const restored = useRef(false);
   const feedKey = useRef(cacheKey);
   useEffect(() => { if (!feed || restored.current) return; restored.current=true; const y=storage.get<number>(cacheKey+".scroll",0); requestAnimationFrame(()=>window.scrollTo(0,y)); }, [feed]);
@@ -809,8 +814,13 @@ function Home() {
       <div className="rh-results-bar" ref={resultsRef}>
         <p role="status" aria-live="polite"><strong>{busy && !feed ? t("Updating results…") : feed ? `${num(feed.total)} ${t("homes")}${country ? ` in ${country.split(",").join(", ")}` : ""}` : ""}</strong>
           {(country || category || maxPrice || minSqm || q || vibeList.length > 0 || sort !== "rank") && <Link to="/" className="hunt-link rh-clear">{t("Clear filters")}</Link>}</p>
-        <div className="rh-results-tools"><RankingExplanation/>{plain && <button className="hunt-link" aria-expanded={podium} onClick={()=>setPodium(!podium)}>{podium?"Hide the top 3":"Show the top 3"}</button>}<span className="rh-motion"><MotionControl/></span></div>
+        <div className="rh-results-tools"><button type="button" className="hunt-link rh-maptoggle" aria-expanded={showMap} onClick={() => setMapMode(showMap ? "off" : "on")}>{showMap ? t("Hide map") : t("Show on map")}</button><RankingExplanation/>{plain && <button className="hunt-link" aria-expanded={podium} onClick={()=>setPodium(!podium)}>{podium?"Hide the top 3":"Show the top 3"}</button>}<span className="rh-motion"><MotionControl/></span></div>
       </div>
+      {showMap && (
+        <Suspense fallback={<div className="hm is-embedded hm-feed"><div className="hm-map" /></div>}>
+          <HomesMap params={{ scope, country, category, max_price: maxPrice, min_sqm: minSqm, q: searchQuery(q), terms } as any} embedded className="hm-feed" />
+        </Suspense>
+      )}
       {showPodium && <PodiumHero rows={feed.rows.slice(0, 3)} scope={scope} endsAt={feed?.week?.ends_at} />}
       {q && feed && <p className="hv-searchnote">{feed.total} {feed.total === 1 ? "home" : "homes"} for “{q}”</p>}
       {nextUp.length > 0 && (

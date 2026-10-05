@@ -60,3 +60,50 @@
   .rh-sticky-filters .hunt-filter-row { flex-basis: 100%; }
 }
 @media (max-width: 700px) { .rh-results-tools .rh-motion { display: none; } }
+
+/* Maps (6-oct-2026): zoom on every device, full screen, price pins, map above the feed and on each home. */
+.hm { position: relative; margin-top: 10px; border-radius: 18px; overflow: hidden; border: 1px solid #E2E3E6; background: #DFE0E2; isolation: isolate; }
+.hm-map { width: 100%; height: 100%; z-index: 0; }
+.hm.hm-page { height: max(420px, calc(100dvh - 260px)); }
+.hm.hm-feed { height: 360px; margin: 6px 0 18px; }
+.hm.hm-detail { height: 320px; }
+@media (max-width: 700px) {
+  .hm.hm-page { height: max(380px, calc(100dvh - 300px)); border-radius: 14px; }
+  .hm.hm-feed { height: 300px; border-radius: 14px; }
+  .hm.hm-detail { height: 280px; border-radius: 14px; }
+}
+.hm.is-full { position: fixed !important; inset: 0; z-index: 3000; height: 100dvh !important; margin: 0; border-radius: 0; border: 0; }
+html.hm-lock, html.hm-lock body { overflow: hidden; }
+.hm-tools { position: absolute; z-index: 500; top: 10px; left: 10px; display: flex; gap: 6px; flex-wrap: wrap; max-width: calc(100% - 140px); }
+.hm.is-full .hm-tools { top: calc(10px + env(safe-area-inset-top)); }
+.hm-tools button { background: #fff; color: #111214; border: 1px solid rgba(0,0,0,.12); border-radius: 999px; padding: 8px 12px; font: 600 13px Inter, system-ui, sans-serif; box-shadow: 0 2px 8px rgba(0,0,0,.15); cursor: pointer; min-height: 36px; }
+.hm-tools button:first-child { background: #111214; color: #fff; }
+.hm-loading { position: absolute; inset: 0; display: grid; place-items: center; z-index: 400; font: 600 14px Inter, system-ui, sans-serif; color: #4A4E57; background: rgba(255,255,255,.55); pointer-events: none; }
+.hm-hint { position: absolute; z-index: 450; left: 50%; bottom: 12px; transform: translateX(-50%); background: rgba(17,18,20,.82); color: #fff; padding: 6px 12px; border-radius: 999px; font: 600 12px Inter, system-ui, sans-serif; pointer-events: none; white-space: nowrap; }
+/* Price pins */
+.hm-pin-wrap { background: none; border: 0; }
+.hm-pin { position: absolute; transform: translate(-50%, -100%); display: inline-block; background: #111214; color: #fff; font: 700 12px/1 Inter, system-ui, sans-serif; padding: 6px 8px; border-radius: 999px; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,.3); border: 2px solid #fff; cursor: pointer; transition: transform .12s; }
+.hm-pin::after { content: ""; position: absolute; left: 50%; bottom: -6px; transform: translateX(-50%); border: 5px solid transparent; border-top-color: #111214; }
+.hm-pin:hover { transform: translate(-50%, -100%) scale(1.08); }
+.hm-pin.is-focus { background: #D4420C; font-size: 14px; padding: 8px 11px; }
+.hm-pin.is-focus::after { border-top-color: #D4420C; }
+/* Pop-up card */
+.hm-pop { display: grid; gap: 3px; width: 220px; color: #111214 !important; text-decoration: none !important; }
+.hm-pop img { width: 220px; height: 146px; object-fit: cover; border-radius: 10px; background: #E2E3E6; }
+.hm-pop b { font-size: 17px; margin-top: 4px; }
+.hm-pop small { color: #797E89; }
+.hm-pop em { font-style: normal; color: #D4420C; font-weight: 700; margin-top: 2px; }
+.hm .leaflet-popup-content { margin: 10px; }
+/* Bigger, touch-friendly controls */
+.hm .leaflet-bar a, .hm .leaflet-touch .leaflet-bar a { width: 40px; height: 40px; line-height: 40px; font-size: 22px; }
+.hm .leaflet-control-zoom { border: 0; box-shadow: 0 2px 10px rgba(0,0,0,.2); border-radius: 12px; overflow: hidden; margin: 0 10px 16px 0; }
+.hm.is-full .leaflet-control-zoom { margin-bottom: calc(16px + env(safe-area-inset-bottom)); }
+.hm .leaflet-control-layers { border: 0; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,.2); font: 600 12px Inter, system-ui, sans-serif; }
+.hm .leaflet-control-layers-expanded { padding: 6px 10px; }
+.hm.is-full .leaflet-top { top: env(safe-area-inset-top); }
+.rh-maptoggle { font-weight: 700; }
+/* Dark mode */
+.hunt.is-dark .hm { border-color: #292B2E; }
+.hunt.is-dark .hm-pin { border-color: #1A1B1E; }
+.hunt.is-dark .hm-tools button { background: #1A1B1E; color: #ECEDEE; border-color: #33363A; }
+.hunt.is-dark .hm-tools button:first-child { background: #ECEDEE; color: #111214; }
