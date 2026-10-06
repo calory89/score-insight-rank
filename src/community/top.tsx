@@ -46,7 +46,7 @@ export const DIMS: [string, string, string][] = [
   ["delivery", "Delivery", "Ready homes score most, then the ones finishing soonest"],
   ["developer", "Developer", "Track record: finished projects and how long they have been building"],
   ["space", "Space", "Size of the smallest unit next to the other projects here"],
-  ["demand", "Buyer demand", "Views, saves, votes and questions from buyers on RealHunt"],
+  ["demand", "Visitor interest", "How many people viewed, saved, voted for or asked about it on RealHunt, next to the other projects here"],
   ["transparency", "Listing detail", "How much the developer publishes: prices, sizes, dates, photos"],
 ];
 export const AMEN: [string, string][] = [["pool", "Pool"], ["gym", "Gym"], ["spa", "Spa & sauna"], ["cowork", "Coworking"], ["rooftop", "Rooftop"], ["restaurant", "Restaurant or bar"], ["security", "Security"], ["parking", "Parking"], ["kids", "Kids area"], ["garden", "Garden"], ["yoga", "Yoga"], ["sport", "Tennis or padel"], ["lift", "Lift"], ["cinema", "Cinema"], ["bbq", "BBQ"], ["furnished", "Furnished"], ["smart", "Smart home"]];
@@ -85,7 +85,7 @@ function HowItWorks({ dest }: { dest: string }) {
         <div><strong>Base score (up to 100)</strong><ul>{PARTS.map(([, l, m]) => <li key={l}>{l}: up to {m}</li>)}</ul><small>Cheaper entry price and a lower price per m² score more. Areas near the busiest beaches and towns score more. Ready homes score more than homes still on plans.</small></div>
         <div><strong>Buyer demand (no limit)</strong><ul><li>Vote: +3</li><li>Save: +2</li><li>Question to the developer: +4</li><li>Click to the developer's website or share: +1</li><li>Every 20 visitors: +1</li></ul><small>One vote and one save per person. Nobody can pay to move up. Only projects whose developer has a working website and a phone or WhatsApp can enter.</small><strong className="tp-how-v">Verified developer: +5</strong><small>The developer showed us their company papers and answers buyers directly. Verifying is free.</small></div>
       </div>
-      <p>Every project also gets 10 scores from 0 to 100: price, value per m², location, beach, facilities, delivery, developer, space, buyer demand and listing detail. Use the filters to sort by the one that matters to you.</p>
+      <p>Every project also gets 10 scores from 0 to 100: price, value per m², location, beach, facilities, delivery, developer, space, visitor interest and listing detail. Use the filters to sort by the one that matters to you.</p>
       <p className="hunt-fine">Prices, sizes and dates come from the public listings on {D.date}. {D.fx ? D.fx + " " : ""}They change, so check with the developer before you decide. This is a ranking, not advice to buy. <Link className="hunt-link" to="/top/how-we-rank">The full formula, sources and how we make money</Link></p>
     </details>
   );

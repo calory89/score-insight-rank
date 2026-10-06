@@ -2955,3 +2955,5 @@ html.rh-dark, html.rh-dark body { background: #0C0D0E; }
   .tp-dims.is-mini { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tp-selects select { flex: 1 1 45%; }
 }
+.tp-filters .tp-selects select { width: auto; flex: 0 1 auto; }
+@media (max-width: 640px) { .tp-filters .tp-selects select { flex: 1 1 45%; width: 100%; } }
