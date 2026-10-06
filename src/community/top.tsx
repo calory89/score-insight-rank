@@ -66,7 +66,6 @@ export function DimBars({ dims, keys, mini }: { dims: any; keys?: string[]; mini
     </div>
   );
 }
-const PARTS: [string, string, number][] = [["entry", "Entry price", 20], ["value", "Price per m²", 25], ["location", "Area", 20], ["stage", "Build stage", 15], ["info", "Listing detail", 10], ["developer", "Developer track record", 10]];
 
 function Move({ rank, base }: { rank: number; base: number }) {
   const d = base - rank;
@@ -80,12 +79,9 @@ function HowItWorks({ dest }: { dest: string }) {
     <details className="tp-how">
       <summary>How the ranking works</summary>
       <p>We checked {D.checked} new-build projects listed for sale in {D.name} and kept the 100 with the best base score. Then buyers decide: every vote, save and question moves a project up.</p>
-      <p>Each project gets a grade from 60 to 90. It compares the project with the other 99: the leader gets 90 and number 100 gets 60. Every project here is already among the best {Math.round(100 / D.checked * 100)}% of what we checked.</p>
-      <div className="tp-how-grid">
-        <div><strong>Base score (up to 100)</strong><ul>{PARTS.map(([, l, m]) => <li key={l}>{l}: up to {m}</li>)}</ul><small>Cheaper entry price and a lower price per m² score more. Areas near the busiest beaches and towns score more. Ready homes score more than homes still on plans.</small></div>
-        <div><strong>Buyer demand (no limit)</strong><ul><li>Vote: +3</li><li>Save: +2</li><li>Question to the developer: +4</li><li>Click to the developer's website or share: +1</li><li>Every 20 visitors: +1</li></ul><small>One vote and one save per person. Nobody can pay to move up. Only projects whose developer has a working website and a phone or WhatsApp can enter.</small><strong className="tp-how-v">Verified developer: +5</strong><small>The developer showed us their company papers and answers buyers directly. Verifying is free.</small></div>
-      </div>
-      <p>Every project also gets 10 scores from 0 to 100: price, value per m², location, beach, facilities, delivery, developer, space, visitor interest and listing detail. Use the filters to sort by the one that matters to you.</p>
+      <p>The grade is the average of 10 scores from 0 to 100. Nothing else is added: no bonus and no hidden weights.</p>
+      <ul className="tp-how-dims">{DIMS.map(([k, l, h]) => <li key={k}><b>{l}</b>: {h}.</li>)}</ul>
+      <p>Price, value per m², space and visitor interest compare a project with the others in this ranking. Beach and facilities use the same scale in every destination. Votes, saves and questions raise visitor interest, so buyers move the ranking. One vote and one save per person, and nobody can pay to move up. A verified developer gets 100 in listing detail, because we have seen their papers.</p>
       <p className="hunt-fine">Prices, sizes and dates come from the public listings on {D.date}. {D.fx ? D.fx + " " : ""}They change, so check with the developer before you decide. This is a ranking, not advice to buy. <Link className="hunt-link" to="/top/how-we-rank">The full formula, sources and how we make money</Link></p>
     </details>
   );
@@ -181,7 +177,7 @@ export function TopListPage() {
       )}
       <div className="tp-dev-cta">
         <Building2 size={20} />
-        <div><strong>Developer in {D.name}? Is one of these your business?</strong><p>Verify it for free: you get the Verified badge, +5 points in the ranking and the buyers' questions straight to you. Open your project and press "Verify it". Not in the list? List it free and it enters the ranking.</p></div>
+        <div><strong>Developer in {D.name}? Is one of these your business?</strong><p>Verify it for free: you get the Verified badge, 100 in listing detail and the buyers' questions straight to you. Open your project and press "Verify it". Not in the list? List it free and it enters the ranking.</p></div>
         <Link className="hunt-primary" to="/network/start">List a project</Link>
       </div>
       <MoneyNote compact />
@@ -268,7 +264,7 @@ export function TopProjectPage() {
       {!p.verified && (
         <div className="tp-claim-strip">
           <ShieldCheck size={20} />
-          <div><strong>Is {p.name} your business?</strong><span>{p.my_claim === "pending" ? "We are checking your documents. It takes up to two working days." : p.my_claim === "rejected" ? "We could not verify it with the documents sent. You can try again." : "Verify it free: Verified badge, +5 in the ranking and buyers' questions straight to you."}</span></div>
+          <div><strong>Is {p.name} your business?</strong><span>{p.my_claim === "pending" ? "We are checking your documents. It takes up to two working days." : p.my_claim === "rejected" ? "We could not verify it with the documents sent. You can try again." : "Verify it free: Verified badge, 100 in listing detail and buyers' questions straight to you."}</span></div>
           {p.my_claim !== "pending" && <Link className="hunt-primary" to={`/top/claim/${slug}`}>Verify it</Link>}
         </div>
       )}
@@ -306,9 +302,7 @@ export function TopProjectPage() {
       <section className="tp-score">
         <h2>Why it is #{p.rank}</h2>
         <p className="tp-bignota"><b>{p.nota}</b>/100 <small>#{p.rank} of {p.of} in {D.name}</small></p>
-        {PARTS.map(([k, l, m]) => { const pct = Math.min(100, ((p.parts?.[k] || 0) / m) * 100); return <div key={k} className="tp-bar"><span>{l}</span><i><b style={{ width: `${pct}%` }} /></i><em>{pct >= 80 ? "Strong" : pct >= 55 ? "Good" : "Fair"}</em></div>; })}
-        <div className="tp-bar is-demand"><span>Buyer demand</span><i><b style={{ width: `${Math.min(100, (p.votes * 3 + p.saves * 2 + p.asks * 4) * 3)}%` }} /></i><em>{p.votes + p.saves + p.asks ? "Rising" : "New"}</em></div>
-        <div className="tp-bar is-ver"><span>Verified developer</span><i><b style={{ width: p.verified ? "100%" : "0%" }} /></i><em>{p.verified ? "Yes" : "Not yet"}</em></div>
+        {p.dims && (() => { const ds = DIMS.filter(([k]) => p.dims?.[k] != null).sort((x, y) => p.dims[y[0]] - p.dims[x[0]]); return <p>{`The grade is the average of the 10 scores above. Strongest: ${ds.slice(0, 3).map(([, l]) => l).join(", ")}. Weakest: ${ds.slice(-2).reverse().map(([, l]) => l).join(", ")}.`}</p>; })()}
         <p className="hunt-fine">{p.votes} votes · {p.saves} saves · {p.asks} questions · {p.views} visitors.</p>
         <HowItWorks dest={dest} />
       </section>
@@ -336,7 +330,7 @@ export function TopProjectPage() {
 // ---------------------------------------------------------------- developer verification (/top/claim/:slug)
 const BENEFITS: [string, string][] = [
   ["Verified badge", "Buyers see that RealHunt checked your company. It is the first thing buyers from abroad look for."],
-  ["+5 points in the ranking", "Verified projects move up. The badge also shows on the list and on every share."],
+  ["100 in listing detail", "Verified projects get the top listing detail score, which lifts their grade. The badge also shows on the list and on every share."],
   ["Buyers' questions go straight to you", "Name, email, budget and when they want to buy. No middleman, no cost per lead."],
   ["Your page, your numbers", "Update the price, build stage, website, WhatsApp and a note to buyers from your panel at realhunt.co/top/mine."],
   ["Bring your own buyers", "Share your page: every vote and save from your buyers moves you up. Buyers you cannot sell to can see other projects, and you earn 3% if they buy through RealHunt."],

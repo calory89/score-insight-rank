@@ -8,7 +8,7 @@ import { sid } from "@/lib/rh";
 import { useCommunity } from "./ctx";
 import { Lightbox } from "./extras";
 import { TOP_TRUST } from "./topTrust";
-import { TOP_DESTS, TOP_ORDER, areaOf } from "./top";
+import { DIMS, TOP_DESTS, TOP_ORDER, areaOf } from "./top";
 import { AlertTriangle, BadgeCheck, BarChart3, Camera, CheckCircle2, CircleHelp, Coins, ExternalLink, Flag, Mail, MapPin, MessageCircle, Scale, ShieldCheck, Star, Trophy, Users, XCircle } from "lucide-react";
 
 const rpc = async (fn: string, args: Record<string, unknown> = {}) => { const { data, error } = await (supabase as any).rpc(fn, args); if (error) throw error; return data; };
@@ -25,7 +25,7 @@ export function MoneyNote({ compact }: { compact?: boolean }) {
       <div>
         <strong>How RealHunt makes money</strong>
         <p>Buyers pay nothing. Developers pay nothing to be listed, to verify or to rank. We earn 5% from the developer only if a buyer we introduced buys. Nobody can pay to be listed or to rank higher.</p>
-        {!compact && <p>Verified developers get +5 points because buyers can reach them directly and we have seen their company papers, not because of any deal with us.</p>}
+        {!compact && <p>Verified developers get 100 in listing detail because buyers can reach them directly and we have seen their company papers, not because of any deal with us.</p>}
         <Link className="hunt-link" to="/top/how-we-rank">How we rank</Link>
       </div>
     </div>
@@ -222,16 +222,17 @@ export function TopMethodPage() {
         <li>A new-build project still for sale, with a published price and at least 4 real photos.</li>
         <li>A named developer with a working website and a phone or WhatsApp. If either is missing, the project cannot be in any ranking.</li>
         <li>At most 3 projects per developer, so no one fills the list.</li>
-        <li>We keep the 100 with the best base score in each destination.</li>
+        <li>We keep the 100 strongest in each destination on price, price per m², area, build stage, listing detail and developer track record.</li>
       </ul>
-      <h2>2. The base score (up to 100)</h2>
-      <table className="tp-units tp-formula"><thead><tr><th>Part</th><th>Max</th><th>How it is scored</th></tr></thead>
-        <tbody>{BASE.map(([l, m, d]) => <tr key={l}><td><b>{l}</b></td><td>{m}</td><td>{d}</td></tr>)}</tbody></table>
-      <h2>3. Buyer demand (no limit)</h2>
-      <p>Vote +3 · save +2 · question to the developer +4 · click to the developer's website or share +1 · every 20 visitors +1. One vote and one save per person, and a daily cap per visitor stops anyone from inflating a project.</p>
-      <p><b>Verified developer +5.</b> Verification is free: the developer shows us the company registration and a document that links them to the project.</p>
-      <h2>4. The grade from 60 to 90</h2>
-      <p>Grade = 60 + 30 × (score − lowest score) ÷ (highest score − lowest score), within the 100 of each destination. The leader gets 90 and number 100 gets 60. Everything in a Top 100 is already among the best of the hundreds of projects we checked.</p>
+      <h2>2. The 10 scores</h2>
+      <table className="tp-units tp-formula"><thead><tr><th>Score</th><th>How it is scored (0 to 100)</th></tr></thead>
+        <tbody>{DIMS.map(([k, l, h]) => <tr key={k}><td><b>{l}</b></td><td>{h}.</td></tr>)}</tbody></table>
+      <p>Price, value per m², space and visitor interest are percentiles: 100 is the best project in that ranking, 0 the weakest. Beach falls with the straight-line distance to the coastline on OpenStreetMap. Facilities adds points for each one the public listing shows: pool, gym, spa, coworking, security, rooftop, restaurant, parking and more.</p>
+      <h2>3. Visitor interest</h2>
+      <p>Views, clicks to the developer, shares, saves (×3), votes (×5) and questions to the developer (×5), compared with the other projects in the ranking. One vote and one save per person, and a daily cap per visitor stops anyone from inflating a project.</p>
+      <p><b>Verified developer.</b> Verification is free: the developer shows us the company registration and a document that links them to the project. Verified projects get 100 in listing detail.</p>
+      <h2>4. The grade</h2>
+      <p>Grade = the average of the 10 scores, rounded. Nothing else is added. The ranking orders projects by that average.</p>
       <h2>5. Sources and review dates</h2>
       <table className="tp-units"><thead><tr><th>Destination</th><th>Projects checked</th><th>Last full review</th></tr></thead>
         <tbody>{TOP_ORDER.map((k) => <tr key={k}><td><Link to={`/top/${k}`}>{TOP_DESTS[k].name}</Link></td><td>{TOP_DESTS[k].checked}</td><td>{TOP_DESTS[k].date}</td></tr>)}</tbody></table>
