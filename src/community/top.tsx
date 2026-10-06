@@ -37,6 +37,35 @@ const AREAS_BY: Record<string, [string, RegExp][]> = {
 const AREAS_BALI: [string, RegExp][] = [["Canggu", /canggu|pererenan|berawa|umalas|kerobokan|seminyak|north kuta|seseh|cemagi|nyanyi|kedungu|tabanan|beraban/i], ["Uluwatu & Bukit", /uluwatu|ungasan|pecatu|bingin|melasti|balangan|pandawa|kutuh|nyang/i], ["Ubud", /ubud|sayan|tegallalang|kedewatan|gianyar/i], ["Nusa Dua & Jimbaran", /nusa dua|benoa|jimbaran|kampial|sawangan/i], ["Sanur & Denpasar", /sanur|denpasar/i]];
 const areasFor = (dest: string) => AREAS_BY[dest] || AREAS_BALI;
 export const areaOf = (dest: string, loc?: string) => areasFor(dest).find(([, re]) => re.test(loc || ""))?.[0] || "Other";
+export const DIMS: [string, string, string][] = [
+  ["price", "Price", "How cheap the entry price is next to the other projects in this Top 100"],
+  ["value", "Value per m²", "How low the price per m² is next to the other projects here"],
+  ["location", "Location", "How close it is to the busiest beaches, towns and services"],
+  ["beach", "Beach", "Straight-line distance to the sea, measured on the map. Same scale in every destination"],
+  ["facilities", "Facilities", "Pool, gym, spa, coworking, security and more, from what the listing shows. Same scale in every destination"],
+  ["delivery", "Delivery", "Ready homes score most, then the ones finishing soonest"],
+  ["developer", "Developer", "Track record: finished projects and how long they have been building"],
+  ["space", "Space", "Size of the smallest unit next to the other projects here"],
+  ["demand", "Buyer demand", "Views, saves, votes and questions from buyers on RealHunt"],
+  ["transparency", "Listing detail", "How much the developer publishes: prices, sizes, dates, photos"],
+];
+export const AMEN: [string, string][] = [["pool", "Pool"], ["gym", "Gym"], ["spa", "Spa & sauna"], ["cowork", "Coworking"], ["rooftop", "Rooftop"], ["restaurant", "Restaurant or bar"], ["security", "Security"], ["parking", "Parking"], ["kids", "Kids area"], ["garden", "Garden"], ["yoga", "Yoga"], ["sport", "Tennis or padel"], ["lift", "Lift"], ["cinema", "Cinema"], ["bbq", "BBQ"], ["furnished", "Furnished"], ["smart", "Smart home"]];
+const AMEN_FILTER = ["pool", "gym", "spa", "cowork", "rooftop", "security", "kids"];
+export const tone = (v?: number | null) => (v == null ? "is-na" : v >= 80 ? "is-great" : v >= 60 ? "is-good" : v >= 40 ? "is-ok" : "is-low");
+export const seaText = (km?: number | null) => (km == null ? "" : km < 0.3 ? "On the beach" : km < 1 ? `${Math.round(km * 1000 / 50) * 50} m to the sea` : `${Number(km).toFixed(1)} km to the sea`);
+const yearOf = (c?: string | null) => (c?.startsWith("Ready") ? 0 : Number((c || "").match(/20(\d\d)/)?.[1] || 99) + 2000);
+export function DimBars({ dims, keys, mini }: { dims: any; keys?: string[]; mini?: boolean }) {
+  if (!dims) return null;
+  const list = keys ? DIMS.filter(([k]) => keys.includes(k)).sort((a, b) => keys.indexOf(a[0]) - keys.indexOf(b[0])) : DIMS;
+  return (
+    <div className={mini ? "tp-dims is-mini" : "tp-dims"}>
+      {list.map(([k, l, h]) => { const v = dims[k]; return (
+        <div key={k} className={"tp-dim " + tone(v)} title={h}>
+          <span>{l}</span><i><b style={{ width: `${Math.max(4, v || 0)}%` }} /></i><em>{v ?? "–"}</em>
+        </div>); })}
+    </div>
+  );
+}
 const PARTS: [string, string, number][] = [["entry", "Entry price", 20], ["value", "Price per m²", 25], ["location", "Area", 20], ["stage", "Build stage", 15], ["info", "Listing detail", 10], ["developer", "Developer track record", 10]];
 
 function Move({ rank, base }: { rank: number; base: number }) {
@@ -56,6 +85,7 @@ function HowItWorks({ dest }: { dest: string }) {
         <div><strong>Base score (up to 100)</strong><ul>{PARTS.map(([, l, m]) => <li key={l}>{l}: up to {m}</li>)}</ul><small>Cheaper entry price and a lower price per m² score more. Areas near the busiest beaches and towns score more. Ready homes score more than homes still on plans.</small></div>
         <div><strong>Buyer demand (no limit)</strong><ul><li>Vote: +3</li><li>Save: +2</li><li>Question to the developer: +4</li><li>Click to the developer's website or share: +1</li><li>Every 20 visitors: +1</li></ul><small>One vote and one save per person. Nobody can pay to move up. Only projects whose developer has a working website and a phone or WhatsApp can enter.</small><strong className="tp-how-v">Verified developer: +5</strong><small>The developer showed us their company papers and answers buyers directly. Verifying is free.</small></div>
       </div>
+      <p>Every project also gets 10 scores from 0 to 100: price, value per m², location, beach, facilities, delivery, developer, space, buyer demand and listing detail. Use the filters to sort by the one that matters to you.</p>
       <p className="hunt-fine">Prices, sizes and dates come from the public listings on {D.date}. {D.fx ? D.fx + " " : ""}They change, so check with the developer before you decide. This is a ranking, not advice to buy. <Link className="hunt-link" to="/top/how-we-rank">The full formula, sources and how we make money</Link></p>
     </details>
   );
@@ -69,7 +99,20 @@ export function TopListPage() {
   const [rows, setRows] = useState<any[] | null>(null);
   const [area, setArea] = useState("All");
   const [kind, setKind] = useState("All");
-  const [sort, setSort] = useState("rank");
+  const qs0 = new URLSearchParams(loc.search);
+  const [sort, setSort] = useState(qs0.get("sort") || "rank");
+  const [maxP, setMaxP] = useState(qs0.get("max") || "");
+  const [sea, setSea] = useState(qs0.get("sea") || "");
+  const [stage, setStage] = useState(qs0.get("stage") || "");
+  const [own, setOwn] = useState(qs0.get("own") || "");
+  const [minScore, setMinScore] = useState(qs0.get("min") || "");
+  const [amen, setAmen] = useState<string[]>((qs0.get("amen") || "").split(",").filter(Boolean));
+  useEffect(() => {
+    const q = new URLSearchParams();
+    if (sort !== "rank") q.set("sort", sort); if (maxP) q.set("max", maxP); if (sea) q.set("sea", sea); if (stage) q.set("stage", stage); if (own) q.set("own", own); if (minScore) q.set("min", minScore); if (amen.length) q.set("amen", amen.join(","));
+    const s2 = q.toString(); window.history.replaceState(null, "", loc.pathname + (s2 ? "?" + s2 : ""));
+  }, [sort, maxP, sea, stage, own, minScore, amen]);
+  const reset = () => { setArea("All"); setKind("All"); setSort("rank"); setMaxP(""); setSea(""); setStage(""); setOwn(""); setMinScore(""); setAmen([]); };
   const load = () => rpc("top_list", { p_dest: dest }).then((r) => setRows(r || [])).catch(() => setRows([]));
   useEffect(() => {
     if (!D) return;
@@ -78,11 +121,19 @@ export function TopListPage() {
   }, [dest, user?.id]);
   useEffect(() => { if (D && rows) document.title = `Top 100 new builds in ${D.name}, ranked by buyers · RealHunt`; }, [rows]);
   const list = useMemo(() => {
-    let r = (rows || []).filter((x) => (area === "All" || areaOf(dest, x.locality) === area) && (kind === "All" || (kind === "Under €100k" ? x.price_eur <= 100000 : x.ptype === kind)));
+    let r = (rows || []).filter((x) => (area === "All" || areaOf(dest, x.locality) === area) && (kind === "All" || (kind === "Under €100k" ? x.price_eur <= 100000 : x.ptype === kind))
+      && (!maxP || (x.price_eur || 9e9) <= Number(maxP)) && (!sea || (x.sea_km ?? 99) <= Number(sea))
+      && (!stage || (stage === "ready" ? yearOf(x.completion) === 0 : yearOf(x.completion) <= Number(stage)))
+      && (!own || (x.ownership || "").toLowerCase() === own) && (!minScore || (x.nota || 0) >= Number(minScore))
+      && amen.every((a) => (x.amen || []).includes(a)));
     if (sort === "price") r = [...r].sort((a, b) => a.price_eur - b.price_eur);
-    if (sort === "votes") r = [...r].sort((a, b) => b.votes - a.votes || a.rank - b.rank);
+    else if (sort === "votes") r = [...r].sort((a, b) => b.votes - a.votes || a.rank - b.rank);
+    else if (sort === "sea") r = [...r].sort((a, b) => (a.sea_km ?? 99) - (b.sea_km ?? 99));
+    else if (DIMS.some(([k]) => k === sort)) r = [...r].sort((a, b) => (b.dims?.[sort] ?? -1) - (a.dims?.[sort] ?? -1) || a.rank - b.rank);
     return r;
-  }, [rows, area, kind, sort]);
+  }, [rows, area, kind, sort, maxP, sea, stage, own, minScore, amen]);
+  const miniKeys = DIMS.some(([k]) => k === sort) && !["price", "beach", "facilities", "location"].includes(sort) ? [sort, "price", "beach", "facilities"] : ["price", "beach", "facilities", "location"];
+  const filtered = sort !== "rank" || maxP || sea || stage || own || minScore || amen.length > 0 || area !== "All" || kind !== "All";
   const vote = async (x: any, k: "vote" | "save") => {
     if (!user) { setNotice(k === "vote" ? "Sign in to vote. One vote per person keeps the ranking fair." : "Sign in to save projects."); requireUser(); return; }
     try { const r = await rpc("top_toggle", { p_slug: x.slug, p_kind: k }); if (r?.error) setNotice(r.error); else { ev("top_" + k); load(); } } catch (e) { setNotice((e as Error).message); }
@@ -98,7 +149,16 @@ export function TopListPage() {
       <div className="tp-filters">
         <div className="tp-chips">{["All", ...areasFor(dest).map((a) => a[0]), "Other"].map((a) => <button key={a} aria-pressed={area === a} onClick={() => setArea(a)}>{a}</button>)}</div>
         <div className="tp-chips">{["All", "Under €100k", "Villas", "Apartments", "Townhouses"].map((a) => <button key={a} aria-pressed={kind === a} onClick={() => setKind(a)}>{a}</button>)}
-          <select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort"><option value="rank">Rank</option><option value="price">Lowest price</option><option value="votes">Most votes</option></select></div>
+          <select value={sort} onChange={(e) => setSort(e.target.value)} aria-label="Sort"><option value="rank">Rank</option><option value="price">Lowest price</option><option value="sea">Closest to the sea</option><option value="votes">Most votes</option>{DIMS.map(([k, l]) => <option key={k} value={k}>{`Best ${l.toLowerCase()} score`}</option>)}</select></div>
+        <div className="tp-selects">
+          <select value={maxP} onChange={(e) => setMaxP(e.target.value)} aria-label="Maximum price"><option value="">Any price</option><option value="100000">Up to €100k</option><option value="150000">Up to €150k</option><option value="250000">Up to €250k</option><option value="500000">Up to €500k</option></select>
+          <select value={sea} onChange={(e) => setSea(e.target.value)} aria-label="Distance to the sea"><option value="">Any distance to the sea</option><option value="0.5">Under 500 m to the sea</option><option value="1">Under 1 km to the sea</option><option value="2">Under 2 km to the sea</option><option value="5">Under 5 km to the sea</option></select>
+          <select value={stage} onChange={(e) => setStage(e.target.value)} aria-label="Build stage"><option value="">Any build stage</option><option value="ready">Ready now</option><option value="2026">Ready by 2026</option><option value="2027">Ready by 2027</option><option value="2028">Ready by 2028</option></select>
+          <select value={own} onChange={(e) => setOwn(e.target.value)} aria-label="Ownership"><option value="">Any ownership</option><option value="freehold">Freehold</option><option value="leasehold">Leasehold</option></select>
+          <select value={minScore} onChange={(e) => setMinScore(e.target.value)} aria-label="Minimum grade"><option value="">Any grade</option><option value="70">Grade 70+</option><option value="75">Grade 75+</option><option value="80">Grade 80+</option><option value="85">Grade 85+</option></select>
+        </div>
+        <div className="tp-chips tp-amen">{AMEN_FILTER.map((k) => { const on = amen.includes(k); return <button key={k} aria-pressed={on} onClick={() => setAmen(on ? amen.filter((a) => a !== k) : [...amen, k])}>{on ? <Check size={13} /> : null}<span>{AMEN.find((a) => a[0] === k)?.[1]}</span></button>; })}</div>
+        {rows && filtered && <p className="tp-count">{`${list.length} of ${rows.length} projects match.`} <button className="hunt-link" onClick={reset}>Clear filters</button></p>}
       </div>
       {rows === null ? <Loader2 className="animate-spin" /> : list.length === 0 ? <p>No projects match. Try another filter.</p> : (
         <ol className="tp-list">{list.map((x) => (
@@ -108,7 +168,8 @@ export function TopListPage() {
             <Link to={`/top/${dest}/${x.slug}`} className="tp-main">
               <strong>{x.name}{x.verified && <BadgeCheck size={16} className="tp-ver" aria-label="Verified developer" />}{x.review_count > 0 && <span className="tp-chip-rev" title={`${x.review_count} buyer reviews`}>★ {Number(x.review_avg).toFixed(1)} ({x.review_count})</span>}{x.visited && <span className="tp-chip-visit" title="The RealHunt team visited this project"><Camera size={12} /> Visited</span>}</strong>
               <span className="tp-sub"><MapPin size={12} /> {x.locality} · {x.developer}</span>
-              <span className="tp-facts"><b>from {eur(x.price_eur)}</b>{x.ppsqm_eur ? <span>{eur(x.ppsqm_eur)}/m²</span> : null}<span>{x.ptype}</span><span>{x.completion?.startsWith("Ready") ? "Ready" : x.completion ? `Ready ${x.completion}` : "Date not published"}</span></span>
+              <span className="tp-facts"><b>from {eur(x.price_eur)}</b>{x.ppsqm_eur ? <span>{eur(x.ppsqm_eur)}/m²</span> : null}<span>{x.ptype}</span><span>{x.completion?.startsWith("Ready") ? "Ready" : x.completion ? `Ready ${x.completion}` : "Date not published"}</span>{x.sea_km != null && <span>{seaText(x.sea_km)}</span>}</span>
+              <DimBars dims={x.dims} keys={miniKeys} mini />
             </Link>
             <div className="tp-act">
               <span className="tp-nota" title="Grade out of 100">{x.nota}<small>/100</small></span>
@@ -231,6 +292,17 @@ export function TopProjectPage() {
       <PriceVsArea p={p} dest={dest} />
       <VerifiedBox p={p} dest={dest} />
       <VisitBox p={p} />
+      {p.dims && (
+        <section className="tp-scores">
+          <h2>{`Scores for ${p.name}`}</h2>
+          <p className="hunt-fine">{`Each score goes from 0 to 100. Most compare it with the other projects in the ${D.name} Top 100. Beach and Facilities use the same scale in every destination.`}</p>
+          <DimBars dims={p.dims} />
+          {p.sea_km != null && <p className="tp-sea"><MapPin size={14} /> {`${seaText(p.sea_km)} in a straight line, measured on the map.`}</p>}
+          {(p.amen || []).length > 0 ? (
+            <div className="tp-amen-list"><strong>Facilities listed</strong><ul>{AMEN.filter(([k]) => p.amen.includes(k)).map(([k, l]) => <li key={k}><Check size={13} /><span>{l}</span></li>)}</ul><small>From the developer's public listing. Ask the developer to confirm what is finished.</small></div>
+          ) : <p className="hunt-fine">The listing does not show the facilities yet. Ask the developer.</p>}
+        </section>
+      )}
       <section className="tp-score">
         <h2>Why it is #{p.rank}</h2>
         <p className="tp-bignota"><b>{p.nota}</b>/100 <small>#{p.rank} of {p.of} in {D.name}</small></p>
