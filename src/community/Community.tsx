@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { EBC, totalCost } from "@/lib/rh";
 import { listingVideo } from "@/lib/listing-media";
 import OriginalListingLink from "@/components/realhunt/OriginalListingLink";
+import { RemoteWorkCard, RemoteWorkStrip } from "@/components/realhunt/RemoteWorkBridge";
 import AuthModal from "@/components/realhunt/AuthModal";
 import { useLiveStats } from "@/components/realhunt/LiveStats";
 import { lazy, Suspense } from "react";
@@ -845,6 +846,7 @@ function Home() {
           : (showPodium ? displayedRows.slice(3) : displayedRows)?.map((d: any, index: number) => (
             <Fragment key={d.id}>
               <Card4 deal={d} scope={scope} onQuick={()=>setQuick(feed.rows.findIndex((r:any)=>r.id===d.id))} />
+              {index === 5 && !q && <RemoteWorkCard />}
               {index === 11 && plain && <SponsoredCard />}
             </Fragment>
           ))}
@@ -1016,6 +1018,7 @@ function Detail() {
           <DecisionFacts deal={d as Row}/><Nearby deal={d} />
           <Availability dealId={d.id} />
           <CostPanel deal={d as Row} />
+          <RemoteWorkStrip place={d.location_name || d.country} slug={d.slug} />
           {!(d as any).developer && <InfoRequest deal={d as Row} />}
           <ClaimListing deal={d as Row} />
           <p className="hunt-fine">Buying from abroad? <Link to={`/help-buying?country=${encodeURIComponent(d.country || "")}`}>Get a local lawyer, translator or survey</Link>{["Italy", "Spain", "Portugal"].includes(d.country) && <> · <Link to={`/guide/${d.country.toLowerCase()}`}>How to buy in {d.country}</Link></>}</p>
