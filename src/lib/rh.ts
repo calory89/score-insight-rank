@@ -4,7 +4,7 @@ export const db = supabase as any;
 export const MAX_PRICE = 100000;
 export const HOME_MAX_PRICE = 100000;
 export const eur = (n: number) => "€" + Math.round(n).toLocaleString("en-GB");
-export const FLAG: Record<string, string> = { Italy: "🇮🇹", Spain: "🇪🇸", Portugal: "🇵🇹", France: "🇫🇷", Greece: "🇬🇷", Croatia: "🇭🇷", Bulgaria: "🇧🇬", Romania: "🇷🇴", Japan: "🇯🇵", Sweden: "🇸🇪", Norway: "🇳🇴", Denmark: "🇩🇰", Finland: "🇫🇮", Germany: "🇩🇪", Turkey: "🇹🇷", Albania: "🇦🇱", Indonesia: "🇮🇩", "United States": "🇺🇸", Canada: "🇨🇦", Mexico: "🇲🇽", Scandinavia: "❄️", Nordics: "❄️", Asia: "🌏", Other: "🌍", "Georgia": "🇬🇪", "Vietnam": "🇻🇳", "Montenegro": "🇲🇪", "Cyprus": "🇨🇾", "Northern Cyprus": "🇨🇾" };
+export const FLAG: Record<string, string> = { Italy: "🇮🇹", Spain: "🇪🇸", Portugal: "🇵🇹", France: "🇫🇷", Greece: "🇬🇷", Croatia: "🇭🇷", Bulgaria: "🇧🇬", Romania: "🇷🇴", Japan: "🇯🇵", Sweden: "🇸🇪", Norway: "🇳🇴", Denmark: "🇩🇰", Finland: "🇫🇮", Germany: "🇩🇪", Turkey: "🇹🇷", Albania: "🇦🇱", Indonesia: "🇮🇩", "United States": "🇺🇸", Canada: "🇨🇦", Mexico: "🇲🇽", Scandinavia: "❄️", Nordics: "❄️", Asia: "🌏", Other: "🌍", "Georgia": "🇬🇪", "Vietnam": "🇻🇳", "Montenegro": "🇲🇪", "Cyprus": "🇨🇾", "Northern Cyprus": "🇨🇾", "United Kingdom": "🇬🇧", Netherlands: "🇳🇱" };
 export const norm = (c: string | null | undefined) => { if (!c) return "Other"; if (c === "Scandinavia") return "Nordics"; if (c === "International" || c === "Europe") return "Other"; return c; };
 export const slug = (c: string) => c.toLowerCase().replace(/[^a-z]+/g, "-");
 export const unslug = (s: string, known: string[]) => known.find((k) => slug(k) === s) || s;
@@ -94,6 +94,7 @@ export const COSTS: Record<string, { pct: number; fixed: number; note: string }>
   Japan: { pct: 8, fixed: 1500, note: "Acquisition tax 3 to 4%, registration about 2%, agent 3% plus ¥60,000, stamp duty. Foreigners can own freehold." },
   Sweden: { pct: 2, fixed: 800, note: "Stamp duty 1.5% plus mortgage registration if any. No notary. Anyone can buy." },
   Norway: { pct: 3, fixed: 500, note: "Document fee 2.5%. No notary. Anyone can buy." },
+  "United Kingdom": { pct: 1, fixed: 1800, note: "Anyone can buy. Stamp duty is 0% on a first and only home at these prices; a second home pays a surcharge (5% in England, 8% in Scotland) and non-UK residents pay 2% more in England. Solicitor about £1,000 to £1,500." },
   Denmark: { pct: 1, fixed: 1500, note: "Registration 0.6% plus about DKK 1,850. Non-residents need Ministry of Justice permission unless from the EU and moving in." },
   Finland: { pct: 3, fixed: 500, note: "Transfer tax 3% for real estate, 1.5% for housing company shares. No notary." },
   Germany: { pct: 10, fixed: 1500, note: "Transfer tax 3.5 to 6.5%, notary and registry about 2%, agent up to 3.57% if any." },

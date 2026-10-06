@@ -11,6 +11,18 @@ import { feedAll, niceTitle, type Row, type FeedParams } from "./extras";
 import { t } from "./i18n";
 
 const esc = (s: unknown) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
+// Price colours (6-oct-2026): strong green = very cheap, light green around €50-60k, then soft red
+// for €70-100k. Never a strong red, because every home here is still a good price.
+const STOPS: [number, number[]][] = [[0, [11, 107, 52]], [30000, [22, 135, 63]], [45000, [63, 164, 90]], [55000, [124, 196, 122]], [65000, [185, 221, 154]], [72000, [246, 205, 190]], [85000, [242, 172, 156]], [100000, [236, 147, 132]]];
+export function priceColor(p?: number | null) {
+  const v = Math.max(0, Math.min(100000, p ?? 100000));
+  let i = 0; while (i < STOPS.length - 2 && v > STOPS[i + 1][0]) i++;
+  const [a, ca] = STOPS[i], [b, cb] = STOPS[i + 1];
+  const f = b === a ? 0 : (v - a) / (b - a);
+  const c = ca.map((x, k) => Math.round(x + (cb[k] - x) * f));
+  const lum = (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255;
+  return { bg: `rgb(${c.join(",")})`, fg: lum > 0.6 ? "#1E2420" : "#fff" };
+}
 const short = (n?: number | null) => (n == null ? "" : n >= 1000 ? `€${Math.round(n / 1000)}k` : `€${n}`);
 const touch = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
 
@@ -102,7 +114,7 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
     let focusedMk: L.Marker | null = null;
     const pinFor = (d: Row) => {
       const isF = !!focus && d.slug === focus;
-      const icon = L.divIcon({ className: "hm-pin-wrap", html: `<span class="hm-pin${isF ? " is-focus" : ""}">${esc(short(d.price_eur))}</span>`, iconSize: [0, 0] });
+      const icon = L.divIcon({ className: "hm-pin-wrap", html: `<span class="hm-pin${isF ? " is-focus" : ""}" style="--pc:${priceColor(d.price_eur).bg};--pf:${priceColor(d.price_eur).fg}">${esc(short(d.price_eur))}</span>`, iconSize: [0, 0] });
       const mk = L.marker([d.lat!, d.lng!], { icon, zIndexOffset: isF ? 1000 : 0, riseOnHover: true, keyboard: true, title: `${money(d.price_eur)} · ${d.location_name || ""}` });
       mk.bindPopup(
         `<a data-slug="${esc(d.slug)}" href="/deal/${esc(d.slug)}" class="hm-pop"><img src="${esc(d.image_urls?.[0] || "")}" alt="" loading="lazy"><b>${esc(money(d.price_eur))}</b><span>${esc(niceTitle(d))}</span><small>${esc(d.location_name || "")}</small><em>${esc(t("Open this home"))} →</em></a>`,
@@ -127,7 +139,7 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
         if (grp.length === 1) { const mk = pinFor(grp[0]); g.addLayer(mk); if (open && mk.options.title === open) mk.openPopup(); return; }
         const b = L.latLngBounds(grp.map((d) => [d.lat!, d.lng!] as L.LatLngExpression));
         const from = Math.min(...grp.map((d) => d.price_eur || 0));
-        const icon = L.divIcon({ className: "hm-pin-wrap", html: `<span class="hm-cl"><b>${grp.length}</b><small>${esc(t("from"))} ${esc(short(from))}</small></span>`, iconSize: [0, 0] });
+        const icon = L.divIcon({ className: "hm-pin-wrap", html: `<span class="hm-cl" style="--pc:${priceColor(from).bg};--pf:${priceColor(from).fg}"><b>${grp.length}</b><small>${esc(t("from"))} ${esc(short(from))}</small></span>`, iconSize: [0, 0] });
         const c = L.marker(b.getCenter(), { icon, title: `${grp.length} homes` });
         c.on("click", () => { const z = m.getBoundsZoom(b, false, L.point(60, 60)); if (z > m.getZoom()) m.flyToBounds(b, { padding: [60, 60], maxZoom: 14, duration: 0.6 }); else m.flyTo(b.getCenter(), Math.min(m.getZoom() + 3, 16), { duration: 0.6 }); });
         g.addLayer(c);
@@ -169,6 +181,7 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
         <button type="button" onClick={(e) => { e.stopPropagation(); toggleSat(); }} aria-pressed={isSat}>{isSat ? t("Map view") : t("Satellite")}</button>
         {"geolocation" in navigator && <button type="button" onClick={(e) => { e.stopPropagation(); myPlace(); }}>{t("Near me")}</button>}
       </div>
+      <div className="hm-legend" aria-hidden="true"><i /><span><b>€20k</b><b>€60k</b><b>€100k</b></span></div>
       {data === null && <div className="hm-loading">{t("Loading map…")}</div>}
       {embedded && !armed && !full && <div className="hm-hint">{touch ? t("Tap the map to move it · pinch to zoom") : t("Click the map to zoom with the mouse wheel")}</div>}
     </div>

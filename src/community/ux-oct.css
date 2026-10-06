@@ -114,3 +114,14 @@ html.hm-lock, html.hm-lock body { overflow: hidden; }
 .hm-cl:hover { transform: translate(-50%, -50%) scale(1.07); }
 @media (max-width: 700px) { .hm-tools button { padding: 7px 10px; font-size: 12px; min-height: 34px; } .hm-tools { max-width: calc(100% - 20px); } }
 @media (max-width: 700px) { .hm.hm-feed { height: 380px; } .hm.hm-detail { height: 340px; } .hm-pop, .hm-pop img { width: 200px; } .hm-pop img { height: 112px; } }
+/* Price colours on the map (6-oct-2026): green = cheapest, light red = up to €100k. */
+.hm-pin { background: var(--pc, #111214); color: var(--pf, #fff); }
+.hm-pin::after { border-top-color: var(--pc, #111214); }
+.hm-pin.is-focus { background: var(--pc, #111214); color: var(--pf, #fff); outline: 3px solid #111214; outline-offset: 1px; font-size: 14px; padding: 8px 11px; z-index: 2; }
+.hm-pin.is-focus::after { border-top-color: var(--pc, #111214); }
+.hm-cl { background: var(--pc, #D4420C); color: var(--pf, #fff); }
+.hm-legend { position: absolute; z-index: 450; left: 10px; bottom: 26px; background: rgba(255,255,255,.92); border-radius: 10px; padding: 6px 8px 4px; box-shadow: 0 2px 8px rgba(0,0,0,.15); pointer-events: none; }
+.hm-legend i { display: block; width: 132px; height: 8px; border-radius: 99px; background: linear-gradient(90deg, rgb(18,121,58) 0%, rgb(22,135,63) 12.5%, rgb(63,164,90) 31%, rgb(124,196,122) 44%, rgb(185,221,154) 56%, rgb(246,205,190) 65%, rgb(242,172,156) 81%, rgb(236,147,132) 100%); }
+.hm-legend span { display: flex; justify-content: space-between; font: 700 10px Inter, system-ui, sans-serif; color: #3A3F47; margin-top: 3px; }
+.hm.is-embedded .hm-legend { bottom: 44px; }
+@media (max-width: 700px) { .hm-legend i { width: 110px; } }
