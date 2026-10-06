@@ -222,7 +222,7 @@ export function TopMethodPage() {
         <li>A new-build project still for sale, with a published price and at least 4 real photos.</li>
         <li>A named developer with a working website and a phone or WhatsApp. If either is missing, the project cannot be in any ranking.</li>
         <li>At most 3 projects per developer, so no one fills the list.</li>
-        <li>We keep the 100 strongest in each destination on price, price per m², area, build stage, listing detail and developer track record.</li>
+        <li>We keep up to 100 of the strongest in each destination (fewer where fewer pass, like Koh Samui) on price, price per m², area, build stage, listing detail and developer track record.</li>
       </ul>
       <h2>2. The 10 scores</h2>
       <table className="tp-units tp-formula"><thead><tr><th>Score</th><th>How it is scored (0 to 100)</th></tr></thead>

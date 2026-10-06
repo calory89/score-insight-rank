@@ -137,7 +137,73 @@ export const TOP_TRUST: Record<string, Trust> = {
     "focus": "Real estate and condo project due diligence, zoning verification"
    }
   ]
+ }, "samui": {
+  "company": {
+   "name": "DBD DataWarehouse+ (Department of Business Development)",
+   "url": "https://datawarehouse.dbd.go.th/",
+   "what": "Free search of Thai juristic persons: registration no., status, capital, directors, shareholders, filed financials."
+  },
+  "permit": null,
+  "permitNote": "Building permits are issued by the local authority where the plot sits (Koh Samui City Municipality). Steep hillside plots also need slope approval. There is no single national online lookup, so ask the developer for the permit and the EIA approval.",
+  "land": {
+   "name": "Department of Lands - LandsMaps",
+   "url": "https://landsmaps.dol.go.th/",
+   "what": "Official map lookup of a title deed (chanote) parcel by deed number: location, area, appraisal."
+  },
+  "checklist": [
+   {
+    "title": "Condo freehold within 49% quota",
+    "text": "Foreigners can own condo units freehold only if total foreign ownership stays within 49% of the building's sellable area.",
+    "source": "https://lexbangkok.com/can-foreigners-buy-condominiums-in-thailand/"
+   },
+   {
+    "title": "Bring funds from abroad (FET)",
+    "text": "Purchase money must be sent from overseas in foreign currency and documented (Foreign Exchange Transaction form) to register condo ownership.",
+    "source": "https://lexbangkok.com/can-foreigners-buy-condominiums-in-thailand/"
+   },
+   {
+    "title": "No land ownership",
+    "text": "Foreigners cannot own land. Villas are usually sold as leasehold land plus building. Check how the land part is structured.",
+    "source": "https://lexbangkok.com/can-foreigners-buy-condominiums-in-thailand/"
+   },
+   {
+    "title": "Lease: 30 years, registered",
+    "text": "Leases are capped at 30 years (s.540) and must be registered at the Land Office if over 3 years. Supreme Court (2025): pre-agreed renewals are unenforceable.",
+    "source": "https://www.austchamthailand.com/resources/news/thai-supreme-court-shuts-door-long-term-lease-loopholes-foreign-property-investors"
+   },
+   {
+    "title": "Nominee companies are illegal",
+    "text": "Holding land via Thai nominee shareholders is prohibited, with criminal penalties and forced sale. Land offices stepped up checks in May 2026.",
+    "source": "https://silklegal.com/what-thailands-new-lands-directives-mean-for-nominee-shareholding-and-property-ownership-in-2026/"
+   },
+   {
+    "title": "EIA for larger condos",
+    "text": "Condo projects of about 80+ units (or over 23 m high) need an approved EIA before building. Ask for the approval.",
+    "source": "https://thairesidential.com/phuket-property-environmental-impact-assessment-eia/"
+   }
+  ],
+  "lawyers": [
+   {
+    "name": "Frank Legal & Tax (FLT)",
+    "city": "Koh Samui (also Bangkok)",
+    "url": "https://franklegaltax.com/lawyer-koh-samui/",
+    "focus": "Business and real estate law on Koh Samui; property and company structuring for foreigners"
+   },
+   {
+    "name": "Samui Law Firm",
+    "city": "Koh Samui",
+    "url": "https://www.samuilawfirm.com/",
+    "focus": "Local law firm on Koh Samui"
+   },
+   {
+    "name": "Sukhothai Interlaw",
+    "city": "Koh Samui office (also Bangkok, Phuket)",
+    "url": "https://sukhothaiinterlaw.com/blog/lawyers-and-real-estate-legal-services-on-koh-samui/",
+    "focus": "Real estate legal services on Koh Samui"
+   }
+  ]
  },
+
  "tulum": {
   "company": {
    "name": "SIGER 2.0 - Registro Público de Comercio (Secretaría de Economía)",

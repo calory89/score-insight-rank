@@ -124,12 +124,12 @@ function prerenderPages() {
              { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: (p.faq || []).map(([q, a]: [string, string]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) }]);
         }
         // Top 100 rankings of new builds by destination (/top/:dest). Static snapshot for crawlers; React loads the live order.
-        const TOPS: [string, string, number][] = [["bali", "Bali", 502], ["phuket", "Phuket", 468], ["tulum", "Tulum", 425], ["batumi", "Batumi", 563]];
-        page(`${SITE}/top`, "Top 100 new builds by destination: Bali, Phuket, Tulum, Batumi · RealHunt", "The 100 best new-build projects in Bali, Phuket, Tulum and Batumi, ranked by price, area and build stage, then by buyers.", `${SITE}/top/bali/og.jpg`,
-          `<main class="rh-static"><h1>Top 100 new builds by destination</h1><ul>${TOPS.map(([k, n]) => `<li><a href="/top/${k}">Top 100 new builds in ${n}</a></li>`).join("")}</ul></main>`,
+        const TOPS: [string, string, number][] = [["bali", "Bali", 502], ["phuket", "Phuket", 468], ["tulum", "Tulum", 425], ["batumi", "Batumi", 563], ["samui", "Koh Samui", 89]];
+        page(`${SITE}/top`, "Top 100 new builds by destination: Bali, Phuket, Tulum, Batumi, Koh Samui · RealHunt", "The best new-build projects in Bali, Phuket, Tulum, Batumi and Koh Samui, ranked by price, area and build stage, then by buyers.", `${SITE}/top/bali/og.jpg`,
+          `<main class="rh-static"><h1>Top 100 new builds by destination</h1><ul>${TOPS.map(([k, n]) => `<li><a href="/top/${k}">Top ${k === "samui" ? 17 : 100} new builds in ${n}</a></li>`).join("")}</ul></main>`,
           [crumbs([["RealHunt", SITE + "/"], ["Top 100 rankings", SITE + "/top"]])]);
         page(`${SITE}/top/how-we-rank`, "How we rank the Top 100 · RealHunt", "The exact formula behind the RealHunt Top 100 rankings, our sources and review dates, and how we make money. Nobody pays to be listed or to rank higher.", `${SITE}/top/bali/og.jpg`,
-          `<main class="rh-static"><h1>How we rank</h1><p>Nobody pays to be listed or to rank higher.</p><p>Base score up to 100: entry price 20, price per m² 25, area 20, build stage 15, listing detail 10, developer track record 10. Buyer demand: vote +3, save +2, question +4, website click or share +1, every 20 visitors +1. Verified developer +5. Grade from 60 to 90.</p><p>Buyers pay nothing. Developers pay nothing to be listed, verify or rank. RealHunt earns 5% from the developer only if a buyer it introduced buys.</p></main>`,
+          `<main class="rh-static"><h1>How we rank</h1><p>Nobody pays to be listed or to rank higher.</p><p>Every project gets 10 scores from 0 to 100: price, value per m², location, beach, facilities, delivery, developer, space, visitor interest and listing detail. The grade is the plain average of the 10, and the ranking orders projects by it. Votes, saves and questions raise visitor interest. A verified developer gets 100 in listing detail.</p><p>Buyers pay nothing. Developers pay nothing to be listed, verify or rank. RealHunt earns 5% from the developer only if a buyer it introduced buys.</p></main>`,
           [crumbs([["RealHunt", SITE + "/"], ["Top 100 rankings", SITE + "/top"], ["How we rank", SITE + "/top/how-we-rank"]])]);
         page(`${SITE}/about`, "About RealHunt: who we are and how we work", "Who runs RealHunt, the company behind it, how we make money and what you should know about our founder before you trust us.", DEF,
           `<main class="rh-static"><h1>Who we are</h1><p>RealHunt is run by Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, United States. Founder: Carlos de Ory Gordillo. Contact: hello@realhunt.co.</p></main>`,
@@ -138,16 +138,17 @@ function prerenderPages() {
           const list: any[] = readJson(`src/data/top-${k}.json`, []);
           if (!list.length) continue;
           const tUrl = `${SITE}/top/${k}`;
-          page(tUrl, `Top 100 new builds in ${n}, ranked by buyers · RealHunt`, `The 100 best new-build villas and apartments in ${n}, from ${checked} projects checked. Ranked by price, area and build stage, then by what buyers vote, save and ask about.`, `${tUrl}/og.jpg`,
-            `<main class="rh-static"><h1>Top 100 new builds in ${esc(n)}</h1><p>Ranked by demand: base score from price, price per m², area and build stage, then buyer votes, saves and questions.</p><ol>${list.map((t) => `<li><a href="/top/${k}/${esc(t.slug)}">${esc(t.name)}</a>, ${esc(t.locality)}, from €${Number(t.price_eur).toLocaleString("en")} (${esc(t.developer)})</li>`).join("")}</ol></main>`,
-            [crumbs([["RealHunt", SITE + "/"], ["Top 100 rankings", SITE + "/top"], [`${n} Top 100`, tUrl]]),
-             { "@context": "https://schema.org", "@type": "ItemList", name: `Top 100 new builds in ${n}`, numberOfItems: list.length, itemListElement: list.map((t, i) => ({ "@type": "ListItem", position: i + 1, url: `${tUrl}/${t.slug}`, name: t.name })) }]);
+          const TN = list.length < 100 ? `Top ${list.length}` : "Top 100";
+          page(tUrl, `${TN} new builds in ${n}, ranked by buyers · RealHunt`, `The ${list.length} best new-build villas and apartments in ${n}, from ${checked} projects checked. Ranked by price, area and build stage, then by what buyers vote, save and ask about.`, `${tUrl}/og.jpg`,
+            `<main class="rh-static"><h1>${TN} new builds in ${esc(n)}</h1><p>Ranked by demand: base score from price, price per m², area and build stage, then buyer votes, saves and questions.</p><ol>${list.map((t) => `<li><a href="/top/${k}/${esc(t.slug)}">${esc(t.name)}</a>, ${esc(t.locality)}, from €${Number(t.price_eur).toLocaleString("en")} (${esc(t.developer)})</li>`).join("")}</ol></main>`,
+            [crumbs([["RealHunt", SITE + "/"], ["Top 100 rankings", SITE + "/top"], [`${n} ${TN}`, tUrl]]),
+             { "@context": "https://schema.org", "@type": "ItemList", name: `${TN} new builds in ${n}`, numberOfItems: list.length, itemListElement: list.map((t, i) => ({ "@type": "ListItem", position: i + 1, url: `${tUrl}/${t.slug}`, name: t.name })) }]);
           for (const t of list) {
             if (!/^[a-z0-9-]+$/.test(t.slug)) continue;
             const u = `${tUrl}/${t.slug}`;
-            page(u, `${t.name}, ${t.locality}: ${n} Top 100 · RealHunt`, `${t.blurb} Ranked in the ${n} Top 100 new builds by RealHunt buyers.`, `${u}-og.jpg`,
-              `<main class="rh-static"><nav><a href="/">RealHunt</a> › <a href="/top/${k}">${esc(n)} Top 100</a></nav><h1>${esc(t.name)}</h1><p>${esc(t.blurb)}</p></main>`,
-              [crumbs([["RealHunt", SITE + "/"], [`${n} Top 100`, tUrl], [t.name, u]])]);
+            page(u, `${t.name}, ${t.locality}: ${n} ${TN} · RealHunt`, `${t.blurb} Ranked in the ${n} ${TN} new builds by RealHunt buyers.`, `${u}-og.jpg`,
+              `<main class="rh-static"><nav><a href="/">RealHunt</a> › <a href="/top/${k}">${esc(n)} ${TN}</a></nav><h1>${esc(t.name)}</h1><p>${esc(t.blurb)}</p></main>`,
+              [crumbs([["RealHunt", SITE + "/"], [`${n} ${TN}`, tUrl], [t.name, u]])]);
           }
         }
         page(`${SITE}/new-builds`, "New-build homes under €100,000 · RealHunt", "New-build projects with units under €100,000, payment plans and verified developers. Ask the developer directly.", DEF);

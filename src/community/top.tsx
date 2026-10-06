@@ -22,16 +22,19 @@ const setMeta = (title: string, desc: string, url: string, image?: string) => {
   if (image) { set('meta[property="og:image"]', "content", image); set('meta[name="twitter:image"]', "content", image); }
 };
 
-export const TOP_DESTS: Record<string, { name: string; country: string; checked: number; date: string; reg: string; permit: string; fx?: string }> = {
+export const TOP_DESTS: Record<string, { name: string; country: string; checked: number; date: string; reg: string; permit: string; fx?: string; n?: number }> = {
   bali: { name: "Bali", country: "Indonesia", checked: 502, date: "29 September 2026", reg: "NIB in Indonesia", permit: "the building permit (PBG)" },
   phuket: { name: "Phuket", country: "Thailand", checked: 468, date: "30 September 2026", reg: "company registration number (DBD)", permit: "the building permit or EIA approval", fx: "Prices converted from Thai baht at about 38 THB per euro." },
   tulum: { name: "Tulum", country: "Mexico", checked: 425, date: "30 September 2026", reg: "RFC", permit: "the construction licence", fx: "Prices converted from US dollars or pesos at the rate of 30 September 2026." },
+  samui: { name: "Koh Samui", country: "Thailand", checked: 89, date: "6 October 2026", reg: "company registration number (DBD)", permit: "the building permit", fx: "Prices converted from Thai baht at about 38 THB per euro.", n: 17 },
   batumi: { name: "Batumi", country: "Georgia", checked: 563, date: "30 September 2026", reg: "company ID (identification code)", permit: "the construction permit", fx: "Prices converted from US dollars at about 1.13 USD per euro." },
 };
-export const TOP_ORDER = ["bali", "phuket", "tulum", "batumi"];
+export const TOP_ORDER = ["bali", "phuket", "tulum", "batumi", "samui"];
+export const TL = (k?: string) => `Top ${(k && TOP_DESTS[k]?.n) || 100}`;
 const AREAS_BY: Record<string, [string, RegExp][]> = {
   phuket: [["Bang Tao & Laguna", /bang tao|laguna|cherng talay|layan/i], ["Surin & Kamala", /surin|kamala/i], ["Patong, Kata & Karon", /patong|kata|karon|kalim/i], ["Rawai & Nai Harn", /rawai|nai ?harn|naiharn|chalong|panwa/i], ["North (Nai Yang, Mai Khao)", /nai yang|mai khao|nai thon|thalang/i], ["Town & east", /town|kathu|koh kaew|yamu|ao po/i]],
   tulum: [["La Veleta", /veleta/i], ["Aldea Zama & Selvazama", /zama/i], ["Region 15 & Holistika", /region 15|holistika/i], ["Centro", /centro|aldea tulum/i], ["Beach & coast", /beach|tankah|soliman|akumal|chemuyil/i]],
+  samui: [["Chaweng", /chaweng/i], ["Bophut, Bangrak & Choeng Mon", /bophut|bangrak|bang rak|choeng mon|plai laem/i], ["Lamai", /lamai/i], ["Maenam & Bang Por", /maenam|bang ?po/i]],
   batumi: [["Airport district", /airport/i], ["Batumi Boulevard", /boulevard/i], ["Centre & old town", /old city|rustaveli|downtown|khimshiashvili|tamar|agmashenebeli|centre/i], ["Bagrationi & Javakhishvili", /bagrationi|javakhishvili|kakhaberi/i], ["Makhinjauri & north", /makhinjauri|chakvi|green cape|mtsvane/i]],
 };
 const AREAS_BALI: [string, RegExp][] = [["Canggu", /canggu|pererenan|berawa|umalas|kerobokan|seminyak|north kuta|seseh|cemagi|nyanyi|kedungu|tabanan|beraban/i], ["Uluwatu & Bukit", /uluwatu|ungasan|pecatu|bingin|melasti|balangan|pandawa|kutuh|nyang/i], ["Ubud", /ubud|sayan|tegallalang|kedewatan|gianyar/i], ["Nusa Dua & Jimbaran", /nusa dua|benoa|jimbaran|kampial|sawangan/i], ["Sanur & Denpasar", /sanur|denpasar/i]];
@@ -78,7 +81,7 @@ function HowItWorks({ dest }: { dest: string }) {
   return (
     <details className="tp-how">
       <summary>How the ranking works</summary>
-      <p>We checked {D.checked} new-build projects listed for sale in {D.name} and kept the 100 with the best base score. Then buyers decide: every vote, save and question moves a project up.</p>
+      <p>{`We checked ${D.checked} new-build projects listed for sale in ${D.name} and kept the ${D.n || 100} that pass our rules (price, photos, a named developer with a website and phone). Then buyers decide: every vote, save and question moves a project up.`}</p>
       <p>The grade is the average of 10 scores from 0 to 100. Nothing else is added: no bonus and no hidden weights.</p>
       <ul className="tp-how-dims">{DIMS.map(([k, l, h]) => <li key={k}><b>{l}</b>: {h}.</li>)}</ul>
       <p>Price, value per m², space and visitor interest compare a project with the others in this ranking. Beach and facilities use the same scale in every destination. Votes, saves and questions raise visitor interest, so buyers move the ranking. One vote and one save per person, and nobody can pay to move up. A verified developer gets 100 in listing detail, because we have seen their papers.</p>
@@ -112,10 +115,10 @@ export function TopListPage() {
   const load = () => rpc("top_list", { p_dest: dest }).then((r) => setRows(r || [])).catch(() => setRows([]));
   useEffect(() => {
     if (!D) return;
-    setMeta(`Top 100 new builds in ${D.name}, ranked by buyers · RealHunt`, `The 100 best new-build villas and apartments in ${D.name}, from ${D.checked} projects checked. Ranked by price, area and build stage, then by what buyers vote, save and ask about.`, `https://realhunt.co/top/${dest}`, `https://realhunt.co/top/${dest}/og.jpg`);
+    setMeta(`${TL(dest)} new builds in ${D.name}, ranked by buyers · RealHunt`, `The ${D.n || 100} best new-build villas and apartments in ${D.name}, from ${D.checked} projects checked. Ranked by price, area and build stage, then by what buyers vote, save and ask about.`, `https://realhunt.co/top/${dest}`, `https://realhunt.co/top/${dest}/og.jpg`);
     load(); ev("top_list_view");
   }, [dest, user?.id]);
-  useEffect(() => { if (D && rows) document.title = `Top 100 new builds in ${D.name}, ranked by buyers · RealHunt`; }, [rows]);
+  useEffect(() => { if (D && rows) document.title = `${TL(dest)} new builds in ${D.name}, ranked by buyers · RealHunt`; }, [rows]);
   const list = useMemo(() => {
     let r = (rows || []).filter((x) => (area === "All" || areaOf(dest, x.locality) === area) && (kind === "All" || (kind === "Under €100k" ? x.price_eur <= 100000 : x.ptype === kind))
       && (!maxP || (x.price_eur || 9e9) <= Number(maxP)) && (!sea || (x.sea_km ?? 99) <= Number(sea))
@@ -138,9 +141,9 @@ export function TopListPage() {
   return (
     <div className="hunt-wrap hunt-page tp">
       <span className="hunt-eyebrow"><Trophy size={13} /> <Link to="/top">REALHUNT RANKINGS</Link></span>
-      <h1>Top 100 new builds in {D.name}</h1>
+      <h1>{`${TL(dest)} new builds in ${D.name}`}</h1>
       <div className="tp-chips tp-dests">{TOP_ORDER.map((k) => <Link key={k} to={`/top/${k}`} aria-current={k === dest ? "page" : undefined} className={k === dest ? "is-on" : ""}>{TOP_DESTS[k].name}</Link>)}</div>
-      <p>The ranking is made by demand. We picked the 100 best of {D.checked} projects on price, price per m², area and build stage. From there, the projects buyers vote for, save and ask about climb.</p>
+      <p>{`We picked the ${D.n || 100} best of ${D.checked} new-build projects in ${D.name}. Each one gets 10 scores from 0 to 100, and the grade is their average. Votes, saves and questions from buyers move projects up.`}</p>
       <HowItWorks dest={dest} />
       <div className="tp-filters">
         <div className="tp-chips">{["All", ...areasFor(dest).map((a) => a[0]), "Other"].map((a) => <button key={a} aria-pressed={area === a} onClick={() => setArea(a)}>{a}</button>)}</div>
@@ -199,7 +202,7 @@ export function TopProjectPage() {
   useEffect(() => { window.scrollTo(0, 0); load(); rpc("top_track", { p_slug: slug, p_kind: "view", p_anon: sid() }).catch(() => {}); ev("top_project_view"); }, [slug, user?.id]);
   useEffect(() => {
     if (!p) return;
-    setMeta(`${p.name}, ${p.locality}: #${p.rank} of the ${D.name} Top 100 · RealHunt`, `${p.blurb} Ranked #${p.rank} of ${p.of} new builds in ${D.name} by RealHunt buyers.`, `https://realhunt.co/top/${dest}/${slug}`, `https://realhunt.co/top/${dest}/${slug}-og.jpg`);
+    setMeta(`${p.name}, ${p.locality}: #${p.rank} of the ${D.name} ${TL(dest)} · RealHunt`, `${p.blurb} Ranked #${p.rank} of ${p.of} new builds in ${D.name} by RealHunt buyers.`, `https://realhunt.co/top/${dest}/${slug}`, `https://realhunt.co/top/${dest}/${slug}-og.jpg`);
   }, [p?.rank, p?.slug]);
   const track = (k: string) => rpc("top_track", { p_slug: slug, p_kind: k, p_anon: sid() }).catch(() => {});
   const toggle = async (k: "vote" | "save") => {
@@ -208,7 +211,7 @@ export function TopProjectPage() {
   };
   const share = async () => {
     const url = `https://realhunt.co/top/${dest}/${slug}`; track("share"); ev("top_share");
-    try { if ((navigator as any).share) await (navigator as any).share({ title: p.name, text: `#${p.rank} in the ${D.name} Top 100 on RealHunt`, url }); else { await navigator.clipboard.writeText(url); setNotice("Link copied."); } } catch { /* cancelled */ }
+    try { if ((navigator as any).share) await (navigator as any).share({ title: p.name, text: `#${p.rank} in the ${D.name} ${TL(dest)} on RealHunt`, url }); else { await navigator.clipboard.writeText(url); setNotice("Link copied."); } } catch { /* cancelled */ }
   };
   const send = async (e: React.FormEvent) => {
     e.preventDefault(); if (!user) { requireUser(); return; }
@@ -217,14 +220,14 @@ export function TopProjectPage() {
     catch (err) { setNotice((err as Error).message); } finally { setBusy(false); }
   };
   if (p === undefined) return <div className="hunt-wrap hunt-page"><Loader2 className="animate-spin" /></div>;
-  if (!p) return <div className="hunt-wrap hunt-page"><h1>Project not found</h1><Link to={`/top/${dest}`} className="hunt-link">Back to the {D.name} Top 100</Link></div>;
+  if (!p) return <div className="hunt-wrap hunt-page"><h1>Project not found</h1><Link to={`/top/${dest}`} className="hunt-link">Back to the {`${D.name} ${TL(dest)}`}</Link></div>;
   const imgs: string[] = p.images || [];
   const src = (p.sources || [])[0] || "";
   const srcHost = src ? new URL(src).hostname.replace(/^www\./, "") : "";
   const ready = p.completion?.startsWith("Ready");
   return (
     <div className="hunt-wrap hunt-page tp tp-detail">
-      <Link to={`/top/${dest}`} className="hunt-link"><ChevronLeft size={15} /> {D.name} Top 100</Link>
+      <Link to={`/top/${dest}`} className="hunt-link"><ChevronLeft size={15} /> {`${D.name} ${TL(dest)}`}</Link>
       <div className="tp-gallery">
         {imgs.slice(0, 5).map((s, i) => <button key={s} className={i === 0 ? "is-hero" : ""} onClick={() => setLb(i)} aria-label={`Open photo ${i + 1}`}><img src={s} alt={`${p.name}, photo ${i + 1}`} loading={i < 2 ? "eager" : "lazy"} /></button>)}
         {imgs.length > 5 && <span className="tp-more">+{imgs.length - 5}</span>}
@@ -245,7 +248,7 @@ export function TopProjectPage() {
         <button className={"tp-vote is-big" + (p.my_vote ? " is-on" : "")} aria-pressed={p.my_vote} onClick={() => toggle("vote")}><Heart size={17} /> {p.my_vote ? "Voted" : "Vote"} · {p.votes}</button>
         <button className={"tp-save is-big" + (p.my_save ? " is-on" : "")} aria-pressed={p.my_save} onClick={() => toggle("save")}><Bookmark size={17} /> {p.my_save ? "Saved" : "Save"}</button>
         <button className="hunt-primary" onClick={() => { if (!user) { requireUser(); return; } setAsk(!ask); }}><MessageCircle size={16} /> {p.my_ask ? "Ask again" : "Ask about this project"}</button>
-        {p.verified && p.whatsapp && <a className="tp-web" href={`https://wa.me/${String(p.whatsapp).replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hi, I saw ${p.name} in the RealHunt ${D.name} Top 100.`)}`} target="_blank" rel="noopener" onClick={() => { track("web"); ev("top_whatsapp"); }}><MessageCircle size={15} /> WhatsApp</a>}
+        {p.verified && p.whatsapp && <a className="tp-web" href={`https://wa.me/${String(p.whatsapp).replace(/[^0-9]/g, "")}?text=${encodeURIComponent(`Hi, I saw ${p.name} in the RealHunt ${D.name} ${TL(dest)}.`)}`} target="_blank" rel="noopener" onClick={() => { track("web"); ev("top_whatsapp"); }}><MessageCircle size={15} /> WhatsApp</a>}
         {p.website && <a className="tp-web" href={p.website} target="_blank" rel="noopener nofollow" onClick={() => { track("web"); ev("top_web"); }}><ExternalLink size={15} /> Developer website</a>}
         <button className="tp-web" onClick={share}><Share2 size={15} /> Share</button>
       </div>
@@ -291,7 +294,7 @@ export function TopProjectPage() {
       {p.dims && (
         <section className="tp-scores">
           <h2>{`Scores for ${p.name}`}</h2>
-          <p className="hunt-fine">{`Each score goes from 0 to 100. Most compare it with the other projects in the ${D.name} Top 100. Beach and Facilities use the same scale in every destination.`}</p>
+          <p className="hunt-fine">{`Each score goes from 0 to 100. Most compare it with the other projects in the ${D.name} ${TL(dest)}. Beach and Facilities use the same scale in every destination.`}</p>
           <DimBars dims={p.dims} />
           {p.sea_km != null && <p className="tp-sea"><MapPin size={14} /> {`${seaText(p.sea_km)} in a straight line, measured on the map.`}</p>}
           {(p.amen || []).length > 0 ? (
@@ -381,7 +384,7 @@ export function TopClaimPage() {
       <Link to={`/top/${dest}/${slug}`} className="hunt-link"><ChevronLeft size={15} /> {p.name}</Link>
       <span className="hunt-eyebrow"><ShieldCheck size={13} /> VERIFY YOUR BUSINESS</span>
       <h1>Is {p.name} yours? Verify it free.</h1>
-      <p>{p.name} is <b>#{p.rank} of {p.of}</b> in the {D.name} Top 100 with a grade of <b>{p.nota}/100</b>{p.votes + p.saves + p.asks > 0 ? <>, and buyers are already voting, saving and asking about it</> : null}. Right now its page is built from public listings and buyers' questions come to RealHunt. Verify it and they come to you.</p>
+      <p>{p.name} is <b>#{p.rank} of {p.of}</b> in the {`${D.name} ${TL(dest)}`} with a grade of <b>{p.nota}/100</b>{p.votes + p.saves + p.asks > 0 ? <>, and buyers are already voting, saving and asking about it</> : null}. Right now its page is built from public listings and buyers' questions come to RealHunt. Verify it and they come to you.</p>
       <ul className="tp-benefits">{BENEFITS.map(([t, d]) => <li key={t}><Check size={18} /><div><b>{t}</b><span>{d}</span></div></li>)}</ul>
       {p.verified ? <p className="tp-claim-strip"><BadgeCheck size={18} /> This page is already verified.</p> : done || p.my_claim === "pending" ? (
         <div className="tp-claim-strip is-done"><Check size={20} /><div><strong>Thanks, we have it.</strong><span>We check your documents within two working days. When it is approved you get the badge, and your page, its questions and the edit form appear in your Top 100 panel.</span></div><Link className="hunt-primary" to="/top/mine">Open my panel</Link></div>
@@ -442,7 +445,7 @@ function MyPage({ pg, onSaved }: { pg: any; onSaved: () => void }) {
   const url = `https://realhunt.co/top/${pg.dest}/${pg.slug}`;
   return (
     <section className="tp-mine">
-      <div className="tp-mine-head"><div><h2>{pg.name} <BadgeCheck size={17} className="tp-ver" /></h2><p className="tp-sub">#{pg.rank} in the {(TOP_DESTS[pg.dest] || TOP_DESTS.bali).name} Top 100 · grade {pg.nota}/100</p></div><Link className="hunt-link" to={`/top/${pg.dest}/${pg.slug}`}>See the page</Link></div>
+      <div className="tp-mine-head"><div><h2>{pg.name} <BadgeCheck size={17} className="tp-ver" /></h2><p className="tp-sub">#{pg.rank} in the {(TOP_DESTS[pg.dest] || TOP_DESTS.bali).name} {TL(pg.dest)} · grade {pg.nota}/100</p></div><Link className="hunt-link" to={`/top/${pg.dest}/${pg.slug}`}>See the page</Link></div>
       <div className="tp-dl"><div><dt>Visitors</dt><dd>{pg.views}</dd></div><div><dt>Votes</dt><dd>{pg.votes}</dd></div><div><dt>Saves</dt><dd>{pg.saves}</dd></div><div><dt>Questions</dt><dd>{pg.asks}</dd></div></div>
       <div className="tp-claim-strip"><Share2 size={18} /><div><strong>Bring your buyers, climb the ranking</strong><span>Send this link to your leads and followers. Every vote +3, every save +2, every question +4.</span></div><button className="hunt-primary" onClick={() => { navigator.clipboard.writeText(url); setNotice("Link copied."); ev("top_dev_copy"); }}>Copy link</button></div>
       <h3>Buyers' questions ({pg.questions.length})</h3>
@@ -484,10 +487,10 @@ export function TopMinePage() {
 export function TopIndexPage() {
   const [tops, setTops] = useState<Record<string, any[]>>({});
   useEffect(() => {
-    setMeta("Top 100 new builds by destination: Bali, Phuket, Tulum, Batumi · RealHunt", "The 100 best new-build projects in Bali, Phuket, Tulum and Batumi, ranked on price, area and build stage, then by what buyers vote, save and ask about.", "https://realhunt.co/top", "https://realhunt.co/top/bali/og.jpg");
+    setMeta("Top 100 new builds by destination: Bali, Phuket, Tulum, Batumi, Koh Samui · RealHunt", "The 100 best new-build projects in Bali, Phuket, Tulum, Batumi and Koh Samui, ranked on price, area and build stage, then by what buyers vote, save and ask about.", "https://realhunt.co/top", "https://realhunt.co/top/bali/og.jpg");
     TOP_ORDER.forEach((k) => rpc("top_list", { p_dest: k }).then((r) => setTops((t) => ({ ...t, [k]: (r || []).slice(0, 3) }))).catch(() => {}));
   }, []);
-  useEffect(() => { document.title = "Top 100 new builds by destination: Bali, Phuket, Tulum, Batumi · RealHunt"; }, [tops]);
+  useEffect(() => { document.title = "Top 100 new builds by destination: Bali, Phuket, Tulum, Batumi, Koh Samui · RealHunt"; }, [tops]);
   return (
     <div className="hunt-wrap hunt-page tp">
       <span className="hunt-eyebrow"><Trophy size={13} /> REALHUNT RANKINGS</span>
@@ -495,7 +498,7 @@ export function TopIndexPage() {
       <p>In each destination we checked every new-build project listed for sale and kept the best 100 on price, price per m², area and build stage. Then buyers decide: every vote, save and question moves a project up. Nobody can pay to be listed or to rank higher: <Link className="hunt-link" to="/top/how-we-rank">see how we rank</Link>.</p>
       <div className="tp-index">{TOP_ORDER.map((k) => (
         <Link key={k} to={`/top/${k}`} className="tp-index-card">
-          <img src={`/top/${k}/og.jpg`} alt={`Top 100 new builds in ${TOP_DESTS[k].name}`} loading="lazy" />
+          <img src={`/top/${k}/og.jpg`} alt={`${TL(k)} new builds in ${TOP_DESTS[k].name}`} loading="lazy" />
           <div><strong>{TOP_DESTS[k].name}, {TOP_DESTS[k].country}</strong><small>Best 100 of {TOP_DESTS[k].checked} projects</small>
             <ol>{(tops[k] || []).map((x) => <li key={x.slug}>#{x.rank} {x.name} <em>from {eur(x.price_eur)}</em></li>)}</ol></div>
         </Link>
