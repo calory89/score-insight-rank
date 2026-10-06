@@ -171,3 +171,7 @@ html.hm-lock, html.hm-lock body { overflow: hidden; }
 .rh-best-card b { font-size: 14px; margin-top: 4px; } .rh-best-card small { font-size: 12px; color: #6B6F76; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rh-best-more { display: none; }
 .hunt.is-dark .rh-best-card small, .hunt.is-dark .rh-best-head small { color: #A6A9AF; }
+.hunt-filters > .hunt-chips.rh-quick { order: 10; flex: 0 0 100% !important; width: 100% !important; max-width: 100%; margin-top: 2px; }
+.hunt-filters > .hunt-filter-row { order: 11; }
+.rh-quick button[aria-pressed="true"] { background: #111214; color: #fff; border-color: #111214; }
+.hunt.is-dark .rh-quick button[aria-pressed="true"] { background: #ECEDEE; color: #111214; }
