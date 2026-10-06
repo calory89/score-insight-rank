@@ -48,7 +48,7 @@ export function ScoreBars({ deal }: { deal: any }) {
   const s = useScore(deal);
   if (!s) return null;
   const list = DIMS.filter(([k]) => s.d[k] != null);
-  const sorted = [...list].sort((a, b) => s.d[b[0]] - s.d[a[0]]);
+  const sorted = list.filter(([k]) => k !== "photos" && k !== "interest").sort((a, b) => s.d[b[0]] - s.d[a[0]]);
   return (
     <section className="rh-scores">
       <div className="rh-scores-head"><span className={"hv-score is-big " + gtone(s.n)}>{s.n}</span><div><strong>{t("RealHunt score")}</strong><small>{`${t("Best at")}: ${sorted.slice(0, 2).map(([, l]) => t(l)).join(", ")}`}</small></div></div>
@@ -60,7 +60,7 @@ export function ScoreBars({ deal }: { deal: any }) {
         ))}
       </div>
       {s.a.length > 0 && <ul className="rh-amen">{AMEN.filter(([k]) => s.a.includes(k)).map(([k, l]) => <li key={k}><Check size={13} /><span>{t(l)}</span></li>)}</ul>}
-      <p className="hunt-fine">{t("Every home on RealHunt passed our hand check, so the score starts at 70. The rest compares it with every other home on the site, using the 10 scores above. Extras and condition come from the listing: check them with the seller.")}</p>
+      <p className="hunt-fine">{t("Every home on RealHunt passed our hand check, so the score starts at 70. The rest compares it with every other home on the site, using the scores above. Extras and condition come from the listing: check them with the seller.")}</p>
     </section>
   );
 }
