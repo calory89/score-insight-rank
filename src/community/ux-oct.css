@@ -125,3 +125,49 @@ html.hm-lock, html.hm-lock body { overflow: hidden; }
 .hm-legend span { display: flex; justify-content: space-between; font: 700 10px Inter, system-ui, sans-serif; color: #3A3F47; margin-top: 3px; }
 .hm.is-embedded .hm-legend { bottom: 44px; }
 @media (max-width: 700px) { .hm-legend i { width: 110px; } }
+
+/* RealHunt score (7-oct-2026): grade badge on cards, sub-score bars on the home page, quick filters */
+.hv-score { margin-left: auto; min-width: 38px; height: 38px; padding: 0 8px; border-radius: 12px; display: inline-grid; place-items: center; font-weight: 800; font-size: 15px; color: #fff; background: #2F7D3A; box-shadow: 0 2px 8px rgba(0,0,0,.18); letter-spacing: -.01em; }
+.hv-score.is-top { background: #0F6B34; }
+.hv-score.is-great { background: #1E8E4E; }
+.hv-score.is-good { background: #5BAA5F; }
+.hv-score + .hv-save { margin-left: 0; }
+.hv-score.is-big { min-width: 56px; height: 56px; border-radius: 16px; font-size: 24px; margin-left: 0; box-shadow: none; }
+.rh-scores { margin: 18px 0; padding: 16px; border: 1px solid #E2E3E6; border-radius: 16px; background: #fff; }
+.rh-scores-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.rh-scores-head strong { display: block; font-size: 17px; }
+.rh-scores-head small { color: #55585E; font-size: 13px; }
+.rh-dims { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 22px; }
+.rh-dim { display: grid; grid-template-columns: 118px 1fr 30px; gap: 8px; align-items: center; font-size: 13px; }
+.rh-dim i { height: 9px; background: #ECEDEF; border-radius: 999px; overflow: hidden; display: block; }
+.rh-dim i b { display: block; height: 100%; border-radius: 999px; background: #9AA0A6; }
+.rh-dim em { font-style: normal; font-weight: 800; text-align: right; }
+.rh-dim.is-great i b { background: #1E8E4E; } .rh-dim.is-great em { color: #157040; }
+.rh-dim.is-good i b { background: #7CC47A; } .rh-dim.is-good em { color: #2F7D3A; }
+.rh-dim.is-ok i b { background: #F2C14E; } .rh-dim.is-ok em { color: #9A6A00; }
+.rh-dim.is-low i b { background: #EC9384; } .rh-dim.is-low em { color: #B5473A; }
+.rh-amen { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; padding: 0; margin: 12px 0 6px; }
+.rh-amen li { display: inline-flex; align-items: center; gap: 4px; padding: 5px 10px; border-radius: 999px; background: #EEF7F0; color: #1F5F35; font-size: 13px; font-weight: 600; }
+.rh-quick { margin-top: 8px; }
+.rh-quick button { display: inline-flex; align-items: center; gap: 4px; }
+@media (max-width: 640px) {
+  .rh-dims { grid-template-columns: 1fr; }
+  .hv-score { min-width: 34px; height: 34px; font-size: 14px; border-radius: 10px; }
+  .rh-quick { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .rh-quick button { flex: 0 0 auto; }
+}
+.hunt.is-dark .rh-scores { background: #17181A; border-color: #2A2C30; }
+.hunt.is-dark .rh-dim i { background: #2A2C30; }
+.hunt.is-dark .rh-scores-head small { color: #A6A9AF; }
+.hunt.is-dark .rh-amen li { background: #16301F; color: #9FE0B0; }
+.rh-best { margin: 14px 0 6px; }
+.rh-best-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.rh-best-head strong { font-size: 17px; } .rh-best-head small { color: #6B6F76; font-size: 13px; }
+.rh-best-row { display: grid; grid-auto-flow: column; grid-auto-columns: 168px; gap: 10px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin; }
+.rh-best-card { display: flex; flex-direction: column; gap: 2px; color: inherit; text-decoration: none; }
+.rh-best-img { position: relative; display: block; aspect-ratio: 4 / 3; border-radius: 14px; overflow: hidden; background: #DFE0E2; }
+.rh-best-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rh-best-img .hv-score { position: absolute; top: 8px; right: 8px; min-width: 32px; height: 32px; font-size: 13px; border-radius: 10px; }
+.rh-best-card b { font-size: 14px; margin-top: 4px; } .rh-best-card small { font-size: 12px; color: #6B6F76; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rh-best-more { display: none; }
+.hunt.is-dark .rh-best-card small, .hunt.is-dark .rh-best-head small { color: #A6A9AF; }

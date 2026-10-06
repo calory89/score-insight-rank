@@ -14,6 +14,7 @@ import { money, votePreview, type Deal, type Session } from "./api";
 import { useCommunity } from "./ctx";
 import { bumpStreak, niceTitle, dealUrl, shareText, type Row } from "./extras";
 import { celebrate, cardColor, CardMeta } from "./v6";
+import { ScoreBadge } from "./scores";
 
 const num = (v: number = 0) => new Intl.NumberFormat("en").format(v);
 // Local activity counters for the profile badges (votes, saves, shares, homes opened).
@@ -353,6 +354,7 @@ export function Card4({ deal, scope = "all", onChange, onQuick }: { deal: Row; s
           {deal.rank && deal.rank <= 3 ? <span className={"hv-rank" + (deal.rank <= 3 ? " is-podium" : "") + (move ? " is-up" : "")}>#{deal.rank}{move ? <em> ▲{move}</em> : null}</span> : null}
           <Chip deal={deal} scope={scope} />
           {(deal as any).developer ? <span className="hv-newbuild">New build</span> : null}
+          <ScoreBadge deal={deal} />
           <SaveHeart deal={deal} />
         </div>
 
