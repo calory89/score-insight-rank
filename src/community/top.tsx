@@ -495,11 +495,11 @@ export function TopIndexPage() {
     <div className="hunt-wrap hunt-page tp">
       <span className="hunt-eyebrow"><Trophy size={13} /> REALHUNT RANKINGS</span>
       <h1>Top 100 new builds, by destination</h1>
-      <p>In each destination we checked every new-build project listed for sale and kept the best 100 on price, price per m², area and build stage. Then buyers decide: every vote, save and question moves a project up. Nobody can pay to be listed or to rank higher: <Link className="hunt-link" to="/top/how-we-rank">see how we rank</Link>.</p>
+      <p>In each destination we checked every new-build project listed for sale and kept up to 100 of the best on price, photos and a reachable developer. Each gets 10 scores from 0 to 100 and the grade is their average. Then buyers decide: every vote, save and question moves a project up. Nobody can pay to be listed or to rank higher: <Link className="hunt-link" to="/top/how-we-rank">see how we rank</Link>.</p>
       <div className="tp-index">{TOP_ORDER.map((k) => (
         <Link key={k} to={`/top/${k}`} className="tp-index-card">
           <img src={`/top/${k}/og.jpg`} alt={`${TL(k)} new builds in ${TOP_DESTS[k].name}`} loading="lazy" />
-          <div><strong>{TOP_DESTS[k].name}, {TOP_DESTS[k].country}</strong><small>Best 100 of {TOP_DESTS[k].checked} projects</small>
+          <div><strong>{TOP_DESTS[k].name}, {TOP_DESTS[k].country}</strong><small>{`Best ${TOP_DESTS[k].n || 100} of ${TOP_DESTS[k].checked} projects`}</small>
             <ol>{(tops[k] || []).map((x) => <li key={x.slug}>#{x.rank} {x.name} <em>from {eur(x.price_eur)}</em></li>)}</ol></div>
         </Link>
       ))}</div>
