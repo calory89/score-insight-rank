@@ -229,3 +229,7 @@ html.hm-lock, html.hm-lock body { overflow: hidden; }
 .rk-bar { width: 46px; }
 .rk-head .rk-bars em { width: 46px; font-size: 10px; letter-spacing: 0; text-transform: none; font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 760px) { .rk-bar { width: auto; } }
+.rk-near { margin: 6px 0 18px; padding: 14px; border-radius: 18px; background: #F4FAF5; border: 1px solid #D7EBDC; }
+.rk-near-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
+.rk-near-head strong { font-size: 18px; } .rk-near-head small { font-size: 14px; color: #4F5A55; }
+.rk-near .rk-list { margin: 0; }

@@ -15,7 +15,7 @@ const nf = (n: number) => n.toLocaleString("en-GB");
 
 type Props = { source: string; title?: string; subtitle?: string; cta?: string; compactProof?: boolean };
 
-const CaptureInline = ({ source, title = "Get the 10 best homes of the week, free", subtitle = "Real listings under €100k, picked by hand. The exact address and the original link, in your inbox.", cta = "Send me the top 10", compactProof }: Props) => {
+const CaptureInline = ({ source, title = "Get the 10 best homes of the week, free", subtitle = "Real listings, scored and picked by hand. The exact address and the original link, in your inbox.", cta = "Send me the top 10", compactProof }: Props) => {
   const { user } = useAuth();
   const stats = useLiveStats();
   const [mode, setMode] = useState<"idle" | "sending" | "done" | "error" | "failed">("idle");

@@ -432,7 +432,7 @@ export function Personalise({ countries, onApply }: { countries: string[]; onApp
 }
 export function AlertsPage() {
   const [countries, setCountries] = useState<string[]>([]);
-  useEffect(() => { document.title = "Alerts for homes under €100,000 · RealHunt"; feed({ limit: 1 }).then((f) => setCountries(Object.keys(f.countries_count || {}))).catch(() => {}); }, []);
+  useEffect(() => { document.title = "Alerts for the best new homes · RealHunt"; feed({ limit: 1 }).then((f) => setCountries(Object.keys(f.countries_count || {}))).catch(() => {}); }, []);
   return (
     <div className="hunt-wrap hunt-page">
       <span className="hunt-eyebrow">{t("Alerts")}</span>
@@ -466,7 +466,7 @@ export function SwipePage() {
   const [dx, setDx] = useState(0);
   const start = useRef<number | null>(null);
   const navigate = useNavigate();
-  useEffect(() => { document.title = "Swipe homes under €100,000 · RealHunt"; feedAll({}).then((f) => setRows(f.rows)).catch(() => setRows([])); }, []);
+  useEffect(() => { document.title = "Swipe the best homes · RealHunt"; feedAll({}).then((f) => setRows(f.rows)).catch(() => setRows([])); }, []);
   // The deck is fixed when it loads: homes already voted are left out once, then every like or skip
   // moves to the next card. (Before 2-oct-2026 a like re-filtered the deck and the same card stayed.)
   const votedAtLoad = useRef<Record<string, number> | null>(null);
@@ -546,7 +546,7 @@ export function LeaderboardPage() {
       <h1>Top hunters</h1>
       <p>Points: 10 for every approved find, 1 for every vote your finds get, 15 for an editor's pick, 5 for every friend you bring. The hunter of the month is featured on the home page.</p>
       {!rows ? <div className="hunt-skeleton-list" /> : rows.length === 0 ? (
-        <div className="hunt-empty"><Trophy size={30} /><h3>The board is empty. The first hunter takes #1.</h3><p>Submit a home under €100,000 that people should see.</p><Link className="hunt-primary" to="/submit">{t("Submit a Deal")}</Link></div>
+        <div className="hunt-empty"><Trophy size={30} /><h3>The board is empty. The first hunter takes #1.</h3><p>Submit a great home that people should see.</p><Link className="hunt-primary" to="/submit">{t("Submit a Deal")}</Link></div>
       ) : (
         <ol className="hunt-leaders">
           {rows.map((r, n) => (
@@ -578,7 +578,7 @@ export function InvitePage() {
         <div className="hunt-invite">
           <code>{link}</code>
           <div className="hunt-row">
-            <button className="hunt-primary" onClick={() => (navigator.share ? navigator.share({ title: "RealHunt", text: "Real homes under €100,000, ranked by people. Join me:", url: link }) : navigator.clipboard.writeText(link).then(() => setNotice("Link copied ✓"))).catch(() => {})}><Share2 size={16} /> {t("Share")}</button>
+            <button className="hunt-primary" onClick={() => (navigator.share ? navigator.share({ title: "RealHunt", text: "The best homes in every country, ranked by score. Join me:", url: link }) : navigator.clipboard.writeText(link).then(() => setNotice("Link copied ✓"))).catch(() => {})}><Share2 size={16} /> {t("Share")}</button>
             <button className="hunt-secondary" onClick={() => navigator.clipboard.writeText(link).then(() => setNotice("Link copied ✓"))}><Copy size={16} /> Copy</button>
           </div>
           <p><strong>{me.count}</strong> {me.count === 1 ? "friend has" : "friends have"} joined with your link.</p>
@@ -689,7 +689,7 @@ export function GuidePage() {
       <nav className="hunt-chips">{Object.entries(GUIDES).map(([k, x]) => <Link key={k} to={`/guide/${k}`} aria-current={k === country ? "page" : undefined}>{x.name}</Link>)}</nav>
       <ol className="hunt-steps">{g.steps.map(([h, b]) => <li key={h}><strong>{h}</strong><p>{b}</p></li>)}</ol>
       <h2>Every year</h2><p>{g.yearly}</p>
-      <div className="hunt-row"><Link className="hunt-primary" to={`/homes/${country}`}>Homes under €100,000 in {g.name}</Link><Link className="hunt-secondary" to="/help-buying">{t("Help buying")}</Link></div>
+      <div className="hunt-row"><Link className="hunt-primary" to={`/homes/${country}`}>Best homes in {g.name}</Link><Link className="hunt-secondary" to="/help-buying">{t("Help buying")}</Link></div>
       {homes.length > 0 && <><h2>Voted homes in {g.name}</h2><div className="hunt-minigrid">{homes.map((d) => <MiniCard key={d.id} d={d} />)}</div></>}
     </div>
   );

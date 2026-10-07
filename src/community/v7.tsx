@@ -190,7 +190,7 @@ function usePosts() {
 
 export function BlogIndex() {
   const posts = usePosts();
-  useEffect(() => { setMeta("RealHunt Research · Data on cheap homes around the world", "Original data and plain-English guides on homes under €100,000: prices by country, buying rules, rent vs buy."); }, []);
+  useEffect(() => { setMeta("RealHunt Research · Data on cheap homes around the world", "Original data and plain-English guides on affordable homes: prices by country, buying rules, rent vs buy."); }, []);
   return (
     <div className="hunt-wrap hunt-page hv-blog">
       <span className="hunt-eyebrow">RealHunt Research</span>
@@ -325,7 +325,7 @@ export function CheapHousesIndex() {
     <div className="hunt-wrap hunt-page hv-sp">
       <span className="hunt-eyebrow">Cheap houses</span>
       <h1>Find a cheap house by what you want around it.</h1>
-      <p>Every page lists real homes under €100,000 that a person has checked. No ruins, no land, no one-photo listings. Updated every day.</p>
+      <p>Every page lists real homes that a person has checked, ranked by score. No ruins, no land, no one-photo listings. Updated every day.</p>
       {!data ? <div className="hunt-skeleton-list" /> : groups.map(([name, test]) => (
         <section key={name}>
           <h2>{name}</h2>

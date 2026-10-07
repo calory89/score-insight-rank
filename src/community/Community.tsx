@@ -32,7 +32,7 @@ import { TopMethodPage, AboutPage } from "./topTrustUI";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
-import { ScoreBars, BestPerCountry, RankRow, RankHead, RankSkeleton, ScoreHelp } from "./scores";
+import { ScoreBars, BestPerCountry, RankRow, RankHead, RankSkeleton, ScoreHelp, NearestHomes } from "./scores";
 import { LogoMark } from "@/components/realhunt/Logo";
 import { isEs, searchQuery } from "@/lib/lang";
 import { guestSaves, isGuestSaved, toggleGuestSave, clearGuestSaves, type GuestSave } from "./guestSaves";
@@ -146,7 +146,7 @@ function Shell({ children }: { children: ReactNode }) {
   }, [user?.id]);
   useEffect(() => {
     if (/^\/(deal\/|insider|blog|cheap-houses|new-builds|developers|inbox|compare-new-builds|costs|research|agents)/.test(location.pathname)) return; // these pages set their own title
-    document.title = "RealHunt — Homes under €100,000. Found by people. Ranked by you.";
+    document.title = "RealHunt — The best homes in every country, ranked by score";
   }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
   // has to find the home again and click twice.
@@ -807,7 +807,7 @@ function Home() {
     <div className="hunt-wrap hunt-home hv-home" onClickCapture={rememberCatalog}>
       <MapFab search={location.search} />
       <section className="hv-hero">
-        <h1>{t("Homes under €100k you won’t believe are real.")}</h1>
+        <h1>{t("The best homes in every country, ranked.")}</h1>
         <p>{t("Every home scored from 70 to 98. The best ones first, every day.")}</p>
         <SmartSearch value={q} onSearch={search} inputRef={searchRef} />
         <Freshness feed={feed} visitors={live?.today} />
@@ -860,7 +860,8 @@ function Home() {
       </div>
       <div ref={sentinel} aria-hidden="true" />
       {showTop && <button className="rh-to-top" aria-label="Back to the top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}><ArrowUp size={18} /></button>}
-      {feed?.rows.length === 0 && !error && (
+      {feed?.rows.length === 0 && !error && q && <NearestHomes q={q} />}
+      {feed?.rows.length === 0 && !error && !q && (
         <EmptyState title={q ? `No homes for “${q}” yet` : "Nothing here yet"}
           text={q ? "Try a country, a town or a simple word like sea, lake or cabin." : "No homes match these filters. Clear them, or post a home you found."}
           action={<div className="hunt-row"><Link to="/" className="hunt-primary">See all homes</Link><Link to="/submit" className="hunt-secondary">{t("Post a home")}</Link><EmptyAlternatives params={{scope,country,category,max_price:maxPrice,min_sqm:minSqm,sort,q}}/></div>} />
@@ -880,7 +881,7 @@ function Home() {
       <ComparisonTray/>
       <p className="hunt-rules">
         {t("One anonymous vote per browser and home each week. Sign in to save homes, contribute or open the original listing.")} {" "}
-        Only priced homes under €100,000 that are ready to live in are listed. The weekly board resets every Monday.
+        Every home has a price, real photos and a hand check. The list is ranked by score and changes every day.
       </p>
     </div>
   );
@@ -952,7 +953,7 @@ function Detail() {
     if (!d) return;
     const where = d.location_name || d.country || "";
     document.title = `${d.price_eur != null ? money(d.price_eur) + " · " : ""}${cleanTitle(d)}${where && !cleanTitle(d).includes(where) ? " · " + where : ""} · RealHunt`;
-    const desc = `${cleanTitle(d)}${d.price_eur != null ? " for " + money(d.price_eur) : ""}. Voted by the RealHunt community. Homes under €100,000.`;
+    const desc = `${cleanTitle(d)}${d.price_eur != null ? " for " + money(d.price_eur) : ""}. Scored and ranked by RealHunt.`;
     const set = (sel: string, attr: string, key: string, val: string) => {
       let m = document.head.querySelector(sel) as HTMLMetaElement | null;
       if (!m) { m = document.createElement("meta"); m.setAttribute(attr, key); document.head.appendChild(m); }

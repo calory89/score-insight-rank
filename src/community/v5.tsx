@@ -71,7 +71,7 @@ export function Welcome({ rows }: { rows: Row[] | undefined }) {
   return (
     <div className="hv-welcome-strip" role="note">
       <Heart size={18} fill="currentColor" aria-hidden="true" />
-      <p><strong>Real homes under €100k.</strong> Tap the heart on the ones you love. The most voted rise to the top.</p>
+      <p><strong>The best homes, ranked by score.</strong> Save the ones you love.</p>
       <button onClick={close} aria-label="Close">Got it</button>
     </div>
   );
@@ -189,7 +189,7 @@ export function BoardPage() {
         <div className="hv-board-hero-copy">
           <span className="hunt-eyebrow">Board{data?.handle && !autoHandle(data.handle) ? ` by @${data.handle}` : ""}</span>
           <h1>{data?.name || "…"}</h1>
-          {data && !data.error && <p className="hunt-fine">{data.rows?.length || 0} homes under €100k{data.rows?.length ? ` · from ${money(Math.min(...data.rows.map((r: Row) => r.price_eur || 1e9)))}` : ""}</p>}
+          {data && !data.error && <p className="hunt-fine">{data.rows?.length || 0} homes{data.rows?.length ? ` · from ${money(Math.min(...data.rows.map((r: Row) => r.price_eur || 1e9)))}` : ""}</p>}
           <div className="hunt-row">
             <button className="hv-share has-label" onClick={() => (navigator.share ? navigator.share({ title: `${data?.name} · RealHunt`, url }) : navigator.clipboard.writeText(url).then(() => setNotice("Board link copied ✓"))).catch(() => {})}><Share2 size={16} /><span>Share this board</span></button>
             {data && !data.error && !data.mine && <button className="hunt-primary" disabled={copying} onClick={async () => {

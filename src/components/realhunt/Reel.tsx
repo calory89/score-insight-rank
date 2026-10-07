@@ -74,7 +74,7 @@ export default function Reel({ images, title, price, place, company, cta = "Clai
         ctx.fillStyle = "#fff"; ctx.textAlign = "center";
         ctx.font = "700 58px Helvetica, Arial, sans-serif"; wrap(ctx, title, W - 120).forEach((l, k) => ctx.fillText(l, W / 2, 470 + k * 66));
         if (price) { ctx.font = "700 72px Helvetica, Arial, sans-serif"; ctx.fillStyle = "#FDE68A"; ctx.fillText("from " + eur(price), W / 2, 740); }
-        ctx.fillStyle = "#fff"; ctx.font = "500 34px Helvetica, Arial, sans-serif"; ctx.fillText("Homes under €100,000, ranked by people", W / 2, 860);
+        ctx.fillStyle = "#fff"; ctx.font = "500 34px Helvetica, Arial, sans-serif"; ctx.fillText("The best homes, ranked by score", W / 2, 860);
         ctx.font = "700 44px Helvetica, Arial, sans-serif"; ctx.fillText("realhunt.co", W / 2, 960);
         ctx.textAlign = "left";
       }

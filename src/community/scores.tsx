@@ -133,7 +133,7 @@ export function RankHead() {
     </div>
   );
 }
-export function RankRow({ deal, pos }: { deal: any; pos: number }) {
+export function RankRow({ deal, pos, km, near }: { deal: any; pos: number; km?: number; near?: string }) {
   const s = useScore(deal);
   const href = `/deal/${encodeURIComponent(deal.slug)}?tab=all`;
   const where = deal.location_name && deal.country && !String(deal.location_name).includes(deal.country) ? `${deal.location_name}, ${deal.country}` : deal.location_name || deal.country;
@@ -145,7 +145,7 @@ export function RankRow({ deal, pos }: { deal: any; pos: number }) {
       <span className="rk-main">
         <strong className="rk-price">{money(deal.price_eur)}{deal.sqm ? <small>{` · ${deal.sqm} m²`}</small> : null}</strong>
         <span className="rk-title">{cleanName(deal)}</span>
-        <span className="rk-where">{where}</span>
+        <span className="rk-where">{where}{km != null && near ? ` · ${Math.round(km)} km ${t("from")} ${near}` : ""}</span>
         <span className="rk-tags">
           {isNew(deal) && <b className="rk-new">{t("New today")}</b>}
           {deal.developer ? <b>{t("New build")}</b> : null}
@@ -172,4 +172,34 @@ export function RankSkeleton() {
 }
 export function ScoreHelp() {
   return <details className="rh-ranking-help"><summary>{t("How the score works")}</summary><p>{t("Every home on RealHunt passed our hand check, so the score starts at 70. The rest compares it with every other home on the site: price, price per m², sea and lakes, airport, space, move-in condition and extras. Higher bars are better. The list is sorted by score, best first, and changes every day as new homes come in.")}</p><p>{t("The score is not a valuation or a recommendation to buy. Check every detail with the seller.")}</p></details>;
+}
+
+// 7-oct-2026 (Carlos): a search with no homes never ends empty. "Nothing in Madrid yet" plus the
+// best-scored homes closest to that place (score minus 1 point per 25 km, among the 30 nearest homes).
+export function NearestHomes({ q }: { q: string }) {
+  const [st, setSt] = useState<{ place: string; rows: any[] } | null>(null);
+  const [miss, setMiss] = useState(false);
+  useEffect(() => {
+    let on = true; setSt(null); setMiss(false);
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=en&q=${encodeURIComponent(q)}`)
+      .then((r) => r.json())
+      .then(async (g: any[]) => {
+        const p = g?.[0]; if (!p) { if (on) setMiss(true); return; }
+        const { data } = await (supabase.rpc as any)("community_near", { p: { lat: Number(p.lat), lng: Number(p.lon), limit: 6 } });
+        const place = String(p.name || p.display_name || q).split(",")[0];
+        if (on) setSt({ place, rows: data?.rows || [] });
+      }).catch(() => { if (on) setMiss(true); });
+    return () => { on = false; };
+  }, [q]);
+  if (miss || (st && !st.rows.length)) return <section className="rk-near"><div className="rk-near-head"><strong>{`${t("No homes for")} “${q}” ${t("yet")}.`}</strong><small>{t("Try a country, a town or a simple word like sea, lake or cabin.")}</small></div></section>;
+  if (!st) return null;
+  return (
+    <section className="rk-near">
+      <div className="rk-near-head">
+        <strong>{`${t("Nothing in")} ${st.place} ${t("yet")}.`}</strong>
+        <small>{`${t("These are the best-scored homes closest to")} ${st.place}.`}</small>
+      </div>
+      <div className="rk-list">{st.rows.map((r, i) => <RankRow key={r.id} deal={r} pos={i + 1} km={r.km} near={st.place} />)}</div>
+    </section>
+  );
 }

@@ -392,7 +392,7 @@ export function Freshness({ feed, visitors }: { feed: any; visitors?: number }) 
   const parts: ReactNode[] = [];
   if (feed.new_today > 0) parts.push(<span key="n" className="hv-live"><i />{num(feed.new_today)} new today</span>);
   if (feed.last_added) parts.push(<span key="u">Updated {ago(feed.last_added)}</span>);
-  if (feed.global_deals >= 100) parts.push(<span key="t">{num(feed.global_deals)} homes under €100k</span>);
+  if (feed.global_deals >= 100) parts.push(<span key="t">{num(feed.global_deals)} homes ranked</span>);
   if (visitors && visitors >= 100) parts.push(<span key="v">{num(visitors)} people browsing today</span>);
   if (!parts.length) return null;
   return <div className="hv-fresh">{parts}</div>;

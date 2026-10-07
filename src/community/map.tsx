@@ -12,7 +12,7 @@ export default function MapView() {
   const [focus] = useState<string | null>(p0.get("focus"));
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [n, setN] = useState<number | null>(null);
-  useEffect(() => { document.title = "Map of homes under €100,000 · RealHunt"; }, []);
+  useEffect(() => { document.title = "Map of the best homes · RealHunt"; }, []);
   // Country counts for the chips come from the feed itself.
   useEffect(() => { import("./extras").then(({ feed }) => feed({ scope: "all", limit: 1 }).then((d: any) => setCounts(d.countries_count || {})).catch(() => {})); }, []);
   return (
