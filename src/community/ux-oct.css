@@ -226,3 +226,6 @@ html.hm-lock, html.hm-lock body { overflow: hidden; }
   .rk-price { font-size: 16px; } .rk-title { font-size: 13px; }
   .rk-skel { height: 132px; }
 }
+.rk-bar { width: 46px; }
+.rk-head .rk-bars em { width: 46px; font-size: 10px; letter-spacing: 0; text-transform: none; font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 760px) { .rk-bar { width: auto; } }
