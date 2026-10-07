@@ -32,6 +32,7 @@ import { TopMethodPage, AboutPage } from "./topTrustUI";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
+import { FindHomePage, FindHomeCTA } from "./findhome";
 import { ScoreBars, BestPerCountry, RankRow, RankHead, RankSkeleton, ScoreHelp, NearestHomes, NearCity } from "./scores";
 import { LogoMark } from "@/components/realhunt/Logo";
 import { isEs, searchQuery } from "@/lib/lang";
@@ -145,7 +146,7 @@ function Shell({ children }: { children: ReactNode }) {
     };
   }, [user?.id]);
   useEffect(() => {
-    if (/^\/(deal\/|insider|blog|cheap-houses|new-builds|developers|inbox|compare-new-builds|costs|research|agents)/.test(location.pathname)) return; // these pages set their own title
+    if (/^\/(deal\/|find-my-home|insider|blog|cheap-houses|new-builds|developers|inbox|compare-new-builds|costs|research|agents)/.test(location.pathname)) return; // these pages set their own title
     document.title = "RealHunt — The best homes in every country, ranked by score";
   }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
@@ -811,6 +812,7 @@ function Home() {
         <p>{t("Every home scored from 70 to 98. The best ones first, every day.")}</p>
         <SmartSearch value={q} onSearch={search} inputRef={searchRef} />
         <Freshness feed={feed} visitors={live?.today} />
+        <FindHomeCTA compact />
       </section>
       <Vibes rows={feed?.rows||[]} isOn={vibeOn} onToggle={toggleVibe} />
       <ExploreLinks />
@@ -852,6 +854,7 @@ function Home() {
           : displayedRows?.map((d: any, index: number) => (
             <Fragment key={d.id}>
               <RankRow deal={d} pos={index + 1} />
+              {index === 6 && <FindHomeCTA place={q || (country && !country.includes(",") ? country : undefined)} />}
               {index === 9 && !q && <RemoteWorkCard />}
               {index === 19 && plain && <SponsoredCard />}
             </Fragment>
@@ -2015,6 +2018,8 @@ export default function Community() {
       <AlertsPage />
     ) : path === "/help-buying" ? (
       <ServicesPage />
+    ) : path.startsWith("/find-my-home") ? (
+      <FindHomePage />
     ) : path.startsWith("/guide") ? (
       <GuidePage />
     ) : path.startsWith("/homes/") ? (

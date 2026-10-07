@@ -199,6 +199,7 @@ export function NearestHomes({ q }: { q: string }) {
         <strong>{`${t("Nothing in")} ${st.place} ${t("yet")}.`}</strong>
         <small>{`${t("These are the best-scored homes closest to")} ${st.place}.`}</small>
       </div>
+      <a className="fh-cta" href={`/find-my-home/${encodeURIComponent(st.place.toLowerCase())}`}><span className="fh-cta-badge">{t("Free")}</span><span className="fh-cta-text"><b>{`${t("We'll find you a home in")} ${st.place}`}</b><small>{t("Tell us where and how much. We send you the best real homes, checked by a person.")}</small></span><span className="fh-cta-go">{t("Start")} →</span></a>
       <div className="rk-list">{st.rows.map((r, i) => <RankRow key={r.id} deal={r} pos={i + 1} km={r.km} near={st.place} />)}</div>
     </section>
   );
@@ -235,7 +236,7 @@ export function NearCity() {
               <div className="rh-nc-body">
                 <b>{`${t("Near")} ${c}`}</b>
                 <small>{`${t("From")} ${money(min)} · ${t("best score")} ${Math.max(...rows.map((r) => r.nota || 0))}`}</small>
-                <div className="rh-nc-actions"><a className="hunt-primary" href={`/?q=${encodeURIComponent(c)}`}>{t("See the homes")}</a><button type="button" className="hunt-link" onClick={() => share(c)}>{t("Share")}</button></div>
+                <div className="rh-nc-actions"><a className="hunt-primary" href={`/?q=${encodeURIComponent(c)}`}>{t("See the homes")}</a><a className="hunt-link" href={`/find-my-home/${encodeURIComponent(c.toLowerCase())}?near=1`}>{t("Find me one")}</a><button type="button" className="hunt-link" onClick={() => share(c)}>{t("Share")}</button></div>
               </div>
             </article>
           );

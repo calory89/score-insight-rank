@@ -88,6 +88,8 @@ function prerenderPages() {
           for (const p of [20000, 40000, 60000, 80000]) page(`${SITE}/homes/${c}/under-${p}`, `Homes under €${p.toLocaleString("en")} in ${cap(c)} · RealHunt`, `Houses for sale under €${p.toLocaleString("en")} in ${cap(c)}, ranked by people's votes.`, DEF);
         }
         for (const [c, n] of [["italy", "Italy"], ["spain", "Spain"], ["portugal", "Portugal"]]) page(`${SITE}/guide/${c}`, `How to buy a cheap home in ${n} as a foreigner · RealHunt`, `Steps, papers and taxes to buy a house in ${n} from abroad, in plain words.`, DEF);
+        page(`${SITE}/find-my-home`, "We find your home, where you want, at your price · RealHunt", "Free home finder. Tell us where and how much, and we send you the best real homes, checked by a person. Skip the queue by inviting friends.", DEF);
+        for (const c of ["madrid", "barcelona", "valencia", "malaga", "sevilla", "lisbon", "porto", "paris", "london", "rome", "milan", "berlin"]) page(`${SITE}/find-my-home/${c}`, `We find you a home in ${cap(c)} · RealHunt`, `Tell us your budget and we find you a real home in or near ${cap(c)}, checked by a person. Free.`, DEF);
         page(`${SITE}/map`, "Map of the best homes · RealHunt", "Every home on RealHunt on one map. Italy, Spain, Portugal and more.", DEF);
         page(`${SITE}/swipe`, "Swipe the best homes · RealHunt", "Swipe through the best-scored homes and save the ones you love.", DEF);
         page(`${SITE}/leaderboard`, "Top hunters · RealHunt", "The people who find the best homes.", DEF);
