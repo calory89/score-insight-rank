@@ -32,7 +32,7 @@ import { TopMethodPage, AboutPage } from "./topTrustUI";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
-import { ScoreBars, BestPerCountry } from "./scores";
+import { ScoreBars, BestPerCountry, RankRow, RankHead, RankSkeleton, ScoreHelp } from "./scores";
 import { LogoMark } from "@/components/realhunt/Logo";
 import { isEs, searchQuery } from "@/lib/lang";
 import { guestSaves, isGuestSaved, toggleGuestSave, clearGuestSaves, type GuestSave } from "./guestSaves";
@@ -648,7 +648,7 @@ function Home() {
   const category = params.get("type") || "";
   const maxPrice = Number(params.get("price")) || null;
   const minSqm = Number(params.get("sqm")) || null;
-  const sort = params.get("order") || "rank";
+  const sort = params.get("order") || "score"; // 7-oct-2026: the feed is a score ranking, no votes
   const minScore = Number(params.get("score")) || null;
   const need = (params.get("need") || "").split(",").filter(Boolean);
   const dimMin: Record<string, number> = Object.fromEntries((params.get("dmin") || "").split(",").filter(Boolean).map((x) => { const [k, v] = x.split(":"); return [k, Number(v) || 0]; }));
@@ -766,7 +766,7 @@ function Home() {
     const next = new URLSearchParams(params);
     const put = (k: string, val: unknown) => (val ? next.set(k, String(val)) : next.delete(k));
     put("country", v.country); put("type", v.category); put("price", v.max_price); put("sqm", v.min_sqm);
-    put("order", v.sort && v.sort !== "rank" ? v.sort : "");
+    put("order", v.sort && v.sort !== "score" ? v.sort : "");
     put("score", v.min_score); put("need", (v.need || []).join(",")); put("dmin", Object.entries(v.dim_min || {}).map(([k, n]) => `${k}:${n}`).join(","));
     next.delete("search");
     setParams(next);
@@ -787,7 +787,7 @@ function Home() {
   const displayedRows = feed?.rows;
   const plain = !country && !category && !q && !vibeList.length;
   const vibe = params.get("vibe") || "";
-  const showPodium = podium && !!feed && plain && !vibe && !maxPrice && !minSqm && sort === "rank" && feed.rows.length >= 6;
+  const showPodium = podium && !!feed && plain && !vibe && !maxPrice && !minSqm && sort === "score" && false;
   // Each vibe switches its own piece of the filter on or off and keeps everything else:
   // by the sea = type beach, Nordic/Japanese = adds Sweden/Japan to the countries, under €30k = price,
   // lake/stone/sauna/terrace = words the listing must contain (all of them).
@@ -808,7 +808,7 @@ function Home() {
       <MapFab search={location.search} />
       <section className="hv-hero">
         <h1>{t("Homes under €100k you won’t believe are real.")}</h1>
-        <p>{t("Real homes. Clear facts. Ranked by people.")}</p>
+        <p>{t("Every home scored from 70 to 98. The best ones first, every day.")}</p>
         <SmartSearch value={q} onSearch={search} inputRef={searchRef} />
         <Freshness feed={feed} visitors={live?.today} />
       </section>
@@ -817,18 +817,17 @@ function Home() {
 
       {!q && <BuyerPicks compact />}
       <div className="rh-sticky-filters"><Filters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort, q, min_score: minScore, need, dim_min: dimMin }} onChange={setFilters} /></div>
-      {!country && !category && !maxPrice && !minSqm && !minScore && !need.length && !Object.keys(dimMin).length && sort === "rank" && !q && <BestPerCountry />}
+      {!country && !category && !maxPrice && !minSqm && !minScore && !need.length && !Object.keys(dimMin).length && sort === "score" && !q && <BestPerCountry />}
       <div className="rh-results-bar" ref={resultsRef}>
         <p role="status" aria-live="polite"><strong>{busy && !feed ? t("Updating results…") : feed ? `${num(feed.total)} ${t("homes")}${country ? ` in ${country.split(",").join(", ")}` : ""}` : ""}</strong>
-          {(country || category || maxPrice || minSqm || q || vibeList.length > 0 || sort !== "rank") && <Link to="/" className="hunt-link rh-clear">{t("Clear filters")}</Link>}</p>
-        <div className="rh-results-tools"><button type="button" className="hunt-link rh-maptoggle" aria-expanded={showMap} onClick={() => setMapMode(showMap ? "off" : "on")}>{showMap ? t("Hide map") : t("Show on map")}</button><RankingExplanation/>{plain && <button className="hunt-link" aria-expanded={podium} onClick={()=>setPodium(!podium)}>{podium?"Hide the top 3":"Show the top 3"}</button>}<span className="rh-motion"><MotionControl/></span></div>
+          {(country || category || maxPrice || minSqm || q || vibeList.length > 0 || sort !== "score") && <Link to="/" className="hunt-link rh-clear">{t("Clear filters")}</Link>}</p>
+        <div className="rh-results-tools"><button type="button" className="hunt-link rh-maptoggle" aria-expanded={showMap} onClick={() => setMapMode(showMap ? "off" : "on")}>{showMap ? t("Hide map") : t("Show on map")}</button><ScoreHelp/><span className="rh-motion"><MotionControl/></span></div>
       </div>
       {showMap && (
         <Suspense fallback={<div className="hm is-embedded hm-feed"><div className="hm-map" /></div>}>
           <HomesMap params={{ scope, country, category, max_price: maxPrice, min_sqm: minSqm, q: searchQuery(q), terms } as any} embedded className="hm-feed" />
         </Suspense>
       )}
-      {showPodium && <PodiumHero rows={feed.rows.slice(0, 3)} scope={scope} endsAt={feed?.week?.ends_at} />}
       {q && feed && <p className="hv-searchnote">{feed.total} {feed.total === 1 ? "home" : "homes"} for “{q}”</p>}
       {nextUp.length > 0 && (
         <aside className="hunt-keepgoing" aria-label="More to vote on">
@@ -846,17 +845,18 @@ function Home() {
       )}
       {error && <ErrorBox error={error} retry={() => load()} />}
       {!q && !country && <Welcome rows={feed?.rows} />}
-      <div className="hv-grid" aria-busy={!feed && busy}>
+      <div className="rk-list" aria-busy={!feed && busy}>
+        {feed && feed.rows.length > 0 && <RankHead />}
         {!feed && busy
-          ? [0, 1, 2, 3, 4, 5].map((n) => <CardSkeleton key={n} />)
-          : (showPodium ? displayedRows.slice(3) : displayedRows)?.map((d: any, index: number) => (
+          ? [0, 1, 2, 3, 4, 5].map((n) => <RankSkeleton key={n} />)
+          : displayedRows?.map((d: any, index: number) => (
             <Fragment key={d.id}>
-              <Card4 deal={d} scope={scope} onQuick={()=>setQuick(feed.rows.findIndex((r:any)=>r.id===d.id))} />
-              {index === 5 && !q && <RemoteWorkCard />}
-              {index === 11 && plain && <SponsoredCard />}
+              <RankRow deal={d} pos={index + 1} />
+              {index === 9 && !q && <RemoteWorkCard />}
+              {index === 19 && plain && <SponsoredCard />}
             </Fragment>
           ))}
-        {feed && busy && feed.rows.length > 0 && feed.rows.length < feed.total && [0, 1, 2].map((n) => <CardSkeleton key={"more" + n} />)}
+        {feed && busy && feed.rows.length > 0 && feed.rows.length < feed.total && [0, 1, 2].map((n) => <RankSkeleton key={"more" + n} />)}
       </div>
       <div ref={sentinel} aria-hidden="true" />
       {showTop && <button className="rh-to-top" aria-label="Back to the top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}><ArrowUp size={18} /></button>}
@@ -871,7 +871,7 @@ function Home() {
       <section className="hunt-join hv-join">
         <div>
           <span className="hunt-eyebrow">FOUND ONE WE MISSED?</span>
-          <h2>Post it. If people love it, it rises.</h2>
+          <h2>{t("Post it. If it scores well, it rises.")}</h2>
           <p>Paste the listing link. Every home gets a human check before it goes live.</p>
         </div>
         <QuickSubmission />
@@ -1006,7 +1006,6 @@ function Detail() {
           {d.why_great && <blockquote>{d.why_great}</blockquote>}
           {!isEs() && <TranslateBar text={[cleanTitle(d), d.why_great].filter(Boolean).join("\n\n")} />}
           <div className="hunt-detail-actions hv-detail-actions">
-            <HeartVote deal={d} scope={scope} onChange={load} big />
             {listing}
             <SaveHeart deal={d} className="hunt-save hv-save-inline" />
             <ShareButton deal={d as Row} scope={scope} label />
@@ -1016,9 +1015,8 @@ function Detail() {
             <BoardButton deal={d} />
             <CompareButton deal={d} />
           </div>
-          <p className="hv-votehint">Total votes decide the ranking; they never reset. Double-tap a photo in the feed to vote.</p>
           <p className="hunt-fine">
-            {num(d.life_up + d.life_down)} lifetime votes · {num(d.views)} views
+            {num(d.views)} views
             · {num(d.saves)} saves
           </p>
           <ScoreBars deal={d} />

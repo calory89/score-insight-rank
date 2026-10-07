@@ -310,8 +310,8 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
   const value = applied;
   const setDraft = (v: FeedParams) => onChange(v);
   const list = Object.entries(countries || {}).sort((a, b) => b[1] - a[1]);
-  const active = !!(value.country || value.category || value.max_price || value.min_sqm || (value.sort && value.sort !== "rank"));
-  const extra = [value.category, value.max_price, value.min_sqm, value.sort && value.sort !== "rank" ? value.sort : ""].filter(Boolean).length;
+  const active = !!(value.country || value.category || value.max_price || value.min_sqm || (value.sort && value.sort !== "score"));
+  const extra = [value.category, value.max_price, value.min_sqm, value.sort && value.sort !== "score" ? value.sort : ""].filter(Boolean).length;
   const [open, setOpen] = useState(() => extra > 0);
   return (
     <div className={"hunt-filters" + (open ? " is-open" : "")}>
@@ -349,8 +349,8 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
             {[40, 60, 80, 100, 150].map((s) => <option key={s} value={s}>{s} m²+</option>)}
           </select></label>
         <label><span>{t("Sort")}</span>
-          <select value={value.sort || "rank"} onChange={(e) => setDraft({ ...value, sort: e.target.value })}>
-            <option value="rank">{t("Top voted")}</option><option value="score">{t("Best score")}</option><option value="new">{t("Newest")}</option>
+          <select value={value.sort || "score"} onChange={(e) => setDraft({ ...value, sort: e.target.value })}>
+            <option value="score">{t("Best score")}</option><option value="new">{t("Newest")}</option>
             <option value="price_asc">{t("Cheapest")}</option><option value="sqm">{t("Biggest")}</option>{DIMS.filter(([k]) => k !== "interest").map(([k, l]) => <option key={k} value={"dim:" + k}>{`${t("Best")}: ${t(l)}`}</option>)}
           </select></label>
       </div>}

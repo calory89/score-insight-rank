@@ -419,7 +419,7 @@ export function DetailBar({ deal, scope = "all", onChange, listing }: { deal: Ro
   return (
     <div className="hv-detailbar" role="region" aria-label="Actions for this home">
       <div className="hv-detailbar-price"><strong>{money(deal.price_eur)}</strong><span>{deal.location_name || deal.country}</span></div>
-      <HeartVote deal={deal} scope={scope} onChange={onChange} />
+      <ScoreBadge deal={deal} />
       <ShareButton deal={deal} scope={scope} />
       {listing}
     </div>

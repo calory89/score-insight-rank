@@ -2,6 +2,8 @@
 // like Nomad List. 70 is the floor because every home on RealHunt already passed our hand check;
 // the rest compares it with every other home on the site. Data: community_scores() / community_feed.
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { money } from "./api";
 import { supabase } from "@/integrations/supabase/client";
 import { Check } from "lucide-react";
 import { t } from "./i18n";
@@ -32,7 +34,7 @@ export const DIMS: [string, string, string][] = [
   ["access", "Airport", "How close the nearest airport with scheduled flights is"],
   ["costs", "Buying costs", "Taxes and fees to buy in this country: lower scores more"],
   ["photos", "Listing detail", "Photos, size and rooms published, verified by us"],
-  ["interest", "Buyer interest", "Views, saves and votes from RealHunt buyers"],
+  ["interest", "Buyer interest", "Views and saves from RealHunt buyers"],
 ];
 export const AMEN: [string, string][] = [["garden", "Garden"], ["terrace", "Terrace"], ["pool", "Pool"], ["sauna", "Sauna"], ["fireplace", "Fireplace"], ["views", "Views"], ["land", "Land"], ["garage", "Garage"], ["outbuildings", "Outbuildings"], ["cellar", "Cellar or attic"], ["water", "By the water"]];
 const tone = (v: number) => (v >= 80 ? "is-great" : v >= 60 ? "is-good" : v >= 40 ? "is-ok" : "is-low");
@@ -107,4 +109,67 @@ export function BestPerCountry({ onCountry }: { onCountry?: (c: string) => void 
       {onCountry && <div className="rh-best-more">{rows.map((r) => <button key={r.country} className="hunt-link" onClick={() => onCountry(r.country)}>{`${t("Best in")} ${r.country}`}</button>)}</div>}
     </section>
   );
+}
+
+// 7-oct-2026 (Carlos): the main feed is a ranking, not a vote. One home per line: position, small photo,
+// name, place and price, one vertical bar per score that matters to a buyer, and the grade at the end.
+export const RANK_BARS: [string, string, string][] = [
+  ["price", "Price", "Price"],
+  ["value", "€/m²", "Price per m²"],
+  ["water", "Sea", "Sea & lakes"],
+  ["access", "Airport", "Airport"],
+  ["space", "Space", "Space"],
+  ["condition", "Ready", "Move-in condition"],
+  ["extras", "Extras", "Extras"],
+];
+const isNew = (d: any) => { const at = d.approved_at || d.publish_at; return !!at && Date.now() - new Date(at).getTime() < 36 * 3600 * 1000; };
+const cleanName = (d: any) => String(d.title || "").replace(/\s+/g, " ").trim().slice(0, 90);
+export function RankHead() {
+  return (
+    <div className="rk-head" aria-hidden="true">
+      <span>#</span><span /><span>{t("Home")}</span>
+      <span className="rk-bars">{RANK_BARS.map(([k, s]) => <em key={k}>{t(s)}</em>)}</span>
+      <span>{t("Score")}</span>
+    </div>
+  );
+}
+export function RankRow({ deal, pos }: { deal: any; pos: number }) {
+  const s = useScore(deal);
+  const href = `/deal/${encodeURIComponent(deal.slug)}?tab=all`;
+  const where = deal.location_name && deal.country && !String(deal.location_name).includes(deal.country) ? `${deal.location_name}, ${deal.country}` : deal.location_name || deal.country;
+  const amen = AMEN.filter(([k]) => s?.a?.includes(k)).slice(0, 3);
+  return (
+    <Link to={href} className={"rk-row" + (pos <= 3 ? " is-podium" : "")} aria-label={`${pos}. ${cleanName(deal)}, ${money(deal.price_eur)}, ${t("RealHunt score")} ${s?.n ?? ""}`}>
+      <span className="rk-pos">{pos}</span>
+      <span className="rk-img">{deal.image_urls?.[0] ? <img src={deal.image_urls[0]} alt="" loading={pos <= 6 ? "eager" : "lazy"} decoding="async" /> : null}</span>
+      <span className="rk-main">
+        <strong className="rk-price">{money(deal.price_eur)}{deal.sqm ? <small>{` · ${deal.sqm} m²`}</small> : null}</strong>
+        <span className="rk-title">{cleanName(deal)}</span>
+        <span className="rk-where">{where}</span>
+        <span className="rk-tags">
+          {isNew(deal) && <b className="rk-new">{t("New today")}</b>}
+          {deal.developer ? <b>{t("New build")}</b> : null}
+          {amen.map(([k, l]) => <b key={k}>{t(l)}</b>)}
+        </span>
+      </span>
+      <span className="rk-bars">
+        {RANK_BARS.map(([k, sh, full]) => {
+          const v = s?.d?.[k];
+          return (
+            <span key={k} className={"rk-bar " + (v != null ? tone(v) : "is-none")} title={v != null ? `${t(full)}: ${v}/100` : t(full)}>
+              <i><b style={{ height: `${v != null ? Math.max(6, v) : 0}%` }} /></i>
+              <em>{t(sh)}</em>
+            </span>
+          );
+        })}
+      </span>
+      <span className={"rk-grade " + (s ? gtone(s.n) : "")}>{s?.n ?? "–"}</span>
+    </Link>
+  );
+}
+export function RankSkeleton() {
+  return <div className="rk-row rk-skel" aria-hidden="true"><span className="rk-pos" /><span className="rk-img" /><span className="rk-main"><i /><i /></span><span className="rk-bars" /><span className="rk-grade" /></div>;
+}
+export function ScoreHelp() {
+  return <details className="rh-ranking-help"><summary>{t("How the score works")}</summary><p>{t("Every home on RealHunt passed our hand check, so the score starts at 70. The rest compares it with every other home on the site: price, price per m², sea and lakes, airport, space, move-in condition and extras. Higher bars are better. The list is sorted by score, best first, and changes every day as new homes come in.")}</p><p>{t("The score is not a valuation or a recommendation to buy. Check every detail with the seller.")}</p></details>;
 }
