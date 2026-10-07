@@ -233,3 +233,15 @@ html.hm-lock, html.hm-lock body { overflow: hidden; }
 .rk-near-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; }
 .rk-near-head strong { font-size: 18px; } .rk-near-head small { font-size: 14px; color: #4F5A55; }
 .rk-near .rk-list { margin: 0; }
+.rh-near-city { margin: 14px 0 6px; }
+.rh-nc-row { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-top: 10px; }
+.rh-nc-card { border: 1px solid #ECEDEF; border-radius: 16px; overflow: hidden; background: #fff; display: flex; flex-direction: column; }
+.rh-nc-imgs { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 1fr 1fr; gap: 2px; height: 150px; }
+.rh-nc-imgs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rh-nc-imgs img:first-child { grid-row: 1 / 3; }
+.rh-nc-imgs img:only-child { grid-column: 1 / 3; }
+.rh-nc-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 3px; }
+.rh-nc-body b { font-size: 17px; } .rh-nc-body small { color: #6B7178; font-size: 13px; }
+.rh-nc-actions { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
+.rh-nc-actions .hunt-primary { padding: 8px 14px; font-size: 14px; }
+@media (max-width: 760px) { .rh-nc-row { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 82%; overflow-x: auto; scroll-snap-type: x mandatory; } .rh-nc-card { scroll-snap-align: start; } }

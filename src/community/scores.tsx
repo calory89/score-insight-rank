@@ -203,3 +203,45 @@ export function NearestHomes({ q }: { q: string }) {
     </section>
   );
 }
+
+// 7-oct-2026 (Carlos): "live close to the city and work online". Homes about an hour from the big cities,
+// for people who keep their city job remotely. Each card opens the search for that province.
+const CITIES: [string, number, number][] = [["Madrid", 40.4168, -3.7038], ["Barcelona", 41.3874, 2.1686], ["Valencia", 39.4699, -0.3763]];
+export function NearCity() {
+  const [data, setData] = useState<Record<string, any[]>>({});
+  useEffect(() => {
+    let on = true;
+    CITIES.forEach(([c, la, lo]) => (supabase.rpc as any)("community_near", { p: { lat: la, lng: lo, limit: 4 } })
+      .then(({ data: d }: any) => { if (on) setData((x) => ({ ...x, [c]: (d?.rows || []).filter((r: any) => r.km <= 110) })); }).catch(() => {}));
+    return () => { on = false; };
+  }, []);
+  const share = (c: string) => {
+    const url = `${location.origin}/?q=${encodeURIComponent(c)}`;
+    const text = `${t("Homes about an hour from")} ${c}. ${t("Keep your city job online and live with space, garden or pool.")}`;
+    if ((navigator as any).share) (navigator as any).share({ title: "RealHunt", text, url }).catch(() => {});
+    else navigator.clipboard?.writeText(`${text} ${url}`);
+  };
+  const ready = CITIES.filter(([c]) => data[c]?.length);
+  if (!ready.length) return null;
+  return (
+    <section className="rh-near-city">
+      <div className="rh-best-head"><strong>{t("Live an hour from the city, work online")}</strong><small>{t("Same salary, a house with a garden or a pool. Best-scored homes near each big city.")}</small></div>
+      <div className="rh-nc-row">
+        {ready.map(([c]) => {
+          const rows = data[c]; const min = Math.min(...rows.map((r) => r.price_eur));
+          return (
+            <article key={c} className="rh-nc-card">
+              <a href={`/?q=${encodeURIComponent(c)}`} className="rh-nc-imgs">{rows.slice(0, 3).map((r) => <img key={r.id} src={r.image_urls?.[0]} alt="" loading="lazy" />)}</a>
+              <div className="rh-nc-body">
+                <b>{`${t("Near")} ${c}`}</b>
+                <small>{`${t("From")} ${money(min)} · ${t("best score")} ${Math.max(...rows.map((r) => r.nota || 0))}`}</small>
+                <div className="rh-nc-actions"><a className="hunt-primary" href={`/?q=${encodeURIComponent(c)}`}>{t("See the homes")}</a><button type="button" className="hunt-link" onClick={() => share(c)}>{t("Share")}</button></div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+      <p className="hunt-fine">{t("Need a remote job first?")} <a href="https://jobersity.com" target="_blank" rel="noopener">{t("Jobersity finds remote jobs for you, free.")}</a></p>
+    </section>
+  );
+}
