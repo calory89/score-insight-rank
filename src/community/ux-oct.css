@@ -245,3 +245,6 @@ html.hm-lock, html.hm-lock body { overflow: hidden; }
 .rh-nc-actions { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
 .rh-nc-actions .hunt-primary { padding: 8px 14px; font-size: 14px; }
 @media (max-width: 760px) { .rh-nc-row { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 82%; overflow-x: auto; scroll-snap-type: x mandatory; } .rh-nc-card { scroll-snap-align: start; } }
+.rh-nc-imgs { grid-template-rows: repeat(2, minmax(0, 1fr)); grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); overflow: hidden; flex: 0 0 150px; }
+.rh-nc-imgs img { min-height: 0; min-width: 0; }
+.rh-near-city .rh-best-head { margin-top: 4px; }
