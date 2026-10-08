@@ -57,7 +57,7 @@ export function ExtensionPage() {
       )}
 
       <section className="xs-why">
-        <div><b>{t("Free")}</b><span>{t("3 full reports a day without an account. Unlimited with just your email.")}</span></div>
+        <div><b>{t("Free")}</b><span>{t("Free forever. Unlimited full reports with just your email, no password.")}</span></div>
         <div><b>{t("Private")}</b><span>{t("Only runs on property sites. Never stores photos or descriptions. Delete everything in one click.")}</span></div>
         <div><b>{t("Shareable")}</b><span>{t("Turn any score into an image for WhatsApp, TikTok or Instagram.")}</span></div>
       </section>
@@ -71,7 +71,7 @@ export function ExtensionPrivacy() {
   return (
     <div className="hunt-wrap hunt-legal xs-legal">
       <h1>RealHunt Score — Privacy policy</h1>
-      <p className="hunt-fine">Last updated: 9 October 2026 · Controller: Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, USA · Contact: carlos@equinoxinvestmentgroup.com</p>
+      <p className="hunt-fine">Last updated: 9 October 2026 (v0.3) · Controller: Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, USA · Contact: carlos@equinoxinvestmentgroup.com</p>
       <h2>What the extension does</h2>
       <p>RealHunt Score shows an estimated 0–100 score on property listings on supported property websites (idealista, Zillow, Rightmove). It runs only on those websites and on nothing else you browse.</p>
       <h2>What we collect, and only after you agree</h2>
@@ -79,12 +79,15 @@ export function ExtensionPrivacy() {
         <li><b>Comparable homes on your computer:</b> the price, size, price per m², area and map point of the homes on search pages you open are kept in your browser to compare listings. They leave your browser only after you agree (next point).</li>
         <li><b>Derived listing data:</b> price, currency, size, price per m², rooms, property type, area name, days listed, the score and red-flag labels, the listing URL and a hashed listing ID. We do not collect or store photos or full descriptions from the website.</li>
         <li><b>Your profile, if you answer it:</b> budget, places, type of home, purpose and timeline.</li>
-        <li><b>Your account, if you create one:</b> email and, optionally, phone, and whether you want emails from us.</li>
+        <li><b>Your account, if you create one:</b> email (checked with a 6-digit code we email you), optionally phone, and whether you want emails from us.</li>
+        <li><b>What you look at:</b> the homes you open (their derived numbers above), the ones you save and share. From them we build your taste profile (price range, areas, size, type) to recommend homes and, only if you ticked the box, to email you homes and price drops that match.</li>
         <li><b>Usage events:</b> install, reports opened, saves, shares and clicks on recommendations, linked to a random ID.</li>
       </ul>
       <p>Before you agree, the score is calculated on your computer only and nothing is sent to us.</p>
       <h2>Location check</h2>
-      <p>To count what is within a walk of a home, the extension sends that listing's published map point (never your own location) to the OpenStreetMap Overpass service (overpass-api.de, with overpass.kumi.systems as a backup). Answers are cached in your browser for 30 days.</p>
+      <p>To count what is within a walk of a home, the extension sends that listing's published map point (never your own location) to the OpenStreetMap Overpass service (overpass-api.de, with overpass.kumi.systems as a backup). If your network blocks it and you have agreed to these terms, our server asks OpenStreetMap instead. Answers are cached for 30 days.</p>
+      <h2>AI reading of descriptions</h2>
+      <p>After you agree, the text of the listing you open is sent to our server and read by an AI model (through Lovable's AI gateway, using Google Gemini) to find red flags and highlights. We keep only the result (labels and short quotes) for 7 days to avoid reading the same listing twice; we never store the full text.</p>
       <h2>Why</h2>
       <p>To calculate and improve scores (comparing a home's price per m² with other homes in the same area), to keep your saved homes and alerts, and to show you homes on RealHunt that match your profile. Recommendations are always labelled “RealHunt pick” or “Sponsored” and never change any score. Legal basis: your consent (GDPR art. 6(1)(a)).</p>
       <h2>What we never do</h2>

@@ -81,6 +81,7 @@ const ReservationContract = L(() => import("./pages/ReservationContract"));
 const DevPublic = L(() => import("./pages/DevPublic"));
 const Finds = L(() => import("./pages/Finds"));
 const AdminActivity = L(() => import("./pages/AdminActivity"));
+const AdminExtension = L(() => import("./pages/AdminExtension"));
 const FindDetail = L(() => import("./pages/FindDetail"));
 const CommandPalette = L(() => import("@/components/CommandPalette"));
 const KeyboardShortcutsModal = L(() => import("@/components/KeyboardShortcutsModal"));
@@ -253,6 +254,7 @@ const AppRoutes = () => (
       <Route path="/extension" element={<Community />} />
       <Route path="/extension/privacy" element={<Community />} />
       <Route path="/find/:shortcode" element={<FindToDeal />} />
+      <Route path="/admin/extension" element={<AdminExtension />} />
       <Route path="/admin/activity" element={<AdminActivity />} />
       <Route path="/admin/activity/:tab" element={<AdminActivity />} />
       <Route path="*" element={<NotFound />} />
