@@ -18,7 +18,7 @@ export function ExtensionPage() {
       <section className="xs-hero">
         <span className="hunt-eyebrow">{t("FREE CHROME EXTENSION")}</span>
         <h1>{t("See the score of any home, on any listing.")}</h1>
-        <p>{t("Install RealHunt Score and every home on idealista, Zillow and Rightmove gets a 0–100 score next to its price: price against the area, how complete the listing is and red flags like occupied, auction or needs renovation. With the reason for every point.")}</p>
+        <p>{t("Install RealHunt Score and every home on idealista, Zillow and Rightmove gets a 0–100 score next to its price: price against similar homes nearby, what's within a walk, red flags like occupied, auction or needs renovation, and what the home really has. One honest line, and the reason for every point.")}</p>
         <div className="xs-cta">
           {STORE
             ? <a className="hunt-primary" href={STORE} target="_blank" rel="noopener" onClick={() => track("ExtensionInstall")}>{t("Add to Chrome, free")}</a>
@@ -31,11 +31,12 @@ export function ExtensionPage() {
       <section className="xs-show">
         <img src="/extension/card.png" alt={t("RealHunt Score card on a listing")} loading="lazy" />
         <div>
-          <h2>{t("Four things, every time")}</h2>
+          <h2>{t("Five things, every time")}</h2>
           <ol className="xs-list">
-            <li><b>{t("Price vs area")}</b> <span>{t("Price per m² against the other homes in the same area.")}</span></li>
-            <li><b>{t("Listing quality")}</b> <span>{t("Photos, description and the facts that are missing: floor, energy rating, orientation, fees.")}</span></li>
+            <li><b>{t("Price vs similar homes")}</b> <span>{t("Price per m² against similar-size homes within 1 to 5 km. Every search you make adds comparables.")}</span></li>
+            <li><b>{t("Location")}</b> <span>{t("Transport, food shops, schools, pharmacies, parks and beach within a 10-minute walk, from OpenStreetMap.")}</span></li>
             <li><b>{t("Red flags")}</b> <span>{t("Occupied, auction, bare ownership, needs renovation, cash only, months on the market.")}</span></li>
+            <li><b>{t("The home and the listing")}</b> <span>{t("Terrace, lift, parking, pool, views, renovated, plus the facts the listing leaves out.")}</span></li>
             <li><b>{t("Fit with you")}</b> <span>{t("Answer 5 questions and the score also tells you if it fits your budget and plans.")}</span></li>
           </ol>
           <p className="hunt-fine">{t("An estimate, not an appraisal. Sponsored homes never change a score.")}</p>
@@ -70,17 +71,20 @@ export function ExtensionPrivacy() {
   return (
     <div className="hunt-wrap hunt-legal xs-legal">
       <h1>RealHunt Score — Privacy policy</h1>
-      <p className="hunt-fine">Last updated: 8 October 2026 · Controller: Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, USA · Contact: carlos@equinoxinvestmentgroup.com</p>
+      <p className="hunt-fine">Last updated: 9 October 2026 · Controller: Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, USA · Contact: carlos@equinoxinvestmentgroup.com</p>
       <h2>What the extension does</h2>
       <p>RealHunt Score shows an estimated 0–100 score on property listings on supported property websites (idealista, Zillow, Rightmove). It runs only on those websites and on nothing else you browse.</p>
       <h2>What we collect, and only after you agree</h2>
       <ul>
+        <li><b>Comparable homes on your computer:</b> the price, size, price per m², area and map point of the homes on search pages you open are kept in your browser to compare listings. They leave your browser only after you agree (next point).</li>
         <li><b>Derived listing data:</b> price, currency, size, price per m², rooms, property type, area name, days listed, the score and red-flag labels, the listing URL and a hashed listing ID. We do not collect or store photos or full descriptions from the website.</li>
         <li><b>Your profile, if you answer it:</b> budget, places, type of home, purpose and timeline.</li>
         <li><b>Your account, if you create one:</b> email and, optionally, phone, and whether you want emails from us.</li>
         <li><b>Usage events:</b> install, reports opened, saves, shares and clicks on recommendations, linked to a random ID.</li>
       </ul>
       <p>Before you agree, the score is calculated on your computer only and nothing is sent to us.</p>
+      <h2>Location check</h2>
+      <p>To count what is within a walk of a home, the extension sends that listing's published map point (never your own location) to the OpenStreetMap Overpass service (overpass-api.de, with overpass.kumi.systems as a backup). Answers are cached in your browser for 30 days.</p>
       <h2>Why</h2>
       <p>To calculate and improve scores (comparing a home's price per m² with other homes in the same area), to keep your saved homes and alerts, and to show you homes on RealHunt that match your profile. Recommendations are always labelled “RealHunt pick” or “Sponsored” and never change any score. Legal basis: your consent (GDPR art. 6(1)(a)).</p>
       <h2>What we never do</h2>
