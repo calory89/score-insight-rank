@@ -33,6 +33,7 @@ import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapH
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
 import { FindHomePage, FindHomeCTA } from "./findhome";
+import ExtensionRoute from "./extension";
 import { ScoreBars, BestPerCountry, RankRow, RankHead, RankSkeleton, ScoreHelp, NearestHomes, NearCity } from "./scores";
 import { LogoMark } from "@/components/realhunt/Logo";
 import { isEs, searchQuery } from "@/lib/lang";
@@ -55,6 +56,7 @@ import {
   Plus,
   Search,
   Trophy,
+  Gauge,
   Flag,
   X,
   Check,
@@ -146,7 +148,7 @@ function Shell({ children }: { children: ReactNode }) {
     };
   }, [user?.id]);
   useEffect(() => {
-    if (/^\/(deal\/|find-my-home|insider|blog|cheap-houses|new-builds|developers|inbox|compare-new-builds|costs|research|agents)/.test(location.pathname)) return; // these pages set their own title
+    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare-new-builds|costs|research|agents)/.test(location.pathname)) return; // these pages set their own title
     document.title = "RealHunt — The best homes in every country, ranked by score";
   }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
@@ -218,6 +220,7 @@ function Shell({ children }: { children: ReactNode }) {
           </Link>
           <nav aria-label="Main navigation">
             <Link to="/top" className="hunt-browse hunt-top100"><Trophy size={16} /> Top 100</Link>
+            <Link to="/extension" className="hunt-browse hunt-ext" title="Free Chrome extension: see the score of any home on idealista, Zillow and Rightmove"><Gauge size={16} /> Score any home</Link>
             <Link to="/?search=1" className="hunt-browse">
               <Search size={16} />
               Search
@@ -2020,6 +2023,8 @@ export default function Community() {
       <ServicesPage />
     ) : path.startsWith("/find-my-home") ? (
       <FindHomePage />
+    ) : path.startsWith("/extension") ? (
+      <ExtensionRoute />
     ) : path.startsWith("/guide") ? (
       <GuidePage />
     ) : path.startsWith("/homes/") ? (

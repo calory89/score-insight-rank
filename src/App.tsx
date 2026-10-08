@@ -250,6 +250,8 @@ const AppRoutes = () => (
       <Route path="/finds" element={<ToFeed />} />
       <Route path="/find-my-home" element={<Community />} />
       <Route path="/find-my-home/:city" element={<Community />} />
+      <Route path="/extension" element={<Community />} />
+      <Route path="/extension/privacy" element={<Community />} />
       <Route path="/find/:shortcode" element={<FindToDeal />} />
       <Route path="/admin/activity" element={<AdminActivity />} />
       <Route path="/admin/activity/:tab" element={<AdminActivity />} />
