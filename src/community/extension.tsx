@@ -41,6 +41,7 @@ export function ExtensionPage() {
           </ol>
           <p><b>{t("New: the smart card.")}</b> {t("Open any home and the card fills in as it loads: how much over or under the market in money, what to offer, the monthly cost and rent, price history, the same home on other sites, questions for the agent, better options nearby and the top 10 homes in that city.")}</p>
           <p><b>{t("New: rank the whole search.")}</b> {t("One click on any search page reads every page of results (up to 500) at a person's pace and sorts all the homes by RealHunt score, best first, while it loads. Download the list as CSV.")}</p>
+          <p><b>{t("New in 0.7.")}</b> {t("Gold, silver and bronze frames on the 3 best homes of every search page, a “best here” button that jumps to it, hide weak homes, continue a ranking after a site slows you down, reopen your last ranking, private notes and 👍/👎 on each home, map and Street View, share by WhatsApp or email, and price per bedroom on sites that don't publish m².")}</p>
           <p className="hunt-fine">{t("An estimate, not an appraisal. Sponsored homes never change a score.")}</p>
         </div>
       </section>
@@ -73,7 +74,7 @@ export function ExtensionPrivacy() {
   return (
     <div className="hunt-wrap hunt-legal xs-legal">
       <h1>RealHunt Score — Privacy policy</h1>
-      <p className="hunt-fine">Last updated: 9 October 2026 (v0.6) · Controller: Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, USA · Contact: carlos@equinoxinvestmentgroup.com</p>
+      <p className="hunt-fine">Last updated: 9 October 2026 (v0.7) · Controller: Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, USA · Contact: carlos@equinoxinvestmentgroup.com</p>
       <h2>What the extension does</h2>
       <p>RealHunt Score shows an estimated 0–100 score on homes for sale or rent on any property website, including small agencies. To find them, the extension loads on the websites you open and runs a quick check on your computer (does the page describe homes with prices and bedrooms or sizes?). On any page that is not about homes it stops right there: it reads nothing more, shows nothing and sends nothing. It never runs on mail, search, social networks, banking or similar sites.</p>
       <h2>What we collect, and only after you agree</h2>
@@ -90,6 +91,8 @@ export function ExtensionPrivacy() {
       <p>To count what is within a walk of a home, the extension sends that listing's published map point (never your own location) to the OpenStreetMap Overpass service (overpass-api.de, with overpass.kumi.systems as a backup). If your network blocks it and you have agreed to these terms, our server asks OpenStreetMap instead. Answers are cached for 30 days.</p>
       <h2>Ranking a whole search</h2>
       <p>If you click “Rank the whole search”, the extension opens the next pages of that same search on that website, from your browser and at about one page every one to two seconds, and reads the same listing numbers as above. It stops when you click Stop, at 500 pages, or if the website asks it to slow down. After you agree, the derived numbers of those homes (never photos or descriptions) are sent to us to improve price comparisons, as above.</p>
+      <h2>Kept only in your browser</h2>
+      <p>Your private notes and 👍/👎 on homes, the homes you opened recently, your last ranked search and your display choices (for example “hide weak homes”) are stored only in your browser. They are never sent to us, and “Delete my data” erases them too. Map and Street View buttons simply open Google Maps in a new tab with that listing's published map point or area name; Share opens WhatsApp or your email app with a text you can edit before sending.</p>
       <h2>Smart card, shared rankings and comparisons</h2>
       <p>After you agree, the extension asks our server for what we know about the home you open (similar homes nearby, the city's median price per m², the price history and the same home on other sites), using that listing's derived numbers and published map point. If you click “Share” on a ranked search or “Compare”, we store that list (listing links, prices, sizes, rooms, scores and area names, never photos or descriptions) and publish it at a link only people you send it to can find.</p>
       <h2>AI reading of descriptions</h2>

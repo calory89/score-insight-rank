@@ -42,7 +42,7 @@ function ExtCta({ city }: { city?: string }) {
   );
 }
 
-function Row({ it, i, cur }: { it: Item; i: number; cur?: string }) {
+function Row({ it, i, cur, unit }: { it: Item; i: number; cur?: string; unit?: string }) {
   const s = it.rh ?? it.score ?? null;
   const c = it.currency || it.cur || cur;
   return (
@@ -53,8 +53,8 @@ function Row({ it, i, cur }: { it: Item; i: number; cur?: string }) {
         <b>{money(it.price, c)}</b>
         {it.sqm ? <> · {Math.round(it.sqm)} m²</> : null}
         {it.rooms ? <> · {it.rooms} rooms</> : null}
-        {it.pct != null && Math.abs(it.pct) >= 3 ? <i className={it.pct < 0 ? "bx-good" : "bx-bad"}>{it.pct < 0 ? "−" : "+"}{Math.abs(it.pct)}% /m²</i> : null}
-        <small>{[it.area, portal(it.portal), it.ppsqm ? money(it.ppsqm, c) + "/m²" : ""].filter(Boolean).join(" · ")}</small>
+        {it.pct != null && Math.abs(it.pct) >= 3 ? <i className={it.pct < 0 ? "bx-good" : "bx-bad"}>{it.pct < 0 ? "−" : "+"}{Math.abs(it.pct)}% {unit === "room" ? "/bedroom" : "/m²"}</i> : null}
+        <small>{[it.area, portal(it.portal), unit === "room" && (it as any).unit_price ? money((it as any).unit_price, c) + "/bedroom" : it.ppsqm ? money(it.ppsqm, c) + "/m²" : ""].filter(Boolean).join(" · ")}</small>
       </span>
       <span className="bx-go">View ↗</span>
     </a>
@@ -73,16 +73,17 @@ export function BestCityPage({ cc, city }: { cc: string; city: string }) {
   useEffect(() => {
     meta(`Top 10 homes for sale in ${name} right now · RealHunt`, `The 10 best-value homes for sale in ${name} today, ranked by price per m² against the city median and the RealHunt Score. Updated from real listings.`);
   }, [name]);
-  const cur = d && d.items && d.items[0] ? d.items[0].currency : undefined;
+  const cur = (d && d.currency) || (d && d.items && d.items[0] ? d.items[0].currency : undefined);
+  const unit = (d && d.unit) || "sqm";
   const ld = useMemo(() => d && d.items ? JSON.stringify({ "@context": "https://schema.org", "@type": "ItemList", name: `Top homes for sale in ${name}`, itemListElement: d.items.map((x: Item, i: number) => ({ "@type": "ListItem", position: i + 1, url: x.url })) }) : "", [d, name]);
   return (
     <div className="hunt-wrap bx-page">
       <p className="bx-crumb"><Link to="/best">Best homes by city</Link> · {FLAG[cc.toUpperCase()] || ""} {cc.toUpperCase()}</p>
       <h1>Top 10 homes for sale in {name}</h1>
-      <p className="bx-lead">Ranked by price per m² against the rest of {name} and the RealHunt Score. Built from the listings that RealHunt Score users open, so it changes every day.</p>
-      {d && d.median ? <div className="bx-stats"><div><b>{money(d.median, cur)}</b><span>median per m²</span></div><div><b>{d.n}</b><span>homes seen in 120 days</span></div><div><b>{d.items.length}</b><span>in this top</span></div></div> : null}
+      <p className="bx-lead">Ranked by price per {unit === "room" ? "bedroom (sites here rarely publish m²)" : "m²"} against the rest of {name} and the RealHunt Score. Built from the listings that RealHunt Score users open, so it changes every day.</p>
+      {d && d.median ? <div className="bx-stats"><div><b>{money(d.median, cur)}</b><span>{unit === "room" ? "median per bedroom" : "median per m²"}</span></div><div><b>{d.n}</b><span>homes seen in 120 days</span></div><div><b>{d.items.length}</b><span>in this top</span></div></div> : null}
       {!d ? <div className="bx-skel">{Array.from({ length: 6 }).map((_, i) => <i key={i} />)}</div>
-        : d.items && d.items.length ? <div className="bx-list">{d.items.map((it: Item, i: number) => <Row key={it.url} it={it} i={i} cur={cur} />)}</div>
+        : d.items && d.items.length ? <div className="bx-list">{d.items.map((it: Item, i: number) => <Row key={it.url} it={it} i={i} cur={cur} unit={unit} />)}</div>
         : <div className="bx-empty"><b>We're still collecting homes in {name}.</b><span>Install the free extension and open any property site in {name}: your search builds this page, and you'll see every home ranked on the spot.</span></div>}
       {ld ? <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ld }} /> : null}
       <ExtCta city={name} />
@@ -102,7 +103,7 @@ export function BestIndexPage() {
       <p className="bx-lead">Each city has a live top 10, ranked by price per m² against the city and the RealHunt Score.</p>
       {!list ? <div className="bx-skel">{Array.from({ length: 6 }).map((_, i) => <i key={i} />)}</div>
         : !list.length ? <div className="bx-empty"><b>The first cities are being built right now.</b><span>Install the extension and open a property site: your city appears here.</span></div>
-        : by.map(([cc, cs]) => <div key={cc}><h2 className="bx-h2">{FLAG[cc] || ""} {cc}</h2><div className="bx-cities">{cs.map((c) => <Link key={c.slug} to={`/best/${cc.toLowerCase()}/${c.slug}`}>{c.name}<small>{c.n} homes · {money(c.median, c.currency)}/m²</small></Link>)}</div></div>)}
+        : by.map(([cc, cs]) => <div key={cc}><h2 className="bx-h2">{FLAG[cc] || ""} {cc}</h2><div className="bx-cities">{cs.map((c) => <Link key={c.slug} to={`/best/${cc.toLowerCase()}/${c.slug}`}>{c.name}<small>{c.n} homes{c.median ? <> · {money(c.median, c.currency)}/m²</> : null}</small></Link>)}</div></div>)}
       <ExtCta />
     </div>
   );
