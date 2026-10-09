@@ -18,7 +18,7 @@ export function ExtensionPage() {
       <section className="xs-hero">
         <span className="hunt-eyebrow">{t("FREE CHROME EXTENSION")}</span>
         <h1>{t("See the score of any home, on any listing.")}</h1>
-        <p>{t("Install RealHunt Score and every home on idealista, Zillow and Rightmove gets a 0–100 score next to its price: price against similar homes nearby, what's within a walk, red flags like occupied, auction or needs renovation, and what the home really has. One honest line, and the reason for every point.")}</p>
+        <p>{t("Install RealHunt Score and every home on 160 property sites in 50 countries (idealista, Fotocasa, Zillow, Rightmove, Zoopla, Boligsiden, SeLoger, ImmoScout24, Funda, Immobiliare and more) gets a 0–100 score next to its price: price against similar homes nearby, what's within a walk, red flags like occupied, auction or needs renovation, and what the home really has. One honest line, and the reason for every point.")}</p>
         <div className="xs-cta">
           {STORE
             ? <a className="hunt-primary" href={STORE} target="_blank" rel="noopener" onClick={() => track("ExtensionInstall")}>{t("Add to Chrome, free")}</a>
@@ -39,6 +39,7 @@ export function ExtensionPage() {
             <li><b>{t("The home and the listing")}</b> <span>{t("Terrace, lift, parking, pool, views, renovated, plus the facts the listing leaves out.")}</span></li>
             <li><b>{t("Fit with you")}</b> <span>{t("Answer 5 questions and the score also tells you if it fits your budget and plans.")}</span></li>
           </ol>
+          <p><b>{t("New: rank the whole search.")}</b> {t("One click on any search page reads every page of results (up to 500) at a person's pace and sorts all the homes by RealHunt score, best first, while it loads. Download the list as CSV.")}</p>
           <p className="hunt-fine">{t("An estimate, not an appraisal. Sponsored homes never change a score.")}</p>
         </div>
       </section>
@@ -50,7 +51,7 @@ export function ExtensionPage() {
             <li>{t("Download the file and unzip it.")}</li>
             <li>{t("Open chrome://extensions and switch on Developer mode (top right).")}</li>
             <li>{t("Click “Load unpacked” and choose the unzipped realhunt-score folder.")}</li>
-            <li>{t("Open any home on idealista, Zillow or Rightmove. The score appears by the price.")}</li>
+            <li>{t("Open any home on a property site. The score appears by the price. On a search page, click “Rank the whole search” to sort every page by score.")}</li>
           </ol>
           <p className="hunt-fine">{t("The one-click Chrome Web Store version is under review.")}</p>
         </section>
@@ -71,9 +72,9 @@ export function ExtensionPrivacy() {
   return (
     <div className="hunt-wrap hunt-legal xs-legal">
       <h1>RealHunt Score — Privacy policy</h1>
-      <p className="hunt-fine">Last updated: 9 October 2026 (v0.3) · Controller: Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, USA · Contact: carlos@equinoxinvestmentgroup.com</p>
+      <p className="hunt-fine">Last updated: 9 October 2026 (v0.4) · Controller: Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, USA · Contact: carlos@equinoxinvestmentgroup.com</p>
       <h2>What the extension does</h2>
-      <p>RealHunt Score shows an estimated 0–100 score on property listings on supported property websites (idealista, Zillow, Rightmove). It runs only on those websites and on nothing else you browse.</p>
+      <p>RealHunt Score shows an estimated 0–100 score on property listings on supported property websites (about 160 property portals, listed in the extension's manifest, plus any other property website you choose to allow from the side panel). It runs only on those websites and on nothing else you browse.</p>
       <h2>What we collect, and only after you agree</h2>
       <ul>
         <li><b>Comparable homes on your computer:</b> the price, size, price per m², area and map point of the homes on search pages you open are kept in your browser to compare listings. They leave your browser only after you agree (next point).</li>
@@ -86,6 +87,10 @@ export function ExtensionPrivacy() {
       <p>Before you agree, the score is calculated on your computer only and nothing is sent to us.</p>
       <h2>Location check</h2>
       <p>To count what is within a walk of a home, the extension sends that listing's published map point (never your own location) to the OpenStreetMap Overpass service (overpass-api.de, with overpass.kumi.systems as a backup). If your network blocks it and you have agreed to these terms, our server asks OpenStreetMap instead. Answers are cached for 30 days.</p>
+      <h2>Ranking a whole search</h2>
+      <p>If you click “Rank the whole search”, the extension opens the next pages of that same search on that website, from your browser and at about one page every one to two seconds, and reads the same listing numbers as above. It stops when you click Stop, at 500 pages, or if the website asks it to slow down. After you agree, the derived numbers of those homes (never photos or descriptions) are sent to us to improve price comparisons, as above.</p>
+      <h2>Other property websites you allow</h2>
+      <p>From the side panel you can allow the extension on a property website that is not on our list. Chrome asks for your permission for that website only, and you can remove it at any time in Chrome's extension settings.</p>
       <h2>AI reading of descriptions</h2>
       <p>After you agree, the text of the listing you open is sent to our server and read by an AI model (through Lovable's AI gateway, using Google Gemini) to find red flags and highlights. We keep only the result (labels and short quotes) for 7 days to avoid reading the same listing twice; we never store the full text.</p>
       <h2>Why</h2>
