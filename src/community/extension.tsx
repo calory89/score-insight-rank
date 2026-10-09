@@ -18,7 +18,7 @@ export function ExtensionPage() {
       <section className="xs-hero">
         <span className="hunt-eyebrow">{t("FREE CHROME EXTENSION")}</span>
         <h1>{t("See the score of any home, on any listing.")}</h1>
-        <p>{t("Install RealHunt Score and every home on 160 property sites in 50 countries (idealista, Fotocasa, Zillow, Rightmove, Zoopla, Boligsiden, SeLoger, ImmoScout24, Funda, Immobiliare and more) gets a 0–100 score next to its price: price against similar homes nearby, what's within a walk, red flags like occupied, auction or needs renovation, and what the home really has. One honest line, and the reason for every point.")}</p>
+        <p>{t("Install RealHunt Score and every home on any property website, from the big portals (idealista, Fotocasa, Zillow, Rightmove, Zoopla, Boligsiden, SeLoger, ImmoScout24, Funda, Immobiliare) to any local agency with listings, in any country, gets a 0–100 score next to its price: price against similar homes nearby, what's within a walk, red flags like occupied, auction or needs renovation, and what the home really has. One honest line, and the reason for every point.")}</p>
         <div className="xs-cta">
           {STORE
             ? <a className="hunt-primary" href={STORE} target="_blank" rel="noopener" onClick={() => track("ExtensionInstall")}>{t("Add to Chrome, free")}</a>
@@ -73,9 +73,9 @@ export function ExtensionPrivacy() {
   return (
     <div className="hunt-wrap hunt-legal xs-legal">
       <h1>RealHunt Score — Privacy policy</h1>
-      <p className="hunt-fine">Last updated: 9 October 2026 (v0.5) · Controller: Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, USA · Contact: carlos@equinoxinvestmentgroup.com</p>
+      <p className="hunt-fine">Last updated: 9 October 2026 (v0.6) · Controller: Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, USA · Contact: carlos@equinoxinvestmentgroup.com</p>
       <h2>What the extension does</h2>
-      <p>RealHunt Score shows an estimated 0–100 score on property listings on supported property websites (about 160 property portals, listed in the extension's manifest, plus any other property website you choose to allow from the side panel). It runs only on those websites and on nothing else you browse.</p>
+      <p>RealHunt Score shows an estimated 0–100 score on homes for sale or rent on any property website, including small agencies. To find them, the extension loads on the websites you open and runs a quick check on your computer (does the page describe homes with prices and bedrooms or sizes?). On any page that is not about homes it stops right there: it reads nothing more, shows nothing and sends nothing. It never runs on mail, search, social networks, banking or similar sites.</p>
       <h2>What we collect, and only after you agree</h2>
       <ul>
         <li><b>Comparable homes on your computer:</b> the price, size, price per m², area and map point of the homes on search pages you open are kept in your browser to compare listings. They leave your browser only after you agree (next point).</li>
@@ -92,8 +92,6 @@ export function ExtensionPrivacy() {
       <p>If you click “Rank the whole search”, the extension opens the next pages of that same search on that website, from your browser and at about one page every one to two seconds, and reads the same listing numbers as above. It stops when you click Stop, at 500 pages, or if the website asks it to slow down. After you agree, the derived numbers of those homes (never photos or descriptions) are sent to us to improve price comparisons, as above.</p>
       <h2>Smart card, shared rankings and comparisons</h2>
       <p>After you agree, the extension asks our server for what we know about the home you open (similar homes nearby, the city's median price per m², the price history and the same home on other sites), using that listing's derived numbers and published map point. If you click “Share” on a ranked search or “Compare”, we store that list (listing links, prices, sizes, rooms, scores and area names, never photos or descriptions) and publish it at a link only people you send it to can find.</p>
-      <h2>Other property websites you allow</h2>
-      <p>From the side panel you can allow the extension on a property website that is not on our list. Chrome asks for your permission for that website only, and you can remove it at any time in Chrome's extension settings.</p>
       <h2>AI reading of descriptions</h2>
       <p>After you agree, the text of the listing you open is sent to our server and read by an AI model (through Lovable's AI gateway, using Google Gemini) to find red flags and highlights. We keep only the result (labels and short quotes) for 7 days to avoid reading the same listing twice; we never store the full text.</p>
       <h2>Why</h2>
@@ -101,7 +99,7 @@ export function ExtensionPrivacy() {
       <h2>What we never do</h2>
       <ul>
         <li>We never sell your data and never use it for credit, lending or unrelated advertising.</li>
-        <li>We never read pages outside the supported property websites.</li>
+        <li>We never read, store or send anything from pages that are not about homes for sale or rent.</li>
         <li>We never republish content from those websites.</li>
       </ul>
       <p>The use of information received from Google APIs complies with the Chrome Web Store User Data Policy, including the Limited Use requirements.</p>

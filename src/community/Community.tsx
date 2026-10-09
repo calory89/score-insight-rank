@@ -221,7 +221,7 @@ function Shell({ children }: { children: ReactNode }) {
           </Link>
           <nav aria-label="Main navigation">
             <Link to="/top" className="hunt-browse hunt-top100"><Trophy size={16} /> Top 100</Link>
-            <Link to="/extension" className="hunt-browse hunt-ext" title="Free Chrome extension: see the score of any home on 160 property sites"><Gauge size={16} /> Score any home</Link>
+            <Link to="/extension" className="hunt-browse hunt-ext" title="Free Chrome extension: see the score of any home on any property site"><Gauge size={16} /> Score any home</Link>
             <Link to="/?search=1" className="hunt-browse">
               <Search size={16} />
               Search
