@@ -1,0 +1,98 @@
+{
+  "london": {
+    "filming": true,
+    "en": {
+      "title": "London in 1 minute",
+      "intro": "London rewards a central base. Choose the neighbourhood first, then the hotel: the West End for theatres and a first visit, South Kensington for museums and families, Shoreditch for food and nightlife, the South Bank for river views.",
+      "areasTitle": "Neighbourhoods at a glance",
+      "areas": [
+        ["West End", "Soho, Covent Garden, Leicester Square", "Theatres, restaurants and the busiest streets. Best for a first visit and short stays."],
+        ["Westminster & St James's", "Big Ben, Buckingham Palace, St James's Park", "The classic landmarks on foot, and much quieter at night than the West End."],
+        ["South Kensington & Knightsbridge", "V&A, Natural History Museum, Hyde Park", "Free museums, the big park and elegant streets. The best base for families."],
+        ["Shoreditch & the City", "Brick Lane, Spitalfields, St Paul's", "Street food, bars and design hotels, with quick Tube links to the centre."],
+        ["South Bank & Southwark", "London Eye, Tate Modern, Borough Market", "Riverside walks, food markets and views across to Westminster."],
+        ["King's Cross & Bloomsbury", "St Pancras, British Museum, Coal Drops Yard", "Eurostar on the doorstep and some of the best-value central hotels."]
+      ],
+      "airTitle": "From the airport",
+      "air": [
+        ["Heathrow (LHR)", "Heathrow Express to Paddington in about 15 min, or the Elizabeth line to central London in about 30–40 min."],
+        ["Gatwick (LGW)", "Gatwick Express to Victoria in about 30 min, or Thameslink to London Bridge and St Pancras."],
+        ["Stansted (STN)", "Stansted Express to Liverpool Street in about 50 min."],
+        ["Luton (LTN)", "Shuttle to Luton Airport Parkway, then Thameslink to St Pancras in about 35 min."],
+        ["London City (LCY)", "DLR to Bank in about 25 min."]
+      ],
+      "whenTitle": "When to go",
+      "when": "Best weather: May to September, with long days and around 20–24°C. Best prices: January, February and November, outside school holidays. December is lively but busy around the Christmas markets and shows.",
+      "aroundTitle": "Getting around",
+      "around": "Tap in and out with a contactless card or your phone on the Tube, buses and trains. Daily fares are capped automatically, so you don't need an Oyster card. Most central sights are 10 to 25 minutes apart on foot.",
+      "tipsTitle": "Good to know",
+      "tips": [
+        "Many big museums are free: the British Museum, National Gallery, Tate Modern and Natural History Museum.",
+        "Book West End shows and the London Eye ahead in summer. Same-day theatre tickets are sold at the TKTS booth in Leicester Square.",
+        "Hotel rooms in central London are compact. Check the room size on the booking page if space matters to you."
+      ]
+    },
+    "es": {
+      "title": "Londres en 1 minuto",
+      "intro": "En Londres compensa dormir en el centro. Elige primero el barrio y después el hotel: el West End para teatros y una primera visita, South Kensington para museos y familias, Shoreditch para comer y salir, y la South Bank para vistas al río.",
+      "areasTitle": "Los barrios, de un vistazo",
+      "areas": [
+        ["West End", "Soho, Covent Garden, Leicester Square", "Teatros, restaurantes y las calles con más ambiente. Lo mejor para una primera visita y estancias cortas."],
+        ["Westminster y St James's", "Big Ben, Palacio de Buckingham, St James's Park", "Los monumentos clásicos a pie y mucha más calma por la noche que en el West End."],
+        ["South Kensington y Knightsbridge", "V&A, Museo de Historia Natural, Hyde Park", "Museos gratis, el gran parque y calles elegantes. La mejor base para familias."],
+        ["Shoreditch y la City", "Brick Lane, Spitalfields, St Paul's", "Comida callejera, bares y hoteles de diseño, con metro rápido al centro."],
+        ["South Bank y Southwark", "London Eye, Tate Modern, Borough Market", "Paseos junto al río, mercados de comida y vistas a Westminster."],
+        ["King's Cross y Bloomsbury", "St Pancras, Museo Británico, Coal Drops Yard", "El Eurostar al lado y algunos de los hoteles céntricos con mejor precio."]
+      ],
+      "airTitle": "Desde el aeropuerto",
+      "air": [
+        ["Heathrow (LHR)", "Heathrow Express a Paddington en unos 15 min, o la Elizabeth line al centro en unos 30–40 min."],
+        ["Gatwick (LGW)", "Gatwick Express a Victoria en unos 30 min, o Thameslink a London Bridge y St Pancras."],
+        ["Stansted (STN)", "Stansted Express a Liverpool Street en unos 50 min."],
+        ["Luton (LTN)", "Lanzadera a Luton Airport Parkway y Thameslink a St Pancras en unos 35 min."],
+        ["London City (LCY)", "DLR a Bank en unos 25 min."]
+      ],
+      "whenTitle": "Cuándo ir",
+      "when": "Mejor tiempo: de mayo a septiembre, con días largos y unos 20–24 °C. Mejores precios: enero, febrero y noviembre, fuera de vacaciones escolares. Diciembre es precioso, pero hay mucha gente por los mercados navideños y los musicales.",
+      "aroundTitle": "Cómo moverse",
+      "around": "Paga con tarjeta contactless o con el móvil en el metro, el autobús y el tren. El gasto diario tiene tope automático, así que no necesitas la tarjeta Oyster. La mayoría de lugares del centro están a 10–25 minutos andando.",
+      "tipsTitle": "Bueno saberlo",
+      "tips": [
+        "Muchos grandes museos son gratis: el Museo Británico, la National Gallery, la Tate Modern y el Museo de Historia Natural.",
+        "En verano reserva antes los musicales del West End y el London Eye. Las entradas de teatro del mismo día se venden en la taquilla TKTS de Leicester Square.",
+        "Las habitaciones en el centro de Londres son pequeñas. Si el espacio te importa, mira los metros en la página de reserva."
+      ]
+    },
+    "da": {
+      "title": "London på 1 minut",
+      "intro": "I London betaler det sig at bo centralt. Vælg først kvarteret, så hotellet: West End til teater og første besøg, South Kensington til museer og familier, Shoreditch til mad og natteliv og South Bank til udsigt over floden.",
+      "areasTitle": "Kvartererne på et øjeblik",
+      "areas": [
+        ["West End", "Soho, Covent Garden, Leicester Square", "Teatre, restauranter og byens travleste gader. Bedst til første besøg og korte ophold."],
+        ["Westminster og St James's", "Big Ben, Buckingham Palace, St James's Park", "De klassiske seværdigheder til fods og meget roligere om aftenen end West End."],
+        ["South Kensington og Knightsbridge", "V&A, Natural History Museum, Hyde Park", "Gratis museer, den store park og elegante gader. Den bedste base for familier."],
+        ["Shoreditch og City", "Brick Lane, Spitalfields, St Paul's", "Streetfood, barer og designhoteller med hurtig undergrundsbane til centrum."],
+        ["South Bank og Southwark", "London Eye, Tate Modern, Borough Market", "Gåture langs floden, madmarkeder og udsigt til Westminster."],
+        ["King's Cross og Bloomsbury", "St Pancras, British Museum, Coal Drops Yard", "Eurostar lige ved døren og nogle af de centrale hoteller med bedst værdi."]
+      ],
+      "airTitle": "Fra lufthavnen",
+      "air": [
+        ["Heathrow (LHR)", "Heathrow Express til Paddington på ca. 15 min eller Elizabeth line til centrum på ca. 30–40 min."],
+        ["Gatwick (LGW)", "Gatwick Express til Victoria på ca. 30 min eller Thameslink til London Bridge og St Pancras."],
+        ["Stansted (STN)", "Stansted Express til Liverpool Street på ca. 50 min."],
+        ["Luton (LTN)", "Shuttle til Luton Airport Parkway og Thameslink til St Pancras på ca. 35 min."],
+        ["London City (LCY)", "DLR til Bank på ca. 25 min."]
+      ],
+      "whenTitle": "Hvornår skal man rejse",
+      "when": "Bedste vejr: maj til september med lange dage og omkring 20–24 °C. Bedste priser: januar, februar og november uden for skoleferierne. December er hyggelig, men travl omkring julemarkeder og musicals.",
+      "aroundTitle": "Sådan kommer du rundt",
+      "around": "Betal med kontaktløst kort eller telefon i undergrundsbanen, busserne og togene. Dagsprisen har automatisk loft, så du behøver ikke et Oyster-kort. De fleste seværdigheder i centrum ligger 10–25 minutters gang fra hinanden.",
+      "tipsTitle": "Godt at vide",
+      "tips": [
+        "Mange store museer er gratis: British Museum, National Gallery, Tate Modern og Natural History Museum.",
+        "Book West End-musicals og London Eye i god tid om sommeren. Billetter til samme dag sælges i TKTS-boden på Leicester Square.",
+        "Hotelværelser i det centrale London er små. Tjek værelsets størrelse på bookingsiden, hvis pladsen betyder noget."
+      ]
+    }
+  }
+}
