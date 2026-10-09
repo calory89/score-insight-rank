@@ -41,6 +41,7 @@ export function ExtensionPage() {
           </ol>
           <p><b>{t("New: the smart card.")}</b> {t("Open any home and the card fills in as it loads: how much over or under the market in money, what to offer, the monthly cost and rent, price history, the same home on other sites, questions for the agent, better options nearby and the top 10 homes in that city.")}</p>
           <p><b>{t("New: rank the whole search.")}</b> {t("One click on any search page reads every page of results (up to 500) at a person's pace and sorts all the homes by RealHunt score, best first, while it loads. Download the list as CSV.")}</p>
+          <p><b>{t("New in 0.10: rentals too, and the best homes go public.")}</b> {t("Scores now work on rentals on any site, each rent against its fair rent (weekly and yearly rents converted, holiday lets left out), with what it costs per year, the deposit and whether buying would be cheaper. Your best finds, scoring 85+, appear on realhunt.co/best for everyone, and the homes you like teach the score your taste.")}</p>
           <p><b>{t("New in 0.9: location that knows the neighbourhood.")}</b> {t("Location now uses any map on the page or finds the address, counts cafés and restaurants too, compares the neighbourhood's prices with the city and tells you the distance to the centre. Set “my place” once (work, school, family) to see distance and travel time on every home and to sort a whole search by it. Your free account is remembered on your Chrome, also after updates.")}</p>
           <p><b>{t("New in 0.8: a fair price for every home.")}</b> {t("The score now estimates what each home should cost from the homes around it (size, bedrooms, bathrooms, plot, age, type and exact area) and tells you how far the asking price is from it. It reads every fact the card shows, hides homes that are pending or sold, flags mobile homes, land leases, timeshares, foreclosures and flood zones, and then opens the best 30 listings one by one to read them in full, map included. Scores now really spread: a great deal scores 85 to 95, an average home around 60.")}</p>
           <p><b>{t("New in 0.7.")}</b> {t("Gold, silver and bronze frames on the 3 best homes of every search page, a “best here” button that jumps to it, hide weak homes, continue a ranking after a site slows you down, reopen your last ranking, private notes and 👍/👎 on each home, map and Street View, share by WhatsApp or email, and price per bedroom on sites that don't publish m².")}</p>
@@ -76,7 +77,7 @@ export function ExtensionPrivacy() {
   return (
     <div className="hunt-wrap hunt-legal xs-legal">
       <h1>RealHunt Score — Privacy policy</h1>
-      <p className="hunt-fine">Last updated: 9 October 2026 (v0.9) · Controller: Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, USA · Contact: carlos@equinoxinvestmentgroup.com</p>
+      <p className="hunt-fine">Last updated: 9 October 2026 (v0.10) · Controller: Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, USA · Contact: carlos@equinoxinvestmentgroup.com</p>
       <h2>What the extension does</h2>
       <p>RealHunt Score shows an estimated 0–100 score on homes for sale or rent on any property website, including small agencies. To find them, the extension loads on the websites you open and runs a quick check on your computer (does the page describe homes with prices and bedrooms or sizes?). On any page that is not about homes it stops right there: it reads nothing more, shows nothing and sends nothing. It never runs on mail, search, social networks, banking or similar sites.</p>
       <h2>What we collect, and only after you agree</h2>
@@ -85,6 +86,7 @@ export function ExtensionPrivacy() {
         <li><b>Derived listing data:</b> price, currency, size, price per m², rooms, property type, area name, days listed, the score and red-flag labels, the listing URL and a hashed listing ID. We do not collect or store photos or full descriptions from the website.</li>
         <li><b>Your profile, if you answer it:</b> budget, places, type of home, purpose and timeline.</li>
         <li><b>Your account, if you create one:</b> email (checked with a 6-digit code we email you), optionally phone, and whether you want emails from us.</li>
+        <li><b>Your 👍 and 👎:</b> after you agree, the homes you like or dislike (their derived numbers, city and link, never your private notes) are linked to your random ID to learn your taste, so scores can tell you how well a home fits you even if you skip the questions.</li>
         <li><b>What you look at:</b> the homes you open (their derived numbers above), the ones you save and share. From them we build your taste profile (price range, areas, size, type) to recommend homes and, only if you ticked the box, to email you homes and price drops that match.</li>
         <li><b>Usage events:</b> install, reports opened, saves, shares and clicks on recommendations, linked to a random ID.</li>
       </ul>
@@ -107,7 +109,7 @@ export function ExtensionPrivacy() {
       <ul>
         <li>We never sell your data and never use it for credit, lending or unrelated advertising.</li>
         <li>We never read, store or send anything from pages that are not about homes for sale or rent.</li>
-        <li>We never republish content from those websites.</li>
+        <li>We never republish photos or descriptions from those websites. The public pages on realhunt.co/best show, for homes that score highly, only the facts above (price, size, rooms, city, score, the listing's short headline or address) and a link back to the original listing.</li>
       </ul>
       <p>The use of information received from Google APIs complies with the Chrome Web Store User Data Policy, including the Limited Use requirements.</p>
       <h2>Where it is stored and for how long</h2>
