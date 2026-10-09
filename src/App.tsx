@@ -252,6 +252,10 @@ const AppRoutes = () => (
       <Route path="/find-my-home" element={<Community />} />
       <Route path="/find-my-home/:city" element={<Community />} />
       <Route path="/extension" element={<Community />} />
+      <Route path="/best" element={<Community />} />
+      <Route path="/best/:cc/:city" element={<Community />} />
+      <Route path="/ranking/:id" element={<Community />} />
+      <Route path="/homes-compare/:id" element={<Community />} />
       <Route path="/extension/privacy" element={<Community />} />
       <Route path="/find/:shortcode" element={<FindToDeal />} />
       <Route path="/admin/extension" element={<AdminExtension />} />

@@ -34,6 +34,7 @@ import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, Verifie
 import { t } from "./i18n";
 import { FindHomePage, FindHomeCTA } from "./findhome";
 import ExtensionRoute from "./extension";
+import BestRoute from "./best";
 import { ScoreBars, BestPerCountry, RankRow, RankHead, RankSkeleton, ScoreHelp, NearestHomes, NearCity } from "./scores";
 import { LogoMark } from "@/components/realhunt/Logo";
 import { isEs, searchQuery } from "@/lib/lang";
@@ -220,7 +221,7 @@ function Shell({ children }: { children: ReactNode }) {
           </Link>
           <nav aria-label="Main navigation">
             <Link to="/top" className="hunt-browse hunt-top100"><Trophy size={16} /> Top 100</Link>
-            <Link to="/extension" className="hunt-browse hunt-ext" title="Free Chrome extension: see the score of any home on idealista, Zillow and Rightmove"><Gauge size={16} /> Score any home</Link>
+            <Link to="/extension" className="hunt-browse hunt-ext" title="Free Chrome extension: see the score of any home on 160 property sites"><Gauge size={16} /> Score any home</Link>
             <Link to="/?search=1" className="hunt-browse">
               <Search size={16} />
               Search
@@ -2025,6 +2026,8 @@ export default function Community() {
       <FindHomePage />
     ) : path.startsWith("/extension") ? (
       <ExtensionRoute />
+    ) : path === "/best" || path.startsWith("/best/") || path.startsWith("/ranking/") || path.startsWith("/homes-compare/") ? (
+      <BestRoute />
     ) : path.startsWith("/guide") ? (
       <GuidePage />
     ) : path.startsWith("/homes/") ? (
