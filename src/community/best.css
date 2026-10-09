@@ -15,7 +15,7 @@
 .bx-good{background:#E3F4E8;color:#0F6B34}.bx-bad{background:#FBE9E5;color:#C2412D}
 .bx-go{font-weight:700;font-size:13px;color:#0F6B34;white-space:nowrap}
 .bx-cta{display:flex;gap:16px;align-items:center;justify-content:space-between;margin:22px 0;padding:18px;border-radius:18px;background:linear-gradient(135deg,#0F6B34,#2E9E5B);color:#fff}
-.bx-cta b{display:block;font-size:17px}.bx-cta span{font-size:13.5px;opacity:.9}.bx-cta .hunt-primary{white-space:nowrap;background:#FFE14D;color:#14181c}
+.bx-cta b{display:block;font-size:17px}.bx-cta span{font-size:13.5px;opacity:.9}.bx-cta .hunt-primary{white-space:nowrap;background:#FFE14D !important;color:#14181c !important;border:0}
 .bx-empty{padding:22px;border-radius:16px;background:rgba(0,0,0,.04)}.bx-empty b{display:block;margin-bottom:4px}
 .bx-h2{font-size:18px;margin:22px 0 10px}
 .bx-cities{display:flex;flex-wrap:wrap;gap:8px}.bx-cities a{padding:9px 12px;border-radius:12px;background:rgba(0,0,0,.05);text-decoration:none;color:inherit;font-weight:700;font-size:14px}.bx-cities small{display:block;font-weight:500;opacity:.65;font-size:11.5px}
