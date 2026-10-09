@@ -78,7 +78,7 @@ const CaptureCard = () => {
       <div>
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/15 text-[11px] font-medium"><Sparkles size={11} /> Free</span>
         <p className="mt-3 font-display text-[19px] md:text-[21px] leading-[1.15] tracking-tight">{head.text || "Get the top 10 homes. Free, by email."}</p>
-        <p className="mt-1.5 text-[12.5px] text-white/70">Real listings under €100k, picked by hand.</p>
+        <p className="mt-1.5 text-[12.5px] text-white/70">Real listings, scored and ranked.</p>
       </div>
       {mode === "done" ? (
         <div className="flex items-start gap-2.5">
@@ -134,7 +134,7 @@ const Home = () => {
   const [pref, setPref] = useState<{ country?: string | null; budget?: number | null }>({});
   const [drops, setDrops] = useState<Set<string>>(new Set());
   const [loaded, setLoaded] = useState(() => finds.length > 0);
-  const headline = useExperiment("home_headline", [{ id: "A", text: "Real homes under €100,000." }]);
+  const headline = useExperiment("home_headline", [{ id: "A", text: "The best homes, ranked by score." }]);
 
   useEffect(() => {
     // 1. Instant paint from the last feed we saw (stale-while-revalidate), then refresh from the DB.
@@ -175,9 +175,9 @@ const Home = () => {
   const allCountries = useMemo(() => { const m: Record<string, number> = { Indonesia: 1 }; finds.forEach((f) => { const c = norm(f.country_guess); m[c] = (m[c] || 0) + 1; }); return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([c]) => c); }, [finds]);
 
   useEffect(() => {
-    const t = aParam ? `Cheap homes spotted by @${aParam}` : country !== "All" ? `Cheap houses in ${country} under €100,000` : "Real homes under €100,000";
+    const t = aParam ? `Cheap homes spotted by @${aParam}` : country !== "All" ? `The best homes in ${country}, ranked by score` : "The best homes, ranked by score";
     document.title = `${t} · RealHunt`;
-    const m = document.querySelector('meta[name="description"]'); if (m) m.setAttribute("content", `${t}. Real listings under €100k, ranked by how cheap they are for where they are. Beach, countryside, villages.`);
+    const m = document.querySelector('meta[name="description"]'); if (m) m.setAttribute("content", `${t}. Real listings scored 0–100 on price, place and risks, best first. Beach, countryside, villages.`);
   }, [country, aParam]);
 
   const selectHomes = useCallback((filters: CatalogFilters) => {
@@ -296,7 +296,7 @@ const Home = () => {
       <RHNav />
 
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pt-6 md:pt-10 pb-3">
-        <h1 className="font-display text-[clamp(30px,5vw,54px)] leading-[1.02] tracking-tight max-w-[22ch]">{aParam ? <>Spotted by <span className="text-ink-muted">@{aParam}</span></> : country !== "All" ? <>Cheap homes in {country}.</> : <>{headline.text || "Real homes under €100,000."}</>}</h1>
+        <h1 className="font-display text-[clamp(30px,5vw,54px)] leading-[1.02] tracking-tight max-w-[22ch]">{aParam ? <>Spotted by <span className="text-ink-muted">@{aParam}</span></> : country !== "All" ? <>Cheap homes in {country}.</> : <>{headline.text || "The best homes, ranked by score."}</>}</h1>
         <p className="mt-3 text-[15px] md:text-[17px] text-ink-muted">{loaded ? shown.filter((f) => f.id !== "capture").length : "…"} homes{isFinite(min) && <> · cheapest <b className="text-ink">{eur(min)}</b></>}{aParam && <> · <a href={`https://instagram.com/${aParam}`} target="_blank" rel="noreferrer" className="underline">follow them on Instagram</a></>}</p>
       </section>
 
@@ -377,7 +377,7 @@ const Home = () => {
             </form>
           )}
         </div>
-        <CaptureInline source="home_bottom" title="Get the best deals we find, in your inbox" subtitle="Free. Only homes under €100k worth talking about — with the address and the original link." />
+        <CaptureInline source="home_bottom" title="Get the best deals we find, in your inbox" subtitle="Free. Only the top-scored homes worth talking about — with the address and the original link." />
       </section>
 
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-10 text-[13px] text-ink-muted flex flex-wrap gap-x-4 gap-y-1">

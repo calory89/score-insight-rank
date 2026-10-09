@@ -74,7 +74,7 @@ function prerenderPages() {
           fs.writeFileSync(path.join(dir, "index.html"), h);
         };
         const SITE = "https://realhunt.co";
-        const DEF = `${SITE}/og-default-100k.jpg`;
+        const DEF = `${SITE}/og-home.jpg`;
         const metaFile = path.resolve(__dirname, "src/data/deal-meta.json");
         const deals: any[] = fs.existsSync(metaFile) ? JSON.parse(fs.readFileSync(metaFile, "utf8")) : [];
         for (const d of deals) {

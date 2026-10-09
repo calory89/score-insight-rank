@@ -70,7 +70,7 @@ export function InsiderPage() {
   const link = s?.code ? `https://realhunt.co/insider?ref=${s.code}` : "";
   const share = () => {
     if (!link) return;
-    const text = s?.insider ? "I get to see new homes under €100k 48h before everyone on RealHunt. This link lets you see them too, plus this week's secret Top 5:" : "I'm hunting homes under €100k on RealHunt. Join with my link and help me unlock new homes 48h early:";
+    const text = s?.insider ? "I get to see the new top-scored homes 48h before everyone on RealHunt. This link lets you see them too, plus this week's secret Top 5:" : "I'm hunting the best homes on RealHunt, ranked by score. Join with my link and help me unlock new homes 48h early:";
     (navigator.share ? navigator.share({ title: "RealHunt", text, url: link }) : navigator.clipboard.writeText(`${text} ${link}`).then(() => setNotice("Link copied ✓"))).catch(() => {});
   };
   const copy = () => navigator.clipboard.writeText(link).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); }).catch(() => {});

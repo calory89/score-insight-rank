@@ -126,7 +126,7 @@ def build():
         if kind == "price":
             intro.append(f"{len(homes)} {what} for sale{' in ' + THE.get(country, country) if country else ''} cost {money(price)} or less right now. The cheapest is {money(cheapest['price_eur'])}, in {place(cheapest)}, and half of them are under {money(med)}.")
         else:
-            intro.append(f"There are {len(homes)} {what}{' in ' + THE.get(country, country) if country else ''} on RealHunt today, all under €100,000. Prices start at {money(cheapest['price_eur'])} ({place(cheapest)}) and the middle of the list sits at {money(med)}.")
+            intro.append(f"There are {len(homes)} {what}{' in ' + THE.get(country, country) if country else ''} on RealHunt today, each one scored and ranked. Prices start at {money(cheapest['price_eur'])} ({place(cheapest)}) and the middle of the list sits at {money(med)}.")
         if country:
             regs = Counter(region(d) for d in homes if region(d)).most_common(3)
             regs = [r for r, n in regs if n >= 2]
@@ -151,7 +151,7 @@ def build():
         pages.append({
             "slug": slug, "kind": kind, "country": country, "price": price, "label": label,
             "h1": h1, "title": f"{h1} ({len(homes)} Listed) · RealHunt",
-            "desc": f"{len(homes)} real {'homes' if kind == 'price' else what}{' in ' + THE.get(country, country) if country else ''} under {money(price or 100000)}, from {money(cheapest['price_eur'])}. Checked by people, updated daily.",
+            "desc": f"{len(homes)} real {'homes' if kind == 'price' else what}{' in ' + THE.get(country, country) if country else ''}{(' under ' + money(price) + ',') if price else ','} from {money(cheapest['price_eur'])}. Checked by people, updated daily.",
             "intro": intro, "faq": faq, "count": len(homes), "min": ps[0], "median": med,
             "homes": [d["slug"] for d in homes[:60]],
         })
@@ -186,7 +186,7 @@ def build():
         static[p["slug"]] = (f'<main class="rh-static"><nav><a href="/">RealHunt</a> › <a href="/cheap-houses">Cheap houses</a></nav><h1>{e(p["h1"])}</h1>'
             + "".join(f"<p>{e(x)}</p>" for x in p["intro"]) + f'<ul class="rh-static-grid">{cards}</ul><h2>Questions people ask</h2>{faq}<h2>Related searches</h2><ul>{rel}</ul></main>')
     hub = "".join(f'<li><a href="/cheap-houses/{e(p["slug"])}">{e(p["h1"])}</a> ({p["count"]})</li>' for p in pages)
-    static["__index__"] = f'<main class="rh-static"><h1>Cheap houses for sale, by what you are looking for</h1><p>Every page lists real homes under €100,000 that a person has checked. Updated daily.</p><ul>{hub}</ul></main>'
+    static["__index__"] = f'<main class="rh-static"><h1>Cheap houses for sale, by what you are looking for</h1><p>Every page lists real homes, scored and ranked best first, that a person has checked. Updated daily.</p><ul>{hub}</ul></main>'
 
     os.makedirs(os.path.join(ROOT, "src", "data"), exist_ok=True)
     json.dump({"updated": __import__("datetime").date.today().isoformat(), "pages": pages, "homes": homes}, open(os.path.join(ROOT, "src", "data", "search-pages.json"), "w"), ensure_ascii=False, separators=(",", ":"))

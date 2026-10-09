@@ -111,19 +111,19 @@ def default_card(rows):
         try: base.paste(cover(fetch_img(d["image_urls"][0]), 392, 352), (8 + i * 397, 270))
         except Exception: pass
     dr = ImageDraw.Draw(base)
-    fb = ImageFont.truetype(os.path.join(FONT, "Poppins-Bold.ttf"), 64)
-    fm = ImageFont.truetype(os.path.join(FONT, "Poppins-Medium.ttf"), 32)
+    fb = ImageFont.truetype(os.path.join(FONT, "Poppins-Bold.ttf"), 60)
+    fm = ImageFont.truetype(os.path.join(FONT, "Poppins-Medium.ttf"), 30)
     base.paste(logo(52), (56, 46), logo(52))
     dr.text((122, 52), "RealHunt", font=fm, fill=(17, 18, 20))
-    dr.text((56, 114), "Real homes under €100,000.", font=fb, fill=(17, 18, 20))
-    dr.text((56, 196), "Found by people. Ranked by your votes.", font=fm, fill=(64, 68, 76))
+    dr.text((56, 114), "The best homes, ranked by score.", font=fb, fill=(17, 18, 20))
+    dr.text((56, 196), "Every home in any country scored 0–100 on price, place and risks.", font=fm, fill=(64, 68, 76))
     dr.rectangle((0, H - 8, W, H), fill=BRAND)
-    base.save(os.path.join(ROOT, "public", "og-default-100k.jpg"), "JPEG", quality=82, optimize=True)
+    base.save(os.path.join(ROOT, "public", "og-home.jpg"), "JPEG", quality=82, optimize=True)
 
 def main():
     rows = [r for r in all_rows() if r.get("image_urls") and r.get("price_eur")]
     outdir = os.path.join(ROOT, "public", "og", "deal"); os.makedirs(outdir, exist_ok=True)
-    if "--default" in sys.argv or not os.path.exists(os.path.join(ROOT, "public", "og-default-100k.jpg")): default_card(rows)
+    if "--default" in sys.argv or not os.path.exists(os.path.join(ROOT, "public", "og-home.jpg")): default_card(rows)
     made = 0
     for d in rows:
         dest = os.path.join(outdir, f"{d['slug']}.jpg")
@@ -134,7 +134,7 @@ def main():
     for d in rows:
         t = nice_title(d); p = money(d["price_eur"]); loc = d.get("location_name") or d.get("country") or ""
         title = f"{p} · {t}" if p not in t else t
-        desc = f"{t}{'' if p in t else ' for ' + p}. {loc}. Voted by people on RealHunt, where every home costs under €100,000."
+        desc = f"{t}{'' if p in t else ' for ' + p}. {loc}. Scored and ranked on RealHunt: the best homes in every country."
         img = f"{SITE}/og/deal/{d['slug']}.jpg?v=2" if os.path.exists(os.path.join(outdir, f"{d['slug']}.jpg")) else (SITE + d["image_urls"][0] if d["image_urls"][0].startswith("/") else d["image_urls"][0])
         meta.append({"slug": d["slug"], "title": title, "desc": desc, "image": img, "country": d.get("country")})
     os.makedirs(os.path.join(ROOT, "src", "data"), exist_ok=True)
