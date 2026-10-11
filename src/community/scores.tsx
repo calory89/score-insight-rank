@@ -31,6 +31,7 @@ export const DIMS: [string, string, string][] = [
   ["condition", "Move-in condition", "Renovated or ready to live in scores more; homes that need work score less"],
   ["extras", "Extras", "Garden, terrace, pool, sauna, fireplace, views, land and more"],
   ["water", "Sea & lakes", "How close it is to the sea or a lake"],
+  ["weather", "Good weather", "Good-weather days a year where the home is: a high of 18–33 °C, dry, light wind (climate normals)"],
   ["access", "Airport", "How close the nearest airport with scheduled flights is"],
   ["costs", "Buying costs", "Taxes and fees to buy in this country: lower scores more"],
   ["photos", "Listing detail", "Photos, size and rooms published, verified by us"],
