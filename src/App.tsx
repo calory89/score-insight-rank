@@ -93,7 +93,12 @@ const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 5 
 
 const PageTracker = ({ children }: { children: React.ReactNode }) => { usePageTracking(); useReferralCapture(); useWebVitals(); return <>{children}</>; };
 
-const SuspenseFallback = () => <div className="min-h-[60vh] bg-paper" aria-busy="true" />;
+// Pages whose prerendered HTML is a real first paint (marked data-rh-keep, e.g. /weather) stay on screen
+// while their code loads, instead of being swapped for a blank box and then the page (a visible flash).
+const bootStatic = (() => { try { const r = document.getElementById("root"); return r && r.querySelector("[data-rh-keep]") ? { path: location.pathname, html: r.innerHTML } : null; } catch { return null; } })();
+const SuspenseFallback = () => bootStatic && location.pathname === bootStatic.path
+  ? <div dangerouslySetInnerHTML={{ __html: bootStatic.html }} />
+  : <div className="min-h-[60vh] bg-paper" aria-busy="true" />;
 
 // Power-user extras load only once the browser is idle, never before the page you came for.
 const Extras = () => {
