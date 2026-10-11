@@ -3,11 +3,11 @@
 .hx-hero h1 { font-size: clamp(24px, 6.4vw, 44px); line-height: 1.05; letter-spacing: -0.03em; margin: 0 0 12px; font-weight: 800; }
 .hx-hero h1 em { font-style: normal; color: #E8551F; }
 .hx-hero .hx-sub { margin: -6px 0 12px; color: #6b6f75; font-size: 14px; }
-.hx-grid { display: grid; grid-template-columns: 1fr; gap: 22px; margin: 10px 0 24px; }
+.hx-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; margin: 10px 0 24px; width: 100%; min-width: 0; }
 @media (min-width: 640px) { .hx-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 18px; } }
 @media (min-width: 1040px) { .hx-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.hx-span { grid-column: 1 / -1; }
-.hx-card { display: block; color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+.hx-span { grid-column: 1 / -1; min-width: 0; overflow: hidden; }
+.hx-card { display: block; min-width: 0; color: inherit; text-decoration: none; -webkit-tap-highlight-color: transparent; }
 .hx-img { position: relative; display: block; aspect-ratio: 4 / 3; border-radius: 18px; overflow: hidden; background: #ece9e3; }
 .hx-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s cubic-bezier(.2,.7,.2,1); }
 @media (hover: hover) { .hx-card:hover .hx-img img { transform: scale(1.04); } }
