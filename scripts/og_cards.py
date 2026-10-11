@@ -140,8 +140,9 @@ def main():
     os.makedirs(os.path.join(ROOT, "src", "data"), exist_ok=True)
     json.dump(meta, open(os.path.join(ROOT, "src", "data", "deal-meta.json"), "w"), ensure_ascii=False, indent=0)
     today = datetime.date.today().isoformat()
-    countries = sorted({(d.get("country") or "").lower() for d in rows if d.get("country")})
+    countries = sorted({(d.get("country") or "").lower().replace(" ", "-") for d in rows if d.get("country")})
     urls = [f"{SITE}/", f"{SITE}/map", f"{SITE}/swipe", f"{SITE}/leaderboard", f"{SITE}/winners", f"{SITE}/help-buying", f"{SITE}/alerts"]
+    urls += [f"{SITE}/{p}" for p in ("weather", "extension", "best", "find-my-home", "top", "about", "method", "finds")]
     urls += [f"{SITE}/guide/{c}" for c in ("italy", "spain", "portugal")]
     for c in countries:
         urls.append(f"{SITE}/homes/{c}")

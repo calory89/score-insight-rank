@@ -82,8 +82,8 @@ function prerenderPages() {
           if (!d?.slug || !/^[A-Za-z0-9_-]+$/.test(d.slug)) continue;
           page(`${SITE}/deal/${d.slug}`, `${d.title} · RealHunt`, d.desc, d.image || DEF);
         }
-        const countries = Array.from(new Set(deals.map((d) => String(d.country || "").toLowerCase()).filter(Boolean)));
-        const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+        const countries = Array.from(new Set(deals.map((d) => String(d.country || "").toLowerCase().replace(/\s+/g, "-")).filter(Boolean)));
+        const cap = (s: string) => s.replace(/-/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
         for (const c of countries) {
           page(`${SITE}/homes/${c}`, `Best homes for sale in ${cap(c)} · RealHunt`, `The best houses for sale in ${cap(c)}, each one scored and ranked best first. New homes every day.`, DEF);
           for (const p of [20000, 40000, 60000, 80000]) page(`${SITE}/homes/${c}/under-${p}`, `Homes under €${p.toLocaleString("en")} in ${cap(c)} · RealHunt`, `Houses for sale under €${p.toLocaleString("en")} in ${cap(c)}, ranked by people's votes.`, DEF);

@@ -15,7 +15,12 @@ import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import OfflineBanner from "@/components/OfflineBanner";
 
 // Everything is lazy: the first paint only ships React, the router, auth and the page you asked for.
-const L = (f: () => Promise<any>) => React.lazy(f);
+// v11-oct: after a new deploy, an open tab asks for old page files that no longer exist ("Failed to fetch dynamically
+// imported module"). Reload once to get the new ones instead of showing an error screen.
+const L = (f: () => Promise<any>) => React.lazy(() => f().catch((e) => {
+  try { const k = "rh_chunk_reload", last = Number(sessionStorage.getItem(k) || 0); if (Date.now() - last > 60000) { sessionStorage.setItem(k, String(Date.now())); location.reload(); return new Promise(() => {}); } } catch { /* storage blocked */ }
+  throw e;
+}));
 const Home = L(() => import("./pages/Home"));
 const Community = L(() => import("./community/Community"));
 const IndexNew = L(() => import("./pages/IndexNew"));
@@ -53,7 +58,6 @@ const InvestorQuiz = L(() => import("./pages/InvestorQuiz"));
 const Portfolio = L(() => import("./pages/Portfolio"));
 const MarketDirectory = L(() => import("./pages/MarketDirectory"));
 const MarketPulse = L(() => import("./pages/MarketPulse"));
-const Heatmap = L(() => import("./pages/Heatmap"));
 const Weather = L(() => import("./pages/Weather"));
 const BestDealsCountry = L(() => import("./pages/BestDealsCountry"));
 const MarketCity = L(() => import("./pages/MarketCity"));
@@ -198,7 +202,7 @@ const AppRoutes = () => (
       <Route path="/market/:country/:city" element={<MarketPulse />} />
       <Route path="/market/:city" element={<MarketCity />} />
       <Route path="/best-deals/:country" element={<BestDealsCountry />} />
-      <Route path="/heatmap" element={<Heatmap />} />
+      <Route path="/heatmap" element={<Navigate to="/weather" replace />} />
       <Route path="/weather" element={<Weather />} />
       <Route path="/fit" element={<Fit />} />
       <Route path="/ecobeachcity" element={<Ebc />} />

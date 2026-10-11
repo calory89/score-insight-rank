@@ -58,7 +58,7 @@ const LOC_REGION = (() => { try { return new Intl.DisplayNames([LANG], { type: "
 // "Spain" -> "España" when the region shown is just the country
 const regionName = (p: Place) => { const r = p.region || ""; if (!ES || !p.cc || !EN_REGION || !LOC_REGION) return r; try { return EN_REGION.of(p.cc) === r ? LOC_REGION.of(p.cc) || r : r; } catch { return r; } };
 let esDict: Record<string, string> | null = null;
-const loadEs = () => (ES ? fetch("/i18n/es-listings.json?v=1").then((r) => r.json()).then((d) => (esDict = d)).catch(() => null) : Promise.resolve(null));
+const loadEs = () => (ES ? fetch("/i18n/es-listings.json?v=2").then((r) => r.json()).then((d) => (esDict = d)).catch(() => null) : Promise.resolve(null));
 const tt = (s: string) => (esDict && esDict[s]) || s;
 const flag = (cc: string) => (cc && cc.length === 2 ? String.fromCodePoint(...[...cc.toUpperCase()].map((c) => 127397 + c.charCodeAt(0))) : "🌍");
 const homeUrl = (h: Home) => (h.k === "n" ? `/top/${h.dest}/${h.s}` : `/deal/${h.s}`);

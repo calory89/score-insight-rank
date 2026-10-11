@@ -697,12 +697,12 @@ export function GuidePage() {
 export function HomesPage() {
   const { country = "", cap = "" } = useParams();
   const name = decodeURIComponent(country).replace(/-/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-  const max = Number((cap.match(/\d+/) || [])[0]) || 100000;
+  const max = Number((cap.match(/\d+/) || [])[0]) || 0; // 0 = no price cap (RealHunt has no €100k limit any more)
   const [data, setData] = useState<{ rows: Row[]; total: number } | null>(null);
   useEffect(() => {
-    document.title = `Homes under ${money(max)} in ${name} · RealHunt`;
-    const m = document.querySelector('meta[name="description"]'); if (m) m.setAttribute("content", `Houses for sale under ${money(max)} in ${name}, found by people and ranked by votes. Updated every day.`);
-    setData(null); feed({ scope: "all", country: name, max_price: max, limit: 60 }).then(setData).catch(() => setData({ rows: [], total: 0 }));
+    document.title = max ? `Homes under ${money(max)} in ${name} · RealHunt` : `Best homes for sale in ${name} · RealHunt`;
+    const m = document.querySelector('meta[name="description"]'); if (m) m.setAttribute("content", max ? `Houses for sale under ${money(max)} in ${name}, each one scored and ranked. Updated every day.` : `The best houses for sale in ${name}, each one scored and ranked best first. Updated every day.`);
+    setData(null); feed({ scope: "all", country: name, ...(max ? { max_price: max } : {}), limit: 60 }).then(setData).catch(() => setData({ rows: [], total: 0 }));
   }, [country, cap]);
   const top = data?.rows?.[0];
   const avg = data?.rows?.length ? Math.round(data.rows.reduce((a, r) => a + (r.price_eur || 0), 0) / data.rows.length / 500) * 500 : 0;
@@ -711,7 +711,7 @@ export function HomesPage() {
     <div className="hunt-wrap hunt-page hv-country">
       <header className="hv-country-hero" style={top ? { backgroundImage: `linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.72)),url("${top.image_urls?.[0]}")` } : undefined}>
         <span className="hunt-eyebrow">{name}</span>
-        <h1>Homes under {money(max)} in {name}</h1>
+        <h1>{max ? <>Homes under {money(max)} in {name}</> : <>Best homes for sale in {name}</>}</h1>
         {data && data.total > 0 && <div className="hv-country-stats"><span><b>{data.total}</b> homes</span><span>from <b>{money(low)}</b></span><span>average <b>{money(avg)}</b></span></div>}
       </header>
       {data && data.rows.length >= 3 && <><h2 className="hv-country-h2">Top 3 in {name}</h2><div className="hv-country-top">{data.rows.slice(0, 3).map((d, n) => <Link key={d.id} to={`/deal/${d.slug}`}><img src={d.image_urls?.[0]} alt="" /><span className="hv-pod-medal">{["🥇", "🥈", "🥉"][n]}</span><strong>{money(d.price_eur)}</strong><small>{d.location_name}</small></Link>)}</div><h2 className="hv-country-h2">All homes</h2></>}
