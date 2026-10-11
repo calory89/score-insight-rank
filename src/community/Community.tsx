@@ -36,6 +36,7 @@ import { FindHomePage, FindHomeCTA } from "./findhome";
 import ExtensionRoute from "./extension";
 import BestRoute from "./best";
 import { ScoreBars, BestPerCountry, RankRow, RankHead, RankSkeleton, ScoreHelp, NearestHomes, NearCity } from "./scores";
+import { HomeCard, HomeCardSkeleton } from "./homecards";
 import { LogoMark } from "@/components/realhunt/Logo";
 import { isEs, searchQuery } from "@/lib/lang";
 import { guestSaves, isGuestSaved, toggleGuestSave, clearGuestSaves, type GuestSave } from "./guestSaves";
@@ -83,6 +84,7 @@ import "./community.css";
 import "./buyer-tools.css";
 import "./ux-oct.css";
 import "./brand-oct.css";
+import "./homecards.css";
 // Imported titles often repeat the price ("€35,000 · Your own home") right under the big price, or
 // say nothing at all ("Property - Japan"). Show something a person would actually write.
 function cleanTitle(d: Pick<Deal, "title" | "location_name" | "country" | "sqm">) {
@@ -811,59 +813,38 @@ function Home() {
   return (
     <div className="hunt-wrap hunt-home hv-home" onClickCapture={rememberCatalog}>
       <MapFab search={location.search} />
-      <section className="hv-hero">
+      <section className="hv-hero hx-hero">
         <h1>{t("The best homes in every country, ranked.")}</h1>
-        <p>{t("Every home scored from 70 to 98. The best ones first, every day.")}</p>
         <SmartSearch value={q} onSearch={search} inputRef={searchRef} />
-        <Freshness feed={feed} visitors={live?.today} />
-        <FindHomeCTA compact />
       </section>
-      <Vibes rows={feed?.rows||[]} isOn={vibeOn} onToggle={toggleVibe} />
-      <ExploreLinks />
-
-      {!q && <BuyerPicks compact />}
       <div className="rh-sticky-filters"><Filters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort, q, min_score: minScore, need, dim_min: dimMin }} onChange={setFilters} /></div>
-      {!country && !category && !maxPrice && !minSqm && !minScore && !need.length && !Object.keys(dimMin).length && sort === "score" && !q && <><NearCity /><BestPerCountry /></>}
+      {!plain || maxPrice || minSqm || minScore || need.length || sort !== "score" || showMap ? (
       <div className="rh-results-bar" ref={resultsRef}>
         <p role="status" aria-live="polite"><strong>{busy && !feed ? t("Updating results…") : feed ? `${num(feed.total)} ${t("homes")}${country ? ` in ${country.split(",").join(", ")}` : ""}` : ""}</strong>
           {(country || category || maxPrice || minSqm || q || vibeList.length > 0 || sort !== "score") && <Link to="/" className="hunt-link rh-clear">{t("Clear filters")}</Link>}</p>
         <div className="rh-results-tools"><button type="button" className="hunt-link rh-maptoggle" aria-expanded={showMap} onClick={() => setMapMode(showMap ? "off" : "on")}>{showMap ? t("Hide map") : t("Show on map")}</button><ScoreHelp/><span className="rh-motion"><MotionControl/></span></div>
-      </div>
+      </div>) : <div ref={resultsRef} />}
       {showMap && (
         <Suspense fallback={<div className="hm is-embedded hm-feed"><div className="hm-map" /></div>}>
           <HomesMap params={{ scope, country, category, max_price: maxPrice, min_sqm: minSqm, q: searchQuery(q), terms } as any} embedded className="hm-feed" />
         </Suspense>
       )}
       {q && feed && <p className="hv-searchnote">{feed.total} {feed.total === 1 ? "home" : "homes"} for “{q}”</p>}
-      {nextUp.length > 0 && (
-        <aside className="hunt-keepgoing" aria-label="More to vote on">
-          <strong>Keep going: more in {more?.country}</strong>
-          <div>
-            {nextUp.map((r: any) => (
-              <Link key={r.id} to={`/deal/${r.slug}`}>
-                <img src={r.image_urls?.[0]} alt="" loading="lazy" />
-                <span>{money(r.price_eur)}</span>
-              </Link>
-            ))}
-          </div>
-          <button aria-label="Hide suggestions" onClick={() => setMore(null)}><X size={14} /></button>
-        </aside>
-      )}
       {error && <ErrorBox error={error} retry={() => load()} />}
-      {!q && !country && <Welcome rows={feed?.rows} />}
-      <div className="rk-list" aria-busy={!feed && busy}>
-        {feed && feed.rows.length > 0 && <RankHead />}
+      <div className="hx-grid" aria-busy={!feed && busy}>
         {!feed && busy
-          ? [0, 1, 2, 3, 4, 5].map((n) => <RankSkeleton key={n} />)
+          ? [0, 1, 2, 3, 4, 5].map((n) => <HomeCardSkeleton key={n} />)
           : displayedRows?.map((d: any, index: number) => (
             <Fragment key={d.id}>
-              <RankRow deal={d} pos={index + 1} />
-              {index === 6 && <FindHomeCTA place={q || (country && !country.includes(",") ? country : undefined)} />}
-              {index === 9 && !q && <RemoteWorkCard />}
-              {index === 19 && plain && <SponsoredCard />}
+              <HomeCard deal={d} pos={index + 1} />
+              {index === 5 && !q && <div className="hx-span"><Vibes rows={feed?.rows||[]} isOn={vibeOn} onToggle={toggleVibe} /></div>}
+              {index === 11 && <div className="hx-span"><FindHomeCTA place={q || (country && !country.includes(",") ? country : undefined)} /></div>}
+              {index === 17 && plain && !maxPrice && sort === "score" && <div className="hx-span"><NearCity /></div>}
+              {index === 23 && plain && !maxPrice && sort === "score" && <div className="hx-span"><BestPerCountry /></div>}
+              {index === 29 && plain && <div className="hx-span"><SponsoredCard /></div>}
             </Fragment>
           ))}
-        {feed && busy && feed.rows.length > 0 && feed.rows.length < feed.total && [0, 1, 2].map((n) => <RankSkeleton key={"more" + n} />)}
+        {feed && busy && feed.rows.length > 0 && feed.rows.length < feed.total && [0, 1, 2].map((n) => <HomeCardSkeleton key={"more" + n} />)}
       </div>
       <div ref={sentinel} aria-hidden="true" />
       {showTop && <button className="rh-to-top" aria-label="Back to the top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}><ArrowUp size={18} /></button>}
