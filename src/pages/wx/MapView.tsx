@@ -24,10 +24,10 @@ export default function MapView({ list, onOpen, S }: { list: Place[]; onOpen: (i
     for (const k of kept) {
       const { p, s, more } = k;
       const html = p.kind === "ebc"
-        ? `<div class="wx-pin ebc">★ Eco Beach City</div>`
+        ? `<div class="wx-pin ebc">★ Eco Beach City · <b>${s}</b></div>`
         : `<div class="wx-pin${p.n ? "" : " empty"}${more.length ? " more" : ""}" style="--c:${scoreBg(s)}"><b>${s}</b>${more.length ? `<i>+${more.length}</i>` : ""}</div>`;
-      const w = p.kind === "ebc" ? 130 : more.length ? 54 : 34;
-      const icon = L.divIcon({ className: "", html, iconSize: [w, 24], iconAnchor: p.kind === "ebc" ? [14, 14] : [w / 2, 12] });
+      const w = p.kind === "ebc" ? 160 : more.length ? 54 : 34;
+      const icon = L.divIcon({ className: "", html, iconSize: [p.kind === "ebc" ? 160 : w, 24], iconAnchor: p.kind === "ebc" ? [14, 14] : [w / 2, 12] });
       const tip = S.tip(p.name, p.days, p.n) + (more.length ? `<br>${S.moreHere(more.length)}` : "");
       L.marker([p.la, p.lo], { icon, zIndexOffset: p.kind === "ebc" ? 1000 : p.n ? 100 : 0, keyboard: true, title: p.name })
         .bindTooltip(tip, { direction: "top", offset: [0, -10] })
