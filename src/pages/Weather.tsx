@@ -53,6 +53,13 @@ const money = (n?: number | null) => {
   if (n >= 1e6) return ES ? `${num((n / 1e6).toFixed(1))} M€` : `€${(n / 1e6).toFixed(1)}M`;
   return ES ? `${Math.round(n / 1000)}.000\u00A0€` : `€${Math.round(n / 1000)}k`;
 };
+const EN_REGION = (() => { try { return new Intl.DisplayNames(["en"], { type: "region" }); } catch { return null; } })();
+const LOC_REGION = (() => { try { return new Intl.DisplayNames([LANG], { type: "region" }); } catch { return null; } })();
+// "Spain" -> "España" when the region shown is just the country
+const regionName = (p: Place) => { const r = p.region || ""; if (!ES || !p.cc || !EN_REGION || !LOC_REGION) return r; try { return EN_REGION.of(p.cc) === r ? LOC_REGION.of(p.cc) || r : r; } catch { return r; } };
+let esDict: Record<string, string> | null = null;
+const loadEs = () => (ES ? fetch("/i18n/es-listings.json?v=1").then((r) => r.json()).then((d) => (esDict = d)).catch(() => null) : Promise.resolve(null));
+const tt = (s: string) => (esDict && esDict[s]) || s;
 const flag = (cc: string) => (cc && cc.length === 2 ? String.fromCodePoint(...[...cc.toUpperCase()].map((c) => 127397 + c.charCodeAt(0))) : "🌍");
 const homeUrl = (h: Home) => (h.k === "n" ? `/top/${h.dest}/${h.s}` : `/deal/${h.s}`);
 const findUrl = (p: Place) => `/find-my-home/${encodeURIComponent(p.name.replace(/\s*\(.*?\)\s*/g, "").trim().toLowerCase().replace(/\s+/g, "-"))}?ref=weather`;
@@ -103,7 +110,7 @@ export default function Weather() {
   useEffect(() => {
     setMeta(S.title, S.desc, "https://realhunt.co/weather");
     let alive = true;
-    loadPlaces().then((d) => { if (alive) setAll(d); });
+    Promise.all([loadPlaces(), loadEs()]).then(([d]) => { if (alive) setAll(d); });
     return () => { alive = false; };
   }, []);
   // keep the address in sync so any view can be shared
@@ -213,7 +220,7 @@ function Card({ p, rank, onOpen }: { p: Place; rank: number; onOpen: () => void 
         <span className="wx-rank">#{rank}</span>
         <span className="wx-score" style={{ background: scoreBg(s) }}>{s}</span>
         {p.kind === "ebc" && <span className="wx-ebc">{S.ourProject}</span>}
-        <div className="wx-name"><b>{flag(p.cc)} {p.name}</b><small>{p.region || ""}</small></div>
+        <div className="wx-name"><b>{flag(p.cc)} {p.name}</b><small>{regionName(p)}</small></div>
         <div className="wx-hover">
           <Bar v={pt.weather} label={S.b.weather} value={`${p.days} ${S.d}`} />
           <Bar v={pt.air} label={S.b.air} value={airLabel(p.pm)} />
@@ -260,7 +267,7 @@ function Sheet({ p, onClose, onShare, copied }: { p: Place; onClose: () => void;
         <div className="wx-sh-top" style={p.img ? { backgroundImage: `linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.65)),url(${p.img})` } : { background: `linear-gradient(135deg, ${dayColor(p.days)}, #1d2b3a)` }}>
           <span className="wx-sh-grab" aria-hidden="true" />
           <button className="wx-x" onClick={onClose} aria-label={S.close}>✕</button>
-          <div><small>{p.region || ""}</small><h2>{flag(p.cc)} {p.name}</h2></div>
+          <div><small>{regionName(p)}</small><h2>{flag(p.cc)} {p.name}</h2></div>
           <span className="wx-score big" style={{ background: scoreBg(s) }}>{s}<small>/100</small></span>
         </div>
         <div className="wx-sh-body">
@@ -296,7 +303,7 @@ function Sheet({ p, onClose, onShare, copied }: { p: Place; onClose: () => void;
                 {p.homes.map((h) => (
                   <Link key={h.s} to={homeUrl(h)} className="wx-home">
                     <div className="wx-hi" style={h.i ? { backgroundImage: `url(${h.i})` } : undefined}><span style={{ background: scoreBg(h.n) }}>{h.n}</span></div>
-                    <b>{money(h.p)}</b><small>{h.t}</small>
+                    <b>{money(h.p)}</b><small>{tt(h.t)}</small>
                   </Link>
                 ))}
               </div>
