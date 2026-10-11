@@ -155,6 +155,9 @@ function prerenderPages() {
               [crumbs([["RealHunt", SITE + "/"], [`${n} ${TN}`, tUrl], [t.name, u]])]);
           }
         }
+        page(`${SITE}/weather`, "Good weather all year: the best homes in the sunniest places · RealHunt", "A world map of comfortable days per year (18–33 °C, dry, light wind) with only the homes that score 80+ where the weather is good most of the year. Mediterranean, Canaries, Mexico, Bali, Sumba.", `${SITE}/weather/og.jpg`,
+          `<main class="rh-static"><h1>Good weather most of the year. Only the good homes.</h1><p>Comfortable days per year: a daily high of 18–33 °C, a dry day and light wind. The Mediterranean coast, the Canaries, Mexico's highlands and the islands of Indonesia lead, with Eco Beach City in Sumba.</p></main>`,
+          [crumbs([["RealHunt", SITE + "/"], ["Weather", SITE + "/weather"]])]);
         page(`${SITE}/new-builds`, "New-build homes under €100,000 · RealHunt", "New-build projects with units under €100,000, payment plans and verified developers. Ask the developer directly.", DEF);
         for (const [c, n] of [["indonesia", "Indonesia"], ["mexico", "Mexico"], ["albania", "Albania"], ["spain", "Spain"], ["portugal", "Portugal"], ["thailand", "Thailand"], ["turkey", "Turkey"], ["montenegro", "Montenegro"]]) page(`${SITE}/new-builds/${c}`, `New builds under €100,000 in ${n} · RealHunt`, `New-build projects in ${n} with units under €100,000, payment plans and verified developers. Ask the developer directly.`, DEF);
         page(`${SITE}/developers`, "Developer ranking · RealHunt", "Developers ranked by sales, buyer ratings and how fast they answer buyers on RealHunt.", DEF);

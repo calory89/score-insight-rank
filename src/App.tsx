@@ -54,6 +54,7 @@ const Portfolio = L(() => import("./pages/Portfolio"));
 const MarketDirectory = L(() => import("./pages/MarketDirectory"));
 const MarketPulse = L(() => import("./pages/MarketPulse"));
 const Heatmap = L(() => import("./pages/Heatmap"));
+const Weather = L(() => import("./pages/Weather"));
 const BestDealsCountry = L(() => import("./pages/BestDealsCountry"));
 const MarketCity = L(() => import("./pages/MarketCity"));
 const NotFound = L(() => import("./pages/NotFound"));
@@ -193,6 +194,7 @@ const AppRoutes = () => (
       <Route path="/market/:city" element={<MarketCity />} />
       <Route path="/best-deals/:country" element={<BestDealsCountry />} />
       <Route path="/heatmap" element={<Heatmap />} />
+      <Route path="/weather" element={<Weather />} />
       <Route path="/fit" element={<Fit />} />
       <Route path="/ecobeachcity" element={<Ebc />} />
       <Route path="/lake-como" element={<Como />} />
