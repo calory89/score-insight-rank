@@ -23,7 +23,7 @@ export function priceColor(p?: number | null) {
   const lum = (0.299 * c[0] + 0.587 * c[1] + 0.114 * c[2]) / 255;
   return { bg: `rgb(${c.join(",")})`, fg: lum > 0.6 ? "#1E2420" : "#fff" };
 }
-const short = (n?: number | null) => (n == null ? "" : n >= 1000 ? `€${Math.round(n / 1000)}k` : `€${n}`);
+const short = (n?: number | null) => (n == null ? "" : n >= 999500 ? `€${(n / 1e6).toFixed(n >= 1e7 ? 0 : 1).replace(/\.0$/, "")}M` : n >= 1000 ? `€${Math.round(n / 1000)}k` : `€${n}`);
 const touch = typeof window !== "undefined" && ("ontouchstart" in window || navigator.maxTouchPoints > 0);
 
 type Props = {
@@ -48,6 +48,22 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
   const [data, setData] = useState<Row[] | null>(rows || null);
   const [nb, setNb] = useState(0);
   const navigate = useNavigate();
+  const openSlug = useRef<string | null>(null);
+  const keepOpen = useRef(false);
+  // Keep the open card fully inside the map, clear of the buttons on top and the zoom buttons below.
+  const fitPopup = () => {
+    const m = map.current; const pop = m && ((m as any)._popup as L.Popup | undefined);
+    if (!m || !pop || !m.hasLayer(pop)) return;
+    pop.update();
+    const node = pop.getElement(); const box = el.current?.getBoundingClientRect(); if (!node || !box) return;
+    const r = node.getBoundingClientRect();
+    const tools = wrap.current?.querySelector(".hm-tools") as HTMLElement | null;
+    const top = box.top + (tools ? tools.offsetTop + tools.offsetHeight + 8 : 12), left = box.left + 10, right = box.right - 10, bottom = box.bottom - 44; // keep the pin under the card visible too
+    let dx = 0, dy = 0;
+    if (r.width > right - left) dx = r.left - left; else if (r.left < left) dx = r.left - left; else if (r.right > right) dx = r.right - right;
+    if (r.top < top) dy = r.top - top; else if (r.bottom > bottom) dy = r.bottom - bottom;
+    if (Math.abs(dx) > 1 || Math.abs(dy) > 1) m.panBy([dx, dy], { animate: true, duration: 0.25 });
+  };
 
   // Map, layers and controls: created once.
   useEffect(() => {
@@ -63,6 +79,13 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
     (m as any)._hmLayers = { street, sat };
     layer.current = L.layerGroup().addTo(m);
     map.current = m;
+    m.on("popupopen", (e: any) => {
+      openSlug.current = (e.popup?._source as any)?._slug || null;
+      const img = e.popup.getElement()?.querySelector("img") as HTMLImageElement | null;
+      if (img && !img.complete) img.addEventListener("load", () => setTimeout(fitPopup, 0), { once: true });
+      setTimeout(fitPopup, 0);
+    });
+    m.on("popupclose", () => { if (!keepOpen.current) setTimeout(() => { if (!m.hasLayer((m as any)._popup)) openSlug.current = null; }, 0); });
     const click = (e: Event) => {
       const a = (e.target as HTMLElement).closest("a[data-slug]") as HTMLAnchorElement | null;
       if (a) { e.preventDefault(); setFull(false); navigate(`/deal/${a.dataset.slug}`); }
@@ -112,40 +135,63 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
     bounds.current = pts.length ? L.latLngBounds(pts) : null;
     setNb(pts.length);
     let focusedMk: L.Marker | null = null;
+    // 12-oct-2026 (Carlos: "when you zoom, what opens no longer fits"). The card now sits above the pin
+    // (not on top of it), is re-measured when its photo loads, is kept inside the map (clear of the
+    // buttons) after every zoom or move, and stays open on the same home when the pins are redrawn.
+    const small = () => (wrap.current?.clientWidth || 999) < 520;
+    const popW = () => (small() ? 200 : 220);
+    const popHtml = (d: Row) => `<a data-slug="${esc(d.slug)}" href="/deal/${esc(d.slug)}" class="hm-pop"><img src="${esc(d.image_urls?.[0] || "")}" alt="" loading="eager" decoding="async"><b>${esc(money(d.price_eur))}</b><span>${esc(niceTitle(d))}</span><small>${esc(d.location_name || "")}</small><em>${esc(t("Open this home"))} →</em></a>`;
+    const popOpts = () => ({ maxWidth: popW() + 20, minWidth: popW(), autoPan: false, closeButton: true, className: "hm-popup" } as L.PopupOptions);
     const pinFor = (d: Row) => {
       const isF = !!focus && d.slug === focus;
-      const icon = L.divIcon({ className: "hm-pin-wrap", html: `<span class="hm-pin${isF ? " is-focus" : ""}" style="--pc:${priceColor(d.price_eur).bg};--pf:${priceColor(d.price_eur).fg}">${esc(short(d.price_eur))}</span>`, iconSize: [0, 0] });
+      const icon = L.divIcon({ className: "hm-pin-wrap", html: `<span class="hm-pin${isF ? " is-focus" : ""}" style="--pc:${priceColor(d.price_eur).bg};--pf:${priceColor(d.price_eur).fg}">${esc(short(d.price_eur))}</span>`, iconSize: [0, 0], popupAnchor: [0, isF ? -38 : -32] });
       const mk = L.marker([d.lat!, d.lng!], { icon, zIndexOffset: isF ? 1000 : 0, riseOnHover: true, keyboard: true, title: `${money(d.price_eur)} · ${d.location_name || ""}` });
-      mk.bindPopup(
-        `<a data-slug="${esc(d.slug)}" href="/deal/${esc(d.slug)}" class="hm-pop"><img src="${esc(d.image_urls?.[0] || "")}" alt="" loading="lazy"><b>${esc(money(d.price_eur))}</b><span>${esc(niceTitle(d))}</span><small>${esc(d.location_name || "")}</small><em>${esc(t("Open this home"))} →</em></a>`,
-        { maxWidth: 240, minWidth: 220, autoPanPadding: [24, 24], closeButton: true }
-      );
-      // Tap a pin: fly in so you can see exactly where it is.
-      mk.on("click", () => { const z = Math.max(m.getZoom(), 12); const h = m.getSize().y; const up = Math.min(140, h * 0.3); const c = m.unproject(m.project([d.lat!, d.lng!], z).subtract([0, up]), z); m.flyTo(c, z, { duration: 0.6 }); });
+      (mk as any)._slug = d.slug;
+      mk.bindPopup(popHtml(d), popOpts());
+      // Tap a pin: fly in so you can see exactly where it is; the card is fitted once the flight ends.
+      mk.on("click", () => { const z = Math.max(m.getZoom(), 12); const h = m.getSize().y; const up = Math.min(140, h * 0.3); const c = m.unproject(m.project([d.lat!, d.lng!], z).subtract([0, up]), z); if (z !== m.getZoom() || m.getCenter().distanceTo(c) > 50) m.flyTo(c, z, { duration: 0.6 }); else fitPopup(); });
       if (isF) focusedMk = mk;
       return mk;
     };
+    // Several homes on the same spot (pins show the village, not the house): one pin that opens a list.
+    const listFor = (grp: Row[]) => {
+      const from = Math.min(...grp.map((d) => d.price_eur || 0));
+      const icon = L.divIcon({ className: "hm-pin-wrap", html: `<span class="hm-cl" style="--pc:${priceColor(from).bg};--pf:${priceColor(from).fg}"><b>${grp.length}</b><small>${esc(t("from"))} ${esc(short(from))}</small></span>`, iconSize: [0, 0], popupAnchor: [0, -26] });
+      const mk = L.marker([grp[0].lat!, grp[0].lng!], { icon, title: `${grp.length} homes` });
+      (mk as any)._slug = "list:" + grp.map((d) => d.slug).sort().join(",");
+      const items = [...grp].sort((a, b) => (a.price_eur || 0) - (b.price_eur || 0)).slice(0, 12)
+        .map((d) => `<a data-slug="${esc(d.slug)}" href="/deal/${esc(d.slug)}" class="hm-li"><img src="${esc(d.image_urls?.[0] || "")}" alt="" loading="lazy"><span><b>${esc(money(d.price_eur))}</b><small>${esc(niceTitle(d))}</small></span></a>`).join("");
+      mk.bindPopup(`<div class="hm-list"><p>${esc(grp[0].location_name || "")} · ${grp.length}</p>${items}</div>`, { ...popOpts(), maxWidth: popW() + 40, minWidth: popW() + 20 });
+      return mk;
+    };
     const draw = () => {
-      const open = (m as any)._popup && m.hasLayer((m as any)._popup) ? (m as any)._popup._source?.options?.title : null;
+      const open = openSlug.current;
       g.clearLayers(); focusedMk = null;
-      const cell = 66, cells = new Map<string, Row[]>();
+      const cell = 66, cells = new Map<string, Row[]>(), deep = m.getZoom() >= 13;
       for (const d of list) {
         if (focus && d.slug === focus) { g.addLayer(pinFor(d)); continue; }
         const p = m.latLngToLayerPoint([d.lat!, d.lng!]);
-        const k = m.getZoom() >= 13 ? d.slug : `${Math.floor(p.x / cell)}:${Math.floor(p.y / cell)}`;
+        const k = deep ? `${d.lat!.toFixed(4)}:${d.lng!.toFixed(4)}` : `${Math.floor(p.x / cell)}:${Math.floor(p.y / cell)}`;
         (cells.get(k) || cells.set(k, []).get(k)!).push(d);
       }
+      let reopened: L.Marker | null = null;
       cells.forEach((grp) => {
-        if (grp.length === 1) { const mk = pinFor(grp[0]); g.addLayer(mk); if (open && mk.options.title === open) mk.openPopup(); return; }
+        if (grp.length === 1) { const mk = pinFor(grp[0]); g.addLayer(mk); if (open && (mk as any)._slug === open) reopened = mk; return; }
         const b = L.latLngBounds(grp.map((d) => [d.lat!, d.lng!] as L.LatLngExpression));
+        const same = b.getNorthEast().distanceTo(b.getSouthWest()) < 30;
+        if (same || deep) { const mk = listFor(grp); g.addLayer(mk); if (open && ((mk as any)._slug === open || grp.some((d) => d.slug === open))) reopened = mk; return; }
         const from = Math.min(...grp.map((d) => d.price_eur || 0));
         const icon = L.divIcon({ className: "hm-pin-wrap", html: `<span class="hm-cl" style="--pc:${priceColor(from).bg};--pf:${priceColor(from).fg}"><b>${grp.length}</b><small>${esc(t("from"))} ${esc(short(from))}</small></span>`, iconSize: [0, 0] });
         const c = L.marker(b.getCenter(), { icon, title: `${grp.length} homes` });
-        c.on("click", () => { const z = m.getBoundsZoom(b, false, L.point(60, 60)); if (z > m.getZoom()) m.flyToBounds(b, { padding: [60, 60], maxZoom: 14, duration: 0.6 }); else m.flyTo(b.getCenter(), Math.min(m.getZoom() + 3, 16), { duration: 0.6 }); });
+        c.on("click", () => { const z = m.getBoundsZoom(b, false, L.point(60, 60)); if (z > m.getZoom()) m.flyToBounds(b, { padding: [60, 60], maxZoom: 15, duration: 0.6 }); else m.flyTo(b.getCenter(), Math.min(m.getZoom() + 3, 16), { duration: 0.6 }); });
         g.addLayer(c);
       });
+      if (reopened) { keepOpen.current = true; (reopened as L.Marker).openPopup(); keepOpen.current = false; fitPopup(); }
+      else if (open && !m.hasLayer((m as any)._popup)) openSlug.current = null;
     };
     m.on("zoomend", draw);
+    const onMove = () => fitPopup();
+    m.on("moveend", onMove);
     const place = () => {
       m.invalidateSize();
       const f = list.find((d) => focus && d.slug === focus);
@@ -153,10 +199,10 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
       else if (around) m.setView([around.lat, around.lng], around.zoom ?? 11);
       else if (bounds.current) m.fitBounds(bounds.current, { padding: [30, 30], maxZoom: 10 });
       draw();
-      if (focusedMk && openFocus) (focusedMk as L.Marker).openPopup();
+      if (focusedMk && openFocus) { (focusedMk as L.Marker).openPopup(); fitPopup(); }
     };
     place(); const tm = setTimeout(place, 250);
-    return () => { clearTimeout(tm); m.off("zoomend", draw); };
+    return () => { clearTimeout(tm); m.off("zoomend", draw); m.off("moveend", onMove); };
   }, [data, focus]);
 
   // Street or satellite.
@@ -181,7 +227,7 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
         <button type="button" onClick={(e) => { e.stopPropagation(); toggleSat(); }} aria-pressed={isSat}>{isSat ? t("Map view") : t("Satellite")}</button>
         {"geolocation" in navigator && <button type="button" onClick={(e) => { e.stopPropagation(); myPlace(); }}>{t("Near me")}</button>}
       </div>
-      <div className="hm-legend" aria-hidden="true"><i /><span><b>€20k</b><b>€60k</b><b>€100k</b></span></div>
+      <div className="hm-legend" aria-hidden="true"><i /><span><b>€20k</b><b>€60k</b><b>€100k+</b></span></div>
       {data === null && <div className="hm-loading">{t("Loading map…")}</div>}
       {embedded && !armed && !full && <div className="hm-hint">{touch ? t("Tap the map to move it · pinch to zoom") : t("Click the map to zoom with the mouse wheel")}</div>}
     </div>

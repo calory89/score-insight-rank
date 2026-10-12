@@ -104,6 +104,9 @@ export const COSTS: Record<string, { pct: number; fixed: number; note: string }>
   Canada: { pct: 1.5, fixed: 1500, note: "Land transfer tax 0 to 2% depending on the province, plus a lawyer, about C$1,500. Until 1 January 2027 most non-Canadians cannot buy homes in Canadian cities (foreign buyer ban); Canadians and permanent residents can." },
   Mexico: { pct: 6, fixed: 1000, note: "Acquisition tax (ISAI) 2 to 5% plus notary fees, about 6 to 8% in total. Foreigners can buy; within 50 km of the coast it is done through a bank trust (fideicomiso), about US$500 to 1,000 a year." },
   Australia: { pct: 4, fixed: 1500, note: "Stamp duty about 2 to 4% at this price, plus conveyancing, about A$1,500. Until 30 June 2029 foreign non-residents cannot buy existing homes in Australia; Australian citizens, permanent residents and New Zealanders can." },
+  Cyprus: { pct: 5, fixed: 1500, note: "Transfer fees 3 to 8% on resale (none if VAT was paid on a new build, then 5 to 19% VAT), stamp duty about 0.2%, lawyer about 1%. Non-EU buyers need Council of Ministers permission, usually a formality." },
+  "Dominican Republic": { pct: 4, fixed: 1500, note: "Transfer tax 3% on the assessed value, notary and title fees about 1%, lawyer about 1%. Foreigners can buy freehold with the same rights as locals. Yearly IPI tax 1% only above about RD$10 million." },
+  Switzerland: { pct: 4, fixed: 2000, note: "Transfer tax 0 to 3.3% depending on the canton, notary and land registry about 0.5 to 1%. Non-residents from outside the EU/EFTA need a permit (Lex Koller) and holiday homes are capped by quota." },
   Indonesia: { pct: 0, fixed: 0, note: "Leasehold in an eco village. Land and connections are itemised on the page." },
 };
 export const totalCost = (price: number, country: string | null | undefined) => { const c = COSTS[country || ""]; return c ? Math.round(price * (1 + c.pct / 100) + c.fixed) : null; };

@@ -181,7 +181,7 @@ export function CostPanel({ deal }: { deal: Row }) {
   useEffect(() => { try { localStorage.setItem("rh_rent", String(rent)); window.dispatchEvent(new Event("rh-rent")); } catch { /* ignore */ } }, [rent]);
   useEffect(()=>{const on=()=>setRent(userRent()||0);window.addEventListener("rh-rent",on);return()=>window.removeEventListener("rh-rent",on);},[]);
   if (deal.price_eur == null) return null;
-  const allin = totalCost(deal.price_eur, deal.country) || deal.price_eur;
+  const allin = totalCost(deal.price_eur, deal.country) || Math.round(deal.price_eur * 1.06);
   const run = RUNNING[deal.country] || { tax: 300, insurance: 200, utilities: 1200, taxName: "property tax" };
   const yearly = run.tax + run.insurance + run.utilities;
   const reno = deal.category === "renovation" || /renovat|restor|ruin|to refurbish/i.test(deal.title || "");
@@ -191,13 +191,13 @@ export function CostPanel({ deal }: { deal: Row }) {
       <h3>{t("What it really costs")}</h3>
       <dl>
         <div><dt>Asking price</dt><dd>{money(deal.price_eur)}</dd></div>
-        <div><dt>Estimated purchase costs</dt><dd>+{money(allin - deal.price_eur)}</dd></div>
+        <div><dt>Estimated purchase costs</dt><dd>{COSTS[deal.country] ? `+${money(allin - deal.price_eur)}` : `≈ +${money(Math.round(deal.price_eur * 0.06))}`}</dd></div>
         <div className="is-total"><dt>Estimated total before renovation</dt><dd>{money(allin)}</dd></div>
         {reno && deal.sqm ? <div><dt>Renovation, typical range</dt><dd>{money(deal.sqm * 400)}–{money(deal.sqm * 900)}</dd></div> : null}
         <div><dt>Keeping it ({run.taxName}, insurance, basic water and power)</dt><dd>≈ {money(Math.round(yearly / 12))}/month</dd></div>
       </dl>
       <label className="hunt-rent">If you pay rent of <input type="number" min={0} placeholder="800" step={50} value={rent || ""} onChange={(e) => {try{localStorage.setItem("rh_rent_explicit","1");}catch{}setRent(Math.max(0, Number(e.target.value)));}} /> € a month{rent > 0 ? <>, the estimated purchase total equals <strong>{`${months} ${t("months of your rent")}`}</strong>.</> : <span className="hunt-rent-hint">{" "}and see how many months of rent this home is worth.</span>}</label>
-      <p className="hunt-fine">{COSTS[deal.country]?.note || "Purchase costs vary by country."} {run.extra || ""} Running costs are a rough guide for a small house; ask the seller for the real bills.{reno ? " Renovation ranges are ballpark figures; get a local quote." : ""}</p>
+      <p className="hunt-fine">{COSTS[deal.country]?.note || "Purchase costs vary by country; we use about 6% until we have local figures."} {run.extra || ""} Running costs are a rough guide for a small house; ask the seller for the real bills.{reno ? " Renovation ranges are ballpark figures; get a local quote." : ""}</p>
     </section>
   );
 }
