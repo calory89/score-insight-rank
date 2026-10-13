@@ -187,7 +187,7 @@ export function CostPanel({ deal }: { deal: Row }) {
   const allin = totalCost(deal.price_eur, deal.country) || Math.round(deal.price_eur * 1.06);
   const run = RUNNING[deal.country] || { tax: 300, insurance: 200, utilities: 1200, taxName: "property tax" };
   const yearly = run.tax + run.insurance + run.utilities;
-  const reno = deal.category === "renovation" || /renovat|restor|ruin|to refurbish/i.test(deal.title || "");
+  const reno = deal.category === "renovation" || /to renovate|needs? (some )?(work|renovation|updating)|renovation project|to restore|\bruin|to refurbish|fixer/i.test(deal.title || "");
   const months = rent > 0 ? Math.round(allin / rent) : 0;
   return (
     <section className="hunt-cost" aria-label={t("What it really costs")}>
