@@ -174,6 +174,8 @@ const RUNNING: Record<string, { tax: number; insurance: number; utilities: numbe
   "United States": { tax: 1200, insurance: 900, utilities: 2400, taxName: "property tax" },
   Canada: { tax: 1500, insurance: 800, utilities: 2400, taxName: "property tax" },
   Mexico: { tax: 150, insurance: 250, utilities: 900, taxName: "predial" },
+  Netherlands: { tax: 450, insurance: 250, utilities: 2400, taxName: "OZB property tax and water board", extra: "Flats also pay a monthly owners' association fee (VvE), usually €150 to €450, shown on each listing." },
+  France: { tax: 900, insurance: 200, utilities: 1400, taxName: "taxe foncière", extra: "Flats also pay building charges (charges de copropriété), shown on each listing." },
   Poland: { tax: 60, insurance: 80, utilities: 2000, taxName: "property tax", extra: "Flats also pay a monthly service charge (czynsz) to the building, often 400 to 900 zł, which usually covers heating and water advances." },
   Australia: { tax: 1400, insurance: 900, utilities: 2000, taxName: "council rates" },
 };
