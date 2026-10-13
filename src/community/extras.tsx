@@ -174,6 +174,7 @@ const RUNNING: Record<string, { tax: number; insurance: number; utilities: numbe
   "United States": { tax: 1200, insurance: 900, utilities: 2400, taxName: "property tax" },
   Canada: { tax: 1500, insurance: 800, utilities: 2400, taxName: "property tax" },
   Mexico: { tax: 150, insurance: 250, utilities: 900, taxName: "predial" },
+  Poland: { tax: 60, insurance: 80, utilities: 2000, taxName: "property tax", extra: "Flats also pay a monthly service charge (czynsz) to the building, often 400 to 900 zł, which usually covers heating and water advances." },
   Australia: { tax: 1400, insurance: 900, utilities: 2000, taxName: "council rates" },
 };
 export function CostPanel({ deal }: { deal: Row }) {
