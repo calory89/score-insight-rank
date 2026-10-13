@@ -2030,10 +2030,10 @@
 "country": "Spain"
 },
 {
-"slug": "es-ponteceso-69k-09724",
-"title": "€69,990 · 3-bedroom flat in Ponteceso",
-"desc": "3-bedroom flat in Ponteceso for €69,990. Ponteceso, A Coruña, Spain. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/es-ponteceso-69k-09724.jpg?v=2",
+"slug": "es-nevada-44k-95451",
+"title": "€44,000 · 1-bedroom apartment with pool in Nevada",
+"desc": "1-bedroom apartment with pool in Nevada for €44,000. Nevada, Granada, Spain. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/es-nevada-44k-95451.jpg?v=2",
 "country": "Spain"
 },
 {
@@ -2042,6 +2042,13 @@
 "desc": "Ready-to-live 72 m² family flat with a balcony in Olecko for €77,683. Olecko, Warmia-Masuria. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/pl-olecko-78k-864749.jpg?v=2",
 "country": "Poland"
+},
+{
+"slug": "es-ponteceso-69k-09724",
+"title": "€69,990 · 3-bedroom flat in Ponteceso",
+"desc": "3-bedroom flat in Ponteceso for €69,990. Ponteceso, A Coruña, Spain. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/es-ponteceso-69k-09724.jpg?v=2",
+"country": "Spain"
 },
 {
 "slug": "DcjCuYlkrFY",
@@ -2058,13 +2065,6 @@
 "country": "Japan"
 },
 {
-"slug": "little-river-92471",
-"title": "€92,471 · Renovated 0-bed condo in Little River, South Carolina",
-"desc": "Renovated 0-bed condo in Little River, South Carolina for €92,471. Little River, South Carolina. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/little-river-92471.jpg?v=2",
-"country": "United States"
-},
-{
 "slug": "pl-kwidzyn-80k-100014",
 "title": "€79,740 · Four-room flat with a balcony and old-town views in Kwidzyn",
 "desc": "Four-room flat with a balcony and old-town views in Kwidzyn for €79,740. Kwidzyn, Pomerania. Scored and ranked on RealHunt: the best homes in every country.",
@@ -2072,17 +2072,17 @@
 "country": "Poland"
 },
 {
+"slug": "little-river-92471",
+"title": "€92,471 · Renovated 0-bed condo in Little River, South Carolina",
+"desc": "Renovated 0-bed condo in Little River, South Carolina for €92,471. Little River, South Carolina. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/little-river-92471.jpg?v=2",
+"country": "United States"
+},
+{
 "slug": "es-cehegin-59k-77832",
 "title": "€59,900 · 5-bedroom house with terrace in Cehegín",
 "desc": "5-bedroom house with terrace in Cehegín for €59,900. Cehegín, Murcia, Spain. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/es-cehegin-59k-77832.jpg?v=2",
-"country": "Spain"
-},
-{
-"slug": "es-nevada-44k-95451",
-"title": "€44,000 · 1-bedroom apartment with pool in Nevada",
-"desc": "1-bedroom apartment with pool in Nevada for €44,000. Nevada, Granada, Spain. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/es-nevada-44k-95451.jpg?v=2",
 "country": "Spain"
 },
 {
@@ -2765,11 +2765,11 @@
 "country": "United States"
 },
 {
-"slug": "de-wuppertal-50k-248035",
-"title": "€50,000 · Furnished studio on a quiet street in Wuppertal-Langerfeld",
-"desc": "Furnished studio on a quiet street in Wuppertal-Langerfeld for €50,000. Langerfeld, Wuppertal. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/de-wuppertal-50k-248035.jpg?v=2",
-"country": "Germany"
+"slug": "fr-saint-etienne-53k-625511",
+"title": "€53,000 · Bright three-room flat with no overlooking, lift and cellar, Saint-Étienne",
+"desc": "Bright three-room flat with no overlooking, lift and cellar, Saint-Étienne for €53,000. La Métare, Saint-Étienne. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-saint-etienne-53k-625511.jpg?v=2",
+"country": "France"
 },
 {
 "slug": "zapopan-80920",
@@ -2793,11 +2793,11 @@
 "country": "Switzerland"
 },
 {
-"slug": "de-chemnitz-45k-168857",
-"title": "€45,000 · Art nouveau studio with a lift, fitted kitchen and carport in Chemnitz",
-"desc": "Art nouveau studio with a lift, fitted kitchen and carport in Chemnitz for €45,000. Altchemnitz, Chemnitz. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/de-chemnitz-45k-168857.jpg?v=2",
-"country": "Germany"
+"slug": "fr-marseille-54k-r-4563",
+"title": "€54,000 · Studio with a view over the port of Marseille, gated residence",
+"desc": "Studio with a view over the port of Marseille, gated residence for €54,000. La Cabucelle, Marseille. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-marseille-54k-r-4563.jpg?v=2",
+"country": "France"
 },
 {
 "slug": "es-masdenverge-85k-59248",
@@ -2821,11 +2821,11 @@
 "country": "Canada"
 },
 {
-"slug": "de-chemnitz-55k-536019",
-"title": "€55,000 · Bright renovated studio in a period building on the Kaßberg, Chemnitz",
-"desc": "Bright renovated studio in a period building on the Kaßberg, Chemnitz for €55,000. Kaßberg, Chemnitz. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/de-chemnitz-55k-536019.jpg?v=2",
-"country": "Germany"
+"slug": "nl-amsterdam-335k-962495",
+"title": "€335,000 · 93 m² four-room flat with a 13.5 m² balcony by Nelson Mandela Park",
+"desc": "93 m² four-room flat with a 13.5 m² balcony by Nelson Mandela Park for €335,000. Nelson Mandelapark, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/nl-amsterdam-335k-962495.jpg?v=2",
+"country": "Netherlands"
 },
 {
 "slug": "east-palestine-82788",
@@ -2849,11 +2849,11 @@
 "country": "Mexico"
 },
 {
-"slug": "de-magdeburg-60k-478460",
-"title": "€60,000 · Designer-renovated furnished studio in Magdeburg, no commission",
-"desc": "Designer-renovated furnished studio in Magdeburg, no commission for €60,000. Sudenburg, Magdeburg. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/de-magdeburg-60k-478460.jpg?v=2",
-"country": "Germany"
+"slug": "nl-amsterdam-310k-984361",
+"title": "€310,000 · Bright three-room flat with two balconies in Venserpolder",
+"desc": "Bright three-room flat with two balconies in Venserpolder for €310,000. Venserpolder, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/nl-amsterdam-310k-984361.jpg?v=2",
+"country": "Netherlands"
 },
 {
 "slug": "ch-salgesch-49k-76547",
@@ -2877,11 +2877,11 @@
 "country": "Spain"
 },
 {
-"slug": "de-chemnitz-45k-234628",
-"title": "€45,000 · Renovated two-room flat with a new kitchen and garden in the Kaßberg",
-"desc": "Renovated two-room flat with a new kitchen and garden in the Kaßberg for €45,000. Kaßberg, Chemnitz. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/de-chemnitz-45k-234628.jpg?v=2",
-"country": "Germany"
+"slug": "nl-amsterdam-330k-529886",
+"title": "€330,000 · Four-room flat with energy label A and a south balcony in Zuidoost",
+"desc": "Four-room flat with energy label A and a south balcony in Zuidoost for €330,000. Zuidoost, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/nl-amsterdam-330k-529886.jpg?v=2",
+"country": "Netherlands"
 },
 {
 "slug": "es-cartagena-88k-38250",
@@ -2905,11 +2905,11 @@
 "country": "Spain"
 },
 {
-"slug": "de-chemnitz-50k-950618",
-"title": "€50,000 · Move-in-ready three-room flat with a loggia over the city park in Chemnitz",
-"desc": "Move-in-ready three-room flat with a loggia over the city park in Chemnitz for €50,000. Helbersdorf, Chemnitz. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/de-chemnitz-50k-950618.jpg?v=2",
-"country": "Germany"
+"slug": "fr-le-havre-60k-595133",
+"title": "€59,990 · Bright south-west three-room flat with a lift in Le Havre",
+"desc": "Bright south-west three-room flat with a lift in Le Havre for €59,990. Caucriauville, Le Havre. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-le-havre-60k-595133.jpg?v=2",
+"country": "France"
 },
 {
 "slug": "es-quiros-93k-41930",
@@ -2933,11 +2933,11 @@
 "country": "Spain"
 },
 {
-"slug": "de-bremen-60k-206993",
-"title": "€60,000 · Studio with a balcony over the trees in Bremen-Kattenesch, vacant",
-"desc": "Studio with a balcony over the trees in Bremen-Kattenesch, vacant for €60,000. Kattenesch, Bremen. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/de-bremen-60k-206993.jpg?v=2",
-"country": "Germany"
+"slug": "fr-saint-etienne-60k-772580",
+"title": "€60,000 · Recently renovated through flat with a heat pump in Saint-Étienne",
+"desc": "Recently renovated through flat with a heat pump in Saint-Étienne for €60,000. Saint-Roch, Saint-Étienne. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-saint-etienne-60k-772580.jpg?v=2",
+"country": "France"
 },
 {
 "slug": "Db91qMLIG7D",
@@ -2961,11 +2961,11 @@
 "country": "Spain"
 },
 {
-"slug": "de-chemnitz-50k-665910",
-"title": "€50,000 · 72 m² flat in a listed building near the university, vacant",
-"desc": "72 m² flat in a listed building near the university, vacant for €50,000. Schloßchemnitz, Chemnitz. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/de-chemnitz-50k-665910.jpg?v=2",
-"country": "Germany"
+"slug": "fr-perpignan-57k-t-9872",
+"title": "€57,000 · Furnished studio with a balcony near the Palais des Congrès, Perpignan",
+"desc": "Furnished studio with a balcony near the Palais des Congrès, Perpignan for €57,000. Les Platanes, Perpignan. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-perpignan-57k-t-9872.jpg?v=2",
+"country": "France"
 },
 {
 "slug": "es-murcia-82k-15626",
@@ -2989,11 +2989,11 @@
 "country": "Spain"
 },
 {
-"slug": "de-chemnitz-50k-484380",
-"title": "€50,000 · Three-room flat with a balcony over the green, no buyer's commission",
-"desc": "Three-room flat with a balcony over the green, no buyer's commission for €50,000. Markersdorf, Chemnitz. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/de-chemnitz-50k-484380.jpg?v=2",
-"country": "Germany"
+"slug": "fr-saint-etienne-39k-705662",
+"title": "Renovated two-room flat for €39,000 in Saint-Étienne",
+"desc": "Renovated two-room flat for €39,000 in Saint-Étienne. Montaud, Saint-Étienne. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-saint-etienne-39k-705662.jpg?v=2",
+"country": "France"
 },
 {
 "slug": "ch-raron-70k-61979",
@@ -3017,11 +3017,11 @@
 "country": "Switzerland"
 },
 {
-"slug": "de-krefeld-50k-993543",
-"title": "€50,000 · Renovated studio with a big balcony and lift in Krefeld",
-"desc": "Renovated studio with a big balcony and lift in Krefeld for €50,000. Inrath, Krefeld. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/de-krefeld-50k-993543.jpg?v=2",
-"country": "Germany"
+"slug": "nl-amsterdam-330k-474793",
+"title": "€330,000 · Three-room flat with a modern kitchen and two balconies in Reigersbos",
+"desc": "Three-room flat with a modern kitchen and two balconies in Reigersbos for €330,000. Reigersbos, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/nl-amsterdam-330k-474793.jpg?v=2",
+"country": "Netherlands"
 },
 {
 "slug": "ch-raron-40k-76568",
@@ -3036,6 +3036,272 @@
 "desc": "Wooden tiny house with two lofts and a wood stove, ready to move for €59,300. Brig, Valais. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/ch-brig-55k-63831.jpg?v=2",
 "country": "Switzerland"
+},
+{
+"slug": "fr-roubaix-57k-230014",
+"title": "€57,000 · Renovated one-bedroom flat in central Roubaix, near Lille",
+"desc": "Renovated one-bedroom flat in central Roubaix, near Lille for €57,000. Centre-ville, Roubaix. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-roubaix-57k-230014.jpg?v=2",
+"country": "France"
+},
+{
+"slug": "nl-amsterdam-300k-930369",
+"title": "€300,000 · Top-floor flat under the eaves with skylights near the Gaasperplas",
+"desc": "Top-floor flat under the eaves with skylights near the Gaasperplas for €300,000. Gein, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/nl-amsterdam-300k-930369.jpg?v=2",
+"country": "Netherlands"
+},
+{
+"slug": "fr-toulouse-60k-120948",
+"title": "€59,500 · Renovated studio with a balcony by the Bagatelle metro, Toulouse",
+"desc": "Renovated studio with a balcony by the Bagatelle metro, Toulouse for €59,500. Bagatelle, Toulouse. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-toulouse-60k-120948.jpg?v=2",
+"country": "France"
+},
+{
+"slug": "nl-amsterdam-305k-988747",
+"title": "€305,000 · Top-floor four-room flat with energy label A and green views, Gein",
+"desc": "Top-floor four-room flat with energy label A and green views, Gein for €305,000. Gein, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/nl-amsterdam-305k-988747.jpg?v=2",
+"country": "Netherlands"
+},
+{
+"slug": "fr-perpignan-60k-371128",
+"title": "€60,000 · Through flat with a south terrace and balcony in central Perpignan",
+"desc": "Through flat with a south terrace and balcony in central Perpignan for €60,000. Les Remparts, Perpignan. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-perpignan-60k-371128.jpg?v=2",
+"country": "France"
+},
+{
+"slug": "nl-amsterdam-310k-950790",
+"title": "€310,000 · Three-room flat with a sunny roof terrace by Reigersbos market",
+"desc": "Three-room flat with a sunny roof terrace by Reigersbos market for €310,000. Reigersbos, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/nl-amsterdam-310k-950790.jpg?v=2",
+"country": "Netherlands"
+},
+{
+"slug": "fr-perpignan-60k-990769",
+"title": "€60,000 · Town house with a mezzanine in historic Saint-Mathieu, Perpignan",
+"desc": "Town house with a mezzanine in historic Saint-Mathieu, Perpignan for €60,000. Saint-Matthieu, Perpignan. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-perpignan-60k-990769.jpg?v=2",
+"country": "France"
+},
+{
+"slug": "nl-amsterdam-315k-980579",
+"title": "€315,000 · Top-floor corner flat with three bedrooms in Venserpolder",
+"desc": "Top-floor corner flat with three bedrooms in Venserpolder for €315,000. Venserpolder, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/nl-amsterdam-315k-980579.jpg?v=2",
+"country": "Netherlands"
+},
+{
+"slug": "fr-mulhouse-52k-754748",
+"title": "€51,800 · Four-room 71 m² flat with two balconies in Mulhouse",
+"desc": "Four-room 71 m² flat with two balconies in Mulhouse for €51,800. Bourtzwiller, Mulhouse. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-mulhouse-52k-754748.jpg?v=2",
+"country": "France"
+},
+{
+"slug": "nl-amsterdam-299k-563619",
+"title": "€299,000 · Remodelled corner flat with a south balcony over the canal, Reigersbos",
+"desc": "Remodelled corner flat with a south balcony over the canal, Reigersbos for €299,000. Reigersbos, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/nl-amsterdam-299k-563619.jpg?v=2",
+"country": "Netherlands"
+},
+{
+"slug": "nl-amsterdam-335k-535568",
+"title": "€335,000 · 79 m² flat with an 11 m² balcony and open views in Amsterdam-Noord",
+"desc": "79 m² flat with an 11 m² balcony and open views in Amsterdam-Noord for €335,000. Molenwijk, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/nl-amsterdam-335k-535568.jpg?v=2",
+"country": "Netherlands"
+},
+{
+"slug": "nl-amsterdam-325k-562301",
+"title": "€325,000 · Three-room flat with a 15 m² south balcony and free views in Nellestein",
+"desc": "Three-room flat with a 15 m² south balcony and free views in Nellestein for €325,000. Nellestein, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/nl-amsterdam-325k-562301.jpg?v=2",
+"country": "Netherlands"
+},
+{
+"slug": "fr-grenoble-59k-973013",
+"title": "€59,000 · One-bedroom flat four minutes' walk from Grenoble station",
+"desc": "One-bedroom flat four minutes' walk from Grenoble station for €59,000. Berriat, Grenoble. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-grenoble-59k-973013.jpg?v=2",
+"country": "France"
+},
+{
+"slug": "nl-amsterdam-299k-968188",
+"title": "€299,000 · Three-room flat with a 14 m² south terrace next to Reigersbos metro",
+"desc": "Three-room flat with a 14 m² south terrace next to Reigersbos metro for €299,000. Reigersbos, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/nl-amsterdam-299k-968188.jpg?v=2",
+"country": "Netherlands"
+},
+{
+"slug": "nl-amsterdam-325k-565328",
+"title": "€325,000 · 12th-floor flat with sweeping views and a covered balcony, Nieuw-West",
+"desc": "12th-floor flat with sweeping views and a covered balcony, Nieuw-West for €325,000. Osdorp, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/nl-amsterdam-325k-565328.jpg?v=2",
+"country": "Netherlands"
+},
+{
+"slug": "nl-amsterdam-325k-505653",
+"title": "€325,000 · 107 m² corner flat on the 10th floor with views over nature, Amsterdam",
+"desc": "107 m² corner flat on the 10th floor with views over nature, Amsterdam for €325,000. Gouden Rand, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/nl-amsterdam-325k-505653.jpg?v=2",
+"country": "Netherlands"
+},
+{
+"slug": "fr-le-mans-55k-949995",
+"title": "€55,000 · 50 m² flat with city views on the tram line in Le Mans",
+"desc": "50 m² flat with city views on the tram line in Le Mans for €55,000. Les Maillets, Le Mans. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-le-mans-55k-949995.jpg?v=2",
+"country": "France"
+},
+{
+"slug": "fr-saint-etienne-56k-284554",
+"title": "€55,500 · Furnished loft-style studio with a new bathroom in the hyper-centre, Saint-Étienne",
+"desc": "Furnished loft-style studio with a new bathroom in the hyper-centre, Saint-Étienne for €55,500. Centre-ville, Saint-Étienne. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-saint-etienne-56k-284554.jpg?v=2",
+"country": "France"
+},
+{
+"slug": "fr-saint-etienne-59k-858128",
+"title": "€59,000 · 7th-floor flat with a balcony and panoramic views, Saint-Étienne",
+"desc": "7th-floor flat with a balcony and panoramic views, Saint-Étienne for €59,000. Beaulieu, Saint-Étienne. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-saint-etienne-59k-858128.jpg?v=2",
+"country": "France"
+},
+{
+"slug": "fr-dijon-57k-969671",
+"title": "€57,000 · 66 m² flat with open views and a lift in Dijon",
+"desc": "66 m² flat with open views and a lift in Dijon for €57,000. Fontaine d'Ouche, Dijon. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-dijon-57k-969671.jpg?v=2",
+"country": "France"
+},
+{
+"slug": "nl-amsterdam-315k-576658",
+"title": "€315,000 · Three-room flat with energy label A and a south balcony over the water",
+"desc": "Three-room flat with energy label A and a south balcony over the water for €315,000. Ganzenhoef, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/nl-amsterdam-315k-576658.jpg?v=2",
+"country": "Netherlands"
+},
+{
+"slug": "fr-mulhouse-60k-377472",
+"title": "€60,000 · Three-room flat with a balcony, cellar and parking in Mulhouse",
+"desc": "Three-room flat with a balcony, cellar and parking in Mulhouse for €60,000. Mulhouse. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-mulhouse-60k-377472.jpg?v=2",
+"country": "France"
+},
+{
+"slug": "nl-amsterdam-340k-564864",
+"title": "€339,500 · Five-room flat with four bedrooms in Amsterdam Zuidoost",
+"desc": "Five-room flat with four bedrooms in Amsterdam Zuidoost for €339,500. Zuidoost, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/nl-amsterdam-340k-564864.jpg?v=2",
+"country": "Netherlands"
+},
+{
+"slug": "nl-amsterdam-325k-982731",
+"title": "€325,000 · Ground-floor flat with tropical front and back gardens in Gein",
+"desc": "Ground-floor flat with tropical front and back gardens in Gein for €325,000. Gein, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/nl-amsterdam-325k-982731.jpg?v=2",
+"country": "Netherlands"
+},
+{
+"slug": "fr-saint-etienne-54k-729815",
+"title": "€54,000 · Modern two-room flat with an open kitchen near the universities, Saint-Étienne",
+"desc": "Modern two-room flat with an open kitchen near the universities, Saint-Étienne for €54,000. Tardy, Saint-Étienne. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-saint-etienne-54k-729815.jpg?v=2",
+"country": "France"
+},
+{
+"slug": "nl-amsterdam-330k-999230",
+"title": "€330,000 · 80 m² three-bedroom flat with a lift and balcony on Plein 40-45",
+"desc": "80 m² three-bedroom flat with a lift and balcony on Plein 40-45 for €330,000. Plein 40-45, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/nl-amsterdam-330k-999230.jpg?v=2",
+"country": "Netherlands"
+},
+{
+"slug": "fr-mulhouse-57k-8-9786",
+"title": "€57,200 · Top-floor attic flat with skylights in central Mulhouse",
+"desc": "Top-floor attic flat with skylights in central Mulhouse for €57,200. Doller, Mulhouse. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-mulhouse-57k-8-9786.jpg?v=2",
+"country": "France"
+},
+{
+"slug": "fr-saint-etienne-48k-108807",
+"title": "€48,000 · Charming furnished two-room flat near the universities, Saint-Étienne",
+"desc": "Charming furnished two-room flat near the universities, Saint-Étienne for €48,000. Couriot, Saint-Étienne. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-saint-etienne-48k-108807.jpg?v=2",
+"country": "France"
+},
+{
+"slug": "de-wuppertal-50k-248035",
+"title": "€50,000 · Furnished studio on a quiet street in Wuppertal-Langerfeld",
+"desc": "Furnished studio on a quiet street in Wuppertal-Langerfeld for €50,000. Langerfeld, Wuppertal. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/de-wuppertal-50k-248035.jpg?v=2",
+"country": "Germany"
+},
+{
+"slug": "de-chemnitz-45k-168857",
+"title": "€45,000 · Art nouveau studio with a lift, fitted kitchen and carport in Chemnitz",
+"desc": "Art nouveau studio with a lift, fitted kitchen and carport in Chemnitz for €45,000. Altchemnitz, Chemnitz. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/de-chemnitz-45k-168857.jpg?v=2",
+"country": "Germany"
+},
+{
+"slug": "de-chemnitz-55k-536019",
+"title": "€55,000 · Bright renovated studio in a period building on the Kaßberg, Chemnitz",
+"desc": "Bright renovated studio in a period building on the Kaßberg, Chemnitz for €55,000. Kaßberg, Chemnitz. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/de-chemnitz-55k-536019.jpg?v=2",
+"country": "Germany"
+},
+{
+"slug": "de-magdeburg-60k-478460",
+"title": "€60,000 · Designer-renovated furnished studio in Magdeburg, no commission",
+"desc": "Designer-renovated furnished studio in Magdeburg, no commission for €60,000. Sudenburg, Magdeburg. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/de-magdeburg-60k-478460.jpg?v=2",
+"country": "Germany"
+},
+{
+"slug": "de-chemnitz-45k-234628",
+"title": "€45,000 · Renovated two-room flat with a new kitchen and garden in the Kaßberg",
+"desc": "Renovated two-room flat with a new kitchen and garden in the Kaßberg for €45,000. Kaßberg, Chemnitz. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/de-chemnitz-45k-234628.jpg?v=2",
+"country": "Germany"
+},
+{
+"slug": "de-chemnitz-50k-950618",
+"title": "€50,000 · Move-in-ready three-room flat with a loggia over the city park in Chemnitz",
+"desc": "Move-in-ready three-room flat with a loggia over the city park in Chemnitz for €50,000. Helbersdorf, Chemnitz. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/de-chemnitz-50k-950618.jpg?v=2",
+"country": "Germany"
+},
+{
+"slug": "de-bremen-60k-206993",
+"title": "€60,000 · Studio with a balcony over the trees in Bremen-Kattenesch, vacant",
+"desc": "Studio with a balcony over the trees in Bremen-Kattenesch, vacant for €60,000. Kattenesch, Bremen. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/de-bremen-60k-206993.jpg?v=2",
+"country": "Germany"
+},
+{
+"slug": "de-chemnitz-50k-665910",
+"title": "€50,000 · 72 m² flat in a listed building near the university, vacant",
+"desc": "72 m² flat in a listed building near the university, vacant for €50,000. Schloßchemnitz, Chemnitz. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/de-chemnitz-50k-665910.jpg?v=2",
+"country": "Germany"
+},
+{
+"slug": "de-chemnitz-50k-484380",
+"title": "€50,000 · Three-room flat with a balcony over the green, no buyer's commission",
+"desc": "Three-room flat with a balcony over the green, no buyer's commission for €50,000. Markersdorf, Chemnitz. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/de-chemnitz-50k-484380.jpg?v=2",
+"country": "Germany"
+},
+{
+"slug": "de-krefeld-50k-993543",
+"title": "€50,000 · Renovated studio with a big balcony and lift in Krefeld",
+"desc": "Renovated studio with a big balcony and lift in Krefeld for €50,000. Inrath, Krefeld. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/de-krefeld-50k-993543.jpg?v=2",
+"country": "Germany"
 },
 {
 "slug": "de-chemnitz-55k-650355",
