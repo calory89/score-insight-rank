@@ -238,7 +238,7 @@ export function Nearby({ deal }: { deal: Deal }) {
     if (n.shop) items.push([<ShoppingBasket size={18} />, `Shop · ${n.shop.name}`, `${n.shop.km < 1 ? "under 1" : Math.round(n.shop.km)} km`]);
     if (n.train) items.push([<TrainFront size={18} />, `Train · ${n.train.name}`, `${Math.round(n.train.km)} km`]);
   }
-  if (n.airport) items.push([<Plane size={18} />, `${n.airport.code} · ${n.airport.name.replace(/ (International )?Airport$/, "")}`, `${regionOnly ? "~" : ""}${n.airport.km} km`]);
+  if (n.airport) items.push([<Plane size={18} />, `${n.airport.code} · ${n.airport.name.replace(/\s*\([A-Z]{3}\)$/, "").replace(/ (International )?Airport$/i, "")}`, `${regionOnly ? "~" : ""}${n.airport.km} km`]);
   return (
     <section className="hv-nearby">
       <h2>Where it is</h2>

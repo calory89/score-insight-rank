@@ -337,7 +337,10 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
           const flip = () => {
             if (qf.min) return setDraft({ ...value, min_score: on ? null : qf.min });
             if (qf.need) { const n = value.need || []; return setDraft({ ...value, need: on ? n.filter((x) => x !== qf.need) : [...n, qf.need as string] }); }
-            if (qf.dim) { const d = { ...(value.dim_min || {}) }; if (on) delete d[qf.dim[0]]; else d[qf.dim[0]] = qf.dim[1]; return setDraft({ ...value, dim_min: d }); }
+            if (qf.dim) { const d = { ...(value.dim_min || {}) }; if (on) delete d[qf.dim[0]]; else d[qf.dim[0]] = qf.dim[1];
+              // 14-oct-2026 (Carlos): "Near an airport" also lists the closest airport first.
+              const sort = qf.k === "air" ? (on ? (value.sort === "airport" ? "score" : value.sort) : "airport") : value.sort;
+              return setDraft({ ...value, dim_min: d, sort }); }
           };
           if (!on && qc && (qc[qf.k] ?? 1) === 0) return null;
           return <button key={qf.k} aria-pressed={on} onClick={flip}>{on ? <Check size={13} /> : null}<span>{t(qf.label)}</span></button>;
@@ -364,7 +367,7 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
         <label><span>{t("Sort")}</span>
           <select value={value.sort || "score"} onChange={(e) => setDraft({ ...value, sort: e.target.value })}>
             <option value="score">{t("Best score")}</option><option value="new">{t("Newest")}</option>
-            <option value="price_asc">{t("Cheapest")}</option><option value="sqm">{t("Biggest")}</option>{DIMS.filter(([k]) => k !== "interest").map(([k, l]) => <option key={k} value={"dim:" + k}>{`${t("Best")}: ${t(l)}`}</option>)}
+            <option value="price_asc">{t("Cheapest")}</option><option value="airport">{t("Nearest airport")}</option><option value="sqm">{t("Biggest")}</option>{DIMS.filter(([k]) => k !== "interest").map(([k, l]) => <option key={k} value={"dim:" + k}>{`${t("Best")}: ${t(l)}`}</option>)}
           </select></label>
       </div>}
     </div>
