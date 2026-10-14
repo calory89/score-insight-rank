@@ -738,7 +738,9 @@ function Home() {
   useEffect(() => {
     const cached=storage.get<any>(cacheKey,null);
     if(cached && Date.now()-cached.at<300000) {seq.current++; freshPending.current=false; feedKey.current=cacheKey;setFeed({ ...cached.feed, _key: cacheKey });setBusy(false);setError("");} else load();
-  }, [scope, country, category, maxPrice, minSqm, sort, q, terms.join(","), user?.id]);
+  // 14-oct-2026 fix: reload on ANY filter change. The old list missed score, quick filters (need) and
+  // dim_min, so tapping a quick filter emptied the list without loading the new homes.
+  }, [cacheKey]);
   useEffect(() => { setQText(q); }, [q]);
   useEffect(() => { if (feed?.rows) saveOrder(feed.rows.map((r: any) => r.slug)); }, [feed?.rows?.length, feed?.rows?.[0]?.id]);
   useEffect(() => {
