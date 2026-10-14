@@ -318,10 +318,16 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
   const [open, setOpen] = useState(() => extra > 0);
   // 14-oct-2026 (Carlos): only show a quick filter when at least one home matches it, given the other filters.
   const [qc, setQc] = useState<Record<string, number> | null>(null);
-  const qkey = JSON.stringify([value.country || "", value.category || "", value.max_price || "", value.min_sqm || ""]);
+  // 15-oct-2026 fix (Carlos: "clicking a filter shows nothing"): the counts now include the quick filters that are
+  // already on, so a chip only shows when ADDING it still leaves 3+ homes. Before, Garden + Views showed Sauna,
+  // which led to 0 homes and an empty list.
+  const vv: any = value;
+  const qp = { country: value.country || "", category: value.category || "", max_price: value.max_price || null, min_sqm: value.min_sqm || null,
+    q: vv.q || "", terms: vv.terms || [], min_score: value.min_score || null, need: value.need || [], dim_min: value.dim_min || {} };
+  const qkey = JSON.stringify(qp);
   useEffect(() => {
     let live = true;
-    rpc("community_quick_counts", { p: { country: value.country || "", category: value.category || "", max_price: value.max_price || null, min_sqm: value.min_sqm || null } })
+    rpc("community_quick_counts", { p: qp })
       .then((r: any) => { if (live && r && typeof r === "object") setQc(r); }).catch(() => {});
     return () => { live = false; };
   }, [qkey]);
