@@ -342,7 +342,7 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
               const sort = qf.k === "air" ? (on ? (value.sort === "airport" ? "score" : value.sort) : "airport") : value.sort;
               return setDraft({ ...value, dim_min: d, sort }); }
           };
-          if (!on && qc && (qc[qf.k] ?? 1) === 0) return null;
+          if (!on && qc && (qc[qf.k] ?? 3) < 3) return null; // 14-oct-2026 (Carlos): a quick filter only shows when at least 3 homes match it
           return <button key={qf.k} aria-pressed={on} onClick={flip}>{on ? <Check size={13} /> : null}<span>{t(qf.label)}</span></button>;
         })}
       </div>

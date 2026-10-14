@@ -73,7 +73,6 @@ export type Quick = { k: string; label: string; need?: string; dim?: [string, nu
 export const QUICK: Quick[] = [
   { k: "s85", label: "Score 85+", min: 85 },
   { k: "water", label: "Sea & lakes", dim: ["water", 70] },
-  { k: "ready", label: "Move-in ready", dim: ["condition", 90] },
   { k: "garden", label: "Garden", need: "garden" },
   { k: "views", label: "Views", need: "views" },
   { k: "air", label: "Near an airport", dim: ["access", 70] },
