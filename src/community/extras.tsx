@@ -316,6 +316,15 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
   const active = !!(value.country || value.category || value.max_price || value.min_sqm || (value.sort && value.sort !== "score"));
   const extra = [value.category, value.max_price, value.min_sqm, value.sort && value.sort !== "score" ? value.sort : ""].filter(Boolean).length;
   const [open, setOpen] = useState(() => extra > 0);
+  // 14-oct-2026 (Carlos): only show a quick filter when at least one home matches it, given the other filters.
+  const [qc, setQc] = useState<Record<string, number> | null>(null);
+  const qkey = JSON.stringify([value.country || "", value.category || "", value.max_price || "", value.min_sqm || ""]);
+  useEffect(() => {
+    let live = true;
+    rpc("community_quick_counts", { p: { country: value.country || "", category: value.category || "", max_price: value.max_price || null, min_sqm: value.min_sqm || null } })
+      .then((r: any) => { if (live && r && typeof r === "object") setQc(r); }).catch(() => {});
+    return () => { live = false; };
+  }, [qkey]);
   return (
     <div className={"hunt-filters" + (open ? " is-open" : "")}>
       <div className="hunt-chips" role="group" aria-label="Country">
@@ -330,6 +339,7 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
             if (qf.need) { const n = value.need || []; return setDraft({ ...value, need: on ? n.filter((x) => x !== qf.need) : [...n, qf.need as string] }); }
             if (qf.dim) { const d = { ...(value.dim_min || {}) }; if (on) delete d[qf.dim[0]]; else d[qf.dim[0]] = qf.dim[1]; return setDraft({ ...value, dim_min: d }); }
           };
+          if (!on && qc && (qc[qf.k] ?? 1) === 0) return null;
           return <button key={qf.k} aria-pressed={on} onClick={flip}>{on ? <Check size={13} /> : null}<span>{t(qf.label)}</span></button>;
         })}
       </div>
