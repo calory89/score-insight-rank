@@ -86,6 +86,9 @@ Deno.serve(async (req) => {
     });
     const { data: { user }, error: authError } = await client.auth.getUser();
     if (authError || !user) return json({ error: "Sign in to submit a deal." }, 401);
+    const svc = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: allowed } = await svc.rpc("community_limit", { p_key: `extract:${user.id}`, p_max: 20, p_seconds: 3600 });
+    if (allowed === false) return json({ error: "Too many links this hour. Fill in the details manually." }, 429);
 
     const body = await req.json().catch(() => ({}));
     const raw = String(body.url ?? "");
