@@ -2,7 +2,7 @@
 // (<html lang>, set before the app starts), so the global translator is told to leave it alone.
 export type WxLang = "en" | "es";
 export const wxLang = (): WxLang => {
-  try { return document.documentElement.lang === "es" || document.documentElement.getAttribute("data-lang") === "es" ? "es" : "en"; } catch { return "en"; }
+  try { const el = (globalThis as any).document?.documentElement; return el?.lang === "es" || el?.getAttribute("data-lang") === "es" ? "es" : "en"; } catch { return "en"; }
 };
 
 export type FilterKey = "sunny" | "mild" | "noheat" | "air" | "safe" | "sea" | "airport" | "homes" | "cheap" | "dry";

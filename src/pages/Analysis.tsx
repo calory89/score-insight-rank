@@ -1,3 +1,4 @@
+import { PUBLIC_ANALYSIS_COLUMNS } from "@/lib/analysisColumns";
 import { useEffect, useState, useRef } from "react";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
@@ -356,10 +357,10 @@ const Analysis = () => {
 
   useEffect(() => {
     if (!id) return;
-    supabase.from("analyses").select("*").eq("id", id).single().then(({ data: result, error }) => {
+    supabase.from("analyses").select(PUBLIC_ANALYSIS_COLUMNS).eq("id", id).single().then(({ data: result, error }) => {
       if (error || !result) { navigate("/"); }
       else {
-        setData(result);
+        setData(result as any);
         setAnalyzing(false);
         setTimeout(() => {
           setRevealed(true);
