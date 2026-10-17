@@ -10,7 +10,9 @@ const JB_URL = "https://nhukaoufssgeyqtwfclt.supabase.co/rest/v1/rpc/jb_public_s
 const JB_ANON =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5odWthb3Vmc3NnZXlxdHdmY2x0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA4NjQ3MDgsImV4cCI6MjEwNjQ0MDcwOH0.hlMhvpXwRPU-Yaou9GfvQ661Bs-FnnWFrv_1S76kBUM";
 
-let cached: number | null | undefined;
+// STATIC MODE (17-oct-2026): no call to Jobersity's database on every RealHunt page view (it kept
+// that Cloud backend awake and billing). The card still shows, just without the live job count.
+let cached: number | null | undefined = null;
 function useRemoteJobs(): number | null {
   const [n, setN] = useState<number | null>(cached ?? null);
   useEffect(() => {

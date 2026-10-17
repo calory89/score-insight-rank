@@ -21,6 +21,11 @@ def rpc(fn, args):
     return json.load(urllib.request.urlopen(req, timeout=60))
 
 def all_rows():
+    # STATIC MODE (17-oct-2026): the database stays paused to save Lovable Cloud credits, so read the
+    # snapshot of published homes committed in public/data/rh-static.json.
+    _snap = os.path.join(ROOT, "public", "data", "rh-static.json")
+    if os.path.exists(_snap):
+        return [r for r in json.load(open(_snap, encoding="utf8"))["rows"]]
     rows, off = [], 0
     while True:
         # "ref" is an Insider's invite code: homes still in their 48h Insider window get their share

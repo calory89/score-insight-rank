@@ -27,6 +27,11 @@ def rpc(fn, args):
 def load_rows():
     if "--cache" in sys.argv:
         return json.load(open(sys.argv[sys.argv.index("--cache") + 1]))
+    # STATIC MODE (17-oct-2026): the database stays paused to save Lovable Cloud credits, so read the
+    # snapshot of published homes committed in public/data/rh-static.json.
+    _snap = os.path.join(ROOT, "public", "data", "rh-static.json")
+    if os.path.exists(_snap):
+        return [r for r in json.load(open(_snap, encoding="utf8"))["rows"]]
     rows, off = [], 0
     while True:
         d = rpc("community_feed", {"p": {"scope": "all", "limit": 100, "offset": off}})
