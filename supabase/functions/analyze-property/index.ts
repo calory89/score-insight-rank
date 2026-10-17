@@ -584,6 +584,8 @@ serve(async (req) => {
       try {
         const parsed = new URL(url);
         if (!parsed.hostname.includes(".")) throw new Error();
+        if (!/^https?:$/.test(parsed.protocol) || (parsed.port && !["80", "443"].includes(parsed.port))) throw new Error();
+        if (/^(localhost|.*\.local|.*\.internal|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|0\.|\[)/i.test(parsed.hostname)) throw new Error();
       } catch {
         return new Response(JSON.stringify({ error: "Invalid URL format" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
