@@ -1,3 +1,4 @@
+import { csvRow } from "@/lib/csv";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Newspaper, Download } from "lucide-react";
@@ -16,7 +17,7 @@ const AdminNewsletterPanel = () => {
   }, []);
 
   const exportCsv = () => {
-    const csv = "email,subscribed_at\n" + subscribers.map(s => `${s.email},${s.created_at}`).join("\n");
+    const csv = "email,subscribed_at\n" + subscribers.map(s => csvRow([s.email, s.created_at])).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

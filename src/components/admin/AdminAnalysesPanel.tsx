@@ -1,3 +1,4 @@
+import { csvRow } from "@/lib/csv";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, Download } from "lucide-react";
@@ -33,7 +34,7 @@ const AdminAnalysesPanel = ({ users }: { users: UserData[] }) => {
 
   const exportCsv = () => {
     const csv = "address,city,country,score,price,user_email,created_at\n" +
-      filtered.map((a: any) => `"${a.address || ""}","${a.city || ""}","${a.country || ""}",${a.global_score || ""},"${a.price || ""}","${a.user_email}","${a.created_at}"`).join("\n");
+      filtered.map((a: any) => csvRow([a.address, a.city, a.country, a.global_score, a.price, a.user_email, a.created_at])).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const el = document.createElement("a"); el.href = url; el.download = `analyses-${new Date().toISOString().slice(0, 10)}.csv`; el.click();
