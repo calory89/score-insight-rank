@@ -1,3 +1,4 @@
+import { csvRow } from "@/lib/csv";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Phone, Download } from "lucide-react";
@@ -17,7 +18,7 @@ const AdminContactsPanel = () => {
 
   const exportCsv = () => {
     const csv = "email,company,phone,message,source,estimated_searches,created_at\n" +
-      contacts.map(c => `"${c.email}","${c.company || ""}","${c.phone || ""}","${(c.message || "").replace(/"/g, '""')}","${c.source}","${c.estimated_searches || ""}","${c.created_at}"`).join("\n");
+      contacts.map(c => csvRow([c.email, c.company, c.phone, c.message, c.source, c.estimated_searches, c.created_at])).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

@@ -18,12 +18,12 @@ serve(async (req) => {
     }
 
     // Try to detect country from Cloudflare/Vercel headers
-    const country = req.headers.get("cf-ipcountry") 
-      || req.headers.get("x-vercel-ip-country")
-      || req.headers.get("x-country-code")
-      || null;
-    
-    const countryName = req.headers.get("x-country-name") || country || null;
+    const raw = (req.headers.get("cf-ipcountry") || "").toUpperCase();
+    const country = /^[A-Z]{2}$/.test(raw) ? raw : null;
+    const countryName = country;
+    if (typeof visit_id !== "string" || !/^[0-9a-f-]{36}$/i.test(visit_id)) {
+      return new Response(JSON.stringify({ error: "Invalid visit_id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     if (!country) {
       return new Response(JSON.stringify({ country: null }), {
@@ -39,7 +39,7 @@ serve(async (req) => {
     await supabase.from("page_visits").update({
       ip_country: countryName,
       ip_country_code: country,
-    }).eq("id", visit_id);
+    }).eq("id", visit_id).is("ip_country_code", null).gte("created_at", new Date(Date.now() - 5 * 60_000).toISOString());
 
     return new Response(JSON.stringify({ country, countryName }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

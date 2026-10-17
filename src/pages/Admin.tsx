@@ -1,3 +1,4 @@
+import { csvRow } from "@/lib/csv";
 import AdminWorkspaceNav from "@/components/realhunt/AdminWorkspaceNav";
 import { useEffect, useState, useMemo, lazy, Suspense } from "react";
 import AdminUserDetail from "@/components/admin/AdminUserDetail";
@@ -206,7 +207,7 @@ const Admin = () => {
                   </div>
                   <button onClick={() => {
                     const csv = "email,created_at,last_sign_in,login_count,country,provider,analyses_count,plan\n" +
-                      filteredUsers.map(u => `"${u.email}",${u.created_at},${u.last_sign_in_at || ""},${u.login_count},"${u.detected_country || ""}",${u.provider},${u.analyses_count},${u.plan}`).join("\n");
+                      filteredUsers.map(u => csvRow([u.email, u.created_at, u.last_sign_in_at, u.login_count, u.detected_country, u.provider, u.analyses_count, u.plan])).join("\n");
                     const blob = new Blob([csv], { type: "text/csv" });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a"); a.href = url; a.download = `users-${new Date().toISOString().slice(0, 10)}.csv`; a.click(); URL.revokeObjectURL(url);

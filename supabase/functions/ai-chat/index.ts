@@ -29,7 +29,7 @@ serve(async (req) => {
       });
     }
     for (const msg of messages) {
-      if (!msg.role || !msg.content || typeof msg.content !== "string") {
+      if (!["user", "assistant"].includes(msg.role) || !msg.content || typeof msg.content !== "string") {
         return new Response(JSON.stringify({ error: "Each message must have role and content (string)" }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });

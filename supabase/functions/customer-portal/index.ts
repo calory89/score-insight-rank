@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
+const ALLOWED_ORIGINS = ["https://realhunt.co", "https://www.realhunt.co", "https://score-insight-rank.lovable.app", "https://id-preview--d885a9cb-86d8-4e65-a4d2-dad109c1f84f.lovable.app"];
+const safeOrigin = (o: string | null) => (o && ALLOWED_ORIGINS.includes(o) ? o : "https://realhunt.co");
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
@@ -37,7 +39,7 @@ serve(async (req) => {
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customers.data[0].id,
-      return_url: `${req.headers.get("origin")}/settings`,
+      return_url: `${safeOrigin(req.headers.get("origin"))}/settings`,
     });
 
     return new Response(JSON.stringify({ url: portalSession.url }), {

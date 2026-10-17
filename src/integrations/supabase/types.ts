@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.1"
   }
   public: {
     Tables: {
@@ -2073,21 +2073,6 @@ export type Database = {
         }
         Relationships: []
       }
-      ext_debug: {
-        Row: {
-          body: string | null
-          id: string
-        }
-        Insert: {
-          body?: string | null
-          id: string
-        }
-        Update: {
-          body?: string | null
-          id?: string
-        }
-        Relationships: []
-      }
       ext_events: {
         Row: {
           created_at: string | null
@@ -2160,18 +2145,52 @@ export type Database = {
         }
         Relationships: []
       }
+      ext_geocode_cache: {
+        Row: {
+          created_at: string | null
+          label: string | null
+          lat: number | null
+          lng: number | null
+          q: string
+          rank: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          label?: string | null
+          lat?: number | null
+          lng?: number | null
+          q: string
+          rank?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          label?: string | null
+          lat?: number | null
+          lng?: number | null
+          q?: string
+          rank?: number | null
+        }
+        Relationships: []
+      }
       ext_listings: {
         Row: {
           area: string | null
+          baths: number | null
+          city_id: number | null
+          city_text: string | null
           country: string | null
           currency: string | null
           days_listed: number | null
+          deal: string
+          deep: boolean | null
+          fair: number | null
           first_seen: string | null
           flags: string[] | null
           hash: string
           last_seen: string | null
           lat: number | null
           lng: number | null
+          pct: number | null
           photos: number | null
           portal: string
           ppsqm: number | null
@@ -2179,21 +2198,30 @@ export type Database = {
           ptype: string | null
           rooms: number | null
           score: number | null
+          score_at: string | null
           seen_count: number | null
           sqm: number | null
+          title: string | null
           url: string | null
         }
         Insert: {
           area?: string | null
+          baths?: number | null
+          city_id?: number | null
+          city_text?: string | null
           country?: string | null
           currency?: string | null
           days_listed?: number | null
+          deal?: string
+          deep?: boolean | null
+          fair?: number | null
           first_seen?: string | null
           flags?: string[] | null
           hash: string
           last_seen?: string | null
           lat?: number | null
           lng?: number | null
+          pct?: number | null
           photos?: number | null
           portal: string
           ppsqm?: number | null
@@ -2201,21 +2229,30 @@ export type Database = {
           ptype?: string | null
           rooms?: number | null
           score?: number | null
+          score_at?: string | null
           seen_count?: number | null
           sqm?: number | null
+          title?: string | null
           url?: string | null
         }
         Update: {
           area?: string | null
+          baths?: number | null
+          city_id?: number | null
+          city_text?: string | null
           country?: string | null
           currency?: string | null
           days_listed?: number | null
+          deal?: string
+          deep?: boolean | null
+          fair?: number | null
           first_seen?: string | null
           flags?: string[] | null
           hash?: string
           last_seen?: string | null
           lat?: number | null
           lng?: number | null
+          pct?: number | null
           photos?: number | null
           portal?: string
           ppsqm?: number | null
@@ -2223,9 +2260,29 @@ export type Database = {
           ptype?: string | null
           rooms?: number | null
           score?: number | null
+          score_at?: string | null
           seen_count?: number | null
           sqm?: number | null
+          title?: string | null
           url?: string | null
+        }
+        Relationships: []
+      }
+      ext_price_history: {
+        Row: {
+          hash: string
+          price: number
+          t: string
+        }
+        Insert: {
+          hash: string
+          price: number
+          t?: string
+        }
+        Update: {
+          hash?: string
+          price?: number
+          t?: string
         }
         Relationships: []
       }
@@ -2276,6 +2333,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ext_rankings: {
+        Row: {
+          cc: string | null
+          city: string | null
+          created_at: string
+          id: string
+          items: Json
+          kind: string
+          n: number | null
+          src: string | null
+          title: string | null
+          user_id: string | null
+          views: number
+        }
+        Insert: {
+          cc?: string | null
+          city?: string | null
+          created_at?: string
+          id: string
+          items: Json
+          kind?: string
+          n?: number | null
+          src?: string | null
+          title?: string | null
+          user_id?: string | null
+          views?: number
+        }
+        Update: {
+          cc?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          items?: Json
+          kind?: string
+          n?: number | null
+          src?: string | null
+          title?: string | null
+          user_id?: string | null
+          views?: number
+        }
+        Relationships: []
       }
       ext_recipes: {
         Row: {
@@ -2345,6 +2444,57 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ext_taste: {
+        Row: {
+          city_text: string | null
+          country: string | null
+          created_at: string | null
+          currency: string | null
+          deal: string | null
+          hash: string
+          like_v: number
+          price: number | null
+          ptype: string | null
+          rooms: number | null
+          score: number | null
+          sqm: number | null
+          url: string | null
+          user_id: string
+        }
+        Insert: {
+          city_text?: string | null
+          country?: string | null
+          created_at?: string | null
+          currency?: string | null
+          deal?: string | null
+          hash: string
+          like_v: number
+          price?: number | null
+          ptype?: string | null
+          rooms?: number | null
+          score?: number | null
+          sqm?: number | null
+          url?: string | null
+          user_id: string
+        }
+        Update: {
+          city_text?: string | null
+          country?: string | null
+          created_at?: string | null
+          currency?: string | null
+          deal?: string | null
+          hash?: string
+          like_v?: number
+          price?: number | null
+          ptype?: string | null
+          rooms?: number | null
+          score?: number | null
+          sqm?: number | null
+          url?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       ext_users: {
         Row: {
@@ -4290,6 +4440,84 @@ export type Database = {
         }
         Relationships: []
       }
+      rh_airports: {
+        Row: {
+          city: string | null
+          country: string | null
+          iata: string
+          kind: string | null
+          lat: number | null
+          lng: number | null
+          name: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          iata: string
+          kind?: string | null
+          lat?: number | null
+          lng?: number | null
+          name?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          iata?: string
+          kind?: string | null
+          lat?: number | null
+          lng?: number | null
+          name?: string | null
+        }
+        Relationships: []
+      }
+      rh_cache: {
+        Row: {
+          k: string
+          t: string
+          v: Json
+        }
+        Insert: {
+          k: string
+          t?: string
+          v: Json
+        }
+        Update: {
+          k?: string
+          t?: string
+          v?: Json
+        }
+        Relationships: []
+      }
+      rh_cities: {
+        Row: {
+          cc: string
+          id: number
+          lat: number
+          lng: number
+          name: string
+          pop: number
+          slug: string
+        }
+        Insert: {
+          cc: string
+          id: number
+          lat: number
+          lng: number
+          name: string
+          pop: number
+          slug: string
+        }
+        Update: {
+          cc?: string
+          id?: number
+          lat?: number
+          lng?: number
+          name?: string
+          pop?: number
+          slug?: string
+        }
+        Relationships: []
+      }
       rh_events: {
         Row: {
           created_at: string | null
@@ -5611,6 +5839,7 @@ export type Database = {
       community_newbuild_report: { Args: never; Returns: Json }
       community_next_drop: { Args: { p_from?: string }; Returns: string }
       community_public_collection: { Args: { p_handle: string }; Returns: Json }
+      community_quick_counts: { Args: { p?: Json }; Returns: Json }
       community_rankings: {
         Args: {
           p_category?: string
@@ -5851,20 +6080,42 @@ export type Database = {
         }
       }
       ext_cards_seen: { Args: { p: Json }; Returns: Json }
+      ext_city_list: { Args: { p_cc?: string; p_deal?: string }; Returns: Json }
+      ext_city_top: {
+        Args: {
+          p_cc: string
+          p_deal?: string
+          p_limit?: number
+          p_slug: string
+        }
+        Returns: Json
+      }
       ext_comps: { Args: { p: Json }; Returns: Json }
       ext_consent: { Args: { p: Json }; Returns: Json }
-      ext_debug_load: { Args: { u: string }; Returns: number }
       ext_delete_me: { Args: { p_token: string }; Returns: Json }
       ext_geo_work: { Args: never; Returns: number }
+      ext_geocode: { Args: { p: Json }; Returns: Json }
+      ext_insights: { Args: { p: Json }; Returns: Json }
       ext_is_admin: { Args: never; Returns: boolean }
       ext_listing_seen: { Args: { p: Json }; Returns: Json }
       ext_me: { Args: { p_token: string }; Returns: Json }
       ext_nearby: { Args: { p: Json }; Returns: Json }
       ext_price_drop_work: { Args: never; Returns: number }
       ext_profile_save: { Args: { p: Json }; Returns: Json }
+      ext_ranking_get: { Args: { p_id: string }; Returns: Json }
+      ext_ranking_save: { Args: { p: Json }; Returns: Json }
       ext_recommend: { Args: { p_token: string }; Returns: Json }
       ext_saved_list: { Args: { p_token: string }; Returns: Json }
       ext_signup: { Args: { p: Json }; Returns: Json }
+      ext_site_score: {
+        Args: { p_dest?: string; p_slug: string }
+        Returns: Json
+      }
+      ext_taste_save: { Args: { p: Json }; Returns: Json }
+      ext_top_global: {
+        Args: { p_cc?: string; p_deal?: string; p_limit?: number }
+        Returns: Json
+      }
       ext_track: { Args: { p: Json }; Returns: undefined }
       ext_uid: { Args: { p_token: string }; Returns: string }
       ext_verify_check: { Args: { p: Json }; Returns: Json }
@@ -5956,6 +6207,15 @@ export type Database = {
           shortcode: string
         }[]
       }
+      px_homes_seen: {
+        Args: {
+          p_deal?: string
+          p_limit?: number
+          p_max?: number
+          p_q?: string
+        }
+        Returns: Json
+      }
       record_email_delivery: {
         Args: {
           p_at: string
@@ -5966,6 +6226,7 @@ export type Database = {
         Returns: undefined
       }
       record_telemetry: { Args: { p_rows: Json }; Returns: undefined }
+      rh_airport_score: { Args: { km: number }; Returns: number }
       rh_board_workspace: {
         Args: { p_action?: string; p_slug: string; p_value?: string }
         Returns: Json
@@ -5985,6 +6246,8 @@ export type Database = {
         }
         Returns: Json
       }
+      rh_city_near: { Args: { p_lat: number; p_lng: number }; Returns: number }
+      rh_city_text: { Args: { p_cc: string; p_text: string }; Returns: number }
       rh_confirm_email_html: { Args: { p_link: string }; Returns: string }
       rh_finance: {
         Args: {
@@ -6005,6 +6268,10 @@ export type Database = {
           today: number
         }[]
       }
+      rh_nearest_airport: {
+        Args: { p_lat: number; p_lng: number }
+        Returns: Json
+      }
       rh_network_cases: {
         Args: {
           p_action?: string
@@ -6023,6 +6290,7 @@ export type Database = {
       rh_refresh_live_stats: { Args: never; Returns: undefined }
       rh_seen: { Args: { p_slug: string }; Returns: undefined }
       rh_setting_on: { Args: { p_key: string }; Returns: boolean }
+      rh_slug: { Args: { s: string }; Returns: string }
       rh_top10_html: { Args: never; Returns: string }
       rh_urlencode: { Args: { value: string }; Returns: string }
       rh_weekly_top10_html: { Args: never; Returns: string }
