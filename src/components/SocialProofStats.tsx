@@ -42,7 +42,7 @@ const SocialProofStats = () => {
 
     const load = async () => {
       const [{ count: aC }, { count: pC }, { data: reviews }] = await Promise.all([
-        supabase.from("analyses").select("*", { count: "exact", head: true }),
+        supabase.from("analyses").select("id", { count: "exact", head: true }),
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         (supabase as any).from("property_reviews").select("rating"),
       ]);

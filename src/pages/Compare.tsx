@@ -1,3 +1,4 @@
+import { PUBLIC_ANALYSIS_COLUMNS } from "@/lib/analysisColumns";
 import { useEffect, useState } from "react";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -49,7 +50,7 @@ const Compare = () => {
 
   useEffect(() => {
     if (ids.length === 0) { setLoading(false); return; }
-    supabase.from("analyses").select("*").in("id", ids).then(({ data }) => {
+    supabase.from("analyses").select(PUBLIC_ANALYSIS_COLUMNS).in("id", ids).then(({ data }) => {
       setProperties(data || []);
       setLoading(false);
     });
