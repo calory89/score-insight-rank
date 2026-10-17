@@ -360,7 +360,7 @@ const Analysis = () => {
     supabase.from("analyses").select(PUBLIC_ANALYSIS_COLUMNS).eq("id", id).single().then(({ data: result, error }) => {
       if (error || !result) { navigate("/"); }
       else {
-        setData(result);
+        setData(result as any);
         setAnalyzing(false);
         setTimeout(() => {
           setRevealed(true);
