@@ -183,6 +183,66 @@ const ASYNC_READS: Record<string, (a: Row) => Promise<any>> = {
 const SKIP_TABLES: Record<string, any> = { page_visits: null, rh_events: null, experiments: [], feature_flags: null };
 const SKIP_FUNCTIONS = new Set(["track-visit"]);
 
+// ---------------------------------------------------------------------------------------------
+// Offline mode for writes. The main database can be paused to save credits. When a write or a
+// signed-in call cannot reach it, the site keeps working:
+//  - session falls back to a guest session; votes and saves are kept in this browser;
+//  - leads, submissions, comments, reports and newsletter/alert sign-ups go to a small inbox
+//    table (insert-only, nobody can read it from the browser) so nothing is lost.
+// ---------------------------------------------------------------------------------------------
+const INBOX_URL = "https://gmdalfsvtfhzepyrdmjj.supabase.co/rest/v1/rh_inbox";
+const INBOX_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtZGFsZnN2dGZoemVweXJkbWpqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM2Mzc3MjIsImV4cCI6MjA1OTIxMzcyMn0.IIbXzmsRZzBeS6DhTHtYJjQNAFVJMaqb0EnxJbwwMx4";
+const PAUSED_MSG = "Accounts are paused for a short update. You can keep browsing and saving homes on this device.";
+let downUntil = 0;
+const dbDown = () => Date.now() < downUntil;
+const markDown = () => { downUntil = Date.now() + 5 * 60 * 1000; };
+function userEmail(): string | null {
+  try {
+    for (const k of Object.keys(localStorage)) if (/^sb-.*-auth-token$/.test(k)) { const v = JSON.parse(localStorage.getItem(k) || "null"); const e = v?.user?.email || v?.currentSession?.user?.email; if (e) return e; }
+  } catch { /* ignore */ }
+  return null;
+}
+function inbox(kind: string, payload: any): Promise<void> {
+  let body: any;
+  try { body = JSON.parse(JSON.stringify(payload ?? {})); } catch { body = { raw: String(payload) }; }
+  if (body && typeof body === "object" && !Array.isArray(body)) { delete body.password; const e = userEmail(); if (e && !body.user_email) body.user_email = e; }
+  return fetch(INBOX_URL, {
+    method: "POST",
+    headers: { apikey: INBOX_KEY, Authorization: `Bearer ${INBOX_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+    body: JSON.stringify({ kind: kind.slice(0, 60), payload: body, page: (location.pathname + location.search).slice(0, 300), ua: navigator.userAgent.slice(0, 280) }),
+  }).then((r) => { if (!r.ok) throw new Error("inbox " + r.status); });
+}
+const lsGet = (k: string, d: any) => { try { return JSON.parse(localStorage.getItem(k) || "null") ?? d; } catch { return d; } };
+const lsSet = (k: string, v: any) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } };
+const isNetErr = (e: any) => !e || /fetch|network|timeout|load failed|ERR_|NAME_NOT_RESOLVED|502|503|504|520|522|523|upstream/i.test(String(e?.message || e?.details || e?.hint || e?.code || e)) || e?.status === 0 || e?.status >= 500;
+function withTimeout<T>(p: PromiseLike<T>, ms = 7000): Promise<T> {
+  return new Promise((res, rej) => { const t = setTimeout(() => rej(new Error("timeout")), ms); Promise.resolve(p).then((v) => { clearTimeout(t); res(v); }, (e) => { clearTimeout(t); rej(e); }); });
+}
+// Runs the real call; if the database is unreachable, runs `fallback` instead.
+function tryDb(real: () => PromiseLike<any>, fallback: () => any): Promise<any> {
+  if (dbDown()) return Promise.resolve().then(fallback);
+  return withTimeout(real()).then((r: any) => {
+    if (r?.error && isNetErr(r.error)) { markDown(); return fallback(); }
+    return r;
+  }, () => { markDown(); return fallback(); });
+}
+const offVotes = () => lsGet("rh_off_votes", {} as Record<string, number>);
+const offSaved = () => lsGet("rh_off_saved", [] as string[]);
+const uid = () => { try { return crypto.randomUUID(); } catch { return String(Date.now()); } };
+const INBOX_ACTIONS = new Set(["comment", "report", "submit", "quick_submit", "profile", "contact", "lead", "request", "claim", "find_home"]);
+function apiFallback(action: string, payload: Row) {
+  if (action === "session") return ok({ token: readToken() || "static-guest", admin: false, pending_submissions: null, hunter: null, votes: offVotes(), saved: offSaved(), offline: true });
+  if (action === "vote") { const v = offVotes(); if (payload?.value) v[payload.id] = payload.value; else delete v[payload.id]; lsSet("rh_off_votes", v); return ok({ ok: true }); }
+  if (action === "save") { const s = new Set(offSaved()); if (payload?.saved) s.add(payload.id); else s.delete(payload.id); lsSet("rh_off_saved", [...s]); return ok({ ok: true }); }
+  if (INBOX_ACTIONS.has(action) || /submit|lead|contact|request/.test(action)) {
+    return inbox("api:" + action, payload).then(() => {
+      if (action === "profile") return ok({ hunter: { handle: payload?.handle, name: payload?.name, bio: payload?.bio || "" } });
+      return ok({ ok: true, id: uid(), queued: true });
+    }).catch(() => ({ data: null, error: { message: PAUSED_MSG } }));
+  }
+  return ok({ error: PAUSED_MSG });
+}
+
 const origRpc = (supabase.rpc as any).bind(supabase);
 (supabase as any).rpc = (fn: string, args: Row = {}, opts?: any) => {
   if (READS[fn]) return chain(snapshot().then((s) => ok(READS[fn](s, args))).catch(() => origRpc(fn, args, opts)));
@@ -201,11 +261,40 @@ const origRpc = (supabase.rpc as any).bind(supabase);
     }
     if (action === "winners") return chain(getJson("/data/winners.json").then(ok).catch(() => origRpc(fn, args, opts)));
     if (action === "session" && !signedIn()) {
-      return chain(ok({ token: readToken() || "static-guest", admin: false, pending_submissions: null, hunter: null, votes: {}, saved: [] }));
+      return chain(ok({ token: readToken() || "static-guest", admin: false, pending_submissions: null, hunter: null, votes: offVotes(), saved: offSaved() }));
     }
+    return chain(tryDb(() => origRpc(fn, args, opts), () => apiFallback(String(action || ""), args?.p_payload || {})));
   }
-  return origRpc(fn, args, opts);
+  // Any other RPC: if the database is unreachable, answer empty instead of throwing.
+  return chain(tryDb(() => origRpc(fn, args, opts), () => ({ data: null, error: { message: PAUSED_MSG } })));
 };
+
+// Tables whose inserts are leads or sign-ups: if the database is unreachable they go to the inbox.
+const LEAD_TABLES = new Set(["newsletter_subscribers", "alerts", "contact_requests", "home_requests", "submissions", "network_developers", "property_notes", "ticket_messages", "tickets", "watchlist", "favorites", "saved_discoveries"]);
+const SILENT_TABLES = new Set(["find_events", "user_streaks", "game_scores", "notifications", "follows"]);
+function wrapBuilder(table: string, real: any): any {
+  const calls: [string | symbol, any[]][] = [];
+  let insertRow: any = undefined;
+  const run = () => { let q = real; for (const [k, a] of calls) q = q[k](...a); return q; };
+  const fallback = () => {
+    if (insertRow !== undefined && LEAD_TABLES.has(table)) {
+      return inbox("table:" + table, insertRow).then(() => ok(Array.isArray(insertRow) ? insertRow : { ...insertRow, id: insertRow?.id || uid() }))
+        .catch(() => ({ data: null, error: { message: PAUSED_MSG } }));
+    }
+    if (SILENT_TABLES.has(table)) return ok(null);
+    if (insertRow === undefined && !calls.some(([k]) => ["update", "upsert", "delete"].includes(String(k)))) return ok([]); // reads: empty
+    return { data: null, error: { message: PAUSED_MSG } };
+  };
+  const proxy: any = new Proxy(function () {}, {
+    get(_t, k) {
+      if (k === "then") return (a: any, c: any) => tryDb(run, fallback).then(a, c);
+      if (k === "catch") return (c: any) => tryDb(run, fallback).catch(c);
+      if (k === "finally") return (f: any) => tryDb(run, fallback).finally(f);
+      return (...args: any[]) => { if (k === "insert" || k === "upsert") insertRow = args[0]; calls.push([k, args]); return proxy; };
+    },
+  });
+  return proxy;
+}
 
 const origFrom = (supabase.from as any).bind(supabase);
 (supabase as any).from = (table: string) => {
@@ -225,13 +314,24 @@ const origFrom = (supabase.from as any).bind(supabase);
     }
     return chain(ok(SKIP_TABLES[table]));
   }
-  return origFrom(table);
+  return wrapBuilder(table, origFrom(table));
 };
+
+// Sign-in: if the database is unreachable, say so clearly instead of a raw network error.
+const authAny: any = (supabase as any).auth;
+if (authAny) {
+  for (const m of ["signInWithPassword", "signInWithOtp", "signUp", "verifyOtp", "resetPasswordForEmail"]) {
+    const orig = authAny[m]?.bind(authAny);
+    if (!orig) continue;
+    authAny[m] = (...a: any[]) => withTimeout(orig(...a), 10000).then((r: any) => (r?.error && isNetErr(r.error) ? { data: {}, error: { message: PAUSED_MSG } } : r), () => ({ data: {}, error: { message: PAUSED_MSG } }));
+  }
+}
 
 const fns: any = (supabase as any).functions;
 if (fns?.invoke) {
   const origInvoke = fns.invoke.bind(fns);
-  fns.invoke = (name: string, o?: any) => (SKIP_FUNCTIONS.has(name) ? Promise.resolve(ok(null)) : origInvoke(name, o));
+  fns.invoke = (name: string, o?: any) => (SKIP_FUNCTIONS.has(name) ? Promise.resolve(ok(null)) : tryDb(() => origInvoke(name, o), () => (
+    /lead|contact|request/.test(name) ? inbox("fn:" + name, o?.body).then(() => ok({ ok: true, queued: true }), () => ({ data: null, error: { message: PAUSED_MSG } })) : { data: null, error: { message: PAUSED_MSG } })));
 }
 
 // Start downloading the snapshot right away, in parallel with the app bundle.
