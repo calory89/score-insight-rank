@@ -29,14 +29,20 @@ def main():
         q = ("Translate the string values of this JSON from English to natural Spanish (Spain) for a home-buying website. "
              "Keep keys, numbers, currency codes, tax names (ITP, IBI, IMU, SDLT, FIRPTA, IMT, etc.) and percentages exactly; "
              "use comma as decimal separator (0,5%). Return ONLY valid JSON with the same structure.\n" + json.dumps(payload, ensure_ascii=False))
-        for _ in range(3):
+        j = None
+        for _ in range(4):
             try:
-                t = ask(q); j = json.loads(t[t.find("{"): t.rfind("}") + 1]); break
+                t = ask(q); jj = json.loads(t[t.find("{"): t.rfind("}") + 1])
+                body = jj.get("en") or jj.get("es") or jj
+                if not isinstance(body, dict) or body == v["en"] or sum(body.get(k) == v["en"].get(k) for k in v["en"]) > 2:
+                    raise ValueError("not translated")
+                j = jj; break
             except Exception as e:
-                print("retry", c, e); j = None
+                print("retry", c, e)
         if not j: continue
-        v["es"] = j.get("en", j)
-        if "states" in j and v.get("states"): v["states"]["es"] = j["states"]
+        v["es"] = {k: x for k, x in (j.get("en") or j.get("es") or j).items() if k in v["en"]}
+        st = j.get("states")
+        if st and v.get("states"): v["states"]["es"] = st
         n += 1; print("es", c)
     json.dump(T, open(P, "w"), ensure_ascii=False, separators=(",", ":"))
     print("translated", n)
