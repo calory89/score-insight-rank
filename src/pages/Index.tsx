@@ -40,15 +40,15 @@ const Index = ({ embedded = false }: { embedded?: boolean }) => {
           {
             "@type": "Organization",
             "name": "RealHunt",
-            "url": "https://score-insight-rank.lovable.app",
-            "logo": "https://score-insight-rank.lovable.app/images/logo.png",
+            "url": "https://realhunt.co",
+            "logo": "https://realhunt.co/images/logo.png",
             "description": "AI-powered real estate intelligence platform. Analyze risk, ROI, demand & liquidity for any property listing worldwide.",
             "sameAs": []
           },
           {
             "@type": "WebApplication",
             "name": "RealHunt",
-            "url": "https://score-insight-rank.lovable.app",
+            "url": "https://realhunt.co",
             "applicationCategory": "BusinessApplication",
             "operatingSystem": "Web",
             "offers": {

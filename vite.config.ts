@@ -2,7 +2,6 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import fs from "fs";
-import { componentTagger } from "lovable-tagger";
 import { weatherShell } from "./src/pages/wx/shell";
 
 // Start the current catalogue/detail page's static imports while the HTML is being
@@ -195,7 +194,7 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  plugins: [react(), preloadPublicRoute(), prerenderPages(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [react(), preloadPublicRoute(), prerenderPages()].filter(Boolean),
   resolve: {
     dedupe: ["react", "react-dom"],
     alias: {

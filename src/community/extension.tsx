@@ -104,7 +104,7 @@ export function ExtensionPrivacy() {
       <h2>Smart card, shared rankings and comparisons</h2>
       <p>After you agree, the extension asks our server for what we know about the home you open (similar homes nearby, the city's median price per m², the price history and the same home on other sites), using that listing's derived numbers and published map point. If you click “Share” on a ranked search or “Compare”, we store that list (listing links, prices, sizes, rooms, scores and area names, never photos or descriptions) and publish it at a link only people you send it to can find.</p>
       <h2>AI reading of descriptions</h2>
-      <p>After you agree, the text of the listing you open is sent to our server and read by an AI model (through Lovable's AI gateway, using Google Gemini) to find red flags and highlights. We keep only the result (labels and short quotes) for 7 days to avoid reading the same listing twice; we never store the full text.</p>
+      <p>After you agree, the text of the listing you open is sent to our server and read by an AI model to find red flags and highlights. We keep only the result (labels and short quotes) for 7 days to avoid reading the same listing twice; we never store the full text.</p>
       <h2>Why</h2>
       <p>To calculate and improve scores (comparing a home's price per m² with other homes in the same area), to keep your saved homes and alerts, and to show you homes on RealHunt that match your profile. Recommendations are always labelled “RealHunt pick” or “Sponsored” and never change any score. Legal basis: your consent (GDPR art. 6(1)(a)).</p>
       <h2>What we never do</h2>

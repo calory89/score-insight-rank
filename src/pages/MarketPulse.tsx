@@ -25,7 +25,7 @@ const MarketPulse = () => {
   useDocumentMeta({
     title: `${displayCity} Real Estate Intelligence | RealHunt`,
     description: `Market intelligence for ${displayCity}, ${displayCountry}. Average scores, price analysis, top properties, and investment insights based on AI-powered analysis.`,
-    canonicalUrl: `https://score-insight-rank.lovable.app/market/${country}/${city}`,
+    canonicalUrl: `https://realhunt.co/market/${country}/${city}`,
   });
 
   useEffect(() => {

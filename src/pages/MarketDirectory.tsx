@@ -19,7 +19,7 @@ const MarketDirectory = () => {
   useDocumentMeta({
     title: "Market Intelligence Directory | RealHunt",
     description: "Explore real estate market intelligence for cities worldwide. Compare average scores, prices, and investment opportunities across global markets.",
-    canonicalUrl: "https://score-insight-rank.lovable.app/market",
+    canonicalUrl: "https://realhunt.co/market",
   });
 
   const [cities, setCities] = useState<CityData[]>([]);
@@ -143,7 +143,7 @@ const MarketDirectory = () => {
             item: {
               "@type": "Place",
               name: `${c.city}, ${c.country}`,
-              url: `https://score-insight-rank.lovable.app/market/${encodeURIComponent(c.country.toLowerCase())}/${encodeURIComponent(c.city.toLowerCase())}`,
+              url: `https://realhunt.co/market/${encodeURIComponent(c.country.toLowerCase())}/${encodeURIComponent(c.city.toLowerCase())}`,
             },
           })),
         }) }} />
