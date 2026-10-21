@@ -1,3 +1,4 @@
+import { TaxPanel } from "./taxes";
 import { CatalogBack, UnavailableHome, DecisionFacts, QuickHome, ComparisonTray, EmptyAlternatives, RankingExplanation, MotionControl, RentPreference } from "./BuyerTools";
 import { storage, rememberCatalog, usePreference } from "./buyer-state";
 import {
@@ -1011,7 +1012,7 @@ function Detail() {
             · {num(d.saves)} saves
           </p>
           <ScoreBars deal={d} />
-          <DecisionFacts deal={d as Row}/><Nearby deal={d} />
+          <DecisionFacts deal={d as Row}/><TaxPanel deal={d as Row}/><Nearby deal={d} />
           <Availability dealId={d.id} />
           <CostPanel deal={d as Row} />
           <RemoteWorkStrip place={d.location_name || d.country} slug={d.slug} />

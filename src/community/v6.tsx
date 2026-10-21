@@ -2,6 +2,7 @@ import {feed} from "./extras";
 import {PropertyImage} from "./BuyerTools";
 import {storage, safeFacts, userRent} from "./buyer-state";
 import {t} from "./i18n";
+import { TaxLine } from "./taxes";
 // RealHunt v6 (23-sep-2026): the visual pass. Weekly podium hero, vibe chips with photos, rent
 // comparison, Airbnb-style gallery with zoom, mini map with what is nearby, amenity icons, video
 // tour, confetti and haptics, search suggestions with photos, friendly empty states.
@@ -406,7 +407,7 @@ export function CardMeta({ deal }: { deal: Row }) {
   return (
     <>
       <span className="hv-where">{FLAG[deal.country] || "📍"} {where}</span>
-      {(deal.sqm != null || deal.bedrooms != null) && <span className="rh-card-facts">{[deal.sqm != null ? `${deal.sqm} m²` : "", deal.bedrooms != null ? `${deal.bedrooms} ${t(deal.bedrooms === 1 ? "bed" : "beds")}` : "", deal.sqm && deal.price_eur && deal.sqm >= 15 ? `€${Math.round(deal.price_eur / deal.sqm).toLocaleString("en-GB")}/m²` : ""].filter(Boolean).join(" · ")}</span>}<RentLine price={deal.price_eur} />
+      {(deal.sqm != null || deal.bedrooms != null) && <span className="rh-card-facts">{[deal.sqm != null ? `${deal.sqm} m²` : "", deal.bedrooms != null ? `${deal.bedrooms} ${t(deal.bedrooms === 1 ? "bed" : "beds")}` : "", deal.sqm && deal.price_eur && deal.sqm >= 15 ? `€${Math.round(deal.price_eur / deal.sqm).toLocaleString("en-GB")}/m²` : ""].filter(Boolean).join(" · ")}</span>}<RentLine price={deal.price_eur} /><TaxLine deal={deal} />
     </>
   );
 }
