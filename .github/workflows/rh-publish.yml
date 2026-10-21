@@ -1,0 +1,35 @@
+name: rh-publish
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install
+        run: npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+      - name: Build
+        env:
+          VITE_SUPABASE_URL: https://realhunt.co/__sb/realhunt
+          VITE_SUPABASE_PUBLISHABLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95a2NzbWV4dGNscGRudWdpeHF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzOTMzNjYsImV4cCI6MjEwNzk2OTM2Nn0.n4lmkzPgZe64B18altwRMYFiQrLQ2Quqg9uV9SoJhAw
+          VITE_SUPABASE_PROJECT_ID: oykcsmextclpdnugixqz
+        run: npx vite build
+      - name: Package for webs-estaticas (assets at root, rest in _s/realhunt.co)
+        run: |
+          set -e
+          grep -rl 'nylmhdtlshhtjkuvfbms.supabase.co' dist --include=*.html | xargs -r sed -i 's#https://nylmhdtlshhtjkuvfbms.supabase.co#https://realhunt.co/__sb/realhunt#g'
+          if grep -rq 'nylmhdtlshhtjkuvfbms' dist/assets; then echo 'old supabase url still in bundle'; exit 1; fi
+          mkdir -p out/_s/realhunt.co
+          cp -r dist/assets out/assets
+          rsync -a --exclude assets dist/ out/_s/realhunt.co/
+          tar -czf rh.tgz -C out .
+          ls -la rh.tgz
+          URL=$(curl -sS -m 300 -F "file=@rh.tgz" https://temp.sh/upload)
+          echo "PUBLISH_URL=$URL"
+          echo "PUBLISH_URL=$URL" >> $GITHUB_STEP_SUMMARY
