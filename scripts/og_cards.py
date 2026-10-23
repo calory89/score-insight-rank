@@ -3,7 +3,7 @@
 
 For every published home: a 1200x630 JPG card (public/og/deal/<slug>.jpg) that WhatsApp, X, Facebook
 and LinkedIn show when someone shares the link, plus src/data/deal-meta.json (read at build time by
-the prerender plugin in vite.config.ts) and public/sitemap.xml. Runs in GitHub Actions every day.
+the prerender step in seo/prerender.ts). Runs in GitHub Actions every day.
 """
 import io, json, os, sys, urllib.request, datetime
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
@@ -144,36 +144,8 @@ def main():
         meta.append({"slug": d["slug"], "title": title, "desc": desc, "image": img, "country": d.get("country")})
     os.makedirs(os.path.join(ROOT, "src", "data"), exist_ok=True)
     json.dump(meta, open(os.path.join(ROOT, "src", "data", "deal-meta.json"), "w"), ensure_ascii=False, indent=0)
-    today = datetime.date.today().isoformat()
-    countries = sorted({(d.get("country") or "").lower().replace(" ", "-") for d in rows if d.get("country")})
-    urls = [f"{SITE}/", f"{SITE}/map", f"{SITE}/swipe", f"{SITE}/leaderboard", f"{SITE}/winners", f"{SITE}/help-buying", f"{SITE}/alerts"]
-    urls += [f"{SITE}/{p}" for p in ("weather", "extension", "best", "find-my-home", "top", "about", "method", "finds")]
-    urls += [f"{SITE}/guide/{c}" for c in ("italy", "spain", "portugal")]
-    for c in countries:
-        urls.append(f"{SITE}/homes/{c}")
-        urls += [f"{SITE}/homes/{c}/under-{p}" for p in (20000, 40000, 60000, 80000)]
-    urls += [f"{SITE}/deal/{d['slug']}" for d in rows]
-    # v7: research articles and search landing pages
-    try:
-        urls += [f"{SITE}/blog", f"{SITE}/cheap-houses", f"{SITE}/insider"]
-        urls += [f"{SITE}/new-builds", f"{SITE}/developers", f"{SITE}/network", f"{SITE}/network/start"]
-        urls += [f"{SITE}/costs", f"{SITE}/research/new-builds", f"{SITE}/agents", f"{SITE}/network/example", f"{SITE}/network/reservation-contract"]
-        urls += [f"{SITE}/costs/{c}" for c in ("bali", "lombok", "albania", "mexico", "spain", "montenegro", "georgia", "northern-cyprus", "vietnam", "italy", "portugal", "bulgaria")]
-        urls += [f"{SITE}/new-builds/{c}" for c in ("indonesia", "mexico", "albania", "spain", "portugal", "thailand", "turkey", "montenegro")]
-        urls += [f"{SITE}/top", f"{SITE}/top/how-we-rank", f"{SITE}/about"]
-        for k in ("bali", "phuket", "tulum", "batumi"):
-            fp = os.path.join(ROOT, "src", "data", f"top-{k}.json")
-            if os.path.exists(fp):
-                top = json.load(open(fp))
-                urls += [f"{SITE}/top/{k}"] + [f"{SITE}/top/{k}/{t['slug']}" for t in top]
-        urls += [f"{SITE}/blog/{p['slug']}" for p in json.load(open(os.path.join(ROOT, "src", "data", "blog.json")))]
-        urls += [f"{SITE}/cheap-houses/{p['slug']}" for p in json.load(open(os.path.join(ROOT, "src", "data", "search-pages.json")))["pages"]]
-    except Exception as e:
-        print("extra sitemap urls skipped:", e)
-    xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + "".join(
-        f"  <url><loc>{u}</loc><lastmod>{today}</lastmod></url>\n" for u in urls) + "</urlset>\n"
-    open(os.path.join(ROOT, "public", "sitemap.xml"), "w").write(xml)
-    print(f"{len(rows)} homes, {made} new cards, {len(urls)} sitemap urls")
+    # The sitemap is built from the prerendered pages at build time (seo/prerender.ts), so it only lists pages that exist.
+    print(f"{len(rows)} homes, {made} new cards")
 
 if __name__ == "__main__":
     main()

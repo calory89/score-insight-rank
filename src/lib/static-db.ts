@@ -32,6 +32,9 @@ function feed(snap: Snap, p: Row = {}) {
   const cat = p.category || null;
   const max = p.max_price ? num(p.max_price) : null;
   const minSqm = p.min_sqm ? num(p.min_sqm) : null;
+  const minPrice = p.min_price ? num(p.min_price) : null;
+  const minBeds = p.min_beds ? num(p.min_beds) : null;
+  const dropped = !!p.price_drop;
   const ids: string[] | null = Array.isArray(p.ids) ? p.ids : null;
   const minScore = p.min_score ? num(p.min_score) : null;
   const need: string[] = Array.isArray(p.need) ? p.need : [];
@@ -47,6 +50,9 @@ function feed(snap: Snap, p: Row = {}) {
     (!cat || e.category === cat) &&
     (max == null || num(e.price_eur) <= max) &&
     (minSqm == null || num(e.sqm) >= minSqm) &&
+    (minPrice == null || num(e.price_eur) >= minPrice) &&
+    (minBeds == null || num(e.bedrooms) >= minBeds) &&
+    (!dropped || num(e.price_drop) > 0) &&
     (!ids || ids.includes(e.id)) &&
     (minScore == null || num(e.nota) >= minScore) &&
     need.every((t) => Array.isArray(e.amen) && e.amen.includes(t)) &&
@@ -70,6 +76,7 @@ function feed(snap: Snap, p: Row = {}) {
     else if (sort === "price_desc") d = num(b.price_eur) - num(a.price_eur);
     else if (sort === "new") d = pub(b) - pub(a);
     else if (sort === "sqm") d = num(b.sqm) - num(a.sqm);
+    else if (sort === "ppsqm") d = (num(a.sqm) > 0 ? num(a.price_eur) / num(a.sqm) : 1e9) - (num(b.sqm) > 0 ? num(b.price_eur) / num(b.sqm) : 1e9);
     else if (sort === "airport") d = num(a.airport_km, 99999) - num(b.airport_km, 99999);
     else if (sort === "score") d = num(b.nota) - num(a.nota);
     else if (String(sort).startsWith("dim:")) { const k = String(sort).slice(4); d = num(b.dims?.[k], -1) - num(a.dims?.[k], -1); }

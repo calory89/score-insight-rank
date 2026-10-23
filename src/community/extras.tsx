@@ -21,7 +21,7 @@ export type Row = Deal & {
   publish_at?: string | null; early?: boolean; price_drop?: number; sold_reports?: number; available_reports?: number;
   imported?: boolean;
 };
-export type FeedParams = { scope?: string; country?: string; category?: string; max_price?: number | null; min_sqm?: number | null; sort?: string; limit?: number; offset?: number; ids?: string[]; q?: string; terms?: string[]; min_score?: number | null; need?: string[]; dim_min?: Record<string, number> };
+export type FeedParams = { scope?: string; country?: string; category?: string; max_price?: number | null; min_price?: number | null; min_beds?: number | null; price_drop?: boolean; min_sqm?: number | null; sort?: string; limit?: number; offset?: number; ids?: string[]; q?: string; terms?: string[]; min_score?: number | null; need?: string[]; dim_min?: Record<string, number> };
 // Guest pass: someone who opens an Insider's invite link (?ref=code) sees the Insider homes too, for
 // 7 days, so what an Insider shares never shows up blurred. The server checks the code belongs to an
 // Insider (community_can_see_early); this only remembers which code the visitor came with.
@@ -307,14 +307,16 @@ export function InfoRequest({ deal, dev }: { deal: Row; dev?: { name: string; sl
 
 // ---------------------------------------------------------------- filters
 const PRICE_CAPS = [20000, 30000, 40000, 60000, 80000, 100000];
+// Filter steps above the €100k "under" pages: RealHunt also lists homes up to ~€500k (Cyprus, Amsterdam, new builds).
+const PRICE_STEPS = [20000, 30000, 40000, 60000, 80000, 100000, 150000, 200000, 300000];
 export function Filters({ countries, value: applied, onChange }: { countries: Record<string, number>; value: FeedParams; onChange: (v: FeedParams) => void }) {
   // 1-oct-2026: every filter applies at once. The old draft + "View N homes" step made a tap on a
   // country look broken (the grid kept showing every country until the second button was pressed).
   const value = applied;
   const setDraft = (v: FeedParams) => onChange(v);
   const list = Object.entries(countries || {}).sort((a, b) => b[1] - a[1]);
-  const active = !!(value.country || value.category || value.max_price || value.min_sqm || (value.sort && value.sort !== "score"));
-  const extra = [value.category, value.max_price, value.min_sqm, value.sort && value.sort !== "score" ? value.sort : ""].filter(Boolean).length;
+  const active = !!(value.country || value.category || value.max_price || value.min_price || value.min_beds || value.price_drop || value.min_sqm || (value.sort && value.sort !== "score"));
+  const extra = [value.category, value.max_price, value.min_price, value.min_beds, value.price_drop, value.min_sqm, value.sort && value.sort !== "score" ? value.sort : ""].filter(Boolean).length;
   const [open, setOpen] = useState(() => extra > 0);
   // 14-oct-2026 (Carlos): only show a quick filter when at least one home matches it, given the other filters.
   const [qc, setQc] = useState<Record<string, number> | null>(null);
@@ -322,7 +324,7 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
   // already on, so a chip only shows when ADDING it still leaves 3+ homes. Before, Garden + Views showed Sauna,
   // which led to 0 homes and an empty list.
   const vv: any = value;
-  const qp = { country: value.country || "", category: value.category || "", max_price: value.max_price || null, min_sqm: value.min_sqm || null,
+  const qp = { country: value.country || "", category: value.category || "", max_price: value.max_price || null, min_price: value.min_price || null, min_beds: value.min_beds || null, price_drop: !!value.price_drop, min_sqm: value.min_sqm || null,
     q: vv.q || "", terms: vv.terms || [], min_score: value.min_score || null, need: value.need || [], dim_min: value.dim_min || {} };
   const qkey = JSON.stringify(qp);
   useEffect(() => {
@@ -352,13 +354,23 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
           return <button key={qf.k} aria-pressed={on} onClick={flip}>{on ? <Check size={13} /> : null}<span>{t(qf.label)}</span></button>;
         })}
       </div>
-      <div className="rh-active-filters">{([ ["category",applied.category], ["max_price",applied.max_price?money(applied.max_price):null], ["min_sqm",applied.min_sqm?`${applied.min_sqm} m²+`:null] ] as const).filter(([,v])=>v).map(([k,v])=><button key={k} aria-label={`${t("Remove")} ${v}`} onClick={()=>onChange({...applied,[k]:null})}>{v} ×</button>)}</div>
+      <div className="rh-active-filters">{([ ["category",applied.category], ["min_price",applied.min_price?`${t("from")} ${money(applied.min_price)}`:null], ["max_price",applied.max_price?`${t("up to")} ${money(applied.max_price)}`:null], ["min_beds",applied.min_beds?`${applied.min_beds}+ ${t("bedrooms")}`:null], ["min_sqm",applied.min_sqm?`${applied.min_sqm} m²+`:null], ["price_drop",applied.price_drop?t("Price dropped"):null] ] as const).filter(([,v])=>v).map(([k,v])=><button key={k} aria-label={`${t("Remove")} ${v}`} onClick={()=>onChange({...applied,[k]:null})}>{v} ×</button>)}</div>
       <button type="button" className="hunt-link hunt-filter-toggle" aria-expanded={open} onClick={() => setOpen((o) => !o)}>{open ? t("Hide filters") : t("More filters")}{extra > 0 ? ` (${extra})` : ""}</button>
       {open && <div className="hunt-filter-row">
+        <label><span>{t("Min price")}</span>
+          <select value={value.min_price || ""} onChange={(e) => setDraft({ ...value, min_price: e.target.value ? Number(e.target.value) : null })}>
+            <option value="">{t("No minimum")}</option>
+            {Array.from(new Set([...PRICE_STEPS, ...(value.min_price ? [value.min_price] : [])])).filter((p) => !value.max_price || p < value.max_price).sort((a, b) => a - b).map((p) => <option key={p} value={p}>{money(p)}</option>)}
+          </select></label>
         <label><span>{t("Max price")}</span>
           <select value={value.max_price || ""} onChange={(e) => setDraft({ ...value, max_price: e.target.value ? Number(e.target.value) : null })}>
             <option value="">{t("Any price")}</option>
-            {Array.from(new Set([...PRICE_CAPS.slice(0, -1),...(value.max_price?[value.max_price]:[])])).sort((a,b)=>a-b).map((p) => <option key={p} value={p}>{money(p)}</option>)}
+            {Array.from(new Set([...PRICE_STEPS,...(value.max_price?[value.max_price]:[])])).filter((p) => !value.min_price || p > value.min_price).sort((a,b)=>a-b).map((p) => <option key={p} value={p}>{money(p)}</option>)}
+          </select></label>
+        <label><span>{t("Bedrooms")}</span>
+          <select value={value.min_beds || ""} onChange={(e) => setDraft({ ...value, min_beds: e.target.value ? Number(e.target.value) : null })}>
+            <option value="">{t("Any")}</option>
+            {[1, 2, 3, 4].map((b) => <option key={b} value={b}>{b}+</option>)}
           </select></label>
         <label><span>{t("Any type")}</span>
           <select value={value.category || ""} onChange={(e) => setDraft({ ...value, category: e.target.value })}>
@@ -370,10 +382,11 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
             <option value="">—</option>
             {[40, 60, 80, 100, 150].map((s) => <option key={s} value={s}>{s} m²+</option>)}
           </select></label>
+        <label className="hunt-check"><input type="checkbox" checked={!!value.price_drop} onChange={(e) => setDraft({ ...value, price_drop: e.target.checked })} /> <span>{t("Price dropped")}</span></label>
         <label><span>{t("Sort")}</span>
           <select value={value.sort || "score"} onChange={(e) => setDraft({ ...value, sort: e.target.value })}>
             <option value="score">{t("Best score")}</option><option value="new">{t("Newest")}</option>
-            <option value="price_asc">{t("Cheapest")}</option><option value="airport">{t("Nearest airport")}</option><option value="sqm">{t("Biggest")}</option>{DIMS.filter(([k]) => k !== "interest").map(([k, l]) => <option key={k} value={"dim:" + k}>{`${t("Best")}: ${t(l)}`}</option>)}
+            <option value="price_asc">{t("Cheapest")}</option><option value="ppsqm">{t("Lowest price per m²")}</option><option value="airport">{t("Nearest airport")}</option><option value="sqm">{t("Biggest")}</option>{DIMS.filter(([k]) => k !== "interest").map(([k, l]) => <option key={k} value={"dim:" + k}>{`${t("Best")}: ${t(l)}`}</option>)}
           </select></label>
       </div>}
     </div>
@@ -454,13 +467,18 @@ export function Personalise({ countries, onApply }: { countries: string[]; onApp
 }
 export function AlertsPage() {
   const [countries, setCountries] = useState<string[]>([]);
-  useEffect(() => { document.title = "Alerts for the best new homes · RealHunt"; feed({ limit: 1 }).then((f) => setCountries(Object.keys(f.countries_count || {}))).catch(() => {}); }, []);
+  useEffect(() => { document.title = "New-home alerts by email · RealHunt"; feed({ limit: 1 }).then((f) => setCountries(Object.keys(f.countries_count || {}))).catch(() => {}); }, []);
+  // Links from a home or country page arrive as /alerts?country=Spain&max=80000 and open with those picked.
+  const q = new URLSearchParams(typeof location !== "undefined" ? location.search : "");
+  const want = (q.get("country") || "").toLowerCase().replace(/-/g, " ");
+  const preCountry = countries.find((c) => c.toLowerCase() === want) || "";
+  const preMax = Number(q.get("max")) || null;
   return (
     <div className="hunt-wrap hunt-page">
       <span className="hunt-eyebrow">{t("Alerts")}</span>
       <h1>Get new homes that match you</h1>
       <p>Choose countries, budget and type. Confirmed accounts can choose daily or weekly updates, or switch them off. New matches you have already opened are excluded.</p>
-      <AlertForm countries={countries} /><BuyerAlertPreferences/>
+      <AlertForm key={preCountry + (preMax || "")} countries={countries} initial={preCountry || preMax ? { country: preCountry, max_price: preMax } as FeedParams : undefined} /><BuyerAlertPreferences/>
     </div>
   );
 }
@@ -528,9 +546,10 @@ export function SwipePage() {
   return (
     <div className="hunt-wrap hunt-swipe hv-swipe">
       {d && <div className="hv-swipe-bg" style={{ backgroundImage: `url("${d.image_urls?.[0]}")` }} aria-hidden="true" />}
-      <div className="hv-swipe-top"><h1 className="hv-swipe-h1">{t("Swipe")}</h1><span>{list.length - i > 0 ? `${list.length - i} homes left` : ""}</span>{i > 0 && <button className="hunt-link hv-swipe-undo" onClick={() => setI((n) => Math.max(0, n - 1))}>Back</button>}</div>
+      <div className="hv-swipe-top"><h1 className="hv-swipe-h1">{t("Swipe")}</h1><span>{list.length - i > 0 ? `${i + 1} of ${list.length}` : ""}</span>{i > 0 && <button className="hunt-link hv-swipe-undo" onClick={() => setI((n) => Math.max(0, n - 1))}>Back</button>}</div>
+      {i === 0 && d && <p className="hv-swipe-hint">{t("Swipe right or press → to like a home, left or ← to skip. Tap the photo to open it.")}</p>}
       {!d ? (
-        <div className="hunt-empty"><h3>You have seen every home this week.</h3><p>New homes are added every week.</p><Link className="hunt-primary" to="/map">{t("Map")}</Link></div>
+        <div className="hunt-empty"><h3>You have seen every home.</h3><p>New homes are added every week. Get them by email as soon as they pass our check.</p><div className="hunt-row"><Link className="hunt-primary" to="/alerts">{t("Get new homes by email")}</Link><Link className="hunt-secondary" to="/saved">{t("See saved homes")}</Link><Link className="hunt-link" to="/map">{t("Map")}</Link></div></div>
       ) : (
         <>
           {next && <div className="hunt-swipe-card is-next" aria-hidden="true"><img src={next.image_urls?.[0]} alt="" draggable={false} /></div>}
@@ -737,7 +756,7 @@ export function HomesPage() {
         {data && data.total > 0 && <div className="hv-country-stats"><span><b>{data.total}</b> homes</span><span>from <b>{money(low)}</b></span><span>average <b>{money(avg)}</b></span></div>}
       </header>
       {data && data.rows.length >= 3 && <><h2 className="hv-country-h2">Top 3 in {name}</h2><div className="hv-country-top">{data.rows.slice(0, 3).map((d, n) => <Link key={d.id} to={`/deal/${d.slug}`}><img src={d.image_urls?.[0]} alt="" /><span className="hv-pod-medal">{["🥇", "🥈", "🥉"][n]}</span><strong>{money(d.price_eur)}</strong><small>{d.location_name}</small></Link>)}</div><h2 className="hv-country-h2">All homes</h2></>}
-      <p>{data ? `${data.total} homes, ranked by people's votes.` : "Loading…"} Every home links to its original listing.</p>
+      <p>{data ? `${data.total} homes, scored from 70 to 98 and ranked best first.` : "Loading…"} Every home links to its original listing. <Link to="/method">How the score works</Link> · <Link to={`/alerts?country=${encodeURIComponent(name)}${max ? `&max=${max}` : ""}`}>Get new homes in {name} by email</Link></p>
       <nav className="hunt-chips">{PRICE_CAPS.map((p) => <Link key={p} aria-current={p === max ? "page" : undefined} to={p === 100000 ? `/homes/${country}` : `/homes/${country}/under-${p}`}>{money(p)}</Link>)}</nav>
       {!data ? <div className="hunt-skeleton-list" /> : <div className="hunt-minigrid">{data.rows.map((d) => <MiniCard key={d.id} d={d} />)}</div>}
       {GUIDES[country.toLowerCase()] && <p className="hunt-row"><Link className="hunt-secondary" to={`/guide/${country.toLowerCase()}`}>How to buy in {name}</Link></p>}

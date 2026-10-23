@@ -1,0 +1,35 @@
+/* 23-oct-2026: desktop side card on home pages. */
+.hv-aside { display: none; }
+@media (min-width: 1100px) {
+  .hv-detail .hunt-detail-grid { grid-template-columns: minmax(0, 1fr) 320px; column-gap: 40px; align-items: start; }
+  .hv-detail .hunt-detail-grid > :first-child { grid-column: 1 / -1; }
+  .hv-aside { display: block; position: sticky; top: 88px; }
+  .hv-aside-card { border: 1px solid #E2E3E6; border-radius: 18px; padding: 18px; background: #fff; box-shadow: 0 6px 24px rgba(17, 18, 20, .06); display: grid; gap: 12px; }
+  .hv-aside-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .hv-aside-price { display: block; font-size: 26px; font-weight: 800; letter-spacing: -.5px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .hv-aside-top small { color: #55585E; font-size: 13px; }
+  .hv-aside-where { margin: 0; font-size: 14px; color: #3B3E44; }
+  .hv-aside-cta .hunt-primary { display: flex; width: 100%; justify-content: center; }
+  .hv-aside-row { display: flex; gap: 8px; }
+  .hv-aside-row > * { flex: 1; justify-content: center; }
+  .hv-aside-alert { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 600; color: var(--rh-brand, #D4420C); text-decoration: none; }
+  .hv-aside-alert:hover { text-decoration: underline; }
+  .hv-aside-fine { margin: 0; font-size: 12px; color: #6B6F76; line-height: 1.4; }
+  .hunt.is-dark .hv-aside-card { background: #17181A; border-color: #2A2C30; box-shadow: none; }
+  .hunt.is-dark .hv-aside-top small, .hunt.is-dark .hv-aside-fine { color: #A6A9AF; }
+  .hunt.is-dark .hv-aside-where { color: #D4D6DA; }
+}
+
+/* Home cards: save without opening the home, price per m², the one-line reason it was picked. */
+.hx-wrap { position: relative; min-width: 0; }
+.hx-save { position: absolute; top: 10px; right: 10px; z-index: 2; box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+.hx-new { right: auto !important; left: 56px; }
+.hx-new.is-drop { background: #0F6B34; }
+.hx-text .hx-pick { color: #3B3E44; font-weight: 600; }
+.hunt.is-dark .hx-text .hx-pick { color: #D4D6DA; }
+@media (min-width: 1100px) {
+  .hv-aside-links { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; }
+  .hv-aside-links a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+}
+.hv-swipe-hint { text-align: center; font-size: 13px; color: #55585E; margin: 0 0 8px; position: relative; z-index: 1; }
+.hunt.is-dark .hv-swipe-hint { color: #A6A9AF; }

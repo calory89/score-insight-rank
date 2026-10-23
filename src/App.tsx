@@ -164,7 +164,8 @@ const AppRoutes = () => (
       <Route path="/homescoring" element={<HomeScoring />} />
       <Route path="/apply" element={<Apply />} />
       <Route path="/projects/:slug" element={<ProjectDetail />} />
-      <Route path="/method" element={<Method />} />
+      <Route path="/method" element={<Community />} />
+      <Route path="/method/analysis" element={<Method />} />
       <Route path="/pricing" element={<Pricing />} />
       <Route path="/for-agents" element={<ForAgents />} />
       <Route path="/auth/sign-in" element={<SignIn />} />

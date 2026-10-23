@@ -401,7 +401,7 @@ const GlobalRanking = () => {
         </h1>
         <p className="reading text-ink-muted mt-3 max-w-[640px]">
           Ranked by the RealHunt forensic score. No sponsors. No paid placement. Every number traceable in{" "}
-          <a href="/method" className="rh-btn-tertiary">/method</a>.
+          <a href="/method/analysis" className="rh-btn-tertiary">/method/analysis</a>.
         </p>
 
         {/* Quick stats + live indicator */}

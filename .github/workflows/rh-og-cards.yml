@@ -1,5 +1,5 @@
 name: rh-og-cards
-# Daily: share cards for new homes, listing data for the prerender step, and the sitemap.
+# Daily: share cards for new homes, listing data for the prerender step.
 on:
   schedule:
     - cron: "10 16 * * *"
@@ -21,7 +21,7 @@ jobs:
         run: |
           git config user.name "realhunt-bot"
           git config user.email "bot@realhunt.co"
-          git add public/og/deal src/data/deal-meta.json public/sitemap.xml public/og-default-60k.jpg src/data/search-pages.json src/data/search-static.json
+          git add public/og/deal src/data/deal-meta.json public/og-default-60k.jpg src/data/search-pages.json src/data/search-static.json
           git diff --cached --quiet || (git commit -m "Share cards, search pages and sitemap for new homes" && git push)
       - name: ping IndexNow (Bing and others)
         run: python3 scripts/indexnow.py

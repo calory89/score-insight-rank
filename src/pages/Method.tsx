@@ -48,7 +48,7 @@ const Method = () => {
     title: "Method — How the RealHunt Global Score is computed",
     description:
       "Every weight, every source, every formula. Public methodology behind the RH 5-dimension forensic property score.",
-    canonicalUrl: "https://realhunt.co/method",
+    canonicalUrl: "https://realhunt.co/method/analysis",
     ogType: "article",
     jsonLd: {
       "@context": "https://schema.org",
