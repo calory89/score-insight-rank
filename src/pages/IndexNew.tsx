@@ -181,7 +181,7 @@ const MethodRow = ({ name, what }: { name: string; what: string }) => (
     <div className="col-span-12 md:col-span-3 font-display text-[17px] text-ink">{name}</div>
     <div className="col-span-12 md:col-span-7 text-ink-muted text-[15px]">{what}</div>
     <div className="col-span-12 md:col-span-2 md:text-right">
-      <Link to="/method" className="rh-btn-tertiary text-[14px]">See sources</Link>
+      <Link to="/method/analysis" className="rh-btn-tertiary text-[14px]">See sources</Link>
     </div>
   </div>
 );
@@ -627,7 +627,7 @@ const IndexNew = () => {
             <span className="text-[14px] text-ink-soft">
               We publish every weight, every source, every formula.
             </span>
-            <Link to="/method" className="rh-btn-tertiary text-[14px]">Read the full method →</Link>
+            <Link to="/method/analysis" className="rh-btn-tertiary text-[14px]">Read the full method →</Link>
           </div>
         </div>
       </Section>
