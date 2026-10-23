@@ -31,6 +31,7 @@ import { InboxPage, CompareBuilds, CostsIndex, CostsPage, NewBuildReport, Agents
 import { TopListPage, TopProjectPage, TopClaimPage, TopMinePage, TopIndexPage } from "./top";
 import { TopMethodPage, AboutPage } from "./topTrustUI";
 import { HomeMethodPage } from "./method";
+import { DetailAside } from "./aside";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
@@ -86,6 +87,7 @@ import "./community.css";
 import "./buyer-tools.css";
 import "./ux-oct.css";
 import "./brand-oct.css";
+import "./oct23.css";
 import "./homecards.css";
 // Imported titles often repeat the price ("€35,000 · Your own home") right under the big price, or
 // say nothing at all ("Property - Japan"). Show something a person would actually write.
@@ -271,7 +273,7 @@ function Shell({ children }: { children: ReactNode }) {
         <footer className="hunt-footer">
           <Link to="/" className="hunt-footer-brand"><LogoMark size={26} />RealHunt</Link>
           <p>
-            {t("Found by people. Ranked by you.")}
+            {t("Checked by people. Ranked by score.")}
             <br />
             {t("Listings belong to their original publishers. RealHunt is not the seller.")}
           </p>
@@ -657,6 +659,9 @@ function Home() {
   const category = params.get("type") || "";
   const maxPrice = Number(params.get("price")) || null;
   const minSqm = Number(params.get("sqm")) || null;
+  const minPrice = Number(params.get("min")) || null;
+  const minBeds = Number(params.get("beds")) || null;
+  const priceDrop = params.get("drop") === "1";
   const sort = params.get("order") || "score"; // 7-oct-2026: the feed is a score ranking, no votes
   const minScore = Number(params.get("score")) || null;
   const need = (params.get("need") || "").split(",").filter(Boolean);
@@ -700,7 +705,7 @@ function Home() {
     if (!more) setFeed(null);
     setError("");
     try {
-      const data: any = await feedV3({ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort, q: searchQuery(q), terms, min_score: minScore, need, dim_min: dimMin, limit: 24, offset: more ? base.rows.length : 0 } as any);
+      const data: any = await feedV3({ scope, country, category, max_price: maxPrice, min_price: minPrice, min_beds: minBeds, price_drop: priceDrop, min_sqm: minSqm, sort, q: searchQuery(q), terms, min_score: minScore, need, dim_min: dimMin, limit: 24, offset: more ? base.rows.length : 0 } as any);
       if (n !== seq.current) return;
       if (!more) freshPending.current = false;
       remember(data.rows);
@@ -777,6 +782,7 @@ function Home() {
     const next = new URLSearchParams(params);
     const put = (k: string, val: unknown) => (val ? next.set(k, String(val)) : next.delete(k));
     put("country", v.country); put("type", v.category); put("price", v.max_price); put("sqm", v.min_sqm);
+    put("min", v.min_price); put("beds", v.min_beds); put("drop", v.price_drop ? "1" : "");
     put("order", v.sort && v.sort !== "score" ? v.sort : "");
     put("score", v.min_score); put("need", (v.need || []).join(",")); put("dmin", Object.entries(v.dim_min || {}).map(([k, n]) => `${k}:${n}`).join(","));
     next.delete("search");
@@ -821,11 +827,11 @@ function Home() {
         <h1>{t("The best homes in every country, ranked.")}</h1>
         <SmartSearch value={q} onSearch={search} inputRef={searchRef} />
       </section>
-      <div className="rh-sticky-filters"><Filters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_sqm: minSqm, sort, q, min_score: minScore, need, dim_min: dimMin }} onChange={setFilters} /></div>
-      {!plain || maxPrice || minSqm || minScore || need.length || sort !== "score" || showMap ? (
+      <div className="rh-sticky-filters"><Filters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_price: minPrice, min_beds: minBeds, price_drop: priceDrop, min_sqm: minSqm, sort, q, min_score: minScore, need, dim_min: dimMin }} onChange={setFilters} /></div>
+      {!plain || maxPrice || minPrice || minBeds || priceDrop || minSqm || minScore || need.length || sort !== "score" || showMap ? (
       <div className="rh-results-bar" ref={resultsRef}>
         <p role="status" aria-live="polite"><strong>{busy && !feed ? t("Updating results…") : feed ? `${num(feed.total)} ${t("homes")}${country ? ` in ${country.split(",").join(", ")}` : ""}` : ""}</strong>
-          {(country || category || maxPrice || minSqm || q || vibeList.length > 0 || sort !== "score") && <Link to="/" className="hunt-link rh-clear">{t("Clear filters")}</Link>}</p>
+          {(country || category || maxPrice || minPrice || minBeds || priceDrop || minSqm || q || vibeList.length > 0 || sort !== "score") && <Link to="/" className="hunt-link rh-clear">{t("Clear filters")}</Link>}</p>
         <div className="rh-results-tools"><button type="button" className="hunt-link rh-maptoggle" aria-expanded={showMap} onClick={() => setMapMode(showMap ? "off" : "on")}>{showMap ? t("Hide map") : t("Show on map")}</button><ScoreHelp/><span className="rh-motion"><MotionControl/></span></div>
       </div>) : <div ref={resultsRef} />}
       {showMap && (
@@ -856,7 +862,7 @@ function Home() {
       {feed?.rows.length === 0 && !error && !q && (
         <EmptyState title={q ? `No homes for “${q}” yet` : "Nothing here yet"}
           text={q ? "Try a country, a town or a simple word like sea, lake or cabin." : "No homes match these filters. Clear them, or post a home you found."}
-          action={<div className="hunt-row"><Link to="/" className="hunt-primary">See all homes</Link><Link to="/submit" className="hunt-secondary">{t("Post a home")}</Link><EmptyAlternatives params={{scope,country,category,max_price:maxPrice,min_sqm:minSqm,sort,q}}/></div>} />
+          action={<div className="hunt-row"><Link to="/" className="hunt-primary">See all homes</Link><Link to={`/alerts?${new URLSearchParams({ ...(country && !country.includes(",") ? { country } : {}), ...(maxPrice ? { max: String(maxPrice) } : {}) }).toString()}`} className="hunt-secondary">{t("Email me when one appears")}</Link><Link to="/submit" className="hunt-link">{t("Post a home")}</Link><EmptyAlternatives params={{scope,country,category,max_price:maxPrice,min_sqm:minSqm,sort,q}}/></div>} />
       )}
       {feed && feed.rows.length < feed.total && !busy && (
         <button className="hunt-more" onClick={() => load(true)}>{t("More discoveries")}</button>
@@ -1038,6 +1044,7 @@ function Detail() {
             <a href={`mailto:hello@realhunt.co?subject=${encodeURIComponent("Feature my listing: " + d.slug)}`}>Feature it or correct the details</a>
           </p>
         </section>
+        <DetailAside deal={d as Row} listing={listing} />
       </div>
       {report && (
         <form

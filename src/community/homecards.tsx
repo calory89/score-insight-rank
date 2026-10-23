@@ -6,6 +6,7 @@ import { money } from "./api";
 import { useScore } from "./scores";
 import { t } from "./i18n";
 import { TaxLine } from "./taxes";
+import { SaveHeart } from "./v4";
 
 const gtone = (n: number) => (n >= 90 ? "is-top" : n >= 80 ? "is-great" : "is-good");
 const isNew = (d: any) => { const at = d.approved_at || d.publish_at; return !!at && Date.now() - new Date(at).getTime() < 36 * 3600 * 1000; };
@@ -16,24 +17,30 @@ export function HomeCard({ deal, pos }: { deal: any; pos: number }) {
   const href = `/deal/${encodeURIComponent(deal.slug)}?tab=all`;
   const img = deal.image_urls?.[0];
   const title = String(deal.title || "").replace(/\s+/g, " ").trim();
+  const perSqm = deal.sqm && deal.price_eur ? Math.round(deal.price_eur / deal.sqm) : null;
+  const pick = String(deal.pick_note || "").trim();
   return (
-    <Link to={href} className={"hx-card" + (pos <= 3 ? " is-podium" : "")} aria-label={`${pos}. ${title}, ${money(deal.price_eur)}${s ? `, ${t("RealHunt score")} ${s.n}` : ""}`}>
-      <span className="hx-img">
-        {img ? <img src={img} alt="" loading={pos <= 3 ? "eager" : "lazy"} fetchPriority={pos === 1 ? "high" : "auto"} decoding="async" /> : null}
-        <span className="hx-pos">#{pos}</span>
-        {s && <span className={"hx-score " + gtone(s.n)} title={t("RealHunt score")}>{s.n}</span>}
-        <span className="hx-price">
-          <b>{money(deal.price_eur)}</b>
-          {deal.sqm || deal.bedrooms ? <small>{[deal.sqm ? `${deal.sqm} m²` : "", deal.bedrooms ? `${deal.bedrooms} 🛏` : ""].filter(Boolean).join(" · ")}</small> : null}
+    <div className="hx-wrap">
+      <Link to={href} className={"hx-card" + (pos <= 3 ? " is-podium" : "")} aria-label={`${pos}. ${title}, ${money(deal.price_eur)}${s ? `, ${t("RealHunt score")} ${s.n}` : ""}`}>
+        <span className="hx-img">
+          {img ? <img src={img} alt={`${title}, ${where(deal)}`} loading={pos <= 3 ? "eager" : "lazy"} fetchPriority={pos === 1 ? "high" : "auto"} decoding="async" /> : null}
+          <span className="hx-pos">#{pos}</span>
+          {isNew(deal) ? <span className="hx-new">{t("New today")}</span> : Number(deal.price_drop) > 0 ? <span className="hx-new is-drop">{t("Price dropped")}</span> : null}
+          {s && <span className={"hx-score " + gtone(s.n)} title={t("RealHunt score")}>{s.n}</span>}
+          <span className="hx-price">
+            <b>{money(deal.price_eur)}</b>
+            {deal.sqm || deal.bedrooms ? <small>{[deal.sqm ? `${deal.sqm} m²` : "", perSqm ? `${money(perSqm)}/m²` : "", deal.bedrooms ? `${deal.bedrooms} 🛏` : ""].filter(Boolean).join(" · ")}</small> : null}
+          </span>
         </span>
-        {isNew(deal) && <span className="hx-new">{t("New today")}</span>}
-      </span>
-      <span className="hx-text">
-        <strong>{title}</strong>
-        <small>{where(deal)}</small>
-        <TaxLine deal={deal} />
-      </span>
-    </Link>
+        <span className="hx-text">
+          <strong>{title}</strong>
+          <small>{where(deal)}</small>
+          {pick && <small className="hx-pick">{pick}</small>}
+          <TaxLine deal={deal} />
+        </span>
+      </Link>
+      <SaveHeart deal={deal} className="hv-save hx-save" />
+    </div>
   );
 }
 
