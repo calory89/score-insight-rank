@@ -1,0 +1,577 @@
+{
+  "ext_name": {
+    "message": "RealHunt Score"
+  },
+  "ext_desc": {
+    "message": "Eerlijke score 0–100 voor woningen op 160 woningsites: prijs vs vergelijkbare woningen, locatie en waarschuwingen. Gratis."
+  },
+  "disclaimer": {
+    "message": "Schatting, geen taxatie. Controleer alles met de verkoper."
+  },
+  "allow": {
+    "message": "Toestaan"
+  },
+  "consent_short": {
+    "message": "RealHunt anonieme woninggegevens (prijs, m², buurt) laten gebruiken om prijzen te vergelijken?"
+  },
+  "see_why": {
+    "message": "Bekijk waarom"
+  },
+  "open_panel": {
+    "message": "Paneel openen"
+  },
+  "save": {
+    "message": "Opslaan"
+  },
+  "saved": {
+    "message": "Opgeslagen"
+  },
+  "share_short": {
+    "message": "Delen"
+  },
+  "part_price": {
+    "message": "Prijs vs markt"
+  },
+  "part_location": {
+    "message": "Locatie"
+  },
+  "part_flags": {
+    "message": "Waarschuwingen"
+  },
+  "part_quality": {
+    "message": "De woning en advertentie"
+  },
+  "part_fit": {
+    "message": "Past bij jou"
+  },
+  "badge_hint": {
+    "message": "Open de advertentie voor de locatie en alle redenen."
+  },
+  "free_badge": {
+    "message": "GRATIS"
+  },
+  "unlock_title": {
+    "message": "Alles ontgrendelen, gratis"
+  },
+  "unlock_cta": {
+    "message": "Stuur me de code"
+  },
+  "try_again": {
+    "message": "Er ging iets mis. Probeer opnieuw."
+  },
+  "rank_cta": {
+    "message": "Hele zoekopdracht rangschikken"
+  },
+  "rank_sub": {
+    "message": "Alle pagina's, beste RealHunt-score eerst"
+  },
+  "rank_title": {
+    "message": "Hele zoekopdracht, gerangschikt"
+  },
+  "rank_stop": {
+    "message": "Stop"
+  },
+  "rank_rooms": {
+    "message": "kamers"
+  },
+  "b_price": {
+    "message": "Prijs vs vergelijkbare woningen"
+  },
+  "price_over": {
+    "message": "Je betaalt $P1$% meer dan voor vergelijkbare woningen van deze grootte.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "price_under": {
+    "message": "$P1$% goedkoper dan vergelijkbare woningen van deze grootte.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "fair_value": {
+    "message": "Marktwaarde bij die m²-prijs"
+  },
+  "b_offer": {
+    "message": "Wat te bieden"
+  },
+  "offer_open": {
+    "message": "Begin met"
+  },
+  "offer_max": {
+    "message": "Niet hoger dan"
+  },
+  "estimate": {
+    "message": "schatting"
+  },
+  "b_cost": {
+    "message": "Wat het je kost"
+  },
+  "cost_month": {
+    "message": "Hypotheek per maand"
+  },
+  "cost_cash": {
+    "message": "Eigen geld op dag één"
+  },
+  "b_hist": {
+    "message": "Prijsgeschiedenis"
+  },
+  "b_dups": {
+    "message": "Dezelfde woning op andere sites"
+  },
+  "b_walk": {
+    "message": "Binnen 10 minuten lopen"
+  },
+  "b_ask": {
+    "message": "Vraag de makelaar"
+  },
+  "top10_city": {
+    "message": "Bekijk de top 10 woningen in $P1$ op RealHunt",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "top10_any": {
+    "message": "Bekijk de beste woningen op RealHunt"
+  },
+  "compare": {
+    "message": "Vergelijken"
+  },
+  "onb_title": {
+    "message": "Nieuw: de slimme kaart"
+  },
+  "unlock_blocks": {
+    "message": "Ontgrendel de volledige kaart gratis met je e-mail"
+  },
+  "s_over": {
+    "message": "ongeveer $P1$ boven marktwaarde",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "s_under": {
+    "message": "ongeveer $P1$ onder marktwaarde",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "copied": {
+    "message": "Gekopieerd"
+  },
+  "unit_room": {
+    "message": "slpk."
+  },
+  "seen_before": {
+    "message": "Je hebt deze woning al eerder geopend"
+  },
+  "price_room": {
+    "message": "$P1$% per slaapkamer vs $P2$ vergelijkbare woningen",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "median": {
+    "message": "mediaan"
+  },
+  "b_map": {
+    "message": "Kaart en straat"
+  },
+  "map_open": {
+    "message": "Kaart openen"
+  },
+  "street_view": {
+    "message": "Street View"
+  },
+  "b_notes": {
+    "message": "Je notities"
+  },
+  "notes_ph": {
+    "message": "Alleen jij ziet dit: wat je mooi vond, wat je wilt vragen…"
+  },
+  "like": {
+    "message": "Leuk"
+  },
+  "dislike": {
+    "message": "Niet voor mij"
+  },
+  "b_share": {
+    "message": "Deel deze woning"
+  },
+  "share_copy": {
+    "message": "Samenvatting kopiëren"
+  },
+  "per_lease_year": {
+    "message": "/jaar erfpacht"
+  },
+  "saved_alert": {
+    "message": "Opgeslagen · we laten het weten als de prijs daalt"
+  },
+  "saved_alert_email": {
+    "message": "Opgeslagen · voeg je e-mail toe voor prijsdalingsalerts"
+  },
+  "best_here": {
+    "message": "Beste hier"
+  },
+  "hide_weak": {
+    "message": "Zwakke verbergen"
+  },
+  "show_all": {
+    "message": "Alles tonen"
+  },
+  "fab_hide": {
+    "message": "Verberg deze balk op deze site"
+  },
+  "last_rank": {
+    "message": "Laatste ranglijst ($P1$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rank_restored": {
+    "message": "$P1$ woningen · ranglijst van $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rank_eta": {
+    "message": "nog ongeveer $P1$ min",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rank_continue": {
+    "message": "Doorgaan"
+  },
+  "rank_copy10": {
+    "message": "Top 10 kopiëren"
+  },
+  "liked": {
+    "message": "Leuk gevonden"
+  },
+  "recent_title": {
+    "message": "Recent bekeken"
+  },
+  "src_model": {
+    "message": "eerlijke prijs uit $P1$ vergelijkbare woningen (oppervlakte, slaapkamers, badkamers, type, buurt)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "vs_fair": {
+    "message": "vs eerlijk"
+  },
+  "fair_short": {
+    "message": "eerlijk"
+  },
+  "baths_short": {
+    "message": "badk."
+  },
+  "deep_done": {
+    "message": "Advertentie volledig gelezen"
+  },
+  "rank_deep": {
+    "message": "Lees de $P2$ beste advertenties volledig… $P1$/$P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rank_deep_btn": {
+    "message": "Top 30 grondig checken"
+  },
+  "hidden_off": {
+    "message": "$P1$ niet meer te koop, verborgen",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rank_basis": {
+    "message": "Elke woning tegen haar eerlijke prijs (oppervlakte, slaapkamers, badkamers, perceel, leeftijd, type, exacte buurt), risico's en de woning zelf. Daarna wordt de top 30 volledig gelezen."
+  },
+  "fair_value_model": {
+    "message": "Eerlijke prijs voor deze woning"
+  },
+  "my_place": {
+    "message": "Naar mijn plek"
+  },
+  "my_place_set": {
+    "message": "Stel mijn plek in (werk, school, familie)"
+  },
+  "my_place_ph": {
+    "message": "Adres van werk, school of familie"
+  },
+  "place_notfound": {
+    "message": "Adres niet gevonden. Probeer straat, stad en land."
+  },
+  "area_hot": {
+    "message": "gewilde buurt: $P1$% duurder per m² dan de stad",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "area_cheap": {
+    "message": "goedkopere buurt: $P1$% minder per m²",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "area_avg": {
+    "message": "buurt op stadsgemiddelde"
+  },
+  "centre_in": {
+    "message": "in het centrum van $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "centre_km": {
+    "message": "$P1$ km van het centrum van $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "geo_approx": {
+    "message": "punt uit het adres"
+  },
+  "loc_none": {
+    "message": "Geen kaartpunt en adres niet gevonden: locatie telt niet mee."
+  },
+  "w_food": {
+    "message": "cafés en restaurants"
+  },
+  "conf_high": {
+    "message": "Betrouwbaarheid: hoog"
+  },
+  "conf_med": {
+    "message": "Betrouwbaarheid: gemiddeld"
+  },
+  "conf_low": {
+    "message": "Betrouwbaarheid: laag"
+  },
+  "conf_tip": {
+    "message": "Hoe zeker de score is: aantal vergeleken woningen en of de locatie is gecheckt."
+  },
+  "unlock_once": {
+    "message": "Maar één keer: we onthouden je in deze Chrome, ook na updates."
+  },
+  "wrong_data": {
+    "message": "Prijs of oppervlakte fout?"
+  },
+  "thanks": {
+    "message": "Bedankt, we checken het"
+  },
+  "rank_only_deep": {
+    "message": "Volledig gelezen"
+  },
+  "rank_hide_no": {
+    "message": "Verberg 👎"
+  },
+  "sort_fairgap": {
+    "message": "Verst onder eerlijke prijs"
+  },
+  "sort_near": {
+    "message": "Dichtst bij mijn plek"
+  },
+  "loc_fail": {
+    "message": "Omgeving nu niet te laden. Locatie telt niet mee; probeer later opnieuw."
+  },
+  "per_month": {
+    "message": "/mnd"
+  },
+  "pc_down": {
+    "message": "Prijs gedaald van $P1$ naar $P2$ sinds je keek op $P3$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "pc_up": {
+    "message": "Prijs gestegen van $P1$ naar $P2$ sinds je keek op $P3$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "b_cost_rent": {
+    "message": "Wat het je kost"
+  },
+  "rent_year": {
+    "message": "Huur per jaar"
+  },
+  "rent_deposit": {
+    "message": "Borg (meestal 2 maanden)"
+  },
+  "rent_deposit_n": {
+    "message": "Gevraagde borg"
+  },
+  "city_rent_median": {
+    "message": "stadsmediaan $P1$/m² in $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rent_vs_buy": {
+    "message": "Een vergelijkbare woning hier kopen kost zo'n $P1$: $P2$ jaar van deze huur.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rent_vs_buy_note": {
+    "message": "Voor de eigenaar is dit $P1$% bruto rendement. Onder 4% is huren meestal beter; boven 6% wint kopen.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rent_real": {
+    "message": "Op basis van echte huren in $P1$ op RealHunt.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "b_offer_rent": {
+    "message": "Wat te bieden"
+  },
+  "rank_cta_rent": {
+    "message": "Rangschik alle huurwoningen"
+  },
+  "deal_sale": {
+    "message": "Te koop"
+  },
+  "deal_rent": {
+    "message": "Te huur"
+  },
+  "rank_cmp3": {
+    "message": "Vergelijk top 3"
+  },
+  "rank_uploaded": {
+    "message": "$P1$ woningen aan RealHunt toegevoegd, $P2$ topdeals (85+).",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "contrib_title": {
+    "message": "Jouw bijdrage"
+  },
+  "contrib_line": {
+    "message": "Je hebt $P1$ woningen aan de ranglijsten van RealHunt toegevoegd, $P2$ topdeals (85+). Dank je!",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "taste_title": {
+    "message": "Jouw smaak (kopen)"
+  },
+  "taste_title_rent": {
+    "message": "Jouw smaak (huren)"
+  },
+  "taste_line": {
+    "message": "Geleerd van $P1$ woningen die je leuk vond: tot $P2$, $P3$ slaapkamers, rond $P4$.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      },
+      "p4": {
+        "content": "$4"
+      }
+    }
+  },
+  "taste_note": {
+    "message": "Gebruikt voor „past bij jou” zolang je de 5 vragen niet hebt beantwoord."
+  },
+  "muted_site": {
+    "message": "Verborgen op deze website. Klik op het RealHunt-icoon om het weer te tonen."
+  },
+  "offline_note": {
+    "message": "RealHunt is nu niet bereikbaar: de score wordt in je browser berekend en kan minder precies zijn."
+  },
+  "cmd_toggle": {
+    "message": "RealHunt-kaart tonen of verbergen"
+  }
+}

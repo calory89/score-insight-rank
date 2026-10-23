@@ -1,0 +1,130 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_ext_name__",
+  "short_name": "RealHunt Score",
+  "description": "__MSG_ext_desc__",
+  "version": "0.15.0",
+  "default_locale": "en",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "RealHunt Score",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
+  "permissions": [
+    "storage",
+    "sidePanel",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://realhunt.co/*",
+    "https://overpass-api.de/*",
+    "https://overpass.kumi.systems/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*/*",
+        "http://*/*"
+      ],
+      "js": [
+        "src/score.js",
+        "src/generic.js",
+        "src/insights.js",
+        "src/model.js",
+        "src/adapters.js",
+        "src/content.js"
+      ],
+      "run_at": "document_idle",
+      "exclude_matches": [
+        "https://*.google.com/*",
+        "https://*.youtube.com/*",
+        "https://*.facebook.com/*",
+        "https://*.instagram.com/*",
+        "https://*.whatsapp.com/*",
+        "https://*.linkedin.com/*",
+        "https://*.x.com/*",
+        "https://*.twitter.com/*",
+        "https://*.tiktok.com/*",
+        "https://*.wikipedia.org/*",
+        "https://*.amazon.com/*",
+        "https://*.github.com/*",
+        "https://*.openai.com/*",
+        "https://*.chatgpt.com/*",
+        "https://*.claude.ai/*",
+        "https://*.anthropic.com/*",
+        "https://*.microsoft.com/*",
+        "https://*.live.com/*",
+        "https://*.office.com/*",
+        "https://*.apple.com/*",
+        "https://*.icloud.com/*",
+        "https://*.yahoo.com/*",
+        "https://*.bing.com/*",
+        "https://*.zoom.us/*",
+        "https://*.slack.com/*",
+        "https://*.notion.so/*",
+        "https://*.figma.com/*",
+        "https://*.canva.com/*",
+        "https://*.dropbox.com/*",
+        "https://*.paypal.com/*",
+        "https://*.stripe.com/*",
+        "https://*.supabase.co/*",
+        "https://*.netflix.com/*",
+        "https://*.spotify.com/*",
+        "https://*.booking.com/*",
+        "https://*.airbnb.com/*",
+        "https://*.reddit.com/*",
+        "https://mail.google.com/*",
+        "https://*.gmail.com/*",
+        "https://*.ebay.com/*",
+        "https://*.ebay.es/*",
+        "https://*.ebay.co.uk/*",
+        "https://*.aliexpress.com/*",
+        "https://*.temu.com/*",
+        "https://*.shein.com/*",
+        "https://*.zalando.com/*",
+        "https://*.atlassian.net/*",
+        "https://*.trello.com/*",
+        "https://*.salesforce.com/*",
+        "https://*.hubspot.com/*",
+        "https://*.zendesk.com/*",
+        "https://*.shopify.com/*",
+        "https://*.wordpress.com/*",
+        "https://*.medium.com/*",
+        "https://*.substack.com/*",
+        "https://*.twitch.tv/*",
+        "https://*.discord.com/*",
+        "https://*.telegram.org/*",
+        "https://*.duckduckgo.com/*",
+        "https://*.chess.com/*",
+        "https://*.bbc.co.uk/*",
+        "https://*.nytimes.com/*",
+        "https://*.elpais.com/*"
+      ],
+      "all_frames": false
+    }
+  ],
+  "homepage_url": "https://realhunt.co/extension",
+  "minimum_chrome_version": "116",
+  "commands": {
+    "toggle-card": {
+      "suggested_key": {
+        "default": "Alt+Shift+R"
+      },
+      "description": "__MSG_cmd_toggle__"
+    }
+  }
+}

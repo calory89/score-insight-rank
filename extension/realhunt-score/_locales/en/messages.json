@@ -1,0 +1,1526 @@
+{
+  "ext_name": {
+    "message": "RealHunt Score"
+  },
+  "ext_desc": {
+    "message": "Honest 0–100 score on any home for sale, on any property website: price vs similar homes, location and red flags. Free."
+  },
+  "disclaimer": {
+    "message": "Estimate, not an appraisal. Check every detail with the seller."
+  },
+  "gate": {
+    "message": "Your free report for today is used. Unlock unlimited reports, free, with just your email."
+  },
+  "consent_short": {
+    "message": "Allow RealHunt to use anonymous listing data (price, m², area) to compare prices with other listings?"
+  },
+  "allow": {
+    "message": "Allow"
+  },
+  "see_why": {
+    "message": "See why"
+  },
+  "open_panel": {
+    "message": "Open panel"
+  },
+  "save": {
+    "message": "Save"
+  },
+  "saved": {
+    "message": "Saved"
+  },
+  "part_price": {
+    "message": "Price vs the market"
+  },
+  "part_quality": {
+    "message": "The home and listing"
+  },
+  "part_flags": {
+    "message": "Red flags"
+  },
+  "part_fit": {
+    "message": "Fit with you"
+  },
+  "consent_title": {
+    "message": "Before we start"
+  },
+  "consent_body": {
+    "message": "RealHunt Score only works on supported property sites. With your OK we store derived listing data (price, size, area, score, a hashed listing ID) to compare prices, plus your answers if you create a profile. We never store photos or full descriptions, never track other browsing and never sell data. You can delete everything at any time."
+  },
+  "privacy": {
+    "message": "Privacy"
+  },
+  "share": {
+    "message": "Share this score"
+  },
+  "no_report_title": {
+    "message": "Open a listing"
+  },
+  "no_report_body": {
+    "message": "Open any home on idealista, Zillow or Rightmove and its score appears next to the price."
+  },
+  "signup_title": {
+    "message": "Free account, forever"
+  },
+  "signup_body": {
+    "message": "Unlimited reports, saved homes and price-drop alerts. No password: just your email."
+  },
+  "phone_optional": {
+    "message": "Phone (optional)"
+  },
+  "marketing_ok": {
+    "message": "Email me price drops and homes that match my profile. Unsubscribe anytime."
+  },
+  "signup_cta": {
+    "message": "Send me the code"
+  },
+  "q_budget": {
+    "message": "What's your maximum budget?"
+  },
+  "q_places": {
+    "message": "Where are you looking?"
+  },
+  "q_type": {
+    "message": "What kind of home?"
+  },
+  "q_purpose": {
+    "message": "What is it for?"
+  },
+  "q_timeline": {
+    "message": "When do you want to buy?"
+  },
+  "o_flat": {
+    "message": "Flat"
+  },
+  "o_house": {
+    "message": "House"
+  },
+  "o_any": {
+    "message": "Either"
+  },
+  "o_live": {
+    "message": "To live in"
+  },
+  "o_second": {
+    "message": "Second home"
+  },
+  "o_invest": {
+    "message": "Investment"
+  },
+  "o_3m": {
+    "message": "Within 3 months"
+  },
+  "o_12m": {
+    "message": "Within a year"
+  },
+  "o_browsing": {
+    "message": "Just looking"
+  },
+  "next": {
+    "message": "Next"
+  },
+  "skip": {
+    "message": "Skip"
+  },
+  "profile_title": {
+    "message": "Your taste profile"
+  },
+  "profile_body": {
+    "message": "5 quick questions so the score knows what fits you."
+  },
+  "profile_cta": {
+    "message": "Start (30 seconds)"
+  },
+  "profile_edit": {
+    "message": "Edit my answers"
+  },
+  "reco_title": {
+    "message": "Homes that match your taste on RealHunt"
+  },
+  "reco_none": {
+    "message": "Nothing matches yet. We'll show homes here as they come in."
+  },
+  "realhunt_grade": {
+    "message": "grade $VAL$",
+    "placeholders": {
+      "val": {
+        "content": "$1"
+      }
+    }
+  },
+  "signed_as": {
+    "message": "Signed in as $VAL$",
+    "placeholders": {
+      "val": {
+        "content": "$1"
+      }
+    }
+  },
+  "delete": {
+    "message": "Delete my data"
+  },
+  "delete_confirm": {
+    "message": "Delete your account, profile, saved homes and history? This can't be undone."
+  },
+  "share_footer": {
+    "message": "Score any home for free"
+  },
+  "download_image": {
+    "message": "Download image"
+  },
+  "bad_email": {
+    "message": "That email doesn't look right."
+  },
+  "try_again": {
+    "message": "Something went wrong. Try again."
+  },
+  "welcome_title": {
+    "message": "Score any home in one second"
+  },
+  "welcome_body": {
+    "message": "Open any listing on idealista, Zillow or Rightmove. You'll see a 0–100 score with the reason for every point: price vs the area, how complete the listing is, and red flags like occupied, auction or needs renovation."
+  },
+  "not_now": {
+    "message": "Not now"
+  },
+  "try_it": {
+    "message": "Try it on idealista"
+  },
+  "part_location": {
+    "message": "Location"
+  },
+  "badge_hint": {
+    "message": "Open the listing for the location check and the full reasons."
+  },
+  "loc_unavailable": {
+    "message": "The map service didn't answer, so location counts as neutral. Reload to try again."
+  },
+  "share_short": {
+    "message": "Share"
+  },
+  "nudge": {
+    "message": "Unlimited scores and price-drop alerts. Just your email"
+  },
+  "unlock_title": {
+    "message": "Unlock everything, free"
+  },
+  "unlock_body": {
+    "message": "Unlimited scores with every reason, saved homes and price-drop alerts. Free forever: just your email."
+  },
+  "unlock_cta": {
+    "message": "Send me the code"
+  },
+  "unlock_fine": {
+    "message": "We send a 6-digit code to check it's you. By continuing you accept the privacy policy. Emails from us only if you tick the box."
+  },
+  "code_title": {
+    "message": "Check your email"
+  },
+  "code_sent": {
+    "message": "We sent a 6-digit code to $VAL$.",
+    "placeholders": {
+      "val": {
+        "content": "$1"
+      }
+    }
+  },
+  "code_cta": {
+    "message": "Unlock"
+  },
+  "change_email": {
+    "message": "Change email"
+  },
+  "wait_code": {
+    "message": "Wait a few seconds and try again."
+  },
+  "code_expired": {
+    "message": "That code expired. Ask for a new one."
+  },
+  "code_wrong": {
+    "message": "That code isn't right. Try again."
+  },
+  "free_badge": {
+    "message": "FREE"
+  },
+  "saved_title": {
+    "message": "Your saved homes"
+  },
+  "saved_none": {
+    "message": "Save homes from the score card. We track their price for you."
+  },
+  "rank_cta": {
+    "message": "Rank the whole search"
+  },
+  "rank_sub": {
+    "message": "All pages, best RealHunt score first"
+  },
+  "rank_title": {
+    "message": "Whole search, ranked"
+  },
+  "rank_loading": {
+    "message": "Reading page $PAGE$… $N$ homes so far",
+    "placeholders": {
+      "page": {
+        "content": "$1"
+      },
+      "n": {
+        "content": "$2"
+      }
+    }
+  },
+  "rank_done": {
+    "message": "Done: $N$ homes from $PAGES$ pages",
+    "placeholders": {
+      "n": {
+        "content": "$1"
+      },
+      "pages": {
+        "content": "$2"
+      }
+    }
+  },
+  "rank_blocked": {
+    "message": "The site asked us to slow down. Ranked $N$ homes from $PAGES$ pages.",
+    "placeholders": {
+      "n": {
+        "content": "$1"
+      },
+      "pages": {
+        "content": "$2"
+      }
+    }
+  },
+  "rank_stop": {
+    "message": "Stop"
+  },
+  "rank_only_sqm": {
+    "message": "Only with m²"
+  },
+  "rank_empty": {
+    "message": "No homes read yet."
+  },
+  "rank_fine": {
+    "message": "Reads the next pages of this search at a person's pace. Scores here use price, size and listing facts; open a home for location and the full report."
+  },
+  "rank_median": {
+    "message": "median"
+  },
+  "rank_rooms": {
+    "message": "beds"
+  },
+  "site_title": {
+    "message": "RealHunt score for this home"
+  },
+  "site_body": {
+    "message": "RealHunt Score works on 160 property sites. If this one is missing, allow it here and it will show scores on it too."
+  },
+  "site_cta": {
+    "message": "Allow on this site"
+  },
+  "site_denied": {
+    "message": "Not allowed. You can try again any time."
+  },
+  "site_done": {
+    "message": "Done. Reload the page if you don't see scores."
+  },
+  "src_near": {
+    "message": "$P1$ similar homes within $P2$ km",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "src_area": {
+    "message": "$P1$ homes in the same city",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "src_page": {
+    "message": "the $P1$ homes on your search page",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "b_price": {
+    "message": "Price against similar homes"
+  },
+  "price_over": {
+    "message": "You'd pay $P1$% more than similar homes for this size.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "price_under": {
+    "message": "$P1$% cheaper than similar homes for this size.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "fair_value": {
+    "message": "Market value at that price per m²"
+  },
+  "price_nocomps": {
+    "message": "No similar homes yet to compare with. It gets sharper with every search you make."
+  },
+  "b_offer": {
+    "message": "What to offer"
+  },
+  "offer_open": {
+    "message": "Open with"
+  },
+  "offer_max": {
+    "message": "Don't go above"
+  },
+  "offer_why": {
+    "message": "Based on the market value of similar homes."
+  },
+  "offer_why_stale": {
+    "message": "Long on the market or already reduced: there's room to negotiate."
+  },
+  "offer_why_nocomps": {
+    "message": "Without comparables: a usual 5–6% negotiation margin."
+  },
+  "haggle": {
+    "message": "Copy a message asking for a lower price"
+  },
+  "estimate": {
+    "message": "estimate"
+  },
+  "b_cost": {
+    "message": "What it costs you"
+  },
+  "cost_month": {
+    "message": "Mortgage per month"
+  },
+  "cost_cash": {
+    "message": "Cash needed on day one"
+  },
+  "cost_down": {
+    "message": "Down"
+  },
+  "cost_rate": {
+    "message": "Rate"
+  },
+  "cost_years": {
+    "message": "Years"
+  },
+  "cost_note": {
+    "message": "Typical rate and about $P1$% buying costs (taxes, notary) for this country. Change the numbers to yours.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rent_line": {
+    "message": "If you rent it out: about $P1$/month (typical $P2$% gross yield here).",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rent_covers": {
+    "message": "That covers the mortgage."
+  },
+  "rent_short": {
+    "message": "That doesn't cover the mortgage."
+  },
+  "b_hist": {
+    "message": "Price history"
+  },
+  "hist_one": {
+    "message": "We've seen it at this price only. We'll tell you if it drops (save it)."
+  },
+  "hist_none": {
+    "message": "First time we see this home. Save it and we'll track its price."
+  },
+  "days_listed": {
+    "message": "days listed"
+  },
+  "b_dups": {
+    "message": "Same home on other sites"
+  },
+  "dups_none": {
+    "message": "We haven't seen it on other sites or with other agencies."
+  },
+  "b_walk": {
+    "message": "Within a 10-minute walk"
+  },
+  "w_transit": {
+    "message": "transport"
+  },
+  "w_shop": {
+    "message": "food shops"
+  },
+  "w_school": {
+    "message": "schools"
+  },
+  "w_health": {
+    "message": "pharmacies/doctors"
+  },
+  "w_park": {
+    "message": "parks"
+  },
+  "w_beach": {
+    "message": "beach (2 km)"
+  },
+  "b_ask": {
+    "message": "Ask the agent"
+  },
+  "size_small": {
+    "message": "$P1$ rooms in this size is tight: about $P2$ m² per room.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "size_big": {
+    "message": "Spacious: about $P2$ m² per room.",
+    "placeholders": {
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "copy_questions": {
+    "message": "Copy the questions"
+  },
+  "q_floor": {
+    "message": "Which floor is it on, and is there a lift?"
+  },
+  "q_energy": {
+    "message": "What's the energy rating?"
+  },
+  "q_orientation": {
+    "message": "Which way does it face? Is it exterior?"
+  },
+  "q_fees": {
+    "message": "How much are the monthly community fees?"
+  },
+  "q_year": {
+    "message": "What year was the building built, and are any works planned?"
+  },
+  "q_occupied": {
+    "message": "When exactly would it be empty and handed over?"
+  },
+  "q_renovation": {
+    "message": "Is there a quote for the renovation?"
+  },
+  "q_rented": {
+    "message": "Can I see the rental contract and when it ends?"
+  },
+  "q_why_cheap": {
+    "message": "Why is the price so far below the area? Any legal or ownership issue?"
+  },
+  "q_photos": {
+    "message": "Can you send more photos and the floor plan?"
+  },
+  "q_taxes": {
+    "message": "How much is the yearly property tax?"
+  },
+  "q_offers": {
+    "message": "Have there been offers? What's the lowest the owner would accept?"
+  },
+  "q_why_selling": {
+    "message": "Why is the owner selling, and how soon?"
+  },
+  "b_alts": {
+    "message": "Better options in $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "b_city": {
+    "message": "$P1$ on RealHunt",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "city_line": {
+    "message": "Median $P1$/m² across $P2$ homes we've seen.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "city_trend": {
+    "message": "last 30 days"
+  },
+  "top10_city": {
+    "message": "See the top 10 homes in $P1$ on RealHunt",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "top10_any": {
+    "message": "See the best homes on RealHunt"
+  },
+  "haggle_body": {
+    "message": "Hello, I'm interested in this home ($P3$). $P2$ I'd like to offer $P1$. Is the owner open to that? Thank you.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "haggle_arg_over": {
+    "message": "It's about $P1$% above similar homes nearby per m².",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "haggle_arg_gen": {
+    "message": "Comparing it with similar homes in the area,"
+  },
+  "copied": {
+    "message": "Copied"
+  },
+  "consent_more": {
+    "message": "Turn it on to see price history, duplicates, the city's median and better options."
+  },
+  "unlock_blocks": {
+    "message": "Unlock the full card free with your email: costs, history, duplicates, questions and better options"
+  },
+  "s_over": {
+    "message": "about $P1$ over market value",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "s_under": {
+    "message": "about $P1$ under market value",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "s_dropped": {
+    "message": "price already cut $P1$%",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "s_dup_cheaper": {
+    "message": "cheaper on another site"
+  },
+  "s_small": {
+    "message": "small rooms"
+  },
+  "s_big": {
+    "message": "spacious"
+  },
+  "onb_title": {
+    "message": "New: the smart card"
+  },
+  "onb_1": {
+    "message": "It fills in as it loads: price in money, what to offer, monthly cost."
+  },
+  "onb_2": {
+    "message": "Price history and the same home on other sites."
+  },
+  "onb_3": {
+    "message": "Drag it anywhere. Alt+Shift+R hides it."
+  },
+  "onb_ok": {
+    "message": "Got it"
+  },
+  "compare": {
+    "message": "Compare"
+  },
+  "rank_share": {
+    "message": "Share"
+  },
+  "rank_shared": {
+    "message": "Link copied"
+  },
+  "consent_needed": {
+    "message": "Allow data first"
+  },
+  "f_pmax": {
+    "message": "Max price"
+  },
+  "f_score": {
+    "message": "Score"
+  },
+  "sort_score": {
+    "message": "Best score"
+  },
+  "sort_ppsqm": {
+    "message": "Cheapest per m²"
+  },
+  "sort_price": {
+    "message": "Cheapest"
+  },
+  "sort_fit": {
+    "message": "Best for me"
+  },
+  "rank_showing": {
+    "message": "Showing $P1$ of $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "compare_hint": {
+    "message": "Add 2 to 4 homes with the Compare button on each card."
+  },
+  "compare_clear": {
+    "message": "Clear"
+  },
+  "unit_room": {
+    "message": "bedroom"
+  },
+  "b_lease": {
+    "message": "Leasehold"
+  },
+  "lease_line": {
+    "message": "$P1$-year lease: you pay about $P2$ per year of use. At the end the land goes back to the owner unless you extend.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "lease_noyears": {
+    "message": "Leasehold, but the listing doesn't say how many years are left. Ask before anything else."
+  },
+  "lease_note": {
+    "message": "Compare leasehold homes by price per year, not by total price."
+  },
+  "q_lease": {
+    "message": "How many years are left on the lease exactly, and what does an extension cost?"
+  },
+  "seen_before": {
+    "message": "You opened this home before"
+  },
+  "price_room": {
+    "message": "$P1$% per bedroom vs $P2$ similar homes you've seen",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "median": {
+    "message": "median"
+  },
+  "b_map": {
+    "message": "Map & street"
+  },
+  "map_open": {
+    "message": "Open map"
+  },
+  "street_view": {
+    "message": "Street View"
+  },
+  "b_notes": {
+    "message": "Your notes"
+  },
+  "notes_ph": {
+    "message": "Only you see this: what you liked, what to ask…"
+  },
+  "like": {
+    "message": "Like"
+  },
+  "dislike": {
+    "message": "Not for me"
+  },
+  "b_share": {
+    "message": "Share this home"
+  },
+  "share_copy": {
+    "message": "Copy summary"
+  },
+  "per_lease_year": {
+    "message": "/yr of lease"
+  },
+  "saved_alert": {
+    "message": "Saved · we'll email you if the price drops"
+  },
+  "saved_alert_email": {
+    "message": "Saved · add your email to get price-drop alerts"
+  },
+  "best_here": {
+    "message": "Best here"
+  },
+  "hide_weak": {
+    "message": "Hide weak"
+  },
+  "show_all": {
+    "message": "Show all"
+  },
+  "fab_hide": {
+    "message": "Hide this bar on this site"
+  },
+  "last_rank": {
+    "message": "Last ranking ($P1$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rank_restored": {
+    "message": "$P1$ homes · ranking from $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rank_eta": {
+    "message": "about $P1$ min left",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rank_continue": {
+    "message": "Continue"
+  },
+  "rank_copy10": {
+    "message": "Copy top 10"
+  },
+  "liked": {
+    "message": "Liked"
+  },
+  "recent_title": {
+    "message": "Recently viewed"
+  },
+  "src_model": {
+    "message": "fair price from $P1$ similar homes (size, bedrooms, bathrooms, type, area)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "vs_fair": {
+    "message": "vs fair"
+  },
+  "fair_short": {
+    "message": "fair"
+  },
+  "baths_short": {
+    "message": "ba"
+  },
+  "deep_done": {
+    "message": "Listing read in full (description, map, every fact)"
+  },
+  "rank_deep": {
+    "message": "Reading the best $P2$ listings in full… $P1$/$P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rank_deep_btn": {
+    "message": "Check top 30 in depth"
+  },
+  "hidden_off": {
+    "message": "$P1$ no longer for sale, hidden",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rank_basis": {
+    "message": "Each home vs its fair price (size, bedrooms, bathrooms, lot, age, type, exact area), risks and the home itself. The top 30 are then read in full."
+  },
+  "fair_value_model": {
+    "message": "Fair price for this home"
+  },
+  "my_place": {
+    "message": "To my place"
+  },
+  "my_place_set": {
+    "message": "Set my place (work, school, family) to see distances"
+  },
+  "my_place_ph": {
+    "message": "Address of your work, school or family"
+  },
+  "place_notfound": {
+    "message": "Couldn't find that address. Try street, city and country."
+  },
+  "area_hot": {
+    "message": "sought-after area: $P1$% pricier per m² than the city",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "area_cheap": {
+    "message": "cheaper area: $P1$% less per m² than the city",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "area_avg": {
+    "message": "area priced like the city average"
+  },
+  "centre_in": {
+    "message": "in the centre of $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "centre_km": {
+    "message": "$P1$ km from the centre of $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "geo_approx": {
+    "message": "map point from the address"
+  },
+  "loc_none": {
+    "message": "No map point on this page and the address couldn't be found, so location isn't counted in the score."
+  },
+  "w_food": {
+    "message": "cafés & restaurants"
+  },
+  "conf_high": {
+    "message": "Confidence: high"
+  },
+  "conf_med": {
+    "message": "Confidence: medium"
+  },
+  "conf_low": {
+    "message": "Confidence: low"
+  },
+  "conf_tip": {
+    "message": "How sure the score is: how many similar homes we compared with, and whether location was checked."
+  },
+  "unlock_once": {
+    "message": "One time only: we remember you on this Chrome, also after updates."
+  },
+  "wrong_data": {
+    "message": "Wrong price or size?"
+  },
+  "thanks": {
+    "message": "Thanks, we'll check it"
+  },
+  "rank_only_deep": {
+    "message": "Read in full"
+  },
+  "rank_hide_no": {
+    "message": "Hide 👎"
+  },
+  "sort_fairgap": {
+    "message": "Furthest below fair price"
+  },
+  "sort_near": {
+    "message": "Closest to my place"
+  },
+  "loc_fail": {
+    "message": "Couldn't load what's within a walk right now (map service busy). Location isn't counted; reopen later."
+  },
+  "per_month": {
+    "message": "/mo"
+  },
+  "pc_down": {
+    "message": "Price down from $P1$ to $P2$ since you looked on $P3$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "pc_up": {
+    "message": "Price up from $P1$ to $P2$ since you looked on $P3$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "b_cost_rent": {
+    "message": "What it costs you"
+  },
+  "rent_year": {
+    "message": "Rent per year"
+  },
+  "rent_deposit": {
+    "message": "Deposit (usual 2 months)"
+  },
+  "rent_deposit_n": {
+    "message": "Deposit asked"
+  },
+  "city_rent_median": {
+    "message": "city median $P1$/m² in $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rent_vs_buy": {
+    "message": "Buying a similar home here costs about $P1$: $P2$ years of this rent.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rent_vs_buy_note": {
+    "message": "For an owner this rent is a $P1$% gross yield. Under 4% renting is usually the better deal; over 6% buying usually wins.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rent_real": {
+    "message": "From real rents of homes in $P1$ on RealHunt.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "b_offer_rent": {
+    "message": "What to offer"
+  },
+  "rank_cta_rent": {
+    "message": "Rank all the rentals"
+  },
+  "deal_sale": {
+    "message": "For sale"
+  },
+  "deal_rent": {
+    "message": "For rent"
+  },
+  "rank_cmp3": {
+    "message": "Compare top 3"
+  },
+  "rank_uploaded": {
+    "message": "Added $P1$ homes to RealHunt, $P2$ of them top deals (85+).",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "contrib_title": {
+    "message": "Your contribution"
+  },
+  "contrib_line": {
+    "message": "You've added $P1$ homes to RealHunt's rankings, $P2$ of them top deals (85+). Thank you: every search makes the scores sharper for everyone.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "taste_title": {
+    "message": "Your taste (buying)"
+  },
+  "taste_title_rent": {
+    "message": "Your taste (renting)"
+  },
+  "taste_line": {
+    "message": "Learned from $P1$ homes you liked: up to $P2$, $P3$ bedrooms, around $P4$.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      },
+      "p4": {
+        "content": "$4"
+      }
+    }
+  },
+  "taste_note": {
+    "message": "Used for the “fit with you” part when you haven't answered the 5 questions. Like or dislike more homes to sharpen it."
+  },
+  "badge_pos": {
+    "message": "#$P1$ of $P2$ homes in this area",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "ago_s": {
+    "message": "updated $P1$s ago",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "ago_m": {
+    "message": "updated $P1$ min ago",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "ago_h": {
+    "message": "updated $P1$ h ago",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "png_sub": {
+    "message": "Best of $P1$ homes · $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "under_fair": {
+    "message": "under fair price"
+  },
+  "png_cta": {
+    "message": "Score any home in 1 click — free"
+  },
+  "toast_found": {
+    "message": "Top deal found"
+  },
+  "pill_homes": {
+    "message": "homes"
+  },
+  "pill_best": {
+    "message": "best"
+  },
+  "rank_loading_api": {
+    "message": "Ranking the whole map: $P1$ of $P2$ homes…",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rank_done_api": {
+    "message": "⚡ Ranked $P1$ homes in $P2$ s",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rank_moving": {
+    "message": "Area changed: re-ranking what's on the map…"
+  },
+  "today": {
+    "message": "today"
+  },
+  "since_last_rank": {
+    "message": "Price change since your last ranking here"
+  },
+  "show_on_page": {
+    "message": "Show it on the page"
+  },
+  "rank_wait": {
+    "message": "Reading the homes…"
+  },
+  "rank_empty_f": {
+    "message": "No home matches these filters."
+  },
+  "clear_filters": {
+    "message": "Clear filters"
+  },
+  "rank_refresh": {
+    "message": "Rank again"
+  },
+  "rank_dock": {
+    "message": "Move to the other side"
+  },
+  "rank_min": {
+    "message": "Minimise (Esc)"
+  },
+  "rank_follow_tip": {
+    "message": "Move the map or change a filter and the ranking follows"
+  },
+  "rank_follow": {
+    "message": "Follow map"
+  },
+  "rank_png": {
+    "message": "Top 3 image"
+  },
+  "png_copied": {
+    "message": "Image copied & saved"
+  },
+  "png_saved": {
+    "message": "Image saved"
+  },
+  "sort_new": {
+    "message": "Newest"
+  },
+  "sort_cut": {
+    "message": "Biggest price cut"
+  },
+  "sort_big": {
+    "message": "Biggest"
+  },
+  "more": {
+    "message": "More"
+  },
+  "less": {
+    "message": "Less"
+  },
+  "rank_basis_manual": {
+    "message": "Each home vs its fair price (size, bedrooms, bathrooms, lot, tax value, exact area and its 8 nearest neighbours), risks and the home itself. ≈ = from the search results; the top 20 are then read in full, slowly (✓)."
+  },
+  "rank_vs_detail": {
+    "message": "In your ranking: $P1$ (#$P2$ of $P3$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "rank_vs_detail_tip": {
+    "message": "The ranking scores every home from the search results. Here the whole listing is read (description, photos, map, risks), so the score can move a few points."
+  },
+  "delta_same": {
+    "message": "Same as in your ranking: $P1$ (#$P2$ of $P3$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "delta_moved": {
+    "message": "In your ranking $P1$ → now $P2$ ($P3$) · was #$P4$ of $P5$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      },
+      "p4": {
+        "content": "$4"
+      },
+      "p5": {
+        "content": "$5"
+      }
+    }
+  },
+  "delta_flag_gone": {
+    "message": "a risk from the search was ruled out"
+  },
+  "delta_location": {
+    "message": "map and walk counted ($P1$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rank_verify": {
+    "message": "Checking the top homes in full: $P1$/$P2$…",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "verified": {
+    "message": "read in full"
+  },
+  "unverified_tip": {
+    "message": "Estimated from the search results. The top homes are checked in full automatically; open it to read it now."
+  },
+  "check_tip": {
+    "message": "Big gap and not checked yet: capped at 84 until its listing is read"
+  },
+  "acc_line": {
+    "message": "Fair-price accuracy here: ±$P1$% (tested on $P2$ homes of this search)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "yield_short": {
+    "message": "yield"
+  },
+  "bought_for": {
+    "message": "Last sold for $P1$ ($P2$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "hoa_mo": {
+    "message": "HOA"
+  },
+  "fair_range": {
+    "message": "±$P1$%",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "zest_line": {
+    "message": "Second opinion used: the portal's own estimate, $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "site_sub": {
+    "message": "Same score as on RealHunt · compared with every home on RealHunt"
+  },
+  "site_note": {
+    "message": "This home is already scored on RealHunt, so the extension shows the site's own score instead of guessing a price from other homes."
+  },
+  "site_more": {
+    "message": "How the score works"
+  },
+  "dim_price": {
+    "message": "Price"
+  },
+  "dim_value": {
+    "message": "Price per m²"
+  },
+  "dim_space": {
+    "message": "Space"
+  },
+  "dim_condition": {
+    "message": "Move-in condition"
+  },
+  "dim_extras": {
+    "message": "Extras"
+  },
+  "dim_water": {
+    "message": "Sea & lakes"
+  },
+  "dim_weather": {
+    "message": "Good weather"
+  },
+  "dim_access": {
+    "message": "Airport"
+  },
+  "dim_costs": {
+    "message": "Buying costs"
+  },
+  "dim_photos": {
+    "message": "Listing detail"
+  },
+  "dim_interest": {
+    "message": "Buyer interest"
+  },
+  "dim_location": {
+    "message": "Location"
+  },
+  "dim_beach": {
+    "message": "Beach"
+  },
+  "dim_facilities": {
+    "message": "Facilities"
+  },
+  "dim_delivery": {
+    "message": "Delivery"
+  },
+  "dim_developer": {
+    "message": "Developer"
+  },
+  "dim_transparency": {
+    "message": "Transparency"
+  },
+  "dim_demand": {
+    "message": "Demand"
+  },
+  "b_price_mkt": {
+    "message": "Price vs the market"
+  },
+  "mkt_over": {
+    "message": "$P1$% above the market price of a home like this",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "mkt_under": {
+    "message": "$P1$% below the market price of a home like this",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "mkt_value": {
+    "message": "Market value"
+  },
+  "mkt_src": {
+    "message": "$P1$/m² in $P2$ (median asking price, $P3$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "mkt_reno": {
+    "message": "Already takes off about $P1$ for the renovation it needs.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "muted_site": {
+    "message": "Hidden on this website. Click the RealHunt icon to show it again."
+  },
+  "offline_note": {
+    "message": "Can't reach RealHunt right now: the score is calculated in your browser and may be less precise."
+  },
+  "cmd_toggle": {
+    "message": "Show or hide the RealHunt card"
+  }
+}

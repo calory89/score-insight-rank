@@ -5,7 +5,7 @@ import { Link, useLocation } from "react-router-dom";
 import { t } from "./i18n";
 
 const ZIP = "/realhunt-score.zip";
-const STORE = ""; // Chrome Web Store URL once approved
+const STORE = "https://chromewebstore.google.com/detail/realhunt-score/bhmlohilhgfcjfmoiaalblamplbcmeem"; // live on the Chrome Web Store
 
 function track(kind: string) {
   try { (window as any).fbq?.("trackCustom", kind); } catch { /* no pixel */ }
