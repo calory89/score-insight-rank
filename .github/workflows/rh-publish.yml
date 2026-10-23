@@ -32,6 +32,13 @@ jobs:
           # Leaving them out keeps the package small enough to upload (it reached 800 MB).
           tar -czf rh.tgz -C out --exclude='./_s/realhunt.co/*.webp' --exclude='./_s/realhunt.co/*.jpg' --exclude='./_s/realhunt.co/*.jpeg' --exclude='./_s/realhunt.co/*.png' --exclude='./_s/realhunt.co/*.gif' --exclude='./_s/realhunt.co/*.mp4' .
           ls -la rh.tgz
-          URL=$(curl -sS -m 300 -F "file=@rh.tgz" https://temp.sh/upload)
+          # temp.sh sometimes answers with an HTML error page: retry, and fail the run if no URL comes back.
+          URL=""
+          for i in 1 2 3 4 5; do
+            URL=$(curl -sS -m 300 -F "file=@rh.tgz" https://temp.sh/upload || true)
+            case "$URL" in https://*) break ;; esac
+            echo "upload attempt $i failed: $(echo "$URL" | head -c 120)"; URL=""; sleep 20
+          done
+          if [ -z "$URL" ]; then echo "could not upload rh.tgz"; exit 1; fi
           echo "PUBLISH_URL=$URL"
           echo "PUBLISH_URL=$URL" >> $GITHUB_STEP_SUMMARY
