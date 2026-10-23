@@ -44,7 +44,7 @@ export function DetailAside({ deal, listing }: { deal: Row; listing: ReactNode }
           {(deal as any).lat != null && (deal as any).lng != null && <a href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${(deal as any).lat},${(deal as any).lng}`} target="_blank" rel="noopener noreferrer nofollow">{t("Street View (approximate)")}</a>}
           {COSTS.has(slug) && <Link to={`/costs/${slug}`}>{t("Buying costs in")} {deal.country}</Link>}
         </div>
-        <p className="hv-aside-fine">{t("RealHunt is not the seller. The listing opens on the original site.")}</p>
+        <p className="hv-aside-fine">{t("RealHunt is not the seller. The listing opens on the original site.")} <Link to="/blog/property-scams-buying-abroad">{t("How to avoid scams")}</Link> · <Link to="/blog/viewing-checklist-cheap-house">{t("Viewing checklist")}</Link></p>
       </div>
     </aside>
   );
