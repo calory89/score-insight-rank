@@ -28,7 +28,9 @@ jobs:
           mkdir -p out/_s/realhunt.co
           cp -r dist/assets out/assets
           rsync -a --exclude assets dist/ out/_s/realhunt.co/
-          tar -czf rh.tgz -C out .
+          # images under _s/realhunt.co are published by their own flow (realhunt-media); rh-pub-import never adds new ones anyway.
+          # Leaving them out keeps the package small enough to upload (it reached 800 MB).
+          tar -czf rh.tgz -C out --exclude='./_s/realhunt.co/*.webp' --exclude='./_s/realhunt.co/*.jpg' --exclude='./_s/realhunt.co/*.jpeg' --exclude='./_s/realhunt.co/*.png' --exclude='./_s/realhunt.co/*.gif' --exclude='./_s/realhunt.co/*.mp4' .
           ls -la rh.tgz
           URL=$(curl -sS -m 300 -F "file=@rh.tgz" https://temp.sh/upload)
           echo "PUBLISH_URL=$URL"
