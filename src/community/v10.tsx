@@ -15,6 +15,7 @@ import { useCommunity } from "./ctx";
 import IntroChat from "@/components/realhunt/IntroChat";
 import DEST from "@/data/destinations.json";
 import GUIDES_JSON from "@/data/guides.json";
+const theC = (n: string) => (/^(United |Netherlands$|Dominican Republic$|Czech Republic$|Philippines$)/.test(n) ? "the " + n : n);
 import { Bell, BadgeCheck, Check, ChevronLeft, FileUp, Languages, Loader2, MessageCircle, Scale, ShieldCheck, TrendingDown, Users, X, Download } from "lucide-react";
 
 const rpc = async (fn: string, args: Record<string, unknown> = {}) => { const { data, error } = await (supabase as any).rpc(fn, args); if (error) throw error; return data; };
@@ -191,7 +192,7 @@ export function CostsPage() {
   const { slug = "" } = useParams();
   const d = D[slug]; const n = nameOf(slug);
   const [price, setPrice] = useState(80000);
-  useEffect(() => { if (n) setMeta(`Buying a home in ${n[0]}: real costs, taxes and rental yield · RealHunt`, `What you pay on top of the price in ${n[0]}, yearly property tax, tax on rental income and what holiday rentals earn. With sources.`); }, [slug]);
+  useEffect(() => { if (n) setMeta(`Buying a home in ${theC(n[0])}: real costs, taxes and rental yield · RealHunt`, `What you pay on top of the price in ${theC(n[0])}, yearly property tax, tax on rental income and what holiday rentals earn. With sources.`); }, [slug]);
   if (!d || !n) return <div className="hunt-wrap hunt-page"><h1>Not found</h1><Link to="/costs">All destinations</Link></div>;
   const r = range(d.purchase_costs_pct);
   const rows: [string, string | null][] = [
@@ -203,7 +204,7 @@ export function CostsPage() {
   return (
     <div className="hunt-wrap hunt-page hv-sp hv-costs">
       <nav className="hv-crumbs"><Link to="/">RealHunt</Link> › <Link to="/costs">Real costs</Link> › <span>{n[0]}</span></nav>
-      <h1>Buying a home in {n[0]}: what it really costs</h1>
+      <h1>Buying a home in {theC(n[0])}: what it really costs</h1>
       {r && <div className="hv-costcalc">
         <label>Price of the home <input type="number" min={5000} step={1000} value={price} onChange={(e) => setPrice(Number(e.target.value) || 0)} /></label>
         <p>You pay about <b>{money(Math.round(price * (1 + r[0] / 100)))}</b>{r[1] !== r[0] ? <> to <b>{money(Math.round(price * (1 + r[1] / 100)))}</b></> : null} in total, of which <b>{money(Math.round(price * r[0] / 100))}{r[1] !== r[0] ? `–${money(Math.round(price * r[1] / 100))}` : ""}</b> is taxes and fees.</p>
@@ -212,7 +213,7 @@ export function CostsPage() {
       <p className="hunt-fine">Figures as of {d.as_of}. General information, not tax or legal advice.</p>
       <h2>Sources</h2>
       <ul className="hv-sources">{(d.sources || []).map((s: string) => <li key={s}><a href={s} target="_blank" rel="noopener noreferrer nofollow">{s.replace(/^https?:\/\/(www\.)?/, "").slice(0, 80)}</a></li>)}</ul>
-      <p style={{ marginTop: 22 }}>{n[2] ? <Link className="hunt-primary" to={`/new-builds/${n[2]}`}>New builds under €100,000 in {n[1]}</Link> : <Link className="hunt-primary" to={`/homes/${slug}`}>Best homes in {n[0]}</Link>} {GUIDE_NAMES[slug] && <Link className="hunt-secondary" to={`/guide/${slug}`}>How to buy in {n[0]}</Link>} <Link className="hunt-link" to="/costs">Other destinations</Link></p>
+      <p style={{ marginTop: 22 }}>{n[2] ? <Link className="hunt-primary" to={`/new-builds/${n[2]}`}>New builds under €100,000 in {theC(n[1])}</Link> : <Link className="hunt-primary" to={`/homes/${slug}`}>Best homes in {theC(n[0])}</Link>} {GUIDE_NAMES[slug] && <Link className="hunt-secondary" to={`/guide/${slug}`}>How to buy in {theC(n[0])}</Link>} <Link className="hunt-link" to="/costs">Other destinations</Link></p>
     </div>
   );
 }

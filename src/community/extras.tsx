@@ -23,6 +23,7 @@ export type Row = Deal & {
   publish_at?: string | null; early?: boolean; price_drop?: number; sold_reports?: number; available_reports?: number;
   imported?: boolean;
 };
+const theC = (n: string) => (/^(United |Netherlands$|Dominican Republic$|Czech Republic$|Philippines$)/.test(n) ? "the " + n : n);
 import { regionOf, slugify, isPriceCap } from "./regions";
 export type FeedParams = { scope?: string; country?: string; category?: string; max_price?: number | null; min_price?: number | null; min_beds?: number | null; price_drop?: boolean; min_sqm?: number | null; sort?: string; limit?: number; offset?: number; ids?: string[]; q?: string; terms?: string[]; min_score?: number | null; need?: string[]; dim_min?: Record<string, number> };
 // Guest pass: someone who opens an Insider's invite link (?ref=code) sees the Insider homes too, for
@@ -692,7 +693,7 @@ export function GuidePage() {
   const [price, setPrice] = useState(80000);
   useEffect(() => {
     window.scrollTo(0, 0);
-    document.title = g ? `How to buy a home in ${g.name} as a foreigner: steps, taxes and costs · RealHunt` : "Guides to buying a home abroad · RealHunt";
+    document.title = g ? `How to buy a home in ${theC(g.name)} as a foreigner: steps, taxes and costs · RealHunt` : "Guides to buying a home abroad · RealHunt";
     if (g) feed({ country: g.name, limit: 6 }).then((f) => setHomes(f.rows)).catch(() => {});
   }, [key]);
   if (!g) return (
@@ -709,7 +710,7 @@ export function GuidePage() {
   return (
     <div className="hunt-wrap hunt-page hunt-guide">
       <nav className="hv-crumbs"><Link to="/">RealHunt</Link> › <Link to="/guide">{t("Guides")}</Link> › <span>{g.name}</span></nav>
-      <h1>How to buy a home in {g.name} as a foreigner</h1>
+      <h1>How to buy a home in {theC(g.name)} as a foreigner</h1>
       <p>{t("The steps, papers and taxes, in plain words. General information, not legal advice: use a local lawyer before you sign.")}</p>
       {c?.can_foreigners_buy && <><h2>{t("Can foreigners buy?")}</h2><p>{c.can_foreigners_buy}</p></>}
       <h2>{t("The steps")}</h2>
@@ -725,7 +726,7 @@ export function GuidePage() {
       <h2>{t("Every year")}</h2><p>{g.yearly}</p>
       {c?.annual_property_tax && <p><b>{t("Yearly property tax")}:</b> {c.annual_property_tax}</p>}
       {c?.rental_income_tax && <p><b>{t("Tax on rental income")}:</b> {c.rental_income_tax}</p>}
-      <div className="hunt-row"><Link className="hunt-primary" to={`/homes/${key}`}>Best homes in {g.name}</Link>{c && <Link className="hunt-secondary" to={`/costs/${key}`}>{t("Costs, taxes and sources")}</Link>}<Link className="hunt-secondary" to={`/help-buying?country=${encodeURIComponent(g.name)}`}>{t("Help buying")}</Link></div>
+      <div className="hunt-row"><Link className="hunt-primary" to={`/homes/${key}`}>Best homes in {theC(g.name)}</Link>{c && <Link className="hunt-secondary" to={`/costs/${key}`}>{t("Costs, taxes and sources")}</Link>}<Link className="hunt-secondary" to={`/help-buying?country=${encodeURIComponent(g.name)}`}>{t("Help buying")}</Link></div>
       {homes.length > 0 && <><h2>{t("Best homes in")} {g.name}</h2><div className="hunt-minigrid">{homes.map((d) => <MiniCard key={d.id} d={d} />)}</div></>}
       {others.length > 0 && <><h2>{t("Compare")} {g.name}</h2><p className="hunt-chips">{others.map((k) => <Link key={k} to={`/countries/${[key, k].sort().join("-vs-")}`}>{g.name} vs {GUIDES[k].name}</Link>)}</p></>}
       {c?.sources?.length > 0 && <p className="hunt-fine">{t("Sources")}: {c.sources.map((u: string, i: number) => <span key={u}>{i ? " · " : ""}<a href={u} target="_blank" rel="noopener noreferrer nofollow">{u.replace(/^https?:\/\/(www\.)?/, "").split("/")[0]}</a></span>)}. {t("Checked")} {c.as_of}.</p>}
