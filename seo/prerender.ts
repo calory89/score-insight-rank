@@ -15,6 +15,7 @@ import fs from "fs";
 import { weatherShell } from "../src/pages/wx/shell";
 import { DIMS, AMEN } from "../src/community/dims";
 import { regionOf, slugify, HOME_TYPES } from "../src/community/regions";
+import { homeArticle } from "../src/community/homeArticle";
 
 const SITE = "https://realhunt.co";
 const DEF = `${SITE}/og-home.jpg`;
@@ -110,6 +111,11 @@ function build(root: string) {
   }
   const regionPage = (r: any) => { const k = `${slugCountry(r?.country || "")}/${slugify(regionOf(r || {}))}`; const g = regionHomes.get(k); return g && g.homes.length >= MIN_LIST ? g : null; };
 
+  // For the article on each home page (src/community/homeArticle.ts).
+  const byCountry = new Map<string, any[]>();
+  for (const r of ranked) { const k = slugCountry(r.country); if (k) (byCountry.get(k) || byCountry.set(k, []).get(k)!).push(r); }
+  const destForArticle: Record<string, any> = readJson("src/data/destinations.json", {});
+  const guidesForArticle: Record<string, any> = readJson("src/data/guides.json", {});
   for (const d of deals) {
     if (!d?.slug || !/^[A-Za-z0-9_-]+$/.test(d.slug)) continue;
     const r = bySlug.get(d.slug);
@@ -129,6 +135,7 @@ function build(root: string) {
       const near = r.nearby || {};
       const nearList = [["sea", "Sea"], ["lake", "Lake"], ["shop", "Shop"], ["train", "Train"], ["airport", "Airport"], ["hospital", "Hospital"]]
         .filter(([k]) => near[k]?.km != null).map(([k, l]) => `<li>${esc(l)}: ${esc(near[k].name || "")} · ${esc(near[k].km)} km</li>`).join("");
+      const art = homeArticle(r, { countryHomes: byCountry.get(cc) || [r], regionHomes: rp?.homes, regionName: rp?.name, dest: destForArticle[cc] || null, hasGuide: !!guidesForArticle[cc] });
       const sameRegion = rp ? rp.homes.filter((x) => x.slug !== r.slug).slice(0, 6) : [];
       const similar = (sameRegion.length >= 3 ? sameRegion : ranked.filter((x) => x.slug !== r.slug && x.country === r.country).slice(0, 6));
       const bands = PRICE_BANDS.filter((p) => p >= r.price_eur).slice(0, 1);
@@ -137,13 +144,17 @@ function build(root: string) {
         + (r.image_urls?.[0] ? `<p><img src="${esc(r.image_urls[0])}" alt="${esc(r.title + ", " + (r.location_name || cName))}" width="760" loading="eager" style="max-width:100%;height:auto;border-radius:12px"></p>` : "")
         + (r.nota != null ? `<h2>RealHunt score: ${esc(r.nota)} / 98</h2><p>Every home on RealHunt passed a hand check first, so the grade starts at 70. The rest compares this home with every other home on the site. <a href="/method">How the score works</a>.</p><ul>${dims.map(([k, l, help]) => `<li>${esc(l)}: <strong>${esc(r.dims[k])}</strong>/100 · ${esc(help)}</li>`).join("")}</ul>` : "")
         + (r.why_great ? `<h2>Why it made the list</h2><p>${esc(r.why_great)}</p>` : "")
+        + art.sections.map((x) => `<h2>${esc(x.h)}</h2>${x.p.map((t) => `<p>${esc(t)}</p>`).join("")}`).join("")
+        + (guidesForArticle[cc] ? `<p><a href="/guide/${esc(cc)}">How to buy a home in ${esc(the(cName))}, step by step</a>${destForArticle[cc] ? ` · <a href="/costs/${esc(cc)}">Costs and taxes in ${esc(the(cName))}</a>` : ""}</p>` : "")
         + (amen.length ? `<h2>Features</h2><p>${esc(amen.join(", "))}</p>` : "")
         + (nearList ? `<h2>What is nearby</h2><ul>${nearList}</ul>` : "")
+        + (art.faq.length ? `<h2>Questions about this home</h2>${art.faq.map(([q, a]) => `<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join("")}` : "")
         + (r.source_domain ? `<p>Listed on ${esc(r.source_domain)}. RealHunt is not an estate agent and does not sell this home; sign in to open the original listing and contact the seller.</p>` : "")
         + (similar.length ? `<h2>More homes in ${esc(sameRegion.length >= 3 && rp ? rp.name : cName)}</h2><ul>${similar.map(homeLi).join("")}</ul>` : "")
         + (cc && !REGIONS.has(cc) ? `<p><a href="/homes/${esc(cc)}">All homes in ${esc(cName)}</a>${bands.length ? ` · <a href="/homes/${esc(cc)}/under-${bands[0]}">Homes under ${esc(eur(bands[0]))} in ${esc(cName)}</a>` : ""} · <a href="/costs">What it costs to buy abroad</a></p>` : "")
         + `</article></main>`;
       const images = (r.image_urls || []).slice(0, 6).map((u: string) => abs(u));
+      if (art.faq.length) ld.push({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: art.faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) });
       ld.push({
         "@context": "https://schema.org", "@type": "RealEstateListing", url, name: r.title, description: r.why_great || d.desc,
         image: images, datePosted: day(r.publish_at || r.approved_at) || undefined,
