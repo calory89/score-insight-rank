@@ -2961,3 +2961,7 @@ html.rh-dark, html.rh-dark body { background: #0C0D0E; }
 @media (max-width: 640px) { .tp-filters .tp-selects select { flex: 1 1 45%; width: 100%; } }
 .tp-how-dims { margin: 6px 0 10px; padding-left: 18px; list-style: disc; font-size: 14px; }
 .tp-how-dims li { margin: 3px 0; }
+
+/* /countries/<a>-vs-<b> */
+.rh-cmp .hv-costs-table th[scope="row"] { width: 26%; min-width: 120px; }
+.rh-cmp .hv-costs-table td { width: 37%; vertical-align: top; }

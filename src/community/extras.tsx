@@ -1,4 +1,6 @@
 import { QUICK, DIMS } from "./scores";
+import GUIDES_JSON from "@/data/guides.json";
+import DEST_JSON from "@/data/destinations.json";
 import {BuyerAlertPreferences} from "./OperationsTools";
 import {PropertyImage, RentPreference} from "./BuyerTools";
 import {userRent} from "./buyer-state";
@@ -677,62 +679,56 @@ export function CollectionPage() {
 }
 
 // ---------------------------------------------------------------- guides and country pages
-const GUIDES: Record<string, { name: string; steps: [string, string][]; yearly: string }> = {
-  italy: {
-    name: "Italy",
-    steps: [
-      ["Get a codice fiscale", "Your Italian tax code. It is free, from the Agenzia delle Entrate in Italy or an Italian consulate abroad."],
-      ["Make a written offer", "The proposta d'acquisto usually comes with a small deposit. Once accepted, many buyers sign a preliminary contract (compromesso) with a 10–30% deposit."],
-      ["Check the house", "Ask for the land registry extract (visura catastale), proof the building matches its plans (conformità urbanistica e catastale), the energy certificate (APE) and any unpaid debts on the property."],
-      ["Sign at the notary", "The deed (rogito) is signed before a notaio, who checks the title and registers the sale. You can sign by power of attorney if you cannot travel."],
-      ["Pay the taxes", "Buying from a private seller: registration tax 9% of the cadastral value for a second home, or 2% if it becomes your main home, plus €50 + €50 fixed taxes and the notary's fee."],
-    ],
-    yearly: "IMU (council property tax) on second homes and a local waste tax (TARI). For small rural houses these are often a few hundred euros a year.",
-  },
-  spain: {
-    name: "Spain",
-    steps: [
-      ["Get an NIE", "Your foreigner identity number, from a Spanish consulate or a police station in Spain. You need it to sign and to pay taxes."],
-      ["Open a Spanish bank account", "Most notaries and councils expect payments and bills to go through a Spanish account."],
-      ["Reserve with an arras contract", "A private contract with a deposit, usually 10%. If the seller backs out, they normally return it twice."],
-      ["Check the house", "Order a nota simple from the Land Registry (owner and debts). In the countryside, check the land status (suelo rústico) and that the buildings are legal. Ask for the last IBI receipts."],
-      ["Sign at the notary and register", "The escritura is signed before a notario and then registered at the Registro de la Propiedad."],
-      ["Pay the transfer tax", "Resale homes pay ITP of 6–10% depending on the region, plus notary and registry of roughly €1,000–2,000."],
-    ],
-    yearly: "IBI (council tax) and waste collection. Non-residents who do not rent the house out also file a small yearly imputed-income tax.",
-  },
-  portugal: {
-    name: "Portugal",
-    steps: [
-      ["Get a NIF", "Your tax number, at a Finanças office or through a representative. Non-EU residents usually need a fiscal representative."],
-      ["Sign a promissory contract", "The CPCV fixes price and date, with a deposit of 10–30%."],
-      ["Check the house", "Ask for the caderneta predial and the certidão permanente (owner, debts, urban or rustic), and the habitation licence (licença de utilização)."],
-      ["Sign the deed", "At a notary or a Casa Pronta office, then the sale is registered at the Conservatória."],
-      ["Pay the taxes", "IMT on a sliding scale up to about 8% (5% on rustic land) and stamp duty of 0.8%."],
-    ],
-    yearly: "IMI (council tax), usually 0.3–0.45% of the tax value for urban property.",
-  },
-};
+// Steps and yearly costs per country live in src/data/guides.json; the money side (costs on top of the price,
+// yearly tax, rental tax, sources) in src/data/destinations.json. seo/prerender.ts builds the same page for crawlers.
+export const GUIDES = GUIDES_JSON as unknown as Record<string, { name: string; steps: [string, string][]; yearly: string }>;
+const DESTS = DEST_JSON as Record<string, any>;
 export function GuidePage() {
-  const { country = "italy" } = useParams();
-  const g = GUIDES[country.toLowerCase()];
+  const { country = "" } = useParams();
+  const key = country.toLowerCase();
+  const g = GUIDES[key];
+  const c = DESTS[key];
   const [homes, setHomes] = useState<Row[]>([]);
+  const [price, setPrice] = useState(80000);
   useEffect(() => {
-    if (!g) return;
-    document.title = `How to buy a cheap home in ${g.name} as a foreigner · RealHunt`;
-    feed({ country: g.name, limit: 6 }).then((f) => setHomes(f.rows)).catch(() => {});
-  }, [country]);
-  if (!g) return <div className="hunt-wrap hunt-page"><h1>Guides</h1><p>{Object.values(GUIDES).map((x) => <Link key={x.name} to={`/guide/${x.name.toLowerCase()}`} className="hunt-link">{x.name} </Link>)}</p></div>;
-  return (
+    window.scrollTo(0, 0);
+    document.title = g ? `How to buy a home in ${g.name} as a foreigner: steps, taxes and costs · RealHunt` : "Guides to buying a home abroad · RealHunt";
+    if (g) feed({ country: g.name, limit: 6 }).then((f) => setHomes(f.rows)).catch(() => {});
+  }, [key]);
+  if (!g) return (
     <div className="hunt-wrap hunt-page hunt-guide">
       <span className="hunt-eyebrow">{t("Guides")}</span>
-      <h1>How to buy a cheap home in {g.name} as a foreigner</h1>
-      <p>The steps, papers and taxes, in plain words. General information, not legal advice: use a local lawyer before you sign.</p>
-      <nav className="hunt-chips">{Object.entries(GUIDES).map(([k, x]) => <Link key={k} to={`/guide/${k}`} aria-current={k === country ? "page" : undefined}>{x.name}</Link>)}</nav>
+      <h1>{t("Guides to buying a home abroad")}</h1>
+      <p>{t("The steps, papers and taxes to buy a house as a foreigner, country by country, in plain words.")}</p>
+      <ul className="tp-law">{Object.entries(GUIDES).sort((x, y) => x[1].name.localeCompare(y[1].name)).map(([k, x]) => <li key={k}><Link className="hunt-link" to={`/guide/${k}`}>{x.name}</Link>{DESTS[k]?.purchase_costs_pct ? `: about ${DESTS[k].purchase_costs_pct}% on top of the price` : ""}</li>)}</ul>
+      <p><Link className="hunt-secondary" to="/countries">{t("Compare two countries")}</Link> <Link className="hunt-secondary" to="/costs">{t("Real buying costs by country")}</Link></p>
+    </div>
+  );
+  const r = (() => { const m = String(c?.purchase_costs_pct || "").match(/([\d.]+)\s*[-–]\s*([\d.]+)/) || String(c?.purchase_costs_pct || "").match(/([\d.]+)/); return m ? [Number(m[1]), Number(m[2] || m[1])] : null; })();
+  const others = Object.keys(GUIDES).filter((k) => k !== key && DESTS[k]).slice(0, 8);
+  return (
+    <div className="hunt-wrap hunt-page hunt-guide">
+      <nav className="hv-crumbs"><Link to="/">RealHunt</Link> › <Link to="/guide">{t("Guides")}</Link> › <span>{g.name}</span></nav>
+      <h1>How to buy a home in {g.name} as a foreigner</h1>
+      <p>{t("The steps, papers and taxes, in plain words. General information, not legal advice: use a local lawyer before you sign.")}</p>
+      {c?.can_foreigners_buy && <><h2>{t("Can foreigners buy?")}</h2><p>{c.can_foreigners_buy}</p></>}
+      <h2>{t("The steps")}</h2>
       <ol className="hunt-steps">{g.steps.map(([h, b]) => <li key={h}><strong>{h}</strong><p>{b}</p></li>)}</ol>
-      <h2>Every year</h2><p>{g.yearly}</p>
-      <div className="hunt-row"><Link className="hunt-primary" to={`/homes/${country}`}>Best homes in {g.name}</Link><Link className="hunt-secondary" to="/help-buying">{t("Help buying")}</Link></div>
-      {homes.length > 0 && <><h2>Voted homes in {g.name}</h2><div className="hunt-minigrid">{homes.map((d) => <MiniCard key={d.id} d={d} />)}</div></>}
+      {c?.purchase_costs_pct && <>
+        <h2>{t("Costs on top of the price")}</h2>
+        <p>About <b>{c.purchase_costs_pct}%</b>{c.purchase_costs_breakdown ? `: ${c.purchase_costs_breakdown}` : ""}</p>
+        {r && <div className="hv-costcalc">
+          <label>{t("Price of the home")} <input type="number" min={5000} step={1000} value={price} onChange={(e) => setPrice(Number(e.target.value) || 0)} /></label>
+          <p>{t("Taxes and fees")}: <b>{money(Math.round(price * r[0] / 100))}{r[1] !== r[0] ? `–${money(Math.round(price * r[1] / 100))}` : ""}</b></p>
+        </div>}
+      </>}
+      <h2>{t("Every year")}</h2><p>{g.yearly}</p>
+      {c?.annual_property_tax && <p><b>{t("Yearly property tax")}:</b> {c.annual_property_tax}</p>}
+      {c?.rental_income_tax && <p><b>{t("Tax on rental income")}:</b> {c.rental_income_tax}</p>}
+      <div className="hunt-row"><Link className="hunt-primary" to={`/homes/${key}`}>Best homes in {g.name}</Link>{c && <Link className="hunt-secondary" to={`/costs/${key}`}>{t("Costs, taxes and sources")}</Link>}<Link className="hunt-secondary" to={`/help-buying?country=${encodeURIComponent(g.name)}`}>{t("Help buying")}</Link></div>
+      {homes.length > 0 && <><h2>{t("Best homes in")} {g.name}</h2><div className="hunt-minigrid">{homes.map((d) => <MiniCard key={d.id} d={d} />)}</div></>}
+      {others.length > 0 && <><h2>{t("Compare")} {g.name}</h2><p className="hunt-chips">{others.map((k) => <Link key={k} to={`/countries/${[key, k].sort().join("-vs-")}`}>{g.name} vs {GUIDES[k].name}</Link>)}</p></>}
+      {c?.sources?.length > 0 && <p className="hunt-fine">{t("Sources")}: {c.sources.map((u: string, i: number) => <span key={u}>{i ? " · " : ""}<a href={u} target="_blank" rel="noopener noreferrer nofollow">{u.replace(/^https?:\/\/(www\.)?/, "").split("/")[0]}</a></span>)}. {t("Checked")} {c.as_of}.</p>}
     </div>
   );
 }
@@ -777,7 +773,7 @@ export function HomesPage() {
       <nav className="hunt-chips" aria-label={t("By price")}>{PRICE_CAPS.map((p) => <Link key={p} aria-current={p === max ? "page" : undefined} to={p === 100000 ? `/homes/${country}` : `/homes/${country}/under-${p}`}>{money(p)}</Link>)}</nav>
       {regions.length > 1 && <nav className="hunt-chips rh-regions" aria-label={t("By region")}>{regions.map(([k, l, n]) => <Link key={k} aria-current={k === regionKey ? "page" : undefined} to={`/homes/${country}/${k}`}>{l} <small>{n}</small></Link>)}</nav>}
       {!data ? <div className="hunt-skeleton-list" /> : data.rows.length ? <div className="hunt-minigrid">{data.rows.map((d) => <MiniCard key={d.id} d={d} />)}</div> : <div className="hunt-empty"><h3>{t("No homes here right now.")}</h3><p><Link className="hunt-primary" to={`/alerts?country=${encodeURIComponent(name)}`}>{t("Email me when one appears")}</Link> <Link className="hunt-secondary" to={`/homes/${country}`}>{t("All homes in")} {name}</Link></p></div>}
-      {GUIDES[country.toLowerCase()] && <p className="hunt-row"><Link className="hunt-secondary" to={`/guide/${country.toLowerCase()}`}>How to buy in {name}</Link></p>}
+      {GUIDES[country.toLowerCase()] && <p className="hunt-row"><Link className="hunt-secondary" to={`/guide/${country.toLowerCase()}`}>How to buy in {name}</Link>{DESTS[country.toLowerCase()] && <Link className="hunt-secondary" to={`/costs/${country.toLowerCase()}`}>Buying costs in {name}</Link>}</p>}
     </div>
   );
 }
