@@ -1,5 +1,5 @@
 name: rh-og-cards
-# Daily: share cards for new homes, listing data for the prerender step.
+# Daily: fresh homes from the database (public/data), share cards for new homes, listing data for the prerender step.
 on:
   schedule:
     - cron: "10 16 * * *"
@@ -15,13 +15,15 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install pillow==11.0.0
+      - name: refresh homes from the database
+        run: python3 scripts/build_static.py
       - run: python3 scripts/search_pages.py
       - run: python3 scripts/og_cards.py
       - name: commit if changed
         run: |
           git config user.name "realhunt-bot"
           git config user.email "bot@realhunt.co"
-          git add public/og/deal src/data/deal-meta.json public/og-default-60k.jpg src/data/search-pages.json src/data/search-static.json
-          git diff --cached --quiet || (git commit -m "Share cards, search pages and sitemap for new homes" && git push)
+          git add public/data public/og/deal src/data/deal-meta.json public/og-default-60k.jpg src/data/search-pages.json src/data/search-static.json
+          git diff --cached --quiet || (git commit -m "Daily data: homes, share cards, search pages and sitemap" && git push)
       - name: ping IndexNow (Bing and others)
         run: python3 scripts/indexnow.py
