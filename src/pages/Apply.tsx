@@ -9,7 +9,7 @@ import { Check } from "lucide-react";
 
 const Apply = () => {
   useDocumentMeta({
-    title: "Apply as Agent — RealHunt",
+    title: "Apply as Agent · RealHunt",
     description: "Free forever for verified off-plan agents. Sign in with Google or email.",
   });
   const { user } = useAuth();

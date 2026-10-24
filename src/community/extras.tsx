@@ -21,6 +21,7 @@ export type Row = Deal & {
   publish_at?: string | null; early?: boolean; price_drop?: number; sold_reports?: number; available_reports?: number;
   imported?: boolean;
 };
+import { regionOf, slugify, isPriceCap } from "./regions";
 export type FeedParams = { scope?: string; country?: string; category?: string; max_price?: number | null; min_price?: number | null; min_beds?: number | null; price_drop?: boolean; min_sqm?: number | null; sort?: string; limit?: number; offset?: number; ids?: string[]; q?: string; terms?: string[]; min_score?: number | null; need?: string[]; dim_min?: Record<string, number> };
 // Guest pass: someone who opens an Insider's invite link (?ref=code) sees the Insider homes too, for
 // 7 days, so what an Insider shares never shows up blurred. The server checks the code belongs to an
@@ -199,7 +200,7 @@ export function CostPanel({ deal }: { deal: Row }) {
         {reno && deal.sqm ? <div><dt>Renovation, typical range</dt><dd>{money(deal.sqm * 400)}–{money(deal.sqm * 900)}</dd></div> : null}
         <div><dt>Keeping it ({run.taxName}, insurance, basic water and power)</dt><dd>≈ {money(Math.round(yearly / 12))}/month</dd></div>
       </dl>
-      <label className="hunt-rent">If you pay rent of <input type="number" min={0} placeholder="800" step={50} value={rent || ""} onChange={(e) => {try{localStorage.setItem("rh_rent_explicit","1");}catch{}setRent(Math.max(0, Number(e.target.value)));}} /> € a month{rent > 0 ? <>, the estimated purchase total equals <strong>{`${months} ${t("months of your rent")}`}</strong>.</> : <span className="hunt-rent-hint">{" "}and see how many months of rent this home is worth.</span>}</label>
+      <label className="hunt-rent">If you pay rent of <input id="rh-rent" type="number" inputMode="numeric" min={0} placeholder="800" step={50} value={rent || ""} onChange={(e) => {try{localStorage.setItem("rh_rent_explicit","1");}catch{}setRent(Math.max(0, Number(e.target.value)));}} /> € a month{rent > 0 ? <>, the estimated purchase total equals <strong>{`${months} ${t("months of your rent")}`}</strong>.</> : <span className="hunt-rent-hint">{" "}and see how many months of rent this home is worth.</span>}</label>
       <p className="hunt-fine">{COSTS[deal.country]?.note || "Purchase costs vary by country; we use about 6% until we have local figures."} {run.extra || ""} Running costs are a rough guide for a small house; ask the seller for the real bills.{reno ? " Renovation ranges are ballpark figures; get a local quote." : ""}</p>
     </section>
   );
@@ -738,27 +739,44 @@ export function GuidePage() {
 export function HomesPage() {
   const { country = "", cap = "" } = useParams();
   const name = decodeURIComponent(country).replace(/-/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-  const max = Number((cap.match(/\d+/) || [])[0]) || 0; // 0 = no price cap (RealHunt has no €100k limit any more)
+  const max = isPriceCap(cap) ? Number((cap.match(/\d+/) || [])[0]) || 0 : 0; // 0 = no price cap
+  const regionKey = cap && !isPriceCap(cap) ? cap.toLowerCase() : "";
   const [data, setData] = useState<{ rows: Row[]; total: number } | null>(null);
+  const [regions, setRegions] = useState<[string, string, number][]>([]);
   useEffect(() => {
-    document.title = max ? `Homes under ${money(max)} in ${name} · RealHunt` : `Best homes for sale in ${name} · RealHunt`;
-    const m = document.querySelector('meta[name="description"]'); if (m) m.setAttribute("content", max ? `Houses for sale under ${money(max)} in ${name}, each one scored and ranked. Updated every day.` : `The best houses for sale in ${name}, each one scored and ranked best first. Updated every day.`);
-    setData(null); feed({ scope: "all", country: name, ...(max ? { max_price: max } : {}), limit: 60 }).then(setData).catch(() => setData({ rows: [], total: 0 }));
+    setData(null);
+    // All homes of the country in one go (at most a few hundred), so regions and counts are exact.
+    feedAll({ scope: "all", country: name, sort: "score" } as FeedParams).then((all) => {
+      const rows = all.rows || [];
+      const counts = new Map<string, [string, number]>();
+      for (const r of rows) { const rg = regionOf(r); if (!rg) continue; const k = slugify(rg); counts.set(k, [rg, (counts.get(k)?.[1] || 0) + 1]); }
+      setRegions([...counts.entries()].filter(([, [, n]]) => n >= 3).map(([k, [l, n]]) => [k, l, n] as [string, string, number]).sort((a, b) => b[2] - a[2]));
+      const list = rows.filter((r) => (!max || (r.price_eur || 0) <= max) && (!regionKey || slugify(regionOf(r)) === regionKey));
+      setData({ rows: list.slice(0, 60), total: list.length });
+    }).catch(() => setData({ rows: [], total: 0 }));
   }, [country, cap]);
+  const regionName = regionKey ? (regions.find((r) => r[0] === regionKey)?.[1] || data?.rows?.[0] && regionOf(data.rows[0]) || cap.replace(/-/g, " ")) : "";
+  const place = regionName ? `${regionName}, ${name}` : name;
+  useEffect(() => {
+    document.title = max ? `Homes under ${money(max)} in ${place} · RealHunt` : `Best homes for sale in ${place} · RealHunt`;
+    const m = document.querySelector('meta[name="description"]'); if (m) m.setAttribute("content", max ? `Houses for sale under ${money(max)} in ${place}, each one scored and ranked. Updated every day.` : `The best houses for sale in ${place}, each one scored and ranked best first. Updated every day.`);
+  }, [place, max]);
   const top = data?.rows?.[0];
   const avg = data?.rows?.length ? Math.round(data.rows.reduce((a, r) => a + (r.price_eur || 0), 0) / data.rows.length / 500) * 500 : 0;
   const low = data?.rows?.length ? Math.min(...data.rows.map((r) => r.price_eur || 1e9)) : 0;
   return (
     <div className="hunt-wrap hunt-page hv-country">
+      <nav className="rh-crumbs" aria-label={t("Breadcrumb")}><Link to="/">RealHunt</Link> › <Link to={`/homes/${country}`}>{name}</Link>{regionName && <> › <span>{regionName}</span></>}{max ? <> › <span>{t("Under")} {money(max)}</span></> : null}</nav>
       <header className="hv-country-hero" style={top ? { backgroundImage: `linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.72)),url("${top.image_urls?.[0]}")` } : undefined}>
-        <span className="hunt-eyebrow">{name}</span>
-        <h1>{max ? <>Homes under {money(max)} in {name}</> : <>Best homes for sale in {name}</>}</h1>
+        <span className="hunt-eyebrow">{place}</span>
+        <h1>{max ? <>Homes under {money(max)} in {place}</> : <>Best homes for sale in {place}</>}</h1>
         {data && data.total > 0 && <div className="hv-country-stats"><span><b>{data.total}</b> homes</span><span>from <b>{money(low)}</b></span><span>average <b>{money(avg)}</b></span></div>}
       </header>
-      {data && data.rows.length >= 3 && <><h2 className="hv-country-h2">Top 3 in {name}</h2><div className="hv-country-top">{data.rows.slice(0, 3).map((d, n) => <Link key={d.id} to={`/deal/${d.slug}`}><img src={d.image_urls?.[0]} alt="" /><span className="hv-pod-medal">{["🥇", "🥈", "🥉"][n]}</span><strong>{money(d.price_eur)}</strong><small>{d.location_name}</small></Link>)}</div><h2 className="hv-country-h2">All homes</h2></>}
+      {data && data.rows.length >= 3 && <><h2 className="hv-country-h2">Top 3 in {place}</h2><div className="hv-country-top">{data.rows.slice(0, 3).map((d, n) => <Link key={d.id} to={`/deal/${d.slug}`}><img src={d.image_urls?.[0]} alt={`${d.title}, ${d.location_name || name}`} /><span className="hv-pod-medal">{["🥇", "🥈", "🥉"][n]}</span><strong>{money(d.price_eur)}</strong><small>{d.location_name}</small></Link>)}</div><h2 className="hv-country-h2">All homes</h2></>}
       <p>{data ? `${data.total} homes, scored from 70 to 98 and ranked best first.` : "Loading…"} Every home links to its original listing. <Link to="/method">How the score works</Link> · <Link to={`/alerts?country=${encodeURIComponent(name)}${max ? `&max=${max}` : ""}`}>Get new homes in {name} by email</Link></p>
-      <nav className="hunt-chips">{PRICE_CAPS.map((p) => <Link key={p} aria-current={p === max ? "page" : undefined} to={p === 100000 ? `/homes/${country}` : `/homes/${country}/under-${p}`}>{money(p)}</Link>)}</nav>
-      {!data ? <div className="hunt-skeleton-list" /> : <div className="hunt-minigrid">{data.rows.map((d) => <MiniCard key={d.id} d={d} />)}</div>}
+      <nav className="hunt-chips" aria-label={t("By price")}>{PRICE_CAPS.map((p) => <Link key={p} aria-current={p === max ? "page" : undefined} to={p === 100000 ? `/homes/${country}` : `/homes/${country}/under-${p}`}>{money(p)}</Link>)}</nav>
+      {regions.length > 1 && <nav className="hunt-chips rh-regions" aria-label={t("By region")}>{regions.map(([k, l, n]) => <Link key={k} aria-current={k === regionKey ? "page" : undefined} to={`/homes/${country}/${k}`}>{l} <small>{n}</small></Link>)}</nav>}
+      {!data ? <div className="hunt-skeleton-list" /> : data.rows.length ? <div className="hunt-minigrid">{data.rows.map((d) => <MiniCard key={d.id} d={d} />)}</div> : <div className="hunt-empty"><h3>{t("No homes here right now.")}</h3><p><Link className="hunt-primary" to={`/alerts?country=${encodeURIComponent(name)}`}>{t("Email me when one appears")}</Link> <Link className="hunt-secondary" to={`/homes/${country}`}>{t("All homes in")} {name}</Link></p></div>}
       {GUIDES[country.toLowerCase()] && <p className="hunt-row"><Link className="hunt-secondary" to={`/guide/${country.toLowerCase()}`}>How to buy in {name}</Link></p>}
     </div>
   );

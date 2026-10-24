@@ -29,7 +29,7 @@ export const realEstateTips = [
   "🔑 Leverage is real estate's superpower: 20% down controls 100% of the asset.",
   "🌍 Currency risk can eat 10-20% of your returns on international investments.",
   "⚡ Properties within 500m of public transit appreciate 15-25% faster.",
-  "🏗️ New construction depreciates ~1.5% per year — factor this into yield calculations.",
+  "🏗️ New construction depreciates ~1.5% per year, factor this into yield calculations.",
   "📉 The best deals are found in markets where supply exceeds demand by 8%+.",
   "🔍 Always verify the price per m² against the micro-market median before buying.",
   "💼 Rental yield above 7% net is considered excellent in most European markets.",
@@ -405,7 +405,7 @@ export const FomoLoader = ({ step, readyReportId, onViewReady }: { step: number;
             {readyReportId && (
               <div className="flex items-center gap-2 mb-4">
                 <CheckCircle2 className="h-5 w-5 text-primary" />
-                <p className="text-sm font-semibold text-foreground">Analysis complete — your report is ready above ↑</p>
+                <p className="text-sm font-semibold text-foreground">Analysis complete, your report is ready above ↑</p>
               </div>
             )}
             
@@ -440,7 +440,7 @@ export const FomoLoader = ({ step, readyReportId, onViewReady }: { step: number;
           >
             <div className="text-center mb-5">
               <p className="text-sm font-semibold text-foreground">
-                🏆 Top rated properties — explore while we prepare yours
+                🏆 Top rated properties, explore while we prepare yours
               </p>
               <p className="text-xs text-muted-foreground mt-1">
                 Ranked by score. Click any to preview without losing your search.

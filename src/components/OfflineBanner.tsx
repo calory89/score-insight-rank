@@ -29,7 +29,7 @@ const OfflineBanner = () => {
     return () => { window.removeEventListener("offline", goOffline); window.removeEventListener("online", goOnline); clearTimeout(timer.current); };
   }, []);
   return <>
-    <StatusNotice active={isOffline} className="bg-destructive text-destructive-foreground"><WifiOff className="h-4 w-4" />You're offline — some features may not work</StatusNotice>
+    <StatusNotice active={isOffline} className="bg-destructive text-destructive-foreground"><WifiOff className="h-4 w-4" />You're offline, some features may not work</StatusNotice>
     <StatusNotice active={showReconnected && !isOffline} className="bg-primary text-primary-foreground"><Wifi className="h-4 w-4" />Back online</StatusNotice>
   </>;
 };

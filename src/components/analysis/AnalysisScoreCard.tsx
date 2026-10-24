@@ -58,7 +58,7 @@ const AnalysisScoreCard = ({ data: d, explanations, globalScore, gated = false }
                     className="rh-btn-primary text-xs"
                     style={{ padding: "8px 14px" }}
                   >
-                    Sign up free — 5 reports/mo
+                    Sign up free: 5 reports/mo
                   </Link>
                 </div>
               </div>

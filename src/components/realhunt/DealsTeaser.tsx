@@ -15,7 +15,7 @@ const DealsTeaser = () => {
         </h2>
         <p className="mt-4 text-ink-muted text-[16px] leading-relaxed">
           We read the portals so you don't. Every deal below was open and priced when we checked it,
-          with the numbers that make it interesting — and the catch that might kill it.
+          with the numbers that make it interesting, and the catch that might kill it.
         </p>
       </div>
 
@@ -29,7 +29,7 @@ const DealsTeaser = () => {
             <div className="bg-[#ECEDEE]">
               <img
                 src={d.image}
-                alt={`${d.title} — ${d.city}, ${d.country}`}
+                alt={`${d.title} · ${d.city}, ${d.country}`}
                 loading="lazy"
                 referrerPolicy="no-referrer"
                 className="w-full h-[180px] object-cover"

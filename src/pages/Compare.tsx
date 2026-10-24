@@ -144,7 +144,7 @@ const Compare = () => {
 
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground mb-1">Property Comparison</h1>
-          <p className="text-sm text-muted-foreground">Side-by-side forensic analysis — Kimovil style</p>
+          <p className="text-sm text-muted-foreground">Side-by-side forensic analysis: Kimovil style</p>
         </div>
 
         {properties.length === 0 ? (

@@ -52,7 +52,7 @@ class ErrorBoundary extends Component<Props, State> {
               <p className="text-sm text-muted-foreground leading-relaxed">
                 {this.state.errorCount >= 2
                   ? "This error persists. Try refreshing the page or going back to the homepage."
-                  : "An unexpected error occurred. This is usually temporary — try again."}
+                  : "An unexpected error occurred. This is usually temporary, try again."}
               </p>
             </div>
             <div className="flex flex-col gap-2.5">

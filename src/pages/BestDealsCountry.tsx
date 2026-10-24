@@ -32,7 +32,7 @@ const BestDealsCountry = () => {
   const description = `Forensic ranking of the highest-scored properties in ${pretty}. Every number sourced. Updated continuously.`;
 
   useDocumentMeta({
-    title: `${title} — RealHunt`,
+    title: `${title} · RealHunt`,
     description,
     canonicalUrl: `https://realhunt.co/best-deals/${encodeURIComponent(country.toLowerCase())}`,
     ogImage: "https://realhunt.co/og-home.jpg",
@@ -95,7 +95,7 @@ const BestDealsCountry = () => {
             <div key={i} className="h-20 rounded-2xl border border-hairline bg-paper animate-pulse" />
           ))}
           {!loading && rows.length === 0 && (
-            <div className="rh-card text-center text-ink-muted">No scored properties in {pretty} yet. Be the first — paste a listing.</div>
+            <div className="rh-card text-center text-ink-muted">No scored properties in {pretty} yet. Be the first, paste a listing.</div>
           )}
           {rows.map((r, i) => (
             <Link

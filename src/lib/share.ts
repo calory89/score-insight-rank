@@ -9,10 +9,10 @@ export function buildWhatsAppLink(phoneE164: string | null | undefined, message:
 
 export function buildShareMessage(opts: { title: string; score: number; url: string; agent?: string | null }) {
   const lines = [
-    `${opts.title} — RealHunt score ${opts.score}/10`,
+    `${opts.title} · RealHunt score ${opts.score}/10`,
     opts.url,
   ];
-  if (opts.agent) lines.push(`— ${opts.agent}`);
+  if (opts.agent) lines.push(`${opts.agent}`);
   return lines.join("\n");
 }
 

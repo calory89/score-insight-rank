@@ -131,11 +131,11 @@ const HeroSection = () => {
 
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-[1.1] mb-6">
             Paste Any Listing.{" "}
-            <span className="text-gradient-primary">Know If It's a Good Deal — Instantly.</span>
+            <span className="text-gradient-primary">Know If It's a Good Deal: Instantly.</span>
           </h1>
 
           <p className="text-base md:text-lg text-muted-foreground max-w-xl mx-auto mb-6 leading-relaxed">
-            We analyze risk, ROI, demand, liquidity, and market strength — so you don't buy blind.
+            We analyze risk, ROI, demand, liquidity, and market strength, so you don't buy blind.
           </p>
 
           {/* Counter shown below trust badges instead */}
@@ -174,7 +174,7 @@ const HeroSection = () => {
                       <span>Scanning listing…</span>
                     </span>
                   ) : (
-                    <>Analyze Property — Free <ArrowRight className="ml-1 h-4 w-4 hidden sm:inline transition-transform group-hover:translate-x-0.5" /></>
+                    <>Analyze Property: Free <ArrowRight className="ml-1 h-4 w-4 hidden sm:inline transition-transform group-hover:translate-x-0.5" /></>
                   )}
                   {launching && (
                     <span className="pointer-events-none absolute inset-x-0 bottom-0 h-[3px] overflow-hidden">
@@ -230,7 +230,7 @@ const HeroSection = () => {
               className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 hover:bg-primary/10 px-4 py-2 transition-colors group"
             >
               <Layers className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Bulk Analyze — Paste Multiple Links at Once</span>
+              <span className="text-sm font-medium text-primary">Bulk Analyze: Paste Multiple Links at Once</span>
               <ArrowRight className="h-3.5 w-3.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
             </button>
           </motion.div>

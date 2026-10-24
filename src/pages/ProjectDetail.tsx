@@ -13,7 +13,7 @@ const ProjectDetail = () => {
   const [loading, setLoading] = useState(true);
 
   useDocumentMeta({
-    title: p ? `${p.name} — RealHunt Score` : "Project — RealHunt",
+    title: p ? `${p.name} · RealHunt Score` : "Project · RealHunt",
     description: p?.description || "Independent off-plan property scoring.",
     ogType: "product",
     jsonLd: p
@@ -100,11 +100,11 @@ const ProjectDetail = () => {
             </div>
             {p.is_owned_by_realhunt && (
               <div className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 bg-amber-50 text-amber-800 ring-1 ring-amber-200 rounded text-xs">
-                <AlertCircle className="h-3.5 w-3.5" /> Owned by RealHunt — conflict disclosed
+                <AlertCircle className="h-3.5 w-3.5" /> Owned by RealHunt, conflict disclosed
               </div>
             )}
             <p className="mt-6 text-slate-700 leading-relaxed max-w-2xl">
-              {p.description || "Independent RealHunt evaluation across five public dimensions. Methodology and weights are open. Scores are calibrated against the global catalog so most projects fall between 4.5 and 7.5 — only truly exceptional projects exceed 8.5."}
+              {p.description || "Independent RealHunt evaluation across five public dimensions. Methodology and weights are open. Scores are calibrated against the global catalog so most projects fall between 4.5 and 7.5, only truly exceptional projects exceed 8.5."}
             </p>
           </div>
 
@@ -113,12 +113,12 @@ const ProjectDetail = () => {
             <ScoreRing score={Number(s.weighted_score || 0)} size="lg" />
             <div className="mt-4 text-xs text-slate-500 text-center max-w-xs">
               {Number(s.weighted_score || 0) >= 8.5
-                ? "Exceptional — top decile globally."
+                ? "Exceptional, top decile globally."
                 : Number(s.weighted_score || 0) >= 7
-                ? "Strong — above average across most dimensions."
+                ? "Strong, above average across most dimensions."
                 : Number(s.weighted_score || 0) >= 5
-                ? "Moderate — mixed picture, reviewers should dig in."
-                : "Risky — clear weaknesses in at least one dimension."}
+                ? "Moderate, mixed picture, reviewers should dig in."
+                : "Risky, clear weaknesses in at least one dimension."}
             </div>
           </div>
         </div>

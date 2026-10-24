@@ -32,6 +32,9 @@ import { TopListPage, TopProjectPage, TopClaimPage, TopMinePage, TopIndexPage } 
 import { TopMethodPage, AboutPage } from "./topTrustUI";
 import { HomeMethodPage } from "./method";
 import { DetailAside } from "./aside";
+import { StaticPage } from "./staticpage";
+import { InlineAlert, HomeFaq, MortgageCalc, PerSqmVsCountry } from "./oct24";
+import { regionOf, slugify } from "./regions";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
@@ -155,8 +158,10 @@ function Shell({ children }: { children: ReactNode }) {
     };
   }, [user?.id]);
   useEffect(() => {
-    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare-new-builds|costs|research|agents)/.test(location.pathname)) return; // these pages set their own title
-    document.title = "RealHunt — The best homes in every country, ranked by score";
+    // Child pages set their own title in effects that run before this one, so they must be listed here or the
+    // default title overwrites theirs (country pages, /method and /alerts showed the home title before 24-oct-2026).
+    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare-new-builds|costs|research|agents|homes\/|method|alerts|about|top|guide|new|sitemap|swipe|map|leaderboard|winners|best|weather|saved|legal|hunter\/|b\/)/.test(location.pathname)) return;
+    document.title = "RealHunt: The best homes in every country, ranked by score";
   }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
   // has to find the home again and click twice.
@@ -270,6 +275,9 @@ function Shell({ children }: { children: ReactNode }) {
           </div>
         )}
         <div className="hunt-main hv-page" key={location.pathname + langV}>{children}</div>
+        <nav className="rh-footer-countries" aria-label="Homes by country">
+          {[["spain","Spain"],["italy","Italy"],["denmark","Denmark"],["sweden","Sweden"],["france","France"],["poland","Poland"],["united-states","United States"],["japan","Japan"],["germany","Germany"],["netherlands","Netherlands"],["greece","Greece"],["switzerland","Switzerland"],["mexico","Mexico"],["canada","Canada"],["bulgaria","Bulgaria"]].map(([k, l]) => <Link key={k} to={`/homes/${k}`}>{t("Homes in")} {t(l)}</Link>)}
+        </nav>
         <footer className="hunt-footer">
           <Link to="/" className="hunt-footer-brand"><LogoMark size={26} />RealHunt</Link>
           <p>
@@ -290,6 +298,11 @@ function Shell({ children }: { children: ReactNode }) {
             <Link to="/research/new-builds">New-build report</Link>
             <Link to="/agents">For agents</Link>
             <Link to="/network">For developers</Link>
+            <Link to="/new">New homes</Link>
+            <Link to="/research/prices">Prices by country</Link>
+            <Link to="/method">How the score works</Link>
+            <Link to="/alerts">Alerts</Link>
+            <Link to="/sitemap">Site map</Link>
             <Link to="/legal/privacy">Privacy</Link>
             <Link to="/legal/terms">Terms</Link>
             {session?.admin && <Link to="/hunt/admin">Moderation</Link>}
@@ -825,6 +838,7 @@ function Home() {
       <MapFab search={location.search} />
       <section className="hv-hero hx-hero">
         <h1>{t("The best homes in every country, ranked.")}</h1>
+        {feed?.countries_count && <p className="hx-sub">{(() => { const v = Object.values(feed.countries_count as Record<string, number>); return `${num(v.reduce((a, b) => a + b, 0))} ${t("homes in")} ${v.length} ${t("countries, each checked by a person and scored from 70 to 98. We link to the seller; we do not sell.")}`; })()} <Link to="/method">{t("How the score works")}</Link></p>}
         <SmartSearch value={q} onSearch={search} inputRef={searchRef} />
       </section>
       <div className="rh-sticky-filters"><Filters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_price: minPrice, min_beds: minBeds, price_drop: priceDrop, min_sqm: minSqm, sort, q, min_score: minScore, need, dim_min: dimMin }} onChange={setFilters} /></div>
@@ -848,6 +862,7 @@ function Home() {
             <Fragment key={d.id}>
               <HomeCard deal={d} pos={index + 1} />
               {index === 5 && !q && <div className="hx-span"><Vibes rows={feed?.rows||[]} isOn={vibeOn} onToggle={toggleVibe} /></div>}
+              {index === 8 && <div className="hx-span"><InlineAlert countries={Object.keys(feed?.countries_count || {})} country={country && !country.includes(",") ? country : undefined} /></div>}
               {index === 11 && <div className="hx-span"><FindHomeCTA place={q || (country && !country.includes(",") ? country : undefined)} /></div>}
               {index === 17 && plain && !maxPrice && sort === "score" && <div className="hx-span"><NearCity /></div>}
               {index === 23 && plain && !maxPrice && sort === "score" && <div className="hx-span"><BestPerCountry /></div>}
@@ -867,6 +882,7 @@ function Home() {
       {feed && feed.rows.length < feed.total && !busy && (
         <button className="hunt-more" onClick={() => load(true)}>{t("More discoveries")}</button>
       )}
+      {plain && !q && <HomeFaq />}
       <section className="hunt-join hv-join">
         <div>
           <span className="hunt-eyebrow">FOUND ONE WE MISSED?</span>
@@ -983,12 +999,13 @@ function Detail() {
         <DetailGallery key={d.id} deal={d} />
         <section>
           <span className="hunt-eyebrow">
-            <Link to={`/homes/${encodeURIComponent((d.country || "").toLowerCase().replace(/ /g, "-"))}`}>{d.country}</Link> · {categories.find((c) => c[0] === d.category)?.[1] || d.category}
+            <Link to={`/homes/${encodeURIComponent((d.country || "").toLowerCase().replace(/ /g, "-"))}`}>{d.country}</Link>{regionOf(d) && <> · <Link to={`/homes/${encodeURIComponent((d.country || "").toLowerCase().replace(/ /g, "-"))}/${slugify(regionOf(d))}`}>{regionOf(d)}</Link></>} · {categories.find((c) => c[0] === d.category)?.[1] || d.category}
           </span>
           <h1>{cleanTitle(d)}</h1>
           <div className="hunt-price">{money(d.price_eur)}</div>
           <RentLine price={d.price_eur} big />
           <LocalPrice eur={d.price_eur} sqm={d.sqm} />
+          <PerSqmVsCountry price={d.price_eur} sqm={d.sqm} country={d.country} />
           <StatusTags deal={d as Row} />
           <VerifiedLine deal={d as Row} />
           {(d as any).developer && <DevBlock deal={d as Row} />}
@@ -1022,6 +1039,7 @@ function Detail() {
           <DecisionFacts deal={d as Row}/><TaxPanel deal={d as Row}/><Nearby deal={d} />
           <Availability dealId={d.id} />
           <CostPanel deal={d as Row} />
+          {d.price_eur ? <MortgageCalc price={d.price_eur} /> : null}
           <RemoteWorkStrip place={d.location_name || d.country} slug={d.slug} />
           {!(d as any).developer && <InfoRequest deal={d as Row} />}
           <ClaimListing deal={d as Row} />
@@ -1264,7 +1282,7 @@ function Submit() {
         }));
       else
         setNotice(
-          "We could not import this source. Add the details below — your draft is saved.",
+          "We could not import this source. Add the details below, your draft is saved.",
         );
       setStep(2);
     } catch (e) {
@@ -1987,6 +2005,8 @@ export default function Community() {
       <AboutPage />
     ) : path === "/method" ? (
       <HomeMethodPage />
+    ) : path === "/new" || path === "/research/prices" || path === "/sitemap" ? (
+      <StaticPage />
     ) : path === "/top/mine" ? (
       <TopMinePage />
     ) : path.startsWith("/top/claim/") ? (

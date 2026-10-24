@@ -59,9 +59,9 @@ const ExplainableAI = ({ data, explanations }: Props) => {
     <div className="rounded-2xl border border-hairline bg-surface p-6 md:p-8">
       <div className="flex items-start justify-between mb-5 flex-wrap gap-2">
         <div>
-          <h3 className="font-display text-[22px] text-ink">Explainable AI — what drives this score</h3>
+          <h3 className="font-display text-[22px] text-ink">Explainable AI, what drives this score</h3>
           <p className="text-[12px] text-ink-soft mt-1">
-            Ranked by impact. No black box — every factor is sourced.
+            Ranked by impact. No black box, every factor is sourced.
           </p>
         </div>
         <span className="text-[10px] uppercase tracking-[0.18em] text-ink-soft border border-hairline px-2 py-1 rounded-full">

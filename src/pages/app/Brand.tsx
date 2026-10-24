@@ -35,7 +35,7 @@ const Field = ({ label, hint, children }: { label: string; hint?: string; childr
 );
 
 const Brand = () => {
-  useDocumentMeta({ title: "Brand settings — RealHunt", description: "Configure your agent brand for shared dossiers." });
+  useDocumentMeta({ title: "Brand settings · RealHunt", description: "Configure your agent brand for shared dossiers." });
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [row, setRow] = useState<BrandRow>(empty);
@@ -140,7 +140,7 @@ const Brand = () => {
                 <span className="h-10 w-10 rounded-md border border-hairline" style={{ background: row.accent_hex }} />
               </div>
             </Field>
-            <Field label="Public slug" hint="Letters and numbers only — used in your shareable agent profile URL">
+            <Field label="Public slug" hint="Letters and numbers only, used in your shareable agent profile URL">
               <input
                 className="rh-input"
                 value={row.slug}

@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&display=swap" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="alternate" type="application/rss+xml" title="RealHunt: new homes" href="https://realhunt.co/feed.xml" />
     <link rel="icon" href="/favicon.png" type="image/png" sizes="512x512" />
     <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
     <meta name="theme-color" content="#FFFFFF" />
@@ -38,17 +39,17 @@
     <meta name="twitter:image" content="https://realhunt.co/og-home.jpg" />
 
     <script type="application/ld+json">
-    {"@context":"https://schema.org","@type":"Organization","name":"RealHunt","url":"https://realhunt.co","logo":"https://realhunt.co/favicon.png","sameAs":["https://twitter.com/RealHuntApp"],"description":"The best homes in every country, scored and ranked, across Europe, the Americas, Japan and Asia."}
+    {"@context":"https://schema.org","@type":"Organization","name":"RealHunt","url":"https://realhunt.co","logo":"https://realhunt.co/favicon.png","sameAs":["https://twitter.com/RealHuntApp"],"description":"Cheap homes for sale around the world, each checked by a person and scored from 70 to 98.","email":"hello@realhunt.co","parentOrganization":{"@type":"Organization","name":"Equinox Investment Group LLC"}}
     </script>
     <script type="application/ld+json">
-    {"@context":"https://schema.org","@type":"WebSite","name":"RealHunt","url":"https://realhunt.co"}
+    {"@context":"https://schema.org","@type":"WebSite","name":"RealHunt","url":"https://realhunt.co","potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://realhunt.co/?q={search_term_string}"},"query-input":"required name=search_term_string"}}
     </script>
     <script>
     /* Language (1-oct-2026): Spanish for visitors from Spain or a Spanish-speaking country, English otherwise. Mirrors src/lib/lang.ts. */
     (function(){var d=document.documentElement,l="en";try{var q=new URLSearchParams(location.search).get("lang"),s=null;try{s=localStorage.getItem("rh_lang")}catch(e){}
     if(q==="es"||q==="en")l=q;else if(s==="es"||s==="en")l=s;else{var n=(navigator.languages&&navigator.languages[0])||navigator.language||"";var tz="";try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||""}catch(e){}
     if(/^es/i.test(n)||/^(Europe\/Madrid|Africa\/Ceuta|Atlantic\/Canary|Africa\/Malabo|America\/(Mexico_City|Cancun|Merida|Monterrey|Matamoros|Chihuahua|Ciudad_Juarez|Ojinaga|Mazatlan|Bahia_Banderas|Hermosillo|Tijuana|Bogota|Lima|Santiago|Punta_Arenas|Argentina\/.+|Buenos_Aires|Cordoba|Mendoza|Caracas|Montevideo|Asuncion|La_Paz|Guayaquil|Guatemala|El_Salvador|Tegucigalpa|Managua|Costa_Rica|Panama|Havana|Santo_Domingo|Puerto_Rico)|Pacific\/(Easter|Galapagos))$/.test(tz))l="es"}}catch(e){}
-    d.setAttribute("data-lang",l);d.lang=l;if(l==="es"){d.className+=" rh-i18n-wait";var k=document.createElement("link");k.rel="preload";k.as="fetch";k.href="/i18n/es-core.json?v=2";k.crossOrigin="anonymous";document.head.appendChild(k);var k2=k.cloneNode();k2.href="/i18n/es-listings.json?v=2";document.head.appendChild(k2);setTimeout(function(){d.classList.remove("rh-i18n-wait")},2500)}})();
+    d.setAttribute("data-lang",l);d.lang=l;if(l==="es"){d.className+=" rh-i18n-wait";var k=document.createElement("link");k.rel="preload";k.as="fetch";k.href="/i18n/es-core.json?v=3";k.crossOrigin="anonymous";document.head.appendChild(k);var k2=k.cloneNode();k2.href="/i18n/es-listings.json?v=3";document.head.appendChild(k2);setTimeout(function(){d.classList.remove("rh-i18n-wait")},2500)}})();
     </script>
     <style>html{background:#FFFFFF}#root:empty{min-height:100vh}html.rh-i18n-wait #root{visibility:hidden}.rh-static{max-width:760px;margin:0 auto;padding:24px 16px;font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#14181c}.rh-static h1{font:800 clamp(26px,4vw,40px)/1.1 system-ui,sans-serif;letter-spacing:-.02em;margin:0 0 10px}.rh-static h2{font:800 20px system-ui,sans-serif;margin:22px 0 8px}.rh-static a{color:#D4420C}.rh-static ul,.rh-static ol{padding-left:20px}.rh-static li{margin:4px 0}.rh-static nav{font-size:13px;color:#6b737a;margin-bottom:8px}</style>
     <!-- Meta Pixel: the script is only downloaded after the visitor accepts cookies -->

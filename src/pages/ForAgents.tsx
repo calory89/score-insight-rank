@@ -6,7 +6,7 @@ import useDocumentMeta from "@/hooks/useDocumentMeta";
 
 const ForAgents = () => {
   useDocumentMeta({
-    title: "For Agents — The report that convinces your client in 10 seconds | RealHunt",
+    title: "For Agents: The report that convinces your client in 10 seconds | RealHunt",
     description: "Send a branded, independent forensic report on any listing. WhatsApp-friendly PDF, Verified by RealHunt badge, and a short link that previews beautifully.",
     canonicalUrl: "https://realhunt.co/for-agents",
   });
@@ -20,12 +20,12 @@ const ForAgents = () => {
           The report that convinces your client in 10 seconds<span className="text-accent-gold">.</span>
         </h1>
         <p className="reading text-ink-muted mt-4 max-w-[640px] text-[16px]">
-          Drop any listing URL. Get back a branded one-page dossier — score, verdict, 5 forensic dimensions, comparable €/m² — ready to send on WhatsApp. Independent. No paid placement.
+          Drop any listing URL. Get back a branded one-page dossier, score, verdict, 5 forensic dimensions, comparable €/m², ready to send on WhatsApp. Independent. No paid placement.
         </p>
 
         <div className="flex flex-wrap gap-3 mt-7">
           <Link to="/pricing" className="rh-btn-primary !px-6 !py-3 inline-flex items-center gap-1">
-            Get Agent Pro — €39/mo <ArrowRight className="h-4 w-4" />
+            Get Agent Pro, €39/mo <ArrowRight className="h-4 w-4" />
           </Link>
           <Link to="/" className="inline-flex items-center gap-1 rounded-full border border-hairline px-6 py-3 text-[14px] text-ink hover:bg-[#FBF8F1]">
             Try a free score first
@@ -45,7 +45,7 @@ const ForAgents = () => {
               <div>
                 <div className="text-[11px] uppercase tracking-[0.15em] text-ink-soft">Verdict</div>
                 <div className="font-display text-[22px] text-good">Strong buy</div>
-                <div className="text-[12px] text-ink-muted mt-1">€3,400/m² — 18% below district median</div>
+                <div className="text-[12px] text-ink-muted mt-1">€3,400/m²: 18% below district median</div>
               </div>
             </div>
             <div className="mt-6 grid grid-cols-5 gap-2 text-center">
@@ -74,7 +74,7 @@ const ForAgents = () => {
         <div className="mt-6 rounded-2xl border border-hairline bg-[#FBF8F1] p-8 md:p-10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
             <div>
-              <div className="font-display text-[26px] text-ink">Agent Pro — €39/month</div>
+              <div className="font-display text-[26px] text-ink">Agent Pro, €39/month</div>
               <ul className="mt-3 space-y-1.5 text-[13px] text-ink-muted">
                 <li className="flex items-center gap-2"><Check className="h-4 w-4 text-accent-gold" /> Unlimited scores</li>
                 <li className="flex items-center gap-2"><Check className="h-4 w-4 text-accent-gold" /> Branded PDF dossiers</li>

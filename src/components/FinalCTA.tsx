@@ -85,7 +85,7 @@ const FinalCTA = () => {
 
           <Button variant="hero" size="lg" className="h-14 sm:h-16 px-10 sm:px-12 text-base group" onClick={scrollToHero}>
             <Sparkles className="h-4 w-4 mr-1 transition-transform group-hover:rotate-12" />
-            Analyze Your First Property — Free
+            Analyze Your First Property: Free
             <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </Button>
           <p className="text-xs text-muted-foreground mt-4">No credit card required.</p>

@@ -7,7 +7,7 @@ import { toast } from "@/hooks/use-toast";
 
 const Contact = () => {
   useDocumentMeta({
-    title: "Contact — RealHunt",
+    title: "Contact · RealHunt",
     description: "Talk to the RealHunt team. Sales, agency plans, partnerships, support.",
     canonicalUrl: "https://realhunt.co/contact",
   });
@@ -32,7 +32,7 @@ const Contact = () => {
     try {
       const subject = encodeURIComponent(`RealHunt contact from ${name}`);
       const body = encodeURIComponent(
-        `From: ${name} <${email}>\n\n${message}\n\n— sent via realhunt.co/contact`
+        `From: ${name} <${email}>\n\n${message}\n\nSent via realhunt.co/contact`
       );
       window.location.href = `mailto:hello@realhunt.co?subject=${subject}&body=${body}`;
     } catch {
@@ -57,7 +57,7 @@ const Contact = () => {
           </h1>
           <p className="mt-5 text-ink-muted text-[16px] leading-relaxed">
             Agency plans, white-label, partnerships, press, or a tricky listing
-            you'd like a second opinion on — drop us a line. A human replies.
+            you'd like a second opinion on, drop us a line. A human replies.
           </p>
 
           <div className="mt-8 space-y-4">
@@ -127,7 +127,7 @@ const Contact = () => {
               className="rh-btn-primary w-full justify-center !py-3.5"
             >
               {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : sent ? <Check className="h-4 w-4" /> : <Send className="h-4 w-4" />}
-              {sent ? "Sent — check your mail client" : sending ? "Preparing…" : "Send message"}
+              {sent ? "Sent, check your mail client" : sending ? "Preparing…" : "Send message"}
             </button>
             <p className="text-[11px] text-ink-soft text-center">
               We never share your email. See our{" "}

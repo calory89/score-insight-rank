@@ -147,7 +147,7 @@ const shareTo = async (
   channel: "whatsapp" | "copy"
 ) => {
   if (channel === "whatsapp") {
-    const wa = `https://wa.me/?text=${encodeURIComponent(`${title} — ${url}`)}`;
+    const wa = `https://wa.me/?text=${encodeURIComponent(`${title} · ${url}`)}`;
     window.open(wa, "_blank", "noopener,noreferrer");
     return;
   }
@@ -175,7 +175,7 @@ const HeroCard = ({
   const { toast } = useToast();
   const ppsm = computePpsm(p);
   const reportUrl = `https://realhunt.co${p.slug ? `/r/${p.slug}` : `/analysis/${p.id}`}`;
-  const shareTitle = `#1 worldwide on RealHunt — ${p.address || p.city} (RH score ${p.global_score}/100)`;
+  const shareTitle = `#1 worldwide on RealHunt · ${p.address || p.city} (RH score ${p.global_score}/100)`;
   const webUrl = p.url && p.url !== "manual-entry" ? (p.url.startsWith("http") ? p.url : `https://${p.url}`) : null;
 
   return (

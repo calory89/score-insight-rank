@@ -10,7 +10,7 @@ const steps = [
   {
     icon: BarChart3,
     title: "We Analyze Everything",
-    description: "Price, demand, growth, risk, and comparable performance — in seconds.",
+    description: "Price, demand, growth, risk, and comparable performance, in seconds.",
   },
   {
     icon: Target,

@@ -25,7 +25,7 @@ const BadDealAlert = ({ score, redFlagCount }: BadDealAlertProps) => {
             <p className="text-sm text-muted-foreground mb-3">
               This property scored <span className="font-bold text-destructive">{score}/100</span> and has{" "}
               <span className="font-bold text-destructive">{redFlagCount} red flag{redFlagCount !== 1 ? "s" : ""}</span>.
-              Pro users get the full risk report to understand exactly why — and avoid losing money.
+              Pro users get the full risk report to understand exactly why, and avoid losing money.
             </p>
             <div className="flex items-center gap-3">
               <Button variant="hero" size="sm" onClick={() => setShowPricing(true)} className="gap-1.5">

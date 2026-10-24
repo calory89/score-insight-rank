@@ -264,11 +264,11 @@ const TESTIMONIALS = [
 const FAQS = [
   {
     q: "How accurate is the RH Score?",
-    a: "Each score is a weighted average of five sourced dimensions. We publish every weight and every data source on the Method page. When inputs are weak (e.g. opaque developer history) the report says so explicitly — no false confidence.",
+    a: "Each score is a weighted average of five sourced dimensions. We publish every weight and every data source on the Method page. When inputs are weak (e.g. opaque developer history) the report says so explicitly, no false confidence.",
   },
   {
     q: "Where does the data come from?",
-    a: "Public listing pages, land and title registries, planning portals, market comparables, and licensed third-party datasets. Every number in a report links back to its source — no black box.",
+    a: "Public listing pages, land and title registries, planning portals, market comparables, and licensed third-party datasets. Every number in a report links back to its source, no black box.",
   },
   {
     q: "What's your refund policy?",
@@ -315,11 +315,11 @@ const FAQItem = ({ q, a }: { q: string; a: string }) => {
 // Stripe price IDs. Pro uses existing live €19 price.
 // TODO: add Agency price ID here once created in Stripe.
 const PRO_PRICE_ID = "price_1TdzpNJ3dZ2FxAKF4TrhJCIH"; // €19/mo
-const AGENCY_PRICE_ID: string | null = null; // not yet configured — Agency CTA stays as "Talk to us"
+const AGENCY_PRICE_ID: string | null = null; // not yet configured: Agency CTA stays as "Talk to us"
 
 const IndexNew = () => {
   useDocumentMeta({
-    title: "RealHunt — Is this listing actually a good deal?",
+    title: "RealHunt: Is this listing actually a good deal?",
     description:
       "Paste any Zillow, Rightmove, Idealista, Redfin, Airbnb or PropertyFinder URL. Get a forensic real-estate score in under 10 seconds. Every number sourced.",
     ogImage: "https://realhunt.co/og-home.jpg",
@@ -439,7 +439,7 @@ const IndexNew = () => {
           <FeatureTile
             icon={<Sparkles size={20} />}
             title="Verdict in one line."
-            body='"Buy below 4.2M AED" or "Pass — escrow risk." No essays. No hedging.'
+            body='"Buy below 4.2M AED" or "Pass, escrow risk." No essays. No hedging.'
           />
           <FeatureTile
             icon={<ShieldCheck size={20} />}
@@ -477,7 +477,7 @@ const IndexNew = () => {
                   Idealista · Marbella · Resale
                 </div>
                 <div className="mt-2 font-display text-[20px] text-ink truncate">
-                  Villa with sea view — Sierra Blanca
+                  Villa with sea view: Sierra Blanca
                 </div>
                 <div className="mt-6 flex items-end gap-6">
                   <div>
@@ -488,7 +488,7 @@ const IndexNew = () => {
                   </div>
                   <div className="flex-1 hairline-l pl-6">
                     <div className="font-display text-[18px] text-ink leading-snug">
-                      Decent yield, weak developer track record — negotiate 8% off list.
+                      Decent yield, weak developer track record, negotiate 8% off list.
                     </div>
                   </div>
                 </div>
@@ -648,7 +648,7 @@ const IndexNew = () => {
               features={[
                 "5 analyses / month",
                 "PDF with RealHunt watermark",
-                "Library — 30 days",
+                "Library: 30 days",
                 "3 comparables per report",
               ]}
               cta={{ label: "Start free", to: "/auth/sign-up" }}
@@ -685,7 +685,7 @@ const IndexNew = () => {
             />
           </div>
           <p className="mt-6 text-[13px] text-ink-soft">
-            No credit card to start. Cancel in two clicks. We don't sell your data — see{" "}
+            No credit card to start. Cancel in two clicks. We don't sell your data, see{" "}
             <Link to="/legal/privacy" className="rh-btn-tertiary">privacy</Link>.
           </p>
         </Section>
@@ -700,7 +700,7 @@ const IndexNew = () => {
               Questions, answered.
             </h2>
             <p className="mt-4 text-ink-muted text-[15px] leading-relaxed">
-              Still curious? Email <a href="mailto:hello@realhunt.co" className="rh-btn-tertiary">hello@realhunt.co</a> — a human replies.
+              Still curious? Email <a href="mailto:hello@realhunt.co" className="rh-btn-tertiary">hello@realhunt.co</a>, a human replies.
             </p>
           </div>
           <div className="md:col-span-8 hairline-t">

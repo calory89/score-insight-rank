@@ -53,7 +53,7 @@ const Chip = ({
 
 const Deals = () => {
   useDocumentMeta({
-    title: "Deals — The best property listings on earth, scored",
+    title: "Deals: The best property listings on earth, scored",
     description:
       "A hand-checked board of the best real estate deals worldwide: €12k Sicilian townhouses, Kyoto akiya, 18% yield Cleveland rentals. Every listing verified, every catch disclosed.",
     canonicalUrl: "https://realhunt.co/deals",
@@ -108,7 +108,7 @@ const Deals = () => {
           </h1>
           <p className="mt-5 text-ink-muted text-[17px] leading-relaxed">
             We read the portals so you don't. Every deal here was open and priced on the day we checked it.
-            No affiliate links, no paid placements, no agency feeding us inventory — if a listing dies, it
+            No affiliate links, no paid placements, no agency feeding us inventory, if a listing dies, it
             comes off the board.
           </p>
         </div>
@@ -201,7 +201,7 @@ const Deals = () => {
             </h2>
             <p className="mt-4 text-ink-muted text-[15px] leading-relaxed">
               This board is editorial, not advice. Prices, yields and price-per-sqm are what the portal
-              showed on the date noted on each card — verify everything before you wire money, and assume
+              showed on the date noted on each card, verify everything before you wire money, and assume
               renovation quotes are optimistic. RealHunt earns nothing if you buy.
             </p>
             <Link to="/" className="rh-btn-primary mt-7">

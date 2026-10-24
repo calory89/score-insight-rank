@@ -30,12 +30,12 @@ const AnalysisROISection = ({ data: d, forensic: f, curr, isPro }: AnalysisROISe
             {d.size_sqm != null && <MetricCard icon={Ruler} label="Price/sqft" value={f.price_per_sqft ? `${curr}${f.price_per_sqft.toLocaleString()}` : undefined} />}
             <MetricCard icon={BarChart3} label="Market Median/m²" value={f.market_median_sqm ? `${curr}${f.market_median_sqm.toLocaleString()}` : undefined} />
             <MetricCard icon={Percent} label="vs Median" value={f.premium_discount_pct != null ? `${f.premium_discount_pct > 0 ? "+" : ""}${f.premium_discount_pct}%` : undefined}
-              positive={premiumPositive} sub={f.premium_discount_pct != null ? (f.premium_discount_pct < 0 ? "Below market — discount" : "Above market — premium") : undefined} />
+              positive={premiumPositive} sub={f.premium_discount_pct != null ? (f.premium_discount_pct < 0 ? "Below market, discount" : "Above market, premium") : undefined} />
           </div>
           {(f.fair_value_low || f.fair_value_high) && (
             <div className="mt-4 p-3 rounded-xl bg-secondary/50 border border-border">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Fair Value Range</p>
-              <p className="text-sm font-mono font-semibold text-foreground">{f.fair_value_low} — {f.fair_value_high}</p>
+              <p className="text-sm font-mono font-semibold text-foreground">{f.fair_value_low} · {f.fair_value_high}</p>
             </div>
           )}
         </Section>

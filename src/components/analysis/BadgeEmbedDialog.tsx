@@ -21,7 +21,7 @@ const BadgeEmbedDialog = ({ open, onClose, slug, address, score }: Props) => {
 
   const embedUrl = `${SUPA_URL}/functions/v1/embed?slug=${encodeURIComponent(slug)}`;
   const reportUrl = `https://realhunt.co/r/${slug}`;
-  const alt = `Scored ${score}/100 by RealHunt — ${address}`;
+  const alt = `Scored ${score}/100 by RealHunt · ${address}`;
 
   const iframeSnippet = `<iframe src="${embedUrl}" width="540" height="110" frameborder="0" style="border:0;max-width:100%;" loading="lazy" title="${alt}"></iframe>
 <p><a href="${reportUrl}" target="_blank">View full RealHunt report</a></p>`;
@@ -47,7 +47,7 @@ const BadgeEmbedDialog = ({ open, onClose, slug, address, score }: Props) => {
         <div className="flex items-center justify-between p-5 border-b border-border">
           <div>
             <h3 className="font-display text-lg font-semibold text-foreground">Get the "Scored by RealHunt" badge</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Paste on your listing page — adds credibility and links back to the full report.</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Paste on your listing page, adds credibility and links back to the full report.</p>
           </div>
           <button onClick={onClose} className="p-2 rounded-md hover:bg-muted">
             <X className="h-4 w-4" />

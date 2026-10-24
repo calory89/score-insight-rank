@@ -92,7 +92,7 @@ const ProtectedListingFallback = ({
               </div>
               <div className="flex-1">
                 <h3 className="text-sm font-semibold text-foreground">Enter Property Details</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">Quick form — takes about 30 seconds</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Quick form, takes about 30 seconds</p>
               </div>
             </div>
           </button>

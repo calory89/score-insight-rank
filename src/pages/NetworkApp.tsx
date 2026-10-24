@@ -305,7 +305,7 @@ const NetworkApp = () => {
         {loadErr ? (
           <div className="border border-hairline rounded-2xl bg-white p-6 max-w-[440px]">
             <p className="font-display text-[20px] tracking-tight">We could not open your panel</p>
-            <p className="text-[14px] text-ink-muted mt-1">The connection timed out. Your data is safe — nothing was lost.</p>
+            <p className="text-[14px] text-ink-muted mt-1">The connection timed out. Your data is safe, nothing was lost.</p>
             <button onClick={load} className="rh-btn-primary mt-4">Try again</button>
           </div>
         ) : (
