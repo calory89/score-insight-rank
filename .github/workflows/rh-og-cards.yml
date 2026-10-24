@@ -27,3 +27,9 @@ jobs:
           git diff --cached --quiet || (git commit -m "Daily data: homes, share cards, search pages and sitemap" && git push)
       - name: ping IndexNow (Bing and others)
         run: python3 scripts/indexnow.py
+  # Publish as soon as the day's data is in main (GitHub often starts scheduled runs hours late, so the
+  # 16:40 publish could otherwise run before the new homes are committed).
+  publish:
+    needs: cards
+    uses: ./.github/workflows/rh-auto-publish.yml
+    secrets: inherit

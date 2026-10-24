@@ -7,7 +7,7 @@ name: rh-auto-publish
 # (never images: those are served by realhunt-media); nothing is deleted; the deploy must stay under 19,500
 # files; every root folder and every site folder must still be in the commit before it is pushed.
 #
-# Runs daily after rh-og-cards (new homes, share cards), on pushes to main that touch the site, by hand,
+# Runs right after rh-og-cards (it calls this when the day's data is committed), daily at 16:40 UTC as a backup, on pushes to main that touch the site, by hand,
 # and from rh-publish (workflow_call).
 on:
   schedule:
@@ -30,13 +30,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
+      # Always the latest main: when rh-og-cards calls this right after committing the day's data, the
+      # caller's own sha would miss that commit.
       - uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Which commit is published
+        id: head
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - name: Build
         env:
+          RH_COMMIT: ${{ steps.head.outputs.sha }}
           VITE_SUPABASE_URL: https://realhunt.co/__sb/realhunt
           VITE_SUPABASE_PUBLISHABLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95a2NzbWV4dGNscGRudWdpeHF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzOTMzNjYsImV4cCI6MjEwNzk2OTM2Nn0.n4lmkzPgZe64B18altwRMYFiQrLQ2Quqg9uV9SoJhAw
           VITE_SUPABASE_PROJECT_ID: oykcsmextclpdnugixqz
@@ -82,11 +90,13 @@ jobs:
           PY
       - name: Commit, check and push
         working-directory: webs
+        env:
+          RH_SHA: ${{ steps.head.outputs.sha }}
         run: |
           git config user.name "realhunt-bot"; git config user.email "bot@realhunt.co"
           git add -A _s/realhunt.co assets
           if git diff --cached --quiet; then echo "nothing changed"; exit 0; fi
-          git commit -q -m "realhunt.co: auto-publish score-insight-rank ${GITHUB_SHA::7}"
+          git commit -q -m "realhunt.co: auto-publish score-insight-rank ${RH_SHA::7}"
           check() {
             total=$(git ls-tree -r --name-only HEAD | wc -l)
             echo "files in deploy: $total"
@@ -96,6 +106,11 @@ jobs:
               missing=$(comm -23 <(echo "$before") <(echo "$after"))
               [ -z "$missing" ] || { echo "folders missing in /$t: $missing"; return 1; }
             done
+            # realhunt-media (the photos) is built from _s/realhunt.co on this branch: photos must never go down.
+            ib=$(git ls-tree -r --name-only HEAD~1 -- _s/realhunt.co | grep -ciE '\.(webp|jpe?g|png)$' || true)
+            ia=$(git ls-tree -r --name-only HEAD -- _s/realhunt.co | grep -ciE '\.(webp|jpe?g|png)$' || true)
+            echo "realhunt photos: $ib -> $ia"
+            [ "$ia" -ge "$ib" ] || { echo "realhunt photos would drop from $ib to $ia"; return 1; }
           }
           check
           for i in 1 2 3 4 5; do
@@ -107,4 +122,4 @@ jobs:
       - name: Tell search engines (IndexNow)
         run: python3 scripts/indexnow.py || true
       - name: Check the live site (build live, sitemap, key pages, every sitemap URL)
-        run: python3 scripts/post_publish_check.py "$GITHUB_SHA"
+        run: python3 scripts/post_publish_check.py "${{ steps.head.outputs.sha }}"
