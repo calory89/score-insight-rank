@@ -1,0 +1,101 @@
+name: rh-auto-publish
+# Builds realhunt.co and publishes it to calory89/webs-estaticas (branch pub/_lovable, folder _s/realhunt.co)
+# with the same rules as rh-pub-import: changed files are updated, new hashed assets and new realhunt.co
+# files (pages, sitemaps, data; never images, which live in realhunt-media) are added, nothing is deleted,
+# and it stops if the deploy would pass 19,500 files.
+#
+# Runs every day after rh-og-cards (new homes, share cards, search pages) and on every push to main that
+# touches the site. Needs the repository secret WEBS_DEPLOY_TOKEN: a fine-grained GitHub token with
+# "Contents: read and write" on calory89/webs-estaticas. Without it the job explains what is missing and
+# stops without failing.
+on:
+  schedule:
+    - cron: "40 16 * * *"
+  push:
+    branches: [main]
+    paths: ["src/**", "seo/**", "public/**", "index.html", "vite.config.ts", "package.json"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: rh-auto-publish
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check token
+        id: token
+        env:
+          T: ${{ secrets.WEBS_DEPLOY_TOKEN }}
+        run: |
+          if [ -z "$T" ]; then
+            echo "WEBS_DEPLOY_TOKEN is not set: add it in Settings > Secrets and variables > Actions to publish automatically." >> $GITHUB_STEP_SUMMARY
+            echo "skip=1" >> $GITHUB_OUTPUT
+          fi
+      - uses: actions/checkout@v4
+        if: steps.token.outputs.skip != '1'
+      - uses: actions/setup-node@v4
+        if: steps.token.outputs.skip != '1'
+        with:
+          node-version: 22
+          cache: npm
+      - name: Build
+        if: steps.token.outputs.skip != '1'
+        env:
+          VITE_SUPABASE_URL: https://realhunt.co/__sb/realhunt
+          VITE_SUPABASE_PUBLISHABLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95a2NzbWV4dGNscGRudWdpeHF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzOTMzNjYsImV4cCI6MjEwNzk2OTM2Nn0.n4lmkzPgZe64B18altwRMYFiQrLQ2Quqg9uV9SoJhAw
+          VITE_SUPABASE_PROJECT_ID: oykcsmextclpdnugixqz
+        run: |
+          npm ci --legacy-peer-deps
+          npx vite build
+          grep -rl 'nylmhdtlshhtjkuvfbms.supabase.co' dist --include=*.html | xargs -r sed -i 's#https://nylmhdtlshhtjkuvfbms.supabase.co#https://realhunt.co/__sb/realhunt#g'
+          if grep -rq 'nylmhdtlshhtjkuvfbms' dist/assets; then echo 'old supabase url still in bundle'; exit 1; fi
+      - name: Check out the deploy branch
+        if: steps.token.outputs.skip != '1'
+        uses: actions/checkout@v4
+        with:
+          repository: calory89/webs-estaticas
+          ref: pub/_lovable
+          token: ${{ secrets.WEBS_DEPLOY_TOKEN }}
+          path: pub
+          fetch-depth: 1
+      - name: Merge the build into the deploy tree
+        if: steps.token.outputs.skip != '1'
+        run: |
+          python3 - <<'PY'
+          import os, shutil, filecmp
+          src, dst = "dist", "pub"
+          img = (".webp", ".jpg", ".jpeg", ".png", ".gif", ".mp4")
+          upd = new = same = 0
+          for root, _, files in os.walk(src):
+              for f in files:
+                  s = os.path.join(root, f); rel = os.path.relpath(s, src)
+                  if rel.startswith("assets/"): d = os.path.join(dst, rel)
+                  elif rel.lower().endswith(img): continue
+                  else: d = os.path.join(dst, "_s/realhunt.co", rel)
+                  if os.path.exists(d):
+                      if filecmp.cmp(s, d, shallow=False): same += 1; continue
+                      upd += 1
+                  else: new += 1
+                  os.makedirs(os.path.dirname(d), exist_ok=True); shutil.copy2(s, d)
+          print(f"updated={upd} added={new} unchanged={same}")
+          PY
+          cd pub
+          total=$(( $(git ls-files | wc -l) + $(git status --porcelain --untracked-files=all | grep -c '^??' || true) ))
+          echo "files in deploy: $total"
+          if [ $total -gt 19500 ]; then echo "too many files for Cloudflare Pages"; exit 1; fi
+          for d in _worker.js _s/realhunt.co _s/equinoxinvestmentgroup.com assets; do test -e "$d" || { echo "missing $d, refusing to publish"; exit 1; }; done
+      - name: Commit and push
+        if: steps.token.outputs.skip != '1'
+        run: |
+          cd pub
+          git config user.name "realhunt-bot"; git config user.email "bot@realhunt.co"
+          git add -A
+          git diff --cached --quiet && { echo "nothing changed"; exit 0; }
+          git commit -q -m "realhunt.co: auto-publish ${GITHUB_SHA::7}"
+          for i in 1 2 3 4 5; do git push origin HEAD:pub/_lovable && exit 0; git pull --rebase -q origin pub/_lovable; sleep 5; done; exit 1
+      - name: Tell search engines (IndexNow)
+        if: steps.token.outputs.skip != '1'
+        run: python3 scripts/indexnow.py || true
