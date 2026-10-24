@@ -6,6 +6,7 @@
 // community_feed / community_quick_counts / community_near / community_nearby / community_scores.
 // Visitor tracking writes are skipped. Only explicit actions (sign in, vote, save, submit, admin)
 // still talk to the database, so the Cloud backend can stay paused and the site keeps working.
+import { mediaDeep } from "./media";
 import { supabase } from "@/integrations/supabase/client";
 
 type Row = Record<string, any>;
@@ -15,7 +16,7 @@ let snapP: Promise<Snap> | null = null;
 export function snapshot(): Promise<Snap> {
   return (snapP ||= fetch("/data/rh-static.json", { cache: "force-cache" }).then((r) => {
     if (!r.ok) throw new Error("static data " + r.status);
-    return r.json();
+    return r.json().then(mediaDeep);
   }).catch((e) => { snapP = null; throw e; }));
 }
 
@@ -180,7 +181,7 @@ const READS: Record<string, (s: Snap, a: Row) => any> = {
   },
 };
 const SKIP_RPC = new Set(["record_telemetry", "rh_seen", "find_view_counts", "top_track"]);
-const getJson = (u: string) => fetch(u, { cache: "force-cache" }).then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); });
+const getJson = (u: string) => fetch(u, { cache: "force-cache" }).then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json().then(mediaDeep); });
 let topListsP: Promise<Record<string, any>> | null = null;
 // New-build Top 100 lists and project pages (snapshots in /data/top-lists.json and /data/top/<slug>.json).
 const ASYNC_READS: Record<string, (a: Row) => Promise<any>> = {

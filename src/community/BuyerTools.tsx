@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Bookmark, Scale, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import variants from '@/data/image-variants.json';
+import { MEDIA, toMedia, fromMedia } from '@/lib/media';
 import { useCommunity } from './ctx';
 import { money } from './api';
 import { feed, type Row } from './extras';
@@ -13,7 +14,7 @@ import { HeartVote, SaveHeart } from "./v4";
 
 export function PropertyImage({src, fallback, ...props}: ImgHTMLAttributes<HTMLImageElement> & {fallback?: string}) {
  const [failed,setFailed]=useState<string[]>([]);
- const original=String(src || ''); const small=(variants as Record<string,string>)[original];
+ const original=String(src || ''); const v=(variants as Record<string,string>)[fromMedia(original)]; const small=v ? (original.startsWith(MEDIA) ? toMedia(v) : v) : undefined;
  const current = !failed.includes(original) ? original : fallback && !failed.includes(fallback) ? fallback : '';
  if(!current) return <span className="rh-photo-missing" role="img" aria-label={props.alt || t('Photo unavailable')}>{t('Photo unavailable')}</span>;
  return <picture className="rh-picture">{small && !props.sizes && !failed.includes(small) && current===original && <source media="(max-width: 700px)" srcSet={small}/>}<img {...props} src={current} decoding="async" onError={e=>{const bad=e.currentTarget.currentSrc;const selected=small&&bad.endsWith(small)?small:current;setFailed(f=>[...f,selected]);}} /></picture>;

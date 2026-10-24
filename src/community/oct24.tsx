@@ -1,4 +1,5 @@
 // 24-oct-2026: home-page FAQ, inline alert sign-up, mortgage calculator and price per m² against the country.
+import { mediaDeep } from "@/lib/media";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Bell, Calculator } from "lucide-react";
@@ -59,7 +60,7 @@ export function MortgageCalc({ price }: { price: number }) {
 // "€1,339/m², 30% below the median for Spain on RealHunt", from the same static data the site reads.
 let medians: Promise<Record<string, number>> | null = null;
 function countryMedians() {
-  return (medians ||= fetch("/data/rh-static.json", { cache: "force-cache" }).then((r) => r.json()).then((s: any) => {
+  return (medians ||= fetch("/data/rh-static.json", { cache: "force-cache" }).then((r) => r.json()).then(mediaDeep).then((s: any) => {
     const by: Record<string, number[]> = {};
     for (const r of (s.rows || []) as any[]) if (r.sqm > 0 && r.price_eur > 0) (by[r.country] ||= []).push(r.price_eur / r.sqm);
     const out: Record<string, number> = {};

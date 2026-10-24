@@ -65,7 +65,7 @@ if len(bad) > 30: problems.append(f"... and {len(bad) - 30} more")
 def img(u):
     for i in range(4):
         try:
-            r = urllib.request.urlopen(urllib.request.Request(f"{SITE}{u}?_c={random.randint(1, 10**9)}", headers=UA), timeout=30)
+            r = urllib.request.urlopen(urllib.request.Request(f"https://realhunt-media.pages.dev{u}?_c={random.randint(1, 10**9)}", headers=UA), timeout=30)  # the app loads photos from here
             return u, r.status, r.headers.get("content-type", "")
         except urllib.error.HTTPError as e:
             if e.code in (403, 429) and i < 3: time.sleep(10 * (i + 1)); continue
