@@ -106,3 +106,5 @@ jobs:
           exit 1
       - name: Tell search engines (IndexNow)
         run: python3 scripts/indexnow.py || true
+      - name: Check the live site (build live, sitemap, key pages, every sitemap URL)
+        run: python3 scripts/post_publish_check.py "$GITHUB_SHA"
