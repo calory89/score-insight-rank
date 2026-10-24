@@ -1,44 +1,11 @@
 name: rh-publish
+# Manual publish of realhunt.co. Same job as rh-auto-publish: builds and pushes straight to webs-estaticas
+# over SSH (deploy key WEBS_DEPLOY_KEY). The old temp.sh package + rh-pub-import step is no longer needed.
 on:
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install
-        run: npm ci --no-audit --no-fund --legacy-peer-deps || npm install --no-audit --no-fund --legacy-peer-deps
-      - name: Build
-        env:
-          VITE_SUPABASE_URL: https://realhunt.co/__sb/realhunt
-          VITE_SUPABASE_PUBLISHABLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95a2NzbWV4dGNscGRudWdpeHF6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIzOTMzNjYsImV4cCI6MjEwNzk2OTM2Nn0.n4lmkzPgZe64B18altwRMYFiQrLQ2Quqg9uV9SoJhAw
-          VITE_SUPABASE_PROJECT_ID: oykcsmextclpdnugixqz
-        run: npx vite build
-      - name: Package for webs-estaticas (assets at root, rest in _s/realhunt.co)
-        run: |
-          set -e
-          grep -rl 'nylmhdtlshhtjkuvfbms.supabase.co' dist --include=*.html | xargs -r sed -i 's#https://nylmhdtlshhtjkuvfbms.supabase.co#https://realhunt.co/__sb/realhunt#g'
-          if grep -rq 'nylmhdtlshhtjkuvfbms' dist/assets; then echo 'old supabase url still in bundle'; exit 1; fi
-          mkdir -p out/_s/realhunt.co
-          cp -r dist/assets out/assets
-          rsync -a --exclude assets dist/ out/_s/realhunt.co/
-          # images under _s/realhunt.co are published by their own flow (realhunt-media); rh-pub-import never adds new ones anyway.
-          # Leaving them out keeps the package small enough to upload (it reached 800 MB).
-          tar -czf rh.tgz -C out --exclude='./_s/realhunt.co/*.webp' --exclude='./_s/realhunt.co/*.jpg' --exclude='./_s/realhunt.co/*.jpeg' --exclude='./_s/realhunt.co/*.png' --exclude='./_s/realhunt.co/*.gif' --exclude='./_s/realhunt.co/*.mp4' .
-          ls -la rh.tgz
-          # temp.sh sometimes answers with an HTML error page: retry, and fail the run if no URL comes back.
-          URL=""
-          for i in 1 2 3 4 5; do
-            URL=$(curl -sS -m 300 -F "file=@rh.tgz" https://temp.sh/upload || true)
-            case "$URL" in https://*) break ;; esac
-            echo "upload attempt $i failed: $(echo "$URL" | head -c 120)"; URL=""; sleep 20
-          done
-          if [ -z "$URL" ]; then echo "could not upload rh.tgz"; exit 1; fi
-          echo "PUBLISH_URL=$URL"
-          echo "PUBLISH_URL=$URL" >> $GITHUB_STEP_SUMMARY
+  publish:
+    uses: ./.github/workflows/rh-auto-publish.yml
+    secrets: inherit
