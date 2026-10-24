@@ -12,13 +12,14 @@ SITE = "https://realhunt.co"
 UA = {"User-Agent": "RealHuntPostPublishCheck/1.0 (+https://realhunt.co)"}
 want = (sys.argv[1] if len(sys.argv) > 1 else "")[:7]
 
-def get(url, tries=3):
+def get(url, tries=4):
     for i in range(tries):
         try:
             sep = "&" if "?" in url else "?"
             r = urllib.request.urlopen(urllib.request.Request(f"{url}{sep}_c={random.randint(1, 10**9)}", headers=UA), timeout=30)
             return r.status, r.read().decode("utf8", "replace")
         except urllib.error.HTTPError as e:
+            if e.code in (403, 429) and i < tries - 1: time.sleep(10 * (i + 1)); continue  # Cloudflare rate limit: back off
             if e.code < 500 or i == tries - 1: return e.code, ""
         except Exception:
             if i == tries - 1: return 0, ""
@@ -47,8 +48,16 @@ for k in KEY:
     s, b = get(SITE + k)
     if s != 200 or len(b) < 500: problems.append(f"{k}: HTTP {s}, {len(b)} bytes")
 
-bad = [u for u, s in ThreadPoolExecutor(12).map(lambda u: (u, get(u)[0]), urls) if s != 200]
-problems += [f"{u}: not 200" for u in bad[:30]]
+# Gently (4 at a time): a burst from a GitHub runner gets rate-limited by Cloudflare and would look like an outage.
+res = list(ThreadPoolExecutor(4).map(lambda u: (u, get(u)[0]), urls))
+codes = {}
+for _, s in res: codes[s] = codes.get(s, 0) + 1
+print("status codes:", codes)
+bad = [(u, s) for u, s in res if s != 200]
+if bad and all(s in (403, 429) for _, s in bad) and len(bad) > len(urls) / 2:
+    print("::warning::most URLs were refused with 403/429 from this runner (rate limit, not an outage); key pages decide")
+    bad = []
+problems += [f"{u}: HTTP {s}" for u, s in bad[:30]]
 if len(bad) > 30: problems.append(f"... and {len(bad) - 30} more")
 
 for p in problems: print("::error::" + p)
