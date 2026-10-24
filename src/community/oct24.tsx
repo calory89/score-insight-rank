@@ -75,3 +75,34 @@ export function PerSqmVsCountry({ price, sqm, country }: { price?: number | null
   if (diff == null || Math.abs(diff) < 3) return null;
   return <p className={"rh-vs " + (diff < 0 ? "is-below" : "is-above")}>{money(Math.round(own))}/m², {Math.abs(diff)}% {diff < 0 ? t("below") : t("above")} {t("the median for")} {country} {t("on RealHunt")} ({money(Math.round(med!))}/m²)</p>;
 }
+
+// /alerts/confirm?t=<token>: the link in the confirmation email.
+export function AlertConfirmPage() {
+  const [state, setState] = useState<"busy" | "ok" | string>("busy");
+  useEffect(() => {
+    document.title = "Confirm your alerts · RealHunt";
+    const tok = new URLSearchParams(location.search).get("t") || "";
+    if (!/^[a-f0-9]{16,64}$/.test(tok)) { setState("This link is not complete. Open it again from the email, or sign up again."); return; }
+    import("@/integrations/supabase/client").then(({ supabase }) => (supabase.rpc as any)("alert_confirm", { p_token: tok }))
+      .then(({ data, error }: any) => setState(error ? t("We could not confirm right now. Please open the link again in a minute.") : data?.ok ? "ok" : (data?.error || t("This link is not valid any more."))))
+      .catch(() => setState(t("We could not confirm right now. Please open the link again in a minute.")));
+  }, []);
+  return (
+    <div className="hunt-wrap hunt-page">
+      <span className="hunt-eyebrow"><Bell size={13} /> {t("Alerts")}</span>
+      {state === "busy" ? <h1>{t("Confirming your alerts…")}</h1> : state === "ok" ? (
+        <>
+          <h1>{t("Your alerts are on.")}</h1>
+          <p>{t("We just emailed you the best homes for your search. From now on you get new ones as they pass our check.")}</p>
+          <p className="hunt-row"><Link className="hunt-primary" to="/new">{t("See the newest homes")}</Link> <Link className="hunt-secondary" to="/">{t("See the best homes")}</Link></p>
+        </>
+      ) : (
+        <>
+          <h1>{t("We could not confirm these alerts")}</h1>
+          <p>{state}</p>
+          <p><Link className="hunt-primary" to="/alerts">{t("Sign up again")}</Link></p>
+        </>
+      )}
+    </div>
+  );
+}

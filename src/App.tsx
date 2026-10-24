@@ -225,6 +225,7 @@ const AppRoutes = () => (
       <Route path="/leaderboard" element={<Community />} />
       <Route path="/invite" element={<Community />} />
       <Route path="/alerts" element={<Community />} />
+      <Route path="/alerts/confirm" element={<Community />} />
       <Route path="/help-buying" element={<Community />} />
       <Route path="/homes/:country" element={<Community />} />
       <Route path="/homes/:country/:cap" element={<Community />} />

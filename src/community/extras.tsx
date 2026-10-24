@@ -444,7 +444,7 @@ export function AlertForm({ countries, initial, compact = false, onApply }: { co
         <label><span>{t("Any type")}</span><select value={cat} onChange={(e) => setCat(e.target.value)}><option value="">{t("Any type")}</option>{categories.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>
       </div>
       {onApply && <button type="button" className="hunt-secondary" onClick={() => { prefs(); onApply({ country: picked.length === 1 ? picked[0] : "", max_price: max < 100000 ? max : null, category: cat }); }}>{t("Show my homes")}</button>}
-      {state === "ok" ? <p className="hunt-info-done"><Check size={16} /> Saved. Sign in with this email to manage daily or weekly alerts. Emails go only to confirmed accounts.</p> : (
+      {state === "ok" ? <p className="hunt-info-done"><Check size={16} /> Almost done: we sent you an email to confirm. Open it in the next few minutes (check spam too) and your alerts start.</p> : (
         <div className="hunt-row">
           <input type="email" required placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="Email" />
           <button className="hunt-primary" disabled={state === "busy"}>{t("Email me new matches")}</button>

@@ -223,7 +223,7 @@ export async function initLang(): Promise<void> {
   try {
     const core = load("/i18n/es-core.json?v=3");
     const homes = load("/i18n/es-listings.json?v=3").catch(() => ({}));
-    const extra = load("/i18n/es-extra.json?v=5");
+    const extra = load("/i18n/es-extra.json?v=6");
     addDict(await core); addDict(await homes);
     if (legal) addDict(await extra.catch(() => ({})));
     else extra.then((d) => { addDict(d); if (started) walk(document.body); }).catch(() => {});

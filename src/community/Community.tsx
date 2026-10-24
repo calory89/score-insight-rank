@@ -33,7 +33,7 @@ import { TopMethodPage, AboutPage } from "./topTrustUI";
 import { HomeMethodPage } from "./method";
 import { DetailAside } from "./aside";
 import { StaticPage } from "./staticpage";
-import { InlineAlert, HomeFaq, MortgageCalc, PerSqmVsCountry } from "./oct24";
+import { InlineAlert, HomeFaq, MortgageCalc, PerSqmVsCountry, AlertConfirmPage } from "./oct24";
 import { regionOf, slugify } from "./regions";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
@@ -2033,6 +2033,8 @@ export default function Community() {
       <LeaderboardPage />
     ) : path === "/invite" ? (
       <InvitePage />
+    ) : path === "/alerts/confirm" ? (
+      <AlertConfirmPage />
     ) : path === "/alerts" ? (
       <AlertsPage />
     ) : path === "/help-buying" ? (
