@@ -60,6 +60,36 @@ if bad and all(s in (403, 429) for _, s in bad) and len(bad) > len(urls) / 2:
 problems += [f"{u}: HTTP {s}" for u, s in bad[:30]]
 if len(bad) > 30: problems.append(f"... and {len(bad) - 30} more")
 
+# Photos: the first photo of every home and its small variant must be a real image (24-oct-2026 the photos
+# vanished for hours because their folder was trimmed; this catches it on the next publish).
+def img(u):
+    for i in range(4):
+        try:
+            r = urllib.request.urlopen(urllib.request.Request(f"{SITE}{u}?_c={random.randint(1, 10**9)}", headers=UA), timeout=30)
+            return u, r.status, r.headers.get("content-type", "")
+        except urllib.error.HTTPError as e:
+            if e.code in (403, 429) and i < 3: time.sleep(10 * (i + 1)); continue
+            return u, e.code, ""
+        except Exception:
+            time.sleep(3)
+    return u, 0, ""
+import os
+VARIANTS = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src", "data", "image-variants.json")))  # what the app asks for
+st, body = get(f"{SITE}/data/rh-static.json")
+rows = json.loads(body).get("rows", []) if st == 200 else []
+photos = []
+for r in rows:
+    first = next((x for x in (r.get("image_urls") or []) if str(x).startswith("/")), None)
+    if first: photos += [first] + ([VARIANTS[first]] if first in VARIANTS else [])
+pres = list(ThreadPoolExecutor(3).map(img, photos))
+small_set = set(VARIANTS.values())
+pbad = [(u, s, ct) for u, s, ct in pres if s != 200 or not ct.startswith("image")]
+small_missing = [u for u, s, ct in pbad if u in small_set]
+pbad = [x for x in pbad if x[0] not in small_set]
+print(f"photos checked {len(pres)}, main photos broken {len(pbad)}, small variants missing {len(small_missing)}")
+if pbad: problems.append(f"{len(pbad)} home photos are not images, e.g. {pbad[0][0]} ({pbad[0][1]} {pbad[0][2]})")
+if small_missing: problems.append(f"{len(small_missing)} small photo variants missing, e.g. {small_missing[0]}")
+
 for p in problems: print("::error::" + p)
 print("OK" if not problems else f"{len(problems)} problems")
 sys.exit(1 if problems else 0)
