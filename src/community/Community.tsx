@@ -36,7 +36,9 @@ import { StaticPage } from "./staticpage";
 import { InlineAlert, HomeFaq, MortgageCalc, PerSqmVsCountry, AlertConfirmPage } from "./oct24";
 import { regionOf, slugify } from "./regions";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
-import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
+import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, GUIDES, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
+import { CountriesPage } from "./countries";
+const slugCountryKey = (c?: string | null) => String(c || "").toLowerCase().trim().replace(/\s+/g, "-");
 import { t } from "./i18n";
 import { FindHomePage, FindHomeCTA } from "./findhome";
 import ExtensionRoute from "./extension";
@@ -312,7 +314,7 @@ function Shell({ children }: { children: ReactNode }) {
             <LangSwitch />
             <InstallButton />
             <ThemeButton label />
-            <Link to="/guide/italy">{t("Guides")}</Link>
+            <Link to="/guide">{t("Guides")}</Link>
             <Link to="/help-buying">{t("Help buying")}</Link>
             <Link to="/leaderboard">{t("Hunters")}</Link>
             <Link to="/invite">{t("Invite")}</Link>
@@ -1043,7 +1045,7 @@ function Detail() {
           <RemoteWorkStrip place={d.location_name || d.country} slug={d.slug} />
           {!(d as any).developer && <InfoRequest deal={d as Row} />}
           <ClaimListing deal={d as Row} />
-          <p className="hunt-fine">Buying from abroad? <Link to={`/help-buying?country=${encodeURIComponent(d.country || "")}`}>Get a local lawyer, translator or survey</Link>{["Italy", "Spain", "Portugal"].includes(d.country) && <> · <Link to={`/guide/${d.country.toLowerCase()}`}>How to buy in {d.country}</Link></>}</p>
+          <p className="hunt-fine">Buying from abroad? <Link to={`/help-buying?country=${encodeURIComponent(d.country || "")}`}>Get a local lawyer, translator or survey</Link>{GUIDES[slugCountryKey(d.country)] && <> · <Link to={`/guide/${slugCountryKey(d.country)}`}>How to buy in {d.country}</Link></>}</p>
           <AdminVerify deal={d as Row} onDone={load} />
           <p className="hunt-fine">
             Price and availability come from the source and may change. Check
@@ -2047,6 +2049,8 @@ export default function Community() {
       <BestRoute />
     ) : path.startsWith("/guide") ? (
       <GuidePage />
+    ) : path === "/countries" || path.startsWith("/countries/") ? (
+      <CountriesPage />
     ) : path.startsWith("/homes/") ? (
       <HomesPage />
     ) : path.startsWith("/c/") ? (

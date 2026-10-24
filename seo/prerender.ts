@@ -288,9 +288,7 @@ function build(root: string) {
     [crumbs([["RealHunt", SITE + "/"], ["How the score works", SITE + "/method"]])]);
 
   // ---------- Guides, tools and info pages ----------
-  for (const [c, n] of [["italy", "Italy"], ["spain", "Spain"], ["portugal", "Portugal"]]) page(`${SITE}/guide/${c}`, `How to buy a cheap home in ${n} as a foreigner · RealHunt`, `Steps, papers and taxes to buy a house in ${n} from abroad, in plain words.`, DEF, undefined, [crumbs([["RealHunt", SITE + "/"], ["Guides", SITE + "/guide"], [n, `${SITE}/guide/${c}`]])], { group: "content" });
-  page(`${SITE}/guide`, "Guides to buying a cheap home abroad · RealHunt", "Plain-English guides to buying a house in Italy, Spain and Portugal as a foreigner: steps, papers and taxes.", DEF,
-    `<main class="rh-static"><h1>Guides to buying a home abroad</h1><ul><li><a href="/guide/italy">Italy</a></li><li><a href="/guide/spain">Spain</a></li><li><a href="/guide/portugal">Portugal</a></li></ul><p><a href="/costs">Real buying costs by country</a></p></main>`, undefined, { group: "content" });
+  // (Buying guides are built further down, with the cost pages and the country comparisons.)
   page(`${SITE}/extension`, "RealHunt Score: see the real score of any home · Free Chrome extension", "Free Chrome extension. Every home on idealista, Zillow and Rightmove gets a 0–100 score: price against the area, listing quality and red flags, with the reason for every point.", DEF);
   page(`${SITE}/extension/privacy`, "RealHunt Score · Privacy policy", "What the RealHunt Score extension collects, why, and how to delete it.", DEF);
   page(`${SITE}/find-my-home`, "We find your home, where you want, at your price · RealHunt", "Free home finder. Tell us where and how much, and we send you the best real homes, checked by a person. Skip the queue by inviting friends.", DEF);
@@ -390,21 +388,85 @@ function build(root: string) {
   page(`${SITE}/network/start`, "List your project free · RealHunt Network", "Paste your project link and we build your listing in seconds. Buyers for your project, 5% only if one buys. Earn 3% from leads you could not sell to.", DEF);
   page(`${SITE}/network/agreement`, "Network agreement · RealHunt", "The agreement between RealHunt and developers listing on the RealHunt Network: fees, leads and payment.", DEF);
 
-  // ---------- Real costs by destination ----------
+  // ---------- Buying guides, real costs and country comparisons ----------
+  // Steps per country: src/data/guides.json. Money side (costs, taxes, rules, sources): src/data/destinations.json.
+  // The app shows the same pages (src/community/extras.tsx GuidePage, v10.tsx CostsPage, countries.tsx).
   const dest: Record<string, any> = readJson("src/data/destinations.json", {});
+  const guides: Record<string, { name: string; steps: [string, string][]; yearly: string }> = readJson("src/data/guides.json", {});
   const DN: Record<string, string> = { bali: "Bali", lombok: "Lombok", albania: "Albania", mexico: "Mexico", spain: "Spain", montenegro: "Montenegro", georgia: "Georgia", "northern-cyprus": "Northern Cyprus", vietnam: "Vietnam", italy: "Italy", portugal: "Portugal", bulgaria: "Bulgaria" };
+  for (const k of Object.keys(guides)) DN[k] ||= guides[k].name;
+  const costKeys = Object.keys(dest).filter((k) => k !== "_meta" && DN[k]).sort((a, b) => DN[a].localeCompare(DN[b]));
   const dl = (d: any) => [["Can foreigners buy?", d.can_foreigners_buy], ["Costs on top of the price", d.purchase_costs_pct ? `${d.purchase_costs_pct}% · ${d.purchase_costs_breakdown || ""}` : null], ["Yearly property tax", d.annual_property_tax], ["Tax on rental income", d.rental_income_tax], ["Holiday-rental yield", d.holiday_rental_gross_yield_pct ? `${d.holiday_rental_gross_yield_pct}% gross` : null], ["What holiday rentals earn", d.holiday_rental_yield_note], ["Long-term rent yield", d.long_term_gross_yield_pct ? `${d.long_term_gross_yield_pct}% gross` : null], ["Holiday-rental rules", d.holiday_rental_rules]].filter((r) => r[1]).map((r) => `<dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd>`).join("");
-  page(`${SITE}/costs`, "What it really costs to buy a cheap home abroad · RealHunt", "Buying costs, property tax, rental tax and holiday-rental yields in Bali, Albania, Mexico, Spain, Georgia, Vietnam and more. With sources.", DEF,
-    `<main class="rh-static"><h1>What it really costs to buy abroad</h1><ul>${Object.keys(DN).filter((k) => dest[k]).map((k) => `<li><a href="/costs/${k}">${esc(DN[k])}</a>: ${esc(dest[k].purchase_costs_pct || "?")}% on top of the price</li>`).join("")}</ul><p>Not legal or tax advice. Check with a local lawyer before you buy.</p></main>`,
+  const srcList = (d: any) => (d?.sources || []).map((u: string) => `<li><a href="${esc(u)}" rel="nofollow noopener">${esc(u.replace(/^https?:\/\/(www\.)?/, ""))}</a></li>`).join("");
+  const homesOf = (k: string) => countries.get(k)?.homes || [];
+  const cmpKeys = Object.keys(guides).filter((k) => dest[k] && homesOf(k).length >= MIN_LIST).sort((a, b) => homesOf(b).length - homesOf(a).length);
+  const pairUrl = (a: string, b: string) => `/countries/${[a, b].sort().join("-vs-")}`;
+  const faqLd = (qa: [string, string][]) => ({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: qa.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) });
+
+  page(`${SITE}/costs`, "What it really costs to buy a cheap home abroad · RealHunt", `Buying costs, property tax and tax on rent in ${costKeys.length} countries, from Spain and Italy to Denmark, Japan and Mexico. With sources.`, DEF,
+    `<main class="rh-static"><nav><a href="/">RealHunt</a> › Real costs</nav><h1>What it really costs to buy abroad</h1><ul>${costKeys.map((k) => `<li><a href="/costs/${k}">${esc(DN[k])}</a>: ${esc(dest[k].purchase_costs_pct || "?")}% on top of the price</li>`).join("")}</ul><p><a href="/guide">Buying guides by country</a> · <a href="/countries">Compare two countries</a></p><p>Not legal or tax advice. Check with a local lawyer before you buy.</p></main>`,
     [crumbs([["RealHunt", SITE + "/"], ["Real costs", SITE + "/costs"]])], { group: "content" });
-  for (const k of Object.keys(DN)) if (dest[k]) {
-    const homesHere = countries.get(k)?.homes || [];
-    page(`${SITE}/costs/${k}`, `Buying a home in ${DN[k]}: real costs, taxes and rental yield · RealHunt`, `What you pay on top of the price in ${DN[k]}, yearly property tax, tax on rental income and what holiday rentals earn. With sources.`, DEF,
+  for (const k of costKeys) {
+    const homesHere = homesOf(k);
+    page(`${SITE}/costs/${k}`, `Buying a home in ${DN[k]}: real costs, taxes and rental yield · RealHunt`, `What you pay on top of the price in ${DN[k]}${dest[k].purchase_costs_pct ? ` (about ${dest[k].purchase_costs_pct}%)` : ""}, yearly property tax and tax on rental income. With sources.`, DEF,
       `<main class="rh-static"><nav><a href="/">RealHunt</a> › <a href="/costs">Real costs</a></nav><h1>Buying a home in ${esc(DN[k])}: what it really costs</h1><dl>${dl(dest[k])}</dl>`
-      + `<h2>Sources</h2><ul>${(dest[k].sources || []).map((u: string) => `<li><a href="${esc(u)}" rel="nofollow">${esc(u)}</a></li>`).join("")}</ul>`
+      + `<h2>Sources</h2><ul>${srcList(dest[k])}</ul>`
       + (homesHere.length >= MIN_LIST ? `<h2>Homes in ${esc(DN[k])}</h2><ol>${homesHere.slice(0, 10).map(homeLi).join("")}</ol><p><a href="/homes/${esc(k)}">All ${homesHere.length} homes in ${esc(DN[k])}</a></p>` : "")
+      + (guides[k] ? `<p><a href="/guide/${k}">How to buy a home in ${esc(DN[k])}, step by step</a></p>` : "")
       + `<p>Not legal or tax advice. Check with a local lawyer before you buy.</p></main>`,
       [crumbs([["RealHunt", SITE + "/"], ["Real costs", SITE + "/costs"], [DN[k], `${SITE}/costs/${k}`]])], { lastmod: day(dest[k].updated_at || dest[k].checked_at), group: "content" });
+  }
+
+  const guideKeys = Object.keys(guides).sort((a, b) => guides[a].name.localeCompare(guides[b].name));
+  page(`${SITE}/guide`, "Guides to buying a home abroad as a foreigner · RealHunt", `How to buy a house as a foreigner in ${guideKeys.length} countries: steps, papers, taxes and costs on top of the price, in plain words.`, DEF,
+    `<main class="rh-static"><nav><a href="/">RealHunt</a> › Guides</nav><h1>Guides to buying a home abroad</h1><p>The steps, papers and taxes to buy a house as a foreigner, country by country, in plain words.</p><ul>${guideKeys.map((k) => `<li><a href="/guide/${k}">${esc(guides[k].name)}</a>${dest[k]?.purchase_costs_pct ? `: about ${esc(dest[k].purchase_costs_pct)}% on top of the price` : ""}</li>`).join("")}</ul><p><a href="/countries">Compare two countries</a> · <a href="/costs">Real buying costs by country</a></p></main>`,
+    [crumbs([["RealHunt", SITE + "/"], ["Guides", SITE + "/guide"]])], { group: "content" });
+  for (const k of guideKeys) {
+    const g = guides[k], c = dest[k] || {}, n = g.name, hs = homesOf(k);
+    const qa: [string, string][] = [];
+    if (c.can_foreigners_buy) qa.push([`Can foreigners buy a home in ${n}?`, c.can_foreigners_buy]);
+    if (c.purchase_costs_pct) qa.push([`How much are the buying costs in ${n}?`, `About ${c.purchase_costs_pct}% on top of the price${c.purchase_costs_breakdown ? `: ${c.purchase_costs_breakdown}` : "."}`]);
+    qa.push([`What does owning a home in ${n} cost every year?`, g.yearly]);
+    const others = cmpKeys.filter((x) => x !== k).slice(0, 8);
+    page(`${SITE}/guide/${k}`, `How to buy a home in ${n} as a foreigner: steps, taxes and costs · RealHunt`, `The steps, papers and taxes to buy a house in ${n} from abroad${c.purchase_costs_pct ? `, and the ${c.purchase_costs_pct}% you pay on top of the price` : ""}. In plain words, with sources.`, DEF,
+      `<main class="rh-static"><nav><a href="/">RealHunt</a> › <a href="/guide">Guides</a></nav><h1>How to buy a home in ${esc(n)} as a foreigner</h1><p>The steps, papers and taxes, in plain words. General information, not legal advice: use a local lawyer before you sign.</p>`
+      + (c.can_foreigners_buy ? `<h2>Can foreigners buy?</h2><p>${esc(c.can_foreigners_buy)}</p>` : "")
+      + `<h2>The steps</h2><ol>${g.steps.map(([h, b]) => `<li><strong>${esc(h)}</strong>: ${esc(b)}</li>`).join("")}</ol>`
+      + (c.purchase_costs_pct ? `<h2>Costs on top of the price</h2><p>About ${esc(c.purchase_costs_pct)}%${c.purchase_costs_breakdown ? `: ${esc(c.purchase_costs_breakdown)}` : ""}</p>` : "")
+      + `<h2>Every year</h2><p>${esc(g.yearly)}</p>` + (c.annual_property_tax ? `<p>Yearly property tax: ${esc(c.annual_property_tax)}</p>` : "") + (c.rental_income_tax ? `<p>Tax on rental income: ${esc(c.rental_income_tax)}</p>` : "")
+      + (hs.length >= MIN_LIST ? `<h2>Best homes in ${esc(n)}</h2><ol>${hs.slice(0, 6).map(homeLi).join("")}</ol><p><a href="/homes/${k}">All ${hs.length} homes in ${esc(n)}</a></p>` : "")
+      + (dest[k] ? `<p><a href="/costs/${k}">Costs, taxes and sources for ${esc(n)}</a></p>` : "")
+      + (others.length && cmpKeys.includes(k) ? `<h2>Compare ${esc(n)}</h2><ul>${others.map((x) => `<li><a href="${pairUrl(k, x)}">${esc(n)} vs ${esc(guides[x].name)}</a></li>`).join("")}</ul>` : "")
+      + (c.sources?.length ? `<h2>Sources</h2><ul>${srcList(c)}</ul>` : "") + `</main>`,
+      [crumbs([["RealHunt", SITE + "/"], ["Guides", SITE + "/guide"], [n, `${SITE}/guide/${k}`]]), faqLd(qa)], { group: "content" });
+  }
+
+  const cstat = (k: string) => { const hs = homesOf(k); const pr = hs.map((h) => h.price_eur); return { k, name: guides[k].name, n: hs.length, med: median(pr), ppsqm: median(hs.filter((h) => h.sqm > 0).map((h) => h.price_eur / h.sqm)), min: Math.min(...pr), score: median(hs.map((h) => h.nota || 0)), top: hs.slice(0, 3) }; };
+  const pairs: [string, string][] = [];
+  for (let i = 0; i < cmpKeys.length; i++) for (let j = i + 1; j < cmpKeys.length; j++) pairs.push([cmpKeys[i], cmpKeys[j]].sort() as [string, string]);
+  page(`${SITE}/countries`, "Compare countries for a cheap home abroad · RealHunt", `${pairs.length} side-by-side comparisons: home prices on RealHunt, price per m², buying costs, property tax and the rules for foreign buyers.`, DEF,
+    `<main class="rh-static"><nav><a href="/">RealHunt</a> › Compare countries</nav><h1>Compare two countries for a cheap home</h1><p>Prices from the homes on RealHunt, side by side with the buying rules, taxes and costs on top of the price.</p>`
+    + cmpKeys.map((a) => `<h2>${esc(guides[a].name)}</h2><ul>${cmpKeys.filter((b) => b !== a).map((b) => `<li><a href="${pairUrl(a, b)}">${esc(guides[a].name)} vs ${esc(guides[b].name)}</a></li>`).join("")}</ul>`).join("") + `</main>`,
+    [crumbs([["RealHunt", SITE + "/"], ["Compare countries", SITE + "/countries"]])], { group: "content" });
+  for (const [ka, kb] of pairs) {
+    const A = cstat(ka), B = cstat(kb), da = dest[ka], db = dest[kb];
+    const ch = A.ppsqm && B.ppsqm ? (A.ppsqm < B.ppsqm ? [A, B] : [B, A]) : null;
+    const gap = ch ? Math.round((ch[1].ppsqm - ch[0].ppsqm) / ch[1].ppsqm * 100) : 0;
+    const lead = ch ? (gap < 3 ? `On RealHunt, homes in ${A.name} and ${B.name} cost about the same per m² (${eur(A.ppsqm)} and ${eur(B.ppsqm)}), with median prices of ${eur(A.med)} and ${eur(B.med)}.` : `On RealHunt, homes in ${ch[0].name} cost a median ${eur(ch[0].ppsqm)} per m², ${gap}% less than in ${ch[1].name} (${eur(ch[1].ppsqm)} per m²).`)
+      + (da.purchase_costs_pct && db.purchase_costs_pct ? ` Buying costs start at about ${String(da.purchase_costs_pct).split(/[-–]/)[0]}% in ${A.name} and ${String(db.purchase_costs_pct).split(/[-–]/)[0]}% in ${B.name}.` : "") : "";
+    const tr = (l: string, a: string, b: string) => `<tr><th scope="row">${esc(l)}</th><td>${esc(a)}</td><td>${esc(b)}</td></tr>`;
+    page(`${SITE}${pairUrl(ka, kb)}`, `${A.name} vs ${B.name}: cheap homes, prices and buying costs compared · RealHunt`, (lead || `${A.name} and ${B.name} side by side: home prices, buying costs, taxes and rules for foreign buyers.`).slice(0, 300), DEF,
+      `<main class="rh-static"><nav><a href="/">RealHunt</a> › <a href="/countries">Compare countries</a></nav><h1>${esc(A.name)} vs ${esc(B.name)}: where is a cheap home better value?</h1>${lead ? `<p>${esc(lead)}</p>` : ""}`
+      + `<div style="overflow-x:auto"><table><thead><tr><th></th><th>${esc(A.name)}</th><th>${esc(B.name)}</th></tr></thead><tbody>`
+      + tr("Homes on RealHunt", String(A.n), String(B.n)) + tr("Median price", eur(A.med), eur(B.med)) + tr("Median price per m²", A.ppsqm ? eur(A.ppsqm) : "n/a", B.ppsqm ? eur(B.ppsqm) : "n/a")
+      + tr("Cheapest home", eur(A.min), eur(B.min)) + tr("Median score", String(A.score), String(B.score))
+      + tr("Costs on top of the price", da.purchase_costs_pct ? `${da.purchase_costs_pct}%` : "n/a", db.purchase_costs_pct ? `${db.purchase_costs_pct}%` : "n/a")
+      + tr("Can foreigners buy?", da.can_foreigners_buy || "n/a", db.can_foreigners_buy || "n/a") + tr("Yearly property tax", da.annual_property_tax || "n/a", db.annual_property_tax || "n/a")
+      + tr("Tax on rental income", da.rental_income_tax || "n/a", db.rental_income_tax || "n/a") + `</tbody></table></div>`
+      + `<p>Prices describe the homes on RealHunt, each checked by a person, not every home in each country. Rules and taxes: general information, not legal or tax advice.</p>`
+      + [A, B].map((c) => `<h2>Best homes in ${esc(c.name)}</h2><ol>${c.top.map(homeLi).join("")}</ol><p><a href="/homes/${c.k}">All ${c.n} homes in ${esc(c.name)}</a> · <a href="/guide/${c.k}">How to buy in ${esc(c.name)}</a> · <a href="/costs/${c.k}">Costs and sources</a></p>`).join("")
+      + `</main>`,
+      [crumbs([["RealHunt", SITE + "/"], ["Compare countries", SITE + "/countries"], [`${A.name} vs ${B.name}`, `${SITE}${pairUrl(ka, kb)}`]])], { group: "content" });
   }
   page(`${SITE}/research/new-builds`, "State of cheap new builds · RealHunt monthly report", "Every month: how many new-build homes under €100,000 we track, the cheapest countries and median prices. Free to quote with a link.", DEF, undefined, undefined, { group: "content" });
   page(`${SITE}/agents`, "RealHunt Agents · Earn from buyers you bring", "Local agents introduce buyers to new-build developers on RealHunt and earn 30% of RealHunt's fee when they buy.", DEF);
@@ -419,7 +481,7 @@ function build(root: string) {
     `<main class="rh-static" data-rh-keep data-rh-static>${navHtml([["RealHunt", SITE + "/"], ["Site map", SITE + "/sitemap"]])}<h1>Site map</h1>`
     + ["pages", "places", "content", "top", "homes"].map((g) => `<h2>${esc(groupNames[g])} (${byGroup(g).length})</h2><ul>${byGroup(g).map((e) => `<li><a href="${esc(label(e.url))}">${esc(label(e.url))}</a></li>`).join("")}</ul>`).join("")
     + `</main>`, undefined, { group: "pages" });
-  fs.writeFileSync(path.join(root, "llms.txt"), `# RealHunt\n\n> RealHunt lists cheap homes for sale around the world (mostly under €100,000), each checked by a person and graded from 70 to 98 against every other home on the site. It is not an estate agent: every home links to its original listing.\n\nToday: ${rows.length} homes in ${countryLinks.length} countries. Updated ${today}.\n\n## Key pages\n\n- [Best homes](${SITE}/): all homes, best score first, with filters.\n- [How the score works](${SITE}/method): the 11 sub-scores and what the grade means.\n- [New homes](${SITE}/new) and [RSS](${SITE}/feed.xml)\n- [Prices by country](${SITE}/research/prices): median price and price per m² by country.\n- [Buying costs abroad](${SITE}/costs)\n- [New builds Top 100](${SITE}/top): Bali, Phuket, Tulum, Batumi, Koh Samui.\n- [Research and guides](${SITE}/blog)\n- [Site map](${SITE}/sitemap)\n\n## Countries\n\n${countryLinks.map(([k, v]) => `- [${v.name}](${SITE}/homes/${k}): ${v.homes.length} homes`).join("\n")}\n`);
+  fs.writeFileSync(path.join(root, "llms.txt"), `# RealHunt\n\n> RealHunt lists cheap homes for sale around the world (mostly under €100,000), each checked by a person and graded from 70 to 98 against every other home on the site. It is not an estate agent: every home links to its original listing.\n\nToday: ${rows.length} homes in ${countryLinks.length} countries. Updated ${today}.\n\n## Key pages\n\n- [Best homes](${SITE}/): all homes, best score first, with filters.\n- [How the score works](${SITE}/method): the 11 sub-scores and what the grade means.\n- [New homes](${SITE}/new) and [RSS](${SITE}/feed.xml)\n- [Prices by country](${SITE}/research/prices): median price and price per m² by country.\n- [Buying costs abroad](${SITE}/costs)\n- [Buying guides by country](${SITE}/guide)\n- [Compare two countries](${SITE}/countries)\n- [New builds Top 100](${SITE}/top): Bali, Phuket, Tulum, Batumi, Koh Samui.\n- [Research and guides](${SITE}/blog)\n- [Site map](${SITE}/sitemap)\n\n## Countries\n\n${countryLinks.map(([k, v]) => `- [${v.name}](${SITE}/homes/${k}): ${v.homes.length} homes`).join("\n")}\n`);
 
   // build.json: which commit is live and when it was built (check with curl https://realhunt.co/build.json).
   fs.writeFileSync(path.join(root, "build.json"), JSON.stringify({ commit: (process.env.GITHUB_SHA || "local").slice(0, 7), built_at: new Date().toISOString(), homes: rows.length, indexable_pages: entries.length }) + "\n");

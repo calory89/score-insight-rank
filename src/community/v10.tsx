@@ -14,6 +14,7 @@ import { money } from "./api";
 import { useCommunity } from "./ctx";
 import IntroChat from "@/components/realhunt/IntroChat";
 import DEST from "@/data/destinations.json";
+import GUIDES_JSON from "@/data/guides.json";
 import { Bell, BadgeCheck, Check, ChevronLeft, FileUp, Languages, Loader2, MessageCircle, Scale, ShieldCheck, TrendingDown, Users, X, Download } from "lucide-react";
 
 const rpc = async (fn: string, args: Record<string, unknown> = {}) => { const { data, error } = await (supabase as any).rpc(fn, args); if (error) throw error; return data; };
@@ -168,24 +169,27 @@ export const DEST_NAMES: Record<string, [string, string, string]> = {
   spain: ["Spain", "Spain", "spain"], montenegro: ["Montenegro", "Montenegro", "montenegro"], georgia: ["Georgia", "Georgia", "georgia"], "northern-cyprus": ["Northern Cyprus", "Cyprus", "northern-cyprus"],
   vietnam: ["Vietnam", "Vietnam", "vietnam"], italy: ["Italy", "Italy", "italy"], portugal: ["Portugal", "Portugal", "portugal"], bulgaria: ["Bulgaria", "Bulgaria", "bulgaria"],
 };
+// Countries with a buying guide but no new-build page (Denmark, France, Japan...) get a cost page too.
+const GUIDE_NAMES = GUIDES_JSON as Record<string, { name: string }>;
+const nameOf = (k: string): [string, string, string] | null => DEST_NAMES[k] || (GUIDE_NAMES[k] ? [GUIDE_NAMES[k].name, GUIDE_NAMES[k].name, ""] : null);
 const range = (s?: string | null): [number, number] | null => { const m = String(s || "").match(/([\d.]+)\s*[-–]\s*([\d.]+)/) || String(s || "").match(/([\d.]+)/); return m ? [Number(m[1]), Number(m[2] || m[1])] : null; };
 export function CostsIndex() {
   useEffect(() => setMeta("What it really costs to buy a cheap home abroad · RealHunt", "Buying costs, property tax, rental tax and holiday-rental yields in Bali, Albania, Mexico, Spain, Georgia, Vietnam and more. With sources."), []);
-  const rows = Object.keys(DEST_NAMES).filter((k) => D[k]);
+  const rows = Object.keys(D).filter((k) => k !== "_meta" && nameOf(k)).sort((a, b) => nameOf(a)![0].localeCompare(nameOf(b)![0]));
   return (
     <div className="hunt-wrap hunt-page hv-sp">
       <nav className="hv-crumbs"><Link to="/">RealHunt</Link> › <span>Real costs</span></nav>
       <h1>What it really costs to buy abroad</h1>
       <p>Taxes and fees on top of the price, yearly tax, tax on rent, and what holiday rentals really earn. Every figure links to its source. Compiled {D._meta?.compiled}.</p>
       <div className="hv-costs-table"><table><thead><tr><th>Destination</th><th>Costs on top of price</th><th>Holiday-rental yield (gross)</th><th>Long-term rent yield (gross)</th></tr></thead>
-        <tbody>{rows.map((k) => <tr key={k}><td><Link to={`/costs/${k}`}>{flag(DEST_NAMES[k][1])} {DEST_NAMES[k][0]}</Link></td><td>{D[k].purchase_costs_pct ? `${D[k].purchase_costs_pct}%` : "—"}</td><td>{D[k].holiday_rental_gross_yield_pct ? `${D[k].holiday_rental_gross_yield_pct}%` : "no reliable figure"}</td><td>{D[k].long_term_gross_yield_pct ? `${String(D[k].long_term_gross_yield_pct).split(" (")[0]}%` : "—"}</td></tr>)}</tbody></table></div>
+        <tbody>{rows.map((k) => <tr key={k}><td><Link to={`/costs/${k}`}>{flag(nameOf(k)![1])} {nameOf(k)![0]}</Link></td><td>{D[k].purchase_costs_pct ? `${D[k].purchase_costs_pct}%` : "—"}</td><td>{D[k].holiday_rental_gross_yield_pct ? `${D[k].holiday_rental_gross_yield_pct}%` : "no reliable figure"}</td><td>{D[k].long_term_gross_yield_pct ? `${String(D[k].long_term_gross_yield_pct).split(" (")[0]}%` : "—"}</td></tr>)}</tbody></table></div>
       <p className="hunt-fine">This is general information, not tax or legal advice. Rules change; check with a local lawyer before you buy.</p>
     </div>
   );
 }
 export function CostsPage() {
   const { slug = "" } = useParams();
-  const d = D[slug]; const n = DEST_NAMES[slug];
+  const d = D[slug]; const n = nameOf(slug);
   const [price, setPrice] = useState(80000);
   useEffect(() => { if (n) setMeta(`Buying a home in ${n[0]}: real costs, taxes and rental yield · RealHunt`, `What you pay on top of the price in ${n[0]}, yearly property tax, tax on rental income and what holiday rentals earn. With sources.`); }, [slug]);
   if (!d || !n) return <div className="hunt-wrap hunt-page"><h1>Not found</h1><Link to="/costs">All destinations</Link></div>;
@@ -208,7 +212,7 @@ export function CostsPage() {
       <p className="hunt-fine">Figures as of {d.as_of}. General information, not tax or legal advice.</p>
       <h2>Sources</h2>
       <ul className="hv-sources">{(d.sources || []).map((s: string) => <li key={s}><a href={s} target="_blank" rel="noopener noreferrer nofollow">{s.replace(/^https?:\/\/(www\.)?/, "").slice(0, 80)}</a></li>)}</ul>
-      <p style={{ marginTop: 22 }}><Link className="hunt-primary" to={`/new-builds/${n[2]}`}>New builds under €100,000 in {n[1]}</Link> <Link className="hunt-link" to="/costs">Other destinations</Link></p>
+      <p style={{ marginTop: 22 }}>{n[2] ? <Link className="hunt-primary" to={`/new-builds/${n[2]}`}>New builds under €100,000 in {n[1]}</Link> : <Link className="hunt-primary" to={`/homes/${slug}`}>Best homes in {n[0]}</Link>} {GUIDE_NAMES[slug] && <Link className="hunt-secondary" to={`/guide/${slug}`}>How to buy in {n[0]}</Link>} <Link className="hunt-link" to="/costs">Other destinations</Link></p>
     </div>
   );
 }
