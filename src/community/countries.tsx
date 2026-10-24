@@ -1,6 +1,7 @@
 // /countries and /countries/<a>-vs-<b>: two countries side by side, from the homes on RealHunt (public/data/rh-static.json)
 // and the buying rules and costs in src/data/destinations.json. seo/prerender.ts builds the same pages for crawlers
 // (same pairs, same figures); keep the two in step.
+import { mediaDeep } from "@/lib/media";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Scale } from "lucide-react";
@@ -21,7 +22,7 @@ export type CountryStats = { k: string; name: string; n: number; med: number; pp
 
 let snap: Promise<Record<string, CountryStats>> | null = null;
 export function countryStats() {
-  return (snap ||= fetch("/data/rh-static.json", { cache: "force-cache" }).then((r) => r.json()).then((s: any) => {
+  return (snap ||= fetch("/data/rh-static.json", { cache: "force-cache" }).then((r) => r.json()).then(mediaDeep).then((s: any) => {
     const by: Record<string, Row[]> = {};
     for (const r of (s.rows || []) as any[]) if (r.price_eur > 0) (by[key(r.country)] ||= []).push(r);
     const out: Record<string, CountryStats> = {};
