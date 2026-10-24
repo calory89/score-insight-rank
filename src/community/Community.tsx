@@ -32,6 +32,8 @@ import { TopListPage, TopProjectPage, TopClaimPage, TopMinePage, TopIndexPage } 
 import { TopMethodPage, AboutPage } from "./topTrustUI";
 import { HomeMethodPage } from "./method";
 import { DetailAside } from "./aside";
+import { StaticPage } from "./staticpage";
+import { regionOf, slugify } from "./regions";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { t } from "./i18n";
@@ -155,7 +157,9 @@ function Shell({ children }: { children: ReactNode }) {
     };
   }, [user?.id]);
   useEffect(() => {
-    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare-new-builds|costs|research|agents)/.test(location.pathname)) return; // these pages set their own title
+    // Child pages set their own title in effects that run before this one, so they must be listed here or the
+    // default title overwrites theirs (country pages, /method and /alerts showed the home title before 24-oct-2026).
+    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare-new-builds|costs|research|agents|homes\/|method|alerts|about|top|guide|new|sitemap|swipe|map|leaderboard|winners|best|weather|saved|legal|hunter\/|b\/)/.test(location.pathname)) return;
     document.title = "RealHunt: The best homes in every country, ranked by score";
   }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
@@ -983,7 +987,7 @@ function Detail() {
         <DetailGallery key={d.id} deal={d} />
         <section>
           <span className="hunt-eyebrow">
-            <Link to={`/homes/${encodeURIComponent((d.country || "").toLowerCase().replace(/ /g, "-"))}`}>{d.country}</Link> · {categories.find((c) => c[0] === d.category)?.[1] || d.category}
+            <Link to={`/homes/${encodeURIComponent((d.country || "").toLowerCase().replace(/ /g, "-"))}`}>{d.country}</Link>{regionOf(d) && <> · <Link to={`/homes/${encodeURIComponent((d.country || "").toLowerCase().replace(/ /g, "-"))}/${slugify(regionOf(d))}`}>{regionOf(d)}</Link></>} · {categories.find((c) => c[0] === d.category)?.[1] || d.category}
           </span>
           <h1>{cleanTitle(d)}</h1>
           <div className="hunt-price">{money(d.price_eur)}</div>
@@ -1987,6 +1991,8 @@ export default function Community() {
       <AboutPage />
     ) : path === "/method" ? (
       <HomeMethodPage />
+    ) : path === "/new" || path === "/research/prices" || path === "/sitemap" ? (
+      <StaticPage />
     ) : path === "/top/mine" ? (
       <TopMinePage />
     ) : path.startsWith("/top/claim/") ? (

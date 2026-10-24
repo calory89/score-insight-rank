@@ -33,3 +33,18 @@
 }
 .hv-swipe-hint { text-align: center; font-size: 13px; color: #55585E; margin: 0 0 8px; position: relative; z-index: 1; }
 .hunt.is-dark .hv-swipe-hint { color: #A6A9AF; }
+.rh-crumbs { font-size: 13px; color: #5E626A; margin: 0 0 10px; }
+.rh-crumbs a { color: inherit; }
+.hunt.is-dark .rh-crumbs { color: #A6A9AF; }
+.rh-regions { margin-top: 8px; }
+/* Prerendered-only pages shown inside the app (/new, /research/prices, /sitemap). */
+.rh-staticwrap .rh-static { padding: 8px 0 32px; max-width: 900px; }
+.rh-staticwrap a { color: var(--rh-brand, #D4420C); text-decoration: underline; text-underline-offset: 3px; }
+.rh-staticwrap ol, .rh-staticwrap ul { padding-left: 22px; list-style: revert; }
+.rh-staticwrap li { margin: 6px 0; line-height: 1.5; }
+.rh-staticwrap h2 { margin-top: 28px; }
+.rh-staticwrap table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; font-size: 14px; }
+.rh-staticwrap th, .rh-staticwrap td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #E2E3E6; white-space: nowrap; }
+.rh-staticwrap th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #55585E; }
+.hunt.is-dark .rh-staticwrap th, .hunt.is-dark .rh-staticwrap td { border-color: #2A2C30; }
+.hunt.is-dark .rh-staticwrap th { color: #A6A9AF; }
