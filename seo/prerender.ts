@@ -14,7 +14,7 @@ import path from "path";
 import fs from "fs";
 import { weatherShell } from "../src/pages/wx/shell";
 import { DIMS, AMEN } from "../src/community/dims";
-import { regionOf, slugify } from "../src/community/regions";
+import { regionOf, slugify, HOME_TYPES } from "../src/community/regions";
 
 const SITE = "https://realhunt.co";
 const DEF = `${SITE}/og-home.jpg`;
@@ -29,6 +29,8 @@ const cap = (s: string) => s.replace(/-/g, " ").replace(/\b\w/g, (ch) => ch.toUp
 const eur = (n: number) => "€" + Math.round(n).toLocaleString("en");
 const day = (s?: string | null) => (s && /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : null);
 const maxDay = (xs: (string | null | undefined)[]) => xs.map(day).filter(Boolean).sort().pop() || null;
+// "in the Netherlands", "in the United States"
+const the = (n: string) => (/^(United |Netherlands$|Dominican Republic$|Czech Republic$|Philippines$)/.test(n) ? "the " + n : n);
 const slugCountry = (c: string) => String(c || "").toLowerCase().trim().replace(/\s+/g, "-");
 const crumbs = (items: [string, string][]) => ({
   "@context": "https://schema.org", "@type": "BreadcrumbList",
@@ -200,10 +202,12 @@ function build(root: string) {
       : `Homes for sale in ${name}, scored and ranked best first. New homes every day.`;
     const bandLinks = PRICE_BANDS.map((p) => [p, homes.filter((h) => h.price_eur <= p).length] as const).filter(([, n]) => n >= MIN_LIST);
     const regLinks = [...regionHomes.values()].filter((g) => g.cc === c && g.homes.length >= MIN_LIST).sort((a, b) => b.homes.length - a.homes.length);
+    const typeLinks = Object.entries(HOME_TYPES).map(([k, v]) => [k, v, homes.filter((h) => h.category === v.cat)] as const).filter(([, , l]) => l.length >= MIN_LIST);
     const faq = countryFaq(name, c, homes);
     page(url, `Best homes for sale in ${name} (${homes.length}) · RealHunt`, desc, top[0] ? homeImg(top[0]) : DEF,
       `<main class="rh-static">${navHtml(trail)}<h1>Best homes for sale in ${esc(name)}</h1><p>${esc(desc)}</p>`
       + (bandLinks.length ? `<p>By price: ${bandLinks.map(([p, n]) => `<a href="/homes/${esc(c)}/under-${p}">under ${esc(eur(p))} (${n})</a>`).join(" · ")}</p>` : "")
+      + (typeLinks.length && !thin ? `<p>By type: ${typeLinks.map(([k, v, l]) => `<a href="/homes/${esc(c)}/${k}">${esc(v.label)} (${l.length})</a>`).join(" · ")}</p>` : "")
       + (regLinks.length ? `<p>By region: ${regLinks.map((g) => `<a href="/homes/${esc(c)}/${esc(g.slug)}">${esc(g.name)} (${g.homes.length})</a>`).join(" · ")}</p>` : "")
       + `<ol>${top.map(homeLi).join("")}</ol>`
       + (faq.length ? `<h2>Questions about buying in ${esc(name)}</h2>${faq.map(([q, a]) => `<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join("")}` : "")
@@ -226,6 +230,27 @@ function build(root: string) {
         [crumbs(bTrail), ...(list.length ? [{ "@context": "https://schema.org", "@type": "ItemList", name: `Homes under ${eur(p)} in ${name}`, numberOfItems: list.length,
           itemListElement: list.slice(0, 50).map((h, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/deal/${h.slug}`, name: h.title })) }] : [])],
         { noindex: thin || list.length < MIN_LIST, lastmod: maxDay(list.map(homeDay)), group: "places" });
+    }
+  }
+
+  // ---------- Home-type pages: /homes/{country}/by-the-sea, /village-houses, /in-town ----------
+  for (const [c, { name, homes }] of countries) {
+    if (REGIONS.has(c)) continue;
+    for (const [k, v] of Object.entries(HOME_TYPES)) {
+      const list = homes.filter((h) => h.category === v.cat);
+      if (list.length < MIN_LIST) continue;
+      const url = `${SITE}/homes/${c}/${k}`;
+      const trail: [string, string][] = [["RealHunt", SITE + "/"], [`Homes in ${name}`, `${SITE}/homes/${c}`], [v.label, url]];
+      const pr = list.map((h) => h.price_eur);
+      const desc = `${list.length} ${v.h1(the(name)).replace(/^Homes |^Village houses for sale /, (m) => m.toLowerCase())}, from ${eur(Math.min(...pr))}. Checked by a person, scored from 70 to 98 and ranked best first.`;
+      const others = Object.entries(HOME_TYPES).filter(([k2, v2]) => k2 !== k && homes.filter((h) => h.category === v2.cat).length >= MIN_LIST);
+      page(url, `${v.h1(the(name))} (${list.length}) · RealHunt`, desc, homeImg(list[0]),
+        `<main class="rh-static">${navHtml(trail)}<h1>${esc(v.h1(the(name)))}</h1><p>${esc(desc)}</p><p>Median price ${esc(eur(median(pr)))}.</p>`
+        + `<ol>${list.slice(0, 50).map(homeLi).join("")}</ol>`
+        + `<p><a href="/homes/${esc(c)}">All ${homes.length} homes in ${esc(the(name))}</a>${others.map(([k2, v2]) => ` · <a href="/homes/${esc(c)}/${k2}">${esc(v2.h1(the(name)))}</a>`).join("")} · <a href="/alerts?country=${encodeURIComponent(name)}">Get new homes in ${esc(the(name))} by email</a></p></main>`,
+        [crumbs(trail), { "@context": "https://schema.org", "@type": "ItemList", name: v.h1(the(name)), numberOfItems: list.length,
+          itemListElement: list.slice(0, 50).map((h, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/deal/${h.slug}`, name: h.title })) }],
+        { lastmod: maxDay(list.map(homeDay)), group: "places" });
     }
   }
 
@@ -391,8 +416,6 @@ function build(root: string) {
   // ---------- Buying guides, real costs and country comparisons ----------
   // Steps per country: src/data/guides.json. Money side (costs, taxes, rules, sources): src/data/destinations.json.
   // The app shows the same pages (src/community/extras.tsx GuidePage, v10.tsx CostsPage, countries.tsx).
-  // "in the Netherlands", "in the United States"
-  const the = (n: string) => (/^(United |Netherlands$|Dominican Republic$|Czech Republic$|Philippines$)/.test(n) ? "the " + n : n);
   const dest: Record<string, any> = readJson("src/data/destinations.json", {});
   const guides: Record<string, { name: string; steps: [string, string][]; yearly: string }> = readJson("src/data/guides.json", {});
   const DN: Record<string, string> = { bali: "Bali", lombok: "Lombok", albania: "Albania", mexico: "Mexico", spain: "Spain", montenegro: "Montenegro", georgia: "Georgia", "northern-cyprus": "Northern Cyprus", vietnam: "Vietnam", italy: "Italy", portugal: "Portugal", bulgaria: "Bulgaria" };
