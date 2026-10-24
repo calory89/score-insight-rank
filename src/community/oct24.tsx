@@ -6,6 +6,9 @@ import { Bell, Calculator } from "lucide-react";
 import { money } from "./api";
 import { AlertForm } from "./extras";
 import { t } from "./i18n";
+import { homeArticle } from "./homeArticle";
+import { regionOf, slugify } from "./regions";
+import DESTS from "@/data/destinations.json";
 
 // Inline sign-up after the first rows of homes: the moment someone has seen enough to want more.
 export function InlineAlert({ countries, country }: { countries: string[]; country?: string }) {
@@ -105,5 +108,29 @@ export function AlertConfirmPage() {
         </>
       )}
     </div>
+  );
+}
+
+// The written article on each home page, the same text crawlers read (src/community/homeArticle.ts).
+let allRows: Promise<any[]> | null = null;
+const rowsP = () => (allRows ||= fetch("/data/rh-static.json", { cache: "force-cache" }).then((r) => r.json()).then((s: any) => s.rows || []).catch(() => []));
+export function HomeArticle({ d }: { d: any }) {
+  const [rows, setRows] = useState<any[] | null>(null);
+  useEffect(() => { let on = true; rowsP().then((x) => { if (on) setRows(x); }); return () => { on = false; }; }, [d?.slug]);
+  const art = useMemo(() => {
+    if (!rows || !d?.country) return null;
+    const key = (c: string) => String(c || "").toLowerCase().trim().replace(/\s+/g, "-");
+    const cc = key(d.country);
+    const countryHomes = rows.filter((r) => key(r.country) === cc);
+    const rg = regionOf(d);
+    const regionHomes = rg ? countryHomes.filter((r) => slugify(regionOf(r)) === slugify(rg)) : [];
+    return homeArticle({ ...rows.find((r) => r.slug === d.slug), ...d }, { countryHomes: countryHomes.length ? countryHomes : [d], regionHomes: regionHomes.length >= 3 ? regionHomes : undefined, regionName: regionHomes.length >= 3 ? rg : undefined, dest: (DESTS as any)[cc] || null });
+  }, [rows, d]);
+  if (!art) return null;
+  return (
+    <section className="rh-home-article">
+      {art.sections.map((s) => <div key={s.h}><h2>{s.h}</h2>{s.p.map((p) => <p key={p}>{p}</p>)}</div>)}
+      {art.faq.length > 0 && <div className="rh-faq"><h2>{t("Questions about this home")}</h2>{art.faq.map(([q, a]) => <details key={q}><summary>{q}</summary><p>{a}</p></details>)}</div>}
+    </section>
   );
 }

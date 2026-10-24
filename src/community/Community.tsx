@@ -33,7 +33,7 @@ import { TopMethodPage, AboutPage } from "./topTrustUI";
 import { HomeMethodPage } from "./method";
 import { DetailAside } from "./aside";
 import { StaticPage } from "./staticpage";
-import { InlineAlert, HomeFaq, MortgageCalc, PerSqmVsCountry, AlertConfirmPage } from "./oct24";
+import { InlineAlert, HomeFaq, MortgageCalc, PerSqmVsCountry, AlertConfirmPage, HomeArticle } from "./oct24";
 import { regionOf, slugify } from "./regions";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, GUIDES, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
@@ -1023,6 +1023,7 @@ function Detail() {
           <Amenities deal={d} />
           {d.why_great && <blockquote>{d.why_great}</blockquote>}
           {!isEs() && <TranslateBar text={[cleanTitle(d), d.why_great].filter(Boolean).join("\n\n")} />}
+          <HomeArticle d={d} />
           <div className="hunt-detail-actions hv-detail-actions">
             {listing}
             <SaveHeart deal={d} className="hunt-save hv-save-inline" />

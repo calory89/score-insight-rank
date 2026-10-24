@@ -2965,3 +2965,10 @@ html.rh-dark, html.rh-dark body { background: #0C0D0E; }
 /* /countries/<a>-vs-<b> */
 .rh-cmp .hv-costs-table th[scope="row"] { width: 26%; min-width: 120px; }
 .rh-cmp .hv-costs-table td { width: 37%; vertical-align: top; }
+
+/* Article on each home page */
+.rh-home-article { margin: 18px 0; }
+.rh-home-article h2 { font-size: 1.15rem; margin: 18px 0 6px; }
+.rh-home-article p { line-height: 1.6; margin: 0 0 8px; }
+.rh-home-article details { border-top: 1px solid var(--line, #e5e5e5); padding: 8px 0; }
+.rh-home-article summary { cursor: pointer; font-weight: 600; }
