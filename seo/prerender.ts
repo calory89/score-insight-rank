@@ -94,7 +94,7 @@ function build(root: string) {
   const REGIONS = new Set(["scandinavia"]);
   const ranked = rows.slice().sort((a, b) => (b.nota ?? 0) - (a.nota ?? 0) || (a.rank ?? 1e9) - (b.rank ?? 1e9));
   const homeLi = (r: any) =>
-    `<li><a href="/deal/${esc(r.slug)}"><strong>${esc(eur(r.price_eur))}</strong> · ${esc(r.title)}</a> — ${esc(r.location_name || r.country)}${r.nota != null ? ` · score ${esc(r.nota)}` : ""}${r.sqm ? ` · ${esc(r.sqm)} m²` : ""}${r.bedrooms ? ` · ${esc(r.bedrooms)} bed` : ""}</li>`;
+    `<li><a href="/deal/${esc(r.slug)}"><strong>${esc(eur(r.price_eur))}</strong> · ${esc(r.title)}</a> · ${esc(r.location_name || r.country)}${r.nota != null ? ` · score ${esc(r.nota)}` : ""}${r.sqm ? ` · ${esc(r.sqm)} m²` : ""}${r.bedrooms ? ` · ${esc(r.bedrooms)} bed` : ""}</li>`;
 
   for (const d of deals) {
     if (!d?.slug || !/^[A-Za-z0-9_-]+$/.test(d.slug)) continue;
@@ -118,7 +118,7 @@ function build(root: string) {
       body = `<main class="rh-static"><article>${navHtml(trail)}<h1>${esc(r.title)}</h1>`
         + `<p><strong>${esc(eur(r.price_eur))}</strong> · ${esc(r.location_name || cName)}${r.sqm ? ` · ${esc(r.sqm)} m²` : ""}${r.bedrooms ? ` · ${esc(r.bedrooms)} bedrooms` : ""}${r.sqm && r.price_eur ? ` · ${esc(eur(r.price_eur / r.sqm))}/m²` : ""}</p>`
         + (r.image_urls?.[0] ? `<p><img src="${esc(r.image_urls[0])}" alt="${esc(r.title + ", " + (r.location_name || cName))}" width="760" loading="eager" style="max-width:100%;height:auto;border-radius:12px"></p>` : "")
-        + (r.nota != null ? `<h2>RealHunt score: ${esc(r.nota)} / 98</h2><p>Every home on RealHunt passed a hand check first, so the grade starts at 70. The rest compares this home with every other home on the site. <a href="/method">How the score works</a>.</p><ul>${dims.map(([k, l, help]) => `<li>${esc(l)}: <strong>${esc(r.dims[k])}</strong>/100 — ${esc(help)}</li>`).join("")}</ul>` : "")
+        + (r.nota != null ? `<h2>RealHunt score: ${esc(r.nota)} / 98</h2><p>Every home on RealHunt passed a hand check first, so the grade starts at 70. The rest compares this home with every other home on the site. <a href="/method">How the score works</a>.</p><ul>${dims.map(([k, l, help]) => `<li>${esc(l)}: <strong>${esc(r.dims[k])}</strong>/100 · ${esc(help)}</li>`).join("")}</ul>` : "")
         + (r.why_great ? `<h2>Why it made the list</h2><p>${esc(r.why_great)}</p>` : "")
         + (amen.length ? `<h2>Features</h2><p>${esc(amen.join(", "))}</p>` : "")
         + (nearList ? `<h2>What is nearby</h2><ul>${nearList}</ul>` : "")

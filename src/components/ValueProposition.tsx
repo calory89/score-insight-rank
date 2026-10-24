@@ -54,7 +54,7 @@ const ValueProposition = () => {
           </div>
 
           <Button variant="hero" size="lg" onClick={scrollToHero}>
-            Analyze Now — Free <ArrowRight className="ml-2 h-4 w-4" />
+            Analyze Now: Free <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </motion.div>
       </div>

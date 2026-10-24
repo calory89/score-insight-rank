@@ -1,5 +1,5 @@
 /* ============================================================================
-   REALHUNT — DEALS
+   REALHUNT: DEALS
    ----------------------------------------------------------------------------
    THIS FILE IS THE CONTROL PANEL FOR THE /deals PAGE.
    To add a deal: copy one block, paste it at the TOP of the DEALS array,
@@ -22,7 +22,7 @@ export interface Deal {
   title: string;
   city: string;
   country: string;
-  countryCode: string;      // ISO2 lowercase — drives the flag
+  countryCode: string;      // ISO2 lowercase, drives the flag
   price: number;            // EUR
   localPrice?: string;      // original currency, if not EUR
   type: DealType;
@@ -51,7 +51,7 @@ export const DEALS: Deal[] = [
     pricePerSqm: 132, grossYieldPct: null,
     url: "https://www.immobiliare.it/annunci/129498612/",
     source: "Immobiliare.it", verifiedOn: "2026-08-18",
-    angle: "132 EUR/sqm — about a tenth of the Sicilian average. Mussomeli has run its cheap-house scheme for years, so notaries, builders and foreign buyers are already a pipeline.",
+    angle: "132 EUR/sqm, about a tenth of the Sicilian average. Mussomeli has run its cheap-house scheme for years, so notaries, builders and foreign buyers are already a pipeline.",
     risk: "Inland Sicilian renovation runs 600-1,000 EUR/sqm, several times the purchase price, and the nearest airport is 80 km away.",
     tags: ["Renovation", "Sub-15k"], featured: true, published: true,
   },
@@ -79,7 +79,7 @@ export const DEALS: Deal[] = [
     url: "https://www.zillow.com/homedetails/1474-Larchmont-Rd-Cleveland-OH-44110/33403982_zpid/",
     source: "Zillow", verifiedOn: "2026-08-18",
     angle: "Zillow's own rent estimate is 1,464 USD/month against a 95,000 USD ask. The expensive items are already done: kitchen, bath, vinyl windows, hardwoods.",
-    risk: "Collinwood is a high-vacancy submarket — the gap between estimated rent and collected rent is where these deals die. 1929 stock means lead paint exposure.",
+    risk: "Collinwood is a high-vacancy submarket, the gap between estimated rent and collected rent is where these deals die. 1929 stock means lead paint exposure.",
     tags: ["Cash flow", "Highest yield"], featured: true, published: true,
   },
   {
@@ -91,7 +91,7 @@ export const DEALS: Deal[] = [
     pricePerSqm: 1180, grossYieldPct: 10,
     url: "https://www.immobiliare.it/annunci/130517204/",
     source: "Immobiliare.it", verifiedOn: "2026-08-18",
-    angle: "Renovated and furnished, with land, in one of Puglia's strongest short-let markets. It can go on the rental market with zero capex — rare at this price in the Valle d'Itria.",
+    angle: "Renovated and furnished, with land, in one of Puglia's strongest short-let markets. It can go on the rental market with zero capex, rare at this price in the Valle d'Itria.",
     risk: "One bedroom and 50 sqm caps the nightly rate; countryside contrada means a car, and a pool, to compete with the surrounding trullo stock.",
     tags: ["Turnkey", "Short-let"], published: true,
   },
@@ -118,7 +118,7 @@ export const DEALS: Deal[] = [
     url: "https://www.imovirtual.com/pt/anuncio/moradia-em-pedra-localizada-em-santa-comba-dao-ID1fwcu",
     source: "Imovirtual", verifiedOn: "2026-08-18",
     angle: "452 EUR/sqm against a national average above 1,900. It sits inside a town on the Dao river, not an isolated hamlet, so after works there is a real long-let tenant pool.",
-    risk: "Listed as unrenovated — budget 50-80k. In interior Portugal the binding constraint is builder availability, not money.",
+    risk: "Listed as unrenovated, budget 50-80k. In interior Portugal the binding constraint is builder availability, not money.",
     tags: ["Renovation", "Long-let"], published: true,
   },
   {
@@ -143,7 +143,7 @@ export const DEALS: Deal[] = [
     pricePerSqm: 413, grossYieldPct: null,
     url: "https://www.bulgarianproperties.com/Houses_in_Bulgaria/AD89637BG_House_for_sale_near_Stara_Zagora.html",
     source: "BulgarianProperties", verifiedOn: "2026-08-18",
-    angle: "Already cut from 42,000 to 33,000 (-21%). The 2,580 sqm plot near Stara Zagora is the real asset — land this size close to a regional city rarely comes with a habitable footprint attached.",
+    angle: "Already cut from 42,000 to 33,000 (-21%). The 2,580 sqm plot near Stara Zagora is the real asset, land this size close to a regional city rarely comes with a habitable footprint attached.",
     risk: "The agency itself says the building needs major repair, and Bulgarian village stock is illiquid with a shrinking local buyer pool.",
     tags: ["Price cut", "Land"], published: true,
   },
@@ -170,7 +170,7 @@ export const DEALS: Deal[] = [
     url: "https://www.immobiliare.it/annunci/126620531/",
     source: "Immobiliare.it", verifiedOn: "2026-08-18",
     angle: "Reduced from 275,000. At 1,401 EUR/sqm it is roughly half what renovated property inside Cefalu's historic centre commands, and it comes with a sea-view terrace and land the centre never includes.",
-    risk: "Needs renovation, energy class F, and it is 5 km outside the centre — guests will need a car and you will need six figures of works.",
+    risk: "Needs renovation, energy class F, and it is 5 km outside the centre, guests will need a car and you will need six figures of works.",
     tags: ["Price cut", "Sea view"], published: true,
   },
   {
@@ -182,7 +182,7 @@ export const DEALS: Deal[] = [
     pricePerSqm: 341, grossYieldPct: null,
     url: "https://www.hepsiemlak.com/en/mersin-akdeniz-cankaya-satilik/daire/171071-3",
     source: "Hepsiemlak", verifiedOn: "2026-08-18",
-    angle: "341 EUR/sqm for a furnished flat with lift, 32 m from a bus stop and walking distance to the metro line. Mersin is the cheapest big coastal city in Turkey — about a third of Alanya pricing.",
+    angle: "341 EUR/sqm for a furnished flat with lift, 32 m from a bus stop and walking distance to the metro line. Mersin is the cheapest big coastal city in Turkey, about a third of Alanya pricing.",
     risk: "31-year-old building in a first-degree seismic zone with no stated retrofit, and lira depreciation can erase nominal gains.",
     tags: ["Coastal", "Sub-25k"], published: true,
   },
@@ -195,7 +195,7 @@ export const DEALS: Deal[] = [
     pricePerSqm: 1651, grossYieldPct: null,
     url: "https://www.ddproperty.com/en/property/centrio-condominium-for-sale-500316194",
     source: "DDproperty", verifiedOn: "2026-08-18",
-    angle: "Furnished, move-in, freehold title minutes from Central Phuket — roughly half the per-sqm price asked in Bang Tao and Cherngtalay new-builds on the same portal.",
+    angle: "Furnished, move-in, freehold title minutes from Central Phuket, roughly half the per-sqm price asked in Bang Tao and Cherngtalay new-builds on the same portal.",
     risk: "Foreigners can only buy inside the 49% foreign quota of the building. Confirm quota availability before paying, or you end up in a leasehold workaround.",
     tags: ["Freehold", "Turnkey"], published: true,
   },
@@ -209,7 +209,7 @@ export const DEALS: Deal[] = [
     url: "https://www.zapimoveis.com.br/imovel/venda-apartamento-2-quartos-com-piscina-encruzilhada-recife-53m2-id-2905819636/",
     source: "ZAP Imoveis", verifiedOn: "2026-08-18",
     angle: "Condo fee and IPTU both listed as exempt, on a 2-bed with parking, pool, gym and coworking. The two costs that normally kill Brazilian yield are zero.",
-    risk: "Encruzilhada is mid-tier inland Recife, not Boa Viagem, so resale is thinner — and those exemptions are usually promotional. Check the expiry in the paperwork.",
+    risk: "Encruzilhada is mid-tier inland Recife, not Boa Viagem, so resale is thinner, and those exemptions are usually promotional. Check the expiry in the paperwork.",
     tags: ["Low carry", "City"], published: true,
   },
   {
@@ -234,7 +234,7 @@ export const DEALS: Deal[] = [
     pricePerSqm: 1578, grossYieldPct: null,
     url: "https://www.zonaprop.com.ar/propiedades/clasificado/veclapin-departamento-de-2-ambientes-en-venta-en-ituzaingo-sur-57662527.html",
     source: "Zonaprop", verifiedOn: "2026-08-18",
-    angle: "Never-lived-in unit with balcony and its own parking space for 91.4k USD — under half the 185k asked for a 3-amb a few blocks away, and Argentine rents re-priced sharply after the 2023 rental-law repeal.",
+    angle: "Never-lived-in unit with balcony and its own parking space for 91.4k USD, under half the 185k asked for a 3-amb a few blocks away, and Argentine rents re-priced sharply after the 2023 rental-law repeal.",
     risk: "Transacted in physical dollars with capital controls on repatriation, and a new suburban build has weak comps until the development sells out.",
     tags: ["New build", "Rent reset"], published: true,
   },

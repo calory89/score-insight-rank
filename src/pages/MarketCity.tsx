@@ -28,10 +28,10 @@ const MarketCity = () => {
   const [loading, setLoading] = useState(true);
 
   const title = `Best-value real estate in ${pretty}, ranked by RealHunt`;
-  const description = `The highest-scored properties in ${pretty} — forensic RealHunt analysis. Every number sourced.`;
+  const description = `The highest-scored properties in ${pretty}, forensic RealHunt analysis. Every number sourced.`;
 
   useDocumentMeta({
-    title: `${title} — RealHunt`,
+    title: `${title} · RealHunt`,
     description,
     canonicalUrl: `https://realhunt.co/market/${encodeURIComponent(city.toLowerCase())}`,
     ogImage: "https://realhunt.co/og-home.jpg",
@@ -93,7 +93,7 @@ const MarketCity = () => {
             <div key={i} className="h-20 rounded-2xl border border-hairline bg-paper animate-pulse" />
           ))}
           {!loading && rows.length === 0 && (
-            <div className="rh-card text-center text-ink-muted">No scored properties in {pretty} yet. Be the first — paste a listing.</div>
+            <div className="rh-card text-center text-ink-muted">No scored properties in {pretty} yet. Be the first, paste a listing.</div>
           )}
           {rows.map((r, i) => (
             <Link key={r.slug} to={`/r/${r.slug}`} className="block rh-card !p-4 md:!p-5 hover:shadow-md transition-shadow">

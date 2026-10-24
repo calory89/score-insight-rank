@@ -9,7 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
 const SignIn = () => {
-  useDocumentMeta({ title: "Sign in — RealHunt", description: "Sign in to your RealHunt agent workspace." });
+  useDocumentMeta({ title: "Sign in · RealHunt", description: "Sign in to your RealHunt agent workspace." });
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();

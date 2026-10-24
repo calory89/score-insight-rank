@@ -31,7 +31,7 @@ const AMENITIES = [
 
 const ECO_BEACH_CITY = {
   id: "eco-beach-city",
-  address: "Eco Beach City — Luxury Beachfront Living",
+  address: "Eco Beach City: Luxury Beachfront Living",
   city: "Costa del Sol, Spain",
   price: "From €185,000",
   image_url: "/images/ecobeachcity-villas.png",
@@ -140,7 +140,7 @@ const PropertyFinder = () => {
             Find Your Dream Property
           </h2>
           <p className="text-sm text-muted-foreground max-w-lg mx-auto">
-            Set your budget and desired amenities — we'll show you the best matches from our database of analyzed properties.
+            Set your budget and desired amenities, we'll show you the best matches from our database of analyzed properties.
           </p>
         </div>
 
@@ -234,7 +234,7 @@ const PropertyFinder = () => {
                       <div className="md:w-72 h-48 md:h-auto">
                         <img
                           src={ECO_BEACH_CITY.image_url}
-                          alt="Eco Beach City development — top pick analyzed property"
+                          alt="Eco Beach City development, top pick analyzed property"
                           className="w-full h-full object-cover"
                         />
                       </div>

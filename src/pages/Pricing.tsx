@@ -64,7 +64,7 @@ const Pricing = () => {
   const [checkoutPlan, setCheckoutPlan] = useState<typeof PLANS[0] | null>(null);
 
   useDocumentMeta({
-    title: "Pricing — RealHunt",
+    title: "Pricing · RealHunt",
     description: "Three plans. Independent scoring, branded reports for agents, and featured placement for developers.",
     canonicalUrl: "https://realhunt.co/pricing",
   });
@@ -100,7 +100,7 @@ const Pricing = () => {
           Pick the plan that fits how you buy<span className="text-accent-gold">.</span>
         </h1>
         <p className="reading text-ink-muted mt-3 max-w-[640px]">
-          Independent. No paid placement in rankings — ever. The 5 free scores stay free for everyone.
+          Independent. No paid placement in rankings, ever. The 5 free scores stay free for everyone.
         </p>
 
         <div className="grid md:grid-cols-3 gap-5 mt-10">

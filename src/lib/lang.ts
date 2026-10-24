@@ -221,9 +221,9 @@ export async function initLang(): Promise<void> {
   const safety = setTimeout(reveal, 2500);
   const legal = /^\/(legal|network|privacy|terms)/.test(location.pathname);
   try {
-    const core = load("/i18n/es-core.json?v=2");
-    const homes = load("/i18n/es-listings.json?v=2").catch(() => ({}));
-    const extra = load("/i18n/es-extra.json?v=3");
+    const core = load("/i18n/es-core.json?v=3");
+    const homes = load("/i18n/es-listings.json?v=3").catch(() => ({}));
+    const extra = load("/i18n/es-extra.json?v=4");
     addDict(await core); addDict(await homes);
     if (legal) addDict(await extra.catch(() => ({})));
     else extra.then((d) => { addDict(d); if (started) walk(document.body); }).catch(() => {});

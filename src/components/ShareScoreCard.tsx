@@ -229,7 +229,7 @@ const ShareScoreCard = (props: ShareScoreCardProps) => {
         await navigator.share({
           files: [file],
           title: "RealHunt score",
-          text: `${props.title} — RH Score ${props.scoreOutOf10.toFixed(1)}/10`,
+          text: `${props.title} · RH Score ${props.scoreOutOf10.toFixed(1)}/10`,
         });
         return;
       }

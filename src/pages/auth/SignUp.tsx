@@ -10,7 +10,7 @@ import { fbLead } from "@/lib/fbpixel";
 import { Loader2, Check } from "lucide-react";
 
 const SignUp = () => {
-  useDocumentMeta({ title: "Create account — RealHunt", description: "Free agent workspace. 5 forensic analyses per month, no card required." });
+  useDocumentMeta({ title: "Create account · RealHunt", description: "Free agent workspace. 5 forensic analyses per month, no card required." });
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -58,7 +58,7 @@ const SignUp = () => {
               "5 forensic analyses every month, free forever",
               "Branded PDF report with your logo and phone",
               "WhatsApp share link in one tap",
-              "Public methodology — no black box",
+              "Public methodology, no black box",
             ].map((b) => (
               <li key={b} className="flex items-start gap-3">
                 <Check className="h-5 w-5 text-rh-good flex-shrink-0 mt-0.5" />

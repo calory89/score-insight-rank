@@ -62,7 +62,7 @@ const Callback = () => {
         <div className="w-full max-w-[420px]">
           <span className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500 text-white"><Check size={20} strokeWidth={3} /></span>
           <h1 className="font-display text-[28px] leading-tight tracking-tight mt-4">Email confirmed. Now choose a password.</h1>
-          <p className="text-[14px] text-ink-muted mt-2">One last step. From now on you sign in with your email and this password — no links to hunt for in your inbox.</p>
+          <p className="text-[14px] text-ink-muted mt-2">One last step. From now on you sign in with your email and this password, no links to hunt for in your inbox.</p>
           <form onSubmit={save} className="mt-6 flex flex-col gap-3">
             <label className="relative"><Lock size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted" />
               <input aria-label="New password" required autoFocus type="password" autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} placeholder="Your new password" className={field} /></label>

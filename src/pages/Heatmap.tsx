@@ -109,7 +109,7 @@ function FitBounds({ clusters }: { clusters: CityCluster[] }) {
 
 const Heatmap = () => {
   useDocumentMeta({
-    title: "Market Heatmap — Discover Investment Hotspots | RealHunt",
+    title: "Market Heatmap: Discover Investment Hotspots | RealHunt",
     description: "Interactive map showing analyzed properties worldwide, color-coded by score, ROI, and risk level. Discover real estate investment hotspots at a glance.",
   });
 

@@ -6,7 +6,7 @@ import useDocumentMeta from "@/hooks/useDocumentMeta";
 
 const Search = () => {
   useDocumentMeta({
-    title: "Property Search — Find Your Dream Property | RealHunt",
+    title: "Property Search: Find Your Dream Property | RealHunt",
     description: "Search analyzed properties by budget and amenities. Find the perfect investment with AI-powered insights.",
   });
 

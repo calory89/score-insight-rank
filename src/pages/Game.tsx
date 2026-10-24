@@ -33,7 +33,7 @@ const Game = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   useDocumentMeta({
-    title: "Deal or No Deal — RealHunt Property Game",
+    title: "Deal or No Deal · RealHunt Property Game",
     description: "Can you spot a good real estate deal? Swipe through properties and test your instincts in this addictive property game.",
   });
   const [properties, setProperties] = useState<GameProperty[]>([]);

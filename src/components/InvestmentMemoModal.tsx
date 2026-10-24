@@ -72,7 +72,7 @@ export default function InvestmentMemoModal({ open, onClose, analysisId, propert
             <div className="text-center">
               <h3 className="text-sm font-semibold text-foreground mb-1">Generate Investment Memo</h3>
               <p className="text-xs text-muted-foreground max-w-sm">
-                AI will create a professional investment memo for <strong>{propertyName}</strong> — formatted like a real estate fund analyst report.
+                AI will create a professional investment memo for <strong>{propertyName}</strong>, formatted like a real estate fund analyst report.
               </p>
             </div>
             <Button variant="hero" onClick={generate} className="mt-2">

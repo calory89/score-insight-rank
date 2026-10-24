@@ -48,7 +48,7 @@ export default function ListingVideo({ shortcode, title, compact = false, href, 
   const player = failed ? <img src={media.poster} alt={title} className="h-full w-full object-contain" /> : <video
     ref={video} src={near ? (compact ? media.preview : media.src) : undefined}
     poster={media.poster} muted={compact} loop={compact} playsInline controls={!compact}
-    preload="none" aria-label={`${title} — property video`}
+    preload="none" aria-label={`${title}, property video`}
     onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onError={() => setFailed(true)}
     className={compact ? "w-full h-full object-contain" : "w-full max-h-[75dvh] aspect-[9/16] object-contain"}
   />;

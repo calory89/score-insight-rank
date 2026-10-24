@@ -213,7 +213,7 @@ const BulkAnalyzeModal = ({ open, onClose, isPro, onUpgrade, user }: BulkAnalyze
           ) : (
             <>
               <p className="text-sm text-muted-foreground mb-4">
-                Paste multiple property URLs — separated by new lines, spaces, or commas.
+                Paste multiple property URLs, separated by new lines, spaces, or commas.
               </p>
               {!isPro && (
                 <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 mb-4 flex items-center gap-2">
@@ -224,7 +224,7 @@ const BulkAnalyzeModal = ({ open, onClose, isPro, onUpgrade, user }: BulkAnalyze
               <Textarea
                 value={urls}
                 onChange={(e) => setUrls(e.target.value)}
-                placeholder={"https://www.zillow.com/homedetails/...\nhttps://www.rightmove.co.uk/properties/...\nhttps://www.redfin.com/...\nhttps://www.airbnb.com/rooms/...\n\nPaste as many URLs as you want — one per line, separated by spaces or commas."}
+                placeholder={"https://www.zillow.com/homedetails/...\nhttps://www.rightmove.co.uk/properties/...\nhttps://www.redfin.com/...\nhttps://www.airbnb.com/rooms/...\n\nPaste as many URLs as you want, one per line, separated by spaces or commas."}
                 className={`text-sm font-mono mb-4 transition-all duration-300 ${detectedUrls.length > 0 ? "min-h-[220px]" : "min-h-[160px]"}`}
                 disabled={!isPro}
               />

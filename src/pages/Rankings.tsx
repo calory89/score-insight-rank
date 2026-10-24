@@ -6,12 +6,12 @@ import { useSearchParams } from "react-router-dom";
 
 const CATEGORY_META: Record<string, { title: string; description: string }> = {
   all: {
-    title: "Top Real-Estate Deals Worldwide — RealHunt Rankings",
+    title: "Top Real-Estate Deals Worldwide · RealHunt Rankings",
     description:
       "Live leaderboard of the best real-estate listings worldwide, ranked by the RealHunt forensic score. Filter by country, €/m², ROI and beachfront.",
   },
   beachfront: {
-    title: "Beachfront — Best value by €/m² | RealHunt",
+    title: "Beachfront: Best value by €/m² | RealHunt",
     description:
       "True beachfront real-estate ranked by €/m². Eco Beach City leads on price-per-square-meter. Independently scored, no sponsors.",
   },

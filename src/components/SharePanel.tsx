@@ -22,8 +22,8 @@ const SharePanel = ({ address, score, slug, verdict }: SharePanelProps) => {
   const supaUrl = (import.meta as any).env?.VITE_SUPABASE_URL || "https://nylmhdtlshhtjkuvfbms.supabase.co";
   const shareUrl = slug ? `${supaUrl}/functions/v1/prerender?slug=${encodeURIComponent(slug)}` : canonical;
 
-  const shareTitle = `${address || "Property"} — RealHunt Score ${score}/100`;
-  const shareText = `🏠 I just analyzed this property on RealHunt — it scored ${score}/100! ${verdict ? `Verdict: ${verdict}.` : ""}\n\nCheck it out:`;
+  const shareTitle = `${address || "Property"} · RealHunt Score ${score}/100`;
+  const shareText = `🏠 I just analyzed this property on RealHunt, it scored ${score}/100! ${verdict ? `Verdict: ${verdict}.` : ""}\n\nCheck it out:`;
 
   const copyLink = async () => {
     await navigator.clipboard.writeText(shareUrl);

@@ -156,7 +156,7 @@ function Shell({ children }: { children: ReactNode }) {
   }, [user?.id]);
   useEffect(() => {
     if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare-new-builds|costs|research|agents)/.test(location.pathname)) return; // these pages set their own title
-    document.title = "RealHunt — The best homes in every country, ranked by score";
+    document.title = "RealHunt: The best homes in every country, ranked by score";
   }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
   // has to find the home again and click twice.
@@ -1264,7 +1264,7 @@ function Submit() {
         }));
       else
         setNotice(
-          "We could not import this source. Add the details below — your draft is saved.",
+          "We could not import this source. Add the details below, your draft is saved.",
         );
       setStep(2);
     } catch (e) {

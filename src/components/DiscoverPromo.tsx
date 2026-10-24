@@ -86,7 +86,7 @@ const DiscoverPromo = () => {
                 Ask thousands of active investors who've already done the research. Get real answers from people who bought, lived it, and can tell you what the data can't.
               </p>
               <Button variant="hero" onClick={handleClick}>
-                {user ? "Open Discover" : "Get Started — Free"} <ArrowRight className="ml-1 h-4 w-4" />
+                {user ? "Open Discover" : "Get Started: Free"} <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </motion.div>
 

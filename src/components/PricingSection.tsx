@@ -24,7 +24,7 @@ const plans = [
     icon: Zap,
     monthlyPrice: 0,
     yearlyPrice: 0,
-    description: "Get started — no card needed",
+    description: "Get started, no card needed",
     features: [
       "5 analyses per month",
       "Full Global Score",

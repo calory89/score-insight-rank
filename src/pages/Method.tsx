@@ -45,7 +45,7 @@ const Dim = ({
 
 const Method = () => {
   useDocumentMeta({
-    title: "Method — How the RealHunt Global Score is computed",
+    title: "Method: How the RealHunt Global Score is computed",
     description:
       "Every weight, every source, every formula. Public methodology behind the RH 5-dimension forensic property score.",
     canonicalUrl: "https://realhunt.co/method/analysis",
@@ -71,9 +71,9 @@ const Method = () => {
         </h1>
         <p className="mt-6 reading text-ink-muted max-w-[680px]">
           The RH Global Score (0–100) is a weighted average of five forensic dimensions. Scores update as data changes
-          — when a listing's price drops, when a comparable closes, when a court filing is published, the score
+, when a listing's price drops, when a comparable closes, when a court filing is published, the score
           recomputes. If you find a mistake, email{" "}
-          <a href="mailto:method@realhunt.co" className="rh-btn-tertiary">method@realhunt.co</a> — we publish a public changelog.
+          <a href="mailto:method@realhunt.co" className="rh-btn-tertiary">method@realhunt.co</a>, we publish a public changelog.
         </p>
 
         {/* Global Score formula */}
@@ -107,7 +107,7 @@ confidence_multiplier:
             <li>· Time-on-market and price-change history (liquidity proxy)</li>
             <li>· Legal/title checks: registry encumbrances, planning permission status, litigation history</li>
             <li>· Developer track record: delivery delays, escrow status, parent-company filings (where disclosed)</li>
-            <li>· Currency is kept native — we never auto-convert when computing the score</li>
+            <li>· Currency is kept native, we never auto-convert when computing the score</li>
           </ul>
         </section>
 
@@ -136,7 +136,7 @@ confidence_multiplier:
           <Dim name="Liquidity Outlook" weight={16}
             bullets={["Average months-on-market for the asset class","Price-cut frequency in the micro-market","Exit-cost burden (taxes, agent fees)","Foreign-currency exit friction"]}
             sources={[{ label: "Portal sold-vs-listed timing" }, { label: "Local notary fee schedules" }]}
-            limits="Beachfront and trophy assets can sit for 9+ months without a price problem — we flag this rather than penalise it." updated="May 2026" />
+            limits="Beachfront and trophy assets can sit for 9+ months without a price problem, we flag this rather than penalise it." updated="May 2026" />
         </div>
       </main>
       <RHFooter />

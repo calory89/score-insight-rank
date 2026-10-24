@@ -107,7 +107,7 @@ const Analysis = () => {
       : undefined;
 
   useDocumentMeta({
-    title: data ? `Is ${data.address || data.city || "this listing"} a good deal? — RealHunt Score ${data.global_score ?? "—"}/100` : "Analyzing Property… | RealHunt",
+    title: data ? `Is ${data.address || data.city || "this listing"} a good deal? · RealHunt Score ${data.global_score ?? "—"}/100` : "Analyzing Property… | RealHunt",
     description: data ? `Forensic analysis of ${data.address || data.city || "property"}${data.country ? ` in ${data.country}` : ""}. RealHunt score ${data.global_score}/100. ${data.primary_insight || data.verdict || ""}`.slice(0, 240) : "Running AI-powered real estate analysis…",
     ogImage: ogImageUrl,
     canonicalUrl: data?.slug ? `https://realhunt.co/r/${data.slug}` : undefined,
@@ -223,7 +223,7 @@ const Analysis = () => {
         setAnalyzeError("");
         if ("Notification" in window && Notification.permission === "granted") {
           new Notification("Your report is ready! 🏠", {
-            body: `${saved[0].address || saved[0].city || "Property"} — Score: ${saved[0].global_score}/100`,
+            body: `${saved[0].address || saved[0].city || "Property"}: Score: ${saved[0].global_score}/100`,
           });
         }
       }
@@ -545,7 +545,7 @@ const Analysis = () => {
                 <Home className="h-6 w-6 text-primary flex-shrink-0 mt-0.5" />
                 <div>
                   <h3 className="font-semibold text-foreground text-sm mb-1">
-                    🏠 {(listingType === "vacation_rental" || d.data_source === "vacation_rental") ? "Vacation Rental" : "Rental"} Listing — Not For Sale
+                    🏠 {(listingType === "vacation_rental" || d.data_source === "vacation_rental") ? "Vacation Rental" : "Rental"} Listing: Not For Sale
                   </h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     This property is listed as a <strong>{(listingType === "vacation_rental" || d.data_source === "vacation_rental") ? "short-term / vacation rental (Airbnb, Booking)" : "long-term rental"}</strong>, not for sale.
@@ -978,7 +978,7 @@ const Analysis = () => {
                         .from("tickets" as any)
                         .insert({
                           user_id: user.id,
-                          subject: `[Error Report] ${reportCategory.replace("_", " ")} — ${d?.address || d?.url || "Unknown"}`,
+                          subject: `[Error Report] ${reportCategory.replace("_", " ")} · ${d?.address || d?.url || "Unknown"}`,
                           category: "error_report",
                           priority: "high",
                         })

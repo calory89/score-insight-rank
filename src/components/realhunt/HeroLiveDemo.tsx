@@ -153,10 +153,10 @@ export default function HeroLiveDemo({ runKey }: { runKey: number }) {
           <ShareScoreCard
             scoreOutOf10={TARGET}
             grade="Strong"
-            title="Villa with sea view — Sierra Blanca"
+            title="Villa with sea view: Sierra Blanca"
             location="Marbella, ES · Idealista"
             dims={DIMS.map((d) => ({ label: d.l, value: d.v, status: d.status }))}
-            verdict="Decent yield, weak developer track record — negotiate 8% off list."
+            verdict="Decent yield, weak developer track record, negotiate 8% off list."
             variant="secondary"
           />
         </motion.div>

@@ -377,7 +377,7 @@ const Home = () => {
             </form>
           )}
         </div>
-        <CaptureInline source="home_bottom" title="Get the best deals we find, in your inbox" subtitle="Free. Only the top-scored homes worth talking about — with the address and the original link." />
+        <CaptureInline source="home_bottom" title="Get the best deals we find, in your inbox" subtitle="Free. Only the top-scored homes worth talking about, with the address and the original link." />
       </section>
 
       <section className="max-w-[1240px] mx-auto px-4 md:px-6 pb-10 text-[13px] text-ink-muted flex flex-wrap gap-x-4 gap-y-1">

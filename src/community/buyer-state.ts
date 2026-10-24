@@ -23,8 +23,8 @@ export function safeFacts(deal: {title?: string; why_great?: string}) {
 }
 export function tenure(deal: {title?: string; why_great?: string}) {
   const s = `${deal.title || ""} ${deal.why_great || ""}`;
-  if (/leasehold|lease\b|leased|arrendamiento/i.test(s)) return "Leasehold stated in listing — confirm remaining term and renewal conditions";
-  if (/freehold|full ownership|plena propiedad/i.test(s)) return "Freehold stated in listing — confirm title with the seller";
-  if (/bare ownership|nuda prop|life interest/i.test(s)) return "Restricted ownership — confirm possession and existing rights";
+  if (/leasehold|lease\b|leased|arrendamiento/i.test(s)) return "Leasehold stated in listing, confirm remaining term and renewal conditions";
+  if (/freehold|full ownership|plena propiedad/i.test(s)) return "Freehold stated in listing, confirm title with the seller";
+  if (/bare ownership|nuda prop|life interest/i.test(s)) return "Restricted ownership, confirm possession and existing rights";
   return "Ownership type not confirmed";
 }

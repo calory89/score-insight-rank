@@ -89,39 +89,24 @@ const open = (path = "/") =>
       <Routes><Route path="/deal/:slug" element={<Community/>}/><Route path="*" element={<Community/>}/></Routes>
     </MemoryRouter>,
   );
-test("voting without registration acknowledges success and exposes sharing", async () => {
+// 7-oct-2026: the feed is a score ranking; cards no longer carry vote buttons.
+test("home cards show price and score and open the home", async () => {
   open();
-  const up = await screen.findByRole("button", { name: "Vote for this home" });
-  await waitFor(() => expect(up).not.toBeDisabled());
-  fireEvent.click(up);
-  await screen.findByText(/You and 2 others love this/);
-  expect(await screen.findByRole("button",{name:"You voted for this home"})).toHaveAttribute("aria-pressed", "true");
+  const card = await screen.findByRole("link", { name: /Stone home by the sea, €39,000/ });
+  expect(card.getAttribute("href")).toContain("/deal/stone-home");
+});
+test("guests can save a home on this device without an account", async () => {
+  open();
+  const save = (await screen.findAllByRole("button", { name: "Save this home" }))[0];
+  fireEvent.click(save);
+  await waitFor(() => expect(screen.getAllByRole("button", { name: "Remove from saved" }).length).toBeGreaterThan(0));
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(mocks.rpc.mock.calls.some(([, p]) => p?.p_action === "save")).toBe(false);
 });
-test("failed vote rolls back optimistic state and does not claim success", async () => {
-  failVote = true;
-  open();
-  const up = await screen.findByRole("button", { name: "Vote for this home" });
-  await waitFor(() => expect(up).not.toBeDisabled());
-  fireEvent.click(up);
-  await screen.findByText(/Voting is temporarily limited/);
-  expect(up).toHaveAttribute("aria-pressed", "false");
-  expect(screen.queryByText(/Vote counted/)).not.toBeInTheDocument();
-  expect(up).toHaveTextContent("2");
-});
-test("saving requires sign-in and never writes for an anonymous visitor", async () => {
-  open();
-  fireEvent.click(await screen.findByRole("button", { name: "Save this home" }));
-  await screen.findByRole("dialog");
-  expect(mocks.rpc.mock.calls.some(([, p]) => p?.p_action === "save")).toBe(
-    false,
-  );
-});
-test('week and all time preserve country filters and request their own counts', async()=>{
- open('/?country=Italy');await screen.findByRole('button',{name:'Vote for this home'});
- expect(mocks.rpc).toHaveBeenCalledWith('community_feed',expect.objectContaining({p:expect.objectContaining({country:'Italy',scope:'week'})}));
- fireEvent.click(screen.getByRole('button',{name:'All Time'}));
- await waitFor(()=>expect(mocks.rpc).toHaveBeenCalledWith('community_feed',expect.objectContaining({p:expect.objectContaining({country:'Italy',scope:'all'})})));
+test("country, budget and bedroom filters in the URL reach the feed", async () => {
+  open("/?country=Italy&min=20000&price=80000&beds=3&drop=1&order=ppsqm");
+  await screen.findByRole("link", { name: /Stone home by the sea/ });
+  expect(mocks.rpc).toHaveBeenCalledWith("community_feed", expect.objectContaining({ p: expect.objectContaining({ country: "Italy", min_price: 20000, max_price: 80000, min_beds: 3, price_drop: true, sort: "ppsqm" }) }));
 });
 test("unsupported import falls back to manual details and keeps the draft through sign-in", async () => {
   open("/submit?details=1");
@@ -153,24 +138,11 @@ test("unsupported import falls back to manual details and keeps the draft throug
   );
 });
 
-test("Sumba is labelled sponsored and outside voting", async () => {
-  const previous = mocks.rpc.getMockImplementation()!;
-  mocks.rpc.mockImplementation(async (name: string, p: any) => {
-    const response = await previous(name, p);
-    if ((name === "community_rankings" || name === "community_feed")) response.data.rows = Array.from({length:10},(_,i)=>({...deal,id:"deal-"+i,slug:"home-"+i,rank:i+1}));
-    return response;
-  });
-  open();
-  const ad = await screen.findByRole("article", {name: "Sponsored: Eco Beach City, Sumba"});
-  expect(screen.getAllByRole("article")[9]).toBe(ad);
-  expect(ad.textContent).toContain("Sponsored");
-  expect(ad.querySelector("button")).toBeNull();
-  expect(ad.querySelector("a")?.getAttribute("href")).toBe("/ecobeachcity");
-  expect(screen.getAllByRole("button", {name: "Vote for this home"})).toHaveLength(10);
-});
-
 for (const path of ['/deal/stone-home']) {
   test(`original listings require an account on ${path}`, async () => {
+    // The server only sends the source URL to signed-in visitors.
+    const previous = mocks.rpc.getMockImplementation()!;
+    mocks.rpc.mockImplementation((name: string, p: any) => p?.p_action === "detail" ? Promise.resolve({ data: { deal: { ...deal, source_url: null, has_source: true }, comments: [] } }) : previous(name, p));
     open(path);
     const source = (await screen.findAllByRole('button', {name:/View listing/}))[0];
     expect(screen.queryByRole('link',{name:/View listing/})).toBeNull();
@@ -183,13 +155,6 @@ for (const path of ['/deal/stone-home']) {
     expect((await screen.findAllByRole('link',{name:/View listing/}))[0]).toHaveAttribute('href',deal.source_url);
   });
 }
-test('the complete catalogue remains accessible beyond its first page',async()=>{
- const previous=mocks.rpc.getMockImplementation()!;
- mocks.rpc.mockImplementation(async(name,p)=>{const r=await previous(name,p);if(name==='community_feed')r.data={...r.data,total:49,rows:[{...deal,id:'deal-'+(p.p.offset||0),slug:'home-'+(p.p.offset||0)}]};return r;});
- open();await screen.findByRole('button',{name:'More discoveries'});
- fireEvent.click(screen.getByRole('button',{name:'More discoveries'}));
- await waitFor(()=>expect(screen.getAllByRole('button',{name:'Vote for this home'})).toHaveLength(2));
-});
 test('the home removes the old copy and asks for registration before a link submission', async () => {
   open();
   expect(screen.queryByText('THE WORLD IS FULL OF GOOD FINDS')).toBeNull();
@@ -231,25 +196,6 @@ test('my submissions shows statuses, review feedback and real property data', as
   expect(screen.getByLabelText('Submission totals')).toHaveTextContent('3 submitted');
 });
 
-test('initial points preserve live voting even on old demo links', async () => {
-  const previous=mocks.rpc.getMockImplementation()!;
-  mocks.rpc.mockImplementation(async(name:string,p:any)=>{
-    const response=await previous(name,p);
-    if(name==='community_rankings'||name==='community_feed') response.data={...response.data,weekly_points:372,rows:[{...deal,launch_points:370,launch_week_points:370,week_net:372,life_net:372}]};
-    return response;
-  });
-  open('/?demo=1');
-  const up=await screen.findByRole('button',{name:'Vote for this home'});
-  await waitFor(()=>expect(up).not.toBeDisabled());
-  expect(up).toHaveTextContent('372');
-  expect(up).toHaveAttribute('title','370 initial points + 2 real votes');
-  expect(screen.queryByRole('link',{name:'Weekly winners'})).toBeNull();
-  fireEvent.click(up);
-  await screen.findByText(/You and 2 others love this/);
-  expect(mocks.rpc.mock.calls.some(([,p])=>p?.p_action==='vote' && p.p_payload.value===1)).toBe(true);
-  expect(screen.queryByText(/Real voting is disabled/)).toBeNull();
-});
-
 test('submission workspace shows photos, source links, status filters and image fallback', async()=>{
   mocks.user={id:'signed-in'};
   const previous=mocks.rpc.getMockImplementation()!;
@@ -287,24 +233,10 @@ test('admin workspace previews source photos and retains explicit approval actio
   expect(screen.getByText('No pending submissions match your search.')).toBeInTheDocument();
 });
 
-test('detail keeps server points including launch allocation instead of recalculating ballots',async()=>{
+test('detail shows price per m2 and the desktop summary card',async()=>{
   const previous=mocks.rpc.getMockImplementation()!;
-  mocks.rpc.mockImplementation((name:string,p:any)=>p?.p_action==='detail'?Promise.resolve({data:{deal:{...deal,week_up:1,week_net:371,life_up:5,life_net:375,launch_points:370,launch_week_points:370,sqm:78},comments:[]}}):previous(name,p));
+  mocks.rpc.mockImplementation((name:string,p:any)=>p?.p_action==='detail'?Promise.resolve({data:{deal:{...deal,sqm:78},comments:[]}}):previous(name,p));
   open('/deal/stone-home');
-  expect((await screen.findAllByRole('button',{name:'Vote for this home'}))[0]).toHaveTextContent('371');
-  expect(screen.getByText(/\/m²/)).toHaveTextContent('500');
-});
-test('all-time card links retain the scoring period when opening detail',async()=>{
-  open('/?tab=all');
-  const title=(await screen.findAllByRole('link',{name:deal.title})).find(el=>el.classList.contains('hv-info'))!;
-  expect(title).toHaveAttribute('href','/deal/stone-home?tab=all');
-  fireEvent.click(title);
-  await screen.findByRole('link',{name:'← Back to your results'});
-  expect(screen.getByText(/All-time votes/)).toBeInTheDocument();
-});
-test('all-time detail displays the cumulative points from the server',async()=>{
-  const previous=mocks.rpc.getMockImplementation()!;
-  mocks.rpc.mockImplementation((name:string,p:any)=>p?.p_action==='detail'?Promise.resolve({data:{deal:{...deal,week_net:1,life_net:375,life_up:5,launch_points:370,launch_week_points:0},comments:[]}}):previous(name,p));
-  open('/deal/stone-home?tab=all');
-  expect((await screen.findAllByRole('button',{name:'Vote for this home'}))[0]).toHaveTextContent('375');
+  expect((await screen.findAllByText(/€500\/m²/)).length).toBeGreaterThan(0);
+  expect(screen.getByRole('complementary',{name:'Summary of this home'})).toBeInTheDocument();
 });

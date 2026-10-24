@@ -60,8 +60,8 @@ export const oneLineVerdict = (d: {
   const s = d.global_score ?? 0;
   const curr = d.currency === "GBP" ? "£" : d.currency === "USD" ? "$" : "€";
   const loc = d.city || "the area";
-  if (s >= 85) return `Strong buy${d.price ? ` at ${curr}${d.price}` : ""} — outperforms peers in ${loc}.`;
-  if (s >= 70) return `Solid opportunity — fair pricing for ${loc}, watch the negotiation room.`;
-  if (s >= 55) return `Moderate — only buy if you can negotiate ${d.price ? "below " + curr + d.price : "the asking price"}.`;
-  return `Pass — overpriced or risky for ${loc}. Better deals exist on the leaderboard.`;
+  if (s >= 85) return `Strong buy${d.price ? ` at ${curr}${d.price}` : ""}, outperforms peers in ${loc}.`;
+  if (s >= 70) return `Solid opportunity, fair pricing for ${loc}, watch the negotiation room.`;
+  if (s >= 55) return `Moderate, only buy if you can negotiate ${d.price ? "below " + curr + d.price : "the asking price"}.`;
+  return `Pass, overpriced or risky for ${loc}. Better deals exist on the leaderboard.`;
 };

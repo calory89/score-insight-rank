@@ -45,7 +45,7 @@ const VoteButton = ({ analysisId, count, voted, size = "sm", onVoted }: VoteButt
       onClick={handle}
       disabled={voted || busy}
       aria-label={voted ? "You voted" : "Upvote this project"}
-      title={voted ? "You voted" : "Upvote — one per visitor"}
+      title={voted ? "You voted" : "Upvote, one per visitor"}
       className={`inline-flex items-center gap-1.5 rounded-full border tabular-nums font-mono transition-colors ${padding} ${
         voted
           ? "bg-accent-gold/15 text-accent-gold border-accent-gold/40"

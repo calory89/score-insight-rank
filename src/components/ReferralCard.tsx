@@ -59,7 +59,7 @@ const ReferralCard = ({ referralCode, referralCount }: ReferralCardProps) => {
     {
       icon: Mail,
       label: "Email",
-      href: `mailto:?subject=${encodeURIComponent("Join RealHunt — AI Property Intelligence")}&body=${encodeURIComponent(`${shareText}\n\n${referralLink}`)}`,
+      href: `mailto:?subject=${encodeURIComponent("Join RealHunt: AI Property Intelligence")}&body=${encodeURIComponent(`${shareText}\n\n${referralLink}`)}`,
     },
   ];
 
@@ -77,7 +77,7 @@ const ReferralCard = ({ referralCode, referralCount }: ReferralCardProps) => {
       </div>
 
       <p className="text-xs text-muted-foreground mb-4">
-        Share your link — when a friend signs up, <strong className="text-foreground">you both get +5 analyses</strong>, free. Idempotent, anti-abuse, no double-credit.
+        Share your link, when a friend signs up, <strong className="text-foreground">you both get +5 analyses</strong>, free. Idempotent, anti-abuse, no double-credit.
       </p>
 
       {/* Referral link */}

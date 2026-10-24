@@ -7,11 +7,11 @@ const RHFooter = () => (
       <div className="flex flex-wrap items-center gap-3">
         <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-hairline bg-surface text-[12px] text-ink-muted">
           <FileSearch size={13} className="text-[#D4420C]" />
-          No black box — every number sourced
+          No black box, every number sourced
         </span>
         <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-hairline bg-surface text-[12px] text-ink-muted">
           <ShieldCheck size={13} className="text-[#1E6B4F]" />
-          GDPR-friendly — we never sell your data
+          GDPR-friendly, we never sell your data
         </span>
       </div>
       <nav className="flex flex-wrap items-center gap-x-6 gap-y-2 md:justify-end text-[13px] text-ink-soft">

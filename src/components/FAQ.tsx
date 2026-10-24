@@ -10,15 +10,15 @@ import {
 const faqs = [
   {
     q: "How accurate are RealHunt scores?",
-    a: "Our AI analyzes 40+ data points per property — market trends, comparable sales, rental yields, demand indicators, and risk factors. Scores are updated in real-time and validated against actual market outcomes. Our methodology has a 92% correlation with real market performance over 12 months.",
+    a: "Our AI analyzes 40+ data points per property, market trends, comparable sales, rental yields, demand indicators, and risk factors. Scores are updated in real-time and validated against actual market outcomes. Our methodology has a 92% correlation with real market performance over 12 months.",
   },
   {
     q: "Which property platforms do you support?",
-    a: "RealHunt works with any property listing URL — Idealista, Immobilienscout24, Rightmove, Zillow, Funda, SeLoger, Immoweb, and hundreds more. If it has a URL, we can analyze it.",
+    a: "RealHunt works with any property listing URL: Idealista, Immobilienscout24, Rightmove, Zillow, Funda, SeLoger, Immoweb, and hundreds more. If it has a URL, we can analyze it.",
   },
   {
     q: "Is my data safe and private?",
-    a: "Absolutely. Your analyses are private by default — only you can see them. We use bank-grade encryption (AES-256) and never share or sell your data. You can delete your account and all associated data at any time.",
+    a: "Absolutely. Your analyses are private by default, only you can see them. We use bank-grade encryption (AES-256) and never share or sell your data. You can delete your account and all associated data at any time.",
   },
   {
     q: "Can I cancel my subscription anytime?",
@@ -26,7 +26,7 @@ const faqs = [
   },
   {
     q: "How is RealHunt different from a real estate agent?",
-    a: "Agents earn commissions on sales — their incentive is for you to buy, not to buy smart. RealHunt is 100% independent with zero conflict of interest. We score properties objectively so you can make data-driven decisions.",
+    a: "Agents earn commissions on sales, their incentive is for you to buy, not to buy smart. RealHunt is 100% independent with zero conflict of interest. We score properties objectively so you can make data-driven decisions.",
   },
   {
     q: "What does the Global Score mean?",

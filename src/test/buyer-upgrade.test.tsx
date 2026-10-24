@@ -30,11 +30,11 @@ test('comparison is shared across cards, limited to three, and can be deselected
  expect(JSON.parse(localStorage.getItem('rh.compare.homes')!)).toEqual(['a','b','c']);
  fireEvent.click(screen.getAllByRole('button',{name:'Selected'})[0]);expect(JSON.parse(localStorage.getItem('rh.compare.homes')!)).toEqual(['b','c']);
 });
-test('draft filters request an exact count and do not mutate the catalogue before applying',async()=>{
+test('filters apply at once, without a second confirm step',()=>{
  const change=vi.fn();render(<Filters countries={{Italy:25}} value={{scope:'all'}} onChange={change}/>);
+ fireEvent.click(screen.getByRole('button',{name:/More filters/}));
  fireEvent.change(screen.getByLabelText('Max price'),{target:{value:'30000'}});
- expect(change).not.toHaveBeenCalled();fireEvent.click(await screen.findByRole('button',{name:'View 24 homes'}));
- expect(change).toHaveBeenCalledWith({scope:'all',max_price:30000});expect(mocks.rpc).toHaveBeenCalledWith('community_feed',{p:expect.objectContaining({max_price:30000,limit:1})});
+ expect(change).toHaveBeenCalledWith(expect.objectContaining({scope:'all',max_price:30000}));
 });
 test('return location refuses external redirects and preserves the entire filter query',()=>{
  sessionStorage.setItem('rh.catalog.return',JSON.stringify('/?country=Italy&price=30000&tab=all'));expect(backToCatalog()).toBe('/?country=Italy&price=30000&tab=all');
