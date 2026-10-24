@@ -46,7 +46,7 @@ export function CountriesPage() {
   const ok = !!(A && B && DESTS[ka] && DESTS[kb] && GUIDES[ka] && GUIDES[kb]);
   useEffect(() => {
     document.title = ok ? `${A!.name} vs ${B!.name}: cheap homes, prices and buying costs compared · RealHunt` : "Compare countries for a cheap home abroad · RealHunt";
-  }, [ok, ka, kb]);
+  }, [ok, ka, kb, st]);
   if (!st) return <div className="hunt-wrap"><div className="hunt-skeleton-list" /></div>;
   const list = comparable(st);
   if (!pair || !ok) return (

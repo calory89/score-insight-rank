@@ -9,9 +9,10 @@ import type { Row } from "./extras";
 import { ScoreBadge } from "./scores";
 import { SaveHeart, ShareButton } from "./v4";
 import { t } from "./i18n";
+import DEST from "@/data/destinations.json";
 
 // Countries with a /costs page (src/data/destinations.json).
-const COSTS = new Set(["spain", "italy", "portugal", "bulgaria", "mexico", "albania", "montenegro", "georgia", "vietnam"]);
+const COSTS = new Set(Object.keys(DEST).filter((k) => k !== "_meta"));
 
 export function DetailAside({ deal, listing }: { deal: Row; listing: ReactNode }) {
   const country = deal.country || "";
