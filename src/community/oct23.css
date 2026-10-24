@@ -48,3 +48,33 @@
 .rh-staticwrap th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: #55585E; }
 .hunt.is-dark .rh-staticwrap th, .hunt.is-dark .rh-staticwrap td { border-color: #2A2C30; }
 .hunt.is-dark .rh-staticwrap th { color: #A6A9AF; }
+/* 24-oct-2026: inline alert, home FAQ, mortgage calculator, €/m² vs country, footer countries. */
+.rh-inline-alert { border: 1px solid #E2E3E6; border-radius: 18px; padding: 18px; background: #FAFAF9; display: grid; gap: 12px; }
+.rh-inline-alert-text { display: flex; gap: 10px; align-items: flex-start; }
+.rh-inline-alert-text svg { color: var(--rh-brand, #D4420C); flex: none; margin-top: 2px; }
+.rh-inline-alert-text strong { display: block; font-size: 16px; }
+.rh-inline-alert-text small { color: #55585E; font-size: 13px; }
+.rh-faq { margin: 36px 0 8px; max-width: 780px; }
+.rh-faq h2 { font-size: 22px; margin: 0 0 10px; }
+.rh-faq details { border-bottom: 1px solid #E2E3E6; padding: 12px 0; }
+.rh-faq summary { cursor: pointer; font-weight: 650; font-size: 15px; }
+.rh-faq details p { margin: 8px 0 0; color: #3B3E44; line-height: 1.55; }
+.rh-mortgage { margin: 14px 0; border: 1px solid #E2E3E6; border-radius: 14px; padding: 12px 14px; }
+.rh-mortgage summary { cursor: pointer; font-weight: 650; display: flex; gap: 8px; align-items: center; }
+.rh-mortgage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-top: 12px; }
+.rh-mortgage-grid label { display: grid; gap: 4px; font-size: 12.5px; color: #55585E; }
+.rh-mortgage-grid input { padding: 8px 10px; border: 1px solid #D5D7DB; border-radius: 10px; font: inherit; font-size: 15px; color: inherit; background: transparent; min-width: 0; }
+.rh-mortgage-out { margin: 12px 0 4px; font-size: 15px; font-variant-numeric: tabular-nums; }
+.rh-vs { margin: 4px 0 8px; font-size: 13.5px; font-weight: 600; }
+.rh-vs.is-below { color: #0F6B34; }
+.rh-vs.is-above { color: #8A5A00; }
+.rh-footer-countries { display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 18px max(16px, env(safe-area-inset-left, 0px)) 0; max-width: 1240px; margin: 24px auto 0; font-size: 13px; border-top: 1px solid #E2E3E6; }
+.rh-footer-countries a { color: #55585E; text-decoration: none; }
+.rh-footer-countries a:hover { text-decoration: underline; }
+.hunt.is-dark .rh-inline-alert { background: #17181A; border-color: #2A2C30; }
+.hunt.is-dark .rh-inline-alert-text small, .hunt.is-dark .rh-mortgage-grid label, .hunt.is-dark .rh-footer-countries a { color: #A6A9AF; }
+.hunt.is-dark .rh-faq details, .hunt.is-dark .rh-mortgage, .hunt.is-dark .rh-footer-countries { border-color: #2A2C30; }
+.hunt.is-dark .rh-faq details p { color: #D4D6DA; }
+.hunt.is-dark .rh-mortgage-grid input { border-color: #3A3C40; }
+.hunt.is-dark .rh-vs.is-below { color: #5CC28A; }
+.hunt.is-dark .rh-vs.is-above { color: #E0B04A; }

@@ -106,7 +106,8 @@ test("guests can save a home on this device without an account", async () => {
 test("country, budget and bedroom filters in the URL reach the feed", async () => {
   open("/?country=Italy&min=20000&price=80000&beds=3&drop=1&order=ppsqm");
   await screen.findByRole("link", { name: /Stone home by the sea/ });
-  expect(mocks.rpc).toHaveBeenCalledWith("community_feed", expect.objectContaining({ p: expect.objectContaining({ country: "Italy", min_price: 20000, max_price: 80000, min_beds: 3, price_drop: true, sort: "ppsqm" }) }));
+  const want = { country: "Italy", min_price: 20000, max_price: 80000, min_beds: 3, price_drop: true, sort: "ppsqm" };
+  await waitFor(() => expect(mocks.rpc.mock.calls.some(([n, a]) => n === "community_feed" && Object.entries(want).every(([k, v]) => a?.p?.[k] === v))).toBe(true));
 });
 test("unsupported import falls back to manual details and keeps the draft through sign-in", async () => {
   open("/submit?details=1");

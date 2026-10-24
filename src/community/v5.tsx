@@ -29,9 +29,18 @@ const cover = (d: Pick<Deal, "image_urls" | "source_domain">) => {
 
 // ---------------------------------------------------------------- theme and page motion
 export function useTheme() {
-  const [dark, setDark] = useState(() => ls.get("rh_theme") === "dark");
+  // No saved choice: follow the device setting (24-oct-2026).
+  const sys = () => { try { return window.matchMedia("(prefers-color-scheme: dark)").matches; } catch { return false; } };
+  const pick = () => { const v = ls.get("rh_theme"); return v ? v === "dark" : sys(); };
+  const [dark, setDark] = useState(pick);
   useEffect(() => {
-    const on = () => setDark(ls.get("rh_theme") === "dark");
+    let mq: MediaQueryList | null = null; try { mq = window.matchMedia("(prefers-color-scheme: dark)"); } catch { /* old browser */ }
+    const onSys = () => setDark(pick());
+    mq?.addEventListener?.("change", onSys);
+    return () => mq?.removeEventListener?.("change", onSys);
+  }, []);
+  useEffect(() => {
+    const on = () => setDark(pick());
     window.addEventListener("rh-theme", on);
     return () => window.removeEventListener("rh-theme", on);
   }, []);
@@ -43,7 +52,9 @@ export function useTheme() {
   return dark;
 }
 export function toggleTheme() {
-  ls.set("rh_theme", ls.get("rh_theme") === "dark" ? "light" : "dark");
+  // Toggle from what is on screen, which may come from the device setting when nothing is saved yet.
+  const now = ls.get("rh_theme") || (window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  ls.set("rh_theme", now === "dark" ? "light" : "dark");
   window.dispatchEvent(new Event("rh-theme"));
 }
 export function ThemeButton({ label = false }: { label?: boolean }) {
