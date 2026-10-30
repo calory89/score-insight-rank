@@ -4,7 +4,7 @@ name: rh-auto-publish
 # No third-party upload in between (the old temp.sh bridge failed with 500s).
 #
 # Rules (same as rh-pub-import): changed files are updated; new assets and new realhunt.co files are added
-# (never images: those are served by realhunt-media); nothing is deleted; the deploy must stay under 19,500
+# (never images: those are served by realhunt-media); nothing is deleted; the deploy must stay under 95,000 (Cloudflare Pages paid plan: 100,000 files)
 # files; every root folder and every site folder must still be in the commit before it is pushed.
 #
 # Runs right after rh-og-cards (it calls this when the day's data is committed), daily at 16:40 UTC as a backup, on pushes to main that touch the site, by hand,
@@ -100,7 +100,7 @@ jobs:
           check() {
             total=$(git ls-tree -r --name-only HEAD | wc -l)
             echo "files in deploy: $total"
-            [ "$total" -le 19500 ] || { echo "too many files for Cloudflare Pages ($total)"; return 1; }
+            [ "$total" -le 95000 ] || { echo "too many files for Cloudflare Pages ($total)"; return 1; }
             for t in "" "_s/"; do
               before=$(git ls-tree --name-only "HEAD~1:$t" | sort); after=$(git ls-tree --name-only "HEAD:$t" | sort)
               missing=$(comm -23 <(echo "$before") <(echo "$after"))
