@@ -174,15 +174,37 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
         const k = deep ? `${d.lat!.toFixed(4)}:${d.lng!.toFixed(4)}` : `${Math.floor(p.x / cell)}:${Math.floor(p.y / cell)}`;
         (cells.get(k) || cells.set(k, []).get(k)!).push(d);
       }
+      // 30-oct-2026: neighbouring groups used to be drawn on top of each other (a "141" bubble hidden
+      // under a "102" one). Groups whose pins or bubbles would overlap on screen are merged until none do.
+      type G = { rows: Row[]; x: number; y: number };
+      let groups: G[] = [...cells.values()].map((rows) => {
+        const ps = rows.map((d) => m.latLngToLayerPoint([d.lat!, d.lng!]));
+        return { rows, x: ps.reduce((a, q) => a + q.x, 0) / ps.length, y: ps.reduce((a, q) => a + q.y, 0) / ps.length };
+      });
+      if (!deep) {
+        const size = (g: G) => (g.rows.length > 1 ? [104, 52] : [80, 32]);
+        for (let merged = true, guard = 0; merged && guard < 200; guard++) {
+          merged = false;
+          outer: for (let i = 0; i < groups.length; i++) for (let j = i + 1; j < groups.length; j++) {
+            const a = groups[i], b = groups[j], [wa, ha] = size(a), [wb, hb] = size(b);
+            if (Math.abs(a.x - b.x) < (wa + wb) / 2 && Math.abs(a.y - b.y) < (ha + hb) / 2) {
+              const n = a.rows.length + b.rows.length;
+              groups[i] = { rows: [...a.rows, ...b.rows], x: (a.x * a.rows.length + b.x * b.rows.length) / n, y: (a.y * a.rows.length + b.y * b.rows.length) / n };
+              groups.splice(j, 1); merged = true; break outer;
+            }
+          }
+        }
+      }
       let reopened: L.Marker | null = null;
-      cells.forEach((grp) => {
+      groups.map((x) => x.rows).forEach((grp) => {
         if (grp.length === 1) { const mk = pinFor(grp[0]); g.addLayer(mk); if (open && (mk as any)._slug === open) reopened = mk; return; }
         const b = L.latLngBounds(grp.map((d) => [d.lat!, d.lng!] as L.LatLngExpression));
         const same = b.getNorthEast().distanceTo(b.getSouthWest()) < 30;
         if (same || deep) { const mk = listFor(grp); g.addLayer(mk); if (open && ((mk as any)._slug === open || grp.some((d) => d.slug === open))) reopened = mk; return; }
         const from = Math.min(...grp.map((d) => d.price_eur || 0));
         const icon = L.divIcon({ className: "hm-pin-wrap", html: `<span class="hm-cl" style="--pc:${priceColor(from).bg};--pf:${priceColor(from).fg}"><b>${grp.length}</b><small>${esc(t("from"))} ${esc(short(from))}</small></span>`, iconSize: [0, 0] });
-        const c = L.marker(b.getCenter(), { icon, title: `${grp.length} homes` });
+        const gp = groups.find((x) => x.rows === grp);
+        const c = L.marker(gp ? m.layerPointToLatLng(L.point(gp.x, gp.y)) : b.getCenter(), { icon, title: `${grp.length} homes` });
         c.on("click", () => { const z = m.getBoundsZoom(b, false, L.point(60, 60)); if (z > m.getZoom()) m.flyToBounds(b, { padding: [60, 60], maxZoom: 15, duration: 0.6 }); else m.flyTo(b.getCenter(), Math.min(m.getZoom() + 3, 16), { duration: 0.6 }); });
         g.addLayer(c);
       });
@@ -197,7 +219,13 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
       const f = list.find((d) => focus && d.slug === focus);
       if (f) m.setView([f.lat!, f.lng!], around?.zoom ?? 11);
       else if (around) m.setView([around.lat, around.lng], around.zoom ?? 11);
-      else if (bounds.current) m.fitBounds(bounds.current, { padding: [30, 30], maxZoom: 10 });
+      else if (bounds.current) {
+        // Most homes are in Europe: open on the region that holds most of them instead of a whole-world
+        // view where every country is one overlapping bubble ("See all homes" still shows everything).
+        const eu = list.filter((d) => d.lat! > 27 && d.lat! < 72 && d.lng! > -30 && d.lng! < 45);
+        const b0 = eu.length >= Math.max(5, list.length * 0.6) && eu.length < list.length ? L.latLngBounds(eu.map((d) => [d.lat!, d.lng!] as L.LatLngExpression)) : bounds.current;
+        m.fitBounds(b0, { padding: [30, 30], maxZoom: 10 });
+      }
       draw();
       if (focusedMk && openFocus) { (focusedMk as L.Marker).openPopup(); fitPopup(); }
     };

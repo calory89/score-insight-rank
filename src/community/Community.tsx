@@ -611,9 +611,9 @@ function SponsoredCard() {
       <div className="hunt-card-body">
         <div className="hunt-card-location">Indonesia <span>· Beach</span></div>
         <div className="hunt-price">{money(EBC.price_eur!)}</div>
-        <h2><Link to="/ecobeachcity">Beachfront cabin + land in Sumba</Link></h2>
+        <h2><Link to="/ecobeachcity">Furnished cabin + land in Sumba</Link></h2>
         <p className="hunt-metrics">Mamboro, Sumba · Eco Beach City</p>
-        <p>Cabin plus second-line plot. Renewable 80-year lease. Instalments available.</p>
+        <p>Cabin, plot and furniture included. Renewable 80-year lease. Instalments available.</p>
         <Link to="/ecobeachcity" className="hunt-primary">Explore Eco Beach City <ArrowUpRight size={16} /></Link>
       </div>
     </article>

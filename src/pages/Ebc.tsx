@@ -8,12 +8,11 @@ import RHNav from "@/components/realhunt/RHNav";
 import { ArrowLeft, ExternalLink, MapPin, Waves, Plane, Check, Share2, CalendarCheck, ChevronLeft, ChevronRight } from "lucide-react";
 import { CALENDLY, track, EBC } from "@/lib/rh";
 const FACILITIES = ["Beach club", "Beach restaurant", "Coworking", "Padel courts", "Beach volley", "Gym", "Yoga deck", "Pools", "Surf school", "Kids club", "Wellness and spa", "Organic farm", "Plaza and shops", "Medical point", "Coliving", "Nature reserve", "Horse trails", "Sunset bar", "Water sports", "Event lawn"];
+// 30-oct-2026 (Carlos): one price, €36,500, for the cabin, the plot and the furniture.
 const PRICES: [string, string, string][] = [
-  ["Cabin", "€11,500", "Two payments after the land. Built off-site, placed on your plot."],
-  ["Land, second line", "€6,500", "80-year structure that extends at the end. One payment."],
-  ["Land, first line on the beach", "€9,950", "Same structure, on the sand."],
-  ["Connections", "€6,500", "Water, septic tank, electricity. Paid before handover."],
-  ["Furniture", "Optional", "Contract it with us or bring your own."],
+  ["Cabin", "Included", "Built off-site and placed on your plot."],
+  ["Your plot", "Included", "80-year structure that extends at the end."],
+  ["Furniture", "Included", "The cabin is handed over furnished."],
 ];
 
 const Ebc = () => {
@@ -22,8 +21,8 @@ const Ebc = () => {
   const [copied, setCopied] = useState(false);
   const [months, setMonths] = useState(24);
   useEffect(() => { track("ebc_view", { find: "ecobeachcity" }); }, []);
-  useEffect(() => { document.title = "€18,000 beachfront cabin and plot · Sumba, Indonesia · RealHunt"; window.scrollTo(0, 0); }, []);
-  const share = () => { const url = location.href; if (navigator.share) { navigator.share({ title: "€18,000 beachfront cabin and plot in Sumba", url }).catch(() => {}); return; } navigator.clipboard?.writeText(url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); }); };
+  useEffect(() => { document.title = "€36,500 furnished cabin and plot · Sumba, Indonesia · RealHunt"; window.scrollTo(0, 0); }, []);
+  const share = () => { const url = location.href; if (navigator.share) { navigator.share({ title: "€36,500 furnished cabin and plot in Sumba", url }).catch(() => {}); return; } navigator.clipboard?.writeText(url).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); }); };
 
   return (
     <div className="min-h-screen bg-paper text-ink pb-24 md:pb-0">
@@ -36,8 +35,8 @@ const Ebc = () => {
         <div className="px-4 md:px-0 grid md:grid-cols-[1.4fr_1fr] gap-10 mt-6">
           <div>
             <p className="text-[11px] uppercase tracking-[0.16em] text-ink-muted">Eco Beach City · new eco village</p>
-            <h1 className="font-display text-[clamp(38px,7vw,64px)] leading-none tracking-tight mt-3 tabular-nums">€18,000</h1>
-            <p className="text-[15px] text-ink-muted mt-1">the €11,500 cabin plus your €6,500 plot, second line. Beachfront plots are €9,950. Connections €6,500 when the time comes. Payable in instalments.</p>
+            <h1 className="font-display text-[clamp(38px,7vw,64px)] leading-none tracking-tight mt-3 tabular-nums">€36,500</h1>
+            <p className="text-[15px] text-ink-muted mt-1">Your cabin, your plot and the furniture, all included. Payable in instalments.</p>
             <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[14px] text-ink-muted">
               <span className="inline-flex items-center gap-1.5"><MapPin size={14} /> Mamboro, Sumba, Indonesia</span>
               <span className="inline-flex items-center gap-1.5"><Waves size={14} /> Beachfront, 2 km of beach</span>
@@ -56,18 +55,18 @@ const Ebc = () => {
             </div>
 
             <div className="mt-8">
-              <h2 className="font-display text-[20px] tracking-tight mb-3">What you pay, in order</h2>
+              <h2 className="font-display text-[20px] tracking-tight mb-3">What is included</h2>
               <div className="border border-hairline rounded-2xl bg-white divide-y divide-hairline">
                 {PRICES.map(([t, p, d]) => <div key={t} className="p-4 flex items-start justify-between gap-4"><div><p className="font-medium text-[15px]">{t}</p><p className="text-[13px] text-ink-muted">{d}</p></div><p className="font-display text-[20px] tabular-nums shrink-0">{p}</p></div>)}
               </div>
-              <p className="text-[13px] text-ink-muted mt-2">Cabin, connections and furniture together come to about €28,000, and that part can be paid in instalments. Land is paid separately, first.</p>
+              <p className="text-[13px] text-ink-muted mt-2">One price, €36,500, for the cabin, the plot and the furniture. It can be paid in instalments.</p>
             </div>
 
             <div className="mt-8 border border-hairline rounded-2xl bg-white p-5">
               <p className="font-display text-[18px] tracking-tight">What it costs per month</p>
-              <p className="text-[13px] text-ink-muted">Cabin + connections, €18,000, spread over {months} months. Land paid first, separately.</p>
+              <p className="text-[13px] text-ink-muted">Cabin, plot and furniture, €36,500, spread over {months} months.</p>
               <input type="range" min={6} max={36} step={6} value={months} onChange={(e) => setMonths(Number(e.target.value))} className="w-full mt-3 accent-sky-500" />
-              <div className="flex items-baseline justify-between mt-2"><span className="text-[13px] text-ink-muted">{months} months</span><span className="font-display text-[30px] tabular-nums">€{Math.round(18000 / months).toLocaleString("en-GB")}<span className="text-[14px] text-ink-muted"> / month</span></span></div>
+              <div className="flex items-baseline justify-between mt-2"><span className="text-[13px] text-ink-muted">{months} months</span><span className="font-display text-[30px] tabular-nums">€{Math.round(36500 / months).toLocaleString("en-GB")}<span className="text-[14px] text-ink-muted"> / month</span></span></div>
             </div>
 
             <div className="mt-8">

@@ -1,1 +1,0 @@
-DELETE FROM public.property_reviews WHERE comment ILIKE '%visited the island%' AND comment ILIKE '%amazing%';

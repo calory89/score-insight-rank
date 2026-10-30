@@ -122,7 +122,8 @@ html.hm-lock, html.hm-lock body { overflow: hidden; }
 .hm-cl { background: var(--pc, #D4420C); color: var(--pf, #fff); }
 .hm-legend { position: absolute; z-index: 450; left: 10px; bottom: 26px; background: rgba(255,255,255,.92); border-radius: 10px; padding: 6px 8px 4px; box-shadow: 0 2px 8px rgba(0,0,0,.15); pointer-events: none; }
 .hm-legend i { display: block; width: 132px; height: 8px; border-radius: 99px; background: linear-gradient(90deg, rgb(18,121,58) 0%, rgb(22,135,63) 12.5%, rgb(63,164,90) 31%, rgb(124,196,122) 44%, rgb(185,221,154) 56%, rgb(246,205,190) 65%, rgb(242,172,156) 81%, rgb(236,147,132) 100%); }
-.hm-legend span { display: flex; justify-content: space-between; font: 700 10px Inter, system-ui, sans-serif; color: #3A3F47; margin-top: 3px; }
+.hm-legend span { display: flex; justify-content: space-between; gap: 8px; font: 700 10px Inter, system-ui, sans-serif; color: #3A3F47; margin-top: 3px; }
+.hm-legend b { white-space: nowrap; }
 .hm.is-embedded .hm-legend { bottom: 44px; }
 @media (max-width: 700px) { .hm-legend i { width: 110px; } }
 
@@ -359,3 +360,11 @@ html.hm-lock, html.hm-lock body { overflow: hidden; }
 @media (max-width: 700px) { .hm-pop, .hm-pop img { width: 200px; } .hm-pop img { height: 112px; } .hm-list { width: 220px; } }
 .hunt.is-dark .hm-li, .hunt.is-dark .hm-list p { color: #111214 !important; }
 @media (max-width: 700px) { .hm-tools { flex-wrap: nowrap; overflow-x: auto; max-width: calc(100% - 20px); scrollbar-width: none; padding-bottom: 2px; } .hm-tools::-webkit-scrollbar { display: none; } .hm-tools button { flex: 0 0 auto; padding: 7px 11px; } }
+
+/* 30-oct-2026: phone footer was a column of 58 px rows (44 px tap target + 14 px gap) with mixed text sizes.
+   Same tap comfort (36 px), tighter rows, one text size for links and tools. */
+@media (max-width: 700px) {
+  .hunt-footer > div { row-gap: 2px !important; column-gap: 18px !important; }
+  .hunt-footer a { min-height: 36px !important; font-size: 14px !important; }
+  .hunt-footer-tools, .hunt-footer-tools button, .hunt-footer-tools a { font-size: 14px !important; }
+}

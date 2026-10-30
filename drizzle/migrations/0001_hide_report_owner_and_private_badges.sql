@@ -1,5 +1,0 @@
-revoke select on public.analyses from anon;
-grant select (address,ai_summary,alternatives,base_votes,bathrooms,bedrooms,city,confidence_level,cons,country,created_at,currency,data_source,demand_strength,downside_scenario,global_score,id,image_url,liquidity_outlook,market_classification,market_rank,market_stability,market_total,opportunity_signals,percentile,price,price_history,primary_insight,projected_roi_high,projected_roi_low,property_type,pros,red_flags,risk_level,roi_potential,score_explanations,size_sqm,slug,upside_scenario,url,verdict,why_not_90,year_built,yield_trend) on public.analyses to anon;
-drop policy if exists "Public can view achievements" on public.user_achievements;
-drop policy if exists "Admins can view achievements" on public.user_achievements;
-create policy "Admins can view achievements" on public.user_achievements for select to authenticated using (public.is_admin(auth.uid()));
