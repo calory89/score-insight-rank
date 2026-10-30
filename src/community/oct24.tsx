@@ -63,7 +63,7 @@ export function MortgageCalc({ price }: { price: number }) {
 // "€1,339/m², 30% below the median for Spain on RealHunt", from the same static data the site reads.
 let medians: Promise<Record<string, number>> | null = null;
 function countryMedians() {
-  return (medians ||= fetch("/data/rh-static.json", { cache: "force-cache" }).then((r) => r.json()).then(mediaDeep).then((s: any) => {
+  return (medians ||= fetch("/data/rh-static.json", { cache: "no-cache" }).then((r) => r.json()).then(mediaDeep).then((s: any) => {
     const by: Record<string, number[]> = {};
     for (const r of (s.rows || []) as any[]) if (r.sqm > 0 && r.price_eur > 0) (by[r.country] ||= []).push(r.price_eur / r.sqm);
     const out: Record<string, number> = {};
@@ -113,7 +113,7 @@ export function AlertConfirmPage() {
 
 // The written article on each home page, the same text crawlers read (src/community/homeArticle.ts).
 let allRows: Promise<any[]> | null = null;
-const rowsP = () => (allRows ||= fetch("/data/rh-static.json", { cache: "force-cache" }).then((r) => r.json()).then((s: any) => s.rows || []).catch(() => []));
+const rowsP = () => (allRows ||= fetch("/data/rh-static.json", { cache: "no-cache" }).then((r) => r.json()).then((s: any) => s.rows || []).catch(() => []));
 export function HomeArticle({ d }: { d: any }) {
   const [rows, setRows] = useState<any[] | null>(null);
   useEffect(() => { let on = true; rowsP().then((x) => { if (on) setRows(x); }); return () => { on = false; }; }, [d?.slug]);

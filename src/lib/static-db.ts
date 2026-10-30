@@ -14,7 +14,7 @@ type Snap = { v: number; generated: string; meta: Row; live: { live: number; tod
 
 let snapP: Promise<Snap> | null = null;
 export function snapshot(): Promise<Snap> {
-  return (snapP ||= fetch("/data/rh-static.json", { cache: "force-cache" }).then((r) => {
+  return (snapP ||= fetch("/data/rh-static.json", { cache: "no-cache" }).then((r) => {
     if (!r.ok) throw new Error("static data " + r.status);
     return r.json().then(mediaDeep);
   }).catch((e) => { snapP = null; throw e; }));

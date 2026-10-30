@@ -22,7 +22,7 @@ export type CountryStats = { k: string; name: string; n: number; med: number; pp
 
 let snap: Promise<Record<string, CountryStats>> | null = null;
 export function countryStats() {
-  return (snap ||= fetch("/data/rh-static.json", { cache: "force-cache" }).then((r) => r.json()).then(mediaDeep).then((s: any) => {
+  return (snap ||= fetch("/data/rh-static.json", { cache: "no-cache" }).then((r) => r.json()).then(mediaDeep).then((s: any) => {
     const by: Record<string, Row[]> = {};
     for (const r of (s.rows || []) as any[]) if (r.price_eur > 0) (by[key(r.country)] ||= []).push(r);
     const out: Record<string, CountryStats> = {};
