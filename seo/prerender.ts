@@ -411,6 +411,8 @@ function build(root: string) {
     [crumbs([["RealHunt", SITE + "/"], ["About", SITE + "/about"]]),
      { "@context": "https://schema.org", "@type": "Organization", name: "RealHunt", url: SITE + "/", logo: SITE + "/apple-touch-icon.png", email: "hello@realhunt.co",
        parentOrganization: { "@type": "Organization", name: "Equinox Investment Group LLC", address: { "@type": "PostalAddress", streetAddress: "30 N Gould St Ste N", addressLocality: "Sheridan", addressRegion: "WY", postalCode: "82801", addressCountry: "US" } } }]);
+  // 30-oct-2026: the Eco Beach City card is shared too; give its page its own title and picture.
+  page(`${SITE}/ecobeachcity`, "€36,500 furnished cabin and plot · Sumba, Indonesia · RealHunt", "A furnished cabin on your own plot in Eco Beach City, a new beachfront eco village in Sumba, one hour from Bali. Cabin, plot and furniture for €36,500, payable in instalments.", `${SITE}/images/ebc/ebc-card.jpg`);
   page(`${SITE}/weather`, "Best places to live with good weather all year, and good homes there · RealHunt", "Compare places by good-weather days, mild winters, clean air, safety, the sea and the airport, then see the homes that score 80+ there. Mediterranean, Canaries, Mexico, Bali, Sumba and more.", `${SITE}/weather/og.jpg`,
     weatherShell(), [crumbs([["RealHunt", SITE + "/"], ["Weather", SITE + "/weather"]])]);
   page(`${SITE}/new-builds`, "New-build homes under €100,000 · RealHunt", "New-build projects with units under €100,000, payment plans and verified developers. Ask the developer directly.", DEF, undefined, undefined, { group: "top" });
