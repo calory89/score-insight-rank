@@ -368,3 +368,11 @@ html.hm-lock, html.hm-lock body { overflow: hidden; }
   .hunt-footer a { min-height: 36px !important; font-size: 14px !important; }
   .hunt-footer-tools, .hunt-footer-tools button, .hunt-footer-tools a { font-size: 14px !important; }
 }
+/* 30-oct-2026: price chips on the home */
+.hunt-filters > .hunt-chips.rh-price { order: 9; flex: 0 0 100% !important; width: 100% !important; max-width: 100%; margin-top: 2px; align-items: center; }
+.rh-price button { display: inline-flex; align-items: center; gap: 4px; }
+.rh-price-label { font-size: 13px; font-weight: 700; opacity: .65; margin-right: 2px; text-transform: uppercase; letter-spacing: .04em; }
+@media (max-width: 640px) {
+  .rh-price { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .rh-price button, .rh-price-label { flex: 0 0 auto; }
+}

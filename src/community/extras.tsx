@@ -313,6 +313,13 @@ export function InfoRequest({ deal, dev }: { deal: Row; dev?: { name: string; sl
 const PRICE_CAPS = [20000, 30000, 40000, 60000, 80000, 100000];
 // Filter steps above the €100k "under" pages: RealHunt also lists homes up to ~€500k (Cyprus, Amsterdam, new builds).
 const PRICE_STEPS = [20000, 30000, 40000, 60000, 80000, 100000, 150000, 200000, 300000];
+const PRICE_CHIPS: { k: string; label: string; min: number | null; max: number | null }[] = [
+  { k: "p50", label: "Under €50k", min: null, max: 50000 },
+  { k: "p100", label: "€50k to €100k", min: 50000, max: 100000 },
+  { k: "p200", label: "€100k to €200k", min: 100000, max: 200000 },
+  { k: "p350", label: "€200k to €350k", min: 200000, max: 350000 },
+  { k: "p350u", label: "€350k+", min: 350000, max: null },
+];
 export function Filters({ countries, value: applied, onChange }: { countries: Record<string, number>; value: FeedParams; onChange: (v: FeedParams) => void }) {
   // 1-oct-2026: every filter applies at once. The old draft + "View N homes" step made a tap on a
   // country look broken (the grid kept showing every country until the second button was pressed).
@@ -328,6 +335,7 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
   // already on, so a chip only shows when ADDING it still leaves 3+ homes. Before, Garden + Views showed Sauna,
   // which led to 0 homes and an empty list.
   const vv: any = value;
+  const priceChipOn = PRICE_CHIPS.some((pc) => (value.min_price || null) === pc.min && (value.max_price || null) === pc.max); // the price row already shows it
   const qp = { country: value.country || "", category: value.category || "", max_price: value.max_price || null, min_price: value.min_price || null, min_beds: value.min_beds || null, price_drop: !!value.price_drop, min_sqm: value.min_sqm || null,
     q: vv.q || "", terms: vv.terms || [], min_score: value.min_score || null, need: value.need || [], dim_min: value.dim_min || {} };
   const qkey = JSON.stringify(qp);
@@ -342,6 +350,14 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
       <div className="hunt-chips" role="group" aria-label="Country">
         <button aria-pressed={!value.country} onClick={() => setDraft({ ...value, country: "" })}>{t("All countries")}</button>
         {list.map(([c, n]) => { const sel = (value.country || "").split(",").filter(Boolean); const on = sel.includes(c); return <button key={c} aria-pressed={on} onClick={() => setDraft({ ...value, country: (on ? sel.filter((x) => x !== c) : [...sel, c]).join(",") })}>{c === "Scandinavia" ? t("Scandinavia · region") : c} <small>{n}</small></button>; })}
+      </div>
+      {/* 30-oct-2026 (Carlos): price filter on the home, one tap. Ranges set min and max together; tap again to clear. */}
+      <div className="hunt-chips rh-price" role="group" aria-label={t("Price")}>
+        <span className="rh-price-label">{t("Price")}</span>
+        {PRICE_CHIPS.map((pc) => {
+          const on = (value.min_price || null) === pc.min && (value.max_price || null) === pc.max;
+          return <button key={pc.k} aria-pressed={on} onClick={() => setDraft({ ...value, min_price: on ? null : pc.min, max_price: on ? null : pc.max })}>{on ? <Check size={13} /> : null}<span>{t(pc.label)}</span></button>;
+        })}
       </div>
       <div className="hunt-chips rh-quick" role="group" aria-label={t("Quick filters")}>
         {QUICK.map((qf) => {
@@ -358,7 +374,7 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
           return <button key={qf.k} aria-pressed={on} onClick={flip}>{on ? <Check size={13} /> : null}<span>{t(qf.label)}</span></button>;
         })}
       </div>
-      <div className="rh-active-filters">{([ ["category",applied.category], ["min_price",applied.min_price?`${t("from")} ${money(applied.min_price)}`:null], ["max_price",applied.max_price?`${t("up to")} ${money(applied.max_price)}`:null], ["min_beds",applied.min_beds?`${applied.min_beds}+ ${t("bedrooms")}`:null], ["min_sqm",applied.min_sqm?`${applied.min_sqm} m²+`:null], ["price_drop",applied.price_drop?t("Price dropped"):null] ] as const).filter(([,v])=>v).map(([k,v])=><button key={k} aria-label={`${t("Remove")} ${v}`} onClick={()=>onChange({...applied,[k]:null})}>{v} ×</button>)}</div>
+      <div className="rh-active-filters">{([ ["category",applied.category], ["min_price",applied.min_price&&!priceChipOn?`${t("from")} ${money(applied.min_price)}`:null], ["max_price",applied.max_price&&!priceChipOn?`${t("up to")} ${money(applied.max_price)}`:null], ["min_beds",applied.min_beds?`${applied.min_beds}+ ${t("bedrooms")}`:null], ["min_sqm",applied.min_sqm?`${applied.min_sqm} m²+`:null], ["price_drop",applied.price_drop?t("Price dropped"):null] ] as const).filter(([,v])=>v).map(([k,v])=><button key={k} aria-label={`${t("Remove")} ${v}`} onClick={()=>onChange({...applied,[k]:null})}>{v} ×</button>)}</div>
       <button type="button" className="hunt-link hunt-filter-toggle" aria-expanded={open} onClick={() => setOpen((o) => !o)}>{open ? t("Hide filters") : t("More filters")}{extra > 0 ? ` (${extra})` : ""}</button>
       {open && <div className="hunt-filter-row">
         <label><span>{t("Min price")}</span>
