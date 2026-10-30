@@ -1,0 +1,282 @@
+// /network/admin — Carlos's view of the developer business: the funnel with real numbers, switches for
+// buyer alerts and outreach emails (both off until he turns them on), listing claims to approve, the
+// outreach list with claim links, and the newest developers.
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import RHNav from "@/components/realhunt/RHNav";
+import { db, eur } from "@/lib/rh";
+import { Check, X, Copy, Loader2, AlertTriangle, ExternalLink } from "lucide-react";
+
+export default function NetworkAdmin() {
+  const [d, setD] = useState<any>(undefined);
+  const [msg, setMsg] = useState("");
+  const [arm, setArm] = useState("");
+  const [filter, setFilter] = useState("all");
+  const [pend, setPend] = useState<any[]>([]);
+  const [boosts, setBoosts] = useState<any[]>([]);
+  const [proofs, setProofs] = useState<any[]>([]);
+  const [topAsks, setTopAsks] = useState<any[]>([]);
+  const [topClaims, setTopClaims] = useState<any[]>([]);
+  const [contacts, setContacts] = useState<any[]>([]);
+  const [cDest, setCDest] = useState("all");
+  const [reports, setReports] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [tSlug, setTSlug] = useState("");
+  const [tr, setTr] = useState<any>(null);
+  const [tFiles, setTFiles] = useState<File[]>([]);
+  const load = () => {
+    db.rpc("dev_admin_pending_projects").then(({ data }: any) => setPend(data || []), () => {});
+    db.rpc("dev_admin_boosts").then(({ data }: any) => setBoosts(data || []), () => {});
+    db.rpc("dev_admin_proofs").then(({ data }: any) => setProofs(data || []), () => {});
+    db.rpc("top_admin_requests").then(({ data }: any) => setTopAsks(data || []), () => {});
+    db.rpc("top_admin_claims").then(({ data }: any) => setTopClaims(data || []), () => {});
+    db.rpc("top_admin_reviews").then(({ data }: any) => setReviews(data || []), () => {});
+    db.rpc("top_admin_reports").then(({ data }: any) => setReports(data || []), () => {});
+    db.rpc("top_admin_contacts", { p_dest: null }).then(({ data }: any) => setContacts(data || []), () => {});
+    return db.rpc("dev_admin_funnel").then(({ data, error }: any) => setD(error ? null : data), () => setD(null));
+  };
+  const moderate = async (id: string, ok: boolean) => {
+    const reason = ok ? null : window.prompt("Why? The developer sees this.", "Photos or price could not be checked");
+    if (!ok && reason === null) return;
+    const { error } = await db.rpc("community_moderate_deal", { p_deal: id, p_action: ok ? "approve" : "reject", p_reason: reason, p_pick: false, p_pick_note: null });
+    setMsg(error ? error.message : ok ? "Approved and live" : "Rejected"); load();
+  };
+  const claimFile = async (path: string) => { const { data, error } = await (db as any).storage.from("top-claims").createSignedUrl(path, 300); if (error) setMsg(error.message); else window.open(data.signedUrl, "_blank", "noopener"); };
+  const claimDecide = async (id: string, ok: boolean) => {
+    const reason = ok ? null : window.prompt("Why? The developer sees this.", "The documents do not show that you represent this company");
+    if (!ok && reason === null) return;
+    const { error } = await db.rpc("top_admin_claim_decide", { p_id: id, p_ok: ok, p_reason: reason });
+    setMsg(error ? error.message : ok ? "Verified: badge on, +5 in the ranking, questions go to the developer" : "Rejected"); load();
+  };
+  const reportResolve = async (id: string, status: string) => {
+    const resp = window.prompt(status === "fixed" ? "What did you fix? This shows on the project page." : "Why is no change needed? This shows on the project page.", status === "fixed" ? "Price updated to the developer's current price list." : "We checked the developer's price list and it matches.");
+    if (resp === null) return;
+    const { error } = await db.rpc("top_admin_report_resolve", { p_id: id, p_status: status, p_response: resp });
+    setMsg(error ? error.message : "Report answered. Email the reporter if they left an email."); load();
+  };
+  const trustLoad = async () => { const s = tSlug.trim().replace(/^.*\/top\/[a-z-]+\//, "").replace(/\/$/, ""); setTSlug(s); const { data, error } = await db.rpc("top_admin_trust", { p_slug: s }); if (error || !data) { setMsg(error?.message || "No project with that slug"); setTr(null); } else { setTr({ ...data, visit_photos: data.visit_photos || [] }); setTFiles([]); } };
+  const trustSave = async () => {
+    try {
+      const photos = [...(tr.visit_photos || [])];
+      for (const f of tFiles) {
+        const ext = (f.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5);
+        const path = `${tr.slug}/${Date.now()}-${photos.length}.${ext}`;
+        const up = await (db as any).storage.from("top-visits").upload(path, f, { contentType: f.type || undefined });
+        if (up.error) throw up.error;
+        photos.push((db as any).storage.from("top-visits").getPublicUrl(path).data.publicUrl);
+      }
+      const { data, error } = await db.rpc("top_admin_set_trust", { p_slug: tr.slug, p_ver_legal_name: tr.ver_legal_name || "", p_ver_reg: tr.ver_reg || "", p_ver_license: tr.ver_license || "", p_permit_status: tr.permit_status || "unknown", p_permit_ref: tr.permit_ref || "", p_visited_at: tr.visited_at || null, p_visit_note: tr.visit_note || "", p_visit_photos: photos, p_reviewed_at: tr.reviewed_at || null });
+      if (error || data?.error) throw new Error(error?.message || data.error);
+      setMsg("Saved. The project page shows it now."); trustLoad();
+    } catch (e) { setMsg((e as Error).message); }
+  };
+  const reviewHide = async (id: string, hide: boolean) => {
+    const reason = hide ? window.prompt("Why is it hidden? Only for breaking the rules (insults, personal data, spam, not a real experience). Never for being negative.", "Personal data") : null;
+    if (hide && reason === null) return;
+    const { error } = await db.rpc("top_admin_review_hide", { p_id: id, p_hide: hide, p_reason: reason });
+    setMsg(error ? error.message : hide ? "Review hidden" : "Review visible again"); load();
+  };
+  const contactMark = async (id: string, status: string) => { const { error } = await db.rpc("top_admin_contact_mark", { p_id: id, p_status: status }); setMsg(error ? error.message : `Marked ${status}`); load(); };
+  const contactsCsv = () => {
+    const rows = contacts.filter((c) => cDest === "all" || c.dest === cDest);
+    const esc = (v: any) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const csv = ["destination,type,company,projects,website,emails,phones,whatsapp,status"].concat(rows.map((c) => [c.dest, c.kind, c.company, (c.projects || []).join(" | "), c.website, (c.emails || []).join(" "), (c.phones || []).join(" "), (c.whatsapp || []).join(" "), c.status].map(esc).join(","))).join("\n");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = `realhunt-contacts-${cDest}.csv`; a.click();
+  };
+  const boostDecide = async (id: number, on: boolean) => { const { error } = await db.rpc("dev_admin_boost_decide", { p_id: id, p_on: on }); setMsg(error ? error.message : on ? "Boost active" : "Boost stopped"); load(); };
+  const proofOpen = async (path: string) => { const { data, error } = await (db as any).storage.from("buyer-proof").createSignedUrl(path, 300); if (error) setMsg(error.message); else window.open(data.signedUrl, "_blank", "noopener"); };
+  const proofDecide = async (u: string, ok: boolean) => { const note = ok ? null : window.prompt("What should the buyer fix?", "Upload a clearer bank statement or a mortgage pre-approval letter."); if (!ok && note === null) return; const { error } = await db.rpc("dev_admin_proof_decide", { p_user: u, p_ok: ok, p_note: note }); setMsg(error ? error.message : ok ? "Buyer verified" : "Rejected"); load(); };
+  useEffect(() => { document.title = "Network admin · RealHunt"; load(); }, []);
+  if (d === undefined) return <div className="min-h-screen bg-paper"><RHNav /><div className="p-10"><Loader2 className="animate-spin" /></div></div>;
+  if (!d) return <div className="min-h-screen bg-paper"><RHNav /><div className="p-10">Admins only. <Link to="/network" className="underline">Back</Link></div></div>;
+  const ev = d.events || {};
+  const steps: [string, number][] = [
+    ["Opened the wizard", ev.dev_wizard_open || 0], ["Pasted a link (preview built)", (ev.dev_preview_ok || 0) + (ev.dev_preview_manual || 0)],
+    ["Left an email", d.wizard_emails], ["Created an account", d.developers], ["Signed the agreement", d.signed],
+    ["Project live", d.projects_live], ["First buyer requests", d.buyer_requests], ["Buyers answered", d.intros_answered], ["Sales", d.sales],
+  ];
+  const max = Math.max(1, ...steps.map((s) => s[1]));
+  const setting = async (key: string, on: boolean) => { const { error } = await db.rpc("dev_admin_setting", { p_key: key, p_on: on }); setMsg(error ? error.message : `${key} ${on ? "ON" : "OFF"}`); setArm(""); load(); };
+  const decide = async (id: number, ok: boolean) => { const { data, error } = await db.rpc("dev_admin_claim_decide", { p_id: id, p_approve: ok }); setMsg(error ? error.message : ok ? `Approved · seller page /dev/${data?.developer}` : "Rejected"); load(); };
+  const send = async () => { const { data, error } = await db.rpc("dev_admin_send_prospects", { p_limit: 20 }); setMsg(error ? error.message : data?.error || `${data.queued} emails queued`); setArm(""); load(); };
+  const prospects = (d.prospect_list || []).filter((p: any) => filter === "all" || p.status === filter || p.country === filter);
+  const S = d.settings || {};
+  return (
+    <div className="min-h-screen bg-paper text-ink">
+      <RHNav />
+      <main className="max-w-[1180px] mx-auto px-4 md:px-6 py-8 flex flex-col gap-8">
+        <div><p className="text-[12px] uppercase tracking-[0.14em] text-ink-muted">RealHunt Network · admin</p><h1 className="font-display text-[34px] tracking-tight">Developer funnel</h1>{msg && <p className="mt-2 rounded-xl bg-white border border-hairline px-4 py-2 text-[14px]">{msg}</p>}</div>
+
+        <section className="rounded-2xl bg-white border border-hairline p-5 md:p-6">
+          <p className="text-[13px] text-ink-muted mb-3">Wizard steps: unique visitors in the last 30 days who accepted analytics cookies (Clarity shows everyone). The rest: all time.</p>
+          <div className="flex flex-col gap-2">{steps.map(([t, n], i) => (
+            <div key={t} className="grid grid-cols-[210px_1fr_60px] items-center gap-3 text-[14px]"><span>{t}</span><span className="h-6 rounded-lg bg-[#ECEDEF] overflow-hidden"><span className="block h-full rounded-lg" style={{ width: `${Math.max(2, (n / max) * 100)}%`, background: i < 3 ? "#D4420C" : i < 6 ? "#111214" : "#16A34A" }} /></span><b className="text-right tabular-nums">{n}</b></div>
+          ))}</div>
+          <p className="text-[13px] text-ink-muted mt-4">Commission earned so far: <b className="text-ink">{eur(Number(d.commission_eur || 0))}</b> · verified developers: {d.verified} · projects waiting for review: <b className="text-ink">{d.projects_pending}</b> (<Link to="/hunt/admin" className="underline">moderation</Link>)</p>
+        </section>
+
+        <section className="grid md:grid-cols-2 gap-4">
+          {[["dev_buyer_alerts", "Email developers when a buyer asks", "Every buyer request is always in the developer's panel. With this on, developers who keep email on also get an email."], ["prospect_emails", "Outreach emails to prospects", "Allows the 'Send next 20' button below. Off = nothing can be sent to prospects."]].map(([k, t, sub]) => (
+            <div key={k} className={`rounded-2xl border p-5 ${S[k] ? "border-emerald-500 bg-emerald-50" : "border-hairline bg-white"}`}>
+              <p className="font-semibold">{t}: {S[k] ? "ON" : "OFF"}</p><p className="text-[13px] text-ink-muted mt-1">{sub}</p>
+              {arm === k ? <div className="mt-3 flex gap-2"><button onClick={() => setting(k, !S[k])} className="rh-btn-primary !py-2 !px-4 !text-[13px]">Yes, switch {S[k] ? "off" : "on"}</button><button onClick={() => setArm("")} className="px-3 text-[13px] underline">Cancel</button></div>
+                : <button onClick={() => setArm(k)} className="mt-3 px-4 py-2 rounded-full border border-ink text-[13px] font-medium">Switch {S[k] ? "off" : "on"}</button>}
+            </div>
+          ))}
+        </section>
+
+        <section>
+          <h2 className="font-display text-[22px]">Developer projects to approve ({pend.length})</h2>
+          {pend.length === 0 ? <p className="text-ink-muted text-[14px] mt-1">None right now.</p> : <div className="mt-3 grid md:grid-cols-2 gap-3">{pend.map((p: any) => (
+            <div key={p.id} className="rounded-2xl bg-white border border-hairline overflow-hidden flex">
+              <div className="w-[120px] shrink-0 bg-[#DFE0E2]">{p.image && <img src={p.image} alt="" className="w-full h-full object-cover" />}</div>
+              <div className="p-3 text-[13px] flex-1 min-w-0"><p className="font-semibold text-[14px] truncate">{p.title}</p><p className="text-ink-muted">{p.company}{p.signed ? " · signed" : " · not signed"} · {p.location || p.country} · {p.price_eur ? eur(p.price_eur) : "no price"} · {p.images} photos</p>
+                {p.source_url && <a href={p.source_url} target="_blank" rel="noreferrer" className="underline inline-flex items-center gap-1">their page <ExternalLink size={11} /></a>}
+                <div className="mt-2 flex gap-2"><button onClick={() => moderate(p.id, true)} className="rh-btn-primary !py-1.5 !px-3 !text-[13px] inline-flex items-center gap-1"><Check size={14} /> Approve</button><button onClick={() => moderate(p.id, false)} className="px-3 py-1.5 rounded-full border border-hairline text-[13px] inline-flex items-center gap-1"><X size={14} /> Reject</button><Link to={`/deal/${p.slug}`} className="text-[12px] underline self-center">preview</Link></div></div>
+            </div>
+          ))}</div>}
+        </section>
+
+        <section className="grid md:grid-cols-2 gap-4">
+          <div>
+            <h2 className="font-display text-[22px]">Featured spots ({boosts.filter((b) => b.status === "active").length} live · {boosts.filter((b) => b.status === "requested").length} queued)</h2>
+            <p className="text-[13px] text-ink-muted">Free and automatic: one per country for 2 weeks, in turns. You can stop one or switch a queued one on early.</p>
+            {boosts.length === 0 ? <p className="text-ink-muted text-[14px] mt-1">None yet.</p> : <div className="mt-2 flex flex-col gap-2">{boosts.map((b: any) => (
+              <div key={b.id} className="rounded-xl bg-white border border-hairline p-3 text-[13px]"><b>{b.company}</b> · {b.deal} ({b.country}) · {b.weeks} wk · <i>{b.status}</i>{b.ends_at ? ` until ${new Date(b.ends_at).toLocaleDateString("en-GB")}` : ""}<p className="text-ink-muted">{b.email}</p>
+                <div className="mt-1 flex gap-2">{b.status === "requested" && <button onClick={() => boostDecide(b.id, true)} className="rh-btn-primary !py-1 !px-3 !text-[12px]">Switch on</button>}{(b.status === "requested" || b.status === "active") && <button onClick={() => boostDecide(b.id, false)} className="px-3 py-1 rounded-full border border-hairline text-[12px]">{b.status === "active" ? "Stop" : "Decline"}</button>}</div></div>
+            ))}</div>}
+          </div>
+          <div>
+            <h2 className="font-display text-[22px]">Serious-buyer checks ({proofs.filter((p) => p.status === "pending").length})</h2>
+            <p className="text-[13px] text-ink-muted">Open the file, check the name and that the funds cover a home under €100,000.</p>
+            {proofs.length === 0 ? <p className="text-ink-muted text-[14px] mt-1">None yet.</p> : <div className="mt-2 flex flex-col gap-2">{proofs.map((p: any) => (
+              <div key={p.user_id} className="rounded-xl bg-white border border-hairline p-3 text-[13px]"><b>{p.email}</b> · {p.kind} · <i>{p.status}</i>
+                <div className="mt-1 flex gap-2"><button onClick={() => proofOpen(p.path)} className="px-3 py-1 rounded-full border border-hairline text-[12px]">Open file</button>{p.status === "pending" && <><button onClick={() => proofDecide(p.user_id, true)} className="rh-btn-primary !py-1 !px-3 !text-[12px]">Verify</button><button onClick={() => proofDecide(p.user_id, false)} className="px-3 py-1 rounded-full border border-hairline text-[12px]">Reject</button></>}</div></div>
+            ))}</div>}
+          </div>
+        </section>
+
+        <section>
+          <h2 className="font-display text-[22px]">Top 100 contacts ({contacts.length})</h2>
+          <p className="text-[13px] text-ink-muted">Emails, phones and WhatsApp numbers found on developer and agency websites and on the listing portals, for the four rankings. Use them to tell each developer their rank and invite them to verify.</p>
+          <div className="mt-2 flex flex-wrap gap-2 items-center text-[13px]">{["all", "bali", "phuket", "tulum", "batumi", "samui"].map((k) => <button key={k} onClick={() => setCDest(k)} className={`px-3 py-1 rounded-full border ${cDest === k ? "bg-ink text-paper border-ink" : "border-hairline bg-white"}`}>{k} ({k === "all" ? contacts.length : contacts.filter((c) => c.dest === k).length})</button>)}<button onClick={contactsCsv} className="px-3 py-1 rounded-full border border-hairline bg-white">Download CSV</button></div>
+          <div className="mt-2 max-h-[520px] overflow-y-auto flex flex-col gap-1.5">{contacts.filter((c) => cDest === "all" || c.dest === cDest).map((c) => (
+            <div key={c.id} className="rounded-xl bg-white border border-hairline p-2.5 text-[13px]">
+              <p><b>{c.company}</b> · {c.dest} · {c.kind} · <span className={c.status === "contacted" ? "text-emerald-700" : "text-ink-muted"}>{c.status}</span>{c.website ? <> · <a className="underline" href={c.website} target="_blank" rel="noreferrer">{c.website.replace(/^https?:\/\//, "").replace(/\/$/, "")}</a></> : null}</p>
+              {(c.projects || []).length > 0 && <p className="text-ink-muted">{c.projects.join(", ")}</p>}
+              <p>{(c.emails || []).map((e: string) => <a key={e} className="underline mr-2" href={`mailto:${e}`}>{e}</a>)}{(c.whatsapp || []).map((w: string) => <a key={w} className="underline mr-2 text-emerald-700" href={`https://wa.me/${w.replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer">WA {w}</a>)}{(c.phones || []).filter((x: string) => !(c.whatsapp || []).includes(x)).map((x: string) => <a key={x} className="mr-2" href={`tel:${x}`}>{x}</a>)}</p>
+              {c.status !== "contacted" && <button onClick={() => contactMark(c.id, "contacted")} className="mt-1 px-2 py-0.5 rounded-full border border-hairline text-[12px]">Mark contacted</button>}
+            </div>
+          ))}</div>
+        </section>
+
+        <section>
+          <h2 className="font-display text-[22px]">Top 100 error reports ({reports.filter((r) => r.status === "open").length} open)</h2>
+          <p className="text-[13px] text-ink-muted">Promise on every page: we answer within 3 working days and the correction shows on the page. Fix the data first (SQL or the trust editor below), then answer here.</p>
+          {reports.length === 0 ? <p className="text-[14px] text-ink-muted mt-2">None yet.</p> : <div className="mt-2 flex flex-col gap-2">{reports.map((r) => (
+            <div key={r.id} className="rounded-xl bg-white border border-hairline p-3 text-[14px]">
+              <p><a className="underline font-medium" href={`/top/${r.dest}/${r.slug}`} target="_blank" rel="noreferrer">{r.project}</a> · {r.kind} · <b>{r.status}</b> · {new Date(r.created_at).toLocaleDateString("en-GB")}{r.email ? <> · <a className="underline" href={`mailto:${r.email}`}>{r.email}</a></> : null}</p>
+              <p className="mt-1">{r.message}</p>
+              {r.response && <p className="mt-1 text-[13px] text-ink-muted">Answer: {r.response}</p>}
+              {r.status === "open" && <div className="mt-2 flex gap-2"><button onClick={() => reportResolve(r.id, "fixed")} className="rh-btn-primary !py-1 !px-3 !text-[12px]">Fixed</button><button onClick={() => reportResolve(r.id, "no_change")} className="px-3 py-1 rounded-full border border-hairline text-[12px]">No change needed</button></div>}
+            </div>
+          ))}</div>}
+        </section>
+
+        <section>
+          <h2 className="font-display text-[22px]">Top 100 buyer reviews ({reviews.length})</h2>
+          <p className="text-[13px] text-ink-muted">Good and bad stay up. Hide only reviews that break the rules: insults, personal data, spam, or not a real experience.</p>
+          {reviews.length === 0 ? <p className="text-[14px] text-ink-muted mt-2">None yet.</p> : <div className="mt-2 flex flex-col gap-2 max-h-[520px] overflow-y-auto">{reviews.map((r) => (
+            <div key={r.id} className="rounded-xl bg-white border border-hairline p-3 text-[14px]">
+              <p><a className="underline font-medium" href={`/top/${r.dest}/${r.slug}`} target="_blank" rel="noreferrer">{r.project}</a> · {"★".repeat(r.rating)} · {r.name || "no name"} · {r.email} · <b>{r.status}</b>{r.hide_reason ? ` (${r.hide_reason})` : ""} · {new Date(r.created_at).toLocaleDateString("en-GB")}</p>
+              <p className="mt-1">{r.body}</p>
+              {r.reply && <p className="mt-1 text-[13px] text-ink-muted">Developer reply: {r.reply}</p>}
+              <button onClick={() => reviewHide(r.id, r.status === "visible")} className="mt-2 px-3 py-1 rounded-full border border-hairline text-[12px]">{r.status === "visible" ? "Hide (breaks rules)" : "Show again"}</button>
+            </div>
+          ))}</div>}
+        </section>
+
+        <section>
+          <h2 className="font-display text-[22px]">Top 100 trust details</h2>
+          <p className="text-[13px] text-ink-muted">Per project: what the verification checked, the building permit, our own visit (date, note, photos) and the review date. Paste the project link or slug.</p>
+          <div className="mt-2 flex gap-2"><input className="flex-1 rounded-xl border border-hairline px-3 py-2 text-[14px]" placeholder="https://realhunt.co/top/bali/… or slug" value={tSlug} onChange={(e) => setTSlug(e.target.value)} /><button onClick={trustLoad} className="rh-btn-primary !py-2 !px-4 !text-[13px]">Load</button></div>
+          {tr && (
+            <div className="mt-3 rounded-xl bg-white border border-hairline p-4 text-[14px] grid md:grid-cols-2 gap-3">
+              <p className="md:col-span-2"><a className="underline font-medium" href={`/top/${tr.dest}/${tr.slug}`} target="_blank" rel="noreferrer">{tr.name}</a> · {tr.verified ? "verified" : "not verified"}</p>
+              {([["ver_legal_name", "Legal company name (shown if verified)"], ["ver_reg", "Registration number (shown if verified)"], ["ver_license", "Licence or permit checked (shown if verified)"], ["permit_ref", "Building permit number or note"]] as [string, string][]).map(([k, l]) => (
+                <label key={k} className="flex flex-col gap-1 text-[12px] text-ink-muted">{l}<input className="rounded-xl border border-hairline px-3 py-2 text-[14px] text-ink" value={tr[k] || ""} onChange={(e) => setTr({ ...tr, [k]: e.target.value })} /></label>
+              ))}
+              <label className="flex flex-col gap-1 text-[12px] text-ink-muted">Building permit<select className="rounded-xl border border-hairline px-3 py-2 text-[14px] text-ink" value={tr.permit_status || "unknown"} onChange={(e) => setTr({ ...tr, permit_status: e.target.value })}><option value="unknown">Not confirmed</option><option value="yes">Confirmed (we saw it)</option><option value="no">No permit yet</option></select></label>
+              <label className="flex flex-col gap-1 text-[12px] text-ink-muted">Last reviewed<input type="date" className="rounded-xl border border-hairline px-3 py-2 text-[14px] text-ink" value={tr.reviewed_at || ""} onChange={(e) => setTr({ ...tr, reviewed_at: e.target.value })} /></label>
+              <label className="flex flex-col gap-1 text-[12px] text-ink-muted">We visited on (empty = no visit badge)<input type="date" className="rounded-xl border border-hairline px-3 py-2 text-[14px] text-ink" value={tr.visited_at || ""} onChange={(e) => setTr({ ...tr, visited_at: e.target.value })} /></label>
+              <label className="flex flex-col gap-1 text-[12px] text-ink-muted md:col-span-2">Visit note (what we saw)<textarea className="rounded-xl border border-hairline px-3 py-2 text-[14px] text-ink" value={tr.visit_note || ""} onChange={(e) => setTr({ ...tr, visit_note: e.target.value })} /></label>
+              <div className="md:col-span-2 flex flex-wrap gap-2 items-center">{(tr.visit_photos || []).map((u: string) => <span key={u} className="relative"><img src={u} alt="" className="w-20 h-16 object-cover rounded-lg" /><button onClick={() => setTr({ ...tr, visit_photos: tr.visit_photos.filter((x: string) => x !== u) })} className="absolute -top-1 -right-1 bg-white rounded-full border border-hairline"><X size={12} /></button></span>)}
+                <label className="px-3 py-1.5 rounded-full border border-hairline text-[12px] cursor-pointer">Add our visit photos{tFiles.length ? ` (${tFiles.length} new)` : ""}<input type="file" multiple accept="image/*" hidden onChange={(e) => setTFiles([...tFiles, ...Array.from(e.target.files || [])])} /></label></div>
+              <div className="md:col-span-2"><button onClick={trustSave} className="rh-btn-primary !py-2 !px-4 !text-[13px]">Save</button></div>
+            </div>
+          )}
+        </section>
+
+        <section>
+          <h2 className="font-display text-[22px]">Top 100 verifications ({topClaims.filter((c) => c.status === "pending").length} to check)</h2>
+          <p className="text-[13px] text-ink-muted">Check the company registration (NIB) and that the person is linked to the project (permit, brochure with the company name, letter of authority). Approve = Verified badge, +5 points, and buyer questions go to them.</p>
+          {topClaims.length === 0 ? <p className="text-[14px] text-ink-muted mt-2">None yet.</p> : <div className="mt-2 flex flex-col gap-2">{topClaims.map((c) => (
+            <div key={c.id} className="rounded-xl bg-white border border-hairline p-3 text-[14px]">
+              <p><a className="underline font-medium" href={`/top/${c.dest || "bali"}/${c.slug}`} target="_blank" rel="noreferrer">{c.project}</a> · listed as {c.listed_developer} · <b>{c.status}</b>{c.reason ? ` (${c.reason})` : ""}</p>
+              <p className="mt-1">{c.full_name}{c.role ? `, ${c.role}` : ""} · {c.email} · {c.phone}</p>
+              <p className="text-[13px] text-ink-muted">{c.company}{c.legal_name ? ` · ${c.legal_name}` : ""}{c.reg_number ? ` · reg. ${c.reg_number}` : ""}{c.country ? ` · ${c.country}` : ""}{c.website ? <> · <a className="underline" href={c.website} target="_blank" rel="noreferrer">{c.website}</a></> : null}{c.listed_website ? <> · listed site <a className="underline" href={c.listed_website} target="_blank" rel="noreferrer">{c.listed_website}</a></> : null}</p>
+              {c.message && <p className="mt-1 text-[13px]">{c.message}</p>}
+              <div className="mt-2 flex flex-wrap gap-2">{(c.files || []).map((f: string, i: number) => <button key={f} onClick={() => claimFile(f)} className="px-3 py-1 rounded-full border border-hairline text-[12px]">Document {i + 1}</button>)}
+                {c.status === "pending" && <><button onClick={() => claimDecide(c.id, true)} className="rh-btn-primary !py-1 !px-3 !text-[12px]">Verify</button><button onClick={() => claimDecide(c.id, false)} className="px-3 py-1 rounded-full border border-hairline text-[12px]">Reject</button></>}</div>
+            </div>
+          ))}</div>}
+        </section>
+
+        <section>
+          <h2 className="font-display text-[22px]">Questions from the Bali Top 100 ({topAsks.length})</h2>
+          <p className="text-[13px] text-ink-muted">Buyers asking about unclaimed projects. Pass each one to the developer (it is also the best reason for them to claim the page) and answer the buyer by email.</p>
+          {topAsks.length === 0 ? <p className="text-[14px] text-ink-muted mt-2">None yet.</p> : <div className="mt-2 flex flex-col gap-2">{topAsks.map((q) => (
+            <div key={q.id} className="rounded-xl bg-white border border-hairline p-3 text-[14px]">
+              <p><b>{q.name}</b> · {q.email} · {q.budget_eur ? `€${Number(q.budget_eur).toLocaleString("en-GB")}` : "no budget"} · {q.timeframe || "no date"} · {new Date(q.at).toLocaleDateString("en-GB")}</p>
+              <p className="mt-1">{q.message}</p>
+              <p className="mt-1 text-[13px] text-ink-muted"><a className="underline" href={`/top/${q.dest || "bali"}/${q.slug}`} target="_blank" rel="noreferrer">{q.project}</a> · {q.developer}{q.website ? <> · <a className="underline" href={q.website} target="_blank" rel="noreferrer">website</a></> : null}</p>
+            </div>
+          ))}</div>}
+        </section>
+
+        <section>
+          <h2 className="font-display text-[22px]">Listing claims to review ({d.claims.length})</h2>
+          {d.claims.length === 0 ? <p className="text-ink-muted text-[14px] mt-1">None right now.</p> : <div className="mt-3 flex flex-col gap-3">{d.claims.map((c: any) => (
+            <div key={c.id} className="rounded-2xl bg-white border border-hairline p-4 text-[14px] flex flex-col md:flex-row md:items-center gap-3">
+              <div className="flex-1"><b>{c.company}</b> ({c.role}) claims <Link to={`/deal/${c.deal_slug}`} className="underline">{c.deal}</Link><p className="text-[13px] text-ink-muted">{c.email} · {c.phone || "no phone"} · {c.website || "no website"}</p>{c.proof && <p className="text-[13px] mt-1">“{c.proof}”</p>}</div>
+              <div className="flex gap-2"><button onClick={() => decide(c.id, true)} className="rh-btn-primary !py-2 !px-4 !text-[13px] inline-flex items-center gap-1"><Check size={14} /> Approve</button><button onClick={() => decide(c.id, false)} className="px-4 py-2 rounded-full border border-hairline text-[13px] inline-flex items-center gap-1"><X size={14} /> Reject</button></div>
+            </div>
+          ))}</div>}
+        </section>
+
+        <section>
+          <div className="flex flex-wrap items-center gap-3 justify-between">
+            <h2 className="font-display text-[22px]">Outreach list ({(d.prospect_list || []).length} · {d.prospects_with_email} with a public email)</h2>
+            {arm === "send" ? <div className="flex gap-2 items-center"><span className="text-[13px] inline-flex items-center gap-1"><AlertTriangle size={14} /> Sends 20 real emails.</span><button onClick={send} className="rh-btn-primary !py-2 !px-4 !text-[13px]">Yes, send</button><button onClick={() => setArm("")} className="text-[13px] underline">Cancel</button></div>
+              : <button disabled={!S.prospect_emails} onClick={() => setArm("send")} className="px-4 py-2 rounded-full border border-ink text-[13px] font-medium disabled:opacity-40" title={S.prospect_emails ? "" : "Switch outreach emails on first"}>Send next 20 emails</button>}
+          </div>
+          <p className="text-[13px] text-ink-muted">Automatic: every day at 10:00 (Spain) 20 more are sent while the switch is on, and whoever opened their listing 4+ days ago without claiming gets one reminder. <Link to="/research/new-builds" className="underline">Monthly report</Link> · <Link to="/network/example" className="underline">Example listing</Link></p>
+          <p className="text-[13px] text-ink-muted">Status: {Object.entries(d.prospects || {}).map(([k, v]) => `${k} ${v}`).join(" · ") || "empty"}. Each claim link opens the ready listing; nothing is public until they claim it.</p>
+          <div className="mt-2 flex flex-wrap gap-2 text-[13px]">{["all", "previewed", "emailed", "opened", "claimed", "optout", "Indonesia", "Albania", "Mexico", "Georgia", "Vietnam", "Spain"].map((k) => <button key={k} onClick={() => setFilter(k)} className={`px-3 py-1.5 rounded-full border ${filter === k ? "bg-ink text-paper border-ink" : "bg-white border-hairline"}`}>{k}</button>)}</div>
+          <div className="mt-3 rounded-2xl bg-white border border-hairline overflow-x-auto"><table className="w-full text-[13px]"><thead><tr className="text-left text-[11px] uppercase tracking-wider text-ink-muted"><th className="px-3 py-2">Developer</th><th className="px-3 py-2">Project</th><th className="px-3 py-2">Where</th><th className="px-3 py-2">From</th><th className="px-3 py-2">Email</th><th className="px-3 py-2">Status</th><th className="px-3 py-2">Claim link</th></tr></thead>
+            <tbody>{prospects.map((p: any) => (
+              <tr key={p.claim_code} className="border-t border-hairline/70"><td className="px-3 py-2">{p.company}</td><td className="px-3 py-2">{p.project_name}{p.kind === "lots" ? <span className="ml-1 px-1.5 rounded bg-amber-100 text-[11px]">land</span> : null}</td><td className="px-3 py-2">{p.area || p.country}</td><td className="px-3 py-2 tabular-nums">{p.price_from_eur ? eur(p.price_from_eur) : "—"}</td><td className="px-3 py-2">{p.has_email ? "✓" : "—"}</td><td className="px-3 py-2">{p.status}</td>
+                <td className="px-3 py-2 whitespace-nowrap"><a href={`/claim/${p.claim_code}`} target="_blank" rel="noreferrer" className="underline inline-flex items-center gap-1">open <ExternalLink size={11} /></a> <button onClick={() => navigator.clipboard.writeText(`https://realhunt.co/claim/${p.claim_code}`)} className="ml-2 inline-flex"><Copy size={12} /></button></td></tr>
+            ))}</tbody></table></div>
+        </section>
+
+        <section>
+          <h2 className="font-display text-[22px]">Newest developers</h2>
+          <div className="mt-3 rounded-2xl bg-white border border-hairline overflow-x-auto"><table className="w-full text-[13px]"><tbody>{(d.latest || []).map((x: any) => (
+            <tr key={x.id} className="border-t border-hairline/70 first:border-0"><td className="px-3 py-2"><b>{x.company}</b></td><td className="px-3 py-2">{x.email}</td><td className="px-3 py-2">{x.mode}</td><td className="px-3 py-2">{x.signed ? "signed" : "not signed"}</td><td className="px-3 py-2">{x.verified ? "verified" : ""}</td><td className="px-3 py-2">{new Date(x.created_at).toLocaleDateString("en-GB")}</td><td className="px-3 py-2">{x.slug && <Link to={`/dev/${x.slug}`} className="underline">page</Link>}</td></tr>
+          ))}</tbody></table></div>
+        </section>
+      </main>
+    </div>
+  );
+}

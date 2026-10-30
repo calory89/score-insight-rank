@@ -1,0 +1,37 @@
+name: rh-import
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: "URL of a .tgz (extracted at repo root) or a single file"
+        required: true
+      path:
+        description: "Destination path for a single file (leave empty for .tgz)"
+        default: ""
+      message:
+        description: "Commit message"
+        default: "Import files"
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download
+        env:
+          URL: ${{ github.event.inputs.url }}
+          DEST: ${{ github.event.inputs.path }}
+        run: |
+          set -e
+          curl -fsSL -X POST "$URL" -o /tmp/in || curl -fsSL "$URL" -o /tmp/in
+          if [ -z "$DEST" ]; then tar -xzf /tmp/in -C . ; else mkdir -p "$(dirname "$DEST")"; cp /tmp/in "$DEST"; fi
+          git status --short | head -50
+      - name: Commit
+        env:
+          MSG: ${{ github.event.inputs.message }}
+        run: |
+          git config user.name "calory89"
+          git config user.email "rrppspain@gmail.com"
+          git add -A
+          git diff --cached --quiet || (git commit -m "$MSG" && git pull --rebase && git push)

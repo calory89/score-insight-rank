@@ -1,0 +1,577 @@
+{
+  "ext_name": {
+    "message": "RealHunt Score"
+  },
+  "ext_desc": {
+    "message": "Ærlig score 0–100 på boliger på 160 boligsider: pris mot lignende, beliggenhet og varsler. Gratis."
+  },
+  "disclaimer": {
+    "message": "Anslag, ikke en takst. Sjekk alt med selger."
+  },
+  "allow": {
+    "message": "Tillat"
+  },
+  "consent_short": {
+    "message": "La RealHunt bruke anonyme annonsedata (pris, m², område) for å sammenligne priser?"
+  },
+  "see_why": {
+    "message": "Se hvorfor"
+  },
+  "open_panel": {
+    "message": "Åpne panelet"
+  },
+  "save": {
+    "message": "Lagre"
+  },
+  "saved": {
+    "message": "Lagret"
+  },
+  "share_short": {
+    "message": "Del"
+  },
+  "part_price": {
+    "message": "Pris mot markedet"
+  },
+  "part_location": {
+    "message": "Beliggenhet"
+  },
+  "part_flags": {
+    "message": "Varsler"
+  },
+  "part_quality": {
+    "message": "Boligen og annonsen"
+  },
+  "part_fit": {
+    "message": "Passer deg"
+  },
+  "badge_hint": {
+    "message": "Åpne annonsen for beliggenhet og alle grunner."
+  },
+  "free_badge": {
+    "message": "GRATIS"
+  },
+  "unlock_title": {
+    "message": "Lås opp alt, gratis"
+  },
+  "unlock_cta": {
+    "message": "Send meg koden"
+  },
+  "try_again": {
+    "message": "Noe gikk galt. Prøv igjen."
+  },
+  "rank_cta": {
+    "message": "Ranger hele søket"
+  },
+  "rank_sub": {
+    "message": "Alle sider, beste RealHunt-score først"
+  },
+  "rank_title": {
+    "message": "Hele søket, rangert"
+  },
+  "rank_stop": {
+    "message": "Stopp"
+  },
+  "rank_rooms": {
+    "message": "rom"
+  },
+  "b_price": {
+    "message": "Pris mot lignende boliger"
+  },
+  "price_over": {
+    "message": "Du betaler $P1$% mer enn for lignende boliger i denne størrelsen.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "price_under": {
+    "message": "$P1$% billigere enn lignende boliger i denne størrelsen.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "fair_value": {
+    "message": "Markedsverdi ved den m²-prisen"
+  },
+  "b_offer": {
+    "message": "Hva du bør by"
+  },
+  "offer_open": {
+    "message": "Start med"
+  },
+  "offer_max": {
+    "message": "Ikke gå over"
+  },
+  "estimate": {
+    "message": "anslag"
+  },
+  "b_cost": {
+    "message": "Hva den koster deg"
+  },
+  "cost_month": {
+    "message": "Lån per måned"
+  },
+  "cost_cash": {
+    "message": "Egenkapital dag én"
+  },
+  "b_hist": {
+    "message": "Prishistorikk"
+  },
+  "b_dups": {
+    "message": "Samme bolig på andre sider"
+  },
+  "b_walk": {
+    "message": "Innen 10 minutters gange"
+  },
+  "b_ask": {
+    "message": "Spør megleren"
+  },
+  "top10_city": {
+    "message": "Se topp 10 boliger i $P1$ på RealHunt",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "top10_any": {
+    "message": "Se de beste boligene på RealHunt"
+  },
+  "compare": {
+    "message": "Sammenlign"
+  },
+  "onb_title": {
+    "message": "Nytt: det smarte kortet"
+  },
+  "unlock_blocks": {
+    "message": "Lås opp hele kortet gratis med e-posten din"
+  },
+  "s_over": {
+    "message": "ca. $P1$ over markedsverdi",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "s_under": {
+    "message": "ca. $P1$ under markedsverdi",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "copied": {
+    "message": "Kopiert"
+  },
+  "unit_room": {
+    "message": "rom"
+  },
+  "seen_before": {
+    "message": "Du har åpnet denne boligen før"
+  },
+  "price_room": {
+    "message": "$P1$% per soverom vs $P2$ lignende boliger",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "median": {
+    "message": "median"
+  },
+  "b_map": {
+    "message": "Kart og gate"
+  },
+  "map_open": {
+    "message": "Åpne kart"
+  },
+  "street_view": {
+    "message": "Street View"
+  },
+  "b_notes": {
+    "message": "Dine notater"
+  },
+  "notes_ph": {
+    "message": "Bare du ser dette: hva du likte, hva du vil spørre om…"
+  },
+  "like": {
+    "message": "Liker"
+  },
+  "dislike": {
+    "message": "Ikke for meg"
+  },
+  "b_share": {
+    "message": "Del denne boligen"
+  },
+  "share_copy": {
+    "message": "Kopier sammendrag"
+  },
+  "per_lease_year": {
+    "message": "/år festeavgift"
+  },
+  "saved_alert": {
+    "message": "Lagret · vi sier fra hvis prisen faller"
+  },
+  "saved_alert_email": {
+    "message": "Lagret · legg til e-post for prisfallvarsler"
+  },
+  "best_here": {
+    "message": "Best her"
+  },
+  "hide_weak": {
+    "message": "Skjul svake"
+  },
+  "show_all": {
+    "message": "Vis alle"
+  },
+  "fab_hide": {
+    "message": "Skjul linjen på dette nettstedet"
+  },
+  "last_rank": {
+    "message": "Siste rangering ($P1$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rank_restored": {
+    "message": "$P1$ boliger · rangering fra $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rank_eta": {
+    "message": "ca. $P1$ min igjen",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rank_continue": {
+    "message": "Fortsett"
+  },
+  "rank_copy10": {
+    "message": "Kopier topp 10"
+  },
+  "liked": {
+    "message": "Likte"
+  },
+  "recent_title": {
+    "message": "Nylig sett"
+  },
+  "src_model": {
+    "message": "rimelig pris fra $P1$ lignende boliger (størrelse, soverom, bad, type, område)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "vs_fair": {
+    "message": "vs rimelig"
+  },
+  "fair_short": {
+    "message": "rimelig"
+  },
+  "baths_short": {
+    "message": "bad"
+  },
+  "deep_done": {
+    "message": "Annonsen lest i sin helhet"
+  },
+  "rank_deep": {
+    "message": "Leser de $P2$ beste annonsene helt… $P1$/$P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rank_deep_btn": {
+    "message": "Sjekk topp 30 grundig"
+  },
+  "hidden_off": {
+    "message": "$P1$ ikke lenger til salgs, skjult",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rank_basis": {
+    "message": "Hver bolig mot sin rimelige pris (størrelse, soverom, bad, tomt, alder, type, eksakt område), risiko og selve boligen. Deretter leses topp 30 i sin helhet."
+  },
+  "fair_value_model": {
+    "message": "Rimelig pris for boligen"
+  },
+  "my_place": {
+    "message": "Til mitt sted"
+  },
+  "my_place_set": {
+    "message": "Angi mitt sted (jobb, skole, familie)"
+  },
+  "my_place_ph": {
+    "message": "Adresse til jobb, skole eller familie"
+  },
+  "place_notfound": {
+    "message": "Fant ikke adressen. Prøv gate, by og land."
+  },
+  "area_hot": {
+    "message": "ettertraktet område: $P1$% dyrere per m² enn byen",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "area_cheap": {
+    "message": "billigere område: $P1$% mindre per m²",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "area_avg": {
+    "message": "område som byens snitt"
+  },
+  "centre_in": {
+    "message": "i sentrum av $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "centre_km": {
+    "message": "$P1$ km fra sentrum av $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "geo_approx": {
+    "message": "punkt fra adressen"
+  },
+  "loc_none": {
+    "message": "Ingen kartpunkt og adressen ble ikke funnet: beliggenhet teller ikke."
+  },
+  "w_food": {
+    "message": "kafeer og restauranter"
+  },
+  "conf_high": {
+    "message": "Sikkerhet: høy"
+  },
+  "conf_med": {
+    "message": "Sikkerhet: middels"
+  },
+  "conf_low": {
+    "message": "Sikkerhet: lav"
+  },
+  "conf_tip": {
+    "message": "Hvor sikker scoren er: antall sammenlignede boliger og om beliggenhet er sjekket."
+  },
+  "unlock_once": {
+    "message": "Bare én gang: vi husker deg i denne Chrome, også etter oppdateringer."
+  },
+  "wrong_data": {
+    "message": "Feil pris eller størrelse?"
+  },
+  "thanks": {
+    "message": "Takk, vi sjekker"
+  },
+  "rank_only_deep": {
+    "message": "Lest helt"
+  },
+  "rank_hide_no": {
+    "message": "Skjul 👎"
+  },
+  "sort_fairgap": {
+    "message": "Mest under rimelig pris"
+  },
+  "sort_near": {
+    "message": "Nærmest mitt sted"
+  },
+  "loc_fail": {
+    "message": "Kunne ikke laste omgivelsene nå. Beliggenhet teller ikke; prøv igjen senere."
+  },
+  "per_month": {
+    "message": "/mnd"
+  },
+  "pc_down": {
+    "message": "Prisen er satt ned fra $P1$ til $P2$ siden du så $P3$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "pc_up": {
+    "message": "Prisen er økt fra $P1$ til $P2$ siden du så $P3$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "b_cost_rent": {
+    "message": "Hva det koster deg"
+  },
+  "rent_year": {
+    "message": "Husleie per år"
+  },
+  "rent_deposit": {
+    "message": "Depositum (vanligvis 2 mnd)"
+  },
+  "rent_deposit_n": {
+    "message": "Krevd depositum"
+  },
+  "city_rent_median": {
+    "message": "byens median $P1$/m² i $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rent_vs_buy": {
+    "message": "Å kjøpe en lignende bolig her koster rundt $P1$: $P2$ års husleie.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rent_vs_buy_note": {
+    "message": "For eieren er det $P1$% bruttoavkastning. Under 4% lønner leie seg; over 6% vinner kjøp.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rent_real": {
+    "message": "Fra ekte husleier i $P1$ på RealHunt.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "b_offer_rent": {
+    "message": "Hva du kan by"
+  },
+  "rank_cta_rent": {
+    "message": "Ranger alle utleieboliger"
+  },
+  "deal_sale": {
+    "message": "Til salgs"
+  },
+  "deal_rent": {
+    "message": "Til leie"
+  },
+  "rank_cmp3": {
+    "message": "Sammenlign topp 3"
+  },
+  "rank_uploaded": {
+    "message": "$P1$ boliger lagt til RealHunt, $P2$ toppkjøp (85+).",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "contrib_title": {
+    "message": "Ditt bidrag"
+  },
+  "contrib_line": {
+    "message": "Du har lagt til $P1$ boliger i RealHunts rangeringer, $P2$ toppkjøp (85+). Takk!",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "taste_title": {
+    "message": "Din smak (kjøp)"
+  },
+  "taste_title_rent": {
+    "message": "Din smak (leie)"
+  },
+  "taste_line": {
+    "message": "Lært fra $P1$ boliger du likte: opp til $P2$, $P3$ soverom, rundt $P4$.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      },
+      "p4": {
+        "content": "$4"
+      }
+    }
+  },
+  "taste_note": {
+    "message": "Brukes for «passer deg» til du har svart på de 5 spørsmålene."
+  },
+  "muted_site": {
+    "message": "Skjult på dette nettstedet. Klikk på RealHunt-ikonet for å vise det igjen."
+  },
+  "offline_note": {
+    "message": "Vi når ikke RealHunt akkurat nå: poengsummen beregnes i nettleseren din og kan være mindre presis."
+  },
+  "cmd_toggle": {
+    "message": "Vis eller skjul RealHunt-kortet"
+  }
+}

@@ -1,0 +1,577 @@
+{
+  "ext_name": {
+    "message": "RealHunt Score"
+  },
+  "ext_desc": {
+    "message": "Ärligt betyg 0–100 för bostäder på 160 bostadssajter: pris mot liknande, läge och varningar. Gratis."
+  },
+  "disclaimer": {
+    "message": "Uppskattning, inte en värdering. Kontrollera allt med säljaren."
+  },
+  "allow": {
+    "message": "Tillåt"
+  },
+  "consent_short": {
+    "message": "Låt RealHunt använda anonyma annonsdata (pris, m², område) för att jämföra priser?"
+  },
+  "see_why": {
+    "message": "Se varför"
+  },
+  "open_panel": {
+    "message": "Öppna panelen"
+  },
+  "save": {
+    "message": "Spara"
+  },
+  "saved": {
+    "message": "Sparad"
+  },
+  "share_short": {
+    "message": "Dela"
+  },
+  "part_price": {
+    "message": "Pris mot marknaden"
+  },
+  "part_location": {
+    "message": "Läge"
+  },
+  "part_flags": {
+    "message": "Varningar"
+  },
+  "part_quality": {
+    "message": "Bostaden och annonsen"
+  },
+  "part_fit": {
+    "message": "Passar dig"
+  },
+  "badge_hint": {
+    "message": "Öppna annonsen för läget och alla skäl."
+  },
+  "free_badge": {
+    "message": "GRATIS"
+  },
+  "unlock_title": {
+    "message": "Lås upp allt, gratis"
+  },
+  "unlock_cta": {
+    "message": "Skicka koden"
+  },
+  "try_again": {
+    "message": "Något gick fel. Försök igen."
+  },
+  "rank_cta": {
+    "message": "Rangordna hela sökningen"
+  },
+  "rank_sub": {
+    "message": "Alla sidor, bästa RealHunt-betyg först"
+  },
+  "rank_title": {
+    "message": "Hela sökningen, rangordnad"
+  },
+  "rank_stop": {
+    "message": "Stoppa"
+  },
+  "rank_rooms": {
+    "message": "rum"
+  },
+  "b_price": {
+    "message": "Pris mot liknande bostäder"
+  },
+  "price_over": {
+    "message": "Du betalar $P1$% mer än för liknande bostäder i den storleken.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "price_under": {
+    "message": "$P1$% billigare än liknande bostäder i den storleken.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "fair_value": {
+    "message": "Marknadsvärde vid det m²-priset"
+  },
+  "b_offer": {
+    "message": "Vad du ska bjuda"
+  },
+  "offer_open": {
+    "message": "Börja på"
+  },
+  "offer_max": {
+    "message": "Gå inte över"
+  },
+  "estimate": {
+    "message": "uppskattning"
+  },
+  "b_cost": {
+    "message": "Vad det kostar dig"
+  },
+  "cost_month": {
+    "message": "Lån per månad"
+  },
+  "cost_cash": {
+    "message": "Kontantinsats dag ett"
+  },
+  "b_hist": {
+    "message": "Prishistorik"
+  },
+  "b_dups": {
+    "message": "Samma bostad på andra sajter"
+  },
+  "b_walk": {
+    "message": "Inom 10 minuters promenad"
+  },
+  "b_ask": {
+    "message": "Fråga mäklaren"
+  },
+  "top10_city": {
+    "message": "Se topp 10 bostäder i $P1$ på RealHunt",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "top10_any": {
+    "message": "Se de bästa bostäderna på RealHunt"
+  },
+  "compare": {
+    "message": "Jämför"
+  },
+  "onb_title": {
+    "message": "Nytt: det smarta kortet"
+  },
+  "unlock_blocks": {
+    "message": "Lås upp hela kortet gratis med din e-post"
+  },
+  "s_over": {
+    "message": "cirka $P1$ över marknadsvärdet",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "s_under": {
+    "message": "cirka $P1$ under marknadsvärdet",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "copied": {
+    "message": "Kopierat"
+  },
+  "unit_room": {
+    "message": "rum"
+  },
+  "seen_before": {
+    "message": "Du har öppnat den här bostaden förut"
+  },
+  "price_room": {
+    "message": "$P1$% per sovrum vs $P2$ liknande bostäder",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "median": {
+    "message": "median"
+  },
+  "b_map": {
+    "message": "Karta och gata"
+  },
+  "map_open": {
+    "message": "Öppna karta"
+  },
+  "street_view": {
+    "message": "Street View"
+  },
+  "b_notes": {
+    "message": "Dina anteckningar"
+  },
+  "notes_ph": {
+    "message": "Bara du ser detta: vad du gillade, vad du vill fråga…"
+  },
+  "like": {
+    "message": "Gilla"
+  },
+  "dislike": {
+    "message": "Inte för mig"
+  },
+  "b_share": {
+    "message": "Dela bostaden"
+  },
+  "share_copy": {
+    "message": "Kopiera sammanfattning"
+  },
+  "per_lease_year": {
+    "message": "/år arrende"
+  },
+  "saved_alert": {
+    "message": "Sparad · vi hör av oss om priset sjunker"
+  },
+  "saved_alert_email": {
+    "message": "Sparad · lägg till e-post för prisvarningar"
+  },
+  "best_here": {
+    "message": "Bäst här"
+  },
+  "hide_weak": {
+    "message": "Dölj svaga"
+  },
+  "show_all": {
+    "message": "Visa alla"
+  },
+  "fab_hide": {
+    "message": "Dölj fältet på den här sajten"
+  },
+  "last_rank": {
+    "message": "Senaste rankning ($P1$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rank_restored": {
+    "message": "$P1$ bostäder · rankning från $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rank_eta": {
+    "message": "ca $P1$ min kvar",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rank_continue": {
+    "message": "Fortsätt"
+  },
+  "rank_copy10": {
+    "message": "Kopiera topp 10"
+  },
+  "liked": {
+    "message": "Gillade"
+  },
+  "recent_title": {
+    "message": "Nyligen visade"
+  },
+  "src_model": {
+    "message": "rimligt pris från $P1$ liknande bostäder (storlek, sovrum, badrum, typ, område)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "vs_fair": {
+    "message": "vs rimligt"
+  },
+  "fair_short": {
+    "message": "rimligt"
+  },
+  "baths_short": {
+    "message": "bad"
+  },
+  "deep_done": {
+    "message": "Annonsen läst i sin helhet"
+  },
+  "rank_deep": {
+    "message": "Läser de $P2$ bästa annonserna helt… $P1$/$P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rank_deep_btn": {
+    "message": "Kolla topp 30 noggrant"
+  },
+  "hidden_off": {
+    "message": "$P1$ inte längre till salu, dolda",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rank_basis": {
+    "message": "Varje bostad mot sitt rimliga pris (storlek, sovrum, badrum, tomt, ålder, typ, exakt område), risker och bostaden själv. Sedan läses topp 30 i sin helhet."
+  },
+  "fair_value_model": {
+    "message": "Rimligt pris för bostaden"
+  },
+  "my_place": {
+    "message": "Till min plats"
+  },
+  "my_place_set": {
+    "message": "Ange min plats (jobb, skola, familj)"
+  },
+  "my_place_ph": {
+    "message": "Adress till jobb, skola eller familj"
+  },
+  "place_notfound": {
+    "message": "Hittade inte adressen. Prova gata, stad och land."
+  },
+  "area_hot": {
+    "message": "eftertraktat område: $P1$% dyrare per m² än staden",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "area_cheap": {
+    "message": "billigare område: $P1$% mindre per m²",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "area_avg": {
+    "message": "område som stadens snitt"
+  },
+  "centre_in": {
+    "message": "i centrum av $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "centre_km": {
+    "message": "$P1$ km från centrum av $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "geo_approx": {
+    "message": "punkt från adressen"
+  },
+  "loc_none": {
+    "message": "Ingen kartpunkt och adressen hittades inte: läget räknas inte."
+  },
+  "w_food": {
+    "message": "kaféer och restauranger"
+  },
+  "conf_high": {
+    "message": "Säkerhet: hög"
+  },
+  "conf_med": {
+    "message": "Säkerhet: medel"
+  },
+  "conf_low": {
+    "message": "Säkerhet: låg"
+  },
+  "conf_tip": {
+    "message": "Hur säker poängen är: antal jämförda bostäder och om läget kontrollerats."
+  },
+  "unlock_once": {
+    "message": "Bara en gång: vi minns dig i denna Chrome, även efter uppdateringar."
+  },
+  "wrong_data": {
+    "message": "Fel pris eller storlek?"
+  },
+  "thanks": {
+    "message": "Tack, vi kollar"
+  },
+  "rank_only_deep": {
+    "message": "Lästa helt"
+  },
+  "rank_hide_no": {
+    "message": "Dölj 👎"
+  },
+  "sort_fairgap": {
+    "message": "Mest under rimligt pris"
+  },
+  "sort_near": {
+    "message": "Närmast min plats"
+  },
+  "loc_fail": {
+    "message": "Kunde inte ladda omgivningen nu. Läget räknas inte; försök senare."
+  },
+  "per_month": {
+    "message": "/mån"
+  },
+  "pc_down": {
+    "message": "Priset sänkt från $P1$ till $P2$ sedan du tittade $P3$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "pc_up": {
+    "message": "Priset höjt från $P1$ till $P2$ sedan du tittade $P3$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "b_cost_rent": {
+    "message": "Vad det kostar dig"
+  },
+  "rent_year": {
+    "message": "Hyra per år"
+  },
+  "rent_deposit": {
+    "message": "Deposition (oftast 2 mån)"
+  },
+  "rent_deposit_n": {
+    "message": "Begärd deposition"
+  },
+  "city_rent_median": {
+    "message": "stadens median $P1$/m² i $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rent_vs_buy": {
+    "message": "Att köpa en liknande bostad här kostar runt $P1$: $P2$ års hyra.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rent_vs_buy_note": {
+    "message": "För ägaren är det $P1$% bruttoavkastning. Under 4% lönar sig hyra; över 6% vinner köp.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rent_real": {
+    "message": "Från riktiga hyror i $P1$ på RealHunt.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "b_offer_rent": {
+    "message": "Vad du kan bjuda"
+  },
+  "rank_cta_rent": {
+    "message": "Ranka alla hyresbostäder"
+  },
+  "deal_sale": {
+    "message": "Till salu"
+  },
+  "deal_rent": {
+    "message": "Att hyra"
+  },
+  "rank_cmp3": {
+    "message": "Jämför topp 3"
+  },
+  "rank_uploaded": {
+    "message": "$P1$ bostäder tillagda på RealHunt, $P2$ toppfynd (85+).",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "contrib_title": {
+    "message": "Ditt bidrag"
+  },
+  "contrib_line": {
+    "message": "Du har lagt till $P1$ bostäder i RealHunts rankningar, $P2$ toppfynd (85+). Tack!",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "taste_title": {
+    "message": "Din smak (köpa)"
+  },
+  "taste_title_rent": {
+    "message": "Din smak (hyra)"
+  },
+  "taste_line": {
+    "message": "Lärt från $P1$ bostäder du gillade: upp till $P2$, $P3$ sovrum, runt $P4$.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      },
+      "p4": {
+        "content": "$4"
+      }
+    }
+  },
+  "taste_note": {
+    "message": "Används för „passar dig“ tills du svarat på de 5 frågorna."
+  },
+  "muted_site": {
+    "message": "Dold på den här webbplatsen. Klicka på RealHunt-ikonen för att visa den igen."
+  },
+  "offline_note": {
+    "message": "Vi når inte RealHunt just nu: betyget räknas ut i din webbläsare och kan vara mindre exakt."
+  },
+  "cmd_toggle": {
+    "message": "Visa eller dölj RealHunt-kortet"
+  }
+}

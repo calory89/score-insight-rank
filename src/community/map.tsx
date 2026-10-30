@@ -1,0 +1,28 @@
+// Map of every ranked home (/map). Same filters as the feed, plus ?focus=<slug> to open one home.
+// Loaded on demand so Leaflet never weighs on the home page.
+import { lazy, Suspense, useState } from "react";
+import { useEffect } from "react";
+import { Filters, type FeedParams } from "./extras";
+import { t } from "./i18n";
+const HomesMap = lazy(() => import("./homesmap"));
+
+export default function MapView() {
+  const p0 = new URLSearchParams(location.search);
+  const [f, setF] = useState<FeedParams>(() => ({ scope: "all", country: p0.get("country") || "", category: p0.get("type") || "", max_price: Number(p0.get("price")) || null, min_sqm: Number(p0.get("sqm")) || null, q: p0.get("q") || undefined } as FeedParams));
+  const [focus] = useState<string | null>(p0.get("focus"));
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [n, setN] = useState<number | null>(null);
+  useEffect(() => { document.title = "Map of the best homes · RealHunt"; }, []);
+  // Country counts for the chips come from the feed itself.
+  useEffect(() => { import("./extras").then(({ feed }) => feed({ scope: "all", limit: 1 }).then((d: any) => setCounts(d.countries_count || {})).catch(() => {})); }, []);
+  return (
+    <div className="hunt-wrap hunt-mappage">
+      <h1>{t("Map")}</h1>
+      <Filters countries={counts} value={f} onChange={(v) => setF({ ...v, scope: "all" })} />
+      <p className="hunt-fine">{n === null ? t("Loading…") : <><span>{`${n} homes`}</span> · <span>{t("Pins show the village, not the exact house.")}</span></>}</p>
+      <Suspense fallback={<div className="hm hm-page"><div className="hm-map" /></div>}>
+        <HomesMap params={f} focus={focus} className="hm-page" onCount={setN} />
+      </Suspense>
+    </div>
+  );
+}

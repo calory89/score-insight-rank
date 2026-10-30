@@ -1,0 +1,1134 @@
+{
+  "ext_name": {
+    "message": "RealHunt Score"
+  },
+  "ext_desc": {
+    "message": "Voto onesto 0–100 sulle case di 160 portali nel mondo: prezzo vs simili, posizione e segnali d'allarme. Gratis."
+  },
+  "disclaimer": {
+    "message": "Stima, non perizia. Verifica ogni dettaglio con il venditore."
+  },
+  "gate": {
+    "message": "Hai usato il report gratuito di oggi. Sblocca report illimitati, gratis, solo con la tua email."
+  },
+  "consent_short": {
+    "message": "Permetti a RealHunt di usare dati anonimi dell'annuncio (prezzo, m², zona) per confrontare i prezzi con altri annunci?"
+  },
+  "allow": {
+    "message": "Consenti"
+  },
+  "see_why": {
+    "message": "Perché?"
+  },
+  "open_panel": {
+    "message": "Apri pannello"
+  },
+  "save": {
+    "message": "Salva"
+  },
+  "saved": {
+    "message": "Salvato"
+  },
+  "part_price": {
+    "message": "Prezzo vs mercato"
+  },
+  "part_quality": {
+    "message": "La casa e l'annuncio"
+  },
+  "part_flags": {
+    "message": "Campanelli d'allarme"
+  },
+  "part_fit": {
+    "message": "Adatto a te"
+  },
+  "consent_title": {
+    "message": "Prima di iniziare"
+  },
+  "consent_body": {
+    "message": "RealHunt Score funziona solo sui portali immobiliari supportati. Con il tuo consenso salviamo dati derivati dall'annuncio (prezzo, superficie, zona, voto e un ID cifrato) per confrontare i prezzi, e le tue risposte se crei un profilo. Non salviamo mai foto o descrizioni complete, non seguiamo il resto della navigazione e non vendiamo dati. Puoi cancellare tutto in qualsiasi momento."
+  },
+  "privacy": {
+    "message": "Privacy"
+  },
+  "share": {
+    "message": "Condividi questo voto"
+  },
+  "no_report_title": {
+    "message": "Apri un annuncio"
+  },
+  "no_report_body": {
+    "message": "Apri una casa su idealista, Zillow o Rightmove e il voto appare accanto al prezzo."
+  },
+  "signup_title": {
+    "message": "Account gratis, per sempre"
+  },
+  "signup_body": {
+    "message": "Report illimitati, case salvate e avvisi di ribasso. Senza password: solo la tua email."
+  },
+  "phone_optional": {
+    "message": "Telefono (facoltativo)"
+  },
+  "marketing_ok": {
+    "message": "Inviami ribassi e case adatte al mio profilo. Puoi disiscriverti quando vuoi."
+  },
+  "signup_cta": {
+    "message": "Inviami il codice"
+  },
+  "q_budget": {
+    "message": "Qual è il tuo budget massimo?"
+  },
+  "q_places": {
+    "message": "Dove cerchi?"
+  },
+  "q_type": {
+    "message": "Che tipo di casa?"
+  },
+  "q_purpose": {
+    "message": "A cosa serve?"
+  },
+  "q_timeline": {
+    "message": "Quando vuoi comprare?"
+  },
+  "o_flat": {
+    "message": "Appartamento"
+  },
+  "o_house": {
+    "message": "Casa"
+  },
+  "o_any": {
+    "message": "Indifferente"
+  },
+  "o_live": {
+    "message": "Per viverci"
+  },
+  "o_second": {
+    "message": "Seconda casa"
+  },
+  "o_invest": {
+    "message": "Investimento"
+  },
+  "o_3m": {
+    "message": "Entro 3 mesi"
+  },
+  "o_12m": {
+    "message": "Entro un anno"
+  },
+  "o_browsing": {
+    "message": "Sto solo guardando"
+  },
+  "next": {
+    "message": "Avanti"
+  },
+  "skip": {
+    "message": "Salta"
+  },
+  "profile_title": {
+    "message": "Il tuo profilo"
+  },
+  "profile_body": {
+    "message": "5 domande veloci perché il voto sappia cosa fa per te."
+  },
+  "profile_cta": {
+    "message": "Inizia (30 secondi)"
+  },
+  "profile_edit": {
+    "message": "Modifica risposte"
+  },
+  "reco_title": {
+    "message": "Case su RealHunt adatte a te"
+  },
+  "reco_none": {
+    "message": "Ancora niente. Le mostreremo qui appena arrivano."
+  },
+  "realhunt_grade": {
+    "message": "voto $VAL$",
+    "placeholders": {
+      "val": {
+        "content": "$1"
+      }
+    }
+  },
+  "signed_as": {
+    "message": "Accesso come $VAL$",
+    "placeholders": {
+      "val": {
+        "content": "$1"
+      }
+    }
+  },
+  "delete": {
+    "message": "Cancella i miei dati"
+  },
+  "delete_confirm": {
+    "message": "Cancellare account, profilo, case salvate e cronologia? Non si può annullare."
+  },
+  "share_footer": {
+    "message": "Dai un voto a qualsiasi casa gratis"
+  },
+  "download_image": {
+    "message": "Scarica immagine"
+  },
+  "bad_email": {
+    "message": "Questa email non sembra corretta."
+  },
+  "try_again": {
+    "message": "Qualcosa è andato storto. Riprova."
+  },
+  "welcome_title": {
+    "message": "Dai un voto a qualsiasi casa in un secondo"
+  },
+  "welcome_body": {
+    "message": "Apri un annuncio su idealista, Zillow o Rightmove. Vedrai un voto da 0 a 100 con il motivo di ogni punto: prezzo rispetto alla zona, completezza dell'annuncio e allarmi come occupato, asta o da ristrutturare."
+  },
+  "not_now": {
+    "message": "Non ora"
+  },
+  "try_it": {
+    "message": "Provalo su idealista"
+  },
+  "part_location": {
+    "message": "Posizione"
+  },
+  "badge_hint": {
+    "message": "Apri l'annuncio per la posizione e tutti i motivi."
+  },
+  "loc_unavailable": {
+    "message": "Il servizio mappe non ha risposto, la posizione conta come neutra. Ricarica per riprovare."
+  },
+  "share_short": {
+    "message": "Condividi"
+  },
+  "nudge": {
+    "message": "Voti illimitati e avvisi di ribasso. Solo la tua email"
+  },
+  "unlock_title": {
+    "message": "Sblocca tutto, gratis"
+  },
+  "unlock_body": {
+    "message": "Voti illimitati con tutti i motivi, case salvate e avvisi di ribasso. Gratis per sempre: solo la tua email."
+  },
+  "unlock_cta": {
+    "message": "Inviami il codice"
+  },
+  "unlock_fine": {
+    "message": "Ti inviamo un codice di 6 cifre per verificare che sei tu. Continuando accetti l'informativa privacy. Ti scriviamo solo se spunti la casella."
+  },
+  "code_title": {
+    "message": "Controlla la tua email"
+  },
+  "code_sent": {
+    "message": "Abbiamo inviato un codice di 6 cifre a $VAL$.",
+    "placeholders": {
+      "val": {
+        "content": "$1"
+      }
+    }
+  },
+  "code_cta": {
+    "message": "Sblocca"
+  },
+  "change_email": {
+    "message": "Cambia email"
+  },
+  "wait_code": {
+    "message": "Aspetta qualche secondo e riprova."
+  },
+  "code_expired": {
+    "message": "Il codice è scaduto. Chiedine uno nuovo."
+  },
+  "code_wrong": {
+    "message": "Il codice non è corretto. Riprova."
+  },
+  "free_badge": {
+    "message": "GRATIS"
+  },
+  "saved_title": {
+    "message": "Le tue case salvate"
+  },
+  "saved_none": {
+    "message": "Salva le case dalla scheda del voto. Teniamo d'occhio il prezzo per te."
+  },
+  "rank_cta": {
+    "message": "Ordina tutta la ricerca"
+  },
+  "rank_sub": {
+    "message": "Tutte le pagine, prima il miglior voto RealHunt"
+  },
+  "rank_title": {
+    "message": "Tutta la ricerca, in classifica"
+  },
+  "rank_loading": {
+    "message": "Leggo la pagina $PAGE$… $N$ case finora",
+    "placeholders": {
+      "page": {
+        "content": "$1"
+      },
+      "n": {
+        "content": "$2"
+      }
+    }
+  },
+  "rank_done": {
+    "message": "Fatto: $N$ case da $PAGES$ pagine",
+    "placeholders": {
+      "n": {
+        "content": "$1"
+      },
+      "pages": {
+        "content": "$2"
+      }
+    }
+  },
+  "rank_blocked": {
+    "message": "Il sito ci ha chiesto di rallentare. Ordinate $N$ case da $PAGES$ pagine.",
+    "placeholders": {
+      "n": {
+        "content": "$1"
+      },
+      "pages": {
+        "content": "$2"
+      }
+    }
+  },
+  "rank_stop": {
+    "message": "Ferma"
+  },
+  "rank_only_sqm": {
+    "message": "Solo con m²"
+  },
+  "rank_empty": {
+    "message": "Nessuna casa letta per ora."
+  },
+  "rank_fine": {
+    "message": "Legge le pagine successive di questa ricerca al ritmo di una persona. Qui il voto usa prezzo, superficie e dati dell'annuncio; apri una casa per la posizione e il report completo."
+  },
+  "rank_median": {
+    "message": "mediana"
+  },
+  "rank_rooms": {
+    "message": "locali"
+  },
+  "site_title": {
+    "message": "Dai un voto alle case su $HOST$",
+    "placeholders": {
+      "host": {
+        "content": "$1"
+      }
+    }
+  },
+  "site_body": {
+    "message": "RealHunt Score funziona su 160 portali immobiliari. Se manca questo, attivalo qui."
+  },
+  "site_cta": {
+    "message": "Attiva su questo sito"
+  },
+  "site_denied": {
+    "message": "Non consentito. Puoi riprovare quando vuoi."
+  },
+  "site_done": {
+    "message": "Fatto. Ricarica la pagina se non vedi i voti."
+  },
+  "src_near": {
+    "message": "$P1$ case simili entro $P2$ km",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "src_area": {
+    "message": "$P1$ case nella stessa città",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "src_page": {
+    "message": "le $P1$ case della tua ricerca",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "b_price": {
+    "message": "Prezzo rispetto a case simili"
+  },
+  "price_over": {
+    "message": "Pagheresti il $P1$% in più di case simili di questa metratura.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "price_under": {
+    "message": "Il $P1$% più economica di case simili di questa metratura.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "fair_value": {
+    "message": "Valore di mercato a quel €/m²"
+  },
+  "price_nocomps": {
+    "message": "Ancora nessuna casa simile per il confronto. Migliora a ogni ricerca."
+  },
+  "b_offer": {
+    "message": "Quanto offrire"
+  },
+  "offer_open": {
+    "message": "Parti da"
+  },
+  "offer_max": {
+    "message": "Non superare"
+  },
+  "offer_why": {
+    "message": "In base al valore di mercato di case simili."
+  },
+  "offer_why_stale": {
+    "message": "In vendita da tempo o già ribassata: c'è margine di trattativa."
+  },
+  "offer_why_nocomps": {
+    "message": "Senza confronti: margine di trattativa abituale del 5–6%."
+  },
+  "haggle": {
+    "message": "Copia un messaggio per chiedere uno sconto"
+  },
+  "estimate": {
+    "message": "stima"
+  },
+  "b_cost": {
+    "message": "Quanto ti costa"
+  },
+  "cost_month": {
+    "message": "Rata del mutuo al mese"
+  },
+  "cost_cash": {
+    "message": "Contanti il primo giorno"
+  },
+  "cost_down": {
+    "message": "Anticipo"
+  },
+  "cost_rate": {
+    "message": "Tasso"
+  },
+  "cost_years": {
+    "message": "Anni"
+  },
+  "cost_note": {
+    "message": "Tasso tipico e circa il $P1$% di costi di acquisto (imposte, notaio) in questo paese. Cambia i numeri con i tuoi.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rent_line": {
+    "message": "Se la affitti: circa $P1$/mese (rendimento lordo tipico del $P2$% qui).",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rent_covers": {
+    "message": "Copre la rata."
+  },
+  "rent_short": {
+    "message": "Non copre la rata."
+  },
+  "b_hist": {
+    "message": "Storico del prezzo"
+  },
+  "hist_one": {
+    "message": "Vista solo a questo prezzo. Salvala e ti avvisiamo se scende."
+  },
+  "hist_none": {
+    "message": "Prima volta che vediamo questa casa. Salvala e seguiamo il prezzo."
+  },
+  "days_listed": {
+    "message": "In vendita da $P1$ giorni.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "b_dups": {
+    "message": "Stessa casa su altri siti"
+  },
+  "dups_none": {
+    "message": "Non l'abbiamo vista su altri siti o con altre agenzie."
+  },
+  "b_walk": {
+    "message": "A 10 minuti a piedi"
+  },
+  "w_transit": {
+    "message": "trasporti"
+  },
+  "w_shop": {
+    "message": "alimentari"
+  },
+  "w_school": {
+    "message": "scuole"
+  },
+  "w_health": {
+    "message": "farmacie/medici"
+  },
+  "w_park": {
+    "message": "parchi"
+  },
+  "w_beach": {
+    "message": "spiaggia (2 km)"
+  },
+  "b_ask": {
+    "message": "Chiedi all'agenzia"
+  },
+  "size_small": {
+    "message": "$P1$ locali in questa metratura è stretto: circa $P2$ m² per locale.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "size_big": {
+    "message": "Spaziosa: circa $P2$ m² per locale.",
+    "placeholders": {
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "copy_questions": {
+    "message": "Copia le domande"
+  },
+  "q_floor": {
+    "message": "A che piano è e c'è l'ascensore?"
+  },
+  "q_energy": {
+    "message": "Qual è la classe energetica?"
+  },
+  "q_orientation": {
+    "message": "Com'è esposta? È esterna?"
+  },
+  "q_fees": {
+    "message": "Quanto sono le spese condominiali al mese?"
+  },
+  "q_year": {
+    "message": "Di che anno è l'edificio e ci sono lavori previsti?"
+  },
+  "q_occupied": {
+    "message": "Quando sarebbe libera esattamente?"
+  },
+  "q_renovation": {
+    "message": "C'è un preventivo per la ristrutturazione?"
+  },
+  "q_rented": {
+    "message": "Posso vedere il contratto d'affitto e quando scade?"
+  },
+  "q_why_cheap": {
+    "message": "Perché il prezzo è così sotto la zona?"
+  },
+  "q_photos": {
+    "message": "Potete mandare più foto e la planimetria?"
+  },
+  "q_taxes": {
+    "message": "Quanto sono IMU e tasse all'anno?"
+  },
+  "q_offers": {
+    "message": "Ci sono state offerte? Qual è il minimo che accetterebbe il proprietario?"
+  },
+  "q_why_selling": {
+    "message": "Perché vende il proprietario e con che fretta?"
+  },
+  "b_alts": {
+    "message": "Opzioni migliori a $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "b_city": {
+    "message": "$P1$ su RealHunt",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "city_line": {
+    "message": "Mediana di $P1$/m² su $P2$ case viste.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "city_trend": {
+    "message": "ultimi 30 giorni"
+  },
+  "top10_city": {
+    "message": "Vedi le top 10 case di $P1$ su RealHunt",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "top10_any": {
+    "message": "Vedi le case migliori su RealHunt"
+  },
+  "haggle_body": {
+    "message": "Buongiorno, mi interessa questa casa ($P3$). $P2$ Vorrei offrire $P1$. Il proprietario sarebbe disponibile? Grazie.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "haggle_arg_over": {
+    "message": "È circa il $P1$% sopra case simili della zona al m².",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "haggle_arg_gen": {
+    "message": "Confrontandola con case simili della zona,"
+  },
+  "copied": {
+    "message": "Copiato"
+  },
+  "consent_more": {
+    "message": "Attivalo per storico del prezzo, duplicati, mediana della città e opzioni migliori."
+  },
+  "unlock_blocks": {
+    "message": "Sblocca la scheda completa gratis con la tua email: costi, storico, duplicati, domande e opzioni migliori"
+  },
+  "s_over": {
+    "message": "circa $P1$ sopra il valore",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "s_under": {
+    "message": "circa $P1$ sotto il valore",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "s_dropped": {
+    "message": "già ribassata del $P1$%",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "s_dup_cheaper": {
+    "message": "più economica su un altro sito"
+  },
+  "s_small": {
+    "message": "locali piccoli"
+  },
+  "s_big": {
+    "message": "spaziosa"
+  },
+  "onb_title": {
+    "message": "Novità: la scheda intelligente"
+  },
+  "onb_1": {
+    "message": "Si completa mentre carica: prezzo in euro, quanto offrire, costo mensile."
+  },
+  "onb_2": {
+    "message": "Storico del prezzo e la stessa casa su altri siti."
+  },
+  "onb_3": {
+    "message": "Trascinala dove vuoi. Alt+Shift+R la nasconde."
+  },
+  "onb_ok": {
+    "message": "Capito"
+  },
+  "compare": {
+    "message": "Confronta"
+  },
+  "rank_share": {
+    "message": "Condividi"
+  },
+  "rank_shared": {
+    "message": "Link copiato"
+  },
+  "consent_needed": {
+    "message": "Prima consenti i dati"
+  },
+  "f_pmax": {
+    "message": "Prezzo max"
+  },
+  "f_score": {
+    "message": "Voto"
+  },
+  "sort_score": {
+    "message": "Voto migliore"
+  },
+  "sort_ppsqm": {
+    "message": "Più economica al m²"
+  },
+  "sort_price": {
+    "message": "Più economica"
+  },
+  "sort_fit": {
+    "message": "Migliore per me"
+  },
+  "rank_showing": {
+    "message": "Mostro $P1$ di $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "compare_hint": {
+    "message": "Aggiungi da 2 a 4 case con il pulsante Confronta."
+  },
+  "compare_clear": {
+    "message": "Svuota"
+  },
+  "unit_room": {
+    "message": "camera"
+  },
+  "seen_before": {
+    "message": "Hai già aperto questo immobile"
+  },
+  "price_room": {
+    "message": "$P1$% per camera vs $P2$ immobili simili visti",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "median": {
+    "message": "mediana"
+  },
+  "b_map": {
+    "message": "Mappa e strada"
+  },
+  "map_open": {
+    "message": "Apri mappa"
+  },
+  "street_view": {
+    "message": "Street View"
+  },
+  "b_notes": {
+    "message": "Le tue note"
+  },
+  "notes_ph": {
+    "message": "Lo vedi solo tu: cosa ti piace, cosa chiedere…"
+  },
+  "like": {
+    "message": "Mi piace"
+  },
+  "dislike": {
+    "message": "Non fa per me"
+  },
+  "b_share": {
+    "message": "Condividi questo immobile"
+  },
+  "share_copy": {
+    "message": "Copia riepilogo"
+  },
+  "per_lease_year": {
+    "message": "/anno di concessione"
+  },
+  "saved_alert": {
+    "message": "Salvato · ti avvisiamo se il prezzo scende"
+  },
+  "saved_alert_email": {
+    "message": "Salvato · aggiungi l'email per gli avvisi di ribasso"
+  },
+  "best_here": {
+    "message": "Il migliore qui"
+  },
+  "hide_weak": {
+    "message": "Nascondi i deboli"
+  },
+  "show_all": {
+    "message": "Mostra tutti"
+  },
+  "fab_hide": {
+    "message": "Nascondi questa barra su questo sito"
+  },
+  "last_rank": {
+    "message": "Ultima classifica ($P1$)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rank_restored": {
+    "message": "$P1$ immobili · classifica del $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rank_eta": {
+    "message": "circa $P1$ min rimanenti",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rank_continue": {
+    "message": "Continua"
+  },
+  "rank_copy10": {
+    "message": "Copia top 10"
+  },
+  "liked": {
+    "message": "Ti piacciono"
+  },
+  "recent_title": {
+    "message": "Visti di recente"
+  },
+  "src_model": {
+    "message": "prezzo giusto da $P1$ case simili (superficie, camere, bagni, tipo, zona)",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "vs_fair": {
+    "message": "vs giusto"
+  },
+  "fair_short": {
+    "message": "giusto"
+  },
+  "baths_short": {
+    "message": "bagni"
+  },
+  "deep_done": {
+    "message": "Annuncio letto per intero"
+  },
+  "rank_deep": {
+    "message": "Leggo per intero i $P2$ migliori annunci… $P1$/$P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rank_deep_btn": {
+    "message": "Controlla a fondo la top 30"
+  },
+  "hidden_off": {
+    "message": "$P1$ non più in vendita, nascoste",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rank_basis": {
+    "message": "Ogni casa contro il suo prezzo giusto (superficie, camere, bagni, terreno, età, tipo, zona esatta), i rischi e la casa stessa. Poi la top 30 viene letta per intero."
+  },
+  "fair_value_model": {
+    "message": "Prezzo giusto per questa casa"
+  },
+  "my_place": {
+    "message": "Al mio posto"
+  },
+  "my_place_set": {
+    "message": "Imposta il tuo posto (lavoro, scuola, famiglia)"
+  },
+  "my_place_ph": {
+    "message": "Indirizzo di lavoro, scuola o famiglia"
+  },
+  "place_notfound": {
+    "message": "Indirizzo non trovato. Prova via, città e paese."
+  },
+  "area_hot": {
+    "message": "zona richiesta: $P1$% più cara al m² della città",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "area_cheap": {
+    "message": "zona più economica: $P1$% in meno al m²",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "area_avg": {
+    "message": "zona nella media cittadina"
+  },
+  "centre_in": {
+    "message": "in centro a $P1$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "centre_km": {
+    "message": "a $P1$ km dal centro di $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "geo_approx": {
+    "message": "punto ricavato dall'indirizzo"
+  },
+  "loc_none": {
+    "message": "Nessun punto sulla mappa e indirizzo non trovato: la posizione non conta."
+  },
+  "w_food": {
+    "message": "bar e ristoranti"
+  },
+  "conf_high": {
+    "message": "Affidabilità: alta"
+  },
+  "conf_med": {
+    "message": "Affidabilità: media"
+  },
+  "conf_low": {
+    "message": "Affidabilità: bassa"
+  },
+  "conf_tip": {
+    "message": "Quanto è affidabile il punteggio: case confrontate e posizione verificata."
+  },
+  "unlock_once": {
+    "message": "Solo una volta: ti ricordiamo su questo Chrome, anche dopo gli aggiornamenti."
+  },
+  "wrong_data": {
+    "message": "Prezzo o superficie sbagliati?"
+  },
+  "thanks": {
+    "message": "Grazie, controlliamo"
+  },
+  "rank_only_deep": {
+    "message": "Lette per intero"
+  },
+  "rank_hide_no": {
+    "message": "Nascondi 👎"
+  },
+  "sort_fairgap": {
+    "message": "Più sotto il prezzo giusto"
+  },
+  "sort_near": {
+    "message": "Più vicine al mio posto"
+  },
+  "loc_fail": {
+    "message": "Impossibile caricare i dintorni ora. La posizione non conta; riprova più tardi."
+  },
+  "per_month": {
+    "message": "/mese"
+  },
+  "pc_down": {
+    "message": "Prezzo sceso da $P1$ a $P2$ dalla tua visita del $P3$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "pc_up": {
+    "message": "Prezzo salito da $P1$ a $P2$ dalla tua visita del $P3$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      }
+    }
+  },
+  "b_cost_rent": {
+    "message": "Quanto ti costa"
+  },
+  "rent_year": {
+    "message": "Affitto annuo"
+  },
+  "rent_deposit": {
+    "message": "Deposito (di solito 2 mesi)"
+  },
+  "rent_deposit_n": {
+    "message": "Deposito richiesto"
+  },
+  "city_rent_median": {
+    "message": "mediana cittadina $P1$/m² a $P2$",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rent_vs_buy": {
+    "message": "Comprare una casa simile qui costa circa $P1$: $P2$ anni di questo affitto.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "rent_vs_buy_note": {
+    "message": "Per il proprietario è un rendimento lordo del $P1$%. Sotto il 4% conviene affittare; sopra il 6% comprare.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "rent_real": {
+    "message": "Da affitti reali a $P1$ su RealHunt.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      }
+    }
+  },
+  "b_offer_rent": {
+    "message": "Cosa offrire"
+  },
+  "rank_cta_rent": {
+    "message": "Classifica tutti gli affitti"
+  },
+  "deal_sale": {
+    "message": "In vendita"
+  },
+  "deal_rent": {
+    "message": "In affitto"
+  },
+  "rank_cmp3": {
+    "message": "Confronta top 3"
+  },
+  "rank_uploaded": {
+    "message": "$P1$ case aggiunte a RealHunt, $P2$ occasioni top (85+).",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "contrib_title": {
+    "message": "Il tuo contributo"
+  },
+  "contrib_line": {
+    "message": "Hai aggiunto $P1$ case alle classifiche di RealHunt, $P2$ occasioni top (85+). Grazie!",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      }
+    }
+  },
+  "taste_title": {
+    "message": "I tuoi gusti (acquisto)"
+  },
+  "taste_title_rent": {
+    "message": "I tuoi gusti (affitto)"
+  },
+  "taste_line": {
+    "message": "Imparato da $P1$ case che ti piacciono: fino a $P2$, $P3$ camere, zona $P4$.",
+    "placeholders": {
+      "p1": {
+        "content": "$1"
+      },
+      "p2": {
+        "content": "$2"
+      },
+      "p3": {
+        "content": "$3"
+      },
+      "p4": {
+        "content": "$4"
+      }
+    }
+  },
+  "taste_note": {
+    "message": "Usato per “adatta a te” finché non rispondi alle 5 domande."
+  },
+  "muted_site": {
+    "message": "Nascosto su questo sito. Clicca l’icona di RealHunt per rivederlo."
+  },
+  "offline_note": {
+    "message": "RealHunt non è raggiungibile ora: il punteggio è calcolato nel tuo browser e può essere meno preciso."
+  },
+  "cmd_toggle": {
+    "message": "Mostra o nascondi la scheda RealHunt"
+  }
+}

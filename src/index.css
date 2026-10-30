@@ -1,0 +1,310 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap');
+
+/* ============================================================
+   RealHunt — Paper, Notarial, Light. No dark mode.
+   Colors are exact HEX from spec, mapped to HSL for shadcn.
+   --bg #FFFFFF · --surface #FFFFFF · --surface-2 #EFF0F1
+   --ink #0F1115 · --ink-muted #5C6271 · --ink-soft #8C92A0
+   --accent #D4420C (RealHunt orange) · --good #1F8A4C · --warn #B57700 · --bad #B23A2E
+   ============================================================ */
+
+@layer base {
+  :root {
+    /* Raw RH brand vars (HEX, used inline where needed) */
+    --rh-bg: #FFFFFF;
+    --rh-surface: #FFFFFF;
+    --rh-surface-2: #ECEDEE;
+    --rh-ink: #111214;
+    --rh-ink-muted: #313338;
+    --rh-ink-soft: #797E89;
+    --rh-accent: #D4420C;
+    --rh-accent-soft: #ff8a5c;
+    --rh-good: #1E6B4F;
+    --rh-warn: #B7791F;
+    --rh-bad: #B23A3A;
+    --rh-hairline: #E2E3E6;
+    --rh-hairline-strong: rgba(22, 21, 15, 0.18);
+    --rh-shadow-soft: 0 8px 30px rgba(20, 18, 10, 0.06);
+
+    /* shadcn HSL tokens (mapped to RH palette) */
+    --background: 0 0% 100%;          /* #FFFFFF */
+    --foreground: 222 17% 8%;          /* #0F1115 */
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 17% 8%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 17% 8%;
+
+    --primary: 16 89% 44%;             /* #D4420C RealHunt orange */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 9% 95%;           /* #EFF0F1 */
+    --secondary-foreground: 222 17% 8%;
+
+    --muted: 220 9% 95%;
+    --muted-foreground: 222 9% 40%;    /* #5C6271 */
+
+    --accent: 220 9% 95%;
+    --accent-foreground: 222 17% 8%;
+
+    --destructive: 6 56% 44%;          /* #B23A2E */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 222 17% 92%;
+    --input: 222 17% 92%;
+    --ring: 16 89% 44%;
+
+    --radius: 0.75rem;
+
+    /* Score colors */
+    --score-excellent: 143 64% 33%;    /* good */
+    --score-good: 143 64% 33%;
+    --score-average: 36 80% 35%;       /* warn */
+    --score-poor: 36 80% 35%;
+    --score-bad: 6 56% 44%;            /* bad */
+
+    /* Sidebar (kept for shadcn sidebar primitive) */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 17% 8%;
+    --sidebar-primary: 16 89% 44%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 9% 95%;
+    --sidebar-accent-foreground: 222 17% 8%;
+    --sidebar-border: 222 17% 92%;
+    --sidebar-ring: 16 89% 44%;
+  }
+
+  /* Dark mode is forbidden in this product. .dark is intentionally a no-op
+     so any stray class doesn't flip the palette. */
+  .dark {
+    --background: 0 0% 100%;
+    --foreground: 222 17% 8%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 17% 8%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 17% 8%;
+    --primary: 16 89% 44%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 9% 95%;
+    --secondary-foreground: 222 17% 8%;
+    --muted: 220 9% 95%;
+    --muted-foreground: 222 9% 40%;
+    --accent: 220 9% 95%;
+    --accent-foreground: 222 17% 8%;
+    --destructive: 6 56% 44%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 222 17% 92%;
+    --input: 222 17% 92%;
+    --ring: 16 89% 44%;
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 4.5rem;
+    background: var(--rh-bg);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  /* Tabular numerals for all numeric content */
+  .tabular,
+  .font-mono,
+  [data-tabular] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Editorial body sizing on reading surfaces */
+  .reading {
+    font-size: 17px;
+    line-height: 1.55;
+  }
+  @media (max-width: 640px) {
+    .reading { font-size: 16px; }
+  }
+
+  *:focus-visible {
+    outline: none;
+    box-shadow: 0 2px 0 0 var(--rh-accent);
+  }
+
+  ::selection {
+    background: rgba(184, 146, 74, 0.2);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  .bg-paper { background-color: var(--rh-bg); }
+  .bg-surface { background-color: var(--rh-surface); }
+  .bg-surface-2 { background-color: var(--rh-surface-2); }
+
+  .text-ink { color: var(--rh-ink); }
+  .text-ink-muted { color: var(--rh-ink-muted); }
+  .text-ink-soft { color: var(--rh-ink-soft); }
+  .text-accent-gold { color: var(--rh-accent); }
+  .text-good { color: var(--rh-good); }
+  .text-warn { color: var(--rh-warn); }
+  .text-bad { color: var(--rh-bad); }
+
+  .border-hairline { border-color: var(--rh-hairline); }
+  .border-hairline-strong { border-color: var(--rh-hairline-strong); }
+
+  .divide-hairline > * + * { border-color: var(--rh-hairline); }
+
+  .shadow-soft { box-shadow: var(--rh-shadow-soft); }
+
+  .rh-card {
+    background-color: var(--rh-surface);
+    border: 1px solid var(--rh-hairline);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--rh-shadow-soft);
+  }
+
+  .rh-input {
+    background-color: var(--rh-surface);
+    border: 1px solid var(--rh-hairline);
+    border-radius: 12px;
+    padding: 16px;
+    color: var(--rh-ink);
+    transition: border-color 120ms ease, box-shadow 120ms ease;
+    width: 100%;
+    font-family: inherit;
+    font-size: 16px;
+  }
+  .rh-input::placeholder { color: var(--rh-ink-soft); }
+  .rh-input:focus {
+    outline: none;
+    border-color: var(--rh-hairline-strong);
+    box-shadow: inset 0 -2px 0 0 var(--rh-accent);
+  }
+
+  .rh-btn-primary {
+    background-color: #111214;
+    color: #FFFFFF;
+    border-radius: 14px;
+    padding: 16px 24px;
+    font-weight: 600;
+    transition: background-color 160ms ease, transform 120ms ease, box-shadow 160ms ease;
+    font-size: 15px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 6px 20px rgba(20, 18, 10, 0.18);
+  }
+  .rh-btn-primary:hover { background-color: #232427; box-shadow: 0 10px 28px rgba(20, 18, 10, 0.28); }
+  .rh-btn-primary:active { transform: translateY(1px); }
+  .rh-btn-primary:disabled { background-color: #232427; color: rgba(255,255,255,0.7); cursor: not-allowed; box-shadow: 0 6px 20px rgba(20, 18, 10, 0.18); }
+
+  .rh-btn-secondary {
+    background-color: transparent;
+    color: var(--rh-ink);
+    border: 1px solid var(--rh-hairline);
+    border-radius: 12px;
+    padding: 14px 22px;
+    font-weight: 500;
+    transition: border-color 120ms ease, background-color 120ms ease;
+    font-size: 15px;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .rh-btn-secondary:hover {
+    border-color: var(--rh-hairline-strong);
+    background-color: var(--rh-surface-2);
+  }
+
+  .rh-btn-tertiary {
+    color: var(--rh-ink);
+    background: transparent;
+    padding: 4px 0;
+    border-bottom: 2px solid transparent;
+    transition: border-color 120ms ease;
+    font-weight: 500;
+  }
+  .rh-btn-tertiary:hover { border-color: var(--rh-accent); }
+
+  /* Used by every horizontal carousel. Was never defined, so the scrollbar showed. */
+  .scrollbar-none { scrollbar-width: none; -ms-overflow-style: none; }
+  .scrollbar-none::-webkit-scrollbar { display: none; }
+
+  .hairline-t { border-top: 1px solid var(--rh-hairline); }
+  .hairline-b { border-bottom: 1px solid var(--rh-hairline); }
+  .hairline-l { border-left: 1px solid var(--rh-hairline); }
+  .hairline-r { border-right: 1px solid var(--rh-hairline); }
+}
+
+/* Print: same paper aesthetic */
+@media print {
+  nav, footer, .print\:hidden {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  /* Reserve room for the brand watermark on every printed page. */
+  @page { margin: 14mm 12mm 22mm 12mm; }
+  .rh-print-footer {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    background: #FFFFFF !important;
+    color: #4D5057 !important;
+    border-top: 1px solid rgba(22,21,15,0.12) !important;
+    z-index: 9999;
+  }
+  .rh-print-footer strong { color: #111214 !important; }
+}
+
+/* Hero Analyze scanning bar */
+@keyframes hero-scan {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+
+/* Keep buyer navigation clear of content, consent controls and device safe areas. */
+@media (max-width: 767px) {
+  body:has(.rh-mobile-nav) { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+  body:has(.rh-mobile-nav) .rh-cookie-banner { bottom: calc(64px + env(safe-area-inset-bottom)); }
+}
+
+/* Connection status: keep the same notices without a page-wide JS animation dependency. */
+@keyframes rh-status-in { from { transform: translateY(-48px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes rh-status-out { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-48px); opacity: 0; } }
+.rh-connection-notice { animation: rh-status-in 200ms ease-out both; }
+.rh-connection-notice[data-visible="false"] { animation-name: rh-status-out; }
+@media (prefers-reduced-motion: reduce) { .rh-connection-notice { animation-duration: 1ms; } }

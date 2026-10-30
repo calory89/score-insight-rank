@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792211573033,
+      "tag": "0000_security_tighten_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792212362218,
+      "tag": "0001_hide_report_owner_and_private_badges",
+      "breakpoints": true
+    }
+  ]
+}
