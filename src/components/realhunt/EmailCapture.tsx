@@ -9,7 +9,7 @@ import { track, eur, subscribeEmail, ixCount, consent } from "@/lib/rh";
 import { useAuth } from "@/contexts/AuthContext";
 import { useExperiment } from "@/lib/experiments";
 
-const SKIP = [/^\/admin/, /^\/auth/, /^\/network/, /^\/legal/, /^\/app/, /^\/dashboard/, /^\/settings/, /^\/reset-password/, /^\/analysis/];
+const SKIP = [/^\/admin/, /^\/auth/, /^\/network/, /^\/legal/, /^\/app/, /^\/dashboard/, /^\/settings/, /^\/reset-password/, /^\/analysis/, /^\/map/];
 const K_SUB = "rh_sub", K_BAR = "rh_bar_off", K_POP = "rh_pop_ts";
 const get = (s: Storage, k: string) => { try { return s.getItem(k); } catch { return null; } };
 const set = (s: Storage, k: string, v: string) => { try { s.setItem(k, v); } catch {} };

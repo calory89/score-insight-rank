@@ -4,6 +4,7 @@ import { lazy, Suspense, useState } from "react";
 import { useEffect } from "react";
 import { Filters, type FeedParams } from "./extras";
 import { t } from "./i18n";
+import { SlidersHorizontal } from "lucide-react";
 const HomesMap = lazy(() => import("./homesmap"));
 
 export default function MapView() {
@@ -13,13 +14,22 @@ export default function MapView() {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [n, setN] = useState<number | null>(null);
   useEffect(() => { document.title = "Map of the best homes · RealHunt"; }, []);
+  // 7-nov-2026 (Carlos: "cuando abro el mapa se ve muy mal"): on a phone the filters filled the whole screen and the
+  // map started below the fold. Now they fold behind one button, so the map is the first thing you see.
+  const active = [f.country, f.category, f.max_price, (f as any).min_price, f.min_sqm, (f as any).min_beds, (f as any).price_drop, (f as any).min_score, ((f as any).need || []).length].filter(Boolean).length;
+  const [showF, setShowF] = useState(() => typeof window === "undefined" || window.innerWidth > 700 || active > 0);
   // Country counts for the chips come from the feed itself.
   useEffect(() => { import("./extras").then(({ feed }) => feed({ scope: "all", limit: 1 }).then((d: any) => setCounts(d.countries_count || {})).catch(() => {})); }, []);
   return (
     <div className="hunt-wrap hunt-mappage">
-      <h1>{t("Map")}</h1>
-      <Filters countries={counts} value={f} onChange={(v) => setF({ ...v, scope: "all" })} />
-      <p className="hunt-fine">{n === null ? t("Loading…") : <><span>{`${n} homes`}</span> · <span>{t("Pins show the village, not the exact house.")}</span></>}</p>
+      <div className="hunt-maphead">
+        <h1>{t("Map")}</h1>
+        <button type="button" className={"hunt-mapfilters" + (showF ? " is-on" : "")} aria-expanded={showF} onClick={() => setShowF(!showF)}>
+          <SlidersHorizontal size={15} /> {showF ? t("Hide filters") : t("Filters")}{active ? <b>{active}</b> : null}
+        </button>
+      </div>
+      {showF && <Filters countries={counts} value={f} onChange={(v) => setF({ ...v, scope: "all" })} />}
+      <p className="hunt-fine hunt-mapcount">{n === null ? t("Loading…") : <><span>{`${n} homes`}</span> · <span>{t("Pins show the village, not the exact house.")}</span></>}</p>
       <Suspense fallback={<div className="hm hm-page"><div className="hm-map" /></div>}>
         <HomesMap params={f} focus={focus} className="hm-page" onCount={setN} />
       </Suspense>
