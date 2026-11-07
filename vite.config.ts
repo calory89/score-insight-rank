@@ -62,7 +62,11 @@ export default defineConfig(({ mode }) => ({
           if (!id.includes("node_modules")) return;
           if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) return "react";
           if (id.includes("@supabase")) return "supabase";
+          // 7-nov-2026: every lucide icon was its own file (~60 tiny requests on the home page). One icons file instead.
+          if (id.includes("lucide-react")) return "icons";
         },
+        // Merge chunks under ~6 KB into their importer so a page needs fewer round trips on a phone.
+        experimentalMinChunkSize: 6000,
       },
     },
   },
