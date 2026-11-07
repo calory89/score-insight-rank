@@ -47,6 +47,9 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
   const [armed, setArmed] = useState(!embedded);
   const [data, setData] = useState<Row[] | null>(rows || null);
   const [nb, setNb] = useState(0);
+  // Region buttons: the map opens on Europe (most homes), so homes elsewhere (Miami, Bali, Mexico...) get a
+  // visible shortcut instead of hiding off-screen until someone presses "See all homes".
+  const [regions, setRegions] = useState<{ k: string; label: string; n: number; b: L.LatLngBounds }[]>([]);
   const navigate = useNavigate();
   const openSlug = useRef<string | null>(null);
   const keepOpen = useRef(false);
@@ -134,6 +137,14 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
     const pts: L.LatLngExpression[] = list.map((d) => [d.lat!, d.lng!]);
     bounds.current = pts.length ? L.latLngBounds(pts) : null;
     setNb(pts.length);
+    const REG: [string, string, (la: number, lo: number) => boolean][] = [
+      ["eu", "Europe", (la, lo) => la > 27 && la < 72 && lo > -30 && lo < 45],
+      ["am", "Americas", (_la, lo) => lo <= -30],
+      ["as", "Asia & Pacific", (_la, lo) => lo >= 60],
+      ["af", "Africa & Middle East", (la, lo) => lo > -30 && lo < 60 && !(la > 27 && la < 72 && lo < 45)],
+    ];
+    const regs = REG.map(([k, label, f]) => { const g = list.filter((d) => f(d.lat!, d.lng!)); return { k, label, n: g.length, b: L.latLngBounds(g.map((d) => [d.lat!, d.lng!] as L.LatLngExpression)) }; }).filter((r) => r.n > 0);
+    setRegions(regs.length > 1 ? regs : []);
     let focusedMk: L.Marker | null = null;
     // 12-oct-2026 (Carlos: "when you zoom, what opens no longer fits"). The card now sits above the pin
     // (not on top of it), is re-measured when its photo loads, is kept inside the map (clear of the
@@ -241,6 +252,7 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
     if (sat.current) { m.removeLayer(tl.street); tl.sat.addTo(m); } else { m.removeLayer(tl.sat); tl.street.addTo(m); }
   };
 
+  const fitRegion = (b: L.LatLngBounds) => { const m = map.current; if (m) m.flyToBounds(b, { padding: [30, 30], maxZoom: 11, duration: 0.6 }); };
   const fitAll = () => { const m = map.current; if (m && bounds.current) m.flyToBounds(bounds.current, { padding: [30, 30], maxZoom: 10, duration: 0.6 }); };
   const myPlace = () => {
     navigator.geolocation?.getCurrentPosition((p) => map.current?.flyTo([p.coords.latitude, p.coords.longitude], 9, { duration: 0.8 }), () => {}, { timeout: 8000 });
@@ -255,6 +267,9 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
         <button type="button" onClick={(e) => { e.stopPropagation(); toggleSat(); }} aria-pressed={isSat}>{isSat ? t("Map view") : t("Satellite")}</button>
         {"geolocation" in navigator && <button type="button" onClick={(e) => { e.stopPropagation(); myPlace(); }}>{t("Near me")}</button>}
       </div>
+      {regions.length > 1 && <div className="hm-regions" role="group" aria-label={t("Go to a region")}>
+        {regions.map((r) => <button key={r.k} type="button" onClick={(e) => { e.stopPropagation(); fitRegion(r.b); }}>{t(r.label)} <b>{r.n}</b></button>)}
+      </div>}
       <div className="hm-legend" aria-hidden="true"><i /><span><b>€20k</b><b>€60k</b><b>€100k+</b></span></div>
       {data === null && <div className="hm-loading">{t("Loading map…")}</div>}
       {embedded && !armed && !full && <div className="hm-hint">{touch ? t("Tap the map to move it · pinch to zoom") : t("Click the map to zoom with the mouse wheel")}</div>}

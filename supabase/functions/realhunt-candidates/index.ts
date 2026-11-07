@@ -45,6 +45,7 @@ function extract(html: string, url: string) {
   for (const x of ld) addImg(x.image || x.photo);
   addImg(meta(html, "og:image"));
   for (const m of html.matchAll(/https:\/\/[^"'\s<>()]+?\.(?:jpe?g|webp|png)(?:\?[^"'\s<>()]*)?/gi)) {
+    if (/[?&](width|w)=([1-6]\d{2})\b/.test(m[0]) && !/width=1[0-9]{3}/.test(m[0])) continue; // small width variants
     const u = dec(m[0]); if (/logo|icon|sprite|avatar|flag|placeholder|banner|thumb_?s|\/s\d{2,3}x/i.test(u)) continue; imgs.add(u);
   }
   const geo = find("geo");
@@ -61,7 +62,8 @@ function extract(html: string, url: string) {
     locality: typeof addr === "object" && addr ? [addr.addressLocality, addr.addressRegion, addr.addressCountry?.name || addr.addressCountry].filter(Boolean).join(", ") : (typeof addr === "string" ? addr : null),
     lat: num(geo?.latitude), lng: num(geo?.longitude),
     description: dec(find("description") || meta(html, "og:description") || "").slice(0, 3000),
-    images: [...imgs].slice(0, 40),
+    // One entry per photo: the same file is often listed at several widths (?width=390, 780, 1200...).
+    images: [...new Map([...imgs].map((u) => [u.split("?")[0].replace(/-\d{2,4}x\d{2,4}(?=\.\w+$)/, ""), u])).values()].slice(0, 40),
     text_sample: text.slice(0, 6000),
   };
 }
