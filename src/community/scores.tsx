@@ -170,6 +170,8 @@ export function NearestHomes({ q }: { q: string }) {
   const [miss, setMiss] = useState(false);
   useEffect(() => {
     let on = true; setSt(null); setMiss(false);
+    // Only look up things that read like a place name (a pasted sentence such as "3 bed house under 200k" is not).
+    if (q.trim().split(/\s+/).length > 4 || /\d/.test(q)) { setMiss(true); return () => { on = false; }; }
     fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=en&q=${encodeURIComponent(q)}`)
       .then((r) => r.json())
       .then(async (g: any[]) => {
