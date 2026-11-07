@@ -5,7 +5,6 @@ import { Link } from "react-router-dom";
 import { money } from "./api";
 import { useScore } from "./scores";
 import { t } from "./i18n";
-import { TaxLine } from "./taxes";
 import { SaveHeart } from "./v4";
 import { CardCheck } from "./check";
 
@@ -38,7 +37,7 @@ export function HomeCard({ deal, pos }: { deal: any; pos: number }) {
           <small>{where(deal)}</small>
           <CardCheck d={deal} />
           {pick && <small className="hx-pick">{pick}</small>}
-          <TaxLine deal={deal} />
+          {/* TaxLine dropped 8-nov-2026: the CHECK all-in line (destinations.json) replaces it */}
         </span>
       </Link>
       <SaveHeart deal={deal} className="hv-save hx-save" />
