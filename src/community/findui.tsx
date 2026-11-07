@@ -11,7 +11,7 @@ import { t } from "./i18n";
 import {
   parseQuery, buildPlaces, suggestPlaces, placeLabel, applyParsed, describeParamsWithPlaces, removeChip, canonicalSearch, paramsToFeed, norm,
   LIFESTYLES, lifestyleOn, toggleLifestyle, loadSaved, storeSaved, addSaved, markOpened, removeSaved, countNew, alertsLink,
-  type Chip, type Place, type SavedSearch, type Parsed,
+  type Chip, type Place, type Suggestion, type SavedSearch, type Parsed,
 } from "./smartsearch";
 import "./find.css";
 
@@ -45,7 +45,7 @@ const EXAMPLES = ["3 bed near the sea under €200k", "Italy with a garden under
 
 type Opt =
   | { kind: "parsed"; id: string; chips: Chip[] }
-  | { kind: "place"; id: string; place: Place }
+  | { kind: "place"; id: string; place: Suggestion }
   | { kind: "home"; id: string; row: Row };
 
 // ---------------------------------------------------------------- 1 + 2: the search box
