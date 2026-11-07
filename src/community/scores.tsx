@@ -26,6 +26,7 @@ export function useScore(deal: { id?: string; nota?: number; dims?: any; amen?: 
 
 export { DIMS, AMEN } from "./dims";
 import { DIMS, AMEN } from "./dims";
+import { ThumbImg } from "./thumbimg";
 const tone = (v: number) => (v >= 80 ? "is-great" : v >= 60 ? "is-good" : v >= 40 ? "is-ok" : "is-low");
 const gtone = (n: number) => (n >= 90 ? "is-top" : n >= 80 ? "is-great" : "is-good");
 
@@ -89,7 +90,7 @@ export function BestPerCountry({ onCountry }: { onCountry?: (c: string) => void 
       <div className="rh-best-row">
         {rows.map((r) => (
           <a key={r.id} href={`/deal/${encodeURIComponent(r.slug)}?tab=all`} className="rh-best-card">
-            <span className="rh-best-img">{r.image_urls?.[0] && <img src={r.image_urls[0]} alt="" loading="lazy" />}<span className={"hv-score " + gtone(r.nota)}>{r.nota}</span></span>
+            <span className="rh-best-img">{r.image_urls?.[0] && <ThumbImg src={r.image_urls[0]} alt="" loading="lazy" />}<span className={"hv-score " + gtone(r.nota)}>{r.nota}</span></span>
             <b>{r.country}</b><small>{`${eur(r.price_eur)} · ${r.location_name || ""}`}</small>
           </a>
         ))}
@@ -129,7 +130,7 @@ export function RankRow({ deal, pos, km, near }: { deal: any; pos: number; km?: 
   return (
     <Link to={href} className={"rk-row" + (pos <= 3 ? " is-podium" : "")} aria-label={`${pos}. ${cleanName(deal)}, ${money(deal.price_eur)}, ${t("RealHunt score")} ${s?.n ?? ""}`}>
       <span className="rk-pos">{pos}</span>
-      <span className="rk-img">{deal.image_urls?.[0] ? <img src={deal.image_urls[0]} alt="" loading={pos <= 6 ? "eager" : "lazy"} decoding="async" /> : null}</span>
+      <span className="rk-img">{deal.image_urls?.[0] ? <ThumbImg src={deal.image_urls[0]} alt="" loading={pos <= 6 ? "eager" : "lazy"} /> : null}</span>
       <span className="rk-main">
         <strong className="rk-price">{money(deal.price_eur)}{deal.sqm ? <small>{` · ${deal.sqm} m²`}</small> : null}</strong>
         <span className="rk-title">{cleanName(deal)}</span>
@@ -220,7 +221,7 @@ export function NearCity() {
           const rows = data[c]; const min = Math.min(...rows.map((r) => r.price_eur));
           return (
             <article key={c} className="rh-nc-card">
-              <a href={`/?q=${encodeURIComponent(c)}`} className="rh-nc-imgs">{rows.slice(0, 3).map((r) => <img key={r.id} src={r.image_urls?.[0]} alt="" loading="lazy" />)}</a>
+              <a href={`/?q=${encodeURIComponent(c)}`} className="rh-nc-imgs">{rows.slice(0, 3).map((r) => <ThumbImg key={r.id} src={r.image_urls?.[0]} alt="" loading="lazy" />)}</a>
               <div className="rh-nc-body">
                 <b>{`${t("Near")} ${c}`}</b>
                 <small>{`${t("From")} ${money(min)} · ${t("best score")} ${Math.max(...rows.map((r) => r.nota || 0))}`}</small>

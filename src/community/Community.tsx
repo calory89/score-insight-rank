@@ -22,6 +22,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { EBC, totalCost } from "@/lib/rh";
 import { listingVideo } from "@/lib/listing-media";
 import OriginalListingLink from "@/components/realhunt/OriginalListingLink";
+import { thumb, onThumbError } from "@/lib/thumbs";
+import { FeedFilters, FooterLinks, DealSkeleton } from "./mobile-ux";
 import { RemoteWorkCard, RemoteWorkStrip } from "@/components/realhunt/RemoteWorkBridge";
 import AuthModal from "@/components/realhunt/AuthModal";
 import { useLiveStats } from "@/components/realhunt/LiveStats";
@@ -288,29 +290,7 @@ function Shell({ children }: { children: ReactNode }) {
             <br />
             {t("Listings belong to their original publishers. RealHunt is not the seller.")}
           </p>
-          <div>
-            <Link to="/">All homes</Link>
-            <Link to="/cheap-houses">Cheap houses</Link>
-            <Link to="/blog">Research</Link>
-            <Link to="/insider">Insider</Link>
-            <Link to="/new-builds">New builds</Link>
-            <Link to="/top">Top 100 rankings</Link>
-            <Link to="/top/how-we-rank">How we rank</Link>
-            <Link to="/about">About us</Link>
-            <Link to="/costs">Real costs</Link>
-            <Link to="/research/new-builds">New-build report</Link>
-            <Link to="/agents">For agents</Link>
-            <Link to="/network">For developers</Link>
-            <Link to="/new">New homes</Link>
-            <Link to="/research/prices">Prices by country</Link>
-            <Link to="/method">How the score works</Link>
-            <Link to="/alerts">Alerts</Link>
-            <Link to="/sitemap">Site map</Link>
-            <Link to="/legal/privacy">Privacy</Link>
-            <Link to="/legal/terms">Terms</Link>
-            {session?.admin && <Link to="/hunt/admin">Moderation</Link>}
-            {session?.admin && <Link to="/hunt/inbox">Inbox</Link>}
-          </div>
+          <FooterLinks admin={!!session?.admin} />
           <div className="hunt-footer-tools">
             <LangSwitch />
             <InstallButton />
@@ -368,12 +348,13 @@ function Media({ deal, detail = false, scope = "all" }: { deal: Deal; detail?: b
       ) : (
         <Link to={`/deal/${deal.slug}${scope === "all" ? "?tab=all" : ""}`} tabIndex={detail ? -1 : 0}>
           <img
-            src={imgs[index] || "/favicon.png"}
+            src={(detail ? imgs[index] : thumb(imgs[index])) || "/favicon.png"}
             alt={deal.title}
             loading={detail ? "eager" : "lazy"}
             decoding="async"
             onClick={detail ? (e) => { e.preventDefault(); setLb(true); } : undefined}
             onError={(e) => {
+              if (!detail && onThumbError(e.currentTarget, imgs[index])) return;
               if (!e.currentTarget.src.endsWith("/favicon.png"))
                 e.currentTarget.src = "/favicon.png";
             }}
@@ -782,7 +763,7 @@ function Home() {
   useEffect(() => {
     if (!feed?.rows?.length) return;
     const idle = (window as any).requestIdleCallback || ((cb: () => void) => setTimeout(cb, 600));
-    idle(() => preloadImages(feed.rows.slice(0, 2).map((r: any) => r.image_urls?.[0])));
+    idle(() => preloadImages(feed.rows.slice(0, 2).map((r: any) => thumb(r.image_urls?.[0]))));
   }, [feed?.rows?.length]);
   // Endless feed: the next page loads before the visitor reaches the bottom.
   useEffect(() => {
@@ -845,7 +826,7 @@ function Home() {
         {feed?.countries_count && <p className="hx-sub">{(() => { const v = Object.values(feed.countries_count as Record<string, number>); return `${num(v.reduce((a, b) => a + b, 0))} ${t("homes in")} ${v.length} ${t("countries, each checked by a person and scored from 70 to 98. We link to the seller; we do not sell.")}`; })()} <Link to="/method">{t("How the score works")}</Link></p>}
         <SmartSearch value={q} onSearch={search} inputRef={searchRef} />
       </section>
-      <div className="rh-sticky-filters"><Filters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_price: minPrice, min_beds: minBeds, price_drop: priceDrop, min_sqm: minSqm, sort, q, min_score: minScore, need, dim_min: dimMin }} onChange={setFilters} /></div>
+      <FeedFilters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_price: minPrice, min_beds: minBeds, price_drop: priceDrop, min_sqm: minSqm, sort, q, min_score: minScore, need, dim_min: dimMin }} onChange={setFilters} total={feed?.total} busy={busy} />
       {!plain || maxPrice || minPrice || minBeds || priceDrop || minSqm || minScore || need.length || sort !== "score" || showMap ? (
       <div className="rh-results-bar" ref={resultsRef}>
         <p role="status" aria-live="polite"><strong>{busy && !feed ? t("Updating results…") : feed ? `${num(feed.total)} ${t("homes")}${country ? ` in ${country.split(",").join(", ")}` : ""}` : ""}</strong>
@@ -989,7 +970,7 @@ function Detail() {
         <ErrorBox error={error} retry={load} />
       </div>
     );
-  if (!d) return <Loading />;
+  if (!d) return <DealSkeleton />;
   const listing = (d.has_source || safeUrl(d.source_url)) ? (
     <OriginalListingLink href={d.source_url || undefined} className="hunt-primary" target="_blank" rel="noopener noreferrer">
       {t("View listing")}{!(user || d.source_url) && <span className="rh-cta-extra"><span aria-hidden="true"> · </span>{t("free account")}</span>} <ArrowUpRight size={17} />

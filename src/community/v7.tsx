@@ -15,6 +15,8 @@ import { FLAG } from "@/lib/rh";
 import { money } from "./api";
 import { useCommunity } from "./ctx";
 import { guestRef, guestDaysLeft } from "./extras";
+import { ThumbImg } from "./thumbimg";
+import { BlogListSkeleton, PostSkeleton } from "./mobile-ux";
 
 const rpc = async (fn: string, args: Record<string, unknown> = {}) => {
   const { data, error } = await (supabase as any).rpc(fn, args);
@@ -120,7 +122,7 @@ export function InsiderPage() {
         {(s?.top || []).map((d, i) => s!.can_see ? (
           <li key={d.id}>
             <Link to={`/deal/${encodeURIComponent(d.slug)}`}>
-              <b>{i + 1}</b><img src={d.image_urls?.[0]} alt="" loading="lazy" />
+              <b>{i + 1}</b><ThumbImg src={d.image_urls?.[0]} alt="" loading="lazy" />
               <span><strong>{money(d.price_eur)} · {d.title}</strong><small>{flag(d.country)} {d.location_name || d.country} · {d.below}% below the {d.country} median ({money(d.median)})</small></span>
             </Link>
           </li>
@@ -175,7 +177,7 @@ export function BlogIndex() {
       <span className="hunt-eyebrow">RealHunt Research</span>
       <h1>What cheap homes really cost, in numbers.</h1>
       <p>Studies and guides built from the homes on RealHunt: prices by country, buying rules, and what to check before you buy.</p>
-      {!posts ? <div className="hunt-skeleton-list" /> : (
+      {!posts ? <BlogListSkeleton /> : (
         <div className="hv-blog-list">
           {posts.map((p, i) => (
             <Link key={p.slug} to={`/blog/${p.slug}`} className={"hv-blog-card" + (i === 0 ? " is-lead" : "")}>
@@ -200,7 +202,7 @@ export function BlogPost() {
   const onClick = useInternalLinks();
   const post = posts?.find((p) => p.slug === slug);
   useEffect(() => { if (post) setMeta(`${post.title} · RealHunt`, post.desc); }, [post?.slug]);
-  if (!posts) return <div className="hunt-wrap hunt-page"><div className="hunt-skeleton-list" /></div>;
+  if (!posts) return <PostSkeleton />;
   if (!post) return <div className="hunt-wrap hunt-page"><h1>Article not found</h1><Link to="/blog" className="hunt-link">All articles</Link></div>;
   const more = posts.filter((p) => p.slug !== post.slug).slice(0, 3);
   return (

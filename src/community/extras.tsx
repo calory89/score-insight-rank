@@ -26,6 +26,8 @@ export type Row = Deal & {
 };
 const theC = (n: string) => (/^(United |Netherlands$|Dominican Republic$|Czech Republic$|Philippines$)/.test(n) ? "the " + n : n);
 import { regionOf, slugify, isPriceCap, HOME_TYPES } from "./regions";
+import { thumb, onThumbError } from "@/lib/thumbs";
+import { HomesFilterLink } from "./homesFilterLink";
 export type FeedParams = { scope?: string; country?: string; category?: string; max_price?: number | null; min_price?: number | null; min_beds?: number | null; price_drop?: boolean; min_sqm?: number | null; sort?: string; limit?: number; offset?: number; ids?: string[]; q?: string; terms?: string[]; min_score?: number | null; need?: string[]; dim_min?: Record<string, number> };
 // Guest pass: someone who opens an Insider's invite link (?ref=code) sees the Insider homes too, for
 // 7 days, so what an Insider shares never shows up blurred. The server checks the code belongs to an
@@ -246,7 +248,7 @@ export function Lightbox({ images, start = 0, title, onClose }: { images: string
 export function MiniCard({ d }: { d: Row }) {
   return (
     <Link className="hunt-minicard" to={`/deal/${d.slug}`}>
-      <PropertyImage src={d.image_urls?.[0]} fallback={d.image_urls?.[1]} alt={niceTitle(d)} loading="lazy" />
+      <PropertyImage src={thumb(d.image_urls?.[0])} fallback={thumb(d.image_urls?.[0]) !== d.image_urls?.[0] ? d.image_urls?.[0] : d.image_urls?.[1]} alt={niceTitle(d)} loading="lazy" width={480} height={360} />
       <div><strong>{money(d.price_eur)}</strong>{(d as any).hoa_monthly > 0 && <em className="rh-mini-fee">+ {fmtCost(Number((d as any).hoa_monthly), (d as any).hoa_currency)}/mo HOA</em>}<span>{niceTitle(d)}</span><small><MapPin size={11} /> {d.location_name || d.country}</small></div>
     </Link>
   );
@@ -321,7 +323,7 @@ const PRICE_CHIPS: { k: string; label: string; min: number | null; max: number |
   { k: "p350", label: "€200k to €350k", min: 200000, max: 350000 },
   { k: "p350u", label: "€350k+", min: 350000, max: null },
 ];
-export function Filters({ countries, value: applied, onChange }: { countries: Record<string, number>; value: FeedParams; onChange: (v: FeedParams) => void }) {
+export function Filters({ countries, value: applied, onChange, expanded = false }: { countries: Record<string, number>; value: FeedParams; onChange: (v: FeedParams) => void; expanded?: boolean }) {
   // 1-oct-2026: every filter applies at once. The old draft + "View N homes" step made a tap on a
   // country look broken (the grid kept showing every country until the second button was pressed).
   const value = applied;
@@ -329,7 +331,7 @@ export function Filters({ countries, value: applied, onChange }: { countries: Re
   const list = Object.entries(countries || {}).sort((a, b) => b[1] - a[1]);
   const active = !!(value.country || value.category || value.max_price || value.min_price || value.min_beds || value.price_drop || value.min_sqm || (value.sort && value.sort !== "score"));
   const extra = [value.category, value.max_price, value.min_price, value.min_beds, value.price_drop, value.min_sqm, value.sort && value.sort !== "score" ? value.sort : ""].filter(Boolean).length;
-  const [open, setOpen] = useState(() => extra > 0);
+  const [open, setOpen] = useState(() => expanded || extra > 0);
   // 14-oct-2026 (Carlos): only show a quick filter when at least one home matches it, given the other filters.
   const [qc, setQc] = useState<Record<string, number> | null>(null);
   // 15-oct-2026 fix (Carlos: "clicking a filter shows nothing"): the counts now include the quick filters that are
@@ -789,7 +791,8 @@ export function HomesPage() {
         <h1>{type ? type.h1(place) : max ? <>Homes under {money(max)} in {place}</> : <>Best homes for sale in {place}</>}</h1>
         {data && data.total > 0 && <div className="hv-country-stats"><span><b>{data.total}</b> homes</span><span>from <b>{money(low)}</b></span><span>average <b>{money(avg)}</b></span></div>}
       </header>
-      {data && data.rows.length >= 3 && <><h2 className="hv-country-h2">Top 3 in {place}</h2><div className="hv-country-top">{data.rows.slice(0, 3).map((d, n) => <Link key={d.id} to={`/deal/${d.slug}`}><img src={d.image_urls?.[0]} alt={`${d.title}, ${d.location_name || name}`} /><span className="hv-pod-medal">{["🥇", "🥈", "🥉"][n]}</span><strong>{money(d.price_eur)}</strong><small>{d.location_name}</small></Link>)}</div><h2 className="hv-country-h2">All homes</h2></>}
+      <HomesFilterLink country={name} max={max || undefined} />
+      {data && data.rows.length >= 3 && <><h2 className="hv-country-h2">Top 3 in {place}</h2><div className="hv-country-top">{data.rows.slice(0, 3).map((d, n) => <Link key={d.id} to={`/deal/${d.slug}`}><img src={thumb(d.image_urls?.[0])} alt={`${d.title}, ${d.location_name || name}`} decoding="async" onError={(e) => onThumbError(e.currentTarget, d.image_urls?.[0])} /><span className="hv-pod-medal">{["🥇", "🥈", "🥉"][n]}</span><strong>{money(d.price_eur)}</strong><small>{d.location_name}</small></Link>)}</div><h2 className="hv-country-h2">All homes</h2></>}
       <p>{data ? `${data.total} homes, scored from 70 to 98 and ranked best first.` : "Loading…"} Every home links to its original listing. <Link to="/method">How the score works</Link> · <Link to={`/alerts?country=${encodeURIComponent(name)}${max ? `&max=${max}` : ""}`}>Get new homes in {name} by email</Link></p>
       <nav className="hunt-chips" aria-label={t("By price")}>{PRICE_CAPS.map((p) => <Link key={p} aria-current={p === max ? "page" : undefined} to={p === 100000 ? `/homes/${country}` : `/homes/${country}/under-${p}`}>{money(p)}</Link>)}</nav>
       {types.length > 0 && <nav className="hunt-chips" aria-label={t("By type")}>{types.map(([k, l, n]) => <Link key={k} aria-current={type && cap.toLowerCase() === k ? "page" : undefined} to={`/homes/${country}/${k}`}>{t(l)} <small>{n}</small></Link>)}</nav>}
@@ -928,7 +931,7 @@ export function LivePodium() {
       <h2>Top homes right now</h2>
       <div>{order.map((d, n) => (
         <Link key={d.id} to={`/deal/${d.slug}`} className={"hunt-podium-" + (n === 1 ? 1 : n === 0 ? 2 : 3)}>
-          <img src={d.image_urls?.[0]} alt="" loading="lazy" />
+          <img src={thumb(d.image_urls?.[0])} alt="" loading="lazy" decoding="async" onError={(e) => onThumbError(e.currentTarget, d.image_urls?.[0])} />
           <strong>#{d.rank} · {money(d.price_eur)}</strong>
           <span>{d.life_net} {d.life_net === 1 ? "vote" : "votes"}</span>
           <i />
