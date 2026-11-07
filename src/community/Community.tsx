@@ -38,6 +38,7 @@ import { regionOf, slugify } from "./regions";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, GUIDES, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { CountriesPage } from "./countries";
+import { CostBadge, RunningCosts } from "./costs";
 const slugCountryKey = (c?: string | null) => String(c || "").toLowerCase().trim().replace(/\s+/g, "-");
 import { t } from "./i18n";
 import { FindHomePage, FindHomeCTA } from "./findhome";
@@ -552,6 +553,7 @@ function Card({
           {money(deal.price_eur)}
         </div>}
         <LocalPrice eur={deal.price_eur} sqm={deal.sqm} />
+        <CostBadge d={deal as any} />
         <StatusTags deal={deal as Row} />
         <h2>
           <Link to={`/deal/${deal.slug}${scope === "all" ? "?tab=all" : ""}`}>{cleanTitle(deal)}</Link>
@@ -1005,6 +1007,7 @@ function Detail() {
           </span>
           <h1>{cleanTitle(d)}</h1>
           <div className="hunt-price">{money(d.price_eur)}</div>
+          <CostBadge d={d as any} />
           <RentLine price={d.price_eur} big />
           <LocalPrice eur={d.price_eur} sqm={d.sqm} />
           <PerSqmVsCountry price={d.price_eur} sqm={d.sqm} country={d.country} />
@@ -1023,6 +1026,7 @@ function Detail() {
           <Amenities deal={d} />
           {d.why_great && <blockquote>{d.why_great}</blockquote>}
           {!isEs() && <TranslateBar text={[cleanTitle(d), d.why_great].filter(Boolean).join("\n\n")} />}
+          <RunningCosts d={d as any} />
           <HomeArticle d={d} />
           <div className="hunt-detail-actions hv-detail-actions">
             {listing}

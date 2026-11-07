@@ -2973,7 +2973,32 @@ html.rh-dark, html.rh-dark body { background: #0C0D0E; }
 .rh-home-article details { border-top: 1px solid var(--line, #e5e5e5); padding: 8px 0; }
 .rh-home-article summary { cursor: pointer; font-weight: 600; }
 
-/* Region shortcuts on the homes map (bottom left, above the price legend) */
-.hm-regions { position: absolute; left: 10px; bottom: 58px; z-index: 500; display: flex; flex-wrap: wrap; gap: 6px; max-width: calc(100% - 80px); }
-.hm-regions button { background: var(--card, #fff); color: inherit; border: 1px solid rgba(0,0,0,.12); border-radius: 999px; padding: 6px 11px; font-size: 13px; box-shadow: 0 1px 4px rgba(0,0,0,.12); cursor: pointer; }
-.hm-regions button b { margin-left: 4px; }
+/* Region shortcuts above the homes map (7-nov-2026: they used to sit on the map, over pins and legend) */
+.hm-regions { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.hm-regions::-webkit-scrollbar { display: none; }
+.hm-regions > span { font-size: 13px; color: var(--muted, #5f6368); flex: 0 0 auto; }
+.hm-regions button { flex: 0 0 auto; background: var(--card, #fff); color: inherit; border: 1px solid rgba(0,0,0,.14); border-radius: 999px; padding: 7px 12px; font: 600 13px Inter, system-ui, sans-serif; cursor: pointer; min-height: 36px; }
+.hm-regions button b { margin-left: 4px; color: var(--accent, #D4420C); }
+.hunt.is-dark .hm-regions button { background: #1A1B1E; border-color: #33363A; }
+.hunt-mappage { padding-bottom: 12px; }
+@media (max-width: 700px) { .hunt-mappage .hm.hm-page { height: max(420px, calc(100dvh - 230px)); } .hm-legend { bottom: 18px; padding: 4px 7px 3px; } .hm-legend i { width: 96px; height: 6px; } }
+
+/* Running costs: community fee (HOA) and property tax, shown big (7-nov-2026) */
+.rh-cost { margin: 4px 0 6px; font-size: 15px; line-height: 1.3; }
+.rh-cost.is-fee { color: #9a3412; }
+.rh-cost.is-fee b { font-size: 18px; font-weight: 800; }
+.rh-cost.is-unknown { display: inline-block; background: #fff4e5; color: #8a4b00; border: 1px solid #f5c98b; border-radius: 8px; padding: 4px 8px; font-size: 13px; font-weight: 600; }
+.rh-costs { border: 2px solid #f0a35e; background: #fff8f0; border-radius: 14px; padding: 14px 16px; margin: 16px 0; }
+.rh-costs h2 { font-size: 1.1rem; margin: 0 0 8px; }
+.rh-costs dl { margin: 0; display: grid; gap: 6px; }
+.rh-costs dl > div { display: flex; justify-content: space-between; gap: 12px; }
+.rh-costs dt { color: #444; }
+.rh-costs dd { margin: 0; font-weight: 700; text-align: right; }
+.rh-costs-total { border-top: 1px solid #f0c9a3; padding-top: 6px; font-size: 17px; }
+.rh-costs-warn { background: #fff0e0; border-radius: 8px; padding: 8px 10px; margin: 10px 0 0; font-size: 14px; }
+.rh-costs p { margin: 8px 0 0; }
+.rh-mini-fee { display: block; font-style: normal; font-weight: 700; color: #9a3412; font-size: 13px; }
+.hunt.is-dark .rh-costs { background: #2a1f14; border-color: #8a5a2b; }
+.hunt.is-dark .rh-costs dt { color: #ccc; }
+.hunt.is-dark .rh-cost.is-unknown, .hunt.is-dark .rh-costs-warn { background: #3a2a14; color: #ffd8a8; border-color: #8a5a2b; }
+.hunt.is-dark .rh-cost.is-fee, .hunt.is-dark .rh-mini-fee { color: #ffb37a; }

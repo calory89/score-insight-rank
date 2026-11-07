@@ -62,6 +62,20 @@ export function homeArticle(r: Row, ctx: ArticleCtx): Article {
     faq.push([`How much are the buying costs for this home?`, `About ${eur(lo)}${rg[1] !== rg[0] ? ` to ${eur(hi)}` : ""} on top of the ${eur(r.price_eur)} asking price (${ctx.dest!.purchase_costs_pct}% in ${inC}), so about ${eur(r.price_eur + lo)}${rg[1] !== rg[0] ? ` to ${eur(r.price_eur + hi)}` : ""} in total.`]);
   }
 
+  // 2b. Running costs: community fee (HOA) and property tax, when the listing gives them.
+  const cur = r.hoa_currency || "EUR";
+  const fmtC = (v: number) => new Intl.NumberFormat("en", { style: "currency", currency: cur, maximumFractionDigits: 0 }).format(v);
+  const hoa = Number(r.hoa_monthly) || 0, tax = Number(r.tax_annual) || 0;
+  if (hoa || tax || r.hoa_unknown) {
+    const p: string[] = [];
+    if (hoa) p.push(`The community fee (HOA) is ${fmtC(hoa)} a month${tax ? ` and the property tax ${fmtC(tax)} a year (${fmtC(tax / 12)} a month), so about ${fmtC(hoa + tax / 12)} a month before insurance and utilities` : ""}.`);
+    else if (r.hoa_unknown) p.push(`The listing does not state the community fee (HOA). Flats in this area usually pay one every month, sometimes over $1,000, plus possible special assessments for building works: ask the agent for the exact fee before you make an offer.${tax ? ` The property tax is ${fmtC(tax)} a year (${fmtC(tax / 12)} a month).` : ""}`);
+    else if (tax) p.push(`The property tax is ${fmtC(tax)} a year (${fmtC(tax / 12)} a month).`);
+    if (r.costs_note) p.push(String(r.costs_note));
+    sections.push({ h: "What it costs every month", p });
+    faq.push(["Is there a community fee (HOA)?", hoa ? `Yes: ${fmtC(hoa)} a month${r.costs_note ? `. ${r.costs_note}` : "."}` : r.hoa_unknown ? "The listing does not say. Ask the agent for the monthly fee and any pending special assessment." : "No community fee is listed."]);
+  }
+
   // 3. Where it is.
   const near = r.nearby || {};
   const bits: string[] = [];
