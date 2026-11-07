@@ -2972,3 +2972,8 @@ html.rh-dark, html.rh-dark body { background: #0C0D0E; }
 .rh-home-article p { line-height: 1.6; margin: 0 0 8px; }
 .rh-home-article details { border-top: 1px solid var(--line, #e5e5e5); padding: 8px 0; }
 .rh-home-article summary { cursor: pointer; font-weight: 600; }
+
+/* Region shortcuts on the homes map (bottom left, above the price legend) */
+.hm-regions { position: absolute; left: 10px; bottom: 58px; z-index: 500; display: flex; flex-wrap: wrap; gap: 6px; max-width: calc(100% - 80px); }
+.hm-regions button { background: var(--card, #fff); color: inherit; border: 1px solid rgba(0,0,0,.12); border-radius: 999px; padding: 6px 11px; font-size: 13px; box-shadow: 0 1px 4px rgba(0,0,0,.12); cursor: pointer; }
+.hm-regions button b { margin-left: 4px; }
