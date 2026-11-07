@@ -218,15 +218,19 @@ async function load(file: string) {
 export async function initLang(): Promise<void> {
   try { document.documentElement.lang = current; document.documentElement.setAttribute("data-lang", current); } catch { /* ignore */ }
   if (current !== "es") { reveal(); return; }
-  const safety = setTimeout(reveal, 2500);
+  const safety = setTimeout(reveal, 1500);
   const legal = /^\/(legal|network|privacy|terms)/.test(location.pathname);
   try {
     const core = load("/i18n/es-core.json?v=3");
     const homes = load("/i18n/es-listings.json?v=3").catch(() => ({}));
     const extra = load("/i18n/es-extra.json?v=12");
-    addDict(await core); addDict(await homes);
-    if (legal) addDict(await extra.catch(() => ({})));
-    else extra.then((d) => { addDict(d); if (started) { walk(document.body); titleLast = ""; doTitle(); } }).catch(() => {});
+    // 7-nov-2026 (Carlos: "que cargue todo mucho más rápido"): the page used to stay hidden until the core AND the
+    // listings dictionaries (~250 KB compressed) had loaded. Now only the core one holds the first paint; home titles
+    // and the extra strings are applied as soon as they arrive.
+    addDict(await core);
+    const later = (p: Promise<Record<string, string>>) => p.then((d) => { addDict(d); if (started) { walk(document.body); titleLast = ""; doTitle(); } }).catch(() => {});
+    if (legal) { addDict(await homes); addDict(await extra.catch(() => ({}))); }
+    else { later(homes); later(extra); }
   } catch { /* stay in English if the dictionary cannot load */ }
   clearTimeout(safety);
 }
