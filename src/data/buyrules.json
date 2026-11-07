@@ -1,0 +1,662 @@
+{
+ "spain": {
+  "name": "Spain",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "As an EU/EEA citizen you buy in your own name like a Spanish buyer."
+  },
+  "uk": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers. A proposed extra tax for non-EU non-resident buyers was not enacted: check current status."
+  },
+  "na": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers. A proposed extra tax for non-EU non-resident buyers was not enacted: check current status."
+  },
+  "other": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers. A proposed extra tax for non-EU non-resident buyers was not enacted: check current status."
+  }
+ },
+ "italy": {
+  "name": "Italy",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "As an EU/EEA citizen you buy in your own name like an Italian buyer."
+  },
+  "uk": {
+   "s": "green",
+   "note": "Allowed: Italy and the UK grant each other's citizens the right to buy (reciprocity)."
+  },
+  "na": {
+   "s": "green",
+   "note": "Allowed: Italy and the US and Canada grant each other's citizens the right to buy (reciprocity)."
+  },
+  "other": {
+   "s": "amber",
+   "note": "Depends on reciprocity: you can buy if your country lets Italians buy there, or if you hold an Italian residence permit.",
+   "badge": "Reciprocity"
+  }
+ },
+ "united-states": {
+  "name": "the United States",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "uk": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "na": {
+   "s": "green",
+   "note": "You can buy freely as a US or Canadian citizen."
+  },
+  "other": {
+   "s": "green",
+   "note": "Open to foreign buyers. A few states, Florida included, restrict buyers domiciled in some countries such as China, Iran or Russia."
+  }
+ },
+ "denmark": {
+  "name": "Denmark",
+  "updated": "2026-11",
+  "eu": {
+   "s": "amber",
+   "note": "EU/EEA citizens can buy a home they live in all year without a permit; a holiday home needs Ministry of Justice permission, rarely granted.",
+   "badge": "Permit"
+  },
+  "uk": {
+   "s": "red",
+   "note": "Non-residents need Ministry of Justice permission, normally granted only if you move to Denmark; holiday homes are practically closed.",
+   "badge": "Residents only"
+  },
+  "na": {
+   "s": "red",
+   "note": "Non-residents need Ministry of Justice permission, normally granted only if you move to Denmark; holiday homes are practically closed.",
+   "badge": "Residents only"
+  },
+  "other": {
+   "s": "red",
+   "note": "Non-residents need Ministry of Justice permission, normally granted only if you move to Denmark; holiday homes are practically closed.",
+   "badge": "Residents only"
+  }
+ },
+ "sweden": {
+  "name": "Sweden",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "uk": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "na": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "other": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  }
+ },
+ "norway": {
+  "name": "Norway",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "uk": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "na": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "other": {
+   "s": "green",
+   "note": "No restrictions for ordinary homes; farms and large rural plots need a concession."
+  }
+ },
+ "france": {
+  "name": "France",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "uk": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "na": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "other": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  }
+ },
+ "germany": {
+  "name": "Germany",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "uk": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "na": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "other": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  }
+ },
+ "netherlands": {
+  "name": "the Netherlands",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "uk": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "na": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "other": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers; some cities require you to live in the home yourself (self-occupancy rules)."
+  }
+ },
+ "portugal": {
+  "name": "Portugal",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "uk": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "na": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "other": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  }
+ },
+ "poland": {
+  "name": "Poland",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "As an EU/EEA or Swiss citizen you buy freely."
+  },
+  "uk": {
+   "s": "amber",
+   "note": "Flats can be bought freely; a house or land needs a permit from the Ministry of the Interior.",
+   "badge": "Permit"
+  },
+  "na": {
+   "s": "amber",
+   "note": "Flats can be bought freely; a house or land needs a permit from the Ministry of the Interior.",
+   "badge": "Permit"
+  },
+  "other": {
+   "s": "amber",
+   "note": "Flats can be bought freely; a house or land needs a permit from the Ministry of the Interior.",
+   "badge": "Permit"
+  }
+ },
+ "greece": {
+  "name": "Greece",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "As an EU/EEA citizen you buy freely, border areas included."
+  },
+  "uk": {
+   "s": "amber",
+   "note": "Allowed, but in border areas (many islands, including parts of Crete and Rhodes) non-EU buyers need a permit from a local committee.",
+   "badge": "Permit"
+  },
+  "na": {
+   "s": "amber",
+   "note": "Allowed, but in border areas (many islands, including parts of Crete and Rhodes) non-EU buyers need a permit from a local committee.",
+   "badge": "Permit"
+  },
+  "other": {
+   "s": "amber",
+   "note": "Allowed, but in border areas (many islands, including parts of Crete and Rhodes) non-EU buyers need a permit from a local committee.",
+   "badge": "Permit"
+  }
+ },
+ "switzerland": {
+  "name": "Switzerland",
+  "updated": "2026-11",
+  "eu": {
+   "s": "amber",
+   "note": "Free if you live in Switzerland; non-residents need a cantonal permit (Lex Koller) and holiday homes are limited by quotas.",
+   "badge": "Lex Koller"
+  },
+  "uk": {
+   "s": "amber",
+   "note": "Non-residents need a cantonal permit (Lex Koller) for a holiday home, within yearly quotas; investment-only purchases are not allowed.",
+   "badge": "Lex Koller"
+  },
+  "na": {
+   "s": "amber",
+   "note": "Non-residents need a cantonal permit (Lex Koller) for a holiday home, within yearly quotas; investment-only purchases are not allowed.",
+   "badge": "Lex Koller"
+  },
+  "other": {
+   "s": "amber",
+   "note": "Non-residents need a cantonal permit (Lex Koller) for a holiday home, within yearly quotas; investment-only purchases are not allowed.",
+   "badge": "Lex Koller"
+  }
+ },
+ "mexico": {
+  "name": "Mexico",
+  "updated": "2026-11",
+  "eu": {
+   "s": "amber",
+   "note": "Allowed. Near the coast or a border (the restricted zone, most beach towns) you own through a bank trust (fideicomiso); inland you can own directly.",
+   "badge": "Bank trust"
+  },
+  "uk": {
+   "s": "amber",
+   "note": "Allowed. Near the coast or a border (the restricted zone, most beach towns) you own through a bank trust (fideicomiso); inland you can own directly.",
+   "badge": "Bank trust"
+  },
+  "na": {
+   "s": "amber",
+   "note": "Allowed. Near the coast or a border (the restricted zone, most beach towns) you own through a bank trust (fideicomiso); inland you can own directly.",
+   "badge": "Bank trust"
+  },
+  "other": {
+   "s": "amber",
+   "note": "Allowed. Near the coast or a border (the restricted zone, most beach towns) you own through a bank trust (fideicomiso); inland you can own directly.",
+   "badge": "Bank trust"
+  }
+ },
+ "canada": {
+  "name": "Canada",
+  "updated": "2026-11",
+  "eu": {
+   "s": "amber",
+   "note": "Non-Canadians are banned from buying homes in cities and towns until 1 January 2027; rural and recreational homes are exempt. Check current status.",
+   "badge": "City ban"
+  },
+  "uk": {
+   "s": "amber",
+   "note": "Non-Canadians are banned from buying homes in cities and towns until 1 January 2027; rural and recreational homes are exempt. Check current status.",
+   "badge": "City ban"
+  },
+  "na": {
+   "s": "amber",
+   "note": "Canadian citizens and residents buy freely. US citizens fall under the ban on homes in cities and towns until 1 January 2027; rural homes are exempt. Check current status.",
+   "badge": "City ban"
+  },
+  "other": {
+   "s": "amber",
+   "note": "Non-Canadians are banned from buying homes in cities and towns until 1 January 2027; rural and recreational homes are exempt. Check current status.",
+   "badge": "City ban"
+  }
+ },
+ "bulgaria": {
+  "name": "Bulgaria",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "As an EU/EEA citizen you can buy homes and the land under them."
+  },
+  "uk": {
+   "s": "amber",
+   "note": "Flats freely; the land under a house can only be owned through a Bulgarian company.",
+   "badge": "Land via company"
+  },
+  "na": {
+   "s": "amber",
+   "note": "Flats freely; the land under a house can only be owned through a Bulgarian company.",
+   "badge": "Land via company"
+  },
+  "other": {
+   "s": "amber",
+   "note": "Flats freely; the land under a house can only be owned through a Bulgarian company.",
+   "badge": "Land via company"
+  }
+ },
+ "dominican-republic": {
+  "name": "the Dominican Republic",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "uk": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "na": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "other": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  }
+ },
+ "cyprus": {
+  "name": "Cyprus",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "As an EU/EEA citizen you buy freely."
+  },
+  "uk": {
+   "s": "amber",
+   "note": "Allowed, but non-EU buyers need a permit from the district office, usually for one home; the permit is normally a formality.",
+   "badge": "Permit"
+  },
+  "na": {
+   "s": "amber",
+   "note": "Allowed, but non-EU buyers need a permit from the district office, usually for one home; the permit is normally a formality.",
+   "badge": "Permit"
+  },
+  "other": {
+   "s": "amber",
+   "note": "Allowed, but non-EU buyers need a permit from the district office, usually for one home; the permit is normally a formality.",
+   "badge": "Permit"
+  }
+ },
+ "united-kingdom": {
+  "name": "the United Kingdom",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "uk": {
+   "s": "green",
+   "note": "You can buy freely."
+  },
+  "na": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "other": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  }
+ },
+ "japan": {
+  "name": "Japan",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "uk": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "na": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers: you can buy in your own name like a local."
+  },
+  "other": {
+   "s": "green",
+   "note": "No restrictions on foreign buyers; land near sensitive sites (bases, borders) must be reported."
+  }
+ },
+ "croatia": {
+  "name": "Croatia",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "As an EU/EEA citizen you buy freely."
+  },
+  "uk": {
+   "s": "amber",
+   "note": "Allowed with Ministry of Justice consent, based on reciprocity; agricultural land is excluded.",
+   "badge": "Permit"
+  },
+  "na": {
+   "s": "amber",
+   "note": "Allowed with Ministry of Justice consent, based on reciprocity; agricultural land is excluded.",
+   "badge": "Permit"
+  },
+  "other": {
+   "s": "amber",
+   "note": "Depends on reciprocity with your country and needs Ministry of Justice consent.",
+   "badge": "Reciprocity"
+  }
+ },
+ "malta": {
+  "name": "Malta",
+  "updated": "2026-11",
+  "eu": {
+   "s": "amber",
+   "note": "Free if you have lived in Malta 5 years or buy in a Special Designated Area; otherwise a permit (AIP) is needed for a second home.",
+   "badge": "Permit"
+  },
+  "uk": {
+   "s": "amber",
+   "note": "Outside Special Designated Areas you need a permit (AIP) and a minimum price; inside them you buy freely.",
+   "badge": "Permit"
+  },
+  "na": {
+   "s": "amber",
+   "note": "Outside Special Designated Areas you need a permit (AIP) and a minimum price; inside them you buy freely.",
+   "badge": "Permit"
+  },
+  "other": {
+   "s": "amber",
+   "note": "Outside Special Designated Areas you need a permit (AIP) and a minimum price; inside them you buy freely.",
+   "badge": "Permit"
+  }
+ },
+ "indonesia": {
+  "name": "Indonesia",
+  "updated": "2026-11",
+  "eu": {
+   "s": "red",
+   "note": "Foreigners cannot own freehold land (Hak Milik); you hold a right to use (Hak Pakai) with a residence permit, or a long lease.",
+   "badge": "Leasehold"
+  },
+  "uk": {
+   "s": "red",
+   "note": "Foreigners cannot own freehold land (Hak Milik); you hold a right to use (Hak Pakai) with a residence permit, or a long lease.",
+   "badge": "Leasehold"
+  },
+  "na": {
+   "s": "red",
+   "note": "Foreigners cannot own freehold land (Hak Milik); you hold a right to use (Hak Pakai) with a residence permit, or a long lease.",
+   "badge": "Leasehold"
+  },
+  "other": {
+   "s": "red",
+   "note": "Foreigners cannot own freehold land (Hak Milik); you hold a right to use (Hak Pakai) with a residence permit, or a long lease.",
+   "badge": "Leasehold"
+  }
+ },
+ "thailand": {
+  "name": "Thailand",
+  "updated": "2026-11",
+  "eu": {
+   "s": "red",
+   "note": "Foreigners cannot own land; condos can be owned within the 49% foreign quota, houses only through a lease.",
+   "badge": "No land"
+  },
+  "uk": {
+   "s": "red",
+   "note": "Foreigners cannot own land; condos can be owned within the 49% foreign quota, houses only through a lease.",
+   "badge": "No land"
+  },
+  "na": {
+   "s": "red",
+   "note": "Foreigners cannot own land; condos can be owned within the 49% foreign quota, houses only through a lease.",
+   "badge": "No land"
+  },
+  "other": {
+   "s": "red",
+   "note": "Foreigners cannot own land; condos can be owned within the 49% foreign quota, houses only through a lease.",
+   "badge": "No land"
+  }
+ },
+ "philippines": {
+  "name": "the Philippines",
+  "updated": "2026-11",
+  "eu": {
+   "s": "red",
+   "note": "Foreigners cannot own land; condos can be owned within the 40% foreign quota, houses only through a lease.",
+   "badge": "No land"
+  },
+  "uk": {
+   "s": "red",
+   "note": "Foreigners cannot own land; condos can be owned within the 40% foreign quota, houses only through a lease.",
+   "badge": "No land"
+  },
+  "na": {
+   "s": "red",
+   "note": "Foreigners cannot own land; condos can be owned within the 40% foreign quota, houses only through a lease.",
+   "badge": "No land"
+  },
+  "other": {
+   "s": "red",
+   "note": "Foreigners cannot own land; condos can be owned within the 40% foreign quota, houses only through a lease.",
+   "badge": "No land"
+  }
+ },
+ "vietnam": {
+  "name": "Vietnam",
+  "updated": "2026-11",
+  "eu": {
+   "s": "red",
+   "note": "Foreigners cannot own land; approved apartments and houses can be held for 50 years, renewable.",
+   "badge": "50-year use"
+  },
+  "uk": {
+   "s": "red",
+   "note": "Foreigners cannot own land; approved apartments and houses can be held for 50 years, renewable.",
+   "badge": "50-year use"
+  },
+  "na": {
+   "s": "red",
+   "note": "Foreigners cannot own land; approved apartments and houses can be held for 50 years, renewable.",
+   "badge": "50-year use"
+  },
+  "other": {
+   "s": "red",
+   "note": "Foreigners cannot own land; approved apartments and houses can be held for 50 years, renewable.",
+   "badge": "50-year use"
+  }
+ },
+ "albania": {
+  "name": "Albania",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "Homes and building plots can be bought freely; only agricultural land is closed to foreigners."
+  },
+  "uk": {
+   "s": "green",
+   "note": "Homes and building plots can be bought freely; only agricultural land is closed to foreigners."
+  },
+  "na": {
+   "s": "green",
+   "note": "Homes and building plots can be bought freely; only agricultural land is closed to foreigners."
+  },
+  "other": {
+   "s": "green",
+   "note": "Homes and building plots can be bought freely; only agricultural land is closed to foreigners."
+  }
+ },
+ "montenegro": {
+  "name": "Montenegro",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "Homes and building plots can be bought freely; agricultural land and forests are closed to foreigners."
+  },
+  "uk": {
+   "s": "green",
+   "note": "Homes and building plots can be bought freely; agricultural land and forests are closed to foreigners."
+  },
+  "na": {
+   "s": "green",
+   "note": "Homes and building plots can be bought freely; agricultural land and forests are closed to foreigners."
+  },
+  "other": {
+   "s": "green",
+   "note": "Homes and building plots can be bought freely; agricultural land and forests are closed to foreigners."
+  }
+ },
+ "georgia": {
+  "name": "Georgia",
+  "updated": "2026-11",
+  "eu": {
+   "s": "green",
+   "note": "Homes and apartments can be bought freely; agricultural land is closed to foreigners."
+  },
+  "uk": {
+   "s": "green",
+   "note": "Homes and apartments can be bought freely; agricultural land is closed to foreigners."
+  },
+  "na": {
+   "s": "green",
+   "note": "Homes and apartments can be bought freely; agricultural land is closed to foreigners."
+  },
+  "other": {
+   "s": "green",
+   "note": "Homes and apartments can be bought freely; agricultural land is closed to foreigners."
+  }
+ },
+ "northern-cyprus": {
+  "name": "Northern Cyprus",
+  "updated": "2026-11",
+  "eu": {
+   "s": "amber",
+   "note": "Foreigners need Council of Ministers approval, and titles from before 1974 can be disputed: use an independent lawyer.",
+   "badge": "Permit"
+  },
+  "uk": {
+   "s": "amber",
+   "note": "Foreigners need Council of Ministers approval, and titles from before 1974 can be disputed: use an independent lawyer.",
+   "badge": "Permit"
+  },
+  "na": {
+   "s": "amber",
+   "note": "Foreigners need Council of Ministers approval, and titles from before 1974 can be disputed: use an independent lawyer.",
+   "badge": "Permit"
+  },
+  "other": {
+   "s": "amber",
+   "note": "Foreigners need Council of Ministers approval, and titles from before 1974 can be disputed: use an independent lawyer.",
+   "badge": "Permit"
+  }
+ },
+ "_meta": {
+  "updated": "2026-11",
+  "note": "General rules on whether foreigners can buy, by buyer group (eu = EU/EEA, uk, na = US/Canada, other). General information, not legal advice."
+ }
+}

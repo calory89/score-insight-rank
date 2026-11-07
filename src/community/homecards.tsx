@@ -7,6 +7,7 @@ import { useScore } from "./scores";
 import { t } from "./i18n";
 import { TaxLine } from "./taxes";
 import { SaveHeart } from "./v4";
+import { CardCheck } from "./check";
 
 const gtone = (n: number) => (n >= 90 ? "is-top" : n >= 80 ? "is-great" : "is-good");
 const isNew = (d: any) => { const at = d.approved_at || d.publish_at; return !!at && Date.now() - new Date(at).getTime() < 36 * 3600 * 1000; };
@@ -35,6 +36,7 @@ export function HomeCard({ deal, pos }: { deal: any; pos: number }) {
         <span className="hx-text">
           <strong>{title}</strong>
           <small>{where(deal)}</small>
+          <CardCheck d={deal} />
           {pick && <small className="hx-pick">{pick}</small>}
           <TaxLine deal={deal} />
         </span>

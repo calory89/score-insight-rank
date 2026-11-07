@@ -19,7 +19,7 @@ import {
 } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { EBC, totalCost } from "@/lib/rh";
+import { EBC } from "@/lib/rh";
 import { listingVideo } from "@/lib/listing-media";
 import OriginalListingLink from "@/components/realhunt/OriginalListingLink";
 import { RemoteWorkCard, RemoteWorkStrip } from "@/components/realhunt/RemoteWorkBridge";
@@ -38,7 +38,8 @@ import { regionOf, slugify } from "./regions";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, GUIDES, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { CountriesPage } from "./countries";
-import { CostBadge, RunningCosts } from "./costs";
+import { CostBadge } from "./costs";
+import { CardCheck, CheckLayer } from "./check";
 const slugCountryKey = (c?: string | null) => String(c || "").toLowerCase().trim().replace(/\s+/g, "-");
 import { t } from "./i18n";
 import { FindHomePage, FindHomeCTA } from "./findhome";
@@ -552,6 +553,7 @@ function Card({
         {deal.price_eur != null && <div className="hunt-price">
           {money(deal.price_eur)}
         </div>}
+        <CardCheck d={deal as any} />
         <LocalPrice eur={deal.price_eur} sqm={deal.sqm} />
         <CostBadge d={deal as any} />
         <StatusTags deal={deal as Row} />
@@ -1014,9 +1016,6 @@ function Detail() {
           <StatusTags deal={d as Row} />
           <VerifiedLine deal={d as Row} />
           {(d as any).developer && <DevBlock deal={d as Row} />}
-          {d.price_eur != null && totalCost(d.price_eur, d.country) && (
-            <p className="hunt-allin">Illustrative purchase estimate before renovation: <strong>{money(totalCost(d.price_eur, d.country))}</strong></p>
-          )}
           <p className="hv-detail-where">{FLAG_[d.country] || "📍"} {d.location_name}</p>
           <p>
             {isImported(d) ? "Spotted on" : "Found by"}{" "}
@@ -1026,7 +1025,7 @@ function Detail() {
           <Amenities deal={d} />
           {d.why_great && <blockquote>{d.why_great}</blockquote>}
           {!isEs() && <TranslateBar text={[cleanTitle(d), d.why_great].filter(Boolean).join("\n\n")} />}
-          <RunningCosts d={d as any} />
+          <CheckLayer d={d as any} />
           <HomeArticle d={d} />
           <div className="hunt-detail-actions hv-detail-actions">
             {listing}

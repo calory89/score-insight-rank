@@ -2,6 +2,7 @@ import { QUICK, DIMS } from "./scores";
 import { fmt as fmtCost } from "./costs";
 import GUIDES_JSON from "@/data/guides.json";
 import DEST_JSON from "@/data/destinations.json";
+import { CardCheck } from "./check";
 import {BuyerAlertPreferences} from "./OperationsTools";
 import {PropertyImage, RentPreference} from "./BuyerTools";
 import {userRent} from "./buyer-state";
@@ -247,7 +248,7 @@ export function MiniCard({ d }: { d: Row }) {
   return (
     <Link className="hunt-minicard" to={`/deal/${d.slug}`}>
       <PropertyImage src={d.image_urls?.[0]} fallback={d.image_urls?.[1]} alt={niceTitle(d)} loading="lazy" />
-      <div><strong>{money(d.price_eur)}</strong>{(d as any).hoa_monthly > 0 && <em className="rh-mini-fee">+ {fmtCost(Number((d as any).hoa_monthly), (d as any).hoa_currency)}/mo HOA</em>}<span>{niceTitle(d)}</span><small><MapPin size={11} /> {d.location_name || d.country}</small></div>
+      <div><strong>{money(d.price_eur)}</strong>{(d as any).hoa_monthly > 0 && <em className="rh-mini-fee">+ {fmtCost(Number((d as any).hoa_monthly), (d as any).hoa_currency)}/mo HOA</em>}<CardCheck d={d as any} /><span>{niceTitle(d)}</span><small><MapPin size={11} /> {d.location_name || d.country}</small></div>
     </Link>
   );
 }
