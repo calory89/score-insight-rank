@@ -16,13 +16,14 @@ import { weatherShell } from "../src/pages/wx/shell";
 import { DIMS, AMEN } from "../src/community/dims";
 import { regionOf, slugify, HOME_TYPES } from "../src/community/regions";
 import { homeArticle } from "../src/community/homeArticle";
+import { type CanBuyData, STATUS_LABEL, UPDATED, canBuyPairs, canBuyCountries, canBuySlug, ruleFor, residencyFor, canBuyFaq, canBuyMeta, fill, costLines, costCountries, nameOf, fmtMoney } from "../src/community/seo2data";
 
 const SITE = "https://realhunt.co";
 const DEF = `${SITE}/og-home.jpg`;
 const MIN_LIST = 3;
 const PRICE_BANDS = [20000, 40000, 60000, 80000, 100000, 150000];
 
-type Opts = { noindex?: boolean; lastmod?: string | null; group?: "pages" | "homes" | "places" | "content" | "top" };
+type Opts = { noindex?: boolean; lastmod?: string | null; group?: "pages" | "homes" | "places" | "content" | "top"; head?: string };
 type Entry = { url: string; lastmod: string | null; group: string };
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -64,6 +65,7 @@ function build(root: string) {
   const page = (url: string, title: string, desc: string, image: string, body?: string, ld?: object[], o: Opts = {}) => {
     let h = html;
     if (body) h = h.replace('<div id="root"></div>', () => `<div id="root">${body}</div>`);
+    if (o.head) h = h.replace("</head>", () => o.head + "</head>");
     if (ld?.length) h = h.replace("</head>", () => ld.map((x) => `<script type="application/ld+json">${JSON.stringify(x).replace(/</g, "\\u003c")}</script>`).join("") + "</head>");
     const rep = (re: RegExp, val: string) => { h = h.replace(re, () => val); };
     rep(/<title>[^<]*<\/title>/, `<title>${esc(title)}</title>`);
@@ -289,10 +291,16 @@ function build(root: string) {
   page(`${SITE}/new`, "New homes on RealHunt, newest first", `The ${newest.length} newest homes to pass our check, newest first, with price, size and score. Also as an RSS feed.`, newest[0] ? homeImg(newest[0]) : DEF,
     `<main class="rh-static" data-rh-keep data-rh-static>${navHtml([["RealHunt", SITE + "/"], ["New homes", SITE + "/new"]])}<h1>New homes, newest first</h1><p>The newest homes to pass our check. Follow them in any feed reader: <a href="/feed.xml">RSS feed</a>, or <a href="/alerts">get them by email</a>.</p>`
     + `<ol>${newest.map((r) => homeLi(r).replace("</li>", ` · added ${esc(day(r.publish_at || r.approved_at) || "")}</li>`)).join("")}</ol></main>`,
-    [crumbs([["RealHunt", SITE + "/"], ["New homes", SITE + "/new"]])], { lastmod: maxDay(newest.map(homeDay)), group: "pages" });
+    [crumbs([["RealHunt", SITE + "/"], ["New homes", SITE + "/new"]])], { lastmod: maxDay(newest.map(homeDay)), group: "pages", head: `<link rel="alternate" type="application/rss+xml" title="RealHunt: new homes" href="${SITE}/new.xml" />` });
   const rssDate = (s: string) => new Date(s).toUTCString();
   fs.writeFileSync(path.join(root, "feed.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>RealHunt: new homes</title><link>${SITE}/new</link><atom:link href="${SITE}/feed.xml" rel="self" type="application/rss+xml"/><description>New homes on RealHunt, checked by a person and scored from 70 to 98.</description><language>en</language>`
     + newest.map((r) => { const u = `${SITE}/deal/${r.slug}`; const img = r.image_urls?.[0] ? abs(r.image_urls[0]) : ""; return `<item><title>${esc(`${eur(r.price_eur)} · ${r.title}`)}</title><link>${u}</link><guid isPermaLink="true">${u}</guid><pubDate>${rssDate(r.publish_at || r.approved_at)}</pubDate><description>${esc(`${r.location_name || r.country}. ${r.sqm ? r.sqm + " m². " : ""}RealHunt score ${r.nota ?? ""}. ${r.why_great || ""}`)}</description>${img ? `<enclosure url="${esc(img)}" type="image/${img.endsWith(".webp") ? "webp" : "jpeg"}" length="0"/>` : ""}</item>`; }).join("")
+    + `</channel></rss>\n`);
+
+  // /new.xml: the 50 newest homes as RSS (same items as /feed.xml, which keeps its 40 for existing subscribers).
+  const newest50 = rows.filter((r) => r.publish_at || r.approved_at).slice().sort((a, b) => String(b.publish_at || b.approved_at).localeCompare(String(a.publish_at || a.approved_at))).slice(0, 50);
+  fs.writeFileSync(path.join(root, "new.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>RealHunt: the 50 newest homes</title><link>${SITE}/new</link><atom:link href="${SITE}/new.xml" rel="self" type="application/rss+xml"/><description>The 50 newest homes on RealHunt, each checked by a person and scored from 70 to 98.</description><language>en</language>`
+    + newest50.map((r) => { const u = `${SITE}/deal/${r.slug}`; const img = r.image_urls?.[0] ? abs(r.image_urls[0]) : ""; return `<item><title>${esc(`${eur(r.price_eur)} · ${r.title}`)}</title><link>${u}</link><guid isPermaLink="true">${u}</guid><pubDate>${rssDate(r.publish_at || r.approved_at)}</pubDate><category>${esc(r.country)}</category><description>${esc(`${r.location_name || r.country}. ${r.sqm ? r.sqm + " m². " : ""}${r.bedrooms ? r.bedrooms + " bedrooms. " : ""}RealHunt score ${r.nota ?? ""}. ${r.why_great || ""}`)}</description>${img ? `<enclosure url="${esc(img)}" type="image/${img.endsWith(".webp") ? "webp" : "jpeg"}" length="0"/>` : ""}</item>`; }).join("")
     + `</channel></rss>\n`);
 
   // ---------- Price report (/research/prices): by country, from the homes on the site ----------
@@ -348,10 +356,11 @@ function build(root: string) {
 
   // ---------- Research blog ----------
   const posts: any[] = readJson("src/data/blog.json", []);
+  const blogRss = `<link rel="alternate" type="application/rss+xml" title="RealHunt Research" href="${SITE}/blog/rss.xml" />`;
   const card = (p: any) => `<li><a href="/blog/${esc(p.slug)}"><strong>${esc(p.title)}</strong></a> <span>${esc(p.desc)}</span></li>`;
   page(`${SITE}/blog`, "RealHunt Research · Data on cheap homes around the world", "Original data and plain-English guides on affordable homes: prices by country, buying rules, rent vs buy.", posts[0] ? abs(posts[0].image) : DEF,
     `<main class="rh-static"><h1>RealHunt Research</h1><p>Studies and guides built from the homes on RealHunt.</p><ul>${posts.map(card).join("")}</ul></main>`,
-    [crumbs([["RealHunt", SITE + "/"], ["Research", SITE + "/blog"]])], { lastmod: maxDay(posts.map((p) => p.date)), group: "content" });
+    [crumbs([["RealHunt", SITE + "/"], ["Research", SITE + "/blog"]])], { lastmod: maxDay(posts.map((p) => p.date)), group: "content", head: blogRss });
   for (const p of posts) {
     if (!/^[a-z0-9-]+$/.test(p.slug)) continue;
     const url = `${SITE}/blog/${p.slug}`;
@@ -360,8 +369,15 @@ function build(root: string) {
       [{ "@context": "https://schema.org", "@type": "Article", headline: p.title, description: p.desc, image: [abs(p.image)], datePublished: p.date, dateModified: p.updated || p.date, mainEntityOfPage: url,
          author: { "@type": "Organization", name: p.author, url: SITE + "/blog" }, publisher: { "@type": "Organization", name: "RealHunt", logo: { "@type": "ImageObject", url: SITE + "/apple-touch-icon.png" } } },
        crumbs([["RealHunt", SITE + "/"], ["Research", SITE + "/blog"], [p.title, url]])],
-      { lastmod: day(p.updated || p.date), group: "content" });
+      { lastmod: day(p.updated || p.date), group: "content", head: blogRss });
   }
+  // RSS of the latest 30 posts (/blog/rss.xml), linked from the head of every blog page.
+  const byDate = posts.filter((p) => /^[a-z0-9-]+$/.test(p.slug)).slice().sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 30);
+  fs.mkdirSync(path.join(root, "blog"), { recursive: true });
+  fs.writeFileSync(path.join(root, "blog", "rss.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>RealHunt Research</title><link>${SITE}/blog</link><atom:link href="${SITE}/blog/rss.xml" rel="self" type="application/rss+xml"/><description>Data and plain-English guides on cheap homes around the world, from the homes on RealHunt.</description><language>en</language>`
+    + (byDate[0] ? `<lastBuildDate>${new Date(byDate[0].updated || byDate[0].date).toUTCString()}</lastBuildDate>` : "")
+    + byDate.map((p) => { const u = `${SITE}/blog/${p.slug}`; const img = p.image ? abs(p.image) : ""; return `<item><title>${esc(p.title)}</title><link>${u}</link><guid isPermaLink="true">${u}</guid><pubDate>${new Date(p.date).toUTCString()}</pubDate><description>${esc(p.desc)}</description>${(p.tags || []).map((t: string) => `<category>${esc(t)}</category>`).join("")}${img ? `<enclosure url="${esc(img)}" type="image/${img.endsWith(".webp") ? "webp" : img.endsWith(".png") ? "png" : "jpeg"}" length="0"/>` : ""}</item>`; }).join("")
+    + `</channel></rss>\n`);
 
   // ---------- Cheap houses by what you want ----------
   const sp: any = readJson("src/data/search-pages.json", { pages: [], homes: {} });
@@ -473,7 +489,7 @@ function build(root: string) {
       + (c.purchase_costs_pct ? `<h2>Costs on top of the price</h2><p>About ${esc(c.purchase_costs_pct)}%${c.purchase_costs_breakdown ? `: ${esc(c.purchase_costs_breakdown)}` : ""}</p>` : "")
       + `<h2>Every year</h2><p>${esc(g.yearly)}</p>` + (c.annual_property_tax ? `<p>Yearly property tax: ${esc(c.annual_property_tax)}</p>` : "") + (c.rental_income_tax ? `<p>Tax on rental income: ${esc(c.rental_income_tax)}</p>` : "")
       + (hs.length >= MIN_LIST ? `<h2>Best homes in ${esc(the(n))}</h2><ol>${hs.slice(0, 6).map(homeLi).join("")}</ol><p><a href="/homes/${k}">All ${hs.length} homes in ${esc(the(n))}</a></p>` : "")
-      + (dest[k] ? `<p><a href="/costs/${k}">Costs, taxes and sources for ${esc(n)}</a></p>` : "")
+      + (dest[k] ? `<p><a href="/costs/${k}">Costs, taxes and sources for ${esc(n)}</a>${c.purchase_costs_pct ? ` · <a href="/buying-costs/${k}">Buying-cost calculator for ${esc(n)}</a>` : ""} · <a href="/can-i-buy">Can I buy there? Rules by nationality</a></p>` : "")
       + (others.length && cmpKeys.includes(k) ? `<h2>Compare ${esc(n)}</h2><ul>${others.map((x) => `<li><a href="${pairUrl(k, x)}">${esc(n)} vs ${esc(guides[x].name)}</a></li>`).join("")}</ul>` : "")
       + (c.sources?.length ? `<h2>Sources</h2><ul>${srcList(c)}</ul>` : "") + `</main>`,
       [crumbs([["RealHunt", SITE + "/"], ["Guides", SITE + "/guide"], [n, `${SITE}/guide/${k}`]]), faqLd(qa)], { group: "content" });
@@ -506,6 +522,72 @@ function build(root: string) {
       + `</main>`,
       [crumbs([["RealHunt", SITE + "/"], ["Compare countries", SITE + "/countries"], [`${A.name} vs ${B.name}`, `${SITE}${pairUrl(ka, kb)}`]])], { group: "content" });
   }
+  // ---------- Can I buy there? /can-i-buy and /can-i-buy/<nationality>-in-<country> (src/community/seo2.tsx) ----------
+  // Rules: src/data/canbuy.json; costs and taxes: destinations.json; steps: guides.json. Logic shared in seo2data.ts.
+  const cb: CanBuyData = readJson("src/data/canbuy.json", { nationalities: {}, countries: {}, eu: [], schengen: [], _meta: {} });
+  const cbCountries = canBuyCountries(cb, dest, guides);
+  const cbPairs = canBuyPairs(cb, dest, guides);
+  const pill = (st: string) => `<strong>${esc(STATUS_LABEL[st as keyof typeof STATUS_LABEL])}</strong>`;
+  const cbTrail: [string, string][] = [["RealHunt", SITE + "/"], ["Can I buy there?", SITE + "/can-i-buy"]];
+  if (cbPairs.length) {
+    page(`${SITE}/can-i-buy`, `Can I buy property abroad? Rules by nationality for ${cbCountries.length} countries (${UPDATED}) · RealHunt`,
+      "Can Americans, British, Canadians, Australians and Europeans buy a home in Spain, Italy, Denmark, Switzerland, Mexico and more? The short answer for each nationality, with costs and taxes.", DEF,
+      `<main class="rh-static">${navHtml(cbTrail)}<h1>Can I buy property there? Rules by nationality</h1><p>Whether you can buy a home, on what conditions, and what it costs on top of the price, for ${Object.keys(cb.nationalities).length} nationalities in ${cbCountries.length} countries. General information, not legal advice. Updated ${UPDATED}.</p>`
+      + Object.entries(cb.nationalities).map(([nk, nv]) => `<h2>${esc(nv.label)} buyers</h2><ul>${cbCountries.filter((c) => nv.home !== c).map((c) => { const r = ruleFor(cb, nk, c)!; return `<li><a href="/can-i-buy/${canBuySlug(nk, c)}">Can ${esc(nv.noun)} buy property in ${esc(the(guides[c].name))}?</a> ${pill(r.s)}</li>`; }).join("")}</ul>`).join("")
+      + `<p><a href="/buying-costs">Buying-cost calculator</a> · <a href="/guide">Buying guides by country</a> · <a href="/countries">Compare two countries</a></p></main>`,
+      [crumbs(cbTrail)], { group: "content" });
+  }
+  for (const { nat, country, slug } of cbPairs) {
+    const nv = cb.nationalities[nat]; const r = ruleFor(cb, nat, country)!; const name = guides[country].name; const d = dest[country] || {}; const g = guides[country];
+    const url = `${SITE}/can-i-buy/${slug}`;
+    const m = canBuyMeta(cb, nat, country, name);
+    const hs = homesOf(country);
+    const faq = canBuyFaq(cb, nat, country, { dest: d, guide: g, name, homes: hs });
+    const ex = costLines(150000, d);
+    const res = residencyFor(cb, nat, country, name);
+    const trail: [string, string][] = [...cbTrail, [`${nv.label} buyers in ${name}`, url]];
+    const top = hs.slice(0, 6);
+    page(url, m.title, m.desc, top[0] ? homeImg(top[0]) : DEF,
+      `<main class="rh-static"><article>${navHtml(trail)}<h1>${esc(m.h1)}</h1>`
+      + `<p>Short answer: ${pill(r.s)}.</p><p>${esc(fill(r.a, nv))}</p><p>General information, not legal advice. Updated ${UPDATED}.</p>`
+      + (ex ? `<h2>What it costs to buy</h2><p>About ${esc(d.purchase_costs_pct)}% on top of the price. On a €150,000 home that is ${esc(ex.fees)}, so ${esc(ex.total)} in total.</p>${d.purchase_costs_breakdown ? `<p>${esc(d.purchase_costs_breakdown)}</p>` : ""}<p><a href="/buying-costs/${country}">Work it out for your price</a></p>` : "")
+      + `<h2>Every year</h2>${d.annual_property_tax ? `<p>Yearly property tax: ${esc(d.annual_property_tax)}</p>` : ""}${g.yearly ? `<p>${esc(g.yearly)}</p>` : ""}${d.rental_income_tax ? `<p>Tax on rental income: ${esc(d.rental_income_tax)}</p>` : ""}`
+      + (res.length ? `<h2>Living there</h2>${res.map((x) => `<p>${esc(x)}</p>`).join("")}` : "")
+      + (nv.notes.length ? `<h2>Good to know as ${esc(nv.noun)}</h2><ul>${nv.notes.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "")
+      + (g.steps?.length ? `<h2>The steps to buy in ${esc(the(name))}</h2><ol>${g.steps.map(([h]) => `<li>${esc(h)}</li>`).join("")}</ol><p><a href="/guide/${country}">The full guide, step by step</a></p>` : "")
+      + (top.length ? `<h2>Best homes in ${esc(name)}</h2><ol>${top.map(homeLi).join("")}</ol>${hs.length > top.length ? `<p><a href="/homes/${country}">All ${hs.length} homes in ${esc(the(name))}</a></p>` : ""}` : "")
+      + `<h2>Questions</h2>${faq.map(([q, a]) => `<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join("")}`
+      + `<p><a href="/guide/${country}">How to buy in ${esc(the(name))}</a> · <a href="/costs/${country}">Costs, taxes and sources</a></p>`
+      + `<h2>Other nationalities in ${esc(name)}</h2><p>${Object.keys(cb.nationalities).filter((k) => k !== nat && cb.nationalities[k].home !== country).map((k) => `<a href="/can-i-buy/${canBuySlug(k, country)}">${esc(cb.nationalities[k].label)}</a>`).join(" · ")}</p>`
+      + `<h2>${esc(nv.label)} buyers in other countries</h2><p>${cbCountries.filter((c) => c !== country && c !== nv.home).map((c) => `<a href="/can-i-buy/${canBuySlug(nat, c)}">${esc(guides[c].name)}</a>`).join(" · ")}</p>`
+      + `</article></main>`,
+      [crumbs(trail), faqLd(faq)], { group: "content", lastmod: "2026-11-07" });
+  }
+
+  // ---------- Buying-cost calculator: /buying-costs and /buying-costs/<country> (src/community/seo2.tsx) ----------
+  const calcKeys = costCountries(dest, guides);
+  const calcTrail: [string, string][] = [["RealHunt", SITE + "/"], ["Buying costs", SITE + "/buying-costs"]];
+  const exTable = (d: any) => `<table><thead><tr><th>Price</th><th>Taxes and fees</th><th>Total</th></tr></thead><tbody>${[150000, 300000].map((p) => { const x = costLines(p, d)!; return `<tr><td>${esc(fmtMoney(p))}</td><td>${esc(x.fees)}</td><td>${esc(x.total)}</td></tr>`; }).join("")}</tbody></table>`;
+  page(`${SITE}/buying-costs`, `Buying costs calculator: taxes and fees in ${calcKeys.length} countries · RealHunt`, `Enter a price and see what you pay on top in taxes and fees when you buy a home in ${calcKeys.length} countries, from Spain and Italy to Japan and Mexico.`, DEF,
+    `<main class="rh-static">${navHtml(calcTrail)}<h1>What does it cost to buy a home abroad?</h1><p>Taxes and fees you pay on top of the price: transfer tax or VAT, notary, land registry and lawyer. Worked example for a €150,000 home:</p>`
+    + `<table><thead><tr><th>Country</th><th>On top of the price</th><th>On €150,000</th></tr></thead><tbody>${calcKeys.map((k) => { const x = costLines(150000, dest[k])!; return `<tr><td><a href="/buying-costs/${k}">${esc(nameOf(k, guides))}</a></td><td>${esc(dest[k].purchase_costs_pct)}%</td><td>${esc(x.fees)}</td></tr>`; }).join("")}</tbody></table>`
+    + `<p>General information, not tax or legal advice. <a href="/can-i-buy">Can I buy there?</a> · <a href="/costs">Real costs and rental yields</a></p></main>`,
+    [crumbs(calcTrail)], { group: "content" });
+  for (const k of calcKeys) {
+    const d = dest[k]; const n = nameOf(k, guides); const url = `${SITE}/buying-costs/${k}`;
+    const trail: [string, string][] = [...calcTrail, [n, url]];
+    const e150 = costLines(150000, d)!;
+    page(url, `Buying costs calculator for ${the(n)}: taxes and fees on top of the price · RealHunt`, `What you pay on top of the price when you buy a home in ${the(n)}: about ${d.purchase_costs_pct}% in taxes and fees, so ${e150.fees} on a €150,000 home. With a calculator and worked examples.`, DEF,
+      `<main class="rh-static">${navHtml(trail)}<h1>Buying costs in ${esc(the(n))}</h1><p>About ${esc(d.purchase_costs_pct)}% on top of the price in taxes and fees. Use the calculator on this page for your price, or see the worked examples:</p>`
+      + `<h2>Worked examples</h2>${exTable(d)}`
+      + (d.purchase_costs_breakdown ? `<h2>Where the money goes</h2><p>${esc(d.purchase_costs_breakdown)}</p>` : "")
+      + (d.annual_property_tax ? `<h2>Every year after you buy</h2><p>Yearly property tax: ${esc(d.annual_property_tax)}</p>` : "")
+      + (d.rental_income_tax ? `<p>Tax on rental income: ${esc(d.rental_income_tax)}</p>` : "")
+      + `<p>Costs are a share of the price, so they work in any currency. Figures as of ${esc(d.as_of)}. General information, not tax or legal advice.</p>`
+      + `<p>${guides[k] ? `<a href="/guide/${k}">How to buy in ${esc(the(n))}</a> · ` : ""}<a href="/costs/${k}">Costs, taxes and sources</a> · <a href="/buying-costs">Other countries</a></p></main>`,
+      [crumbs(trail)], { group: "content", lastmod: day(String(d.as_of || "")) });
+  }
+
   page(`${SITE}/research/new-builds`, "State of cheap new builds · RealHunt monthly report", "Every month: how many new-build homes under €100,000 we track, the cheapest countries and median prices. Free to quote with a link.", DEF, undefined, undefined, { group: "content" });
   page(`${SITE}/agents`, "RealHunt Agents · Earn from buyers you bring", "Local agents introduce buyers to new-build developers on RealHunt and earn 30% of RealHunt's fee when they buy.", DEF);
   page(`${SITE}/network/example`, "Example listing · RealHunt Network", "See how a new-build project looks on RealHunt and what the developer receives: qualified buyers, chat, rank and a 30-second video.", DEF);
@@ -519,7 +601,7 @@ function build(root: string) {
     `<main class="rh-static" data-rh-keep data-rh-static>${navHtml([["RealHunt", SITE + "/"], ["Site map", SITE + "/sitemap"]])}<h1>Site map</h1>`
     + ["pages", "places", "content", "top", "homes"].map((g) => `<h2>${esc(groupNames[g])} (${byGroup(g).length})</h2><ul>${byGroup(g).map((e) => `<li><a href="${esc(label(e.url))}">${esc(label(e.url))}</a></li>`).join("")}</ul>`).join("")
     + `</main>`, undefined, { group: "pages" });
-  fs.writeFileSync(path.join(root, "llms.txt"), `# RealHunt\n\n> RealHunt lists cheap homes for sale around the world (mostly under €100,000), each checked by a person and graded from 70 to 98 against every other home on the site. It is not an estate agent: every home links to its original listing.\n\nToday: ${rows.length} homes in ${countryLinks.length} countries. Updated ${today}.\n\n## Key pages\n\n- [Best homes](${SITE}/): all homes, best score first, with filters.\n- [How the score works](${SITE}/method): the 11 sub-scores and what the grade means.\n- [New homes](${SITE}/new) and [RSS](${SITE}/feed.xml)\n- [Prices by country](${SITE}/research/prices): median price and price per m² by country.\n- [Buying costs abroad](${SITE}/costs)\n- [Buying guides by country](${SITE}/guide)\n- [Compare two countries](${SITE}/countries)\n- [New builds Top 100](${SITE}/top): Bali, Phuket, Tulum, Batumi, Koh Samui.\n- [Research and guides](${SITE}/blog)\n- [Site map](${SITE}/sitemap)\n\n## Countries\n\n${countryLinks.map(([k, v]) => `- [${v.name}](${SITE}/homes/${k}): ${v.homes.length} homes`).join("\n")}\n`);
+  fs.writeFileSync(path.join(root, "llms.txt"), `# RealHunt\n\n> RealHunt lists cheap homes for sale around the world (mostly under €100,000), each checked by a person and graded from 70 to 98 against every other home on the site. It is not an estate agent: every home links to its original listing.\n\nToday: ${rows.length} homes in ${countryLinks.length} countries. Updated ${today}.\n\n## Key pages\n\n- [Best homes](${SITE}/): all homes, best score first, with filters.\n- [How the score works](${SITE}/method): the 11 sub-scores and what the grade means.\n- [New homes](${SITE}/new) and [RSS](${SITE}/feed.xml)\n- [Prices by country](${SITE}/research/prices): median price and price per m² by country.\n- [Buying costs abroad](${SITE}/costs)\n- [Buying guides by country](${SITE}/guide)\n- [Can I buy there? Rules by nationality](${SITE}/can-i-buy)\n- [Buying-cost calculator](${SITE}/buying-costs)\n- [Compare two countries](${SITE}/countries)\n- [New builds Top 100](${SITE}/top): Bali, Phuket, Tulum, Batumi, Koh Samui.\n- [Research and guides](${SITE}/blog) and [RSS](${SITE}/blog/rss.xml)\n- [Site map](${SITE}/sitemap)\n\n## Countries\n\n${countryLinks.map(([k, v]) => `- [${v.name}](${SITE}/homes/${k}): ${v.homes.length} homes`).join("\n")}\n`);
 
   // build.json: which commit is live and when it was built (check with curl https://realhunt.co/build.json).
   fs.writeFileSync(path.join(root, "build.json"), JSON.stringify({ commit: (process.env.RH_COMMIT || process.env.GITHUB_SHA || "local").slice(0, 7), built_at: new Date().toISOString(), homes: rows.length, indexable_pages: entries.length }) + "\n");

@@ -57,6 +57,10 @@ import { useTheme, ThemeButton, Welcome, BoardButton, BoardsSection, BoardPage, 
 import { Ctx, useCommunity } from "./ctx";
 const MapView = lazy(() => import("./map"));
 const HomesMap = lazy(() => import("./homesmap"));
+// Growth pages (/can-i-buy, /buying-costs), loaded only when opened.
+const CanBuyIndex = lazy(() => import("./seo2").then((m) => ({ default: m.CanBuyIndex })));
+const CanBuyPage = lazy(() => import("./seo2").then((m) => ({ default: m.CanBuyPage })));
+const BuyingCostsPage = lazy(() => import("./seo2").then((m) => ({ default: m.BuyingCostsPage })));
 import {
   ArrowUp,
   ArrowUpRight,
@@ -163,7 +167,7 @@ function Shell({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Child pages set their own title in effects that run before this one, so they must be listed here or the
     // default title overwrites theirs (country pages, /method and /alerts showed the home title before 24-oct-2026).
-    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare-new-builds|costs|research|agents|homes\/|method|alerts|about|top|guide|new|sitemap|swipe|map|leaderboard|winners|best|weather|saved|legal|hunter\/|b\/)/.test(location.pathname)) return;
+    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare-new-builds|costs|research|agents|homes\/|method|alerts|can-i-buy|buying-costs|about|top|guide|new|sitemap|swipe|map|leaderboard|winners|best|weather|saved|legal|hunter\/|b\/)/.test(location.pathname)) return;
     document.title = "RealHunt: The best homes in every country, ranked by score";
   }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
@@ -2054,6 +2058,12 @@ export default function Community() {
       <BestRoute />
     ) : path.startsWith("/guide") ? (
       <GuidePage />
+    ) : path === "/can-i-buy" ? (
+      <Suspense fallback={<Loading />}><CanBuyIndex /></Suspense>
+    ) : path.startsWith("/can-i-buy/") ? (
+      <Suspense fallback={<Loading />}><CanBuyPage /></Suspense>
+    ) : path === "/buying-costs" || path.startsWith("/buying-costs/") ? (
+      <Suspense fallback={<Loading />}><BuyingCostsPage /></Suspense>
     ) : path === "/countries" || path.startsWith("/countries/") ? (
       <CountriesPage />
     ) : path.startsWith("/homes/") ? (
