@@ -1,0 +1,46 @@
+name: weekly-top10
+# Mondays: "The 10 best home deals this week" for the blog (scripts/weekly_top10.py), from the live snapshot
+# at realhunt.co/data/rh-static.json. Opens a pull request to review; nothing goes live until it is merged.
+# One post per ISO week: a second run in the same week does nothing.
+on:
+  schedule:
+    - cron: "13 7 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+concurrency:
+  group: weekly-top10
+  cancel-in-progress: false
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: test the selection
+        run: python3 scripts/test_weekly_top10.py
+      - name: write this week's post
+        id: post
+        run: python3 scripts/weekly_top10.py
+      - name: open a pull request
+        if: steps.post.outputs.slug != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLUG: ${{ steps.post.outputs.slug }}
+          TITLE: ${{ steps.post.outputs.title }}
+        run: |
+          if git diff --quiet -- src/data/blog.json src/data/blog-es.json; then echo "no change"; exit 0; fi
+          BRANCH="bot/$SLUG"
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then echo "branch $BRANCH already open"; exit 0; fi
+          git config user.name "realhunt-bot"
+          git config user.email "bot@realhunt.co"
+          git checkout -b "$BRANCH"
+          git add src/data/blog.json src/data/blog-es.json
+          git commit -m "Blog: $TITLE"
+          git push origin "$BRANCH"
+          gh pr create --base main --head "$BRANCH" --title "Blog: $TITLE" \
+            --body "Weekly Top 10, written by scripts/weekly_top10.py from the live homes snapshot. Check the post at /blog/$SLUG in the preview, then merge to publish."
