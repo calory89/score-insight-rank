@@ -52,6 +52,7 @@ import { guestSaves, isGuestSaved, toggleGuestSave, clearGuestSaves, type GuestS
 import { Card4, CardSkeleton, Freshness, TabBar, DetailBar, HeartVote, ShareButton, SaveHeart, remember, rowCache, takeDetail, prefetchDetail, preloadImages } from "./v4";
 import { bumpIx, FLAG as FLAG_ } from "@/lib/rh";
 import { bumpStat } from "./v4";
+import { FindSearch, FindBar, SavedSearches } from "./findui";
 import { PodiumHero, Vibes, VIBES, SmartSearch, EmptyState, DetailGallery, Amenities, Nearby, VideoTour, RentLine } from "./v6";
 import { useTheme, ThemeButton, Welcome, BoardButton, BoardsSection, BoardPage, CompareButton, ComparePage, MapFab, NotifBell, ProfilePage, saveOrder, useHomeSwipe, HomeNav } from "./v5";
 import { Ctx, useCommunity } from "./ctx";
@@ -843,9 +844,10 @@ function Home() {
       <section className="hv-hero hx-hero">
         <h1>{t("The best homes in every country, ranked.")}</h1>
         {feed?.countries_count && <p className="hx-sub">{(() => { const v = Object.values(feed.countries_count as Record<string, number>); return `${num(v.reduce((a, b) => a + b, 0))} ${t("homes in")} ${v.length} ${t("countries, each checked by a person and scored from 70 to 98. We link to the seller; we do not sell.")}`; })()} <Link to="/method">{t("How the score works")}</Link></p>}
-        <SmartSearch value={q} onSearch={search} inputRef={searchRef} />
+        <FindSearch value={q} inputRef={searchRef} />
       </section>
       <div className="rh-sticky-filters"><Filters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_price: minPrice, min_beds: minBeds, price_drop: priceDrop, min_sqm: minSqm, sort, q, min_score: minScore, need, dim_min: dimMin }} onChange={setFilters} /></div>
+      <FindBar />
       {!plain || maxPrice || minPrice || minBeds || priceDrop || minSqm || minScore || need.length || sort !== "score" || showMap ? (
       <div className="rh-results-bar" ref={resultsRef}>
         <p role="status" aria-live="polite"><strong>{busy && !feed ? t("Updating results…") : feed ? `${num(feed.total)} ${t("homes")}${country ? ` in ${country.split(",").join(", ")}` : ""}` : ""}</strong>
@@ -1656,6 +1658,7 @@ function Mine() {
     return (
       <div className="hunt-wrap hunt-profile">
         <h1>Saved homes</h1>
+        <SavedSearches />
         <p className="hunt-guest-note">Saved on this device. <button className="hunt-link" onClick={requireUser}>Create a free account</button> to keep them on your phone and computer and get an email if the price drops.</p>
         <div className="hunt-small-grid">
           {guest.map((d) => (
@@ -1676,11 +1679,13 @@ function Mine() {
           Sign in
         </button>
         <p><Link to="/">Or see the top homes first →</Link></p>
+        {pathname.endsWith("saved") && <SavedSearches />}
       </div>
     );
   return (
     <div className="hunt-wrap hunt-profile">
       <h1>{pathname.endsWith("saved") ? "Saved deals" : "My submissions"}</h1>
+      {pathname.endsWith("saved") && <SavedSearches />}
       {pathname.endsWith("saved") && <BoardsSection />}
       {pathname.endsWith("saved") && <ShareSavedToggle />}
       <nav className="hunt-tabs">
