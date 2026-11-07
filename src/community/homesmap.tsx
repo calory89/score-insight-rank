@@ -3,7 +3,7 @@
 // drag on any device, street or satellite view, full screen, and a tap on a pin flies to the home.
 // Loaded on demand so Leaflet never weighs on the first paint.
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useNavigationType } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { money } from "./api";
@@ -47,6 +47,19 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
   const [armed, setArmed] = useState(!embedded);
   const [data, setData] = useState<Row[] | null>(rows || null);
   const [nb, setNb] = useState(0);
+  // 7-nov-2026 (Carlos: "si vuelvo atrás tras ver algo en el mapa debe volver al mapa donde estaba"): the
+  // view is saved on every move; coming back with the browser's back button restores it instead of
+  // re-fitting the map on Europe. Only the full map page (not maps embedded in other pages) does this.
+  const navType = useNavigationType();
+  const VIEW_KEY = "rh-map-view:" + JSON.stringify(params || {});
+  const lastView = useRef<{ lat: number; lng: number; z: number } | null>(null);
+  useEffect(() => () => { if (!embedded && lastView.current) try { sessionStorage.setItem(VIEW_KEY, JSON.stringify({ ...lastView.current, left: true, t: Date.now() })); } catch { /* private mode */ } }, [VIEW_KEY]);
+  const restoreView = useRef<{ lat: number; lng: number; z: number } | null>((() => {
+    if (embedded || navType !== "POP") return null;
+    // Only after leaving the map inside the site (marked on unmount): a fresh visit or a reload also counts
+    // as "POP" but leaves no mark, so it opens normally (or on ?focus=).
+    try { const v = JSON.parse(sessionStorage.getItem(VIEW_KEY) || "null"); sessionStorage.removeItem(VIEW_KEY); return v && v.left && Number.isFinite(v.lat) && Date.now() - v.t < 3600e3 ? v : null; } catch { return null; }
+  })());
   // Region buttons: the map opens on Europe (most homes), so homes elsewhere (Miami, Bali, Mexico...) get a
   // visible shortcut instead of hiding off-screen until someone presses "See all homes".
   const [regions, setRegions] = useState<{ k: string; label: string; n: number; b: L.LatLngBounds }[]>([]);
@@ -165,10 +178,10 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
       return mk;
     };
     // Several homes on the same spot (pins show the village, not the house): one pin that opens a list.
-    const listFor = (grp: Row[]) => {
+    const listFor = (grp: Row[], at?: L.LatLng) => {
       const from = Math.min(...grp.map((d) => d.price_eur || 0));
       const icon = L.divIcon({ className: "hm-pin-wrap", html: `<span class="hm-cl" style="--pc:${priceColor(from).bg};--pf:${priceColor(from).fg}"><b>${grp.length}</b><small>${esc(t("from"))} ${esc(short(from))}</small></span>`, iconSize: [0, 0], popupAnchor: [0, -26] });
-      const mk = L.marker([grp[0].lat!, grp[0].lng!], { icon, title: `${grp.length} homes` });
+      const mk = L.marker(at || [grp[0].lat!, grp[0].lng!], { icon, title: `${grp.length} homes` });
       (mk as any)._slug = "list:" + grp.map((d) => d.slug).sort().join(",");
       const items = [...grp].sort((a, b) => (a.price_eur || 0) - (b.price_eur || 0)).slice(0, 12)
         .map((d) => `<a data-slug="${esc(d.slug)}" href="/deal/${esc(d.slug)}" class="hm-li"><img src="${esc(d.image_urls?.[0] || "")}" alt="" loading="lazy"><span><b>${esc(money(d.price_eur))}</b><small>${esc(niceTitle(d))}</small></span></a>`).join("");
@@ -192,13 +205,21 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
         const ps = rows.map((d) => m.latLngToLayerPoint([d.lat!, d.lng!]));
         return { rows, x: ps.reduce((a, q) => a + q.x, 0) / ps.length, y: ps.reduce((a, q) => a + q.y, 0) / ps.length };
       });
-      if (!deep) {
-        const size = (g: G) => (g.rows.length > 1 ? [104, 52] : [80, 32]);
+      // 7-nov-2026 (Carlos, phone screenshot of Aventura): prices overlapped at street level, where groups
+      // were never merged, and the box sizes were guessed too small for "233.000 €" / "desde 246.000 €".
+      // Sizes now come from the label length; a price pin sits above its point, a group is centred on it.
+      {
+        const charW = 7.4;
+        const size = (g: G): [number, number, number] => {
+          if (g.rows.length === 1) return [22 + charW * short(g.rows[0].price_eur).length, 30, -17];
+          const from = Math.min(...g.rows.map((d) => d.price_eur || 0));
+          return [Math.max(52, 24 + 6.4 * (t("from").length + 1 + short(from).length)), 52, 0];
+        };
         for (let merged = true, guard = 0; merged && guard < 200; guard++) {
           merged = false;
           outer: for (let i = 0; i < groups.length; i++) for (let j = i + 1; j < groups.length; j++) {
-            const a = groups[i], b = groups[j], [wa, ha] = size(a), [wb, hb] = size(b);
-            if (Math.abs(a.x - b.x) < (wa + wb) / 2 && Math.abs(a.y - b.y) < (ha + hb) / 2) {
+            const a = groups[i], b = groups[j], [wa, ha, oa] = size(a), [wb, hb, ob] = size(b);
+            if (Math.abs(a.x - b.x) < (wa + wb) / 2 + 4 && Math.abs(a.y + oa - (b.y + ob)) < (ha + hb) / 2 + 4) {
               const n = a.rows.length + b.rows.length;
               groups[i] = { rows: [...a.rows, ...b.rows], x: (a.x * a.rows.length + b.x * b.rows.length) / n, y: (a.y * a.rows.length + b.y * b.rows.length) / n };
               groups.splice(j, 1); merged = true; break outer;
@@ -211,7 +232,8 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
         if (grp.length === 1) { const mk = pinFor(grp[0]); g.addLayer(mk); if (open && (mk as any)._slug === open) reopened = mk; return; }
         const b = L.latLngBounds(grp.map((d) => [d.lat!, d.lng!] as L.LatLngExpression));
         const same = b.getNorthEast().distanceTo(b.getSouthWest()) < 30;
-        if (same || deep) { const mk = listFor(grp); g.addLayer(mk); if (open && ((mk as any)._slug === open || grp.some((d) => d.slug === open))) reopened = mk; return; }
+        const gp0 = groups.find((x) => x.rows === grp);
+        if (same || deep) { const mk = listFor(grp, gp0 ? m.layerPointToLatLng(L.point(gp0.x, gp0.y)) : undefined); g.addLayer(mk); if (open && ((mk as any)._slug === open || grp.some((d) => d.slug === open))) reopened = mk; return; }
         const from = Math.min(...grp.map((d) => d.price_eur || 0));
         const icon = L.divIcon({ className: "hm-pin-wrap", html: `<span class="hm-cl" style="--pc:${priceColor(from).bg};--pf:${priceColor(from).fg}"><b>${grp.length}</b><small>${esc(t("from"))} ${esc(short(from))}</small></span>`, iconSize: [0, 0] });
         const gp = groups.find((x) => x.rows === grp);
@@ -228,7 +250,9 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
     const place = () => {
       m.invalidateSize();
       const f = list.find((d) => focus && d.slug === focus);
-      if (f) m.setView([f.lat!, f.lng!], around?.zoom ?? 11);
+      const rv = restoreView.current;
+      if (rv) m.setView([rv.lat, rv.lng], rv.z, { animate: false });
+      else if (f) m.setView([f.lat!, f.lng!], around?.zoom ?? 11);
       else if (around) m.setView([around.lat, around.lng], around.zoom ?? 11);
       else if (bounds.current) {
         // Most homes are in Europe: open on the region that holds most of them instead of a whole-world
@@ -240,8 +264,10 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
       draw();
       if (focusedMk && openFocus) { (focusedMk as L.Marker).openPopup(); fitPopup(); }
     };
-    place(); const tm = setTimeout(place, 250);
-    return () => { clearTimeout(tm); m.off("zoomend", draw); m.off("moveend", onMove); };
+    place(); const tm = setTimeout(() => { place(); restoreView.current = null; }, 250);
+    const save = () => { if (embedded) return; try { const c = m.getCenter(); lastView.current = { lat: c.lat, lng: c.lng, z: m.getZoom() }; } catch { /* private mode */ } };
+    m.on("moveend", save);
+    return () => { clearTimeout(tm); m.off("zoomend", draw); m.off("moveend", onMove); m.off("moveend", save); };
   }, [data, focus]);
 
   // Street or satellite.
@@ -259,6 +285,11 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
   };
 
   return (
+    <>
+    {regions.length > 1 && !embedded && <div className="hm-regions" role="group" aria-label={t("Go to a region")}>
+      <span>{t("Go to")}</span>
+      {regions.map((r) => <button key={r.k} type="button" onClick={() => fitRegion(r.b)}>{t(r.label)} <b>{r.n}</b></button>)}
+    </div>}
     <div ref={wrap} className={`hm ${full ? "is-full" : ""} ${embedded ? "is-embedded" : ""} ${className}`} onClick={() => !armed && setArmed(true)}>
       <div ref={el} className="hm-map" role="region" aria-label={t("Map of homes")} />
       <div className="hm-tools">
@@ -267,12 +298,10 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
         <button type="button" onClick={(e) => { e.stopPropagation(); toggleSat(); }} aria-pressed={isSat}>{isSat ? t("Map view") : t("Satellite")}</button>
         {"geolocation" in navigator && <button type="button" onClick={(e) => { e.stopPropagation(); myPlace(); }}>{t("Near me")}</button>}
       </div>
-      {regions.length > 1 && <div className="hm-regions" role="group" aria-label={t("Go to a region")}>
-        {regions.map((r) => <button key={r.k} type="button" onClick={(e) => { e.stopPropagation(); fitRegion(r.b); }}>{t(r.label)} <b>{r.n}</b></button>)}
-      </div>}
       <div className="hm-legend" aria-hidden="true"><i /><span><b>€20k</b><b>€60k</b><b>€100k+</b></span></div>
       {data === null && <div className="hm-loading">{t("Loading map…")}</div>}
       {embedded && !armed && !full && <div className="hm-hint">{touch ? t("Tap the map to move it · pinch to zoom") : t("Click the map to zoom with the mouse wheel")}</div>}
     </div>
+    </>
   );
 }
