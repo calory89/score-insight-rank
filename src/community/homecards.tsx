@@ -6,6 +6,7 @@ import { money } from "./api";
 import { useScore } from "./scores";
 import { t } from "./i18n";
 import { SaveHeart } from "./v4";
+import { thumb, onThumbError } from "@/lib/thumbs";
 import { CardCheck } from "./check";
 
 const gtone = (n: number) => (n >= 90 ? "is-top" : n >= 80 ? "is-great" : "is-good");
@@ -23,7 +24,7 @@ export function HomeCard({ deal, pos }: { deal: any; pos: number }) {
     <div className="hx-wrap">
       <Link to={href} className={"hx-card" + (pos <= 3 ? " is-podium" : "")} aria-label={`${pos}. ${title}, ${money(deal.price_eur)}${s ? `, ${t("RealHunt score")} ${s.n}` : ""}`}>
         <span className="hx-img">
-          {img ? <img src={img} alt={`${title}, ${where(deal)}`} loading={pos <= 3 ? "eager" : "lazy"} fetchPriority={pos === 1 ? "high" : "auto"} decoding="async" /> : null}
+          {img ? <img src={thumb(img)} alt={`${title}, ${where(deal)}`} width={480} height={360} loading={pos <= 3 ? "eager" : "lazy"} fetchPriority={pos === 1 ? "high" : "auto"} decoding="async" onError={(e) => onThumbError(e.currentTarget, img)} /> : null}
           <span className="hx-pos">#{pos}</span>
           {isNew(deal) ? <span className="hx-new">{t("New today")}</span> : Number(deal.price_drop) > 0 ? <span className="hx-new is-drop">{t("Price dropped")}</span> : null}
           {s && <span className={"hx-score " + gtone(s.n)} title={t("RealHunt score")}>{s.n}</span>}

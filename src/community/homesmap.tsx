@@ -9,6 +9,7 @@ import "leaflet/dist/leaflet.css";
 import { money } from "./api";
 import { feedAll, niceTitle, type Row, type FeedParams } from "./extras";
 import { t } from "./i18n";
+import { thumb } from "@/lib/thumbs";
 
 const esc = (s: unknown) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
 // Price colours (6-oct-2026): strong green = very cheap, light green around €50-60k, then soft red
@@ -164,7 +165,7 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
     // buttons) after every zoom or move, and stays open on the same home when the pins are redrawn.
     const small = () => (wrap.current?.clientWidth || 999) < 520;
     const popW = () => (small() ? 200 : 220);
-    const popHtml = (d: Row) => `<a data-slug="${esc(d.slug)}" href="/deal/${esc(d.slug)}" class="hm-pop"><img src="${esc(d.image_urls?.[0] || "")}" alt="" loading="eager" decoding="async"><b>${esc(money(d.price_eur))}</b><span>${esc(niceTitle(d))}</span><small>${esc(d.location_name || "")}</small><em>${esc(t("Open this home"))} →</em></a>`;
+    const popHtml = (d: Row) => `<a data-slug="${esc(d.slug)}" href="/deal/${esc(d.slug)}" class="hm-pop"><img src="${esc(thumb(d.image_urls?.[0]))}" onerror="this.onerror=null;this.src='${esc(d.image_urls?.[0] || "")}'" alt="" loading="eager" decoding="async"><b>${esc(money(d.price_eur))}</b><span>${esc(niceTitle(d))}</span><small>${esc(d.location_name || "")}</small><em>${esc(t("Open this home"))} →</em></a>`;
     const popOpts = () => ({ maxWidth: popW() + 20, minWidth: popW(), autoPan: false, closeButton: true, className: "hm-popup" } as L.PopupOptions);
     const pinFor = (d: Row) => {
       const isF = !!focus && d.slug === focus;
@@ -184,7 +185,7 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
       const mk = L.marker(at || [grp[0].lat!, grp[0].lng!], { icon, title: `${grp.length} homes` });
       (mk as any)._slug = "list:" + grp.map((d) => d.slug).sort().join(",");
       const items = [...grp].sort((a, b) => (a.price_eur || 0) - (b.price_eur || 0)).slice(0, 12)
-        .map((d) => `<a data-slug="${esc(d.slug)}" href="/deal/${esc(d.slug)}" class="hm-li"><img src="${esc(d.image_urls?.[0] || "")}" alt="" loading="lazy"><span><b>${esc(money(d.price_eur))}</b><small>${esc(niceTitle(d))}</small></span></a>`).join("");
+        .map((d) => `<a data-slug="${esc(d.slug)}" href="/deal/${esc(d.slug)}" class="hm-li"><img src="${esc(thumb(d.image_urls?.[0]))}" onerror="this.onerror=null;this.src='${esc(d.image_urls?.[0] || "")}'" alt="" loading="lazy" decoding="async"><span><b>${esc(money(d.price_eur))}</b><small>${esc(niceTitle(d))}</small></span></a>`).join("");
       mk.bindPopup(`<div class="hm-list"><p>${esc(grp[0].location_name || "")} · ${grp.length}</p>${items}</div>`, { ...popOpts(), maxWidth: popW() + 40, minWidth: popW() + 20 });
       return mk;
     };

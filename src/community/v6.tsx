@@ -15,6 +15,7 @@ import { money, type Deal } from "./api";
 import { feedAll, niceTitle, Lightbox, type Row } from "./extras";
 import { useVote, SaveHeart, ShareButton, remember, rowCache, preloadImages } from "./v4";
 import COLORS from "@/data/card-colors.json";
+import { ThumbImg } from "./thumbimg";
 
 const HomesMap = lazy(() => import("./homesmap"));
 const num = (v: number = 0) => new Intl.NumberFormat("en").format(v);
@@ -80,6 +81,7 @@ export const VIBES: { k: string; label: string; q?: string; country?: string; ty
   { k: "cheap", label: "Under €30k", price: 30000 },
 ];
 // A photo for every vibe even when the feed is filtered to a country that has none (2-oct-2026).
+// Thumbnails of these are made by scripts/make_thumbs.py (EXTRA): keep both lists in sync.
 const VIBE_FALLBACK: Record<string, string> = { sea: "/finds/DdOGB56ABXI-0.webp", lake: "/finds/lake-como-peglio-85000-0.webp", stone: "/finds/lake-como-plesio-89000-0.webp", nordic: "/finds/DcAr2EbIAqx-1.webp", japan: "/finds/Dc56aI-icMP-1.webp", sauna: "/finds/DdPBLT2CLlb-1.webp", terrace: "/finds/acquappesa-sea-view-39000.webp", cheap: "/finds/grotte-santo-stefano-13000.webp" };
 // 3-oct-2026: vibes combine with every other filter (Spain + by the sea, Italy + stone + terrace...)
 // and each one can be switched on and off on its own.
@@ -102,7 +104,7 @@ export function Vibes({ isOn, onToggle, rows=[] }: { rows?: Row[]; isOn: (k: str
         const on = isOn(v.k);
         return (
           <button key={v.k} aria-pressed={on} onClick={() => onToggle(v)} className={on ? "is-on" : ""}>
-            <span className="hv-vibe-img" style={{ backgroundColor: "#DFE0E2" }}>{img && <img src={img} alt="" loading="lazy" />}</span>
+            <span className="hv-vibe-img" style={{ backgroundColor: "#DFE0E2" }}>{img && <ThumbImg src={img} alt="" loading="lazy" />}</span>
             <span>{v.label}</span>
           </button>
         );
@@ -136,7 +138,7 @@ export function PodiumHero({ rows, scope, endsAt }: { rows: Row[]; scope: string
   const medal = ["🥇", "🥈", "🥉"];
   const Small = ({ d, n }: { d: Row; n: number }) => (
     <Link to={`/deal/${encodeURIComponent(d.slug)}`} className="hv-pod-small" style={{ backgroundColor: cardColor(d.slug) }}>
-      <img src={d.image_urls?.[0]} alt="" />
+      <ThumbImg src={d.image_urls?.[0]} alt="" />
       <span className="hv-pod-medal">{medal[n]} #{n + 1}</span>
       <span className="hv-pod-copy"><strong>{money(d.price_eur)}</strong><em>{FLAG[d.country] || "📍"} {d.location_name || d.country}</em></span>
     </Link>
@@ -149,7 +151,7 @@ export function PodiumHero({ rows, scope, endsAt }: { rows: Row[]; scope: string
       </div>
       <div className="hv-podium-grid">
         <Link to={`/deal/${encodeURIComponent(a.slug)}`} className="hv-pod-big" style={{ backgroundColor: cardColor(a.slug) }}>
-          <img src={a.image_urls?.[0]} alt={niceTitle(a)} />
+          <ThumbImg src={a.image_urls?.[0]} alt={niceTitle(a)} />
           <span className="hv-pod-medal is-gold">{medal[0]} #1{scope === "all" ? "" : " this week"}</span>
           <div className="hv-pod-copy">
             <strong className="hv-pod-price">{money(a.price_eur)}</strong>
@@ -375,7 +377,7 @@ export function SmartSearch({ value, onSearch, inputRef }: { value: string; onSe
       ) : (sugg.places.length + sugg.homes.length > 0) && (
         <div className="hv-sugg" id="rh-search-options" role="listbox">
           {sugg.places.map((p,index) => <button role="option" aria-selected={active===index} id={`rh-suggestion-${index}`} key={p.label} className={"hv-sugg-row"+(active===index?" rh-search-active":"")} onClick={() => go(p.label)}><span className="hv-sugg-img">{p.img ? <img src={p.img} alt="" /> : <MapPin size={16} />}</span><span><strong>{p.label}</strong><small>{p.n} matching {p.n === 1 ? "suggestion" : "suggestions"}</small></span></button>)}
-          {sugg.homes.map((r,index) => <button role="option" aria-selected={active===index+sugg.places.length} id={`rh-suggestion-${index+sugg.places.length}`} key={r.id} className={"hv-sugg-row"+(active===index+sugg.places.length?" rh-search-active":"")} onClick={() => { setOpen(false); navigate(`/deal/${encodeURIComponent(r.slug)}`); }}><span className="hv-sugg-img"><img src={r.image_urls?.[0]} alt="" /></span><span><strong>{money(r.price_eur)} · {niceTitle(r)}</strong><small>{r.location_name}</small></span></button>)}
+          {sugg.homes.map((r,index) => <button role="option" aria-selected={active===index+sugg.places.length} id={`rh-suggestion-${index+sugg.places.length}`} key={r.id} className={"hv-sugg-row"+(active===index+sugg.places.length?" rh-search-active":"")} onClick={() => { setOpen(false); navigate(`/deal/${encodeURIComponent(r.slug)}`); }}><span className="hv-sugg-img"><ThumbImg src={r.image_urls?.[0]} alt="" /></span><span><strong>{money(r.price_eur)} · {niceTitle(r)}</strong><small>{r.location_name}</small></span></button>)}
         </div>
       ))}
     </div>
