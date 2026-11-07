@@ -7,6 +7,7 @@
 // Visitor tracking writes are skipped. Only explicit actions (sign in, vote, save, submit, admin)
 // still talk to the database, so the Cloud backend can stay paused and the site keeps working.
 import { mediaDeep } from "./media";
+import { wordMatches } from "@/community/smartsearch"; // FIND layer: "apartment" also finds flats and condos
 import { supabase } from "@/integrations/supabase/client";
 
 type Row = Record<string, any>;
@@ -59,7 +60,7 @@ function feed(snap: Snap, p: Row = {}) {
     need.every((t) => Array.isArray(e.amen) && e.amen.includes(t)) &&
     Object.entries(dmin).every(([k, v]) => num(e.dims?.[k]) >= num(v)) &&
     terms.every((t) => has([e.title, e.location_name, e.why_great].join(" "), t)) &&
-    (!q || q.split(" ").filter(Boolean).every((w) => has([e.title, e.location_name, e.country, e.category, e.why_great].join(" "), w))));
+    (!q || q.split(" ").filter(Boolean).every((w) => wordMatches([e.title, e.location_name, e.country, e.category, e.why_great].join(" "), w))));
   // rh_fresh_boost_v1: in the default order every 4th card is a home published in the last 7 days
   const key = new Map<string, number>();
   if (sort === "rank") {
