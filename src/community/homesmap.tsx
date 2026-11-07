@@ -107,9 +107,9 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
       if (a) { e.preventDefault(); setFull(false); navigate(`/deal/${a.dataset.slug}`); }
     };
     el.current.addEventListener("click", click);
-    const ro = new ResizeObserver(() => m.invalidateSize());
+    const ro = new ResizeObserver(() => { const n = el.current; if (n && n.isConnected && n.offsetWidth) m.invalidateSize({ animate: false }); });
     ro.observe(el.current);
-    return () => { ro.disconnect(); el.current?.removeEventListener("click", click); m.remove(); map.current = null; };
+    return () => { ro.disconnect(); el.current?.removeEventListener("click", click); try { m.off(); (m as any)._stop?.(); (m as any)._panAnim?.off?.(); } catch {} m.remove(); map.current = null; };
   }, []);
 
   // Wheel zoom inside a page only after the visitor clicks the map, so the page still scrolls.
