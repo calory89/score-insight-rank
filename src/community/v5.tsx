@@ -458,7 +458,7 @@ export function ProfilePage() {
         {user ? <Link to="/hunt/mine" className="hunt-secondary">My submissions</Link> : <button className="hunt-primary" onClick={requireUser}>Sign in to keep your streak on every device</button>}
         {session?.hunter && <Link to={`/hunter/${session.hunter.handle}`} className="hunt-secondary">Public profile ↗</Link>}
         <Link to="/leaderboard" className="hunt-secondary">Top hunters</Link>
-        <Link to="/insider" className="hunt-secondary">Insider: new homes 48h early</Link>
+        <Link to="/insider" className="hunt-secondary">Insider: the secret Top 5</Link>
       </div>
     </div>
   );
