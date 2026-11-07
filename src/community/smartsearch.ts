@@ -197,18 +197,8 @@ const WORDS: Record<string, Act> = {
   stone: { word: "stone" }, piedra: { word: "stone" }, castle: { word: "castle" }, castillo: { word: "castle" }, island: { word: "island" }, isla: { word: "island" },
   cheap: { sort: "price_asc" }, cheapest: { sort: "price_asc" }, affordable: { sort: "price_asc" }, budget: { sort: "price_asc" }, barata: { sort: "price_asc" }, barato: { sort: "price_asc" }, baratas: { sort: "price_asc" }, baratos: { sort: "price_asc" }, economica: { sort: "price_asc" }, economico: { sort: "price_asc" },
 };
-/** Each canonical search word also matches these words in a listing (used by the static feed filter). */
-export const SYNONYMS: Record<string, string[]> = {
-  apartment: ["apartment", "flat", "condo", "penthouse", "studio", "floor"],
-  farm: ["farm", "finca", "cortijo", "masseria", "country house", "rustic"],
-  cabin: ["cabin", "cottage", "chalet", "log house", "hut"],
-  mountain: ["mountain", "alps", "alpine", "sierra", " ski ", "ski resort", "hills"],
-};
-export function wordMatches(text: string, word: string): boolean {
-  const t = text.toLowerCase();
-  const w = word.toLowerCase();
-  return (SYNONYMS[w] || [w]).some((x) => t.includes(x));
-}
+import { SYNONYMS, wordMatches } from "@/lib/synonyms";
+export { SYNONYMS, wordMatches };
 
 export function parseQuery(input: string, places: Place[] = [], known?: (word: string) => boolean): Parsed {
   const out: Parsed = { country: [], place: null, max_price: null, min_price: null, min_beds: null, category: null, need: [], vibe: [], dmin: {}, words: [], ignored: [], sort: null, structured: false };

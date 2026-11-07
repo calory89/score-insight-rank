@@ -7,7 +7,7 @@
 // Visitor tracking writes are skipped. Only explicit actions (sign in, vote, save, submit, admin)
 // still talk to the database, so the Cloud backend can stay paused and the site keeps working.
 import { mediaDeep } from "./media";
-import { wordMatches } from "@/community/smartsearch"; // FIND layer: "apartment" also finds flats and condos
+import { wordMatches } from "./synonyms"; // FIND layer: "apartment" also finds flats and condos
 import { supabase } from "@/integrations/supabase/client";
 
 type Row = Record<string, any>;
