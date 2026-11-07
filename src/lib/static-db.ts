@@ -264,6 +264,15 @@ const origRpc = (supabase.rpc as any).bind(supabase);
         if (!r) return ok({ error: "Deal not found" });
         const deal: Row = { ...r, has_source: true };
         if (!["fotocasa", "immoscout24"].includes(deal.hunter_handle || "") && !signedIn()) delete deal.source_url;
+        // 7-nov-2026 (Carlos: "me he logueado pero no puedo clicar en ver anuncio"): the public snapshot leaves most
+        // listing links out, so a signed-in visitor got a disabled button. Ask the database, which returns the link
+        // to signed-in users, and keep the snapshot answer if it is unreachable.
+        if (signedIn() && !deal.source_url) {
+          return Promise.resolve(origRpc(fn, args, opts)).then((res: any) => {
+            const url = res?.data?.deal?.source_url;
+            return ok({ deal: url ? { ...deal, source_url: url } : deal, comments: res?.data?.comments || [] });
+          }).catch(() => ok({ deal, comments: [] }));
+        }
         return ok({ deal, comments: [] });
       }).catch(() => origRpc(fn, args, opts)));
     }
