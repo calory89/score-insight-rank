@@ -53,11 +53,16 @@ import { guestSaves, isGuestSaved, toggleGuestSave, clearGuestSaves, type GuestS
 import { Card4, CardSkeleton, Freshness, TabBar, DetailBar, HeartVote, ShareButton, SaveHeart, remember, rowCache, takeDetail, prefetchDetail, preloadImages } from "./v4";
 import { bumpIx, FLAG as FLAG_ } from "@/lib/rh";
 import { bumpStat } from "./v4";
+import { FindSearch, FindBar, SavedSearches } from "./findui";
 import { PodiumHero, Vibes, VIBES, SmartSearch, EmptyState, DetailGallery, Amenities, Nearby, VideoTour, RentLine } from "./v6";
 import { useTheme, ThemeButton, Welcome, BoardButton, BoardsSection, BoardPage, CompareButton, ComparePage, MapFab, NotifBell, ProfilePage, saveOrder, useHomeSwipe, HomeNav } from "./v5";
 import { Ctx, useCommunity } from "./ctx";
 const MapView = lazy(() => import("./map"));
 const HomesMap = lazy(() => import("./homesmap"));
+// Growth pages (/can-i-buy, /buying-costs), loaded only when opened.
+const CanBuyIndex = lazy(() => import("./seo2").then((m) => ({ default: m.CanBuyIndex })));
+const CanBuyPage = lazy(() => import("./seo2").then((m) => ({ default: m.CanBuyPage })));
+const BuyingCostsPage = lazy(() => import("./seo2").then((m) => ({ default: m.BuyingCostsPage })));
 import {
   ArrowUp,
   ArrowUpRight,
@@ -164,7 +169,7 @@ function Shell({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Child pages set their own title in effects that run before this one, so they must be listed here or the
     // default title overwrites theirs (country pages, /method and /alerts showed the home title before 24-oct-2026).
-    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare-new-builds|costs|research|agents|homes\/|method|alerts|about|top|guide|new|sitemap|swipe|map|leaderboard|winners|best|weather|saved|legal|hunter\/|b\/)/.test(location.pathname)) return;
+    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare-new-builds|costs|research|agents|homes\/|method|alerts|can-i-buy|buying-costs|about|top|guide|new|sitemap|swipe|map|leaderboard|winners|best|weather|saved|legal|hunter\/|b\/)/.test(location.pathname)) return;
     document.title = "RealHunt: The best homes in every country, ranked by score";
   }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
@@ -845,9 +850,10 @@ function Home() {
       <section className="hv-hero hx-hero">
         <h1>{t("The best homes in every country, ranked.")}</h1>
         {feed?.countries_count && <p className="hx-sub">{(() => { const v = Object.values(feed.countries_count as Record<string, number>); return `${num(v.reduce((a, b) => a + b, 0))} ${t("homes in")} ${v.length} ${t("countries, each checked by a person and scored from 70 to 98. We link to the seller; we do not sell.")}`; })()} <Link to="/method">{t("How the score works")}</Link></p>}
-        <SmartSearch value={q} onSearch={search} inputRef={searchRef} />
+        <FindSearch value={q} inputRef={searchRef} />
       </section>
       <div className="rh-sticky-filters"><Filters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_price: minPrice, min_beds: minBeds, price_drop: priceDrop, min_sqm: minSqm, sort, q, min_score: minScore, need, dim_min: dimMin }} onChange={setFilters} /></div>
+      <FindBar />
       {!plain || maxPrice || minPrice || minBeds || priceDrop || minSqm || minScore || need.length || sort !== "score" || showMap ? (
       <div className="rh-results-bar" ref={resultsRef}>
         <p role="status" aria-live="polite"><strong>{busy && !feed ? t("Updating results…") : feed ? `${num(feed.total)} ${t("homes")}${country ? ` in ${country.split(",").join(", ")}` : ""}` : ""}</strong>
@@ -1655,6 +1661,7 @@ function Mine() {
     return (
       <div className="hunt-wrap hunt-profile">
         <h1>Saved homes</h1>
+        <SavedSearches />
         <p className="hunt-guest-note">Saved on this device. <button className="hunt-link" onClick={requireUser}>Create a free account</button> to keep them on your phone and computer and get an email if the price drops.</p>
         <div className="hunt-small-grid">
           {guest.map((d) => (
@@ -1675,11 +1682,13 @@ function Mine() {
           Sign in
         </button>
         <p><Link to="/">Or see the top homes first →</Link></p>
+        {pathname.endsWith("saved") && <SavedSearches />}
       </div>
     );
   return (
     <div className="hunt-wrap hunt-profile">
       <h1>{pathname.endsWith("saved") ? "Saved deals" : "My submissions"}</h1>
+      {pathname.endsWith("saved") && <SavedSearches />}
       {pathname.endsWith("saved") && <BoardsSection />}
       {pathname.endsWith("saved") && <ShareSavedToggle />}
       <nav className="hunt-tabs">
@@ -2053,6 +2062,12 @@ export default function Community() {
       <BestRoute />
     ) : path.startsWith("/guide") ? (
       <GuidePage />
+    ) : path === "/can-i-buy" ? (
+      <Suspense fallback={<Loading />}><CanBuyIndex /></Suspense>
+    ) : path.startsWith("/can-i-buy/") ? (
+      <Suspense fallback={<Loading />}><CanBuyPage /></Suspense>
+    ) : path === "/buying-costs" || path.startsWith("/buying-costs/") ? (
+      <Suspense fallback={<Loading />}><BuyingCostsPage /></Suspense>
     ) : path === "/countries" || path.startsWith("/countries/") ? (
       <CountriesPage />
     ) : path.startsWith("/homes/") ? (

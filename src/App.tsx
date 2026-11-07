@@ -225,6 +225,10 @@ const AppRoutes = () => (
       <Route path="/guide" element={<Community />} />
       <Route path="/countries" element={<Community />} />
       <Route path="/countries/:pair" element={<Community />} />
+      <Route path="/can-i-buy" element={<Community />} />
+      <Route path="/can-i-buy/:slug" element={<Community />} />
+      <Route path="/buying-costs" element={<Community />} />
+      <Route path="/buying-costs/:country" element={<Community />} />
       <Route path="/leaderboard" element={<Community />} />
       <Route path="/invite" element={<Community />} />
       <Route path="/alerts" element={<Community />} />
