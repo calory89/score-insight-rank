@@ -11,7 +11,7 @@ export default function MiniMap({ lat, lng, zoom = 11 }: { lat: number; lng: num
     L.circle([lat, lng], { radius: zoom >= 10 ? 1800 : 22000, color: "#D4420C", weight: 2, fillColor: "#D4420C", fillOpacity: 0.18 }).addTo(m);
     L.circleMarker([lat, lng], { radius: 7, color: "#fff", weight: 3, fillColor: "#111214", fillOpacity: 1 }).addTo(m);
     setTimeout(() => m.invalidateSize(), 200);
-    return () => { m.remove(); };
+    return () => { try { m.off(); (m as any)._stop?.(); (m as any)._panAnim?.off?.(); } catch {} m.remove(); };
   }, [lat, lng, zoom]);
   return <div ref={el} className="hv-minimap" />;
 }
