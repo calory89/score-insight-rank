@@ -3002,3 +3002,17 @@ html.rh-dark, html.rh-dark body { background: #0C0D0E; }
 .hunt.is-dark .rh-costs dt { color: #ccc; }
 .hunt.is-dark .rh-cost.is-unknown, .hunt.is-dark .rh-costs-warn { background: #3a2a14; color: #ffd8a8; border-color: #8a5a2b; }
 .hunt.is-dark .rh-cost.is-fee, .hunt.is-dark .rh-mini-fee { color: #ffb37a; }
+
+/* 7-nov-2026: compact map page head; filters fold behind one button on phones. */
+.hunt-maphead { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.hunt-mapfilters { display: none; align-items: center; gap: 6px; border: 1px solid rgba(0,0,0,.14); background: var(--card, #fff); color: inherit; border-radius: 999px; padding: 7px 14px; font: 600 14px Inter, system-ui, sans-serif; min-height: 38px; cursor: pointer; }
+.hunt-mapfilters b { background: var(--accent, #D4420C); color: #fff; border-radius: 999px; font-size: 11px; min-width: 18px; height: 18px; display: inline-grid; place-items: center; padding: 0 5px; }
+.hunt-mapfilters.is-on { border-color: var(--accent, #D4420C); color: var(--accent, #D4420C); }
+.hunt.is-dark .hunt-mapfilters { background: #1A1B1E; border-color: #33363A; }
+@media (max-width: 700px) {
+  .hunt-mappage { padding-top: 8px; }
+  .hunt-mappage h1 { font-size: 22px; margin: 0; }
+  .hunt-mapfilters { display: inline-flex; }
+  .hunt-mapcount { margin: 6px 0 4px; font-size: 12px; }
+  .hunt-mappage .hm.hm-page { height: max(380px, calc(100dvh - 250px)); }
+}
