@@ -2,6 +2,7 @@ import { QUICK, DIMS } from "./scores";
 import { fmt as fmtCost } from "./costs";
 import GUIDES_JSON from "@/data/guides.json";
 import DEST_JSON from "@/data/destinations.json";
+import { CardCheck } from "./check";
 import {BuyerAlertPreferences} from "./OperationsTools";
 import {PropertyImage, RentPreference} from "./BuyerTools";
 import {userRent} from "./buyer-state";
@@ -249,7 +250,7 @@ export function MiniCard({ d }: { d: Row }) {
   return (
     <Link className="hunt-minicard" to={`/deal/${d.slug}`}>
       <PropertyImage src={thumb(d.image_urls?.[0])} fallback={thumb(d.image_urls?.[0]) !== d.image_urls?.[0] ? d.image_urls?.[0] : d.image_urls?.[1]} alt={niceTitle(d)} loading="lazy" width={480} height={360} />
-      <div><strong>{money(d.price_eur)}</strong>{(d as any).hoa_monthly > 0 && <em className="rh-mini-fee">+ {fmtCost(Number((d as any).hoa_monthly), (d as any).hoa_currency)}/mo HOA</em>}<span>{niceTitle(d)}</span><small><MapPin size={11} /> {d.location_name || d.country}</small></div>
+      <div><strong>{money(d.price_eur)}</strong>{(d as any).hoa_monthly > 0 && <em className="rh-mini-fee">+ {fmtCost(Number((d as any).hoa_monthly), (d as any).hoa_currency)}/mo HOA</em>}<CardCheck d={d as any} /><span>{niceTitle(d)}</span><small><MapPin size={11} /> {d.location_name || d.country}</small></div>
     </Link>
   );
 }
@@ -745,7 +746,7 @@ export function GuidePage() {
       <h2>{t("Every year")}</h2><p>{g.yearly}</p>
       {c?.annual_property_tax && <p><b>{t("Yearly property tax")}:</b> {c.annual_property_tax}</p>}
       {c?.rental_income_tax && <p><b>{t("Tax on rental income")}:</b> {c.rental_income_tax}</p>}
-      <div className="hunt-row"><Link className="hunt-primary" to={`/homes/${key}`}>Best homes in {theC(g.name)}</Link>{c && <Link className="hunt-secondary" to={`/costs/${key}`}>{t("Costs, taxes and sources")}</Link>}<Link className="hunt-secondary" to={`/help-buying?country=${encodeURIComponent(g.name)}`}>{t("Help buying")}</Link></div>
+      <div className="hunt-row"><Link className="hunt-primary" to={`/homes/${key}`}>Best homes in {theC(g.name)}</Link>{c && <Link className="hunt-secondary" to={`/costs/${key}`}>{t("Costs, taxes and sources")}</Link>}{c?.purchase_costs_pct && <Link className="hunt-secondary" to={`/buying-costs/${key}`}>{t("Buying-cost calculator")}</Link>}<Link className="hunt-secondary" to={`/can-i-buy`}>{t("Can I buy there?")}</Link><Link className="hunt-secondary" to={`/help-buying?country=${encodeURIComponent(g.name)}`}>{t("Help buying")}</Link></div>
       {homes.length > 0 && <><h2>{t("Best homes in")} {g.name}</h2><div className="hunt-minigrid">{homes.map((d) => <MiniCard key={d.id} d={d} />)}</div></>}
       {others.length > 0 && <><h2>{t("Compare")} {g.name}</h2><p className="hunt-chips">{others.map((k) => <Link key={k} to={`/countries/${[key, k].sort().join("-vs-")}`}>{g.name} vs {GUIDES[k].name}</Link>)}</p></>}
       {c?.sources?.length > 0 && <p className="hunt-fine">{t("Sources")}: {c.sources.map((u: string, i: number) => <span key={u}>{i ? " · " : ""}<a href={u} target="_blank" rel="noopener noreferrer nofollow">{u.replace(/^https?:\/\/(www\.)?/, "").split("/")[0]}</a></span>)}. {t("Checked")} {c.as_of}.</p>}
