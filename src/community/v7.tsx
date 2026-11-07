@@ -1,6 +1,7 @@
 import { isEs } from "@/lib/lang";
 // RealHunt v7 (23-sep-2026): growth pass.
-//  - Insider: new homes are visible to Insiders 48h before everyone else, plus a secret weekly Top 5
+//  - Insider: the secret weekly Top 5 (7-nov-2026, Carlos: "enseña todas a todos": every home is public as soon
+//    as it is approved, so the 48-hour early window is gone)
 //    (the homes furthest below their country's median). Free: invite 3 friends who sign up.
 //    Server side: community_insider(), community_is_insider(), trigger community_insider_window_trg.
 //  - Blog (/blog, /blog/:slug): data articles from src/data/blog.json, prerendered by vite.config.ts.
@@ -53,8 +54,8 @@ export function InsiderStrip() {
     <Link to="/insider" className={"hv-insider-strip" + (s.can_see ? " is-in" : "")}>
       <span className="hv-ins-icon">{s.can_see ? <Star size={16} fill="currentColor" /> : <Lock size={16} />}</span>
       <span>
-        <strong>{s.insider ? "You're an Insider" : s.guest ? `${s.host_name || "A friend"} gave you Insider access` : s.early_count > 0 ? `${s.early_count} new ${s.early_count === 1 ? "home is" : "homes are"} Insider-only right now` : "The secret Top 5 of the week is out"}</strong>
-        <small>{s.insider ? `${s.early_count} early ${s.early_count === 1 ? "home" : "homes"} · Top 5 of week ${s.week.slice(-2)}` : s.guest ? `See the secret Top 5 and new homes early${guestDaysLeft() ? ` · ${guestDaysLeft()} days left` : ""}` : "Invite 3 friends to see new homes 48h early. Free."}</small>
+        <strong>{s.insider ? "You're an Insider" : s.guest ? `${s.host_name || "A friend"} gave you Insider access` : "The secret Top 5 of the week is out"}</strong>
+        <small>{s.insider ? `Top 5 of week ${s.week.slice(-2)}` : s.guest ? `See the secret Top 5${guestDaysLeft() ? ` · ${guestDaysLeft()} days left` : ""}` : "Invite 3 friends to unlock it. Free."}</small>
       </span>
       <ChevronRight size={18} />
     </Link>
@@ -65,12 +66,12 @@ export function InsiderPage() {
   const { user, requireUser, setNotice } = useCommunity();
   const [s, setS] = useState<Insider | null>(null);
   const [copied, setCopied] = useState(false);
-  useEffect(() => { setMeta("RealHunt Insider · See new homes 48 hours early", "Invite 3 friends and see every new home 48 hours before everyone else, plus the secret weekly Top 5. Free."); }, []);
+  useEffect(() => { setMeta("RealHunt Insider · The secret Top 5 of the week", "Invite 3 friends and unlock the secret weekly Top 5: the homes furthest below their country's typical price. Free."); }, []);
   useEffect(() => { loadInsider(user?.id || null, true).then(setS).catch(() => setS(null)); }, [user?.id]);
   const link = s?.code ? `https://realhunt.co/insider?ref=${s.code}` : "";
   const share = () => {
     if (!link) return;
-    const text = s?.insider ? "I get to see the new top-scored homes 48h before everyone on RealHunt. This link lets you see them too, plus this week's secret Top 5:" : "I'm hunting the best homes on RealHunt, ranked by score. Join with my link and help me unlock new homes 48h early:";
+    const text = s?.insider ? "This week's secret Top 5 on RealHunt: the homes furthest below their country's typical price. This link lets you see it too:" : "I'm hunting the best homes on RealHunt, ranked by score. Join with my link and help me unlock the secret weekly Top 5:";
     (navigator.share ? navigator.share({ title: "RealHunt", text, url: link }) : navigator.clipboard.writeText(`${text} ${link}`).then(() => setNotice("Link copied ✓"))).catch(() => {});
   };
   const copy = () => navigator.clipboard.writeText(link).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1800); }).catch(() => {});
@@ -78,19 +79,19 @@ export function InsiderPage() {
   return (
     <div className="hunt-wrap hunt-page hv-insider">
       <span className="hunt-eyebrow"><Sparkles size={13} /> RealHunt Insider</span>
-      <h1>See new homes 48 hours before everyone else.</h1>
-      <p className="hv-ins-sub">Plus the secret Top 5 of the week: the homes furthest below their country's typical price. It's free. Invite 3 friends to unlock it for good.</p>
+      <h1>The secret Top 5 of the week.</h1>
+      <p className="hv-ins-sub">Every Monday, the five homes furthest below their country's typical price on RealHunt. It's free. Invite 3 friends to unlock it for good.</p>
 
       {s?.guest && (
         <div className="hv-ins-guest">
           <span>🎟️</span>
           <div><strong>{s.host_name || "A friend"} gave you Insider access{guestDaysLeft() ? ` for ${guestDaysLeft()} days` : ""}.</strong>
-          <p>You can see the early homes and the secret Top 5 below. To keep it for good, invite 3 friends of your own.</p></div>
+          <p>You can see the secret Top 5 below. To keep it for good, invite 3 friends of your own.</p></div>
         </div>
       )}
       <section className={"hv-ins-card" + (s?.insider ? " is-in" : "")}>
         {!s ? <div className="hunt-skeleton-list" /> : s.insider ? (
-          <div className="hv-ins-done"><span><Check size={20} /></span><div><strong>You're an Insider</strong><p>New homes show up in your feed with an Early access tag, 48 hours before they go public.</p></div></div>
+          <div className="hv-ins-done"><span><Check size={20} /></span><div><strong>You're an Insider</strong><p>The secret Top 5 is yours every week, and you have the Connector badge.</p></div></div>
         ) : (
           <>
             <div className="hv-ins-progress" aria-label={`${n} of 3 friends joined`}>
@@ -112,28 +113,6 @@ export function InsiderPage() {
           </>
         )}
       </section>
-
-      <h2><Clock size={18} /> Early access {s ? `· ${s.early_count}` : ""}</h2>
-      {s && s.early.length === 0 ? (
-        <p className="hunt-fine">Nothing in early access this minute. New homes arrive most days and land here first, 48 hours before the public feed.</p>
-      ) : (
-        <div className="hv-ins-grid">
-          {(s?.early || []).map((d) => s!.can_see ? (
-            <Link key={d.id} to={`/deal/${encodeURIComponent(d.slug)}`} className="hv-ins-tile">
-              <img src={d.image_urls?.[0]} alt="" loading="lazy" />
-              <span className="hv-ins-badge">Public in {hoursLeft(d.publish_at)}h</span>
-              <strong>{money(d.price_eur)}</strong><small>{flag(d.country)} {d.location_name || d.country}</small>
-            </Link>
-          ) : (
-            <div key={d.id} className="hv-ins-tile is-locked">
-              <img src={d.cover} alt="" loading="lazy" />
-              <span className="hv-ins-lock"><Lock size={18} /></span>
-              <span className="hv-ins-badge">Public in {hoursLeft(d.publish_at)}h</span>
-              <strong>{money(d.price_eur)}</strong><small>{flag(d.country)} {d.country}</small>
-            </div>
-          ))}
-        </div>
-      )}
 
       <h2 className="hv-ins-h2"><span><Star size={18} /> Secret Top 5 · week {s?.week.slice(-2) || ""}</span>{s?.insider && link && <button className="hunt-secondary" onClick={share}><Share2 size={15} /> Share it</button>}</h2>
       <p className="hunt-fine">Picked every Monday from the homes with the biggest gap between their price and the median price of homes in the same country on RealHunt.</p>
@@ -157,7 +136,7 @@ export function InsiderPage() {
       <ol className="hv-ins-steps">
         <li><strong>Share your link</strong><span>Send it to friends who dream about a cheap house somewhere.</span></li>
         <li><strong>They join, free</strong><span>A friend counts when they sign up from your link.</span></li>
-        <li><strong>You're in</strong><span>At 3 friends you see every new home 48 hours early, and the Top 5 every week.</span></li>
+        <li><strong>You're in</strong><span>At 3 friends you see the secret Top 5 every week.</span></li>
       </ol>
       {!user && <button className="hunt-primary" onClick={() => requireUser()}>Get my invite link</button>}
     </div>
@@ -249,7 +228,7 @@ function InsiderCTA() {
   return (
     <Link to="/insider" className="hv-ins-cta">
       <Lock size={18} />
-      <span><strong>See new homes 48 hours early</strong><small>Invite 3 friends and unlock RealHunt Insider. Free.</small></span>
+      <span><strong>The secret Top 5 of the week</strong><small>Invite 3 friends and unlock RealHunt Insider. Free.</small></span>
       <ChevronRight size={18} />
     </Link>
   );

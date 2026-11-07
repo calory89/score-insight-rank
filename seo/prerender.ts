@@ -340,7 +340,7 @@ function build(root: string) {
   page(`${SITE}/best`, "The best homes on RealHunt, by country · RealHunt", "The top-scored homes in each country on RealHunt, checked by a person and ranked best first.", DEF,
     `<main class="rh-static"><h1>The best homes, by country</h1><ul>${countryLinks.map(([k, v]) => `<li><a href="/homes/${esc(k)}">Best homes in ${esc(v.name)}</a>: ${v.homes[0] ? `${esc(v.homes[0].title)}, ${esc(eur(v.homes[0].price_eur))}` : ""}</li>`).join("")}</ul></main>`);
   page(`${SITE}/help-buying`, "Help buying a home abroad · RealHunt", "Local lawyers, translators, surveys and tax numbers for buying a house in another country.", DEF);
-  page(`${SITE}/insider`, "RealHunt Insider · See new homes 48 hours early", "Invite 3 friends and see every new home 48 hours before everyone else, plus the secret weekly Top 5. Free.", DEF);
+  page(`${SITE}/insider`, "RealHunt Insider · The secret Top 5 of the week", "Invite 3 friends and unlock the secret weekly Top 5: the homes furthest below their country's typical price. Free.", DEF);
   page(`${SITE}/contact`, "Contact RealHunt", "Write to the RealHunt team about a home, a listing, a partnership or press.", DEF,
     `<main class="rh-static"><h1>Contact RealHunt</h1><p>Email: <!--email_off-->hello@realhunt.co<!--/email_off--></p><p>RealHunt is run by Equinox Investment Group LLC. <a href="/about">About us</a>.</p></main>`);
   for (const [k, n] of [["privacy", "Privacy policy"], ["terms", "Terms of use"], ["cookies", "Cookie policy"], ["takedown", "Listing and photo takedown requests"]] as const)
