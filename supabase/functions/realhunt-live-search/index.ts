@@ -4,6 +4,9 @@
 //   GET  ?job=<id>  -> {status, progress 0-100, stage, results[] (only the ones that passed), hidden, note, parsed}
 //   POST {action:"work", job, secret}      internal: continues a long job in a fresh invocation (see slice)
 //   POST {action:"regate", slugs?, secret}  internal: runs the v2 check on homes earlier live searches imported
+//   POST {action:"translate", limit?}       fills title_es / why_great_es / why_cheap_es of approved homes that have none
+//                                           (idempotent: only untranslated homes, at most 12 a call, so its cost is bounded
+//                                           by the homes published; scripts/build_static.py calls it daily)
 // Order of work, cheapest first:
 //   1. our own data: approved RealHunt homes (score >= 80) and finds earlier live searches published (last 30 days,
 //      passed the gate). With 6 or more good matches it answers from them and spends nothing.
@@ -94,6 +97,8 @@ type Result = {
   score: number; parts?: Record<string, unknown>; found_at: string;
   // v2: the AI check
   show: boolean; reasons?: string[]; photo_quality?: number | null; flags?: string[]; why_cheap?: string | null; why_great?: string | null; ai_checked_at?: string | null;
+  // 8-nov-2026: Spanish versions, so the Spanish page never shows a card in English
+  title_es?: string | null; why_great_es?: string | null; why_cheap_es?: string | null;
   hoa_monthly?: number | null; hoa_currency?: string | null; tax_annual?: number | null; hoa_unknown?: boolean;
 };
 type Cand = { url: string; title: string; price: number | null; currency: string; beds: number | null; sqm: number | null; location: string; country: string | null; kind: "buy" | "rent"; image: string | null; provider: string; cb?: C.CbRow; lat?: number | null; lng?: number | null };
@@ -106,8 +111,10 @@ Deno.serve(async (req) => {
     if (req.method === "GET") return await poll(new URL(req.url).searchParams.get("job") || "");
     if (req.method === "POST") {
       const body = await req.json().catch(() => ({}));
-      if (body.action === "work" || body.action === "regate" || body.action === "selftest") {
+      if (body.action === "translate") return json(await translateMissing(Math.min(Math.max(Number(body.limit) || 12, 1), 12)));
+      if (body.action === "work" || body.action === "regate" || body.action === "selftest" || body.action === "translate_strings") {
         if (!body.secret || body.secret !== (await secret())) return json({ error: "Forbidden" }, 403);
+        if (body.action === "translate_strings") return json(await translateStrings(Array.isArray(body.items) ? body.items.slice(0, 40) : [], String(body.context || "").slice(0, 500)));
         if (body.action === "selftest") return json({ chain: await chain("00000000-0000-0000-0000-000000000000") }); // can this function call itself?
         if (body.action === "work") { background(slice(String(body.job || "")).catch((e) => console.error("slice", e))); return json({ ok: true }); }
         return json(await regate(Array.isArray(body.slugs) ? body.slugs.map(String) : null, body.apply === true));
@@ -136,6 +143,19 @@ async function poll(id: string) {
   }
   const all: Result[] = Array.isArray(j.results) ? j.results : [];
   const shown = all.filter(isShown);
+  // 8-nov-2026: results saved before the Spanish texts existed get them from their home page row
+  const slugs = shown.filter((r) => r.deal_slug && !r.title_es).map((r) => r.deal_slug!);
+  if (slugs.length) {
+    const { data: es } = await db.from("community_deals").select("slug,title,why_great,why_cheap,title_es,why_great_es,why_cheap_es").in("slug", slugs);
+    const by = new Map((es || []).map((d: any) => [d.slug, d]));
+    for (const r of shown) {
+      const d: any = r.deal_slug ? by.get(r.deal_slug) : null;
+      if (!d?.title_es) continue;
+      if (r.title === d.title) r.title_es = d.title_es;
+      if (r.why_great && r.why_great === d.why_great) r.why_great_es = d.why_great_es || null;
+      if (r.why_cheap && r.why_cheap === d.why_cheap) r.why_cheap_es = d.why_cheap_es || null;
+    }
+  }
   return json({ job_id: j.id, status: j.status, progress: j.progress, stage: j.stage, results: shown, found: all.length, hidden: all.length - shown.length, note: j.note, parsed: j.parsed });
 }
 // v1 results (no `show`) are never shown again: they were not checked by the AI
@@ -231,6 +251,7 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
         id: "rh-" + r.slug, source: "realhunt", provider: "realhunt", url: "https://realhunt.co/deal/" + r.slug, deal_slug: r.slug, deal_id: r.id, title: r.title, price: Number(r.price_eur) || null, currency: "EUR",
         price_eur: Number(r.price_eur) || null, beds: r.bedrooms ?? null, sqm: r.sqm ?? null, location: r.location_name || "", country: r.country, kind: "buy", image: abs(r.image_urls?.[0] || "") || null,
         image_urls: (r.image_urls || []).slice(0, 3).map(abs), photos: r.image_urls?.length ?? null, score: Number(r.nota), found_at: r.approved_at || now, show: true, why_cheap: r.why_cheap || null, flags: r.ai_flags || [], ai_checked_at: r.ai_checked ? r.ai_checked_at : null,
+        title_es: r.title_es || null, why_great_es: r.why_great_es || null, why_cheap_es: r.why_cheap_es || null,
       });
     }
   }
@@ -392,7 +413,7 @@ async function checkOne(c: Cand, w: Work, results: Result[], spend: (usd: number
   const slug = C.slugFor(c.url, c.cb ? { city: cityName, address: c.cb.address, price } : {});
   let existing: any = null;
   if (c.kind === "buy") {
-    const sel = "id,slug,status,image_urls,ai_checked,ai_checked_at,title,why_great,why_cheap,ai_flags";
+    const sel = "id,slug,status,image_urls,ai_checked,ai_checked_at,title,why_great,why_cheap,ai_flags,title_es,why_great_es,why_cheap_es";
     existing = (await db.from("community_deals").select(sel).eq("source_key", sourceKey(c.url)).maybeSingle()).data || (await db.from("community_deals").select(sel).eq("slug", slug).maybeSingle()).data;
   }
 
@@ -420,6 +441,7 @@ async function checkOne(c: Cand, w: Work, results: Result[], spend: (usd: number
   if (skip && skip !== "already_live") gate.reasons.unshift("skip:" + skip);
   const soft = flags.filter((f) => (C.SOFT_FLAGS as readonly string[]).includes(f));
   const why_cheap = review?.why_cheap || (soft.includes("age_restricted") && (pre.parts.ratio ?? 1) < 0.7 ? "Only for buyers aged 55 or more." : null);
+  const why_cheap_es = review?.why_cheap ? review.why_cheap_es : why_cheap ? "Solo para compradores de 55 años o más." : null;
   const isCondo = /condo|co-?op|apartment|townhouse/i.test(ptype);
   const hoa = review?.hoa_monthly ?? facts?.hoa ?? null;
   // Florida (Carlos, 7-nov-2026): the listing's tax is the seller's, with the homestead discount; a buyer pays about 1.8 % a year
@@ -436,6 +458,7 @@ async function checkOne(c: Cand, w: Work, results: Result[], spend: (usd: number
     location, country, kind: c.kind, image: ordered[0] || c.image || null, image_urls: ordered.slice(0, 3), photos: okPage ? photos.length : null,
     score: sc.score, parts: { ...sc.parts, caps: sc.caps }, found_at: new Date().toISOString(),
     show: gate.show, reasons: gate.reasons, photo_quality: review?.photo_quality ?? null, flags: soft, why_cheap, why_great: review?.why_great || null,
+    title_es: review?.title ? review.title_es : existing?.title_es || null, why_great_es: review?.why_great ? review.why_great_es : null, why_cheap_es,
     ai_checked_at: review ? new Date().toISOString() : existing?.ai_checked_at || null, hoa_monthly: hoa, hoa_currency: hoa || tax ? currency : null, tax_annual: tax, hoa_unknown: isCondo && !hoa,
   };
 
@@ -444,9 +467,9 @@ async function checkOne(c: Cand, w: Work, results: Result[], spend: (usd: number
   if (r.kind === "buy" && r.show) {
     await step("publishing");
     if (existing?.status === "approved") {
-      Object.assign(r, { deal_slug: existing.slug, deal_id: existing.id, title: existing.title, image: abs(existing.image_urls?.[0] || "") || r.image, image_urls: (existing.image_urls || []).slice(0, 3), why_cheap: existing.why_cheap ?? r.why_cheap, flags: existing.ai_flags || r.flags, ai_checked_at: existing.ai_checked ? existing.ai_checked_at : null });
+      Object.assign(r, { deal_slug: existing.slug, deal_id: existing.id, title: existing.title, title_es: existing.title_es || null, why_great_es: existing.why_great_es || null, why_cheap_es: existing.why_cheap ? existing.why_cheap_es || null : r.why_cheap_es, image: abs(existing.image_urls?.[0] || "") || r.image, image_urls: (existing.image_urls || []).slice(0, 3), why_cheap: existing.why_cheap ?? r.why_cheap, flags: existing.ai_flags || r.flags, ai_checked_at: existing.ai_checked ? existing.ai_checked_at : null });
     } else if (r.country && price_eur) {
-      const aiCols = { status: "approved", ai_checked: true, ai_checked_at: r.ai_checked_at, why_cheap: r.why_cheap, ai_flags: soft.length ? soft : null, hoa_monthly: hoa, hoa_currency: r.hoa_currency, tax_annual: tax, hoa_unknown: !!r.hoa_unknown, costs_note, reject_reason: null };
+      const aiCols = { status: "approved", ai_checked: true, ai_checked_at: r.ai_checked_at, why_cheap: r.why_cheap, ai_flags: soft.length ? soft : null, hoa_monthly: hoa, hoa_currency: r.hoa_currency, tax_annual: tax, hoa_unknown: !!r.hoa_unknown, costs_note, reject_reason: null, title_es: r.title_es || null, why_great_es: r.why_great_es || null, why_cheap_es: r.why_cheap_es || null };
       let dealId: string | null = null; let dealSlug: string | null = null;
       if (existing?.status === "pending") {
         const { error } = await db.from("community_deals").update({ ...aiCols, title: r.title, why_great: r.why_great || existing.why_great, image_urls: ordered }).eq("id", existing.id).eq("status", "pending");
@@ -507,7 +530,7 @@ async function aiReview(urls: string[], info: Omit<Parameters<typeof C.reviewPro
     try {
       const r = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST", signal: c.signal, headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-        body: JSON.stringify({ model, max_tokens: 900, messages: [{ role: "user", content }] }),
+        body: JSON.stringify({ model, max_tokens: 1500, messages: [{ role: "user", content }] }),
       });
       const d = await r.json().catch(() => ({}));
       if (r.status === 404 || d?.error?.type === "not_found_error") continue;
@@ -518,6 +541,60 @@ async function aiReview(urls: string[], info: Omit<Parameters<typeof C.reviewPro
     } catch (e) { console.error("review", e); return { review: null, reviewed: 0, cost }; } finally { clearTimeout(t); }
   }
   return { review: null, reviewed: 0, cost };
+}
+
+// ---------------------------------------------------------------- Spanish texts of homes that have none (8-nov-2026)
+async function translateMissing(limit: number) {
+  const key = Deno.env.get("ANTHROPIC_API_KEY");
+  const MISSING = "title_es.is.null,and(why_great.not.is.null,why_great_es.is.null),and(why_cheap.not.is.null,why_cheap_es.is.null)";
+  const { data: rows } = await db.from("community_deals").select("id,title,why_great,why_cheap").eq("status", "approved").or(MISSING).order("approved_at", { ascending: false }).limit(limit);
+  const left = async () => (await db.from("community_deals").select("id", { count: "exact", head: true }).eq("status", "approved").or(MISSING)).count ?? null;
+  if (!rows?.length || !key) return { translated: 0, left: await left() };
+  const items = rows.map((r: any) => ({ id: r.id, title: r.title, why_great: r.why_great, why_cheap: r.why_cheap }));
+  const c = new AbortController(); const t = setTimeout(() => c.abort(), 90000);
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST", signal: c.signal, headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({ model: "claude-haiku-4-5", max_tokens: 6000, messages: [{ role: "user", content: C.translatePrompt(items) }] }),
+    });
+    const d = await r.json().catch(() => ({}));
+    const cost = C.jobCost("claude-haiku-4-5", d?.usage);
+    if (!r.ok) return { translated: 0, error: d?.error?.message || r.status, cost };
+    const text = (Array.isArray(d.content) ? d.content : []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("\n");
+    const out = C.parseTranslations(text, rows.map((x: any) => x.id));
+    let n = 0;
+    for (const o of out) {
+      const src: any = rows.find((x: any) => x.id === o.id);
+      const { error } = await db.from("community_deals").update({ title_es: o.title_es, why_great_es: src?.why_great ? o.why_great_es || "" : null, why_cheap_es: src?.why_cheap ? o.why_cheap_es || "" : null }).eq("id", o.id); // "" = tried, no Spanish: never paid for twice
+      if (!error) n++;
+    }
+    return { translated: n, cost, left: await left() };
+  } catch (e) { return { translated: 0, error: String(e) }; } finally { clearTimeout(t); }
+}
+
+/** Internal (secret): Spanish of site texts (buying rules, guide steps) for the dictionary, 40 strings a call. */
+async function translateStrings(items: unknown[], context: string) {
+  const key = Deno.env.get("ANTHROPIC_API_KEY");
+  const list = items.map((x) => String(x || "").slice(0, 2000)).filter(Boolean);
+  if (!key || !list.length) return { out: [] };
+  const prompt = [
+    "Translate these texts of RealHunt (a site where foreigners find, check and buy homes abroad) from English into natural, precise Spanish (Spain).",
+    "Keep numbers, percentages, currencies, dates, law and tax names, place names and local terms (e.g. IMU, ITP, Hak Pakai, fideicomiso) exactly; write numbers the Spanish way (1,5% and 4.014 m²). No em dashes. Keep the meaning exact, add nothing.",
+    context ? "Context: " + context : "",
+    'Return ONLY a JSON array of strings, same order and same count as the input.',
+    JSON.stringify(list),
+  ].filter(Boolean).join("\n");
+  const r = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST", headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+    body: JSON.stringify({ model: "claude-haiku-4-5", max_tokens: 8000, messages: [{ role: "user", content: prompt }] }),
+  });
+  const d = await r.json().catch(() => ({}));
+  const cost = C.jobCost("claude-haiku-4-5", d?.usage);
+  const text = (Array.isArray(d.content) ? d.content : []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("\n");
+  const a = text.indexOf("["), b = text.lastIndexOf("]");
+  let out: unknown = [];
+  try { out = JSON.parse(text.slice(a, b + 1)); } catch { /* bad answer */ }
+  return { out: Array.isArray(out) && out.length === list.length ? out.map((x) => String(x).replace(/\s*[—–]\s*/g, ", ")) : [], cost };
 }
 
 // ---------------------------------------------------------------- re-check homes earlier live searches imported
@@ -551,7 +628,7 @@ async function regate(only: string[] | null, apply: boolean) {
     const row: any = { slug: d.slug, was: d.status, score: sc.score, photo_quality: rv.review?.photo_quality ?? null, flags, reasons: gate.reasons, title: rv.review?.title, why_cheap: rv.review?.why_cheap };
     if (apply && rv.review) {
       if (gate.show) {
-        await db.from("community_deals").update({ status: "approved", ai_checked: true, ai_checked_at: new Date().toISOString(), title: rv.review.title, why_great: rv.review.why_great || d.why_great, why_cheap: rv.review.why_cheap, ai_flags: soft.length ? soft : null, image_urls: ordered, reject_reason: null }).eq("id", d.id);
+        await db.from("community_deals").update({ status: "approved", ai_checked: true, ai_checked_at: new Date().toISOString(), title: rv.review.title, why_great: rv.review.why_great || d.why_great, why_cheap: rv.review.why_cheap, title_es: rv.review.title_es, why_great_es: rv.review.why_great ? rv.review.why_great_es : null, why_cheap_es: rv.review.why_cheap_es, ai_flags: soft.length ? soft : null, image_urls: ordered, reject_reason: null }).eq("id", d.id);
         row.now = "approved";
       } else {
         await db.from("community_deals").update({ status: "rejected", ai_checked: false, reject_reason: ("AI check v2 (live search): " + gate.reasons.join(", ")).slice(0, 500) }).eq("id", d.id);

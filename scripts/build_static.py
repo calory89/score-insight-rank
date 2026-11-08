@@ -30,6 +30,22 @@ def pages(scope):
         rows += d["rows"]; off += 100
         if off >= d["total"] or not d["rows"]: return meta, rows
 
+# 8-nov-2026 (Carlos: "nunca mezclados, todo bien traducido"): every approved home gets its Spanish title and texts
+# (title_es, why_great_es, why_cheap_es) before the snapshot is built. The function only translates homes that have
+# none, 12 a call, so this costs cents a day at most and nothing once they are done.
+def translate_missing():
+    url = os.environ.get("RH_FN_URL", "https://oykcsmextclpdnugixqz.supabase.co/functions/v1/realhunt-live-search")
+    for _ in range(10):
+        try:
+            req = urllib.request.Request(url, data=json.dumps({"action": "translate", "limit": 12}).encode(),
+                headers={"apikey": KEY, "Authorization": f"Bearer {KEY}", "Content-Type": "application/json", "User-Agent": "realhunt-static/1.0"})
+            d = json.load(urllib.request.urlopen(req, timeout=120))
+            print("spanish texts:", d)
+            if not d.get("translated") or not d.get("left"): return
+        except Exception as e:
+            print("spanish texts: skipped", e); return
+translate_missing()
+
 meta, rows = pages("all")
 # The live database does not count views any more (the static site skips tracking), so its counters and the
 # buyer-interest sub-score would sink to zero and move every grade. Keep, for homes already in the previous

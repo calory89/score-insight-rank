@@ -737,7 +737,7 @@ export function GuidePage() {
       <ol className="hunt-steps">{g.steps.map(([h, b]) => <li key={h}><strong>{h}</strong><p>{b}</p></li>)}</ol>
       {c?.purchase_costs_pct && <>
         <h2>{t("Costs on top of the price")}</h2>
-        <p>About <b>{c.purchase_costs_pct}%</b>{c.purchase_costs_breakdown ? `: ${c.purchase_costs_breakdown}` : ""}</p>
+        <p>About <b>{c.purchase_costs_pct}%</b>{c.purchase_costs_breakdown ? <>{": "}<span>{c.purchase_costs_breakdown}</span></> : ""}</p>
         {r && <div className="hv-costcalc">
           <label>{t("Price of the home")} <input type="number" min={5000} step={1000} value={price} onChange={(e) => setPrice(Number(e.target.value) || 0)} /></label>
           <p>{t("Taxes and fees")}: <b>{money(Math.round(price * r[0] / 100))}{r[1] !== r[0] ? `–${money(Math.round(price * r[1] / 100))}` : ""}</b></p>
@@ -789,12 +789,12 @@ export function HomesPage() {
       <nav className="rh-crumbs" aria-label={t("Breadcrumb")}><Link to="/">RealHunt</Link> › <Link to={`/homes/${country}`}>{name}</Link>{regionName && <> › <span>{regionName}</span></>}{type && <> › <span>{type.label}</span></>}{max ? <> › <span>{t("Under")} {money(max)}</span></> : null}</nav>
       <header className="hv-country-hero" style={top ? { backgroundImage: `linear-gradient(180deg,rgba(0,0,0,.15),rgba(0,0,0,.72)),url("${top.image_urls?.[0]}")` } : undefined}>
         <span className="hunt-eyebrow">{place}</span>
-        <h1>{type ? type.h1(place) : max ? <>Homes under {money(max)} in {place}</> : <>Best homes for sale in {place}</>}</h1>
+        <h1>{type ? type.h1(place) : max ? `Homes under ${money(max)} in ${place}` : `Best homes for sale in ${place}`}</h1>
         {data && data.total > 0 && <div className="hv-country-stats"><span><b>{data.total}</b> homes</span><span>from <b>{money(low)}</b></span><span>average <b>{money(avg)}</b></span></div>}
       </header>
       <HomesFilterLink country={name} max={max || undefined} />
       {data && data.rows.length >= 3 && <><h2 className="hv-country-h2">Top 3 in {place}</h2><div className="hv-country-top">{data.rows.slice(0, 3).map((d, n) => <Link key={d.id} to={`/deal/${d.slug}`}><img src={thumb(d.image_urls?.[0])} alt={`${d.title}, ${d.location_name || name}`} decoding="async" onError={(e) => onThumbError(e.currentTarget, d.image_urls?.[0])} /><span className="hv-pod-medal">{["🥇", "🥈", "🥉"][n]}</span><strong>{money(d.price_eur)}</strong><small>{d.location_name}</small></Link>)}</div><h2 className="hv-country-h2">All homes</h2></>}
-      <p>{data ? `${data.total} homes, scored from 70 to 98 and ranked best first.` : "Loading…"} Every home links to its original listing. <Link to="/method">How the score works</Link> · <Link to={`/alerts?country=${encodeURIComponent(name)}${max ? `&max=${max}` : ""}`}>Get new homes in {name} by email</Link></p>
+      <p>{data ? `${data.total} homes, scored from 70 to 98 and ranked best first.` : "Loading…"} Every home links to its original listing. <Link to="/method">How the score works</Link> · <Link to={`/alerts?country=${encodeURIComponent(name)}${max ? `&max=${max}` : ""}`}>{`Get new homes in ${name} by email`}</Link></p>
       <nav className="hunt-chips" aria-label={t("By price")}>{PRICE_CAPS.map((p) => <Link key={p} aria-current={p === max ? "page" : undefined} to={p === 100000 ? `/homes/${country}` : `/homes/${country}/under-${p}`}>{money(p)}</Link>)}</nav>
       {types.length > 0 && <nav className="hunt-chips" aria-label={t("By type")}>{types.map(([k, l, n]) => <Link key={k} aria-current={type && cap.toLowerCase() === k ? "page" : undefined} to={`/homes/${country}/${k}`}>{t(l)} <small>{n}</small></Link>)}</nav>}
       {regions.length > 1 && <nav className="hunt-chips rh-regions" aria-label={t("By region")}>{regions.map(([k, l, n]) => <Link key={k} aria-current={k === regionKey ? "page" : undefined} to={`/homes/${country}/${k}`}>{l} <small>{n}</small></Link>)}</nav>}

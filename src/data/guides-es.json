@@ -1,6 +1,6 @@
 {
  "_meta": {
-  "note": "Spanish name, yearly costs and step titles for src/data/guides.json, same keys and step order. Loaded only when the site is in Spanish."
+  "note": "Spanish name, yearly costs, step titles (steps) and step texts (step_texts) for src/data/guides.json, same keys and step order. Loaded only when the site is in Spanish."
  },
  "italy": {
   "name": "Italia",
@@ -11,6 +11,13 @@
    "Revisa la casa",
    "Firma ante notario",
    "Paga los impuestos"
+  ],
+  "step_texts": [
+   "Tu código fiscal italiano. Es gratuito, de la Agenzia delle Entrate en Italia o un consulado italiano en el extranjero.",
+   "La proposta d'acquisto normalmente viene con una pequeña señal. Una vez aceptada, muchos compradores firman un contrato preliminar (compromesso) con una señal del 10-30%.",
+   "Pide la nota simple del catastro (visura catastale), prueba de que el edificio se ajusta a sus planos (conformità urbanistica e catastale), el certificado energético (APE) y cualquier deuda impagada sobre la propiedad.",
+   "La escritura (rogito) se firma ante un notaio, que verifica el título e inscribe la venta. Puedes firmar por poder notarial si no puedes viajar.",
+   "Compra de vendedor privado: impuesto de registro del 9% del valor catastral para una segunda vivienda, o 2% si se convierte en tu vivienda principal, más €50 + €50 de impuestos fijos y la honorarios del notario."
   ]
  },
  "spain": {
@@ -23,6 +30,14 @@
    "Revisa la casa",
    "Firma la escritura ante notario e inscríbela",
    "Paga el impuesto de transmisión"
+  ],
+  "step_texts": [
+   "Tu número de identidad de extranjero, de un consulado español o una comisaría de policía en España. Lo necesitas para firmar y para pagar impuestos.",
+   "La mayoría de notarios y ayuntamientos esperan que pagos y facturas pasen por una cuenta española.",
+   "Un contrato privado con una señal, normalmente del 10%. Si el vendedor se echa atrás, normalmente la devuelve el doble.",
+   "Encarga una nota simple del Registro de la Propiedad (propietario y deudas). En el campo, verifica el estatus del terreno (suelo rústico) y que los edificios sean legales. Pide los últimos recibos de IBI.",
+   "La escritura se firma ante un notario y luego se inscribe en el Registro de la Propiedad.",
+   "Las viviendas de reventa pagan ITP del 6-10% según la región, más notario e inscripción de aproximadamente €1.000-2.000."
   ]
  },
  "portugal": {
@@ -34,6 +49,13 @@
    "Revisa la casa",
    "Firma la escritura",
    "Paga los impuestos"
+  ],
+  "step_texts": [
+   "Tu número fiscal, en una oficina de Finanças o a través de un representante. Los residentes no ciudadanos de la UE normalmente necesitan un representante fiscal.",
+   "El CPCV fija precio y fecha, con una señal del 10-30%.",
+   "Pide la caderneta predial y la certidão permanente (propietario, deudas, urbano o rústico), y la licencia de habitación (licença de utilização).",
+   "En una notaría o una oficina Casa Pronta, luego la venta se inscribe en la Conservatória.",
+   "IMT en una escala móvil de hasta aproximadamente el 8% (5% en tierra rústica) y timbre del 0,8%."
   ]
  },
  "denmark": {
@@ -46,6 +68,14 @@
    "Haz una oferta y firma con condiciones",
    "Pide a tu abogado que revise los documentos",
    "Inscribe la escritura"
+  ],
+  "step_texts": [
+   "Usa las reglas de Civilstyrelsen: los ciudadanos de la UE/EEE que viven en Dinamarca firman una declaración, todos los demás solicitan permiso para la propiedad específica.",
+   "Si no tienes número personal danés, solicita uno a la Agencia Tributaria Danesa con el formulario 04.063_AP_EN.",
+   "Los bancos daneses suelen prestar hasta el 80 % del valor, así que planifica al menos una entrada del 20 %.",
+   "El agente del vendedor redacta el contrato; haz que tu propio abogado lo revise y añada cláusulas de aprobación bancaria y legal (bank- og advokatforbehold).",
+   "Tu abogado revisa el informe de estado, el título y los gravámenes registrados antes de que se levanten las cláusulas.",
+   "La escritura (skøde) se registra digitalmente en el Tribunal de Registro de Tierras y se paga la tasa de registro, lo que te convierte en propietario legal."
   ]
  },
  "sweden": {
@@ -58,6 +88,14 @@
    "Inspecciona antes de comprometerte",
    "Firma el contrato de compraventa",
    "Solicita el título en Lantmäteriet"
+  ],
+  "step_texts": [
+   "Reserva una verificación de identidad en un centro de servicio de la Agencia Tributaria Sueca para obtener un samordningsnummer, que necesitas para registrarte como propietario.",
+   "Normalmente se necesita una cuenta sueca para completar el pago.",
+   "Los anuncios están en Hemnet y Booli; los compradores extranjeros pueden enfrentarse a un depósito mayor si un banco presta en absoluto.",
+   "Visita la propiedad y considera contratar a un inspector antes de firmar.",
+   "Tú y el vendedor firman el contrato, normalmente con el agente del vendedor encargándose de la documentación.",
+   "Solicita lagfart a Lantmäteriet y paga el impuesto de timbre del 1,5 % para registrarte como propietario."
   ]
  },
  "norway": {
@@ -70,6 +108,14 @@
    "Paga en la liquidación",
    "Saca un número D si lo necesitas",
    "Inscribe la escritura"
+  ],
+  "step_texts": [
+   "Busca anuncios en Finn.no y obtén preaprobación si necesitas una hipoteca; espera aportar entre el 15 y el 25 %.",
+   "Las ofertas van a través del agente del vendedor y las rondas de pujas pueden cerrarse en 24 horas, así que inspecciona la casa primero.",
+   "El agente redacta el contrato de compra; haz que un abogado local lo revise.",
+   "El precio se paga a través de una cuenta de depósito en garantía al cierre, y se firma la escritura.",
+   "Envía a Kartverket la solicitud de número D con la escritura y una copia certificada del pasaporte no más antigua de 3 meses.",
+   "La escritura (skjøte) se registra con Kartverket y se paga el impuesto sobre actos jurídicos documentados del 2,5 % y la tasa."
   ]
  },
  "germany": {
@@ -82,6 +128,14 @@
    "Asegura una anotación preventiva",
    "Paga el impuesto de transmisión y el precio",
    "Inscríbete como propietario"
+  ],
+  "step_texts": [
+   "Busca en los portales o usa un agente local y consigue financiación antes de firmar.",
+   "El notario es neutral y no actúa por ti, así que considera tu propio abogado y un peritaje.",
+   "El notario redacta el contrato de compra y ambas partes lo firman ante el notario; puedes firmar a través de un poder notarial certificado desde el extranjero.",
+   "El notario registra un aviso de prioridad (Vormerkung) en el registro de la propiedad para protegerte contra otras ventas.",
+   "Paga el impuesto de transmisión cuando la oficina tributaria envíe la factura, y paga el precio como establece el contrato, a menudo a través del notario.",
+   "El registro de la propiedad (Grundbuch) te inscribe como propietario una vez pagado el impuesto de transmisión, lo que puede tardar de 3 a 4 meses."
   ]
  },
  "netherlands": {
@@ -94,6 +148,14 @@
    "Aprovecha el periodo de reflexión de 3 días",
    "Paga la señal",
    "Firma la escritura e inscríbela"
+  ],
+  "step_texts": [
+   "Regístrate en persona en uno de los 19 municipios RNI con un documento de identidad válido para obtener un número de servicio al ciudadano (BSN).",
+   "Abre una cuenta que pueda pagar al notario a tiempo y consigue financiación.",
+   "Una aceptación verbal o por correo electrónico no te vincula; solo lo hace un contrato de compra (koopovereenkomst) escrito y firmado.",
+   "Un comprador privado puede cancelar en los tres días siguientes a recibir el acuerdo firmado sin dar razón alguna.",
+   "El acuerdo estándar normalmente pide el 10% del precio, o una garantía bancaria, pagados al notario.",
+   "Un notario de derecho civil holandés firma la escritura de transferencia y te conviertes en propietario cuando se registra en el Kadaster."
   ]
  },
  "france": {
@@ -106,6 +168,14 @@
    "Paga la señal",
    "Deja que el notario haga las comprobaciones",
    "Firma la escritura definitiva"
+  ],
+  "step_texts": [
+   "Acuerda el precio con el vendedor, normalmente a través del agente. Presupuesta primero los honorarios del notario y otros gastos.",
+   "Firma el compromis de vente con un notario (notaire). Añade condiciones (clauses suspensives) como obtener una hipoteca.",
+   "Tienes 10 días después de recibir el compromis firmado para retractarte sin penalización. El vendedor no puede retractarse.",
+   "Después del período de reflexión, paga un depósito, normalmente el 10% del precio. Puedes perderlo si te retractas sin una condición válida.",
+   "El notario comprueba la propiedad, los límites y servidumbres y recopila los informes diagnósticos obligatorios (termitas, plomo, amianto).",
+   "Envía el saldo y los honorarios a la cuenta del notario antes de la fecha, después firma el acte de vente en persona o por poder notarial. El notario registra la venta."
   ]
  },
  "poland": {
@@ -118,6 +188,14 @@
    "Haz las comprobaciones previas",
    "Firma la escritura notarial",
    "Paga el impuesto PCC"
+  ],
+  "step_texts": [
+   "Solicita un número de identificación polaco (PESEL) en Polonia, en persona o a través de un abogado con poder notarial. Es gratuito y normalmente tarda hasta siete días hábiles.",
+   "Los compradores no-EEE de una casa o terreno deben solicitar un permiso MSWiA antes de comprar. Los apartamentos no lo necesitan.",
+   "Acuerda el precio y paga un depósito, normalmente el 10%. Si te retractas sin causa el vendedor se lo queda; si se retracta el vendedor lo repaga al doble.",
+   "Un abogado bilingüe puede comprobar el registro de la tierra (księga wieczysta) por cargas, deudas, cuotas impagadas y cuestiones de zonificación.",
+   "Firma la escritura final (akt notarialny) ante un notario y paga los honorarios. El notario presenta el cambio al registro de la tierra.",
+   "Paga el 2% PCC en los 14 días siguientes a la escritura si el notario no lo ha cobrado."
   ]
  },
  "greece": {
@@ -130,6 +208,14 @@
    "Firma un contrato privado",
    "Paga el impuesto de transmisión",
    "Firma la escritura e inscríbela"
+  ],
+  "step_texts": [
+   "Solicita un número de identificación fiscal (AFM) con tu pasaporte. Es gratuito y necesario para firmar contratos y pagar impuestos.",
+   "Un abogado no es obligatorio pero se recomienda encarecidamente. Puede actuar por ti bajo poder notarial.",
+   "El abogado comprueba la propiedad y busca en el registro de la tierra hipotecas, cargas y reclamaciones. Los compradores no-UE en zonas fronterizas solicitan el permiso en esta fase.",
+   "Firma un acuerdo de compra preliminar y paga un depósito, normalmente del 5-10%, que normalmente pierdes si te retractas.",
+   "El notario prepara la declaración de impuesto de transferencia y pagas el impuesto antes de la escritura final.",
+   "Firma el contrato final ante un notario y paga el saldo, normalmente el mismo día. La escritura se registra después en el registro de la tierra local o catastro."
   ]
  },
  "switzerland": {
@@ -141,6 +227,13 @@
    "Encuentra un inmueble y haz una oferta",
    "Firma la escritura ante notario",
    "Inscribe la transmisión"
+  ],
+  "step_texts": [
+   "Averigua si puedes comprar libremente o necesitas un permiso. Las personas que viven en el extranjero deben obtener autorización del cantón antes de comprar.",
+   "Los bancos normalmente requieren al menos el 20% del precio como capital y prueban la capacidad de pago a una tasa de interés de alrededor del 5%.",
+   "Busca en los principales portales y haz tu oferta, normalmente a través del agente del vendedor.",
+   "El notario redacta el contrato de compra (Kaufvertrag, acte de vente), lo lee en voz alta y ambas partes lo firman.",
+   "El notario presenta la venta en el registro de la propiedad (Grundbuch, registre foncier). La titularidad se transmite una vez que se inscribe, lo que puede tardar varias semanas."
   ]
  },
  "cyprus": {
@@ -153,6 +246,14 @@
    "Deposita el contrato en el Registro",
    "Pide autorización si eres de fuera de la UE",
    "Transfiere el título"
+  ],
+  "step_texts": [
+   "Usa un abogado de Chipre para negociar y redactar el contrato de compraventa y realizar las comprobaciones.",
+   "El abogado busca en el Registro de Tierras del Distrito la titularidad, hipotecas, demandas judiciales y restricciones, y comprueba los permisos y la situación fiscal.",
+   "Firma el acuerdo de compraventa con el precio y las condiciones de pago. Es vinculante legalmente una vez firmado.",
+   "Deposita el contrato firmado en el Registro de Tierras conforme a la Ley de Cumplimiento Específico para proteger tu derecho a la titularidad.",
+   "Los compradores no comunitarios solicitan autorización al Consejo de Ministros a través del Oficial del Distrito, normalmente después de firmar. La titularidad no se puede inscribir sin ella.",
+   "Paga el saldo y los gastos de transferencia, después transfiere la escritura de propiedad en el Registro de Tierras del Distrito."
   ]
  },
  "united-kingdom": {
@@ -165,6 +266,14 @@
    "Intercambia los contratos",
    "Completa la compra",
    "Paga el SDLT e inscribe la compra"
+  ],
+  "step_texts": [
+   "Haz una oferta a través del agente inmobiliario del vendedor. La aceptación no es vinculante hasta que se intercambien contratos.",
+   "Contrata a un abogado o agente inmobiliario autorizado. Todo el proceso se puede hacer a distancia.",
+   "Tu abogado realiza búsquedas locales y plantea preguntas al vendedor. Esta fase suele tardar de 8 a 12 semanas.",
+   "Firma e intercambia contratos y paga la fianza, normalmente el 10%. Ahora estás legalmente obligado a comprar.",
+   "Paga el saldo en la fecha de cierre y recibe las llaves.",
+   "Tu abogado paga el SDLT, presenta la declaración ante HMRC y te registra como propietario en el Registro de Tierras de Su Majestad."
   ]
  },
  "united-states": {
@@ -177,6 +286,14 @@
    "Haz las comprobaciones",
    "Cierra la compra e inscribe la escritura",
    "Organiza tus declaraciones fiscales"
+  ],
+  "step_texts": [
+   "Confirma que el estado en el que vas a comprar no restringe a compradores de tu país. Las normas varían según el estado y algunos solo abarcan tierras agrícolas o terrenos cerca de bases militares.",
+   "Los agentes deben tener un acuerdo escrito contigo antes de mostrar viviendas. Establece cuánto cobra el agente y quién lo paga.",
+   "Incluye tu precio y condiciones en una oferta escrita. Puedes pedir al vendedor que pague toda o parte de la comisión del agente.",
+   "Haz una inspección de la vivienda y una búsqueda de titularidad para saber el estado de la casa y que la titularidad esté limpia.",
+   "Paga el saldo y los gastos de cierre en el acto de cierre. La escritura se inscribe entonces en el condado.",
+   "Si alquilas la vivienda, elige entre el 30% de impuesto sobre la renta bruta o la elección de renta neta, que requiere el Formulario W-8ECI y un Formulario 1040-NR anual."
   ]
  },
  "canada": {
@@ -189,6 +306,14 @@
    "Haz una oferta",
    "Cierra la venta",
    "Organiza las declaraciones fiscales del alquiler"
+  ],
+  "step_texts": [
+   "Hasta el 1 de enero de 2027, los no canadienses no pueden comprar viviendas en áreas metropolitanas censales o aglomeraciones censales a menos que se aplique una excepción. Comprueba primero la ubicación y tu situación.",
+   "Ontario carga a los compradores extranjeros el 25% y Columbia Británica carga el 20% en algunas regiones. Estos impuestos pueden costar más que el resto de los gastos de compra combinados.",
+   "El abogado comprueba la titularidad, gestiona los fondos e inscribe la transferencia. Pide primero un presupuesto de honorarios escrito.",
+   "Firma un acuerdo de compra con tu precio y condiciones, como una inspección de la vivienda.",
+   "En el día del cierre pagas el saldo más el impuesto de transmisión de tierras y los gastos a través de tu abogado, y la vivienda se inscribe a tu nombre.",
+   "Si la alquilas, designa un agente canadiense para retener impuestos, considera presentar el Formulario NR6, e presenta una declaración de la Sección 216 cada año."
   ]
  },
  "japan": {
@@ -201,6 +326,14 @@
    "Firma y paga una señal",
    "Paga e inscribe la compra",
    "Presenta las declaraciones y nombra un representante fiscal"
+  ],
+  "step_texts": [
+   "Cualquier agente con licencia puede mostrarte la mayoría de anuncios. Muchas casas baratas solo se anuncian en japonés, así que un agente que traduce te ayuda.",
+   "Envía una solicitud de compra sin carácter vinculante con tu precio y condiciones. Los no residentes suelen pagar en efectivo, ya que los bancos japoneses raramente prestan a extranjeros.",
+   "Antes del contrato, un especialista con licencia debe explicarte la situación legal de la propiedad. Puede hacerse por videollamada.",
+   "Firma el contrato de venta y paga una fianza de aproximadamente 5-10%. Si te echas atrás después de esto, pierdes la fianza.",
+   "El día de la liquidación pagas el resto y recibes las llaves, y un escribano judicial registra la transferencia en la Oficina de Asuntos Legales. Desde el 5 de octubre de 2026 todos los compradores deben mostrar prueba de nacionalidad al registrar.",
+   "Los no residentes deben reportar la compra al Banco de Japón en 20 días conforme a la Ley de Control de Cambios Extranjeros. También necesitas un representante fiscal con domicilio japonés para recibir y pagar las facturas de impuestos."
   ]
  },
  "dominican-republic": {
@@ -213,6 +346,14 @@
    "Firma la escritura ante notario",
    "Paga el impuesto de transmisión",
    "Inscribe el título"
+  ],
+  "step_texts": [
+   "Obtén tu RNC en una oficina DGII con tu pasaporte, o a través de un abogado con un poder notariado. Lo necesitas para firmar y para registrar el título.",
+   "Haz que un abogado dominicano confirme un título limpio en el Registro de Títulos, sin gravámenes ni demandas, y que los impuestos IPI, los servicios y las cuotas de condominio estén pagados.",
+   "Firma el contrato de promesa de venta y paga una fianza, normalmente 10-20%. Normalmente fija una ventana de 30 a 60 días para completar.",
+   "Paga el resto y firma la escritura de venta. El notario legaliza el documento.",
+   "Paga el 3% de impuesto de transferencia a DGII. El título no puede registrarse hasta que se pague.",
+   "Tu abogado presenta la escritura y el recibo de impuesto en el Registro de Títulos. El nuevo certificado de título a tu nombre normalmente tarda 30 a 90 días."
   ]
  },
  "mexico": {
@@ -225,6 +366,14 @@
    "Firma el contrato de compraventa",
    "Cierra la compra ante notario",
    "Inscribe la escritura"
+  ],
+  "step_texts": [
+   "Los extranjeros no pueden tener título directamente dentro de 50 km de la costa o 100 km de una frontera. Fuera de esa zona puedes poseer a tu nombre.",
+   "En la zona restringida usa un fideicomiso bancario, donde un banco mexicano tiene el título para ti, o una empresa mexicana. El costo del permiso del ministerio de relaciones exteriores (SRE) es MXN 21.650 para un fideicomiso en 2026.",
+   "Verifica el título del vendedor, comprueba si hay gravámenes y disputas, y confirma que el terreno no es tierra ejidal, que no se puede vender normalmente.",
+   "Firma un contrato que establezca el precio, los términos de pago y las condiciones. No hagas una transferencia de fianza hasta que se hayan revisado los documentos y el título.",
+   "Un notario público prepara y firma la escritura pública. Se recomienda un abogado independiente del comprador para una revisión independiente.",
+   "El notario registra la escritura en el Registro Público. Guarda la escritura final y los registros de registro."
   ]
  },
  "bulgaria": {
@@ -237,6 +386,14 @@
    "Prepara tus documentos",
    "Firma la escritura ante notario",
    "Declara el inmueble en el ayuntamiento"
+  ],
+  "step_texts": [
+   "Los ciudadanos no comunitarios pueden comprar apartamentos y edificios a su nombre pero no terrenos. Para comprar una casa con su parcela, un comprador no comunitario normalmente constituye una empresa búlgara.",
+   "Un abogado comprueba el título y las deudas, lo que normalmente tarda 5 a 10 días hábiles.",
+   "Paga una fianza, normalmente 10%. Si te echas atrás la pierdes, y si el vendedor se echa atrás te debe el doble.",
+   "Necesitas tu pasaporte y un número de impuesto personal búlgaro de la Agencia Nacional de Ingresos. Los pagos de EUR 5.113 o más deben hacerse por transferencia bancaria.",
+   "Firma la escritura notarial ante un notario en el distrito de la propiedad, con un traductor jurado si no hablas búlgaro. El notario la presenta ante la Agencia de Registro, normalmente en 1 a 3 días hábiles.",
+   "Presenta una declaración de impuestos ante el municipio local en 2 meses desde la compra, y cambia las cuentas de servicios a tu nombre."
   ]
  }
 }

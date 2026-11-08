@@ -89,7 +89,8 @@ export function localizeRows<T extends Row>(rows: Record<string, T>, es: Record<
     if (!e || k === "_meta" || !v || typeof v !== "object") { out[k] = v; continue; }
     const o: Row = { ...v };
     for (const [f, x] of Object.entries(e)) {
-      if (f === "steps" && Array.isArray(x) && Array.isArray(v.steps)) o.steps = v.steps.map((st: [string, string], i: number) => [x[i] ?? st[0], st[1]]);
+      if (f === "steps" && Array.isArray(x) && Array.isArray(v.steps)) o.steps = v.steps.map((st: [string, string], i: number) => [x[i] ?? st[0], (e.step_texts as string[] | undefined)?.[i] ?? st[1]]);
+      else if (f === "step_texts") continue; // folded into steps above (8-nov-2026)
       else if (x != null && x !== "") o[f] = x;
     }
     out[k] = o as T;

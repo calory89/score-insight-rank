@@ -87,7 +87,12 @@ export type LiveQuery = {
   min_eur: number | null;
   ptype: "house" | "apartment" | "any";
   good_score: boolean;
+  /** style / condition words the person typed ("moderna", "renovated", "con vistas"): features, never part of the place */
+  features?: string[];
 };
+
+/** Style and condition words (accents already removed). "new" is kept when it starts a place name (New York, Nueva Zelanda). */
+export const STYLE_RE = /\s(modern[ao]s?|modern|contemporane[ao]s?|contemporary|nuev[ao]s?(?! (?:york|jersey|mexico|orleans|zelanda|leon|delhi|gales|caledonia|hampshire|brunswick|escocia))|new(?! (?:york|jersey|mexico|orleans|hampshire|zealand|haven|brunswick|smyrna|braunfels|port|castle|london|delhi|england|caledonia|south wales|rochelle|bern|albany|westminster|iberia))|brand new|newly built|new build|a estrenar|obra nueva|reformad[ao]s?|renovad[ao]s?|renovated|refurbished|remodeled|remodelled|updated|lujo|de lujo|lujos[ao]s?|luxury|luxurious|centric[ao]s?|central|centrally located|bonit[ao]s?(?! springs)|preciosa?s?|precioso|beautiful|pretty|lovely|cozy|cosy|acogedor[ao]?s?|amplia?s?|amplio|spacious|large|small|pequen[ao]s?|barat[ao]s?|cheap|cheapest|affordable|economic[ao]s?|asequibles?|luminos[ao]s?|bright|sunny(?! isles)|soleada?s?|tranquil[ao]s?|quiet|peaceful|con vistas(?: al mar| a la montana)?|vistas al mar|with (?:a )?views?|sea views?|ocean views?|con piscina|with (?:a )?pool|con jardin|with (?:a )?garden|con terraza|with (?:a )?terrace|amueblad[ao]s?|furnished|independientes?|detached)(?=\s)/g;
 
 const NUMW: Record<string, number> = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, un: 1, uno: 1, una: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5, seis: 6 };
 const BED_RE = /\b(\d{1,2}|one|two|three|four|five|six|uno|una|un|dos|tres|cuatro|cinco|seis)\s*\+?\s*-?\s*(bedrooms?|beds?|bdrms?|bd|br|dormitorios?|dorms?|habitaciones|habitacion|habs?|cuartos?|recamaras?|rooms?)\b/;
@@ -152,9 +157,11 @@ export function parseLiveQuery(input: string): LiveQuery {
   let placeTxt: string | null = null;
   // the first "in X" whose X is not a home word ("piso en alquiler en Madrid" -> Madrid)
   for (const pm of s.matchAll(/\s(?:in|en|near|around|cerca de|alrededor de|at)\s+(?=([a-z][a-z .'-]{1,60}))/g)) {
-    const cand = (" " + pm[1] + " ").replace(STOPW, " ").replace(/\s+/g, " ").trim();
+    const cand = (" " + pm[1] + " ").replace(STYLE_RE, " ").replace(/\s+/g, " ").replace(STOPW, " ").replace(/\s+/g, " ").trim();
     if (cand && !HOME_RE.test(" " + cand + " ") && !RENT_RE.test(" " + cand + " ")) { placeTxt = cand; break; }
   }
+  const feats = [...s.matchAll(STYLE_RE)].map((m) => m[1].trim());
+  if (feats.length) out.features = [...new Set(feats)];
   const hay = s.replace(/[,]/g, " , ");
   // known US cities (longest first) win over the free text
   let city: string | null = null;
@@ -381,6 +388,8 @@ export function inconsistent(x: { beds?: number | null; baths?: number | null; s
 export type Review = {
   photo_quality: number; order: number[]; flags: string[]; title: string; why_great: string; why_cheap: string | null;
   hoa_monthly: number | null; tax_annual: number | null; note: string;
+  /** the same texts in Spanish (8-nov-2026): the Spanish site never shows a home's English text */
+  title_es: string | null; why_great_es: string | null; why_cheap_es: string | null;
 };
 /** Reads Claude's review JSON defensively: numbers clamped, only known flags, photo indexes in range, no em dashes. */
 export function parseReview(text: string, nPhotos: number): Review | null {
@@ -401,7 +410,31 @@ export function parseReview(text: string, nPhotos: number): Review | null {
     flags: [...new Set((Array.isArray(o.flags) ? o.flags : []).map((f: unknown) => String(f).toLowerCase().trim()).filter((f: string) => ALL_FLAGS.includes(f)))] as string[],
     title: clean(o.title, 120), why_great: clean(o.why_great, 700), why_cheap: cheap && !/^(null|none|n\/a)$/i.test(cheap) ? cheap : null,
     hoa_monthly: num(o.hoa_monthly), tax_annual: num(o.tax_annual), note: clean(o.note, 200),
+    title_es: clean(o.title_es, 140) || null, why_great_es: clean(o.why_great_es, 800) || null,
+    why_cheap_es: cheap && !/^(null|none|n\/a|ninguno|ninguna)$/i.test(clean(o.why_cheap_es, 260)) ? clean(o.why_cheap_es, 260) || null : null,
   };
+}
+
+/** Spanish of a home's texts, for the translate action (homes published before the gate wrote Spanish). */
+export function translatePrompt(items: { id: string; title: string; why_great?: string | null; why_cheap?: string | null }[]): string {
+  return [
+    "Translate these home listings of RealHunt from English into natural Spanish (Spain). Keep place names, numbers and units as they are; " +
+      "keep the meaning exact, add nothing, no em dashes. Sentence case for titles.",
+    'Return ONLY a JSON array, one object per home, in the same order: [{"id": "", "title_es": "", "why_great_es": "", "why_cheap_es": null}]. ' +
+      "why_great_es / why_cheap_es are null when the English text is empty.",
+    JSON.stringify(items.map((x) => ({ id: x.id, title: x.title, why_great: x.why_great || "", why_cheap: x.why_cheap || "" }))),
+  ].join("\n");
+}
+export type EsTexts = { id: string; title_es: string | null; why_great_es: string | null; why_cheap_es: string | null };
+export function parseTranslations(text: string, ids: string[]): EsTexts[] {
+  const a = String(text || "").indexOf("["), b = String(text || "").lastIndexOf("]");
+  if (a < 0 || b <= a) return [];
+  let arr: any;
+  try { arr = JSON.parse(text.slice(a, b + 1)); } catch { return []; }
+  if (!Array.isArray(arr)) return [];
+  const clean = (s: unknown, n: number) => { const v = String(s ?? "").replace(/\s*[—–]\s*/g, ", ").replace(/\s+/g, " ").trim().slice(0, n); return v && !/^(null|none)$/i.test(v) ? v : null; };
+  return arr.filter((o) => o && ids.includes(String(o.id)) && clean(o.title_es, 140))
+    .map((o) => ({ id: String(o.id), title_es: clean(o.title_es, 140), why_great_es: clean(o.why_great_es, 800), why_cheap_es: clean(o.why_cheap_es, 260) }));
 }
 
 /** why_cheap must be a reason, not the price comparison again: clauses about medians or percentages are dropped. */
@@ -454,7 +487,7 @@ export function reviewPrompt(x: {
     `Listing text: ${String(x.text || "").slice(0, 2500) || "none"}`,
     `The ${x.nPhotos} photos are numbered 0 to ${x.nPhotos - 1} in the order given.`,
     "Return ONLY this JSON, no prose:",
-    '{"photo_quality": 1-10, "order": [photo indexes, best first], "flags": [], "title": "", "why_great": "", "why_cheap": null, "hoa_monthly": null, "tax_annual": null, "note": ""}',
+    '{"photo_quality": 1-10, "order": [photo indexes, best first], "flags": [], "title": "", "why_great": "", "why_cheap": null, "title_es": "", "why_great_es": "", "why_cheap_es": null, "hoa_monthly": null, "tax_annual": null, "note": ""}',
     "photo_quality: the photos as a set for a premium home feed. 9-10 bright professional photos of an attractive home; 7-8 good clear photos; 5-6 dated, dark, cluttered, " +
       "small or with a big watermark; 1-4 not real photos of the home (parking lots, maps, logos, street views only, renderings) or a run-down home.",
     "order: the photos worth publishing, best first: an attractive exterior or the living room first. Leave out floor plans, maps, logos, text banners, " +
@@ -472,6 +505,7 @@ export function reviewPrompt(x: {
       '(e.g. "Mobile home on rented land: you pay a monthly lot fee.", "Only for buyers aged 55 or more.", "Needs a full renovation.", "Small 1960s building far from the beach."). ' +
       "Never just repeat that the price is below the area, never praise the value. If you cannot see a concrete reason, null. If the price is not unusually low, null.",
     "hoa_monthly / tax_annual: the monthly community (HOA) fee and the yearly property tax in the listing currency, only if stated; else null. note: one short internal note.",
+    "title_es / why_great_es / why_cheap_es: the same title, why_great and why_cheap in natural Spanish (Spain), same facts, place names unchanged, no em dashes; why_cheap_es is null when why_cheap is null.",
   ].join("\n");
 }
 

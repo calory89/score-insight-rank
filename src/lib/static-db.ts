@@ -9,6 +9,7 @@
 import { mediaDeep } from "./media";
 import { wordMatches } from "./synonyms"; // FIND layer: "apartment" also finds flats and condos
 import { supabase } from "@/integrations/supabase/client";
+import { learnTexts } from "./lang";
 
 type Row = Record<string, any>;
 type Snap = { v: number; generated: string; meta: Row; live: { live: number; today: number }; flags: Record<string, boolean>; rows: Row[] };
@@ -17,7 +18,7 @@ let snapP: Promise<Snap> | null = null;
 export function snapshot(): Promise<Snap> {
   return (snapP ||= fetch("/data/rh-static.json", { cache: "no-cache" }).then((r) => {
     if (!r.ok) throw new Error("static data " + r.status);
-    return r.json().then(mediaDeep);
+    return r.json().then(mediaDeep).then((s: Snap) => { learnTexts(s.rows); return s; });
   }).catch((e) => { snapP = null; throw e; }));
 }
 
@@ -258,7 +259,7 @@ const origRpc = (supabase.rpc as any).bind(supabase);
 let dbTokenP: Promise<string | null> | null = null;
 function dbDetail(fn: string, args: Row, opts?: any): Promise<any> {
   const real = readToken() && readToken() !== "static-guest" ? Promise.resolve(readToken()) : (dbTokenP ||= Promise.resolve(origRpc("community_api", { p_action: "session", p_token: null, p_payload: {} })).then((res: any) => res?.data?.token || null).catch(() => { dbTokenP = null; return null; }));
-  return real.then((tok) => origRpc(fn, { ...args, p_token: tok }, opts)).then((res: any) => (res?.data?.deal ? ok({ deal: { ...res.data.deal, has_source: true }, comments: res.data.comments || [] }) : ok({ error: "Deal not found" }))).catch(() => ok({ error: "Deal not found" }));
+  return real.then((tok) => origRpc(fn, { ...args, p_token: tok }, opts)).then((res: any) => (res?.data?.deal && learnTexts([res.data.deal]), res)).then((res: any) => (res?.data?.deal ? ok({ deal: { ...res.data.deal, has_source: true }, comments: res.data.comments || [] }) : ok({ error: "Deal not found" }))).catch(() => ok({ error: "Deal not found" }));
 }
 (supabase as any).rpc = (fn: string, args: Row = {}, opts?: any) => {
   if (READS[fn]) return chain(snapshot().then((s) => ok(READS[fn](s, args))).catch(() => origRpc(fn, args, opts)));

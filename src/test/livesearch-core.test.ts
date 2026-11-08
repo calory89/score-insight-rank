@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import {
   parseLiveQuery, liveKey, cbSearchUrls, parseCbMatch, pickCb, cbPhotos, liveScore, parseClaudeListings, slugFor, toEur, jobCost, fits, median, SHOW_MIN, type CbRow,
-  pickMedian, parseReview, gateDecision, orderPhotos, textFlags, inconsistent, reviewPrompt, TITLE_EXAMPLES, parseCbFacts, niceArea,
+  pickMedian, parseReview, parseTranslations, translatePrompt, gateDecision, orderPhotos, textFlags, inconsistent, reviewPrompt, TITLE_EXAMPLES, parseCbFacts, niceArea,
 } from "../../supabase/functions/realhunt-live-search/core";
 
 describe("parseLiveQuery", () => {
@@ -28,6 +28,21 @@ describe("parseLiveQuery", () => {
     expect(parseLiveQuery("2 bed flat in Lisbon with a garden")).toMatchObject({ ok: true, place: "Lisbon", min_beds: 2, ptype: "apartment" });
     expect(parseLiveQuery("cheap house in Italy")).toMatchObject({ ok: true, country: "Italy" });
     expect(parseLiveQuery("condo in Some Town, FL under 200k")).toMatchObject({ ok: true, state: "fl", city: "some town", country: "United States" });
+  });
+  it("treats style and condition words as features, never as part of the place (owner's screenshot, 8-nov)", () => {
+    const p = parseLiveQuery("Casas en madrid moderna 3 habitaciones por menos de 200.000");
+    expect(p).toMatchObject({ ok: true, place: "Madrid", min_beds: 3, max_price: 200000, currency: "EUR" });
+    expect(p.features).toContain("moderna");
+    expect(parseLiveQuery("piso reformado en Sevilla con vistas").place).toBe("Sevilla");
+    expect(parseLiveQuery("casas en Valencia bonita y barata").place).toBe("Valencia");
+    expect(parseLiveQuery("casa de lujo en Marbella").place).toBe("Marbella");
+    expect(parseLiveQuery("casas en Malaga nuevas reformadas").place).toBe("Malaga");
+    expect(parseLiveQuery("flat in central London under £300k").place).toBe("London");
+    expect(parseLiveQuery("homes in Porto modern renovated").place).toBe("Porto");
+    // "new" that starts a place name stays
+    expect(parseLiveQuery("modern house in New York under $500k")).toMatchObject({ city: "new york", features: ["modern"] });
+    expect(parseLiveQuery("casa en Nueva York").place).toBe("Nueva York");
+    expect(parseLiveQuery("homes in Bonita Springs, FL").place).toBe("Bonita Springs");
   });
   it("refuses anything that is not about homes", () => {
     expect(parseLiveQuery("best pizza in Miami").reason).toBe("not_homes");
@@ -148,6 +163,21 @@ describe("the quality gate", () => {
     expect(parseReview("no json", 3)).toBeNull();
     expect(parseReview('{"photo_quality":"high"}', 3)).toBeNull();
     expect(parseReview('{"photo_quality":14}', 3)!.photo_quality).toBe(10);
+  });
+  it("keeps the Spanish texts of the review (no English on the Spanish site)", () => {
+    const r = parseReview(review({ why_cheap: "Mobile home on rented land.", title_es: "Piso esquinero luminoso — gran balcón", why_great_es: "Gran balcón.", why_cheap_es: "Casa móvil en terreno alquilado." }), 4)!;
+    expect(r.title_es).toBe("Piso esquinero luminoso, gran balcón");
+    expect(r.why_great_es).toBe("Gran balcón.");
+    expect(r.why_cheap_es).toBe("Casa móvil en terreno alquilado.");
+    const n = parseReview(review({ why_cheap: null, why_cheap_es: "Algo" }), 4)!;
+    expect(n.why_cheap_es).toBeNull();
+    expect(parseReview(review(), 4)!.title_es).toBeNull();
+  });
+  it("reads batch translations of older homes defensively", () => {
+    expect(translatePrompt([{ id: "a", title: "House", why_great: "Nice." }])).toContain('"id":"a"');
+    const out = parseTranslations('ok [{"id":"a","title_es":"Casa — bonita","why_great_es":"Bonita.","why_cheap_es":null},{"id":"zzz","title_es":"x"},{"id":"b","title_es":""}]', ["a", "b"]);
+    expect(out).toEqual([{ id: "a", title_es: "Casa, bonita", why_great_es: "Bonita.", why_cheap_es: null }]);
+    expect(parseTranslations("nothing", ["a"])).toEqual([]);
   });
   it("shows only good, complete, unflagged homes", () => {
     const r = parseReview(review(), 4)!;

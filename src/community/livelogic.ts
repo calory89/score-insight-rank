@@ -15,6 +15,8 @@ export type LiveResult = {
   // v2 (8-nov-2026): the AI check
   show?: boolean; deal_id?: string | null; image_urls?: string[]; photo_quality?: number | null; flags?: string[]; why_cheap?: string | null; ai_checked_at?: string | null;
   hoa_monthly?: number | null; hoa_currency?: string | null; tax_annual?: number | null; hoa_unknown?: boolean;
+  /** Spanish versions (8-nov-2026), shown on the Spanish site through learnTexts in src/lib/lang.ts */
+  why_great?: string | null; title_es?: string | null; why_great_es?: string | null; why_cheap_es?: string | null;
 };
 export type LiveStatus = { job_id?: string; status: string; progress?: number; stage?: { k: string; n?: number; of?: number } | null; results?: LiveResult[]; found?: number; hidden?: number; note?: string | null; parsed?: LiveQuery; reason?: string };
 
