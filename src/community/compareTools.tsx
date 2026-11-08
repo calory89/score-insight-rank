@@ -61,7 +61,7 @@ export function CompareTray() {
       <span className="rh-cmp-tray-dots" aria-hidden="true">{Array.from({ length: MAX_COMPARE }, (_, i) => <i key={i} className={i < n ? "is-on" : ""} />)}</span>
       {n < 2 ? <span className="rh-cmp-tray-text">{t("Pick one more to compare")}</span> : null}
       <Link className={"hunt-primary rh-cmp-tray-go" + (n < 2 ? " is-off" : "")} to={compareHref(list)} aria-disabled={n < 2} onClick={(e) => { if (n < 2) e.preventDefault(); }}>
-        <Scale size={16} aria-hidden="true" /> {`${t("Compare")} (${n})`}
+        <Scale size={16} aria-hidden="true" /> <span>{t("Compare")}</span> <span>({n})</span>
       </Link>
       <button type="button" className="rh-cmp-tray-x" aria-label={t("Clear compare")} onClick={() => setList([])}><X size={16} aria-hidden="true" /></button>
     </div>
