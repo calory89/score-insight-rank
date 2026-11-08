@@ -1,0 +1,242 @@
+{
+ "_meta": {
+  "note": "Spanish name, yearly costs and step titles for src/data/guides.json, same keys and step order. Loaded only when the site is in Spanish."
+ },
+ "italy": {
+  "name": "Italia",
+  "yearly": "El IMU (impuesto municipal sobre la propiedad) en segundas viviendas y una tasa local de basuras (TARI). En casas rurales pequeñas suelen ser unos cientos de euros al año.",
+  "steps": [
+   "Saca el codice fiscale",
+   "Haz una oferta por escrito",
+   "Revisa la casa",
+   "Firma ante notario",
+   "Paga los impuestos"
+  ]
+ },
+ "spain": {
+  "name": "España",
+  "yearly": "El IBI (impuesto municipal) y la tasa de basuras. Los no residentes que no alquilan la casa presentan además cada año una pequeña declaración por imputación de rentas.",
+  "steps": [
+   "Saca el NIE",
+   "Abre una cuenta en un banco español",
+   "Reserva con un contrato de arras",
+   "Revisa la casa",
+   "Firma la escritura ante notario e inscríbela",
+   "Paga el impuesto de transmisión"
+  ]
+ },
+ "portugal": {
+  "name": "Portugal",
+  "yearly": "El IMI (impuesto municipal), normalmente del 0,3-0,45% del valor fiscal en inmuebles urbanos.",
+  "steps": [
+   "Saca el NIF",
+   "Firma un contrato de promesa de compraventa",
+   "Revisa la casa",
+   "Firma la escritura",
+   "Paga los impuestos"
+  ]
+ },
+ "denmark": {
+  "name": "Dinamarca",
+  "yearly": "Cuenta con el impuesto sobre el valor de la vivienda y el impuesto municipal sobre el suelo, ambos cobrados a través del sistema fiscal danés, más seguro, suministros y mantenimiento. Los propietarios que viven fuera pueden tener que presentar la declaración de la renta danesa si alquilan la vivienda.",
+  "steps": [
+   "Comprueba si necesitas autorización",
+   "Saca un número fiscal danés",
+   "Fija un presupuesto con un banco",
+   "Haz una oferta y firma con condiciones",
+   "Pide a tu abogado que revise los documentos",
+   "Inscribe la escritura"
+  ]
+ },
+ "sweden": {
+  "name": "Suecia",
+  "yearly": "Los propietarios de casas pagan la tasa municipal sobre la propiedad y deben presentar la declaración de la renta sueca si la deben o tienen ingresos por alquiler, aunque vivan fuera. Suma seguro, suministros y mantenimiento.",
+  "steps": [
+   "Saca un número de coordinación",
+   "Abre una cuenta en un banco sueco",
+   "Encuentra una vivienda y organiza la financiación",
+   "Inspecciona antes de comprometerte",
+   "Firma el contrato de compraventa",
+   "Solicita el título en Lantmäteriet"
+  ]
+ },
+ "norway": {
+  "name": "Noruega",
+  "yearly": "Cuenta con el impuesto municipal sobre la propiedad donde exista, las tasas municipales, el seguro y el mantenimiento. Gastos como las tasas municipales y el impuesto sobre la propiedad se deducen de los ingresos por alquiler.",
+  "steps": [
+   "Encuentra una vivienda y consigue la aprobación del préstamo",
+   "Puja a través del agente",
+   "Firma el contrato",
+   "Paga en la liquidación",
+   "Saca un número D si lo necesitas",
+   "Inscribe la escritura"
+  ]
+ },
+ "germany": {
+  "name": "Alemania",
+  "yearly": "Cuenta con el impuesto municipal sobre bienes inmuebles, el seguro, los suministros y el mantenimiento. El beneficio del alquiler tributa en Alemania, así que un arrendador no residente trata con una oficina de Hacienda alemana.",
+  "steps": [
+   "Encuentra una vivienda y organiza la financiación",
+   "Busca asesoramiento independiente",
+   "Firma ante notario",
+   "Asegura una anotación preventiva",
+   "Paga el impuesto de transmisión y el precio",
+   "Inscríbete como propietario"
+  ]
+ },
+ "netherlands": {
+  "name": "Países Bajos",
+  "yearly": "Cuenta con el impuesto municipal sobre bienes inmuebles (OZB), el seguro y el mantenimiento y, en un piso, la cuota de la comunidad de propietarios (VvE). Los no residentes pagan además el impuesto sobre la renta del box 3 según el valor del inmueble.",
+  "steps": [
+   "Saca un BSN",
+   "Organiza los pagos y la financiación",
+   "Haz una oferta",
+   "Aprovecha el periodo de reflexión de 3 días",
+   "Paga la señal",
+   "Firma la escritura e inscríbela"
+  ]
+ },
+ "france": {
+  "name": "Francia",
+  "yearly": "Cuenta con la taxe foncière anual, más la taxe d'habitation si es una segunda vivienda amueblada, y el impuesto sobre la renta y las cargas sociales por cualquier alquiler.",
+  "steps": [
+   "Haz una oferta",
+   "Firma el contrato preliminar",
+   "Aprovecha el periodo de reflexión",
+   "Paga la señal",
+   "Deja que el notario haga las comprobaciones",
+   "Firma la escritura definitiva"
+  ]
+ },
+ "poland": {
+  "name": "Polonia",
+  "yearly": "Los gastos anuales son el impuesto local sobre bienes inmuebles, que es bajo en los pisos, más el impuesto sobre la renta por cualquier alquiler.",
+  "steps": [
+   "Saca un número PESEL",
+   "Comprueba si necesitas permiso",
+   "Firma un contrato preliminar",
+   "Haz las comprobaciones previas",
+   "Firma la escritura notarial",
+   "Paga el impuesto PCC"
+  ]
+ },
+ "greece": {
+  "name": "Grecia",
+  "yearly": "Los gastos anuales son el ENFIA y el impuesto sobre la renta por cualquier alquiler.",
+  "steps": [
+   "Saca un número fiscal griego",
+   "Contrata un abogado",
+   "Revisa el título",
+   "Firma un contrato privado",
+   "Paga el impuesto de transmisión",
+   "Firma la escritura e inscríbela"
+  ]
+ },
+ "switzerland": {
+  "name": "Suiza",
+  "yearly": "Los gastos anuales son el impuesto sobre el patrimonio, el impuesto cantonal sobre la propiedad donde exista y el impuesto sobre el valor locativo imputado (Eigenmietwert) si usas tú la vivienda. El valor locativo imputado debe desaparecer el 1 de enero de 2029, y los cantones podrán añadir entonces un nuevo impuesto sobre las segundas viviendas.",
+  "steps": [
+   "Comprueba tu situación según la Lex Koller",
+   "Organiza la financiación",
+   "Encuentra un inmueble y haz una oferta",
+   "Firma la escritura ante notario",
+   "Inscribe la transmisión"
+  ]
+ },
+ "cyprus": {
+  "name": "Chipre",
+  "yearly": "Los gastos anuales son las tasas municipales, de alcantarillado y de la administración local, más el impuesto sobre la renta y la contribución GHS por cualquier alquiler.",
+  "steps": [
+   "Contrata un abogado",
+   "Revisa el título",
+   "Firma el contrato",
+   "Deposita el contrato en el Registro",
+   "Pide autorización si eres de fuera de la UE",
+   "Transfiere el título"
+  ]
+ },
+ "united-kingdom": {
+  "name": "Reino Unido",
+  "yearly": "Los gastos anuales son el council tax, que puede incluir un recargo por segunda vivienda, más una declaración de la renta (self assessment) y el impuesto sobre la renta si alquilas la vivienda.",
+  "steps": [
+   "Haz una oferta",
+   "Contrata un solicitor",
+   "Haz las búsquedas y consultas registrales",
+   "Intercambia los contratos",
+   "Completa la compra",
+   "Paga el SDLT e inscribe la compra"
+  ]
+ },
+ "united-states": {
+  "name": "Estados Unidos",
+  "yearly": "Cuenta con el impuesto local sobre la propiedad, que suele rondar el 1% del valor pero varía mucho según la ciudad, más seguro y mantenimiento. Si la alquilas y eliges tributar por el rendimiento neto, presentas además cada año una declaración de la renta en Estados Unidos.",
+  "steps": [
+   "Comprueba las normas del estado",
+   "Contrata a un agente del comprador",
+   "Haz una oferta",
+   "Haz las comprobaciones",
+   "Cierra la compra e inscribe la escritura",
+   "Organiza tus declaraciones fiscales"
+  ]
+ },
+ "canada": {
+  "name": "Canadá",
+  "yearly": "Cuenta con el impuesto municipal sobre la propiedad, de alrededor del 0,3% al 2,1% del valor tasado según la ciudad, más seguro y mantenimiento. Está propuesto suprimir el impuesto federal sobre viviendas infrautilizadas (Underused Housing Tax) a partir de 2025, pero en la última comprobación el cambio seguía en el proyecto de ley C-15.",
+  "steps": [
+   "Comprueba si puedes comprar",
+   "Comprueba los impuestos provinciales para compradores extranjeros",
+   "Contrata un abogado inmobiliario",
+   "Haz una oferta",
+   "Cierra la venta",
+   "Organiza las declaraciones fiscales del alquiler"
+  ]
+ },
+ "japan": {
+  "name": "Japón",
+  "yearly": "Cuenta con el impuesto sobre bienes inmuebles del 1,4% y el impuesto de urbanismo de hasta el 0,3% del valor tasado, que suele estar muy por debajo del valor de mercado. Suma el coste de un representante fiscal y, en los pisos, las cuotas mensuales de administración y del fondo de reparaciones.",
+  "steps": [
+   "Encuentra una vivienda y un agente",
+   "Presenta una oferta por escrito",
+   "Escucha la explicación del inmueble",
+   "Firma y paga una señal",
+   "Paga e inscribe la compra",
+   "Presenta las declaraciones y nombra un representante fiscal"
+  ]
+ },
+ "dominican-republic": {
+  "name": "República Dominicana",
+  "yearly": "La mayoría de viviendas sueltas de menos de unos 150.000 $ no pagan el impuesto IPI porque quedan por debajo del umbral, pero cuenta con cuotas de comunidad, suministros y mantenimiento. Una ley fiscal de 2026 (Ley 30-26) fija un impuesto del 10% sobre la ganancia cuando vende un particular, aunque su reglamento seguía en borrador en octubre de 2026.",
+  "steps": [
+   "Saca un número fiscal (RNC)",
+   "Revisa el título",
+   "Firma una promesa de venta",
+   "Firma la escritura ante notario",
+   "Paga el impuesto de transmisión",
+   "Inscribe el título"
+  ]
+ },
+ "mexico": {
+  "name": "México",
+  "yearly": "Los gastos anuales incluyen el impuesto local sobre la propiedad (predial), normalmente del 0,05% al 1,2% del valor catastral oficial, que suele estar muy por debajo del valor de mercado. En la zona restringida suma la cuota del fideicomiso, de unos 450 a 1.000 US$ al año, más las cuotas de comunidad (HOA), el seguro y el mantenimiento.",
+  "steps": [
+   "Comprueba la zona restringida",
+   "Elige cómo tener la propiedad",
+   "Revisa el título",
+   "Firma el contrato de compraventa",
+   "Cierra la compra ante notario",
+   "Inscribe la escritura"
+  ]
+ },
+ "bulgaria": {
+  "name": "Bulgaria",
+  "yearly": "Los gastos anuales son bajos: el impuesto municipal sobre la propiedad es del 0,01% al 0,45% del valor fiscal, con un 5% de descuento si se paga entero antes del 30 de abril, más una tasa municipal de basuras. Tener la propiedad a través de una sociedad suma unos 500 a 1.500 € al año en gastos de mantenimiento de la sociedad.",
+  "steps": [
+   "Comprueba qué puedes tener en propiedad",
+   "Contrata un abogado y revisa el inmueble",
+   "Firma un contrato preliminar",
+   "Prepara tus documentos",
+   "Firma la escritura ante notario",
+   "Declara el inmueble en el ayuntamiento"
+  ]
+ }
+}

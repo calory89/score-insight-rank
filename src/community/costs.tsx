@@ -3,10 +3,12 @@
 // (columns hoa_monthly, hoa_currency, hoa_unknown, tax_annual, costs_note). A flat whose listing does not state
 // the fee says so plainly instead of looking free.
 import { t } from "./i18n";
+import { isEs } from "@/lib/lang";
 
 type D = { hoa_monthly?: number | string | null; hoa_currency?: string | null; hoa_unknown?: boolean | null; tax_annual?: number | string | null; costs_note?: string | null };
 const n = (v: unknown) => (v == null || v === "" ? null : Number(v));
-export const fmt = (v: number, cur?: string | null) => new Intl.NumberFormat("en", { style: "currency", currency: cur || "EUR", maximumFractionDigits: 0 }).format(v);
+// Spanish site: "124 US$", "9.000 €" (8-nov-2026).
+export const fmt = (v: number, cur?: string | null) => new Intl.NumberFormat(isEs() ? "es-ES" : "en", { style: "currency", currency: cur || "EUR", maximumFractionDigits: 0 }).format(v);
 
 /** Big line on cards: "+ $1,073 / month HOA" or "HOA fee not stated". Nothing when we know nothing. */
 export function CostBadge({ d }: { d: D }) {
@@ -26,7 +28,7 @@ export function RunningCosts({ d }: { d: D }) {
     <section className={"rh-costs" + (d.hoa_unknown ? " is-unknown" : "")} aria-label={t("Monthly running costs")}>
       <h2>{t("What it costs every month")}</h2>
       <dl>
-        <div><dt>{t("Community fee (HOA)")}</dt><dd>{hoa ? `${fmt(hoa, cur)} / ${t("month")}` : d.hoa_unknown ? t("Not stated in the listing") : "-"}</dd></div>
+        <div><dt>{t("Community fee (HOA)")}</dt><dd>{hoa ? <>{fmt(hoa, cur)} / {t("month")}</> : d.hoa_unknown ? t("Not stated in the listing") : "-"}</dd></div>
         {tax ? <div><dt>{t("Property tax")}</dt><dd>{fmt(taxM, cur)} / {t("month")} <small>({fmt(tax, cur)} / {t("year")})</small></dd></div> : null}
         {hoa || taxM ? <div className="rh-costs-total"><dt>{t("Total before insurance and utilities")}</dt><dd>{d.hoa_unknown && !hoa ? `${fmt(taxM, cur)} + ${t("HOA")}` : fmt((hoa || 0) + taxM, cur)} / {t("month")}</dd></div> : null}
       </dl>

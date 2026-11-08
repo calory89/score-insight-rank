@@ -52,7 +52,7 @@ export function allIn(d: CheckRow): AllIn {
 }
 /** Round for display: nearest 100 below 100k, nearest 1,000 above. */
 export const roundNice = (v: number) => (v >= 100000 ? Math.round(v / 1000) * 1000 : v >= 1000 ? Math.round(v / 100) * 100 : Math.round(v));
-export const eur = (v: number) => new Intl.NumberFormat("en", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v);
+export const eur = (v: number, locale = "en") => new Intl.NumberFormat(locale, { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v);
 /** Card line parts: ["≈ €93,800 to buy", "≈ €450/mo"]. Empty when nothing is known. */
 export function allInParts(d: CheckRow): { v: string; unit: "to buy" | "/mo" }[] {
   const a = allIn(d), out: { v: string; unit: "to buy" | "/mo" }[] = [];
@@ -69,11 +69,20 @@ export const GROUPS: [Group, string][] = [["eu", "EU / EEA"], ["uk", "UK"], ["na
 type Rule = { s: Light; note: string; badge?: string };
 const RULES = RULES_JSON as unknown as Record<string, { name: string; updated: string } & Record<Group, Rule>>;
 export const BUY_UPDATED = (RULES_JSON as any)._meta?.updated || "";
-export function buyRule(country: string | null | undefined, g: Group): (Rule & { name: string; updated: string }) | null {
-  const r = RULES[countryKey(country)];
+/** Spanish texts for the rules (src/data/buyrules-es.json, loaded only on the Spanish site): same keys, no status. */
+export type RulesEs = Record<string, { name?: string } & Partial<Record<Group, { note?: string; badge?: string }>>>;
+/** The rule for a country and group; with `es`, the note, badge and country name are the Spanish ones. */
+export function buyRule(country: string | null | undefined, g: Group, es?: RulesEs | null): (Rule & { name: string; updated: string }) | null {
+  const k = countryKey(country);
+  const r = RULES[k];
   if (!r || !r[g]) return null;
-  return { ...r[g], name: r.name, updated: r.updated };
+  const e = es?.[k]; const eg = e?.[g];
+  if (!e || !eg?.note) return { ...r[g], name: r.name, updated: r.updated };
+  return { ...r[g], note: eg.note, badge: r[g].badge ? eg.badge || r[g].badge : undefined, name: e.name || r.name, updated: r.updated };
 }
+const MONTHS_ES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+/** "2026-11" -> "noviembre de 2026". */
+export const monthEs = (ym: string) => { const m = /^(\d{4})-(\d{2})$/.exec(ym || ""); return m && MONTHS_ES[Number(m[2]) - 1] ? `${MONTHS_ES[Number(m[2]) - 1]} de ${m[1]}` : ym; };
 
 const EU_LANG = /^(de|fr|it|es|pt|nl|da|sv|fi|pl|cs|sk|sl|hu|ro|bg|hr|el|et|lv|lt|ga|mt|is|nb|nn|no|lb)$/;
 const EU_REGION = /^(AT|BE|BG|HR|CY|CZ|DK|EE|FI|FR|DE|GR|HU|IE|IT|LV|LT|LU|MT|NL|PL|PT|RO|SK|SI|ES|SE|IS|LI|NO|CH)$/;
@@ -224,13 +233,26 @@ const MAIL: Record<Lang, { subj: string; hi: string; intro: string; ask: string;
   sv: { subj: "Fråga om din annons", hi: "Hej,", intro: "Jag är intresserad av din bostad: {home}.", ask: "Innan vi bokar en visning, kan du vänligen svara på följande:", bye: "Tack på förhand.\nVänliga hälsningar," },
 };
 export const questionText = (id: QId, lang: Lang = "en", fee?: string) => Q[id][lang].replace("{fee}", fee || "");
-/** Monthly fee as stated in the listing, in its currency ("$124"). */
-export const feeText = (d: CheckRow) => (Number(d.hoa_monthly) > 0 ? new Intl.NumberFormat("en", { style: "currency", currency: d.hoa_currency || "EUR", maximumFractionDigits: 0 }).format(Number(d.hoa_monthly)) : "");
+// The Spanish lines above are written for an agent in Spain or Latin America (IBI, predial, cédula). On the Spanish
+// site the visitor also sees them for homes elsewhere, so these say the same thing without local names.
+const Q_ES_ANYWHERE: Partial<Record<QId, string>> = {
+  tax: "¿Cuánto es el impuesto anual sobre la propiedad y hay otros impuestos o tasas locales?",
+  legal: "¿La casa es totalmente legal y está inscrita en el registro, con licencias de obra y certificado de habitabilidad?",
+};
+/** The question as the visitor reads it on the page, in the site's language ("en" or "es"), with the fee in that language's format. */
+export function questionUi(id: QId, d: CheckRow, ui: "en" | "es" = "en"): string {
+  if (ui === "en") return questionText(id, "en", feeText(d));
+  const local = emailLang(d) === "es";
+  return (local ? Q[id].es : Q_ES_ANYWHERE[id] ?? Q[id].es).replace("{fee}", feeText(d, "es"));
+}
+/** Monthly fee as stated in the listing, in its currency, written for a language ("$124" in English, "124 US$" in Spanish). */
+export const feeText = (d: CheckRow, locale = "en") => (Number(d.hoa_monthly) > 0 ? new Intl.NumberFormat(locale === "es" ? "es-ES" : locale, { style: "currency", currency: d.hoa_currency || "EUR", maximumFractionDigits: 0 }).format(Number(d.hoa_monthly)) : "");
 export function agentEmail(d: CheckRow, ids: QId[] = questions(d), lang: Lang = emailLang(d)): { lang: Lang; subject: string; body: string } {
   const m = MAIL[lang];
   const place = String(d.location_name || "").split(",")[0].trim();
-  const home = [d.title, place && (d.title || "").includes(place) ? null : d.location_name, d.price_eur ? eur(Number(d.price_eur)) : null].filter(Boolean).join(", ");
-  const lines = ids.map((id, i) => `${i + 1}. ${questionText(id, lang, feeText(d))}`);
+  const loc = lang === "es" ? "es-ES" : lang;
+  const home = [d.title, place && (d.title || "").includes(place) ? null : d.location_name, d.price_eur ? eur(Number(d.price_eur), loc) : null].filter(Boolean).join(", ");
+  const lines = ids.map((id, i) => `${i + 1}. ${questionText(id, lang, feeText(d, loc))}`);
   const body = [m.hi, "", m.intro.replace("{home}", home), m.ask, "", ...lines, "", m.bye].join("\n");
   return { lang, subject: `${m.subj}: ${d.title || d.location_name || ""}`.trim(), body };
 }
