@@ -452,7 +452,9 @@ describe("pisos.com, the free Spanish source (v3)", async () => {
       "https://www.pisos.com/venta/pisos-sevilla_capital_triana/con-3-habitaciones/hasta-181000/precio-desc/",
       "https://www.pisos.com/venta/pisos-sevilla_capital_los_remedios/con-3-habitaciones/hasta-181000/precio-desc/",
       "https://www.pisos.com/venta/pisos-sevilla_capital_macarena/con-3-habitaciones/hasta-181000/precio-desc/",
+      "https://www.pisos.com/venta/pisos-sevilla_capital_casco_antiguo/con-3-habitaciones/", // v5: comparables only
     ]);
+    expect(P.pisosSearchUrls(sevilla, 2).filter((x) => x.comps).length).toBe(1);
     const plain = rl(parseLiveQuery("casa en sevilla de 3 habitaciones por menos de 200k"), { tz: "Europe/Madrid" }).p;
     expect(P.pisosSearchUrls(plain, 2).map((x) => x.url)).toEqual([
       "https://www.pisos.com/venta/pisos-sevilla_capital/con-3-habitaciones/hasta-181000/precio-desc/",
@@ -624,8 +626,13 @@ describe("the centre as real geography (v4, 8-nov-2026)", async () => {
     ]);
     expect(tally).toEqual({ checked_central: 2, closest_km: 2.8 });
     expect(CT.centreNote({ place: "Madrid", max_price: 350000, currency: "EUR", min_beds: 2, ...tally }))
-      .toBe("No home in central Madrid under €350,000 with 2+ bedrooms passed our checks today. We checked 2 in the centre and none met our bar. Closest checked outside the centre: 2.8 km away.");
-    expect(CT.centreNote({ place: "Madrid", ...tally }, "es")).toBe("Hoy ninguna vivienda en el centro de Madrid ha pasado nuestras comprobaciones. Revisamos 2 en el centro y ninguna alcanzó nuestro nivel. La más cercana fuera del centro está a 2,8 km.");
+      .toBe("2 central homes checked (Madrid, under €350,000, 2+ bedrooms); none passed our photo and value checks today. Closest checked outside the centre: 2.8 km away.");
+    expect(CT.centreNote({ place: "Madrid", ...tally }, "es")).toBe("Revisamos 2 viviendas del centro de Madrid; ninguna ha pasado hoy nuestras comprobaciones de fotos y precio. La más cercana fuera del centro está a 2,8 km.");
+    expect(CT.centreNote({ place: "Madrid", max_price: 350000, currency: "EUR", min_beds: 2, checked_central: 12, closest_km: null }))
+      .toBe("12 central homes checked (Madrid, under €350,000, 2+ bedrooms); none passed our photo and value checks today.");
+    expect(CT.centreNote({ place: "Madrid", checked_central: 1 })).toBe("1 central home checked (Madrid); it did not pass our photo and value checks today.");
+    expect(CT.centreNote({ place: "Madrid", max_price: 350000, currency: "EUR", min_beds: 2, checked_central: 12 }, "es"))
+      .toBe("Revisamos 12 viviendas del centro de Madrid (por menos de 350.000 €, con 2 o más habitaciones); ninguna ha pasado hoy nuestras comprobaciones de fotos y precio.");
     expect(CT.centreNote({ place: "Miami", max_price: 350000, currency: "USD" })).toMatch(/under \$350,000/);
   });
   it("picks central pisos.com cards first and leaves other towns out", async () => {
@@ -643,6 +650,38 @@ describe("the centre as real geography (v4, 8-nov-2026)", async () => {
     expect(P.pickPisos(rows, { ...p, central: false }, 20, null).length).toBe(6);
   });
   it("does not reuse answers to 'centre' searches made before the centre was real", () => {
-    expect(liveKey(parseLiveQuery("piso en Madrid en el centro")).endsWith("|c2")).toBe(true);
+    expect(liveKey(parseLiveQuery("piso en Madrid en el centro")).endsWith("|c3")).toBe(true);
+  });
+});
+
+describe("value against the centre (v5, 8-nov-2026)", async () => {
+  const CT = await import("../../supabase/functions/realhunt-live-search/centre");
+  const P = await import("../../supabase/functions/realhunt-live-search/pisos");
+  const flats = (v: number[]) => v.map((ppm, i) => ({ ppm, group: "flat" as const, id: "f" + i }));
+  it("uses central comparables of the same kind, then any central, then the city x a premium", () => {
+    const m = CT.centreMedians([...flats([5000, 5200, 5400, 5600, 5800, 6000]), { ppm: 3000, group: "house", id: "h" }], 3500);
+    expect(m.flat).toEqual({ ppm: 5500, from: "centre_type", n: 6 });
+    expect(m.house).toMatchObject({ from: "centre", ppm: 5400, n: 7 }); // one house: all central homes
+    const few = CT.centreMedians(flats([5000, 5200, 5400]), 3500);
+    expect(few.flat).toEqual({ ppm: 4375, from: "city_premium", n: 3 }); // 3,500 x 1.25
+    expect(CT.centreMedians([], null).all).toEqual({ ppm: null, from: null, n: 0 });
+    // the same listing seen twice (scan and an earlier find) counts once; nonsense is dropped
+    const dup = CT.centreMedians([...flats([5000, 5000, 5000, 5000, 5000]), { ppm: 9000, group: "flat", id: "f0" }, { ppm: -1, group: "flat" }], 4000);
+    expect(dup.flat.from).toBe("city_premium");
+    // six odd cheap "houses" next to many central flats do not set the bar for houses
+    const odd = CT.centreMedians([...flats([5000, 5200, 5400, 5600, 5800, 6000, 6200]), ...[900, 950, 1000, 1000, 1050, 1100].map((ppm, i) => ({ ppm, group: "house" as const, id: "h" + i }))], 3500);
+    expect(odd.house.from).toBe("centre");
+    expect(odd.flat.from).toBe("centre_type");
+    expect(P.pisosGroup("chalet_adosado")).toBe("house");
+    expect(P.pisosGroup("atico")).toBe("flat");
+  });
+  it("lets the best-value central homes reach 80 and keeps overpriced ones below", () => {
+    const m = CT.centreMedians(flats([5000, 5200, 5400, 5600, 5800, 6000, 6200]), 3500).flat.ppm!;
+    const home = (ppm: number) => liveScore({ price_eur: ppm * 70, sqm: 70, photos: 20, beds: 2, lat: 40.41, lng: -3.70, desc_len: 400, kind: "buy", photo_quality: 8, flags: [] }, { median_ppm: m, min_beds: 2 });
+    expect(home(4600).score).toBeGreaterThanOrEqual(80); // 20 % under the centre's median
+    expect(home(5600).score).toBeLessThan(80); // at the centre's median
+    expect(home(7000).score).toBeLessThan(70); // overpriced for the centre
+    // against the whole city (3,500 a m²) the same good-value central flat could never pass
+    expect(liveScore({ price_eur: 4600 * 70, sqm: 70, photos: 20, beds: 2, lat: 40.41, lng: -3.70, desc_len: 400, kind: "buy", photo_quality: 8, flags: [] }, { median_ppm: 3500, min_beds: 2 }).score).toBeLessThan(80);
   });
 });

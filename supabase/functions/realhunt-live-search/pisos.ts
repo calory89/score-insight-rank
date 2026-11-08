@@ -48,14 +48,14 @@ export function pisosLoc(place: string | null | undefined): string | null {
   return CAPITALS.has(s) ? s + "_capital" : s;
 }
 
-export function pisosSearchUrls(p: LiveQuery, pages = 3): { url: string; central: boolean }[] {
+export function pisosSearchUrls(p: LiveQuery, pages = 3): { url: string; central: boolean; comps?: boolean }[] {
   if (p.kind !== "buy" || p.country !== "Spain") return [];
   const loc = pisosLoc(p.place);
   if (!loc) return [];
   // "casa" in Spanish usually means any home: flats count unless a house word was used ("chalet", "adosado")
   const type = p.ptype === "apartment" ? "piso" : p.ptype === "house" && !p.ptype_soft ? "casas" : "pisos";
   const filt = [p.min_beds ? `con-${Math.min(p.min_beds, 4)}-habitaciones/` : "", p.max_eur ? `hasta-${Math.floor(p.max_eur / 1.1 / 1000) * 1000}/` : "", p.max_eur ? "precio-desc/" : ""].join("");
-  const out: { url: string; central: boolean }[] = [];
+  const out: { url: string; central: boolean; comps?: boolean }[] = [];
   const page = (l: string, i: number, central: boolean) => out.push({ url: `https://www.pisos.com/venta/${type}-${l}/${filt}${i > 1 ? i + "/" : ""}`, central });
   const dist = CENTRE[loc.replace(/_capital$/, "")];
   // "in the centre": the centre's own pages (two), then one page of each district next to it; the whole city only
@@ -63,6 +63,10 @@ export function pisosSearchUrls(p: LiveQuery, pages = 3): { url: string; central
   if (p.central && dist && dist.centre.length + dist.ring.length) {
     for (const d of dist.centre) { page(`${loc}_${d}`, 1, true); page(`${loc}_${d}`, 2, true); }
     for (const d of dist.ring) page(`${loc}_${d}`, 1, false);
+    // v5: the centre's market without the budget, only as comparables for the value score (its homes are not candidates):
+    // the in-budget pages alone hold the cheapest central homes, which would make every central home look dear
+    const beds = p.min_beds ? `con-${Math.min(p.min_beds, 4)}-habitaciones/` : "";
+    for (const d of dist.centre) out.push({ url: `https://www.pisos.com/venta/${type}-${loc}_${d}/${beds}`, central: true, comps: true });
     if (!dist.centre.length) page(loc, 1, false);
     return out;
   }
@@ -106,6 +110,8 @@ export function pisosArea(area: string, place: string | null): string {
   const city = String(place || "").trim();
   return [hood && norm(hood) !== norm(city) ? hood : "", city].filter(Boolean).join(", ");
 }
+/** flat or house, for comparing a home with its own kind (v5) */
+export const pisosGroup = (type: string): "flat" | "house" => (HOUSE_TYPES.test(type) ? "house" : "flat");
 const HOUSE_TYPES = /^(casa|chalet|casa_adosada|casa_pareada|chalet_adosado|chalet_pareado|casa_rustica|casa_unifamiliar|villa)/;
 const NOT_HOMES = /^(finca_rustica|garaje|local|oficina|terreno|trastero|nave|edificio|parcela)/;
 /** Text that rules a listing out before any check: squatted or bare ownership, auctions, shares. */
