@@ -153,6 +153,7 @@ function Shell({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [error, setError] = useState("");
   const [auth, setAuth] = useState(false);
+  const [authMode, setAuthMode] = useState<"in" | "up">("in"); // live search's "Sign up" / "Log in" buttons (8-nov-2026)
   const [notice, setNotice] = useState("");
   const location = useLocation();
   const dark = useTheme();
@@ -216,8 +217,9 @@ function Shell({ children }: { children: ReactNode }) {
     window.addEventListener("focus", refresh);
     return () => { window.clearInterval(timer); window.removeEventListener("focus", refresh); };
   }, [session?.admin, user?.id]);
-  const requireUser = () => {
+  const requireUser = (mode?: "in" | "up") => {
     if (!user) {
+      setAuthMode(mode === "up" ? "up" : "in");
       setAuth(true);
       return false;
     }
@@ -317,6 +319,8 @@ function Shell({ children }: { children: ReactNode }) {
         <TabBar />
         <CompareTray />
         <AuthModal
+          key={authMode}
+          initialMode={authMode}
           open={auth}
           onClose={() => setAuth(false)}
           redirect={location.pathname + location.search}

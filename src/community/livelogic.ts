@@ -1,10 +1,10 @@
 // Live web search, client logic (8-nov-2026). Pure functions only, tested in src/test/livesearch-ui.test.ts.
 // The search itself runs in the edge function realhunt-live-search; its parser lives in core.ts there and is
 // imported here so the page shows the same understanding of the sentence before the server answers.
-import { parseLiveQuery, type LiveQuery } from "../../supabase/functions/realhunt-live-search/core";
+import { parseLiveQuery, resolveLive, type LiveQuery, type PlaceOpt, type Miss } from "../../supabase/functions/realhunt-live-search/core";
 import { FILTER_KEYS } from "./smartsearch";
 
-export { parseLiveQuery, type LiveQuery };
+export { parseLiveQuery, resolveLive, type LiveQuery, type PlaceOpt, type Miss };
 export const SHOW_MIN = 80;
 export const LIVE_FREE_KEY = "rh.live.used";
 
@@ -18,7 +18,7 @@ export type LiveResult = {
   /** Spanish versions (8-nov-2026), shown on the Spanish site through learnTexts in src/lib/lang.ts */
   why_great?: string | null; title_es?: string | null; why_great_es?: string | null; why_cheap_es?: string | null;
 };
-export type LiveStatus = { job_id?: string; status: string; progress?: number; stage?: { k: string; n?: number; of?: number } | null; results?: LiveResult[]; found?: number; hidden?: number; note?: string | null; parsed?: LiveQuery; reason?: string };
+export type LiveStatus = { options?: PlaceOpt[]; closest?: Miss[]; job_id?: string; status: string; progress?: number; stage?: { k: string; n?: number; of?: number } | null; results?: LiveResult[]; found?: number; hidden?: number; note?: string | null; parsed?: LiveQuery; reason?: string };
 
 type HomeRow = { slug: string; title?: string; price_eur?: number | null; country?: string | null; location_name?: string | null; bedrooms?: number | null; nota?: number | null; [k: string]: any };
 const n = (s: unknown) => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -57,7 +57,8 @@ export function liveChips(p: LiveQuery): { k: string; label: string; value?: str
   out.push({ k: "kind", label: p.kind === "rent" ? "To rent" : "To buy" });
   const where = [p.place || p.city, p.state && p.country === "United States" ? p.state.toUpperCase() : null, p.country && !(p.place || p.city) ? p.country : p.country && p.country !== "United States" ? p.country : null].filter(Boolean).join(", ");
   if (where) out.push({ k: "where", label: "", value: where });
-  if (p.ptype !== "any") out.push({ k: "type", label: p.ptype === "apartment" ? "Apartments" : "Houses" });
+  if (p.ptype !== "any" && !p.ptype_soft) out.push({ k: "type", label: p.ptype === "apartment" ? "Apartments" : "Houses" });
+  if (p.central) out.push({ k: "central", label: "In or near the centre" });
   if (p.min_beds) out.push({ k: "beds", label: p.min_beds === 1 ? "bedroom or more" : "bedrooms or more", value: String(p.min_beds) });
   if (p.max_price) out.push({ k: "max", label: p.kind === "rent" ? "a month at most" : "at most", value: money(p.max_price, p.currency) });
   if (p.min_price) out.push({ k: "min", label: "at least", value: money(p.min_price, p.currency) });
@@ -142,4 +143,30 @@ export function rememberJob(store: Record<string, { id: string; at: number }>, q
 export function recallJob(store: Record<string, { id: string; at: number }> | null, q: string, now = Date.now()): string | null {
   const v = store?.[queryKey(q)];
   return v && now - v.at < 24 * 3600_000 && /^[0-9a-f-]{36}$/.test(v.id) ? v.id : null;
+}
+
+// ---------------------------------------------------------------- v3 (8-nov-2026)
+/** The browser's time zone ("Europe/Madrid"), so "Sevilla" means Spain for a visitor in Spain. */
+export function visitorTz(): string | null {
+  try { return Intl.DateTimeFormat().resolvedOptions().timeZone || null; } catch { return null; }
+}
+/** The search as the server will understand it, and whether to ask "Which Sevilla do you mean?" first. */
+export function understand(q: string, tz: string | null, choice: string | null) {
+  return resolveLive(parseLiveQuery(q), { tz, choice });
+}
+/** Why live web search is not available right now, from a job's note or a "capped" answer, or null. */
+export function limitKind(note: string | null | undefined, status?: string | null): "mine" | "everyone" | null {
+  const s = String(note || "");
+  if (/global_budget|global_cap/.test(s)) return "everyone";
+  if (/user_budget|ip_cap/.test(s) || (status === "capped" && !s)) return "mine";
+  return null;
+}
+/** When the daily limits reset (00:00 UTC), as a local time like "01:00" or "7:00 PM". */
+export function resetTime(lang: string, now = new Date()): string {
+  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+  try { return next.toLocaleTimeString(lang === "es" ? "es-ES" : "en-GB", { hour: "2-digit", minute: "2-digit" }); } catch { return "00:00 UTC"; }
+}
+/** A place option as people read it: "Sevilla, Valle del Cauca, Colombia" (country names go through t()). */
+export function optionParts(o: PlaceOpt): { name: string; region: string | null; country: string } {
+  return { name: o.name, region: o.region && o.region !== o.name ? o.region : null, country: o.country };
 }

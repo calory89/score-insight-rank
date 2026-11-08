@@ -38,6 +38,8 @@ const ROUTES = [
   "/compare?ids=1ce2a768-fb96-44f5-8476-e542b13f6870,1d6e45f5-5584-4396-8f8b-44d39130ae49,366a4c01-1d7e-4f89-9ace-20728826c1e7",
   "/live-search", "/live-search?q=" + encodeURIComponent(JOB.parsed ? "3 bedroom house in Tampa under $350k" : "x"),
   "/live-search?q=" + encodeURIComponent("Casas en madrid moderna 3 habitaciones por menos de 200.000"),
+  // v3 states: "Which Sevilla?" (asked in the page, no request), a second search without an account, today's limit
+  "/live-search?q=Sevilla", "/live-search?q=" + encodeURIComponent("piso en Bilbao 2 habitaciones"), "/live-search?q=" + encodeURIComponent("piso en Zaragoza 2 habitaciones"),
   "/hunt/saved", "/alerts", "/blog", "/blog/cheap-houses-japan-move-in-ready", "/about", "/method", "/find-my-home", "/best", "/no-such-page-xyz",
 ];
 
@@ -126,10 +128,15 @@ function collectInPage() {
 
 async function mockLive(page) {
   let polls = 0;
+  let variant = "";
   await page.route(/functions\/v1\/realhunt-live-search/, async (route) => {
     const req = route.request();
     if (req.method() === "OPTIONS") return route.fulfill({ status: 200, headers: { "access-control-allow-origin": "*", "access-control-allow-headers": "*" }, body: "ok" });
-    const body = req.method() === "POST" ? { job_id: "00000000-0000-4000-8000-000000000001", status: "queued", parsed: JOB.parsed, cached: true }
+    if (req.method() === "POST") { try { const q = String(JSON.parse(req.postData() || "{}").q || ""); variant = /bilbao/i.test(q) ? "login" : /zaragoza/i.test(q) ? "limit" : ""; } catch { variant = ""; } }
+    const limitJob = { ...JOB, results: [], found: 2, hidden: 2, note: "none_80:user_budget",
+      closest: [{ id: "m1", url: "https://www.pisos.com/comprar/piso-x/", title: "Bright two-bedroom flat near the old town", title_es: "Piso luminoso de dos dormitorios cerca del casco antiguo", price: 175000, currency: "EUR", price_eur: 175000, beds: 2, sqm: 70, location: "Delicias, Zaragoza", image: null, score: 77, photo_quality: 6, why: ["score", "photos"] }] };
+    const body = req.method() === "POST" ? (variant === "login" ? { status: "need_login", parsed: JOB.parsed } : { job_id: "00000000-0000-4000-8000-000000000001", status: "queued", parsed: JOB.parsed, cached: true })
+      : variant === "limit" ? limitJob
       : ++polls < 3 ? { ...JOB, status: "running", progress: 40, stage: { k: "agents" }, results: JOB.results.slice(0, 1), found: 1, hidden: 0 }
       : JOB;
     return route.fulfill({ status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: JSON.stringify(body) });
