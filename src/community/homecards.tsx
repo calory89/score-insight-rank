@@ -8,6 +8,7 @@ import { t } from "./i18n";
 import { SaveHeart } from "./v4";
 import { thumb, onThumbError } from "@/lib/thumbs";
 import { CardCheck } from "./check";
+import { CompareToggle } from "./compareTools";
 
 const gtone = (n: number) => (n >= 90 ? "is-top" : n >= 80 ? "is-great" : "is-good");
 const isNew = (d: any) => { const at = d.approved_at || d.publish_at; return !!at && Date.now() - new Date(at).getTime() < 36 * 3600 * 1000; };
@@ -42,6 +43,7 @@ export function HomeCard({ deal, pos }: { deal: any; pos: number }) {
         </span>
       </Link>
       <SaveHeart deal={deal} className="hv-save hx-save" />
+      <CompareToggle deal={deal} />
     </div>
   );
 }

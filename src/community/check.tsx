@@ -8,12 +8,13 @@ import { Link } from "react-router-dom";
 import { AlertTriangle, Check, ChevronDown, Copy, Mail, ShieldCheck, ShieldAlert, ShieldX } from "lucide-react";
 import GUIDES from "@/data/guides.json";
 import { t } from "./i18n";
+import { isEs } from "@/lib/lang";
 import { RunningCosts } from "./costs";
 import { RiskBlock, RiskCardChips } from "./risks";
 import { cardRiskChips } from "./risksLogic";
 import {
-  GROUPS, agentEmail, allIn, allInParts, buyRule, countryKey, detectGroup, emailLang, eur, feeText, questionText, questions, redFlags, roundNice,
-  type CheckRow, type Group, type QId,
+  GROUPS, agentEmail, allIn, allInParts, buyRule, countryKey, detectGroup, emailLang, eur, monthEs, questionUi, questions, redFlags, roundNice,
+  type CheckRow, type Group, type QId, type RulesEs,
 } from "./checkLogic";
 import "./check.css";
 
@@ -41,13 +42,27 @@ export function useBuyerGroup(): [Group, (g: Group) => void] {
 }
 const GROUP_LABEL: Record<Group, string> = { eu: "EU / EEA citizen", uk: "UK citizen", na: "US / Canadian citizen", other: "Other nationality" };
 
+// Spanish rule texts (8-nov-2026): src/data/buyrules-es.json is fetched only on the Spanish site, so the English
+// entry bundle does not carry it. Until it arrives the English note shows (the same moment the dictionary loads).
+const ES = isEs();
+let rulesEs: RulesEs | null = null;
+const esSubs = new Set<() => void>();
+if (ES) import("@/data/buyrules-es.json").then((m) => { rulesEs = ((m as any).default || m) as RulesEs; esSubs.forEach((f) => f()); }).catch(() => { /* stay in English */ });
+function useRulesEs(): RulesEs | null {
+  return useSyncExternalStore((f) => { esSubs.add(f); return () => { esSubs.delete(f); }; }, () => rulesEs, () => null);
+}
+/** 1.5 -> "1,5" on the Spanish site. */
+const dec = (v: number) => (ES ? String(v).replace(".", ",") : String(v));
+const LANG_ES: Record<string, string> = { en: "inglés", es: "español", it: "italiano", fr: "francés", de: "alemán", pt: "portugués", nl: "neerlandés", da: "danés", sv: "sueco" };
+
 // ------------------------------------------------------------------------------------------------- cards
 /** Compact line under the price on cards. Works inside a link (no interactive children). */
 export function CardCheck({ d }: { d: CheckRow }) {
   const [g] = useBuyerGroup();
+  const es = useRulesEs();
   const parts = useMemo(() => allInParts(d), [d.price_eur, d.country, d.hoa_monthly, d.tax_annual]);
   const flags = useMemo(() => redFlags(d).filter((f) => f.id !== "hoa_unknown" && f.sev >= 2).slice(0, 2), [d.title, d.why_great, d.costs_note]);
-  const rule = buyRule(d.country, g);
+  const rule = buyRule(d.country, g, es);
   const warn = rule && rule.s !== "green" ? rule : null;
   const risky = cardRiskChips(d as any).length > 0;
   if (!parts.length && !flags.length && !warn && !risky) return null;
@@ -77,7 +92,7 @@ function TotalCost({ d }: { d: CheckRow }) {
       <h2 id="rh-chk-total-h">{t("Total cost to buy")}</h2>
       <dl>
         <div><dt>{t("Price")}</dt><dd>{eur(a.price)}</dd></div>
-        {a.costsLow != null && a.costsHigh != null && a.pct && <div><dt>{t("Buying costs")} <small>({a.pct[0] === a.pct[1] ? `${a.pct[0]}%` : `${a.pct[0]}–${a.pct[1]}%`})</small></dt><dd>{range(a.costsLow, a.costsHigh)}</dd></div>}
+        {a.costsLow != null && a.costsHigh != null && a.pct && <div><dt>{t("Buying costs")} <small>({a.pct[0] === a.pct[1] ? `${dec(a.pct[0])}%` : `${dec(a.pct[0])}–${dec(a.pct[1])}%`})</small></dt><dd>{range(a.costsLow, a.costsHigh)}</dd></div>}
         {a.totalLow != null && a.totalHigh != null && <div className="rh-chk-sum"><dt>{t("Total to buy")}</dt><dd>{range(a.totalLow, a.totalHigh)}</dd></div>}
         <div className="rh-chk-month"><dt>{t("Then every month")}</dt><dd>{a.monthly != null && a.monthly > 0 ? <>≈ {eur(Math.round(a.monthly))} <small>{t("fee and property tax")}</small></> : d.hoa_unknown ? t("Fee not stated") : t("Not stated in the listing")}</dd></div>
       </dl>
@@ -91,7 +106,8 @@ function TotalCost({ d }: { d: CheckRow }) {
 
 function CanIBuy({ d }: { d: CheckRow }) {
   const [g, set] = useBuyerGroup();
-  const rule = buyRule(d.country, g);
+  const es = useRulesEs();
+  const rule = buyRule(d.country, g, es);
   if (!rule) return null;
   const k = countryKey(d.country);
   const Icon = rule.s === "green" ? ShieldCheck : rule.s === "amber" ? ShieldAlert : ShieldX;
@@ -111,13 +127,16 @@ function CanIBuy({ d }: { d: CheckRow }) {
         <span className="rh-chk-dot" aria-hidden="true"><Icon size={20} /></span>
         <div>
           <strong>{t(verdict)}</strong>
-          <p>{t(rule.note)}</p>
+          <p>{es ? rule.note : t(rule.note)}</p>
         </div>
       </div>
-      <p className="rh-chk-src">
+      {es ? <p className="rh-chk-src">
+        Normas generales para compradores en {rule.name}, actualizadas en {monthEs(rule.updated)}. Información general, no asesoramiento legal.{" "}
+        {GUIDE_KEYS[k] ? <Link className="hunt-link" to={`/guide/${k}`}>Cómo comprar en {rule.name}</Link> : null}
+      </p> : <p className="rh-chk-src">
         {t("General rules for buyers in")} {rule.name}, {t("updated")} {rule.updated}. {t("General information, not legal advice.")}{" "}
         {GUIDE_KEYS[k] ? <Link className="hunt-link" to={`/guide/${k}`}>{t("How to buy in")} {String(d.country)}</Link> : null}
-      </p>
+      </p>}
     </section>
   );
 }
@@ -158,7 +177,6 @@ function AgentQuestions({ d }: { d: CheckRow }) {
   useEffect(() => { if (state === "idle") return; const id = setTimeout(() => setState("idle"), 2500); return () => clearTimeout(id); }, [state]);
   const lang = emailLang(d);
   const mail = useMemo(() => agentEmail(d, ids, lang), [ids, lang, d.title, d.location_name, d.price_eur]);
-  const fee = feeText(d);
   const copy = async () => setState((await copyText(`${mail.subject}\n\n${mail.body}`)) ? "ok" : "fail");
   return (
     <section className="rh-chk rh-chk-q">
@@ -167,13 +185,13 @@ function AgentQuestions({ d }: { d: CheckRow }) {
           <span><strong>{t("Questions to ask before you visit")}</strong><small>{ids.length} {t("questions for this home")}</small></span>
           <ChevronDown size={18} aria-hidden="true" className="rh-chk-caret" />
         </summary>
-        <ol>{ids.map((id) => <li key={id}>{t(questionText(id, "en", fee))}</li>)}</ol>
+        <ol>{ids.map((id) => <li key={id}>{questionUi(id, d, ES ? "es" : "en")}</li>)}</ol>
       </details>
       <div className="rh-chk-mail">
         <button type="button" className={"rh-chk-copy" + (state === "ok" ? " is-done" : "")} onClick={copy} aria-live="polite">
           {state === "ok" ? <><Check size={17} aria-hidden="true" /> {t("Copied")}</> : <><Copy size={17} aria-hidden="true" /> {t("Copy email to the agent")}</>}
         </button>
-        <span className="rh-chk-mailnote"><Mail size={14} aria-hidden="true" /> {lang === "en" ? t("Polite email in English with these questions.") : <>{t("Polite email in")} {t(LANG_NAME[lang])} {t("with these questions.")}</>}</span>
+        <span className="rh-chk-mailnote"><Mail size={14} aria-hidden="true" /> {ES ? `Correo educado en ${LANG_ES[lang] || "inglés"} con estas preguntas, en el idioma del anuncio.` : lang === "en" ? t("Polite email in English with these questions.") : <>{t("Polite email in")} {t(LANG_NAME[lang])} {t("with these questions.")}</>}</span>
         {state === "fail" && <span className="rh-chk-fail" role="alert">{t("Could not copy. Open the list and copy it by hand.")}</span>}
       </div>
     </section>

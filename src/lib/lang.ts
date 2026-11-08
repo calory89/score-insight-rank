@@ -72,7 +72,8 @@ function money(s: string): string {
     const [ip, dp] = String(Math.round(n * 100) / 100).split(".");
     return `${ip.replace(/\B(?=(\d{3})+(?!\d))/g, ".")}${dp ? "," + dp : ""} €`;
   });
-  o = o.replace(/\b(\d{1,3}(?:,\d{3})+)\b/g, (m) => m.replace(/,/g, "."));
+  // Not "0,896" or "0,799%": a leading 0 is a Spanish decimal (from the Spanish legal texts), not thousands.
+  o = o.replace(/\b([1-9]\d{0,2}(?:,\d{3})+)\b/g, (m) => m.replace(/,/g, "."));
   o = o.replace(/(\d) €/g, "$1\u00A0€");
   o = o.replace(/\b(\d{1,2}) (Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept?|Oct|Nov|Dec|January|February|March|April|June|July|August|September|October|November|December)\b/g, (_m, d, mo) => `${d} ${MONTHS[mo] || mo}`);
   o = o.replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept?|Oct|Nov|Dec|January|February|March|April|June|July|August|September|October|November|December) (\d{1,2}), (\d{4})\b/g, (_m, mo, d, y) => `${d} ${MONTHS[mo] || mo} ${y}`);
