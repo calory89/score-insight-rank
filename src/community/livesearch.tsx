@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCommunity } from "./ctx";
 import { feedAll, type Row } from "./extras";
-import { HomeCard, HomeCardSkeleton } from "./homecards";
+import { HomeCard, HomeCardSkeleton, kmFromCentre } from "./homecards";
 import { getLang, t } from "./i18n";
 import { learnTexts } from "@/lib/lang";
 import {
@@ -278,6 +278,7 @@ export default function LiveSearchPage() {
                     <span className="lv-miss-meta">
                       {[m.beds ? `${m.beds} ${t("bed")}` : "", m.sqm ? `${m.sqm} m²` : "", m.location].filter(Boolean).join(" · ")}
                     </span>
+                    {centreKm(m) != null && <span className="lv-miss-meta"><span>{kmFromCentre(centreKm(m)!)}</span> <span>{t("from the centre")}</span></span>}
                     <span className="lv-miss-why">
                       {t("AI estimate")} {m.score}/100{m.photo_quality != null && <> · {t("Photos")} {m.photo_quality}/10</>}
                     </span>
