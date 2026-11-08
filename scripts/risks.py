@@ -312,7 +312,17 @@ def main() -> None:
     ap.add_argument("--slug"); ap.add_argument("--missing", action="store_true"); ap.add_argument("--dry", action="store_true")
     ap.add_argument("--out"); ap.add_argument("--token-file")
     ap.add_argument("--apply", help="write a JSON file made earlier with --out instead of computing")
+    ap.add_argument("--homes-url", help="read homes from the public snapshot (no token; use with --out, e.g. in GitHub Actions)")
     a = ap.parse_args()
+    if a.homes_url:
+        rows = json.load(urllib.request.urlopen(urllib.request.Request(a.homes_url, headers={"User-Agent": "rh-ops"}), timeout=120))["rows"]
+        homes = [{"slug": r["slug"], "lat": r["lat"], "lng": r["lng"], "country": r.get("country"), "risks": r.get("risks")} for r in rows if r.get("lat") is not None and r.get("lng") is not None]
+        if a.missing: homes = [h for h in homes if not ((h.get("risks") or {}).get("noise") or {}).get("roads_checked")]
+        print(f"{len(homes)} homes (public snapshot)")
+        res, failed = compute(homes, {h["slug"]: h.get("risks") for h in homes if h.get("risks")})
+        json.dump(res, open(a.out or "risks.json", "w", encoding="utf8"), ensure_ascii=False, indent=0)
+        print("roads checked:", sum(1 for r in res.values() if r["noise"]["roads_checked"]), "of", len(res), "failed:", len(failed))
+        return
     token = os.environ.get("SUPABASE_ACCESS_TOKEN") or (open(a.token_file).read().strip() if a.token_file else "")
     if not token: sys.exit("Set SUPABASE_ACCESS_TOKEN or pass --token-file (reads homes and writes the risks column).")
     if a.apply:
