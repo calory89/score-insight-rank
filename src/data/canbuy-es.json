@@ -1,0 +1,297 @@
+{
+ "_meta": {
+  "updated": "noviembre de 2026",
+  "note": "Spanish texts for src/data/canbuy.json, same keys. {plural} is filled with plural (with article) and capitalised at the start of a sentence."
+ },
+ "nationalities": {
+  "american": {
+   "label": "Estadounidense",
+   "noun": "un estadounidense",
+   "plural": "los estadounidenses",
+   "adj": "estadounidense",
+   "adj_pl": "estadounidenses",
+   "notes": [
+    "Estados Unidos grava a sus ciudadanos por su renta mundial, así que el alquiler de una vivienda en el extranjero va en tu declaración estadounidense, y las cuentas bancarias en el extranjero que en total superen 10.000 US$ deben declararse en el informe FBAR.",
+    "Algunos bancos extranjeros tardan en abrir cuentas a ciudadanos estadounidenses por las obligaciones de información de FATCA, así que pregunta con tiempo."
+   ]
+  },
+  "british": {
+   "label": "Británico",
+   "noun": "un británico",
+   "plural": "los británicos",
+   "adj": "británico",
+   "adj_pl": "británicos",
+   "notes": [
+    "Desde el Brexit, los compradores británicos cuentan como compradores de fuera de la UE, así que se les aplican las normas y los tipos impositivos para no comunitarios (por ejemplo, sobre las rentas del alquiler)."
+   ]
+  },
+  "canadian": {
+   "label": "Canadiense",
+   "noun": "un canadiense",
+   "plural": "los canadienses",
+   "adj": "canadiense",
+   "adj_pl": "canadienses",
+   "notes": [
+    "Los residentes en Canadá cuyos inmuebles en el extranjero cuesten en total más de 100.000 CAD deben presentar el formulario T1135 ante la CRA."
+   ]
+  },
+  "australian": {
+   "label": "Australiano",
+   "noun": "un australiano",
+   "plural": "los australianos",
+   "adj": "australiano",
+   "adj_pl": "australianos",
+   "notes": [
+    "Los residentes fiscales en Australia tributan por su renta mundial, así que el alquiler de una vivienda en el extranjero va en tu declaración australiana, normalmente con una deducción por el impuesto pagado fuera."
+   ]
+  },
+  "german": {
+   "label": "Alemán",
+   "noun": "un alemán",
+   "plural": "los alemanes",
+   "adj": "alemán",
+   "adj_pl": "alemanes",
+   "notes": []
+  },
+  "dutch": {
+   "label": "Neerlandés",
+   "noun": "un neerlandés",
+   "plural": "los neerlandeses",
+   "adj": "neerlandés",
+   "adj_pl": "neerlandeses",
+   "notes": [
+    "Los residentes en los Países Bajos declaran una vivienda en el extranjero en el box 3 (ahorro e inversiones) de su declaración de la renta neerlandesa."
+   ]
+  },
+  "swedish": {
+   "label": "Sueco",
+   "noun": "un sueco",
+   "plural": "los suecos",
+   "adj": "sueco",
+   "adj_pl": "suecos",
+   "notes": []
+  },
+  "danish": {
+   "label": "Danés",
+   "noun": "un danés",
+   "plural": "los daneses",
+   "adj": "danés",
+   "adj_pl": "daneses",
+   "notes": []
+  },
+  "norwegian": {
+   "label": "Noruego",
+   "noun": "un noruego",
+   "plural": "los noruegos",
+   "adj": "noruego",
+   "adj_pl": "noruegos",
+   "notes": [
+    "Noruega no está en la UE, pero como forma parte del EEE, los noruegos compran y se mudan dentro de la UE casi en las mismas condiciones que los ciudadanos de la UE."
+   ]
+  },
+  "french": {
+   "label": "Francés",
+   "noun": "un francés",
+   "plural": "los franceses",
+   "adj": "francés",
+   "adj_pl": "franceses",
+   "notes": []
+  },
+  "spanish": {
+   "label": "Español",
+   "noun": "un español",
+   "plural": "los españoles",
+   "adj": "español",
+   "adj_pl": "españoles",
+   "notes": [
+    "Los residentes en España con bienes en el extranjero de más de 50.000 € en una categoría (por ejemplo, inmuebles) deben presentar el modelo 720."
+   ]
+  },
+  "italian": {
+   "label": "Italiano",
+   "noun": "un italiano",
+   "plural": "los italianos",
+   "adj": "italiano",
+   "adj_pl": "italianos",
+   "notes": [
+    "Los residentes en Italia declaran los inmuebles en el extranjero en el cuadro RW de su declaración de la renta y pueden deber el IVIE, el impuesto sobre inmuebles en el extranjero."
+   ]
+  },
+  "swiss": {
+   "label": "Suizo",
+   "noun": "un suizo",
+   "plural": "los suizos",
+   "adj": "suizo",
+   "adj_pl": "suizos",
+   "notes": [
+    "Suiza no está en la UE ni en el EEE. El acuerdo de libre circulación entre Suiza y la UE permite a los suizos vivir en países de la UE, pero pueden seguir aplicándose las normas sobre compra de inmuebles para compradores de fuera de la UE."
+   ]
+  },
+  "irish": {
+   "label": "Irlandés",
+   "noun": "un irlandés",
+   "plural": "los irlandeses",
+   "adj": "irlandés",
+   "adj_pl": "irlandeses",
+   "notes": []
+  }
+ },
+ "countries": {
+  "bulgaria": {
+   "eu": {
+    "a": "Sí. Desde 2012 los ciudadanos de la UE y del EEE pueden ser propietarios de edificios y de suelo en Bulgaria en las mismas condiciones que los búlgaros."
+   },
+   "other": {
+    "a": "Sí, con una condición: {plural} pueden ser propietarios directos de pisos y edificios, pero no del terreno sobre el que está una casa. Para una casa con parcela lo habitual es comprar a través de una sociedad búlgara, que sí puede tener suelo."
+   },
+   "residency_other": "Comprar una vivienda no da derecho a vivir en Bulgaria; para estancias largas necesitas un permiso de residencia."
+  },
+  "canada": {
+   "all": {
+    "a": "De momento, en general no: una prohibición federal impide a los no canadienses comprar viviendas en ciudades y municipios grandes hasta el 1 de enero de 2027. No afecta a las zonas rurales ni a los pueblos pequeños, y hay excepciones, como algunos titulares de permiso de trabajo. Comprueba la situación actual antes de buscar: el Gobierno ha dicho que estudia una medida que la sustituya."
+   },
+   "residency_other": "Comprar una vivienda no da derecho a vivir en Canadá."
+  },
+  "cyprus": {
+   "eu": {
+    "a": "Sí. Los ciudadanos de la UE compran vivienda en Chipre sin restricciones."
+   },
+   "other": {
+    "a": "Sí, con permiso: {plural} necesitan autorización del Consejo de Ministros, que se solicita a través del District Officer, y normalmente se limita a una vivienda o una parcela de hasta 4.014 m². Para la mayoría de compradores el permiso es un trámite, pero lleva tiempo."
+   },
+   "residency_other": "Los compradores de fuera de la UE de una vivienda nueva de al menos 300.000 € más IVA pueden solicitar la residencia permanente por la vía de inversión de Chipre; las condiciones se endurecieron en 2023, así que comprueba las normas actuales."
+  },
+  "denmark": {
+   "eu": {
+    "a": "Solo si vives allí: {plural} que viven y están empadronados en Dinamarca pueden comprar sin autorización una vivienda en la que vivan todo el año, firmando una declaración. Sin residencia danesa necesitas autorización de la Agencia de Asuntos Civiles (Civilstyrelsen), y las casas de vacaciones (sommerhuse) solo se permiten a personas con vínculos fuertes y duraderos con Dinamarca."
+   },
+   "other": {
+    "a": "Restringido. Sin residencia danesa (o 5 años de residencia en el pasado) {plural} necesitan autorización de la Agencia de Asuntos Civiles (Civilstyrelsen), que rara vez se concede solo para comprar una vivienda. Las casas de vacaciones (sommerhuse) solo se permiten a personas con vínculos fuertes y duraderos con Dinamarca."
+   },
+   "residency_other": "Comprar una vivienda no da derecho a vivir en Dinamarca."
+  },
+  "dominican-republic": {
+   "all": {
+    "a": "Sí. {plural} tienen los mismos derechos que los dominicanos para comprar suelo y viviendas, sin restricciones."
+   },
+   "residency_other": "Comprar una vivienda no te da por sí solo la residencia en la República Dominicana."
+  },
+  "france": {
+   "all": {
+    "a": "Sí. {plural} pueden comprar inmuebles en Francia sin restricciones y sin necesidad de permiso."
+   },
+   "residency_other": "Comprar una vivienda no da derecho a vivir en Francia; para estancias de más de 90 días necesitas un visado de larga duración."
+  },
+  "germany": {
+   "all": {
+    "a": "Sí. No hay restricciones para que {plural} compren inmuebles en Alemania."
+   },
+   "other": {
+    "a": "Sí. No hay restricciones para que {plural} compren inmuebles en Alemania, aunque los bancos suelen pedir a los compradores de fuera de la UE una entrada mayor."
+   },
+   "residency_other": "Comprar una vivienda no da derecho a vivir en Alemania."
+  },
+  "greece": {
+   "eu": {
+    "a": "Sí. Los ciudadanos de la UE compran en Grecia en las mismas condiciones que los griegos."
+   },
+   "ch": {
+    "a": "Sí. Los ciudadanos de la AELC, incluidos los suizos, compran en Grecia como los ciudadanos de la UE, también en las zonas fronterizas."
+   },
+   "other": {
+    "a": "Sí, con una condición: {plural} necesitan un permiso para comprar en las zonas fronterizas designadas (partes del norte de Grecia e islas del Egeo oriental como Rodas y el Dodecaneso). En el resto del país compras como un griego. El Gobierno también ha anunciado un impuesto de transmisión del 15% para compradores de fuera de la UE desde el 1 de enero de 2027, aún no definitivo."
+   },
+   "residency_other": "Grecia tiene una golden visa para compradores de fuera de la UE. Desde 2024 el mínimo es de 800.000 € en el Ática, Salónica, Mykonos, Santorini y las islas más grandes, y de 400.000 € en el resto, así que una vivienda barata no da acceso a ella."
+  },
+  "italy": {
+   "eu": {
+    "a": "Sí. Los ciudadanos de la UE compran en Italia en las mismas condiciones que los italianos."
+   },
+   "other": {
+    "a": "Sí. Italia permite comprar a los ciudadanos de fuera de la UE cuando su país permite comprar a los italianos (reciprocidad), y Estados Unidos, el Reino Unido, Canadá, Australia y Suiza cumplen esa condición. Necesitas un código fiscal italiano (codice fiscale)."
+   },
+   "residency_other": "Comprar una vivienda no da derecho a vivir en Italia; para estancias de más de 90 días necesitas un visado, como el de residencia electiva."
+  },
+  "japan": {
+   "all": {
+    "a": "Sí. {plural} pueden comprar suelo en plena propiedad y viviendas en las mismas condiciones que los japoneses, incluso con visado de turista."
+   },
+   "residency_other": "Comprar una vivienda no da visado ni residencia en Japón."
+  },
+  "mexico": {
+   "all": {
+    "a": "Sí, con condiciones. En la Zona Restringida (a menos de 50 km de la costa o 100 km de las fronteras, que incluye Tulum y Playa del Carmen) {plural} compran a través de un fideicomiso bancario o de una sociedad mexicana. En el interior puedes ser propietario directo, con un permiso de la Secretaría de Relaciones Exteriores."
+   },
+   "residency_other": "Comprar una vivienda no da la residencia en México; la residencia temporal suele basarse en ingresos o ahorros y se solicita en un consulado mexicano."
+  },
+  "netherlands": {
+   "all": {
+    "a": "Sí. En los Países Bajos no hay requisitos de nacionalidad ni de residencia ni recargos para compradores extranjeros. Algunas ciudades limitan el alquiler de viviendas más baratas después de comprarlas (opkoopbescherming)."
+   },
+   "residency_other": "Comprar una vivienda no da derecho a vivir en los Países Bajos."
+  },
+  "norway": {
+   "all": {
+    "a": "Sí. Cualquiera con fondos puede comprar inmuebles en Noruega, y una parcela edificada de hasta 2 decáreas normalmente no necesita concesión (konsesjon). Las fincas agrícolas y las parcelas más grandes sí la necesitan."
+   },
+   "residency_other": "Comprar una vivienda no da derecho a vivir en Noruega."
+  },
+  "poland": {
+   "eu": {
+    "a": "Sí. Los ciudadanos de la UE, del EEE y de Suiza compran en Polonia en las mismas condiciones que los polacos."
+   },
+   "ch": {
+    "a": "Sí. Los ciudadanos de la UE, del EEE y de Suiza compran en Polonia en las mismas condiciones que los polacos."
+   },
+   "other": {
+    "a": "En parte: {plural} pueden comprar un piso sin permiso, pero para comprar una casa o un terreno normalmente necesitan un permiso del Ministerio del Interior (MSWiA)."
+   },
+   "residency_other": "Comprar una vivienda no da derecho a vivir en Polonia."
+  },
+  "portugal": {
+   "all": {
+    "a": "Sí. {plural} compran en Portugal con los mismos derechos que los portugueses. Necesitas un número de identificación fiscal portugués (NIF)."
+   },
+   "residency_other": "Desde octubre de 2023, comprar una vivienda ya no da acceso a la golden visa de Portugal. El visado D7, para personas con ingresos pasivos, es la vía habitual para vivir allí."
+  },
+  "spain": {
+   "eu": {
+    "a": "Sí. Los ciudadanos de la UE compran en España en las mismas condiciones que los españoles. Necesitas un NIE, tu número de identidad de extranjero."
+   },
+   "other": {
+    "a": "Sí, de momento. {plural} compran en España en las mismas condiciones que los españoles y necesitan un NIE, el número de identidad de extranjero. El Gobierno ha propuesto un impuesto del 100% (o una prohibición) para los compradores de fuera de la UE que no residen en España; a noviembre de 2026 no es ley, así que compruébalo antes de firmar."
+   },
+   "residency_other": "Comprar una vivienda no da derecho a vivir en España: la golden visa para compradores de inmuebles se cerró el 3 de abril de 2025. El visado de residencia no lucrativa es la vía habitual para personas con ingresos pasivos."
+  },
+  "sweden": {
+   "all": {
+    "a": "Sí. En Suecia no hay requisitos de nacionalidad ni de residencia para comprar una vivienda. Necesitas un número de identidad personal sueco o un número de coordinación (samordningsnummer) para inscribir la propiedad."
+   },
+   "residency_other": "Comprar una vivienda no da derecho a vivir en Suecia."
+  },
+  "switzerland": {
+   "eu": {
+    "a": "Solo si vives allí. Según la ley Lex Koller, {plural} que viven en Suiza compran como los suizos. Si vives fuera, necesitas un permiso cantonal y normalmente solo puedes comprar una casa de vacaciones en una zona turística, dentro de cupos nacionales."
+   },
+   "other": {
+    "a": "Restringido. Según la ley Lex Koller, {plural} que viven fuera necesitan un permiso cantonal y normalmente solo pueden comprar una casa de vacaciones en una zona turística, dentro de cupos nacionales. Si vives en Suiza, los titulares de un permiso C compran como los suizos, y los de un permiso B pueden comprar la vivienda en la que viven."
+   },
+   "residency_other": "Comprar una vivienda no da derecho a vivir en Suiza."
+  },
+  "united-kingdom": {
+   "all": {
+    "a": "Sí. No hay restricciones por nacionalidad para comprar vivienda en ninguna parte del Reino Unido. En Inglaterra e Irlanda del Norte, los compradores que no viven en el Reino Unido pagan un recargo del 2% en el stamp duty (el impuesto sobre la compra)."
+   },
+   "irish": {
+    "a": "Sí. No hay restricciones por nacionalidad para comprar vivienda en ninguna parte del Reino Unido, y los ciudadanos irlandeses también pueden vivir y trabajar allí gracias a la Zona Común de Viaje. Los compradores que no viven en el Reino Unido pagan un recargo del 2% en el stamp duty en Inglaterra e Irlanda del Norte."
+   },
+   "residency_other": "Comprar una vivienda no da derecho a vivir en el Reino Unido. Los visitantes normalmente pueden quedarse hasta 6 meses, y la mayoría necesita ya una autorización electrónica de viaje (ETA) antes de viajar."
+  },
+  "united-states": {
+   "all": {
+    "a": "Sí. No hay ninguna prohibición federal para que los extranjeros compren vivienda en Estados Unidos. Unos 30 estados han añadido algunos límites, sobre todo para tierras agrícolas o para compradores de ciertos países como China, que no afectan a {plural}."
+   },
+   "residency_other": "Comprar una vivienda no da visado ni derecho a vivir en Estados Unidos; las visitas siguen las normas habituales para visitantes según tu pasaporte."
+  }
+ }
+}
