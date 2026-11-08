@@ -10,6 +10,7 @@ import { money } from "./api";
 import { feedAll, niceTitle, type Row, type FeedParams } from "./extras";
 import { t } from "./i18n";
 import { thumb } from "@/lib/thumbs";
+import { isHighRisk } from "./risksLogic";
 
 const esc = (s: unknown) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string));
 // Price colours (6-oct-2026): strong green = very cheap, light green around €50-60k, then soft red
@@ -36,9 +37,10 @@ type Props = {
   openFocus?: boolean;          // open the focused home's card (off on the home's own page)
   className?: string;
   onCount?: (n: number) => void;
+  hideRisky?: boolean;          // hide homes with a high noise or flood risk (the focused home always stays)
 };
 
-export default function HomesMap({ params, rows, focus, around, embedded = false, openFocus = true, className = "", onCount }: Props) {
+export default function HomesMap({ params, rows, focus, around, embedded = false, openFocus = true, className = "", onCount, hideRisky = false }: Props) {
   const wrap = useRef<HTMLDivElement>(null);
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
@@ -48,6 +50,9 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
   const [armed, setArmed] = useState(!embedded);
   const [data, setData] = useState<Row[] | null>(rows || null);
   const [nb, setNb] = useState(0);
+  // 8-nov-2026: the risk toggle only redraws the pins; the view, the open card and the back-button restore stay.
+  const hideRef = useRef(hideRisky);
+  const redraw = useRef<(() => void) | null>(null);
   // 7-nov-2026 (Carlos: "si vuelvo atrás tras ver algo en el mapa debe volver al mapa donde estaba"): the
   // view is saved on every move; coming back with the browser's back button restores it instead of
   // re-fitting the map on Europe. Only the full map page (not maps embedded in other pages) does this.
@@ -146,7 +151,9 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
   const [isSat, setIsSat] = useState(false);
   useEffect(() => {
     const m = map.current, g = layer.current; if (!m || !g || !data) return;
-    const list = data.filter((d) => d.lat != null && d.lng != null);
+    const all = data.filter((d) => d.lat != null && d.lng != null);
+    const visible = () => (hideRef.current ? all.filter((d) => (focus && d.slug === focus) || !isHighRisk(d as any)) : all);
+    let list = visible();
     onCount?.(list.length);
     const pts: L.LatLngExpression[] = list.map((d) => [d.lat!, d.lng!]);
     bounds.current = pts.length ? L.latLngBounds(pts) : null;
@@ -245,6 +252,7 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
       if (reopened) { keepOpen.current = true; (reopened as L.Marker).openPopup(); keepOpen.current = false; fitPopup(); }
       else if (open && !m.hasLayer((m as any)._popup)) openSlug.current = null;
     };
+    redraw.current = () => { list = visible(); onCount?.(list.length); draw(); };
     m.on("zoomend", draw);
     const onMove = () => fitPopup();
     m.on("moveend", onMove);
@@ -268,8 +276,10 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
     place(); const tm = setTimeout(() => { place(); restoreView.current = null; }, 250);
     const save = () => { if (embedded) return; try { const c = m.getCenter(); lastView.current = { lat: c.lat, lng: c.lng, z: m.getZoom() }; } catch { /* private mode */ } };
     m.on("moveend", save);
-    return () => { clearTimeout(tm); m.off("zoomend", draw); m.off("moveend", onMove); m.off("moveend", save); };
+    return () => { clearTimeout(tm); redraw.current = null; m.off("zoomend", draw); m.off("moveend", onMove); m.off("moveend", save); };
   }, [data, focus]);
+
+  useEffect(() => { if (hideRef.current === hideRisky) return; hideRef.current = hideRisky; redraw.current?.(); }, [hideRisky]);
 
   // Street or satellite.
   const toggleSat = () => {

@@ -1,0 +1,46 @@
+/* Noise and flood (8-nov-2026). Uses the CHECK layer tokens from check.css (--chk-green/amber/red). */
+.hunt { --risk-none: #5F646D; --risk-none-bg: #F1F2F4; }
+.hunt.is-dark { --risk-none: #A9AEB7; --risk-none-bg: #222428; }
+
+.rh-risk-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.rh-risk-row { display: grid; grid-template-columns: 36px minmax(0, 1fr); gap: 12px; padding: 12px 0; border-top: 1px solid var(--rh-hairline, #E2E3E6); }
+.rh-risk-row:first-child { border-top: 0; padding-top: 2px; }
+.rh-risk-ic { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--risk-none-bg); color: var(--risk-none); }
+.rh-risk-row.is-low .rh-risk-ic { background: var(--chk-green-bg); color: var(--chk-green); }
+.rh-risk-row.is-medium .rh-risk-ic { background: var(--chk-amber-bg); color: var(--chk-amber); }
+.rh-risk-row.is-high .rh-risk-ic { background: var(--chk-red-bg); color: var(--chk-red); }
+.rh-risk-body { min-width: 0; }
+.rh-risk-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 28px; }
+.rh-risk-top strong { font-size: 15.5px; }
+.hunt .rh-risk-lv { display: inline-flex; align-items: center; font: 700 12.5px/1 Inter, system-ui, sans-serif; padding: 6px 10px; border-radius: 999px; border: 1px solid transparent; white-space: nowrap; }
+.rh-risk-lv.is-low { background: var(--chk-green-bg); color: var(--chk-green); border-color: color-mix(in srgb, var(--chk-green) 30%, transparent); }
+.rh-risk-lv.is-medium { background: var(--chk-amber-bg); color: var(--chk-amber); border-color: var(--chk-amber-line); }
+.rh-risk-lv.is-high { background: var(--chk-red-bg); color: var(--chk-red); border-color: var(--chk-red-line); }
+.rh-risk-lv.is-none { background: var(--risk-none-bg); color: var(--risk-none); border-color: var(--rh-hairline, #E2E3E6); }
+.rh-risk-sum { margin: 4px 0 0; font-size: 14px; line-height: 1.45; font-weight: 600; }
+.hunt .rh-risk-facts { margin: 8px 0 0; display: grid; gap: 4px; }
+.rh-risk-facts > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 14px; }
+.rh-risk-facts dt { color: var(--rh-ink-muted, #4A4D55); }
+.rh-risk-facts dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; }
+.rh-risk-facts .is-far dd { font-weight: 500; color: var(--rh-ink-soft, #6B7079); }
+.rh-risk-note { margin: 6px 0 0; font-size: 13px; line-height: 1.45; color: var(--rh-ink-muted, #4A4D55); overflow-wrap: anywhere; }
+.rh-risk-src { margin: 6px 0 0; font-size: 12px; line-height: 1.45; color: var(--rh-ink-soft, #6B7079); }
+.hunt .rh-risk-src a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.hunt .rh-risk-map { margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 44px; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--rh-hairline, #E2E3E6); color: inherit; text-decoration: none; font-weight: 650; font-size: 14px; }
+.rh-risk-map span { display: grid; gap: 1px; min-width: 0; }
+.rh-risk-map small { font-weight: 500; font-size: 12px; color: var(--rh-ink-soft, #6B7079); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rh-risk-map svg { flex: none; color: var(--hv-accent, #D4420C); }
+.hunt .rh-risk-map:hover { border-color: var(--hv-accent, #D4420C); }
+.hunt .rh-risk-map:focus-visible { outline: 2px solid var(--hv-accent, #D4420C); outline-offset: 2px; }
+
+/* Map page toggle: "Hide noisy or flood-risk homes" */
+.hunt .hm-risk-toggle { position: relative; display: inline-flex; flex-direction: row; align-items: center; gap: 10px; min-height: 44px; margin: 2px 0; cursor: pointer; font: 600 14px/1.3 Inter, system-ui, sans-serif; text-align: left; user-select: none; -webkit-tap-highlight-color: transparent; }
+.hunt .hm-risk-toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; min-height: 0; padding: 0; margin: 0; border: 0; pointer-events: none; }
+.hm-risk-sw { position: relative; flex: none; width: 40px; height: 24px; border-radius: 999px; background: #C9CCD1; transition: background .15s ease; }
+.hm-risk-sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .15s ease; }
+.hm-risk-toggle input:checked + .hm-risk-sw { background: var(--hv-accent, #D4420C); }
+.hm-risk-toggle input:checked + .hm-risk-sw::after { transform: translateX(16px); }
+.hm-risk-toggle input:focus-visible + .hm-risk-sw { outline: 2px solid var(--hv-accent, #D4420C); outline-offset: 2px; }
+.hunt.is-dark .hm-risk-sw { background: #474A50; }
+.hm-risk-toggle small { font-weight: 500; color: var(--rh-ink-soft, #6B7079); font-size: 12.5px; }
+@media (prefers-reduced-motion: reduce) { .hm-risk-sw, .hm-risk-sw::after { transition: none; } }
