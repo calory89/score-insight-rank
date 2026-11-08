@@ -205,7 +205,10 @@ const SKIP = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "CODE", "PRE", 
 const ATTRS = ["placeholder", "title", "aria-label", "alt"];
 // What each node was last translated to, and with which dictionary generation: a node seen before the home
 // titles (or a home's own Spanish) arrived is translated again when the dictionary grows.
-const mine = new WeakMap<Node, [string, number]>();
+// The third item is the original text: when the dictionary grows (es-extra.json arrives after the first paint), a node
+// is translated again from its English original, not from its first pass (which may only have had its € amounts
+// reformatted, "under €150k" -> "under 150.000 €", and would then match no entry).
+const mine = new WeakMap<Node, [string, number, string]>();
 let gen = 0;
 
 function skipEl(el: Element | null): boolean {
@@ -220,8 +223,9 @@ function doText(n: Text) {
   const seen = mine.get(n);
   if (seen && seen[0] === v && seen[1] === gen) return;
   if (!/[A-Za-z€\d]/.test(v) || skipEl(n.parentElement)) return;
-  const t = tr(v);
-  mine.set(n, [t, gen]);
+  const src = seen && seen[0] === v ? seen[2] : v; // our own output: start again from the original
+  const t = tr(src);
+  mine.set(n, [t, gen, src]);
   if (t !== v) n.nodeValue = t;
 }
 function doAttrs(el: Element) {
@@ -230,8 +234,9 @@ function doAttrs(el: Element) {
     if (!v || !/[A-Za-z]/.test(v)) continue;
     const key = "a:" + a;
     if ((el as any)[key] === v && (el as any)[key + "g"] === gen) continue;
-    const t = tr(v);
-    (el as any)[key] = t; (el as any)[key + "g"] = gen;
+    const src: string = (el as any)[key] === v ? (el as any)[key + "o"] ?? v : v; // our own output: from the original
+    const t = tr(src);
+    (el as any)[key] = t; (el as any)[key + "g"] = gen; (el as any)[key + "o"] = src;
     if (t !== v) el.setAttribute(a, t);
   }
   if (el.tagName === "INPUT" && /^(button|submit)$/i.test((el as HTMLInputElement).type)) {
@@ -248,6 +253,7 @@ function walk(root: Node) {
 }
 let titleLast = "";
 function doTitle() {
+  if (typeof document === "undefined") return; // a test environment torn down under a pending observer
   const v = document.title;
   if (v && v !== titleLast) { const t = tr(v); titleLast = t; if (t !== v) document.title = t; }
   const md = document.querySelector('meta[name="description"]');

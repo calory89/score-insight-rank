@@ -504,3 +504,10 @@ html.rh-dark .rh-auth .hover\:bg-paper:hover { background: #26282B !important; }
   .hunt .rh-jb-strip-cta { min-height: 44px; display: inline-flex; align-items: center; }
 }
 .hunt.is-dark .hv-search button { background-color: var(--c-surface-3) !important; }
+@media (pointer: coarse) {
+  .hunt details > summary { min-height: 44px; display: flex; align-items: center; gap: 8px; }
+  .hunt details > summary::-webkit-details-marker { display: none; }
+  .hunt details:not(.rh2-faq details):not(.rh-chk-q) > summary:not(:has(svg))::before { content: ""; flex: none; width: 0; height: 0; border-left: 6px solid currentColor; border-top: 5px solid transparent; border-bottom: 5px solid transparent; transition: transform .15s ease; }
+  .hunt details[open]:not(.rh2-faq details):not(.rh-chk-q) > summary:not(:has(svg))::before { transform: rotate(90deg); }
+  .hunt select { min-height: 44px !important; }
+}
