@@ -16,14 +16,14 @@ const NotFound = () => {
         <p className="mt-3 text-muted-foreground">The link may be old or mistyped. Search for a place, or start from one of these.</p>
         <form className="mt-6 flex gap-2" onSubmit={(e) => { e.preventDefault(); window.location.href = "/?q=" + encodeURIComponent(q.trim()); }}>
           <label htmlFor="nf-q" className="sr-only">Search a country, town or region</label>
-          <input id="nf-q" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search a country, town or region" className="flex-1 min-w-0 rounded-xl border border-input bg-background px-4 py-3 text-base" />
-          <button className="rounded-xl bg-primary px-5 py-3 font-semibold text-primary-foreground">Search</button>
+          <input id="nf-q" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search a country, town or region" className="min-h-11 flex-1 min-w-0 rounded-xl border border-input bg-background px-4 text-base" />
+          <button className="min-h-11 rounded-xl bg-primary px-5 font-semibold text-primary-foreground">Search</button>
         </form>
         <div className="mt-6 flex flex-wrap gap-2">
-          <Link to="/" className="rounded-full border border-input px-4 py-2 text-sm font-medium">Best homes</Link>
-          <Link to="/new" className="rounded-full border border-input px-4 py-2 text-sm font-medium">New homes</Link>
-          {COUNTRIES.map(([k, l]) => <Link key={k} to={`/homes/${k}`} className="rounded-full border border-input px-4 py-2 text-sm font-medium">{l}</Link>)}
-          <Link to="/sitemap" className="rounded-full border border-input px-4 py-2 text-sm font-medium">Site map</Link>
+          <Link to="/" className="inline-flex min-h-11 items-center rounded-full border border-input px-4 text-sm font-medium">Best homes</Link>
+          <Link to="/new" className="inline-flex min-h-11 items-center rounded-full border border-input px-4 text-sm font-medium">New homes</Link>
+          {COUNTRIES.map(([k, l]) => <Link key={k} to={`/homes/${k}`} className="inline-flex min-h-11 items-center rounded-full border border-input px-4 text-sm font-medium">{l}</Link>)}
+          <Link to="/sitemap" className="inline-flex min-h-11 items-center rounded-full border border-input px-4 text-sm font-medium">Site map</Link>
         </div>
       </div>
     </main>

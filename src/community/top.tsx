@@ -10,6 +10,7 @@ import { useCommunity } from "./ctx";
 import { Lightbox } from "./extras";
 import { LegalBox, MoneyNote, PriceVsArea, QaList, ReviewAndReport, ReviewReply, ReviewsBox, VerifiedBox, VisitBadge, VisitBox } from "./topTrustUI";
 import { ArrowDown, ArrowUp, BadgeCheck, Camera, Bookmark, Building2, Check, ChevronLeft, ExternalLink, FileUp, Heart, Loader2, MapPin, MessageCircle, Share2, ShieldCheck, Trophy, X } from "lucide-react";
+import { t } from "./i18n";
 
 const rpc = async (fn: string, args: Record<string, unknown> = {}) => { const { data, error } = await (supabase as any).rpc(fn, args); if (error) throw error; return data; };
 const ev = (n: string) => { try { (window as any).clarity?.("event", n); } catch { /* ignore */ } };
@@ -493,9 +494,9 @@ export function TopIndexPage() {
   useEffect(() => { document.title = "Top 100 new builds by destination: Bali, Phuket, Tulum, Batumi, Koh Samui · RealHunt"; }, [tops]);
   return (
     <div className="hunt-wrap hunt-page tp">
-      <span className="hunt-eyebrow"><Trophy size={13} /> REALHUNT RANKINGS</span>
-      <h1>Top 100 new builds, by destination</h1>
-      <p>In each destination we checked every new-build project listed for sale and kept up to 100 of the best on price, photos and a reachable developer. Each gets 10 scores from 0 to 100 and the grade is their average. Then buyers decide: every vote, save and question moves a project up. Nobody can pay to be listed or to rank higher: <Link className="hunt-link" to="/top/how-we-rank">see how we rank</Link>.</p>
+      <span className="hunt-eyebrow"><Trophy size={14} /> {t("RealHunt rankings")}</span>
+      <h1>{t("Top 100 new builds, by destination")}</h1>
+      <p>{t("In each destination we checked every new-build project for sale and kept up to 100 of the best. Each one gets 10 scores from 0 to 100, and buyers' votes, saves and questions move it up. Nobody can pay to be listed or to rank higher.")} <Link className="hunt-link" to="/top/how-we-rank">{t("How we rank")}</Link></p>
       <div className="tp-index">{TOP_ORDER.map((k) => (
         <Link key={k} to={`/top/${k}`} className="tp-index-card">
           <img src={`/top/${k}/og.jpg`} alt={`${TL(k)} new builds in ${TOP_DESTS[k].name}`} loading="lazy" />

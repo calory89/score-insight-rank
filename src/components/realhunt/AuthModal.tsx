@@ -57,8 +57,8 @@ export default function AuthModal({ open, onClose, title = "Sign in to see the o
   };
   const field = "w-full h-12 border border-hairline rounded-xl pl-11 pr-4 text-[16px] bg-paper outline-none focus:border-ink";
   return <Dialog.Root open={open} onOpenChange={value => { if (!value) onClose(); }}><Dialog.Portal>
-    <Dialog.Overlay className="fixed inset-0 z-[75] bg-black/50 backdrop-blur-[2px]" />
-    <Dialog.Content className="fixed z-[80] bottom-0 md:bottom-auto md:top-1/2 left-1/2 -translate-x-1/2 md:-translate-y-1/2 w-full md:max-w-[460px] bg-white rounded-t-3xl md:rounded-3xl p-6 md:p-8 shadow-2xl max-h-[92dvh] overflow-y-auto">
+    <Dialog.Overlay className="fixed inset-0 z-[95] bg-black/50 backdrop-blur-[2px]" />
+    <Dialog.Content className="rh-auth fixed z-[96] bottom-0 md:bottom-auto md:top-1/2 left-1/2 -translate-x-1/2 md:-translate-y-1/2 w-full md:max-w-[460px] bg-white rounded-t-3xl md:rounded-3xl p-6 md:p-8 shadow-2xl max-h-[92dvh] overflow-y-auto">
       <div className="flex items-start justify-between gap-3"><Dialog.Title className="font-display text-[24px] leading-tight tracking-tight">{title}</Dialog.Title><Dialog.Close aria-label="Close sign in" className="h-11 w-11 shrink-0 grid place-items-center -mr-2 -mt-2 rounded-full hover:bg-paper"><X size={20} /></Dialog.Close></div>
       <Dialog.Description className="text-[14px] text-ink-muted mt-2">{subtitle}</Dialog.Description>
       {sentTo ? <div className="mt-6 space-y-3">
@@ -80,7 +80,7 @@ export default function AuthModal({ open, onClose, title = "Sign in to see the o
         <div className="mt-5 pt-4 border-t border-hairline"><button onClick={() => { setMode(mode === "in" ? "up" : "in"); setErr(""); }} className="w-full text-left flex items-center justify-between gap-3 min-h-11 text-sm"><span>{mode === "in" ? "New here or forgot your password?" : "Already have a password?"}<span className="block text-ink-muted mt-1">{mode === "in" ? "Email me a sign-in link" : "Sign in with email and password"}</span></span><ArrowRight size={17} /></button></div>
       </>}
       {err && <p role="alert" className="text-sm text-red-700 mt-3">{err}</p>}
-      <p className="text-xs text-ink-muted mt-5">Your place in the catalogue is saved.</p>
+      <p className="text-xs text-ink-muted mt-5">We will bring you back to this page.</p>
     </Dialog.Content>
   </Dialog.Portal></Dialog.Root>;
 }

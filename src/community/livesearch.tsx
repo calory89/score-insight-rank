@@ -131,8 +131,8 @@ export default function LiveSearchPage() {
     <div className="hunt-wrap lv-page">
       <header className="lv-head">
         <span className="lv-eyebrow"><Globe size={14} aria-hidden="true" /> {t("Live search")}</span>
-        <h1>{t("Search the whole web for homes")}</h1>
-        <p className="lv-sub">{t("Homes to buy or rent from estate agents and portals. Our AI checks every photo and detail and shows only the best ones, each with a full RealHunt page.")}</p>
+        <h1>{t("Search estate agents and portals, live")}</h1>
+        <p className="lv-sub">{t("Homes to buy or rent. We search agents and portals now, check every photo and detail with AI, and show only homes that score 80 or more.")}</p>
         <form className="lv-form" role="search" onSubmit={submit}>
           <Search size={18} aria-hidden="true" />
           <input type="search" value={text} onChange={(e) => setText(e.target.value)} aria-label={t("Search homes")} placeholder={t("Try: 3 bedroom house in Miami under $300k")} enterKeyHint="search" maxLength={200} />

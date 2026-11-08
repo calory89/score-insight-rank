@@ -45,7 +45,7 @@ export function FindHomeCTA({ place, compact }: { place?: string; compact?: bool
       <span className="fh-cta-badge">{t("Free")}</span>
       <span className="fh-cta-text"><b>{place ? `${t("We'll find you a home in")} ${place}` : t("We'll find your home. Where you want, at your price.")}</b>
         <small>{t("Tell us where and how much. We send you the best real homes, checked by a person.")}</small></span>
-      <span className="fh-cta-go">{t("Start")} →</span>
+      <span className="fh-cta-go">{t("Start")}</span>
     </Link>
   );
 }

@@ -14,10 +14,10 @@ const CookieBanner = () => {
   return createPortal(
     <div className="rh-cookie-banner fixed bottom-0 inset-x-0 z-[70] p-3 md:p-4">
       <div className="max-w-[720px] mx-auto bg-white border border-hairline rounded-2xl shadow-2xl p-3.5 md:p-5 flex flex-col md:flex-row md:items-center gap-2.5 md:gap-3">
-        <p className="text-[12.5px] md:text-[13px] leading-snug md:leading-relaxed text-ink-muted flex-1">Essential cookies keep you signed in. With your OK we also use analytics and ad cookies (Meta Pixel). <Link to="/legal/cookies" className="underline text-ink">Cookie policy</Link> · <Link to="/legal/privacy" className="underline text-ink">Privacy</Link></p>
+        <p className="text-[12.5px] md:text-[13px] leading-snug md:leading-relaxed text-ink-muted flex-1">Essential cookies keep you signed in. With your OK we also use analytics and ad cookies (Meta Pixel). <Link to="/legal/cookies" className="underline text-ink whitespace-nowrap">Cookie policy</Link>{" "}<Link to="/legal/privacy" className="underline text-ink">Privacy</Link></p>
         <div className="flex gap-2 shrink-0">
-          <button onClick={() => set("essential")} className="flex-1 md:flex-none px-4 py-2.5 rounded-full border border-hairline text-[13px] hover:border-ink">Essential only</button>
-          <button onClick={() => set("all")} className="flex-1 md:flex-none px-4 py-2.5 rounded-full bg-ink text-paper text-[13px]">Accept all</button>
+          <button onClick={() => set("essential")} className="rh-cb-essential flex-1 md:flex-none px-4 rounded-xl border border-hairline text-[14px] font-semibold hover:border-ink">Essential only</button>
+          <button onClick={() => set("all")} className="rh-cb-accept flex-1 md:flex-none px-4 rounded-xl bg-ink text-paper text-[14px] font-semibold">Accept all</button>
         </div>
       </div>
     </div>,

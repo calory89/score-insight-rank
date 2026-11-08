@@ -26,3 +26,18 @@ describe("Spanish texts of homes (no English card on the Spanish site)", () => {
     expect(L.tr("Only English")).toBe("Only English");
   });
 });
+
+describe("text translated before the whole dictionary arrives", () => {
+  it("is translated again from the English original when the dictionary grows", async () => {
+    document.body.innerHTML = '<div><input placeholder="Try a cabin under €150k"><p>Sauna cabin under €90k</p></div>';
+    L.startLang(); // first pass: no entry yet, only the € amounts are reformatted
+    const input = document.querySelector("input")!;
+    const p = document.querySelector("p")!;
+    expect(input.getAttribute("placeholder")).toBe("Try a cabin under 150.000 €");
+    expect(p.textContent).toBe("Sauna cabin under 90.000 €");
+    // the entries arrive later (es-extra.json, or a home's own Spanish)
+    L.learnTexts([{ title: "Try a cabin under €150k", title_es: "Prueba una cabaña por menos de 150.000 €" }, { title: "Sauna cabin under €90k", title_es: "Cabaña con sauna por menos de 90.000 €" }]);
+    expect(input.getAttribute("placeholder")).toBe("Prueba una cabaña por menos de 150.000 €");
+    expect(p.textContent).toBe("Cabaña con sauna por menos de 90.000 €");
+  });
+});

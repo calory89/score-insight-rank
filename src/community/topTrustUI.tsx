@@ -10,6 +10,7 @@ import { Lightbox } from "./extras";
 import { TOP_TRUST } from "./topTrust";
 import { DIMS, TOP_DESTS, TOP_ORDER, areaOf } from "./top";
 import { AlertTriangle, BadgeCheck, BarChart3, Camera, CheckCircle2, CircleHelp, Coins, ExternalLink, Flag, Mail, MapPin, MessageCircle, Scale, ShieldCheck, Star, Trophy, Users, XCircle } from "lucide-react";
+import { t } from "./i18n";
 
 const rpc = async (fn: string, args: Record<string, unknown> = {}) => { const { data, error } = await (supabase as any).rpc(fn, args); if (error) throw error; return data; };
 const eur = (n?: number | null) => (n == null ? "–" : "€" + Math.round(n).toLocaleString("en-GB"));
@@ -255,7 +256,7 @@ export function AboutPage() {
   useEffect(() => { window.scrollTo(0, 0); setDoc("About RealHunt: who we are and how we work", "Who runs RealHunt, the company behind it, how we make money and what you should know about our founder before you trust us.", "https://realhunt.co/about"); }, []);
   return (
     <div className="hunt-wrap hunt-page tp tp-about">
-      <span className="hunt-eyebrow"><Users size={13} /> ABOUT REALHUNT</span>
+      <span className="hunt-eyebrow"><Users size={14} /> {t("About RealHunt")}</span>
       <h1>Who we are</h1>
       <p>RealHunt finds homes and new builds abroad that are good value, and lets buyers rank them. You should know exactly who is behind it before you trust a ranking, so here it is.</p>
       <div className="tp-team is-one">{TEAM.map((t) => (
