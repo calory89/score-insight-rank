@@ -3,7 +3,8 @@
 // gets lifestyle chips and saved searches with "N new since last visit". Logic lives in smartsearch.ts.
 import { useEffect, useId, useMemo, useRef, useState, type RefObject } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { Bell, BookmarkPlus, BookmarkCheck, Check, MapPin, Search, X, Sparkles } from "lucide-react";
+import { Bell, BookmarkPlus, BookmarkCheck, Check, Globe, MapPin, Search, X, Sparkles } from "lucide-react";
+import { liveHref } from "./livecta";
 import { feed, feedAll, type Row } from "./extras";
 import { VIBES } from "./v6";
 import { money } from "./api";
@@ -46,7 +47,8 @@ const EXAMPLES = ["3 bed near the sea under €200k", "Italy with a garden under
 type Opt =
   | { kind: "parsed"; id: string; chips: Chip[] }
   | { kind: "place"; id: string; place: Suggestion }
-  | { kind: "home"; id: string; row: Row };
+  | { kind: "home"; id: string; row: Row }
+  | { kind: "live"; id: string };
 
 // ---------------------------------------------------------------- 1 + 2: the search box
 export function FindSearch({ value, inputRef }: { value: string; inputRef?: RefObject<HTMLInputElement> }) {
@@ -81,6 +83,8 @@ export function FindSearch({ value, inputRef }: { value: string; inputRef?: RefO
       const nq = norm(q);
       data.rows.filter((r: any) => norm(`${r.title}`).includes(nq)).slice(0, 3).forEach((r: any) => out.push({ kind: "home", id: "h-" + r.id, row: r }));
     }
+    // last: search the web live for the whole sentence (livesearch.tsx)
+    if (q.length >= 3) out.push({ kind: "live", id: "live" });
     return out;
   }, [q, frag, preview, data]);
   useEffect(() => setActive(-1), [q]);
@@ -110,6 +114,7 @@ export function FindSearch({ value, inputRef }: { value: string; inputRef?: RefO
   };
   const choose = (o: Opt) => {
     if (o.kind === "home") { setOpen(false); navigate(`/deal/${encodeURIComponent(o.row.slug)}`); return; }
+    if (o.kind === "live") { setOpen(false); navigate(liveHref(text)); return; }
     if (o.kind === "parsed") { submit(text); return; }
     const name = o.place.name;
     const s = tokens.length > 2 ? [...tokens.slice(0, -1), name].join(" ") : name;
@@ -171,6 +176,9 @@ export function FindSearch({ value, inputRef }: { value: string; inputRef?: RefO
               {o.kind === "parsed" ? (<>
                 <span className="rf-opt-icon" aria-hidden="true"><Sparkles size={16} /></span>
                 <span className="rf-opt-main"><strong>{t("Search for")}</strong><small>{o.chips.map((c) => t(c.label)).join(" · ")}</small></span>
+              </>) : o.kind === "live" ? (<>
+                <span className="rf-opt-icon" aria-hidden="true"><Globe size={16} /></span>
+                <span className="rf-opt-main"><strong>{t("Search the web live for:")} {q}</strong><small>{t("Estate agents and portals, only homes scoring 80+")}</small></span>
               </>) : o.kind === "place" ? (<>
                 <span className="rf-opt-icon" aria-hidden="true"><MapPin size={16} /></span>
                 <span className="rf-opt-main"><strong>{placeLabel(o.place)}</strong><small>{o.place.n} {o.place.n === 1 ? t("home") : t("homes")}{o.place.score >= 4 ? ` · ${t("did you mean this?")}` : ""}</small></span>
