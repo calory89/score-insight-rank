@@ -1,26 +1,45 @@
-// RealHunt language layer (1-oct-2026).
-// Visitors from Spain or a Spanish-speaking country (browser language or time zone) see the site in
-// Spanish, everyone else in English. The choice can be changed with the EN/ES switch and is remembered.
+// RealHunt language layer (1-oct-2026, rule changed 8-nov-2026).
+// Owner's rule: Spanish only for people connecting from a Spanish-speaking country, English for everyone else,
+// whatever the browser language. The country comes from the time zone (instant, no request), refined by the
+// Cloudflare country of a previous visit (/cdn-cgi/trace, same origin, free; saved as rh_geo). An explicit
+// choice (?lang=, the EN/ES switch, saved rh_lang) always wins and is remembered. index.html mirrors this.
 // Components keep writing English; this module swaps the rendered text in place (text nodes and a few
 // attributes) from a dictionary built from the source code, so no page can be left half translated.
 export type Lang = "en" | "es";
 
-const ES_TZ = /^(Europe\/Madrid|Africa\/Ceuta|Atlantic\/Canary|Africa\/Malabo|America\/(Mexico_City|Cancun|Merida|Monterrey|Matamoros|Chihuahua|Ciudad_Juarez|Ojinaga|Mazatlan|Bahia_Banderas|Hermosillo|Tijuana|Bogota|Lima|Santiago|Punta_Arenas|Argentina\/.+|Buenos_Aires|Cordoba|Mendoza|Caracas|Montevideo|Asuncion|La_Paz|Guayaquil|Guatemala|El_Salvador|Tegucigalpa|Managua|Costa_Rica|Panama|Havana|Santo_Domingo|Puerto_Rico)|Pacific\/(Easter|Galapagos))$/;
+/** ISO codes of the Spanish-speaking countries (Cloudflare loc / cf-ipcountry values). */
+export const ES_COUNTRIES = new Set(["ES", "MX", "AR", "CO", "CL", "PE", "VE", "EC", "GT", "CU", "BO", "DO", "HN", "PY", "SV", "NI", "CR", "PA", "UY", "PR", "GQ"]);
+/** IANA time zones of those countries. */
+export const ES_TZ = /^(Europe\/Madrid|Africa\/Ceuta|Atlantic\/Canary|Africa\/Malabo|America\/(Mexico_City|Cancun|Merida|Monterrey|Matamoros|Chihuahua|Ciudad_Juarez|Ojinaga|Mazatlan|Bahia_Banderas|Hermosillo|Tijuana|Ensenada|Santa_Isabel|Bogota|Lima|Santiago|Punta_Arenas|Argentina\/.+|Buenos_Aires|Cordoba|Mendoza|Catamarca|Jujuy|Rosario|Caracas|Montevideo|Asuncion|La_Paz|Guayaquil|Guatemala|El_Salvador|Tegucigalpa|Managua|Costa_Rica|Panama|Havana|Santo_Domingo|Puerto_Rico)|Pacific\/(Easter|Galapagos)|Chile\/.+|Mexico\/.+|Cuba)$/;
+
+/** Pure rule, tested: explicit choice > saved choice > Cloudflare country (from an earlier visit) > time zone. */
+export function pickLang(o: { q?: string | null; saved?: string | null; geo?: string | null; tz?: string | null }): Lang {
+  if (o.q === "es" || o.q === "en") return o.q;
+  if (o.saved === "es" || o.saved === "en") return o.saved;
+  const g = (o.geo || "").toUpperCase();
+  if (/^[A-Z]{2}$/.test(g) && g !== "XX" && g !== "T1") return ES_COUNTRIES.has(g) ? "es" : "en";
+  return ES_TZ.test(o.tz || "") ? "es" : "en";
+}
 
 export function detectLang(): Lang {
+  let q: string | null = null, saved: string | null = null, geo: string | null = null, tz = "";
+  try { q = new URLSearchParams(location.search).get("lang"); } catch { /* ignore */ }
+  try { saved = localStorage.getItem("rh_lang"); geo = localStorage.getItem("rh_geo"); } catch { /* storage blocked */ }
+  try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch { /* ignore */ }
+  return pickLang({ q, saved, geo, tz });
+}
+
+/** After the first paint: remember the visitor's Cloudflare country for the next visit (no extra service, no cost). */
+export function refineGeo() {
   try {
-    const q = new URLSearchParams(location.search).get("lang");
-    if (q === "es" || q === "en") return q;
-    const saved = localStorage.getItem("rh_lang");
-    if (saved === "es" || saved === "en") return saved;
-  } catch { /* storage blocked */ }
-  try {
-    const langs = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "en"]).map((l) => String(l).toLowerCase());
-    if (langs[0]?.startsWith("es")) return "es";
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-    if (ES_TZ.test(tz)) return "es";
+    if (localStorage.getItem("rh_geo")) return;
+    const go = () => fetch("/cdn-cgi/trace", { cache: "no-store" }).then((r) => (r.ok ? r.text() : "")).then((t) => {
+      const m = /(?:^|\n)loc=([A-Z]{2})/.exec(t);
+      if (m) localStorage.setItem("rh_geo", m[1]);
+    }).catch(() => {});
+    const w = window as any;
+    if (w.requestIdleCallback) w.requestIdleCallback(go, { timeout: 5000 }); else setTimeout(go, 3000);
   } catch { /* ignore */ }
-  return "en";
 }
 
 const fromHtml = typeof document !== "undefined" ? document.documentElement.getAttribute("data-lang") : null;
@@ -59,7 +78,7 @@ function addDict(d: Record<string, string>) {
   }
   // longest literal first so specific templates win
   pats.sort((a, b) => b.re.source.length - a.re.source.length);
-  cache.clear();
+  cache.clear(); gen++;
 }
 
 // € amounts and thousands in Spanish format: €100,000 -> 100.000 €, €30k -> 30.000 €
@@ -82,7 +101,13 @@ function money(s: string): string {
 
 const COUNTRIES: Record<string, string> = { Spain: "España", Italy: "Italia", "St. Gallen": "San Galo", Bern: "Berna", Geneva: "Ginebra", Lucerne: "Lucerna", Grisons: "Grisones", Ticino: "Tesino", "North Jutland": "Jutlandia Septentrional", "West Jutland": "Jutlandia Occidental", "East Jutland": "Jutlandia Oriental", "Central Jutland": "Jutlandia Central", Funen: "Fionia", "Nova Scotia": "Nueva Escocia", "New Brunswick": "Nuevo Brunswick", Pennsylvania: "Pensilvania", Sweden: "Suecia", Japan: "Japón", "United States": "Estados Unidos", USA: "EE. UU.", Mexico: "México", Canada: "Canadá", France: "Francia", Portugal: "Portugal", Germany: "Alemania", Greece: "Grecia", Croatia: "Croacia", Bulgaria: "Bulgaria", Romania: "Rumanía", Hungary: "Hungría", Finland: "Finlandia", Norway: "Noruega", Denmark: "Dinamarca", Scandinavia: "Escandinavia", Ireland: "Irlanda", "United Kingdom": "Reino Unido", Thailand: "Tailandia", Indonesia: "Indonesia", Georgia: "Georgia", Turkey: "Turquía", Morocco: "Marruecos", Brazil: "Brasil", Argentina: "Argentina", Panama: "Panamá", "Costa Rica": "Costa Rica", Philippines: "Filipinas", Vietnam: "Vietnam", Malaysia: "Malasia", Albania: "Albania", Montenegro: "Montenegro", Serbia: "Serbia", Slovakia: "Eslovaquia", Slovenia: "Eslovenia", Poland: "Polonia", Czechia: "Chequia", "Czech Republic": "República Checa", Austria: "Austria", Switzerland: "Suiza", Belgium: "Bélgica", Netherlands: "Países Bajos", Latvia: "Letonia", Lithuania: "Lituania", Estonia: "Estonia", Cyprus: "Chipre", Malta: "Malta", Tuscany: "Toscana", Lazio: "Lacio", Sicily: "Sicilia", Sardinia: "Cerdeña", Piedmont: "Piamonte", Lombardy: "Lombardía", Apulia: "Apulia", Puglia: "Apulia", Calabria: "Calabria", Abruzzo: "Abruzos", Liguria: "Liguria", Umbria: "Umbría", "Lake Como": "Lago de Como", Brittany: "Bretaña", Normandy: "Normandía", Andalusia: "Andalucía", Catalonia: "Cataluña" };
 const PLACE_RE = new RegExp(`(^|, |· |\\()(${Object.keys(COUNTRIES).sort((a, b) => b.length - a.length).map(esc).join("|")})(?=$|,|\\s·|\\)|\\s\\d)`, "g");
-function places(s: string): string { return /[A-Z]/.test(s) ? s.replace(PLACE_RE, (_m, pre, c) => pre + (COUNTRIES[c] || c)) : s; }
+/** Spanish name of a country or region the site knows ("Spain" -> "España"), else the name itself. */
+export const esPlace = (n: string) => COUNTRIES[n] || n;
+function places(s: string): string {
+  if (!/[A-Z]/.test(s)) return s;
+  // location notes in the data: "Skåne (about 60 min from Copenhagen)"
+  return s.replace(PLACE_RE, (_m, pre, c) => pre + (COUNTRIES[c] || c)).replace(/\(about (\d+) min from ([^)]+)\)/g, "(a unos $1 min de $2)");
+}
 
 // counts built in code ("242 homes", "1 home in Spain") that the source templates can't express safely
 const COUNTS: [RegExp, (m: RegExpExecArray) => string][] = [
@@ -109,9 +134,25 @@ function lookup(core: string, depth = 0): string | null {
       break;
     }
   }
+  if (out == null && depth < 3 && core.length < 600) out = composite(core, depth);
   if (cache.size > 5000) cache.clear();
   cache.set(core, out);
   return out;
+}
+
+// 8-nov-2026: labels built around a home title ("3. <title>, €79,800, RealHunt score 98", "<title>, Ranum, Denmark",
+// "<title>, 4" for photo 4) are translated from the title's own entry plus each remaining comma-separated piece.
+function composite(core: string, depth: number): string | null {
+  const num = /^(\d+\. )([\s\S]+)$/.exec(core);
+  if (num) { const r = lookup(num[2], depth + 1); return r == null ? null : num[1] + r; }
+  if (!core.includes(", ")) return null;
+  const segs = core.split(", ");
+  for (let i = segs.length - 1; i >= 1; i--) {
+    const hit = dict[segs.slice(0, i).join(", ")];
+    if (hit == null) continue;
+    return [hit, ...segs.slice(i).map((x) => lookup(x, depth + 1) ?? places(x))].join(", ");
+  }
+  return null;
 }
 
 // Long generated texts ("Villas in Ubud, Bali, by X. From €95,000. Ready to move in.") and titles
@@ -129,6 +170,25 @@ function pieces(core: string): string | null {
   return out.some((x, i) => x !== sents[i]) ? out.join(" ") : null;
 }
 
+/** 8-nov-2026: homes carry their own Spanish (title_es, why_great_es, why_cheap_es; the live search writes them for
+ * every home it publishes). Registered as dictionary entries, so every card, page and list that shows the English text
+ * shows the Spanish one instead, with no change to the components. */
+export function learnTexts(rows: unknown): void {
+  if (current !== "es" || !Array.isArray(rows)) return;
+  const d: Record<string, string> = {};
+  for (const r of rows as Record<string, unknown>[]) {
+    if (!r || typeof r !== "object") continue;
+    for (const k of ["title", "why_great", "why_cheap"]) {
+      const en = typeof r[k] === "string" ? (r[k] as string).trim() : "";
+      const es = typeof r[k + "_es"] === "string" ? (r[k + "_es"] as string).trim() : "";
+      if (en && es && en !== es && dict[en] !== es) d[en] = es;
+    }
+  }
+  if (!Object.keys(d).length) return;
+  Object.assign(dict, d); cache.clear(); gen++;
+  if (started) { walk(document.body); titleLast = ""; doTitle(); }
+}
+
 /** Translate one visible string. Returns the input when no translation exists. */
 export function tr(s: string): string {
   if (current !== "es" || !s) return s;
@@ -143,7 +203,10 @@ export function tr(s: string): string {
 // ---------------------------------------------------------------- DOM pass
 const SKIP = new Set(["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "CODE", "PRE", "svg", "SVG"]);
 const ATTRS = ["placeholder", "title", "aria-label", "alt"];
-const mine = new WeakMap<Node, string>();
+// What each node was last translated to, and with which dictionary generation: a node seen before the home
+// titles (or a home's own Spanish) arrived is translated again when the dictionary grows.
+const mine = new WeakMap<Node, [string, number]>();
+let gen = 0;
 
 function skipEl(el: Element | null): boolean {
   for (let e = el, i = 0; e && i < 40; e = e.parentElement, i++) {
@@ -154,10 +217,11 @@ function skipEl(el: Element | null): boolean {
 }
 function doText(n: Text) {
   const v = n.nodeValue || "";
-  if (mine.get(n) === v) return;
+  const seen = mine.get(n);
+  if (seen && seen[0] === v && seen[1] === gen) return;
   if (!/[A-Za-z€\d]/.test(v) || skipEl(n.parentElement)) return;
   const t = tr(v);
-  mine.set(n, t);
+  mine.set(n, [t, gen]);
   if (t !== v) n.nodeValue = t;
 }
 function doAttrs(el: Element) {
@@ -165,9 +229,9 @@ function doAttrs(el: Element) {
     const v = el.getAttribute(a);
     if (!v || !/[A-Za-z]/.test(v)) continue;
     const key = "a:" + a;
-    if ((el as any)[key] === v) continue;
+    if ((el as any)[key] === v && (el as any)[key + "g"] === gen) continue;
     const t = tr(v);
-    (el as any)[key] = t;
+    (el as any)[key] = t; (el as any)[key + "g"] = gen;
     if (t !== v) el.setAttribute(a, t);
   }
   if (el.tagName === "INPUT" && /^(button|submit)$/i.test((el as HTMLInputElement).type)) {
@@ -217,6 +281,7 @@ async function load(file: string) {
 
 /** Called once from main.tsx before React renders. Never blocks for long. */
 export async function initLang(): Promise<void> {
+  try { const q = new URLSearchParams(location.search).get("lang"); if (q === "es" || q === "en") localStorage.setItem("rh_lang", q); } catch { /* ignore */ }
   try { document.documentElement.lang = current; document.documentElement.setAttribute("data-lang", current); } catch { /* ignore */ }
   if (current !== "es") { reveal(); return; }
   const safety = setTimeout(reveal, 1500);
@@ -225,17 +290,19 @@ export async function initLang(): Promise<void> {
     const core = load("/i18n/es-core.json?v=3");
     const homes = load("/i18n/es-listings.json?v=3").catch(() => ({}));
     const extra = load("/i18n/es-extra.json?v=13");
+    const data = load("/i18n/es-data.json?v=1").catch(() => ({})); // buying rules, guides... (scripts/build-es-data.mjs)
     // 7-nov-2026 (Carlos: "que cargue todo mucho más rápido"): the page used to stay hidden until the core AND the
     // listings dictionaries (~250 KB compressed) had loaded. Now only the core one holds the first paint; home titles
     // and the extra strings are applied as soon as they arrive.
     addDict(await core);
     const later = (p: Promise<Record<string, string>>) => p.then((d) => { addDict(d); if (started) { walk(document.body); titleLast = ""; doTitle(); } }).catch(() => {});
-    if (legal) { addDict(await homes); addDict(await extra.catch(() => ({}))); }
-    else { later(homes); later(extra); }
+    if (legal) { addDict(await homes); addDict(await extra.catch(() => ({}))); addDict(await data); }
+    else { later(homes); later(extra); later(data); }
   } catch { /* stay in English if the dictionary cannot load */ }
   clearTimeout(safety);
 }
 export function startLang() {
+  if (typeof window !== "undefined" && !/^(localhost|127\.)/.test(location.hostname)) refineGeo();
   if (current !== "es") return;
   const go = () => { start(); requestAnimationFrame(reveal); };
   if (document.body) go(); else addEventListener("DOMContentLoaded", go);

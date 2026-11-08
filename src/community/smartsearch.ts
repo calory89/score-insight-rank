@@ -137,6 +137,8 @@ export type Parsed = {
   /** free words no listing contains (only when parseQuery gets a `known` check); left out of the search */
   ignored: string[];
   sort: string | null;
+  /** style / condition words ("moderna", "renovated", "luxury"): understood as wishes, never a place and never a text filter */
+  style?: string[];
   /** true when anything beyond free words was understood */
   structured: boolean;
 };
@@ -197,6 +199,20 @@ const WORDS: Record<string, Act> = {
   stone: { word: "stone" }, piedra: { word: "stone" }, castle: { word: "castle" }, castillo: { word: "castle" }, island: { word: "island" }, isla: { word: "island" },
   cheap: { sort: "price_asc" }, cheapest: { sort: "price_asc" }, affordable: { sort: "price_asc" }, budget: { sort: "price_asc" }, barata: { sort: "price_asc" }, barato: { sort: "price_asc" }, baratas: { sort: "price_asc" }, baratos: { sort: "price_asc" }, economica: { sort: "price_asc" }, economico: { sort: "price_asc" },
 };
+// Style and condition words (8-nov-2026, owner: "casas en madrid moderna" must find Madrid, not "Madrid Moderna" or Modena).
+// They are kept as wishes (Parsed.style) and never become a place, a typo-tolerant place or a must-contain word.
+const STYLE_GROUPS: Record<string, string[]> = {
+  modern: ["modern", "moderna", "moderno", "modernas", "modernos", "contemporary", "contemporanea", "contemporaneo"],
+  new: ["new", "nueva", "nuevo", "nuevas", "nuevos", "brand", "estrenar"],
+  renovated: ["renovated", "reformada", "reformado", "reformadas", "reformados", "renovada", "renovado", "refurbished", "remodeled", "remodelled", "updated"],
+  luxury: ["luxury", "luxurious", "lujo", "lujosa", "lujoso"],
+  central: ["central", "centrally", "centrica", "centrico", "centricas", "centricos"],
+  beautiful: ["beautiful", "pretty", "lovely", "bonita", "bonito", "bonitas", "bonitos", "preciosa", "precioso"],
+  cozy: ["cozy", "cosy", "acogedora", "acogedor"], spacious: ["spacious", "amplia", "amplio"], bright: ["bright", "luminosa", "luminoso"],
+  sunny: ["sunny", "soleada", "soleado"], furnished: ["furnished", "amueblada", "amueblado"], detached: ["detached", "independiente"],
+};
+/** typed word -> the English word listings use */
+export const STYLE_WORDS = new Map<string, string>(Object.entries(STYLE_GROUPS).flatMap(([en, l]) => l.map((w) => [w, en] as const)));
 import { SYNONYMS, wordMatches } from "@/lib/synonyms";
 export { SYNONYMS, wordMatches };
 
@@ -255,7 +271,7 @@ export function parseQuery(input: string, places: Place[] = [], known?: (word: s
     let used = 0;
     for (let n = Math.min(3, toks.length - i); n >= 1 && !used; n--) {
       const g = toks.slice(i, i + n).join(" ");
-      if (n === 1 && (STOP.has(g) || WORDS[g])) break;
+      if (n === 1 && (STOP.has(g) || WORDS[g] || STYLE_WORDS.has(g))) break;
       const c = COUNTRY_ALIAS.get(g);
       if (c) { if (!out.country.includes(c)) out.country.push(c); used = n; break; }
       const p = placeByKey.get(g);
@@ -264,6 +280,13 @@ export function parseQuery(input: string, places: Place[] = [], known?: (word: s
     if (used) { i += used; continue; }
     const w = toks[i];
     if (WORDS[w]) { apply(WORDS[w]); i++; continue; }
+    if (STYLE_WORDS.has(w)) {
+      const en = STYLE_WORDS.get(w)!;
+      if (!(out.style ||= []).includes(w)) out.style.push(w);
+      // a wish, never a place: kept as an English search word only when some listing says it
+      if (known && !known(en)) { if (!out.ignored.includes(w)) out.ignored.push(w); } else if (known && !out.words.includes(en)) out.words.push(en);
+      i++; continue;
+    }
     if (STOP.has(w) || /^\d+$/.test(w) || w.length < 2) { i++; continue; }
     const c = countryOf(w);
     if (c) { if (!out.country.includes(c)) out.country.push(c); i++; continue; }

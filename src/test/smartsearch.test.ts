@@ -117,6 +117,18 @@ describe("parseQuery (Spanish)", () => {
     const p = P("casa en el campo lista para entrar a vivir");
     expect(p.category).toBe("village"); expect(p.dmin).toEqual({ condition: 88 });
   });
+  it("style words are wishes, not part of the place (owner's screenshot, 8-nov)", () => {
+    const places = buildPlaces([...ROWS, ...Array.from({ length: 4 }, () => ({ country: "Spain", location_name: "Madrid, Comunidad de Madrid" })), ...Array.from({ length: 4 }, () => ({ country: "Italy", location_name: "Modena, Emilia-Romagna" }))]);
+    const p = parseQuery("Casas en madrid moderna 3 habitaciones por menos de 200.000", places);
+    expect(p.place).toBe("Madrid"); expect(p.min_beds).toBe(3); expect(p.max_price).toBe(200000);
+    expect(p.style).toEqual(["moderna"]); expect(p.words).toEqual([]);
+    const q = parseQuery("modern renovated flat in Madrid", places);
+    expect(q.place).toBe("Madrid"); expect(q.style).toEqual(["modern", "renovated"]); expect(q.words).toEqual(["apartment"]);
+    // with the feed's "does any listing say it" check, a Spanish style word becomes the English word listings use
+    const k = parseQuery("casa moderna y luminosa en Madrid", places, (w) => "a modern villa".includes(w));
+    expect(k.place).toBe("Madrid"); expect(k.words).toEqual(["modern"]); expect(k.ignored).toEqual(["luminosa"]);
+    expect(parseQuery("piso de lujo centrico bonita", places).place).toBe(null);
+  });
 });
 
 describe("URL params and chips", () => {

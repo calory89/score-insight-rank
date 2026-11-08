@@ -14,6 +14,7 @@ import { useCommunity } from "./ctx";
 import { feedAll, type Row } from "./extras";
 import { HomeCard, HomeCardSkeleton } from "./homecards";
 import { getLang, t } from "./i18n";
+import { learnTexts } from "@/lib/lang";
 import {
   parseLiveQuery, similarHomes, liveChips, stageParts, isFinal, mergeResults, fmtMoney, SHOW_MIN, LIVE_FREE_KEY, passes, resultToDeal,
   LIVE_JOBS_KEY, rememberJob, recallJob, queryKey, type LiveQuery, type LiveResult, type LiveStatus,
@@ -100,6 +101,7 @@ export default function LiveSearchPage() {
           fails = 0;
           setSt(s);
           if (s.parsed) setParsed(s.parsed);
+          learnTexts(s.results); // each found home's own Spanish title and texts (8-nov-2026)
           setResults((prev) => mergeResults(prev, (s.results || []).filter(passes)));
           if (isFinal(s.status)) { setPhase(s.status === "done" ? "done" : "error"); return; }
         } catch { if (++fails > 5) { if (alive()) setPhase("error"); return; } }

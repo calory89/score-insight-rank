@@ -7,6 +7,10 @@ import { money } from "./api";
 import { AlertForm } from "./extras";
 import { t } from "./i18n";
 import { homeArticle } from "./homeArticle";
+import { homeArticleEs } from "./homeArticleEs";
+import { localizeRows } from "./seo2data";
+import DESTS_ES from "@/data/destinations-es.json";
+import { isEs } from "@/lib/lang";
 import { regionOf, slugify } from "./regions";
 import DESTS from "@/data/destinations.json";
 
@@ -124,7 +128,9 @@ export function HomeArticle({ d }: { d: any }) {
     const countryHomes = rows.filter((r) => key(r.country) === cc);
     const rg = regionOf(d);
     const regionHomes = rg ? countryHomes.filter((r) => slugify(regionOf(r)) === slugify(rg)) : [];
-    return homeArticle({ ...rows.find((r) => r.slug === d.slug), ...d }, { countryHomes: countryHomes.length ? countryHomes : [d], regionHomes: regionHomes.length >= 3 ? regionHomes : undefined, regionName: regionHomes.length >= 3 ? rg : undefined, dest: (DESTS as any)[cc] || null });
+    const es = isEs(); // 8-nov-2026: the Spanish page gets the article written in Spanish (homeArticleEs.ts)
+    const dests: any = es ? localizeRows(DESTS as any, DESTS_ES as any) : DESTS;
+    return (es ? homeArticleEs : homeArticle)({ ...rows.find((r) => r.slug === d.slug), ...d }, { countryHomes: countryHomes.length ? countryHomes : [d], regionHomes: regionHomes.length >= 3 ? regionHomes : undefined, regionName: regionHomes.length >= 3 ? rg : undefined, dest: dests[cc] || null });
   }, [rows, d]);
   if (!art) return null;
   return (
