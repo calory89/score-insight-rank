@@ -95,7 +95,7 @@ const HOME_RE = /\b(house|houses|home|homes|property|properties|apartment|apartm
 const OFF_RE = /\b(hotel|hotels|hostel|airbnb|car|cars|coche|job|jobs|trabajo|flight|flights|vuelo|vuelos|restaurant|restaurante|pizza|weather|tiempo|recipe|receta)\b/;
 const APT_RE = /\b(apartment|apartments|flat|flats|condo|condos|penthouse|studio|loft|piso|pisos|apartamento|apartamentos|departamento|departamentos|atico|estudio)\b/;
 // "house" (one) means a house; "houses", "homes", "casas" are any home
-const HOUSE_RE = /\b(house|villa|villas|townhouse|townhouses|cottage|cabin|chalet|adosado|single family)\b/;
+const HOUSE_RE = /\b(house|houses|casa|casas|bungalow|bungalows|villa|villas|townhouse|townhouses|cottage|cabin|chalet|adosado|single family)\b/;
 const SCORE_RE = /\b(good score|high score|well rated|top rated|best rated|buena puntuacion|alta puntuacion|bien puntuad[ao]s?|buena nota|mejor puntuad[ao]s?|best|mejores)\b/;
 
 function amount(sym: string | undefined, digits: string, suffix: string | undefined, cur: string | undefined): { v: number; c: string | null } | null {

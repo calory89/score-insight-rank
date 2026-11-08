@@ -21,14 +21,14 @@ export const LIMITS = {
   GLOBAL_JOBS_PER_DAY: 300,
   USER_USD_PER_DAY: 1, // Claude spend per user (or per IP hash without an account) per UTC day
   GLOBAL_USD_PER_DAY: 30,
-  EST_CLAUDE_JOB_USD: 0.15, // what one Claude job may cost, checked against the caps before calling
+  EST_CLAUDE_JOB_USD: 0.35, // what one Claude job may cost, checked against the caps before calling
   REUSE_ENOUGH: 6, // good matches we must already have to skip the web
   REUSE_DAYS: 30,
   CACHE_HOURS: 24,
   DEADLINE_MS: 140_000, // background work stops here and the job finishes with what it has
   STALE_MS: 240_000, // a running job not updated for this long is marked as failed
 };
-const MODELS = [Deno.env.get("ANTHROPIC_MODEL") || "claude-haiku-4-5", "claude-sonnet-4-5"].filter((m, i, a) => a.indexOf(m) === i);
+const MODELS = [Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5-5", "claude-sonnet-5-5", "claude-haiku-4-5"].filter((m, i, a) => a.indexOf(m) === i);
 const SUPA = Deno.env.get("SUPABASE_URL")!;
 const ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 const db = createClient(SUPA, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { db: { schema: "realhunt" }, auth: { persistSession: false } });
@@ -317,7 +317,9 @@ async function claude(key: string, p: C.LiveQuery, q: string, lang: string, want
   ].filter(Boolean).join("; ");
   const system = "You find real estate listings for RealHunt. Use the web_search tool to find CURRENT individual property listings (one home per page, " +
     "not search result pages, not news, not blogs) on real estate portals or agency websites. Never invent a listing, a price or a URL: every url you return " +
-    "must be exactly a URL that appeared in your web search results. If you are not sure a listing is current or matches, leave it out. " +
+    "must be exactly a URL that appeared in your web search results or in a page you opened with web_fetch. Search results are often list pages " +
+    "(e.g. Redfin, Trulia, homes.com, Idealista, Rightmove category pages): open 1 to 3 of the most relevant list pages with web_fetch and take the " +
+    "individual listing URLs, prices and details shown there (make relative links absolute with that page's domain). If you are not sure a listing is current or matches, leave it out. " +
     "Reply with ONLY a JSON array, no prose, no code fences: " +
     '[{"url":"","title":"","price":0,"currency":"USD","beds":0,"sqm":0,"location":"town, region","country":"country name in English","kind":"buy","image_url":""}]. ' +
     "price is a number in the listing currency (monthly rent for rentals), sqm is the living area in square metres (convert from sq ft by multiplying by 0.0929), " +
@@ -329,8 +331,11 @@ async function claude(key: string, p: C.LiveQuery, q: string, lang: string, want
     try {
       const r = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST", signal: c.signal,
-        headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-        body: JSON.stringify({ model, max_tokens: 2000, system, messages: [{ role: "user", content: user }], tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 5 }] }),
+        headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-beta": "web-fetch-2025-09-10", "content-type": "application/json" },
+        body: JSON.stringify({ model, max_tokens: 3000, system, messages: [{ role: "user", content: user }], tools: [
+          { type: "web_search_20250305", name: "web_search", max_uses: 4 },
+          { type: "web_fetch_20250910", name: "web_fetch", max_uses: 3, max_content_tokens: 12000 },
+        ] }),
       });
       const d = await r.json().catch(() => ({}));
       if (r.status === 404 || d?.error?.type === "not_found_error") { lastErr = "model"; continue; }
@@ -338,8 +343,18 @@ async function claude(key: string, p: C.LiveQuery, q: string, lang: string, want
       const blocks: any[] = Array.isArray(d.content) ? d.content : [];
       const text = blocks.filter((b) => b.type === "text").map((b) => b.text).join("\n");
       const urls = blocks.filter((b) => b.type === "web_search_tool_result" && Array.isArray(b.content)).flatMap((b) => b.content.map((x: any) => x.url)).filter(Boolean);
+      // 8-nov-2026: list pages opened with web_fetch hold the individual listings; accept a URL found in their text, or a relative
+      // link from that page made absolute with the page's own domain.
+      const fetched = blocks.filter((b) => b.type === "web_fetch_tool_result").map((b) => b.content).filter((x: any) => x && x.url);
+      for (const f of fetched) {
+        urls.push(f.url);
+        const doc = String(f.content?.source?.data || f.content?.content?.source?.data || "");
+        const origin = (() => { try { return new URL(f.url).origin; } catch { return ""; } })();
+        for (const m of doc.matchAll(/https?:\/\/[^\s)"'<>\]]+/g)) urls.push(m[0]);
+        if (origin) for (const m of doc.matchAll(/\]\((\/[^\s)]+)\)|href="(\/[^"]+)"/g)) urls.push(origin + (m[1] || m[2]));
+      }
       const items = C.parseClaudeListings(text, urls, p.kind);
-      return { items, cost: C.jobCost(model, d.usage), usage: { ...d.usage, result_urls: urls.length, items_raw: (text.match(/"url"/g) || []).length, kept: items.length, text_head: text.slice(0, 1200), url_sample: urls.slice(0, 12) }, model };
+      return { items, cost: C.jobCost(model, d.usage), usage: { ...d.usage, result_urls: urls.length, items_raw: (text.match(/"url"/g) || []).length, kept: items.length, text_head: text.slice(0, 1200), url_sample: urls.slice(0, 12), fetched: fetched.length }, model };
     } catch (e) { lastErr = String(e).slice(0, 60); } finally { clearTimeout(t); }
   }
   return { items: [], cost: 0, usage: null, model: "", error: lastErr || "failed" };
