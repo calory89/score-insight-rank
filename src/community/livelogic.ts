@@ -58,7 +58,7 @@ export function liveChips(p: LiveQuery): { k: string; label: string; value?: str
   const where = [p.place || p.city, p.state && p.country === "United States" ? p.state.toUpperCase() : null, p.country && !(p.place || p.city) ? p.country : p.country && p.country !== "United States" ? p.country : null].filter(Boolean).join(", ");
   if (where) out.push({ k: "where", label: "", value: where });
   if (p.ptype !== "any" && !p.ptype_soft) out.push({ k: "type", label: p.ptype === "apartment" ? "Apartments" : "Houses" });
-  if (p.central) out.push({ k: "central", label: "In or near the centre" });
+  if (p.central) out.push({ k: "central", label: "In the centre" });
   if (p.min_beds) out.push({ k: "beds", label: p.min_beds === 1 ? "bedroom or more" : "bedrooms or more", value: String(p.min_beds) });
   if (p.max_price) out.push({ k: "max", label: p.kind === "rent" ? "a month at most" : "at most", value: money(p.max_price, p.currency) });
   if (p.min_price) out.push({ k: "min", label: "at least", value: money(p.min_price, p.currency) });
