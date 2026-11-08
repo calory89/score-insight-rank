@@ -58,6 +58,7 @@ import { bumpIx, FLAG as FLAG_ } from "@/lib/rh";
 import { bumpStat } from "./v4";
 import { FindSearch, FindBar, SavedSearches } from "./findui";
 import { LiveSearchCard } from "./livecta";
+import { AiCheckNote, AiQueue } from "./aicheck";
 import { liveQueryFromParams } from "./livelogic";
 import { PodiumHero, Vibes, VIBES, SmartSearch, EmptyState, DetailGallery, Amenities, Nearby, VideoTour, RentLine } from "./v6";
 import { useTheme, ThemeButton, Welcome, BoardButton, BoardsSection, BoardPage, CompareButton, ComparePage, MapFab, NotifBell, ProfilePage, saveOrder, useHomeSwipe, HomeNav } from "./v5";
@@ -1007,6 +1008,7 @@ function Detail() {
           <PerSqmVsCountry price={d.price_eur} sqm={d.sqm} country={d.country} />
           <StatusTags deal={d as Row} />
           <VerifiedLine deal={d as Row} />
+          <AiCheckNote d={d as any} />
           {(d as any).developer && <DevBlock deal={d as Row} />}
           <p className="hv-detail-where">{FLAG_[d.country] || "📍"} {d.location_name}</p>
           <p>
@@ -1916,6 +1918,7 @@ function Admin() {
           </button>
         </article>
       ))}
+      <AiQueue approved={data?.approved || []} busy={busy} act={act} />
       <h2>RealHunt Picks</h2>
       <p>Editorial picks are independent of the community ranking.</p>
       {data?.approved.filter((d:any)=>matchesSubmission(d,query)).map((d: any) => (

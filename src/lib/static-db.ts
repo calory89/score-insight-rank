@@ -262,7 +262,9 @@ const origRpc = (supabase.rpc as any).bind(supabase);
     if (action === "detail") {
       return chain(snapshot().then((s) => {
         const r = s.rows.find((x) => x.slug === args?.p_payload?.slug && visible(x));
-        if (!r) return ok({ error: "Deal not found" });
+        // 8-nov-2026: homes published after the snapshot was built (the live search publishes AI-checked homes at
+        // once; the snapshot is rebuilt daily) are asked from the database, which answers for approved homes only.
+        if (!r) return Promise.resolve(origRpc(fn, args, opts)).then((res: any) => (res?.data?.deal ? ok({ deal: { ...res.data.deal, has_source: true }, comments: res.data.comments || [] }) : ok({ error: "Deal not found" }))).catch(() => ok({ error: "Deal not found" }));
         const deal: Row = { ...r, has_source: true };
         if (!["fotocasa", "immoscout24"].includes(deal.hunter_handle || "") && !signedIn()) delete deal.source_url;
         // 7-nov-2026 (Carlos: "me he logueado pero no puedo clicar en ver anuncio"): the public snapshot leaves most

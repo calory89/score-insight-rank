@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import {
   parseLiveQuery, liveKey, cbSearchUrls, parseCbMatch, pickCb, cbPhotos, liveScore, parseClaudeListings, slugFor, toEur, jobCost, fits, median, SHOW_MIN, type CbRow,
+  pickMedian, parseReview, gateDecision, orderPhotos, textFlags, inconsistent, reviewPrompt, TITLE_EXAMPLES, parseCbFacts, niceArea,
 } from "../../supabase/functions/realhunt-live-search/core";
 
 describe("parseLiveQuery", () => {
@@ -89,28 +90,105 @@ describe("liveScore", () => {
   const ctx = { median_ppm: 1400, min_beds: 3 };
   const x = { price_eur: 210000, sqm: 150, photos: 12, beds: 3, lat: 1, lng: 1, desc_len: 300, kind: "buy" as const };
   it("adds value, photos, bedrooms and completeness", () => {
-    // 1400 €/m² is the median: value 24.5 (rounded in parts), photos 15, beds 15, complete 25
-    expect(liveScore(x, ctx).score).toBe(80);
-    expect(liveScore({ ...x, price_eur: 105000 }, ctx).parts.value).toBe(45);
+    // 1400 €/m² is the median: value 21.8, photos 5 + 7.5 (quality not checked yet), beds 15, complete 25
+    expect(liveScore(x, ctx).score).toBe(74);
+    expect(liveScore({ ...x, photo_quality: 9 }, ctx).score).toBe(80);
+    expect(liveScore({ ...x, price_eur: 105000 }, ctx).parts.value).toBe(40);
     expect(liveScore({ ...x, price_eur: 400000 }, ctx).parts.value).toBe(0);
   });
   it("is neutral when it cannot compare or could not see the photos", () => {
-    expect(liveScore({ ...x, sqm: null }, ctx).parts.value).toBe(22.5);
-    expect(liveScore(x, { median_ppm: null, min_beds: null }).parts).toMatchObject({ value: 22.5, beds: 10 });
-    expect(liveScore({ ...x, photos: null }, ctx).parts.photos).toBe(7.5);
+    expect(liveScore({ ...x, sqm: null }, ctx).parts.value).toBe(20);
+    expect(liveScore(x, { median_ppm: null, min_beds: null }).parts).toMatchObject({ value: 20, beds: 10 });
+    expect(liveScore({ ...x, photos: null }, ctx).parts.photos).toBe(10);
     expect(liveScore({ ...x, beds: 2 }, ctx).parts.beds).toBe(0);
     const s = liveScore({ price_eur: null, sqm: null, photos: 0, beds: null, lat: null, lng: null, desc_len: 0, kind: "buy" }, ctx).score;
     expect(s).toBeGreaterThanOrEqual(0); expect(s).toBeLessThanOrEqual(100);
   });
-  it("only lets complete, good-value homes reach the bar", () => {
+  it("only lets complete, good-value, well-photographed homes reach the bar", () => {
     expect(SHOW_MIN).toBe(80);
-    expect(liveScore({ ...x, price_eur: 180000 }, ctx).score).toBeGreaterThanOrEqual(SHOW_MIN); // below the median
-    expect(liveScore({ ...x, price_eur: 260000 }, ctx).score).toBeLessThan(SHOW_MIN); // above the median
-    expect(liveScore({ ...x, photos: 3 }, ctx).score).toBeLessThan(SHOW_MIN); // few photos
-    expect(liveScore({ ...x, sqm: null }, ctx).score).toBeLessThan(SHOW_MIN); // size unknown
+    const good = { ...x, photo_quality: 8 };
+    expect(liveScore({ ...good, price_eur: 180000 }, ctx).score).toBeGreaterThanOrEqual(SHOW_MIN); // below the median
+    expect(liveScore({ ...good, price_eur: 260000 }, ctx).score).toBeLessThan(SHOW_MIN); // above the median
+    expect(liveScore({ ...good, price_eur: 180000, photo_quality: 4 }, ctx).score).toBeLessThan(SHOW_MIN); // ugly photos
+    expect(liveScore({ ...good, sqm: null }, ctx).score).toBeLessThan(SHOW_MIN); // size unknown
   });
-  it("takes a median", () => {
+  it("takes points off for caveats and caps blocking flags", () => {
+    const good = { ...x, price_eur: 150000, photo_quality: 9 };
+    const a = liveScore(good, ctx).score;
+    expect(liveScore({ ...good, flags: ["age_restricted"] }, ctx).score).toBe(a - 6);
+    expect(liveScore({ ...good, flags: ["needs_renovation"] }, ctx).score).toBe(a - 10);
+    const m = liveScore({ ...good, flags: ["manufactured_home"] }, ctx);
+    expect(m.score).toBeLessThanOrEqual(60); expect(m.caps).toContain("blocking_flag");
+  });
+  it("does not let a price that looks too good reach 80 unless the check explains it", () => {
+    const cheap = { ...x, price_eur: 90000, photo_quality: 10 }; // 600 €/m², 43 % of the median
+    const s = liveScore(cheap, ctx);
+    expect(s.score).toBe(SHOW_MIN - 1); expect(s.caps).toContain("cheap_unexplained");
+    expect(liveScore({ ...cheap, why_cheap: "Small 1960s building far from the beach." }, ctx).score).toBeGreaterThanOrEqual(SHOW_MIN);
+    expect(liveScore({ ...x, price_eur: 20000, photo_quality: 10, why_cheap: "x" }, ctx).parts.value).toBe(30); // under 0.3 x
+  });
+  it("takes a median and picks the closest comparables", () => {
     expect(median([3, 1, 2])).toBe(2); expect(median([4, 1, 2, 3])).toBe(2.5); expect(median([])).toBeNull();
+    expect(pickMedian([1, 2, 3, 4, 5, 6, 7, 8], [100], 50)).toEqual({ ppm: 4.5, from: "scan" });
+    expect(pickMedian([10], [20, 30, 40], 50)).toEqual({ ppm: 25, from: "local" });
+    expect(pickMedian([], [20], 50)).toEqual({ ppm: 50, from: "country" });
+    expect(pickMedian([], [], null)).toEqual({ ppm: null, from: null });
+  });
+});
+
+describe("the quality gate", () => {
+  const review = (o: Record<string, unknown> = {}) => JSON.stringify({ photo_quality: 8, order: [2, 0, 1, 3], flags: [], title: "Bright corner condo", why_great: "Big balcony.", why_cheap: null, ...o });
+  it("reads the AI review defensively", () => {
+    const r = parseReview("Here you go:\n```json\n" + review({ order: [2, 2, 9, -1, "1"], flags: ["Age_Restricted", "made_up"], title: "Corner condo — big balcony", why_cheap: "null", hoa_monthly: "450" }) + "\n```", 4)!;
+    expect(r.order).toEqual([2, 1]);
+    expect(r.flags).toEqual(["age_restricted"]);
+    expect(r.title).toBe("Corner condo, big balcony");
+    expect(r.why_cheap).toBeNull();
+    expect(r.hoa_monthly).toBe(450);
+    expect(parseReview("no json", 3)).toBeNull();
+    expect(parseReview('{"photo_quality":"high"}', 3)).toBeNull();
+    expect(parseReview('{"photo_quality":14}', 3)!.photo_quality).toBe(10);
+  });
+  it("shows only good, complete, unflagged homes", () => {
+    const r = parseReview(review(), 4)!;
+    expect(gateDecision(85, r, 6)).toEqual({ show: true, reasons: [] });
+    expect(gateDecision(79, r, 6).reasons).toContain("score");
+    expect(gateDecision(90, { ...r, photo_quality: 6 }, 6).reasons).toContain("photos");
+    expect(gateDecision(90, r, 3).reasons).toContain("few_photos");
+    expect(gateDecision(90, { ...r, flags: ["manufactured_home"] }, 6).reasons).toContain("flag:manufactured_home");
+    expect(gateDecision(90, { ...r, flags: ["age_restricted"] }, 6).show).toBe(true); // a caveat, shown with a label
+    expect(gateDecision(99, null, 9)).toEqual({ show: false, reasons: ["not_reviewed"] });
+  });
+  it("orders photos best first and drops the rejected ones", () => {
+    const ph = ["a", "b", "c", "d", "e", "f", "g", "h"];
+    expect(orderPhotos(ph, { order: [3, 0] }, 6)).toEqual(["d", "a", "g", "h"]);
+    expect(orderPhotos(ph, null, 0, 3)).toEqual(["a", "b", "c"]);
+  });
+  it("finds flags in the listing text", () => {
+    expect(textFlags("Lovely double wide mobile home, lot rent $850")).toEqual(expect.arrayContaining(["manufactured_home", "land_lease"]));
+    expect(textFlags("Condo in a 55+ community, sold as-is")).toEqual(expect.arrayContaining(["age_restricted", "needs_renovation"]));
+    expect(textFlags("Tenant occupied until June. Cash only.")).toEqual(expect.arrayContaining(["tenant_occupied", "cash_only"]));
+    expect(textFlags("Renovated 3 bed house with a pool, built 1955")).toEqual([]);
+    // the owner's example: 5 bedrooms and 4 bathrooms in 93 m²
+    expect(textFlags("", { beds: 5, baths: 4, sqm: 93 })).toEqual(["inconsistent_data"]);
+    expect(inconsistent({ beds: 3, baths: 2, sqm: 120 })).toBe(false);
+  });
+  it("writes a prompt with the area comparison and RealHunt's title style", () => {
+    const t = reviewPrompt({ kind: "buy", price: 90000, currency: "USD", price_eur: 80640, beds: 1, sqm: 82, ptype: "Condo", location: "Miami, Florida", country: "United States", ratio: 0.42, text: "Nice", facts: "", nPhotos: 6 });
+    expect(t).toContain("42% of the median");
+    expect(t).toContain("numbered 0 to 5");
+    expect(t).toContain(TITLE_EXAMPLES[0]);
+    expect(t).not.toMatch(/—/);
+  });
+  it("reads Coldwell Banker facts", () => {
+    const f = parseCbFacts(['publicRemarks":"GREAT HOME.\\r\\nPOOL, TENNIS."', 'seniorCommunity":true', 'associationFee":1350', 'associationFeeFrequency":"Quarterly"', 'taxAnnualAmount":248', 'subdivisionName":"DORSET AT CENTURY VILLAGE CONDO SEC 2"']);
+    expect(f.remarks).toBe("GREAT HOME. POOL, TENNIS.");
+    expect(f.senior).toBe(true);
+    expect(f.hoa).toBe(450);
+    expect(f.tax).toBe(248);
+    expect(f.subdivision).toBe("Dorset at Century Village");
+    expect(niceArea("MAR-LEN GARDENS")).toBe("Mar-Len Gardens");
+    expect(niceArea("NONE")).toBe("");
   });
 });
 
@@ -178,8 +256,15 @@ describe("guards", () => {
     expect(withinAsk({ kind: "buy", price: null, currency: "USD", beds: null }, p)).toBe(true);
   });
   it("does not reward prices that look too good to be true", () => {
-    const x = { price_eur: 20000, sqm: 150, photos: 12, beds: 3, lat: 1, lng: 1, desc_len: 300, kind: "buy" as const };
-    expect(liveScore(x, { median_ppm: 1400, min_beds: 3 }).parts.value).toBe(22.5);
+    const x = { price_eur: 20000, sqm: 150, photos: 12, beds: 3, lat: 1, lng: 1, desc_len: 300, kind: "buy" as const, photo_quality: 10 };
+    expect(liveScore(x, { median_ppm: 1400, min_beds: 3 }).score).toBe(SHOW_MIN - 1);
+  });
+  it("leaves out listings under half the city's median per sq ft", () => {
+    const base = parseCbMatch(MATCH)!;
+    const rows: CbRow[] = Array.from({ length: 9 }, (_, i) => ({ ...base, id: "n" + i, price: 200000 + i * 1000, sqft: 1000 }));
+    rows.push({ ...base, id: "odd", price: 60000, sqft: 1000 });
+    const ids = pickCb(rows, parseLiveQuery("3 bed home in Miami under $300k")).map((r) => r.id);
+    expect(ids).not.toContain("odd"); expect(ids[0]).toBe("n0");
   });
   it("leaves out manufactured homes", () => {
     const base = parseCbMatch(MATCH)!;
@@ -203,6 +288,7 @@ describe("55+ communities by name and MLS flag", () => {
     expect(AGE_RESTRICTED.test('subdivisionName":"DORSET AT CENTURY VILLAGE CONDO"')).toBe(true);
     expect(AGE_RESTRICTED.test('seniorCommunityYN": true')).toBe(true);
     expect(AGE_RESTRICTED.test('seniorCommunityYN":false')).toBe(false);
+    expect(AGE_RESTRICTED.test('seniorCommunity":true')).toBe(true);
     const m = '"subdivisionName":"DORSET AT CENTURY VILLAGE CONDO"'.match(new RegExp(CB_FACTS_RX));
     expect(m?.[1]).toContain("CENTURY VILLAGE");
   });
