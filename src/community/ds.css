@@ -169,13 +169,13 @@
 .hunt .hunt-header nav .hunt-primary:hover,
 .hunt.is-dark .hunt-header nav .hunt-primary:hover { background: var(--c-surface-2) !important; border-color: transparent !important; color: var(--c-ink) !important; }
 .hunt .hunt-header nav .hunt-primary svg { width: 16px; height: 16px; }
-@media (max-width: 1100px) {
-  .hunt .hunt-header nav .hunt-ext { display: none; }
-  .hunt .hunt-header nav .hunt-browse:not(.hunt-top100) { font-size: 0; gap: 0; padding: 0 10px; }
-}
+/* header by width: desktop shows every label; tablets (no tab bar above 700 px) keep Top 100, Map and Search */
+@media (max-width: 1180px) { .hunt .hunt-header nav .hunt-ext { display: none !important; } }
 @media (max-width: 899.98px) {
-  .hunt .hunt-header nav .hunt-browse { display: none !important; }
+  .hunt .hunt-header nav .hv-theme-head, .hunt .hunt-header nav .hunt-primary { display: none !important; }
+  .hunt .hunt-header nav .hunt-browse:not(.hunt-top100):not(.hunt-maplink) { font-size: 0; gap: 0; }
 }
+@media (max-width: 700px) { .hunt .hunt-header nav .hunt-browse { display: none !important; } }
 @media (max-width: 700px) {
   .hunt .hunt-header nav > .hunt-savedlink { display: none !important; } /* the tab bar has Saved */
 }
@@ -490,3 +490,17 @@ html.rh-dark .rh-auth .hover\:bg-paper:hover { background: #26282B !important; }
 .hunt .hunt-back { font-size: 14px; font-weight: 500; color: var(--c-ink-3) !important; margin: var(--s-2) 0; }
 .hunt .hunt-back:hover { color: var(--c-ink) !important; }
 @media (min-width: 701px) { .hunt .hv-mosaic { height: min(56vh, 520px); } }
+
+/* ---------------------------------------------------------------- touch: every control at least 44 x 44 */
+@media (pointer: coarse) {
+  .hunt .hv-bell > button, .hunt .hunt-header nav .hunt-account, .hunt .hunt-header nav > a:not(.hunt-primary) { min-height: 44px; min-width: 44px; }
+  .hunt .rh-lang button { min-height: 44px; min-width: 44px; }
+  .hunt .hv-theme { min-height: 44px; }
+  .hunt .hunt-footer-brand { min-height: 44px; }
+  .hunt .hv-search button[aria-label] { width: 44px; height: 44px; padding: 8px; display: grid; place-items: center; background-clip: content-box; border-radius: 50%; margin-right: -6px; }
+  .hunt .hunt-avail button, .hunt .hv-translate button { min-height: 44px; }
+  .hunt select, .hunt .rh-cmp-x, .hunt .hunt-rent input { min-height: 44px; }
+  .hunt .rh-cmp-x { min-width: 44px; }
+  .hunt .rh-jb-strip-cta { min-height: 44px; display: inline-flex; align-items: center; }
+}
+.hunt.is-dark .hv-search button { background-color: var(--c-surface-3) !important; }
