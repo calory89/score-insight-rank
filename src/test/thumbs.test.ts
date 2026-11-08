@@ -29,3 +29,12 @@ describe("card thumbnails", () => {
     expect(onThumbError(img, "/finds/a.webp")).toBe(false);
   });
 });
+
+import { isThumb as isThumb2 } from "@/lib/thumbs";
+import { describe as d2, it as i2, expect as e2 } from "vitest";
+d2("isThumb after the media fallback", () => {
+  i2("treats a realhunt.co thumbnail as a thumbnail so the card falls back to the original photo", () => {
+    e2(isThumb2("https://realhunt.co/t/sb/us-tampa-8105-325k-0.webp")).toBe(true);
+    e2(isThumb2("https://realhunt.co/finds/x.webp")).toBe(false);
+  });
+});
