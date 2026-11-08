@@ -111,3 +111,76 @@
 .lv-miss-meta, .lv-miss-why { font-size: 12.5px; color: var(--lv-muted); overflow: hidden; text-overflow: ellipsis; }
 .lv-miss-meta { white-space: nowrap; }
 .lv-miss-ext { flex: none; color: var(--lv-muted); }
+
+/* ==========================================================================
+   Minimal pass (8-nov-2026). Carlos: "too heavy". One-line title, one pill search field whose button appears only
+   when there is something new to search, small understood-chips in one scrolling row, a 3 px progress line with
+   one status, the "Which one?" question as a chat bubble. Fills instead of outlines.
+   ========================================================================== */
+.hunt .lv-min { padding-top: 12px; }
+.hunt .lv-min .lv-head { padding: 4px 0 0; }
+.hunt .lv-min .lv-head h1 { font-size: clamp(24px, 6vw, 32px); line-height: 1.15; margin: 4px 0 12px; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hunt .lv-min .lv-form {
+  flex-wrap: nowrap; gap: 6px; height: 52px; padding: 0 5px 0 16px; border-radius: 999px;
+  background: var(--c-fill); border: 1.5px solid transparent; box-shadow: none; transition: background-color .15s ease, border-color .15s ease;
+}
+.hunt .lv-min .lv-form:focus-within { background: var(--c-surface); border-color: var(--c-ink-3); }
+.hunt .lv-min .lv-form input { min-height: 48px; font-size: 16px; flex-basis: auto; }
+.hunt .lv-min .lv-form input::-webkit-search-cancel-button { display: none; }
+.hunt .lv-min .lv-form > svg { color: var(--c-ink-3); }
+.hunt .lv-min .lv-go { flex: none; flex-basis: auto; height: 42px; min-height: 42px; padding: 0 16px; gap: 6px; border-radius: 999px; font-size: 15px; }
+.hunt .lv-min .lv-go > svg { display: none; }
+@media (max-width: 599.98px) {
+  .hunt .lv-min .lv-go { width: 42px; padding: 0; }
+  .hunt .lv-min .lv-go > svg { display: block; }
+  .hunt .lv-min .lv-go > span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+.hunt .lv-min .lv-sub { margin: 10px 2px 0; font-size: 14px; color: var(--c-ink-3); }
+.hunt .lv-min .lv-chips {
+  flex-wrap: nowrap; overflow-x: auto; gap: 6px; margin: 12px calc(-1 * var(--gutter)) 0; padding: 0 var(--gutter) 2px;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.hunt .lv-min .lv-chips::-webkit-scrollbar { display: none; }
+.hunt .lv-min .lv-chips li { flex: none; min-height: 28px; padding: 0 11px; border: 0; background: var(--c-fill); color: var(--c-ink-2); font-size: 13px; font-weight: 550; white-space: nowrap; }
+@media (min-width: 700px) { .hunt .lv-min .lv-chips { flex-wrap: wrap; margin-left: 0; margin-right: 0; padding: 0; } }
+.hunt .lv-min .lv-free { margin: 10px 2px 0; font-size: 13px; color: var(--c-ink-3); }
+.hunt .lv-min .lv-free .hunt-link { font-size: 13px; min-height: 0; padding: 0; display: inline; }
+
+/* progress: a thin line and one status */
+.hunt .lv-min .lv-progress { margin: 20px 0 4px; }
+.hunt .lv-min .lv-bar { height: 3px; border: 0; background: var(--c-line); margin: 0; }
+.hunt .lv-min .lv-bar span { background: var(--c-accent); }
+.hunt .lv-min .lv-progress.is-done .lv-bar { display: none; }
+.hunt .lv-min .lv-status { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin: 10px 0 0; font-size: 14.5px; font-weight: 550; color: var(--c-ink); line-height: 1.4; }
+.hunt .lv-min .lv-status b { font-weight: 600; color: var(--c-ink-3); font-variant-numeric: tabular-nums; }
+.hunt .lv-min .lv-progress.is-done .lv-status { margin-top: 0; }
+.hunt .lv-min .lv-progress.is-error .lv-status { color: var(--c-bad); }
+.hunt .lv-min .lv-fine { margin: 4px 0 0; font-size: 13px; color: var(--c-ink-3); line-height: 1.45; }
+.hunt .lv-min .lv-progress .lv-btn { margin-top: 10px; }
+
+/* "Which one do you mean?": a chat bubble with option chips */
+.hunt .lv-min .lv-ask { display: block; margin: 16px 0; }
+.hunt .lv-min .lv-ask-bubble { width: fit-content; max-width: min(100%, 560px); min-width: 0; background: var(--c-fill); border: 0; box-shadow: none; border-radius: 18px 18px 18px 6px; padding: 12px 14px 14px; }
+.hunt .lv-min .lv-ask-bubble strong { font-size: 15.5px; font-weight: 600; }
+.hunt .lv-min .lv-ask-opts { gap: 6px; margin-top: 10px; }
+.hunt .lv-min .lv-ask-opts li, .hunt .lv-min .lv-ask-chip { width: auto; max-width: 100%; }
+.hunt .lv-min .lv-ask-chip span { min-width: 0; }
+.hunt .lv-min .lv-ask-chip { min-height: 40px; padding: 0 14px; gap: 6px; border: 0; background: var(--c-surface); color: var(--c-ink); font-size: 14px; box-shadow: 0 1px 2px rgba(17, 18, 20, .08); }
+.hunt .lv-min .lv-ask-chip:hover { background: var(--c-surface); box-shadow: 0 0 0 1.5px var(--c-ink) inset; }
+.hunt .lv-min .lv-ask-chip b { font-weight: 650; }
+.hunt .lv-min .lv-ask-chip svg { color: var(--c-ink-3); }
+.hunt.is-dark .lv-min .lv-ask-chip { background: var(--c-surface-3); }
+@media (pointer: coarse) { .hunt .lv-min .lv-ask-chip { min-height: 44px; } }
+
+/* messages and panels: soft fill, no outline */
+.hunt .lv-min .lv-card { border: 0; background: var(--c-fill); border-radius: var(--r-lg); padding: 14px 16px; margin: 16px 0; }
+.hunt .lv-min .lv-msg strong { font-size: 15px; font-weight: 600; }
+.hunt .lv-min .lv-msg p { font-size: 14px; color: var(--c-ink-3); }
+.hunt .lv-min .lv-msg > svg { color: var(--c-ink-3); }
+.hunt .lv-min :is(.lv-results, .lv-similar, .lv-closest) h2 { font-size: 19px; font-weight: 700; letter-spacing: -0.01em; margin: 28px 0 12px; }
+.hunt .lv-min .lv-results:first-of-type h2 { margin-top: 22px; }
+.hunt .lv-min .lv-miss { border: 0; background: var(--c-fill); }
+.hunt .lv-min .lv-how { border: 0; background: transparent; padding: 0; margin-top: 36px; }
+.hunt .lv-min .lv-how summary { font-size: 14px; font-weight: 600; color: var(--c-ink-2); }
+.hunt .lv-min .lv-how p { font-size: 13.5px; color: var(--c-ink-3); }
+.hunt .lv-min .lv-form input, .hunt.is-dark .lv-min .lv-form input { background: transparent !important; border: 0 !important; box-shadow: none !important; }

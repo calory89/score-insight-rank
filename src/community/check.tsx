@@ -13,7 +13,7 @@ import { RunningCosts } from "./costs";
 import { RiskBlock, RiskCardChips } from "./risks";
 import { cardRiskChips } from "./risksLogic";
 import {
-  GROUPS, agentEmail, allIn, allInParts, buyRule, countryKey, detectGroup, emailLang, eur, monthEs, questionUi, questions, redFlags, roundNice,
+  GROUPS, agentEmail, allIn, buyRule, countryKey, detectGroup, emailLang, eur, monthEs, questionUi, questions, redFlags, roundNice,
   type CheckRow, type Group, type QId, type RulesEs,
 } from "./checkLogic";
 import "./check.css";
@@ -56,19 +56,19 @@ const dec = (v: number) => (ES ? String(v).replace(".", ",") : String(v));
 const LANG_ES: Record<string, string> = { en: "inglés", es: "español", it: "italiano", fr: "francés", de: "alemán", pt: "portugués", nl: "neerlandés", da: "danés", sv: "sueco" };
 
 // ------------------------------------------------------------------------------------------------- cards
-/** Compact line under the price on cards. Works inside a link (no interactive children). */
+/** Small warning chips on cards (buying restriction, the most serious red flags). Works inside a link.
+ *  8-nov-2026 minimal pass: the all-in line ("≈ €212,000 to buy · ≈ €90/mo") is no longer printed on cards.
+ *  Carlos read it as a second, unexplained price; the home page shows it, labelled, in "Total cost to buy". */
 export function CardCheck({ d }: { d: CheckRow }) {
   const [g] = useBuyerGroup();
   const es = useRulesEs();
-  const parts = useMemo(() => allInParts(d), [d.price_eur, d.country, d.hoa_monthly, d.tax_annual]);
-  const flags = useMemo(() => redFlags(d).filter((f) => f.id !== "hoa_unknown" && f.sev >= 2).slice(0, 2), [d.title, d.why_great, d.costs_note]);
+  const flags = useMemo(() => redFlags(d).filter((f) => f.id !== "hoa_unknown" && f.sev >= 2).slice(0, 1), [d.title, d.why_great, d.costs_note]);
   const rule = buyRule(d.country, g, es);
   const warn = rule && rule.s !== "green" ? rule : null;
   const risky = cardRiskChips(d as any).length > 0;
-  if (!parts.length && !flags.length && !warn && !risky) return null;
+  if (!flags.length && !warn && !risky) return null;
   return (
     <span className="rh-chk-card">
-      {parts.length > 0 && <span className="rh-chk-line" title={t("Estimate: price plus typical buying costs, and monthly fee plus property tax")}>{parts.map((x, i) => <span key={x.unit} className="rh-chk-part">{i ? " · " : ""}{x.v}{x.unit === "/mo" ? "" : " "}<span>{t(x.unit)}</span></span>)}</span>}
       {(warn || flags.length > 0 || risky) && <span className="rh-chk-chips">
         <RiskCardChips d={d as any} />
         {warn && <span className={"rh-chk-chip is-" + warn.s} title={warn.note}>{warn.s === "red" ? <ShieldX size={12} aria-hidden="true" /> : <ShieldAlert size={12} aria-hidden="true" />}{t(warn.badge || "Check rules")}</span>}

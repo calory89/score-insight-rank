@@ -35,12 +35,11 @@ import { TopMethodPage, AboutPage } from "./topTrustUI";
 import { HomeMethodPage } from "./method";
 import { DetailAside } from "./aside";
 import { StaticPage } from "./staticpage";
-import { InlineAlert, HomeFaq, MortgageCalc, PerSqmVsCountry, AlertConfirmPage, HomeArticle } from "./oct24";
+import { InlineAlert, HomeFaq, MortgageCalc, AlertConfirmPage, HomeArticle } from "./oct24";
 import { regionOf, slugify } from "./regions";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
-import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, LocalPrice, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, GUIDES, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
+import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, GUIDES, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { CountriesPage } from "./countries";
-import { CostBadge } from "./costs";
 import { CardCheck, CheckLayer } from "./check";
 import { CompareTray, CompareRoute, PriceWatch, SavedHomes } from "./compareTools";
 const slugCountryKey = (c?: string | null) => String(c || "").toLowerCase().trim().replace(/\s+/g, "-");
@@ -60,9 +59,11 @@ import { FindSearch, FindBar, SavedSearches } from "./findui";
 import { LiveSearchCard } from "./livecta";
 import { AiCheckNote, AiQueue } from "./aicheck";
 import { liveQueryFromParams } from "./livelogic";
-import { PodiumHero, Vibes, VIBES, SmartSearch, EmptyState, DetailGallery, Amenities, Nearby, VideoTour, RentLine } from "./v6";
+import { PodiumHero, Vibes, VIBES, SmartSearch, EmptyState, DetailGallery, Amenities, Nearby, VideoTour } from "./v6";
 import { useTheme, ThemeButton, Welcome, BoardButton, BoardsSection, BoardPage, CompareButton, ComparePage, MapFab, NotifBell, ProfilePage, saveOrder, useHomeSwipe, HomeNav } from "./v5";
 import { Ctx, useCommunity } from "./ctx";
+import { AccountMenu } from "./accountmenu";
+import { PriceHead } from "./pricehead";
 const MapView = lazy(() => import("./map"));
 const LiveSearchPage = lazy(() => import("./livesearch"));
 const HomesMap = lazy(() => import("./homesmap"));
@@ -110,6 +111,7 @@ import "./brand-oct.css";
 import "./oct23.css";
 import "./homecards.css";
 import "./ds.css"; // design system, last so it settles the older layers
+import "./minimal.css"; // 8-nov-2026 minimal pass: lighter buttons, one-row header, quieter cards
 // Imported titles often repeat the price ("€35,000 · Your own home") right under the big price, or
 // say nothing at all ("Property - Japan"). Show something a person would actually write.
 function cleanTitle(d: Pick<Deal, "title" | "location_name" | "country" | "sqm">) {
@@ -262,23 +264,14 @@ function Shell({ children }: { children: ReactNode }) {
               <Bookmark size={19} />
             </Link>
             <NotifBell />
-            <InboxLink />
+            <span className="rh-head-inbox"><InboxLink /></span>
             <span className="hv-theme-head"><ThemeButton /></span>
             <LangSwitch compact />
-            {user ? (
-              <Link to="/hunt/mine" className="hunt-account">
-                {t("My submissions")}
-              </Link>
-            ) : (
-              <button onClick={() => setAuth(true)} className="hunt-account">
-                {t("Sign in")}
-              </button>
-            )}
-            {session?.admin && <Link to="/hunt/admin" className="hunt-admin-link">Review ({session.pending_submissions || 0})</Link>}
             <Link className="hunt-primary" to="/submit">
               <Plus size={16} />
               <span>{t("Post a home")}</span>
             </Link>
+            <AccountMenu onSignIn={() => setAuth(true)} />
           </nav>
         </header>
         {error && (
@@ -552,8 +545,6 @@ function Card({
           {money(deal.price_eur)}
         </div>}
         <CardCheck d={deal as any} />
-        <LocalPrice eur={deal.price_eur} sqm={deal.sqm} />
-        <CostBadge d={deal as any} />
         <StatusTags deal={deal as Row} />
         <h2>
           <Link to={`/deal/${deal.slug}${scope === "all" ? "?tab=all" : ""}`}>{cleanTitle(deal)}</Link>
@@ -1006,11 +997,7 @@ function Detail() {
             <Link to={`/homes/${encodeURIComponent((d.country || "").toLowerCase().replace(/ /g, "-"))}`}>{d.country}</Link>{regionOf(d) && <> · <Link to={`/homes/${encodeURIComponent((d.country || "").toLowerCase().replace(/ /g, "-"))}/${slugify(regionOf(d))}`}>{regionOf(d)}</Link></>} · {categories.find((c) => c[0] === d.category)?.[1] || d.category}
           </span>
           <h1>{cleanTitle(d)}</h1>
-          <div className="hunt-price">{money(d.price_eur)}</div>
-          <CostBadge d={d as any} />
-          <RentLine price={d.price_eur} big />
-          <LocalPrice eur={d.price_eur} sqm={d.sqm} />
-          <PerSqmVsCountry price={d.price_eur} sqm={d.sqm} country={d.country} />
+          <PriceHead d={d as any} />
           <StatusTags deal={d as Row} />
           <VerifiedLine deal={d as Row} />
           <AiCheckNote d={d as any} />
