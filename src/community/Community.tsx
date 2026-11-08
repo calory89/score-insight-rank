@@ -57,10 +57,13 @@ import { Card4, CardSkeleton, Freshness, TabBar, DetailBar, HeartVote, ShareButt
 import { bumpIx, FLAG as FLAG_ } from "@/lib/rh";
 import { bumpStat } from "./v4";
 import { FindSearch, FindBar, SavedSearches } from "./findui";
+import { LiveSearchCard } from "./livecta";
+import { liveQueryFromParams } from "./livelogic";
 import { PodiumHero, Vibes, VIBES, SmartSearch, EmptyState, DetailGallery, Amenities, Nearby, VideoTour, RentLine } from "./v6";
 import { useTheme, ThemeButton, Welcome, BoardButton, BoardsSection, BoardPage, CompareButton, ComparePage, MapFab, NotifBell, ProfilePage, saveOrder, useHomeSwipe, HomeNav } from "./v5";
 import { Ctx, useCommunity } from "./ctx";
 const MapView = lazy(() => import("./map"));
+const LiveSearchPage = lazy(() => import("./livesearch"));
 const HomesMap = lazy(() => import("./homesmap"));
 // Growth pages (/can-i-buy, /buying-costs), loaded only when opened.
 const CanBuyIndex = lazy(() => import("./seo2").then((m) => ({ default: m.CanBuyIndex })));
@@ -172,7 +175,7 @@ function Shell({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Child pages set their own title in effects that run before this one, so they must be listed here or the
     // default title overwrites theirs (country pages, /method and /alerts showed the home title before 24-oct-2026).
-    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare|costs|research|agents|homes\/|method|alerts|can-i-buy|buying-costs|about|top|guide|new|sitemap|swipe|map|leaderboard|winners|best|weather|saved|legal|hunter\/|b\/)/.test(location.pathname)) return;
+    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare|costs|research|agents|homes\/|method|alerts|can-i-buy|buying-costs|about|top|guide|new|sitemap|swipe|map|leaderboard|winners|best|weather|saved|legal|hunter\/|b\/|live-search)/.test(location.pathname)) return;
     document.title = "RealHunt: The best homes in every country, ranked by score";
   }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
@@ -866,6 +869,7 @@ function Home() {
           ))}
         {feed && busy && feed.rows.length > 0 && feed.rows.length < feed.total && [0, 1, 2].map((n) => <HomeCardSkeleton key={"more" + n} />)}
       </div>
+      {feed && !busy && !error && feed.total < 6 && <LiveSearchCard q={liveQueryFromParams(params)} />}
       <div ref={sentinel} aria-hidden="true" />
       {showTop && <button className="rh-to-top" aria-label="Back to the top" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}><ArrowUp size={18} /></button>}
       {feed?.rows.length === 0 && !error && q && <NearestHomes q={q} />}
@@ -2008,6 +2012,8 @@ export default function Community() {
       <CheapHousesPage />
     ) : path === "/swipe" ? (
       <SwipePage />
+    ) : path === "/live-search" ? (
+      <Suspense fallback={<Loading />}><LiveSearchPage /></Suspense>
     ) : path === "/map" ? (
       <Suspense fallback={<Loading />}><MapView /></Suspense>
     ) : path === "/leaderboard" ? (

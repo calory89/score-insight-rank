@@ -278,6 +278,7 @@ const AppRoutes = () => (
       <Route path="/network/app" element={<NetworkApp />} />
       <Route path="/network/app/:tab" element={<NetworkApp />} />
       <Route path="/finds" element={<ToFeed />} />
+      <Route path="/live-search" element={<Community />} />
       <Route path="/find-my-home" element={<Community />} />
       <Route path="/find-my-home/:city" element={<Community />} />
       <Route path="/extension" element={<Community />} />

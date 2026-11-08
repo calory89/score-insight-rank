@@ -1,0 +1,12 @@
+/* Live search entry points (8-nov-2026): the feed card when a search finds few homes. */
+.lv-cta { display: flex; align-items: center; gap: 14px; margin: 8px 0 22px; padding: 16px; border-radius: 18px; border: 1.5px solid #F0C8B6; background: #FBEDE6; color: #111214; text-decoration: none; }
+.lv-cta:hover { border-color: #D4420C; }
+.lv-cta:focus-visible { outline: 2px solid #D4420C; outline-offset: 2px; }
+.lv-cta-icon { flex: none; width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: #D4420C; color: #fff; }
+.lv-cta-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lv-cta-main strong { font-size: 16px; }
+.lv-cta-main small { font-size: 13.5px; color: #5F3A2A; overflow-wrap: anywhere; }
+.lv-cta > svg:last-child { flex: none; margin-left: auto; color: #9E2F05; }
+.hunt.is-dark .lv-cta { background: #2A1A13; border-color: #5A2A16; color: #ECEDEE; }
+.hunt.is-dark .lv-cta-main small { color: #E8C2B0; }
+.hunt.is-dark .lv-cta > svg:last-child { color: #FFB08F; }
