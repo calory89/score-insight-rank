@@ -445,10 +445,21 @@ describe("pisos.com, the free Spanish source (v3)", async () => {
   const sevilla = rl(parseLiveQuery("casa en sevilla de 3 habtiacioens en el centro por menos de 200k"), { tz: "Europe/Madrid" }).p;
   it("builds search pages: centre first, bedrooms and budget in the URL, dearest first", () => {
     const u = P.pisosSearchUrls(sevilla, 2).map((x) => x.url);
-    expect(u[0]).toBe("https://www.pisos.com/venta/pisos-sevilla_capital_casco_antiguo/con-3-habitaciones/hasta-181000/precio-desc/");
-    expect(u[1]).toBe("https://www.pisos.com/venta/pisos-sevilla_capital/con-3-habitaciones/hasta-181000/precio-desc/");
-    expect(u[2]).toBe("https://www.pisos.com/venta/pisos-sevilla_capital/con-3-habitaciones/hasta-181000/precio-desc/2/");
-    expect(u).toHaveLength(3);
+    // v4: a "centre" search reads the centre's own pages and the districts next to it, never the whole city
+    expect(u).toEqual([
+      "https://www.pisos.com/venta/pisos-sevilla_capital_casco_antiguo/con-3-habitaciones/hasta-181000/precio-desc/",
+      "https://www.pisos.com/venta/pisos-sevilla_capital_casco_antiguo/con-3-habitaciones/hasta-181000/precio-desc/2/",
+      "https://www.pisos.com/venta/pisos-sevilla_capital_triana/con-3-habitaciones/hasta-181000/precio-desc/",
+      "https://www.pisos.com/venta/pisos-sevilla_capital_los_remedios/con-3-habitaciones/hasta-181000/precio-desc/",
+      "https://www.pisos.com/venta/pisos-sevilla_capital_macarena/con-3-habitaciones/hasta-181000/precio-desc/",
+      "https://www.pisos.com/venta/pisos-sevilla_capital_casco_antiguo/con-3-habitaciones/", // v5: comparables only
+    ]);
+    expect(P.pisosSearchUrls(sevilla, 2).filter((x) => x.comps).length).toBe(1);
+    const plain = rl(parseLiveQuery("casa en sevilla de 3 habitaciones por menos de 200k"), { tz: "Europe/Madrid" }).p;
+    expect(P.pisosSearchUrls(plain, 2).map((x) => x.url)).toEqual([
+      "https://www.pisos.com/venta/pisos-sevilla_capital/con-3-habitaciones/hasta-181000/precio-desc/",
+      "https://www.pisos.com/venta/pisos-sevilla_capital/con-3-habitaciones/hasta-181000/precio-desc/2/",
+    ]);
     expect(P.pisosLoc("Marbella")).toBe("marbella");
     expect(P.pisosLoc("Seville")).toBe("sevilla_capital");
     expect(P.pisosSearchUrls(parseLiveQuery("3 bedroom house in Miami"), 2)).toEqual([]);
@@ -539,5 +550,138 @@ describe("closest misses (v3)", async () => {
     ]);
     expect(out.map((x) => x.id)).toEqual(["a", "d"]);
     expect(out[1].why).toEqual(["score", "photos"]);
+  });
+});
+
+describe("the centre as real geography (v4, 8-nov-2026)", async () => {
+  const CT = await import("../../supabase/functions/realhunt-live-search/centre");
+  const P = await import("../../supabase/functions/realhunt-live-search/pisos");
+  const fx = (await import("./fixtures/pisos-sevilla.json")).default as { cards: string[] };
+  const sev = CT.centreFor("Seville", "Spain")!;
+  it("knows the centre of the cities in the gazetteer", () => {
+    expect(sev).toMatchObject({ name: "Sevilla", lat: 37.3891, lng: -5.9845, src: "table" });
+    expect(CT.centreFor("sevilla")).toBe(sev);
+    expect(CT.centreFor("Madrid", "Spain")!.label).toBe("Puerta del Sol");
+    expect(CT.centreFor("Lisboa")!.country).toBe("Portugal");
+    expect(CT.centreFor("miami", "United States")!.r_km).toBe(2.5);
+    expect(CT.centreFor("Valencia", "Venezuela")).toBe(null); // the Spanish Valencia's centre is not Venezuela's
+    expect(CT.centreFor("Nowhereville")).toBe(null);
+  });
+  it("measures the distance and keeps only listings within the radius", () => {
+    expect(CT.km({ lat: 37.3891, lng: -5.9845 }, { lat: 37.3891, lng: -5.9845 })).toBe(0);
+    // Plaza Nueva to Calle Sierpes (300 m), Triana's Calle Betis (about 1 km), Doctor Fedriani and Palmete (far)
+    const sierpes = CT.centreFit(sev, { lat: 37.3925, lng: -5.9940 });
+    expect(sierpes).toMatchObject({ status: "central", by: "coords" });
+    expect(sierpes.km!).toBeLessThan(1.5);
+    expect(CT.centreFit(sev, { lat: 37.3837, lng: -5.9998 }).status).toBe("central");
+    const fedriani = CT.centreFit(sev, { lat: 37.4089451, lng: -5.9868636, text: "Doctor Fedriani (Distrito Macarena. Sevilla Capital)" });
+    expect(fedriani).toMatchObject({ status: "outside", by: "coords", km: 2.2 });
+    const palmete = CT.centreFit(sev, { lat: 37.3790, lng: -5.9330 });
+    expect(palmete.status).toBe("outside");
+    expect(palmete.km!).toBeGreaterThan(4);
+    // the map position wins over the text, and nonsense coordinates are ignored
+    expect(CT.centreFit(sev, { lat: 37.379, lng: -5.933, text: "Casco Antiguo" }).status).toBe("outside");
+    expect(CT.centreFit(sev, { lat: 0, lng: 0, text: "Arenal (Distrito Casco Antiguo. Sevilla Capital)" })).toMatchObject({ status: "central", by: "district" });
+    expect(CT.centreFit(sev, { lat: 40.4, lng: -3.7, text: "" }).status).toBe("unknown");
+  });
+  it("falls back to the listing's own district when it has no map position", () => {
+    expect(CT.centreFit(sev, { text: "San Vicente (Distrito Casco Antiguo. Sevilla Capital)" })).toMatchObject({ status: "central", district: "casco antiguo" });
+    expect(CT.centreFit(sev, { text: "Santa Cruz, Sevilla" }).status).toBe("central");
+    expect(CT.centreFit(sev, { text: "Barrio León-El Tardón (Distrito Triana. Sevilla Capital)" })).toMatchObject({ status: "near", district: "triana" });
+    expect(CT.centreFit(sev, { text: "Palmete (Distrito Cerro Amate. Sevilla Capital)" }).status).toBe("unknown");
+    expect(CT.centreFit(sev, { text: "Sevilla Capital" }).status).toBe("unknown");
+    // another town is never the centre of Sevilla
+    expect(CT.cardPlaceText("Camas", "Sevilla")).toBe("");
+    expect(CT.cardPlaceText("Arenal (Distrito Casco Antiguo. Sevilla Capital)", "Sevilla")).toMatch(/casco antiguo/);
+    expect(CT.inCentre(CT.centreFit(sev, { text: "Triana, Sevilla" }))).toBe(true);
+    expect(CT.inCentre(CT.centreFit(sev, { text: "Pino Montano, Sevilla" }))).toBe(false);
+    // Barcelona: the Dreta de l'Eixample is central, the rest of the Eixample next to it
+    const bcn = CT.centreFor("Barcelona")!;
+    expect(CT.centreFit(bcn, { text: "Dreta de l'Eixample (Distrito Eixample. Barcelona Capital)" }).status).toBe("central");
+    expect(CT.centreFit(bcn, { text: "Sant Antoni (Distrito Eixample. Barcelona Capital)" }).status).toBe("near");
+  });
+  it("geocodes other cities with a radius by size", () => {
+    const town = CT.centreFromGeocode("Ronda", "Spain", { lat: "36.7423", lon: "-5.1671", boundingbox: ["36.73", "36.76", "-5.18", "-5.15"] })!;
+    expect(town).toMatchObject({ lat: 36.7423, lng: -5.1671, r_km: 1.2, src: "geocoded" });
+    const big = CT.centreFromGeocode("Big", "Spain", { lat: "40", lon: "-3", boundingbox: ["39.8", "40.2", "-3.3", "-2.7"] })!;
+    expect(big.r_km).toBe(3);
+    expect(CT.centreFromGeocode("X", "Spain", null)).toBe(null);
+    // a geocoded city has no district lists: the generic words decide without a map position
+    expect(CT.centreFit(town, { text: "Casco antiguo, Ronda" }).status).toBe("central");
+  });
+  it("writes the card's fact and the honest note", () => {
+    expect(CT.centreFact({ status: "central", km: 1.2, by: "coords" })).toEqual({ en: "1.2 km from the centre", es: "A 1,2 km del centro" });
+    expect(CT.centreFact({ status: "central", km: 0.1, by: "coords" })!.en).toBe("In the city centre");
+    expect(CT.centreFact({ status: "near", km: null, by: "district" })!.en).toBe("Near the centre");
+    expect(CT.centreFact({ status: "unknown", km: null, by: null })).toBe(null);
+    expect(CT.centreNote({ place: "Sevilla", max_price: 200000, currency: "EUR", min_beds: 3, kind: "buy", closest_km: 2.14 }))
+      .toBe("No home in central Sevilla under €200,000 with 3+ bedrooms passed our checks today. Closest checked: 2.1 km from the centre.");
+    expect(CT.centreNote({ place: "Sevilla", max_price: 200000, currency: "EUR", min_beds: 3, closest_km: 2.14 }, "es"))
+      .toBe("Hoy ninguna vivienda en el centro de Sevilla por menos de 200.000 € con 3 o más habitaciones ha pasado nuestras comprobaciones. La más cercana que revisamos está a 2,1 km del centro.");
+    expect(CT.centreNote({ place: "Madrid", max_price: null, min_beds: null, closest_km: null })).toBe("No home in central Madrid passed our checks today.");
+    // central listings were checked but missed the bar: say how many, and the nearest one outside the centre
+    const tally = CT.centreTally([
+      { source: "web", centre_status: "central", distance_to_centre_km: 0.6 }, { source: "web", centre_status: "near", distance_to_centre_km: null },
+      { source: "web", centre_status: "outside", distance_to_centre_km: 2.8 }, { source: "realhunt", centre_status: "outside", distance_to_centre_km: 1.9 }, { source: "realhunt", centre_status: "central", distance_to_centre_km: 1 },
+    ]);
+    expect(tally).toEqual({ checked_central: 2, closest_km: 2.8 });
+    expect(CT.centreNote({ place: "Madrid", max_price: 350000, currency: "EUR", min_beds: 2, ...tally }))
+      .toBe("2 central homes checked (Madrid, under €350,000, 2+ bedrooms); none passed our photo and value checks today. Closest checked outside the centre: 2.8 km away.");
+    expect(CT.centreNote({ place: "Madrid", ...tally }, "es")).toBe("Revisamos 2 viviendas del centro de Madrid; ninguna ha pasado hoy nuestras comprobaciones de fotos y precio. La más cercana fuera del centro está a 2,8 km.");
+    expect(CT.centreNote({ place: "Madrid", max_price: 350000, currency: "EUR", min_beds: 2, checked_central: 12, closest_km: null }))
+      .toBe("12 central homes checked (Madrid, under €350,000, 2+ bedrooms); none passed our photo and value checks today.");
+    expect(CT.centreNote({ place: "Madrid", checked_central: 1 })).toBe("1 central home checked (Madrid); it did not pass our photo and value checks today.");
+    expect(CT.centreNote({ place: "Madrid", max_price: 350000, currency: "EUR", min_beds: 2, checked_central: 12 }, "es"))
+      .toBe("Revisamos 12 viviendas del centro de Madrid (por menos de 350.000 €, con 2 o más habitaciones); ninguna ha pasado hoy nuestras comprobaciones de fotos y precio.");
+    expect(CT.centreNote({ place: "Miami", max_price: 350000, currency: "USD" })).toMatch(/under \$350,000/);
+  });
+  it("picks central pisos.com cards first and leaves other towns out", async () => {
+    const { resolveLive: rl } = await import("../../supabase/functions/realhunt-live-search/core");
+    const p = rl(parseLiveQuery("casa en sevilla de 3 habitaciones en el centro por menos de 500k"), { tz: "Europe/Madrid" }).p;
+    const base = fx.cards.map((c) => P.parsePisosCard(c)).filter(Boolean) as any[];
+    const card = (id: string, area: string) => ({ ...base[0], id, url: "https://www.pisos.com/comprar/x-" + id, area, price: 300000, beds: 3, photos: 30 });
+    const rows = [card("1", "Palmete (Distrito Cerro Amate. Sevilla Capital)"), card("2", "Camas"), card("3", "Arenal (Distrito Casco Antiguo. Sevilla Capital)"),
+      card("4", "Triana Casco Antiguo (Distrito Triana. Sevilla Capital)"), card("5", "Sevilla Capital"), card("6", "Pino Montano (Distrito Norte. Sevilla Capital)")];
+    const ids = P.pickPisos(rows, p, 20, CT.centreFor("Sevilla")).map((r) => r.id);
+    expect(ids.slice(0, 3)).toEqual(["3", "4", "5"]);
+    expect(ids).not.toContain("2");
+    expect(ids.slice(3).sort()).toEqual(["1", "6"]); // other districts only after, for the honest "closest" list
+    // without the centre asked for, nothing is left out
+    expect(P.pickPisos(rows, { ...p, central: false }, 20, null).length).toBe(6);
+  });
+  it("does not reuse answers to 'centre' searches made before the centre was real", () => {
+    expect(liveKey(parseLiveQuery("piso en Madrid en el centro")).endsWith("|c3")).toBe(true);
+  });
+});
+
+describe("value against the centre (v5, 8-nov-2026)", async () => {
+  const CT = await import("../../supabase/functions/realhunt-live-search/centre");
+  const P = await import("../../supabase/functions/realhunt-live-search/pisos");
+  const flats = (v: number[]) => v.map((ppm, i) => ({ ppm, group: "flat" as const, id: "f" + i }));
+  it("uses central comparables of the same kind, then any central, then the city x a premium", () => {
+    const m = CT.centreMedians([...flats([5000, 5200, 5400, 5600, 5800, 6000]), { ppm: 3000, group: "house", id: "h" }], 3500);
+    expect(m.flat).toEqual({ ppm: 5500, from: "centre_type", n: 6 });
+    expect(m.house).toMatchObject({ from: "centre", ppm: 5400, n: 7 }); // one house: all central homes
+    const few = CT.centreMedians(flats([5000, 5200, 5400]), 3500);
+    expect(few.flat).toEqual({ ppm: 4375, from: "city_premium", n: 3 }); // 3,500 x 1.25
+    expect(CT.centreMedians([], null).all).toEqual({ ppm: null, from: null, n: 0 });
+    // the same listing seen twice (scan and an earlier find) counts once; nonsense is dropped
+    const dup = CT.centreMedians([...flats([5000, 5000, 5000, 5000, 5000]), { ppm: 9000, group: "flat", id: "f0" }, { ppm: -1, group: "flat" }], 4000);
+    expect(dup.flat.from).toBe("city_premium");
+    // six odd cheap "houses" next to many central flats do not set the bar for houses
+    const odd = CT.centreMedians([...flats([5000, 5200, 5400, 5600, 5800, 6000, 6200]), ...[900, 950, 1000, 1000, 1050, 1100].map((ppm, i) => ({ ppm, group: "house" as const, id: "h" + i }))], 3500);
+    expect(odd.house.from).toBe("centre");
+    expect(odd.flat.from).toBe("centre_type");
+    expect(P.pisosGroup("chalet_adosado")).toBe("house");
+    expect(P.pisosGroup("atico")).toBe("flat");
+  });
+  it("lets the best-value central homes reach 80 and keeps overpriced ones below", () => {
+    const m = CT.centreMedians(flats([5000, 5200, 5400, 5600, 5800, 6000, 6200]), 3500).flat.ppm!;
+    const home = (ppm: number) => liveScore({ price_eur: ppm * 70, sqm: 70, photos: 20, beds: 2, lat: 40.41, lng: -3.70, desc_len: 400, kind: "buy", photo_quality: 8, flags: [] }, { median_ppm: m, min_beds: 2 });
+    expect(home(4600).score).toBeGreaterThanOrEqual(80); // 20 % under the centre's median
+    expect(home(5600).score).toBeLessThan(80); // at the centre's median
+    expect(home(7000).score).toBeLessThan(70); // overpriced for the centre
+    // against the whole city (3,500 a m²) the same good-value central flat could never pass
+    expect(liveScore({ price_eur: 4600 * 70, sqm: 70, photos: 20, beds: 2, lat: 40.41, lng: -3.70, desc_len: 400, kind: "buy", photo_quality: 8, flags: [] }, { median_ppm: 3500, min_beds: 2 }).score).toBeLessThan(80);
   });
 });

@@ -236,7 +236,7 @@ export function parseLiveQuery(input: string): LiveQuery {
 /** One key per meaning: same kind, place, bedrooms, budget (rounded to €1,000) and type. */
 export function liveKey(p: LiveQuery): string {
   const r = (n: number | null) => (n == null ? "" : String(Math.round(n / 1000)));
-  return [p.kind, norm(p.country || ""), norm(p.city || p.place || ""), p.state || "", "b" + (p.min_beds ?? ""), "x" + r(p.max_eur), "n" + r(p.min_eur), p.ptype_soft ? "any" : p.ptype, p.good_score ? "g" : "", p.central ? "c" : ""].join("|");
+  return [p.kind, norm(p.country || ""), norm(p.city || p.place || ""), p.state || "", "b" + (p.min_beds ?? ""), "x" + r(p.max_eur), "n" + r(p.min_eur), p.ptype_soft ? "any" : p.ptype, p.good_score ? "g" : "", p.central ? "c3" : ""].join("|"); // c2 (8-nov-2026): the centre became real geography; c3: values against central comparables; older "centre" answers are not reused
 }
 
 /** Puts a chosen (or the only) place into a parsed search: its name, country and, for US places, city and state. */
@@ -606,7 +606,7 @@ export function jobCost(model: string, u: Usage | null | undefined): number {
  * checked by the AI, no blocking flag (no squat, no mobile home...), score 60 or more, best first, at most 4.
  * They keep only what the card needs and why each one missed (photos, score).
  */
-export type Miss = { id: string; url: string; title: string; title_es?: string | null; price: number | null; currency: string; price_eur: number | null; beds: number | null; sqm: number | null; location: string; image: string | null; score: number; photo_quality: number | null; why: string[]; central?: boolean | null };
+export type Miss = { id: string; url: string; title: string; title_es?: string | null; price: number | null; currency: string; price_eur: number | null; beds: number | null; sqm: number | null; location: string; image: string | null; score: number; photo_quality: number | null; why: string[]; central?: boolean | null; distance_to_centre_km?: number | null; centre_fact?: string | null; centre_fact_es?: string | null };
 export function closestMisses(all: any[], n = 4): Miss[] {
   return (all || [])
     .filter((r) => r && r.show !== true && r.source === "web" && r.photo_quality != null && r.score >= 60 && !(r.reasons || []).some((x: string) => /^flag:|^skip:/.test(x)))
@@ -614,6 +614,7 @@ export function closestMisses(all: any[], n = 4): Miss[] {
     .map((r) => ({
       id: r.id, url: r.url, title: r.title, title_es: r.title_es || null, price: r.price, currency: r.currency, price_eur: r.price_eur, beds: r.beds, sqm: r.sqm, location: r.location,
       image: r.image, score: r.score, photo_quality: r.photo_quality, central: r.central ?? null,
+      distance_to_centre_km: r.distance_to_centre_km ?? null, centre_fact: r.centre_fact ?? null, centre_fact_es: r.centre_fact_es ?? null,
       why: (r.reasons || []).filter((x: string) => x === "photos" || x === "score" || x === "few_photos"),
     }));
 }
