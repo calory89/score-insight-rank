@@ -267,6 +267,7 @@ def compute(homes: list[dict], prev: dict[str, dict], log=print, sink=None) -> t
     elev = elevations([(h["lat"], h["lng"]) for h in homes])
     out, failed = {}, []
     overpass_ok = True
+    fails = 0
     fema_cache: dict[tuple[float, float], dict | None] = {}
     for i, h in enumerate(homes):
         lat, lng, slug = float(h["lat"]), float(h["lng"]), h["slug"]
@@ -276,9 +277,13 @@ def compute(homes: list[dict], prev: dict[str, dict], log=print, sink=None) -> t
             mw = rl = None; checked = False
             if overpass_ok:
                 try:
-                    mw, rl = overpass_roads(lat, lng); checked = True; time.sleep(1.5)
+                    mw, rl = overpass_roads(lat, lng); checked = True; time.sleep(1.5); fails = 0
                 except RuntimeError as e:
-                    log(f"  overpass unreachable ({e}); roads/rail skipped for the rest of this run"); overpass_ok = False
+                    # 8-nov-2026: Overpass rate-limits in bursts; skip this home, rest a while and keep going
+                    fails += 1
+                    log(f"  overpass failed for {slug} ({e}); retry later")
+                    if fails >= 25: log("  overpass down: roads/rail skipped for the rest of this run"); overpass_ok = False
+                    else: time.sleep(min(120, 20 * fails))
             if not checked and old.get("roads_checked"):
                 mw, rl, checked = old.get("motorway_m"), old.get("rail_m"), True
             noise = {"level": noise_level(mw, rl, akm, checked), "motorway_m": mw, "rail_m": rl, "airport_km": akm, "airport": aname,
