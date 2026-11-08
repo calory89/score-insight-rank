@@ -231,6 +231,14 @@ export function parseCbMatch(m: string): CbRow | null {
 export function cbPpm(rows: CbRow[]): number[] {
   return rows.filter((r) => r.sqft && r.sqft > 150 && r.price >= 20000).map((r) => (toEur(r.price, "USD") || 0) / (r.sqft! * 0.092903)).filter((v) => v > 0);
 }
+/** Flats, townhouses and houses are compared with their own kind (a townhouse always looks cheap next to houses). */
+export const cbGroup = (type: string) => (/condo|co-?op|apartment/i.test(type) ? "condo" : /town/i.test(type) ? "townhouse" : "house");
+/** Median € per m² of each kind among the scanned rows (8 or more of that kind), plus "all". */
+export function cbGroupMedians(rows: CbRow[]): Record<string, number | null> {
+  const out: Record<string, number | null> = { all: rows.length ? median(cbPpm(rows)) : null };
+  for (const g of ["condo", "townhouse", "house"]) { const v = cbPpm(rows.filter((r) => cbGroup(r.type) === g)); out[g] = v.length >= 8 ? median(v) : null; }
+  return out;
+}
 /**
  * ACTIVE listings that fit the search, best value per sq ft first (rows without a size go last). 8-nov-2026: rows
  * under half the city's median per sq ft are left out (with 8+ rows to compare): that cheap is nearly always a
@@ -253,9 +261,13 @@ export function pickCb(rows: CbRow[], p: LiveQuery, limit = 16): CbRow[] {
     return true;
   });
   const pp = (r: CbRow) => (r.sqft && r.sqft > 150 ? r.price / r.sqft : Infinity);
-  const sized = ok.map(pp).filter((v) => Number.isFinite(v));
-  const med = sized.length >= 8 ? median(sized) : null;
-  return ok.filter((r) => !med || !Number.isFinite(pp(r)) || pp(r) >= med * 0.5).sort((a, b) => pp(a) - pp(b) || a.price - b.price).slice(0, limit);
+  const sized = ok.filter((r) => Number.isFinite(pp(r)));
+  const all = sized.length >= 8 ? median(sized.map(pp)) : null;
+  const gm: Record<string, number | null> = {};
+  for (const g of ["condo", "townhouse", "house"]) { const v = sized.filter((r) => cbGroup(r.type) === g).map(pp); gm[g] = v.length >= 8 ? median(v) : all; }
+  // value against its own kind; rows without a size go last
+  const rel = (r: CbRow) => { const m = gm[cbGroup(r.type)]; return Number.isFinite(pp(r)) ? (m ? pp(r) / m : pp(r) / 1e6) : Infinity; };
+  return ok.filter((r) => !Number.isFinite(rel(r)) || !gm[cbGroup(r.type)] || rel(r) >= 0.5).sort((a, b) => rel(a) - rel(b) || a.price - b.price).slice(0, limit);
 }
 
 /** Photos of this listing only (CB pages also show photos of other homes), at 1280 px. */
@@ -383,13 +395,22 @@ export function parseReview(text: string, nPhotos: number): Review | null {
   const order: number[] = [];
   for (const v of Array.isArray(o.order) ? o.order : []) { const i = Number(v); if (Number.isInteger(i) && i >= 0 && i < nPhotos && !order.includes(i)) order.push(i); }
   const num = (v: unknown) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.round(n) : null; };
-  const cheap = clean(o.why_cheap, 220);
+  const cheap = cleanCheap(clean(o.why_cheap, 260));
   return {
     photo_quality: Math.max(1, Math.min(10, Math.round(q))), order,
     flags: [...new Set((Array.isArray(o.flags) ? o.flags : []).map((f: unknown) => String(f).toLowerCase().trim()).filter((f: string) => ALL_FLAGS.includes(f)))] as string[],
     title: clean(o.title, 120), why_great: clean(o.why_great, 700), why_cheap: cheap && !/^(null|none|n\/a)$/i.test(cheap) ? cheap : null,
     hoa_monthly: num(o.hoa_monthly), tax_annual: num(o.tax_annual), note: clean(o.note, 200),
   };
+}
+
+/** why_cheap must be a reason, not the price comparison again: clauses about medians or percentages are dropped. */
+export function cleanCheap(s: string | null | undefined): string | null {
+  const parts = String(s || "").split(/(?<=[.;])\s+|;\s*/).map((x) => x.replace(/[.;]\s*$/, "").trim()).filter(Boolean);
+  const keep = parts.filter((x) => !/median|\d+\s?%|per cent|percent|comparable|below (the )?(area|market|average)|priced (at|below|under)|good value|great value|strong (buyer )?value|bargain|suggest/i.test(x));
+  if (!keep.length || /^(null|none|n\/a)$/i.test(keep[0])) return null;
+  const out = keep.join("; ");
+  return (out.charAt(0).toUpperCase() + out.slice(1)).slice(0, 220).replace(/[,;:\s]+$/, "") + ".";
 }
 
 /** The gate: shown only with score >= 80, photos >= 7/10, at least 4 good photos and no blocking flag. */
@@ -440,14 +461,16 @@ export function reviewPrompt(x: {
       "photos with a watermark or MLS logo where others exist, blurry, dark or near-duplicate photos, and photos that are not of this home.",
     `flags: any that apply, only from this list: ${ALL_FLAGS.join(", ")}. manufactured_home = mobile, manufactured or park home; land_lease = on rented land or with a lot fee; ` +
       "age_restricted = 55+ or senior community; inconsistent_data = only when the stated facts clearly cannot all be true (e.g. 5 bedrooms in 93 m²) or the photos clearly show a different kind of property than described; small differences or missing details are not inconsistent; " +
-      "not_a_home = land, a parking space, a commercial unit; off_market = sold, under contract or no longer listed; needs_renovation = the text or photos show it needs major work.",
+      "not_a_home = land, a parking space, a commercial unit; off_market = sold, under contract or no longer listed; needs_renovation = the text or photos show it needs major work; " +
+      "hoa_assessment = only when an extra one-off special assessment is stated (a normal monthly HOA or community fee is NOT a flag).",
     "title: a polished title in RealHunt's style, 6 to 14 words, sentence case, no price, no emoji, no address number, no em dashes; the best true feature first, then the type and the area. Examples: " +
       TITLE_EXAMPLES.map((t) => `"${t}"`).join("; ") + ".",
     "why_great: 2 to 4 short sentences in plain English about what is good about this home, using only facts from the listing text, the portal facts and what the photos clearly show. " +
       "No invented facts, no superlatives you cannot back, no promises about value or returns, no em dashes.",
-    "why_cheap: if the price per m² is under 70% of the median, or a flag explains a low price, one plain sentence saying why it is cheap " +
+    "why_cheap: if the price per m² is under 70% of the median, or a flag explains a low price, one plain sentence with the concrete reason a buyer pays less, " +
+      "as the listing states it or the photos show it: the kind of home, its age or condition, the location (e.g. next to a main road), high monthly fees, restrictions, a tenant " +
       '(e.g. "Mobile home on rented land: you pay a monthly lot fee.", "Only for buyers aged 55 or more.", "Needs a full renovation.", "Small 1960s building far from the beach."). ' +
-      "Use only what the listing says or shows; if you cannot tell why, null. Otherwise null.",
+      "Never just repeat that the price is below the area, never praise the value. If you cannot see a concrete reason, null. If the price is not unusually low, null.",
     "hoa_monthly / tax_annual: the monthly community (HOA) fee and the yearly property tax in the listing currency, only if stated; else null. note: one short internal note.",
   ].join("\n");
 }
@@ -491,7 +514,7 @@ export const CB_FACTS_RX = '"((?:subdivisionName|seniorCommunityYN|seniorCommuni
 export type CbFacts = { remarks: string; subdivision: string; senior: boolean; style: string; body: string; hoa: number | null; hoa_freq: string; tax: number | null; year: number | null; baths: number | null; text: string };
 /** "DORSET AT CENTURY VILLAGE CONDO SEC 2" -> "Dorset at Century Village": an MLS subdivision as a place name. */
 export function niceArea(s: string): string {
-  const t = String(s || "").replace(/\b(condo(minium)?s?|unit|units|sec(tion)?|phase|ph|addn?|addition|replat|resub|sub(div(ision)?)?|amd|amended|plat|pb|pg|no|bldg|blk|lot|tract|[ivx]{1,4}|\d+\w*)\b\.?/gi, " ")
+  const t = String(s || "").replace(/\btwnhms?\b|\btwnhs\b|\btwnhses\b/gi, "Townhomes").replace(/\bhts\b/gi, "Heights").replace(/\bests?\b/gi, "Estates").replace(/\bvlg\b/gi, "Village").replace(/\b(condo(minium)?s?|unit|units|sec(tion)?|phase|ph|addn?|addition|replat|resub|rev|revised|sub(div(ision)?)?|amd|amended|plat|pb|pg|no|bldg|blk|lot|tract|[ivx]{1,4}|\d+\w*)\b\.?/gi, " ")
     .replace(/[#,;:()]/g, " ").replace(/\s+/g, " ").trim();
   if (t.length < 3 || /^(none|unknown|n\/a|na|other|not in subdivision|no subdivision)$/i.test(t)) return "";
   return t.toLowerCase().replace(/\b[a-z]/g, (c) => c.toUpperCase()).replace(/\b(At|Of|The|And|On|In)\b/g, (w) => w.toLowerCase()).replace(/^./, (c) => c.toUpperCase());
@@ -520,6 +543,13 @@ export function withinAsk(it: { kind: "buy" | "rent"; price: number | null; curr
   if (p.min_beds && it.beds != null && it.beds < p.min_beds) return false;
   return true;
 }
+
+// ---------------------------------------------------------------- which portals can be read
+/** Portals our reader (realhunt-candidates "extract") can open, tested 8-nov-2026: Claude is asked to prefer them. */
+export const READABLE_PORTALS = ["coldwellbanker.com", "pisos.com", "habitaclia.com", "thinkspain.com", "imovirtual.com"];
+/** Portals that block automatic reading: their listings can never pass the AI check, so they are not even tried. */
+export const BLOCKED_PORTALS = /(^|\.)(idealista\.(com|pt|it)|fotocasa\.es|yaencontre\.com|zillow\.com|redfin\.com|homes\.com|realtor\.com|trulia\.com|casa\.sapo\.pt|supercasa\.pt|kyero\.com|green-acres\.\w+|spainhouses\.net|engelvoelkers\.com|rightmove\.co\.uk|zoopla\.co\.uk)$/i;
+export const blockedUrl = (u: string) => { try { return BLOCKED_PORTALS.test(new URL(u).hostname.replace(/^www\./, "")); } catch { return true; } };
 
 // ---------------------------------------------------------------- Claude's answer
 export type LiveItem = { url: string; title: string; price: number | null; currency: string; beds: number | null; sqm: number | null; location: string; kind: "buy" | "rent"; image_url: string | null; country: string | null };

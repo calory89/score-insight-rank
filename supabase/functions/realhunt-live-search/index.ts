@@ -7,8 +7,9 @@
 // Order of work, cheapest first:
 //   1. our own data: approved RealHunt homes (score >= 80) and finds earlier live searches published (last 30 days,
 //      passed the gate). With 6 or more good matches it answers from them and spends nothing.
-//   2. Claude with web search + web fetch (ANTHROPIC_API_KEY; model ANTHROPIC_MODEL, default claude-sonnet-5-5).
-//   3. Coldwell Banker (free) for US cities, as fallback or to fill up.
+//   2. Coldwell Banker (free, readable) for US cities.
+//   3. Claude with web search + web fetch (ANTHROPIC_API_KEY; model ANTHROPIC_MODEL, default claude-sonnet-5-5), when
+//      the free source found fewer than 6 listings (most US portals block robots, so their pages cannot be checked).
 //   4. every candidate: read the page, a first score, then (only if it could still reach 80) the AI check:
 //      Claude vision (REVIEW_MODEL, cheap) on up to 6 photos plus the listing text returns photo quality, the best
 //      photo order, flags (mobile home, land lease, 55+...), a polished title, why it is great and why it is cheap.
@@ -30,7 +31,7 @@ export const LIMITS = {
   GLOBAL_JOBS_PER_DAY: 300,
   USER_USD_PER_DAY: 1, // Claude spend (search + AI checks) per user (or per IP hash without an account) per UTC day
   GLOBAL_USD_PER_DAY: 30,
-  EST_CLAUDE_JOB_USD: 0.35, // what the web search part of one job may cost, checked against the caps before calling
+  EST_CLAUDE_JOB_USD: 0.5, // what the web search part of one job may cost, checked against the caps before calling
   EST_REVIEW_USD: 0.03, // what one AI check may cost; each check runs only while the job's budget still covers it
   MAX_REVIEWS: 12, // AI checks per job
   REUSE_ENOUGH: 6, // good matches we must already have to skip the web
@@ -65,12 +66,14 @@ async function cand(body: Record<string, unknown>, timeout = 60000): Promise<any
   } catch (e) { return { error: String(e) }; } finally { clearTimeout(t); }
 }
 /** Hands a job over to a fresh invocation of this function (each one has its own time limit). */
-async function chain(id: string) {
+async function chain(id: string): Promise<string> {
   try {
     const c = new AbortController(); const t = setTimeout(() => c.abort(), 15000);
-    await fetch(`${SUPA}/functions/v1/realhunt-live-search`, { method: "POST", signal: c.signal, headers: { "Content-Type": "application/json", apikey: ANON, Authorization: `Bearer ${ANON}` }, body: JSON.stringify({ action: "work", job: id, secret: await secret() }) }).then((r) => r.text());
+    const r = await fetch(`${SUPA}/functions/v1/realhunt-live-search`, { method: "POST", signal: c.signal, headers: { "Content-Type": "application/json", apikey: ANON, Authorization: `Bearer ${ANON}` }, body: JSON.stringify({ action: "work", job: id, secret: await secret() }) });
+    const body = (await r.text()).slice(0, 80);
     clearTimeout(t);
-  } catch (e) { console.error("chain", id, e); }
+    return r.status + " " + body;
+  } catch (e) { console.error("chain", id, e); return "err " + String(e).slice(0, 80); }
 }
 
 // ---------------------------------------------------------------- RealHunt's approved homes (the site's own snapshot)
@@ -95,7 +98,7 @@ type Result = {
 };
 type Cand = { url: string; title: string; price: number | null; currency: string; beds: number | null; sqm: number | null; location: string; country: string | null; kind: "buy" | "rent"; image: string | null; provider: string; cb?: C.CbRow; lat?: number | null; lng?: number | null };
 type Who = { user: string | null; ipHash: string; netHash: string; ipSrc: string };
-type Work = { p: C.LiveQuery; q: string; lang: string; who: Who; t0: number; cands: Cand[]; i: number; median: number | null; median_from: string | null; country_medians: Record<string, number | null>; budget: number; reviews: number; units: number; slices: number; note: string; provider: string; search_cost: number; done?: boolean };
+type Work = { p: C.LiveQuery; q: string; lang: string; who: Who; t0: number; cands: Cand[]; i: number; median: number | null; median_from: string | null; country_medians: Record<string, number | null>; scan_medians?: Record<string, number | null>; budget: number; reviews: number; units: number; slices: number; note: string; provider: string; search_cost: number; done?: boolean };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
@@ -103,8 +106,9 @@ Deno.serve(async (req) => {
     if (req.method === "GET") return await poll(new URL(req.url).searchParams.get("job") || "");
     if (req.method === "POST") {
       const body = await req.json().catch(() => ({}));
-      if (body.action === "work" || body.action === "regate") {
+      if (body.action === "work" || body.action === "regate" || body.action === "selftest") {
         if (!body.secret || body.secret !== (await secret())) return json({ error: "Forbidden" }, 403);
+        if (body.action === "selftest") return json({ chain: await chain("00000000-0000-0000-0000-000000000000") }); // can this function call itself?
         if (body.action === "work") { background(slice(String(body.job || "")).catch((e) => console.error("slice", e))); return json({ ok: true }); }
         return json(await regate(Array.isArray(body.slugs) ? body.slugs.map(String) : null, body.apply === true));
       }
@@ -250,42 +254,44 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
   }
   await set({ progress: 12, stage: { k: "ours_some", n: results.length } });
 
-  // 2. the web: Claude, within the caps
+  // 2. Coldwell Banker for US cities (free, and its pages can be read; most US portals block robots, so their
+  //    listings could never pass the AI check): first. Its pages are also the same-city comparables.
   const cands: Cand[] = [];
   let note = ""; let provider = ""; let usage: any = null;
+  let scanPpm: number[] = [];
+  let scanMedians: Record<string, number | null> = {};
+  if (p.city && p.state) {
+    await set({ progress: 15, stage: { k: "searching_cb" } });
+    const pages = await Promise.all(C.cbSearchUrls(p, 5).map((u) => cand({ action: "scan", url: u, rx: C.CB_RX }, 45000)));
+    const scanned = pages.flatMap((r: any) => (Array.isArray(r?.matches) ? r.matches : [])).map(C.parseCbMatch).filter(Boolean) as C.CbRow[];
+    const clean = scanned.filter((r) => r.status === "ACTIVE" && !/land|lot|manufactured|mobile/i.test(r.type));
+    scanPpm = C.cbPpm(clean);
+    scanMedians = C.cbGroupMedians(clean);
+    for (const r of C.pickCb(scanned, p, 14)) {
+      cands.push({ url: r.url, title: "", price: r.price, currency: "USD", beds: r.beds, sqm: r.sqft ? Math.round(r.sqft * 0.092903) : null, location: r.address, country: "United States", kind: p.kind, image: r.photo, provider: "coldwellbanker", cb: r, lat: r.lat, lng: r.lng });
+    }
+    if (cands.length) provider = "coldwellbanker";
+    await set({ progress: 22, stage: { k: "found", n: cands.length } });
+  }
+
+  // 3. the web: Claude with web search, within the caps (for US cities only when the free source found too few)
   const [mine, all] = await Promise.all([who.user ? spentToday("user_id", who.user) : spentToday("ip_hash", who.ipHash), spentToday(null, null)]);
   const budget = Math.max(0, Math.min(LIMITS.USER_USD_PER_DAY - mine, LIMITS.GLOBAL_USD_PER_DAY - all));
   const key = Deno.env.get("ANTHROPIC_API_KEY");
   if (!key) note = "no_key";
+  else if (cands.length >= 6) { /* enough readable listings: no need to pay for a web search */ }
   else if (budget < LIMITS.EST_CLAUDE_JOB_USD) note = mine + LIMITS.EST_CLAUDE_JOB_USD > LIMITS.USER_USD_PER_DAY ? "user_budget" : "global_budget";
   else {
-    await set({ progress: 15, stage: { k: "searching" } });
-    let prog = 15;
-    const tick = setInterval(() => { prog = Math.min(36, prog + 1); set({ progress: prog, stage: { k: "searching" } }).then(() => {}, () => {}); }, 4000);
+    await set({ progress: 24, stage: { k: "searching" } });
+    let prog = 24;
+    const tick = setInterval(() => { prog = Math.min(42, prog + 1); set({ progress: prog, stage: { k: "searching" } }).then(() => {}, () => {}); }, 4000);
     try {
       const c = await claude(key, p, q, Math.max(1, 8 - results.length));
-      cost = c.cost; usage = c.usage; provider = c.model || "";
-      for (const it of c.items.filter((i) => C.withinAsk(i, p))) cands.push({ ...it, image: it.image_url, provider: "claude" });
+      cost = c.cost; usage = c.usage; provider = [provider, c.model].filter(Boolean).join("+");
+      for (const it of c.items.filter((i) => C.withinAsk(i, p) && !C.blockedUrl(i.url))) if (!cands.some((x) => x.url === it.url)) cands.push({ ...it, image: it.image_url, provider: "claude" });
       if (c.error) note = "claude_" + c.error;
     } finally { clearInterval(tick); }
-    await set({ progress: 38, stage: { k: "found", n: cands.length }, usage: { ...(usage || {}), model: provider, ip_src: who.ipSrc, net: who.netHash } });
-  }
-
-  // 3. Coldwell Banker for US cities (free): fallback, or to fill up; its pages are also the same-city comparables
-  let scanPpm: number[] = [];
-  if (p.city && p.state) {
-    await set({ progress: 40, stage: { k: "searching_cb" } });
-    const pages = await Promise.all(C.cbSearchUrls(p, 5).map((u) => cand({ action: "scan", url: u, rx: C.CB_RX }, 45000)));
-    const scanned = pages.flatMap((r: any) => (Array.isArray(r?.matches) ? r.matches : [])).map(C.parseCbMatch).filter(Boolean) as C.CbRow[];
-    scanPpm = C.cbPpm(scanned.filter((r) => r.status === "ACTIVE" && !/land|lot|manufactured|mobile/i.test(r.type)));
-    if (cands.length < 8) {
-      for (const r of C.pickCb(scanned, p, 16)) {
-        if (cands.some((c) => c.url === r.url)) continue;
-        cands.push({ url: r.url, title: "", price: r.price, currency: "USD", beds: r.beds, sqm: r.sqft ? Math.round(r.sqft * 0.092903) : null, location: r.address, country: "United States", kind: p.kind, image: r.photo, provider: "coldwellbanker", cb: r, lat: r.lat, lng: r.lng });
-      }
-      provider = provider ? provider + "+coldwellbanker" : "coldwellbanker";
-    }
-    await set({ progress: 44, stage: { k: "found", n: cands.length } });
+    await set({ progress: 44, stage: { k: "found", n: cands.length }, usage: { ...(usage || {}), model: provider, ip_src: who.ipSrc, net: who.netHash } });
   }
 
   // medians for the value part of the score (core.ts pickMedian)
@@ -300,7 +306,7 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
     ...cands.filter((c) => !c.cb).map((c) => ppm(C.toEur(c.price, c.currency), c.sqm))];
   const m = C.pickMedian(scanPpm, local, p.country ? country_medians[p.country] ?? null : null);
 
-  const work: Work = { p, q, lang, who, t0, cands: cands.slice(0, LIMITS.MAX_CANDS), i: 0, median: m.ppm, median_from: m.from, country_medians, budget: Math.max(0, budget - cost), reviews: 0, units: 0, slices: 0, note, provider, search_cost: cost };
+  const work: Work = { p, q, lang, who, t0, cands: cands.slice(0, LIMITS.MAX_CANDS), i: 0, median: m.ppm, median_from: m.from, country_medians, scan_medians: scanMedians, budget: Math.max(0, budget - cost), reviews: 0, units: 0, slices: 0, note, provider, search_cost: cost };
   await set({ progress: 45, stage: { k: "checking", n: 0, of: work.cands.length }, work, provider: provider || "ours" });
   await slice(id, t0);
 }
@@ -321,6 +327,9 @@ async function slice(id: string, sliceT0 = Date.now()) {
   const shownCount = () => results.filter(isShown).length;
   const tooLate = () => Date.now() - w.t0 > LIMITS.JOB_MAX_MS;
 
+  // heartbeat: a slow listing (an import can take a minute) must not look like a dead job to the poll's re-start
+  const beat = setInterval(() => { db.from("live_jobs").update({ updated_at: new Date().toISOString() }).eq("id", id).then(() => {}, () => {}); }, 20_000);
+  try {
   while (w.i < total && !tooLate() && shownCount() < 12 && Date.now() - sliceT0 < LIMITS.SLICE_START_MS) {
     const batch = w.cands.slice(w.i, w.i + 3);
     w.i += batch.length;
@@ -328,7 +337,8 @@ async function slice(id: string, sliceT0 = Date.now()) {
     await Promise.all(batch.map((c) => checkOne(c, w, results, (usd) => { cost += usd; }, step).catch((e) => console.error("check", c.url, e))));
     await set({ progress: pct(), stage: { k: "checking", n: w.i, of: total } });
   }
-  if (w.i < total && !tooLate() && shownCount() < 12) { await set({}); await chain(id); return; }
+  } finally { clearInterval(beat); }
+  if (w.i < total && !tooLate() && shownCount() < 12) { await set({}); const st = await chain(id); if (!st.startsWith("200")) console.error("chain failed", id, st); return; }
 
   // done
   results.sort((a, b) => Number(isShown(b)) - Number(isShown(a)) || b.score - a.score);
@@ -368,7 +378,8 @@ async function checkOne(c: Cand, w: Work, results: Result[], spend: (usd: number
   const tc = (s: string) => s.toLowerCase().replace(/\b[a-z]/g, (m) => m.toUpperCase());
   const location = c.cb ? [facts?.subdivision, tc(cityName), tc(stateName)].filter(Boolean).join(", ") : c.location || (okPage && x.locality) || "";
   const country = c.country || p.country;
-  const median = w.median || (country ? w.country_medians[country] ?? null : null);
+  // the same kind of home in the same city first (a townhouse against townhouses), then the job's median
+  const median = (c.cb && w.scan_medians?.[C.cbGroup(c.cb.type)]) || w.median || (country ? w.country_medians[country] ?? null : null);
   const ptype = c.cb?.type || (p.ptype !== "any" ? p.ptype : "");
   const flags0 = C.textFlags([desc, c.title, facts?.text || "", facts?.style || "", facts?.body || ""].join(" "), { beds, baths, sqm });
   if (facts?.senior && !flags0.includes("age_restricted")) flags0.push("age_restricted");
@@ -413,8 +424,12 @@ async function checkOne(c: Cand, w: Work, results: Result[], spend: (usd: number
   const hoa = review?.hoa_monthly ?? facts?.hoa ?? null;
   // Florida (Carlos, 7-nov-2026): the listing's tax is the seller's, with the homestead discount; a buyer pays about 1.8 % a year
   const fl = c.cb && p.state === "fl" && c.kind === "buy" && price;
-  const tax = fl ? Math.round((price! * 0.018) / 100) * 100 : review?.tax_annual ?? facts?.tax ?? null;
-  const costs_note = fl ? `Property tax is an estimate for a new owner (about 1.8% of the price a year)${facts?.tax ? `; the seller paid $${Math.round(facts.tax).toLocaleString("en-US")} in the last tax bill, which may include a homestead discount` : ""}.` : null;
+  const est = fl ? Math.round((price! * 0.018) / 100) * 100 : 0;
+  const sellerTax = facts?.tax || 0;
+  const tax = fl ? Math.max(est, Math.round(sellerTax / 100) * 100) : review?.tax_annual ?? facts?.tax ?? null;
+  const costs_note = !fl ? null : sellerTax > est
+    ? `Property tax: the last tax bill was $${Math.round(sellerTax).toLocaleString("en-US")} a year.`
+    : `Property tax is an estimate for a new owner (about 1.8% of the price a year)${sellerTax ? `; the seller paid $${Math.round(sellerTax).toLocaleString("en-US")} in the last tax bill, which may include a homestead discount` : ""}.`;
   const r: Result = {
     id: "web-" + (await sha(c.url)).slice(0, 12), source: "web", provider: c.provider, url: c.url, deal_slug: null, deal_id: null,
     title: (review?.title || existing?.title || c.title || (okPage && x.title) || "Home").slice(0, 160), price, currency, price_eur, beds, sqm,
@@ -520,7 +535,7 @@ async function regate(only: string[] | null, apply: boolean) {
     const facts = /coldwellbanker\.com/.test(d.source_url || "") ? C.parseCbFacts((await cand({ action: "scan", url: d.source_url, rx: C.CB_FACTS_RX }, 25000))?.matches) : null;
     const desc = facts?.remarks || d.why_great || "";
     const med = C.median(rows.filter((r) => r.country === d.country).map((r) => ppm(Number(r.price_eur) || null, Number(r.sqm) || null)));
-    const { data: near } = await db.from("live_listings").select("price_eur,sqm,place").ilike("place", `%${String(d.location_name || "").split(",")[0]}%`).limit(300);
+    const { data: near } = await db.from("live_listings").select("price_eur,sqm,place").ilike("place", `%${(() => { const parts = String(d.location_name || "").split(",").map((x) => x.trim()).filter(Boolean); return parts.length >= 2 ? parts[parts.length - 2] : parts[0] || ""; })()}%`).limit(300);
     const m = C.pickMedian([], (near || []).map((x: any) => ppm(Number(x.price_eur), Number(x.sqm))), med);
     const flags0 = C.textFlags([desc, facts?.text || ""].join(" "), { beds: d.bedrooms, baths: facts?.baths, sqm: d.sqm });
     if (facts?.senior && !flags0.includes("age_restricted")) flags0.push("age_restricted");
@@ -567,6 +582,7 @@ async function claude(key: string, p: C.LiveQuery, q: string, want: number): Pro
     "(e.g. Redfin, Trulia, homes.com, Idealista, Rightmove category pages): open 1 to 3 of the most relevant list pages with web_fetch and take the " +
     "individual listing URLs, prices and details shown there (make relative links absolute with that page's domain). If you are not sure a listing is current or matches, leave it out. " +
     "Leave out mobile or manufactured homes, homes on rented land, 55+ communities, auctions, timeshares, shares of a property and homes that need a full renovation. " +
+    `Only listings whose page our robot can read count: prefer ${C.READABLE_PORTALS.join(", ")} and estate agents' own websites; never return listings from idealista, fotocasa, yaencontre, zillow, redfin, homes.com, realtor.com, trulia, casa.sapo, supercasa, kyero, engelvoelkers, rightmove or zoopla (they block robots). ` +
     "Reply with ONLY a JSON array, no prose, no code fences: " +
     '[{"url":"","title":"","price":0,"currency":"USD","beds":0,"sqm":0,"location":"town, region","country":"country name in English","kind":"buy","image_url":""}]. ' +
     "price is a number in the listing currency (monthly rent for rentals), sqm is the living area in square metres (convert from sq ft by multiplying by 0.0929), " +
@@ -580,8 +596,9 @@ async function claude(key: string, p: C.LiveQuery, q: string, want: number): Pro
         method: "POST", signal: c.signal,
         headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-beta": "web-fetch-2025-09-10", "content-type": "application/json" },
         body: JSON.stringify({ model, max_tokens: 3000, system, messages: [{ role: "user", content: user }], tools: [
-          { type: "web_search_20250305", name: "web_search", max_uses: 4 },
-          { type: "web_fetch_20250910", name: "web_fetch", max_uses: 3, max_content_tokens: 12000 },
+          // 8-nov-2026: 4 searches + 3 fetches of 12k tokens cost US$0.76 on one search; this keeps it near US$0.3
+          { type: "web_search_20250305", name: "web_search", max_uses: 3 },
+          { type: "web_fetch_20250910", name: "web_fetch", max_uses: 2, max_content_tokens: 8000 },
         ] }),
       });
       const d = await r.json().catch(() => ({}));

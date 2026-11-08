@@ -159,6 +159,13 @@ describe("the quality gate", () => {
     expect(gateDecision(90, { ...r, flags: ["age_restricted"] }, 6).show).toBe(true); // a caveat, shown with a label
     expect(gateDecision(99, null, 9)).toEqual({ show: false, reasons: ["not_reviewed"] });
   });
+  it("keeps why_cheap to the reason", async () => {
+    const { cleanCheap } = await import("../../supabase/functions/realhunt-live-search/core");
+    expect(cleanCheap("1964 home in suburban Tampa location; 60% of area median suggests home still needs updates; older systems may need work.")).toBe("1964 home in suburban Tampa location; older systems may need work.");
+    expect(cleanCheap("Priced 38% below median comparable homes in the area, suggesting strong buyer value.")).toBeNull();
+    expect(cleanCheap("Mobile home on rented land: you pay a monthly lot fee.")).toBe("Mobile home on rented land: you pay a monthly lot fee.");
+    expect(cleanCheap(null)).toBeNull();
+  });
   it("orders photos best first and drops the rejected ones", () => {
     const ph = ["a", "b", "c", "d", "e", "f", "g", "h"];
     expect(orderPhotos(ph, { order: [3, 0] }, 6)).toEqual(["d", "a", "g", "h"]);
@@ -265,6 +272,19 @@ describe("guards", () => {
     rows.push({ ...base, id: "odd", price: 60000, sqft: 1000 });
     const ids = pickCb(rows, parseLiveQuery("3 bed home in Miami under $300k")).map((r) => r.id);
     expect(ids).not.toContain("odd"); expect(ids[0]).toBe("n0");
+  });
+  it("compares townhouses with townhouses", async () => {
+    const { cbGroup, cbGroupMedians } = await import("../../supabase/functions/realhunt-live-search/core");
+    const base = parseCbMatch(MATCH)!;
+    const houses: CbRow[] = Array.from({ length: 8 }, (_, i) => ({ ...base, id: "h" + i, type: "Single Family", price: 300000, sqft: 1000 }));
+    const towns: CbRow[] = Array.from({ length: 8 }, (_, i) => ({ ...base, id: "t" + i, type: "Townhouse", price: 200000 + i * 5000, sqft: 1000 }));
+    expect(cbGroup("Townhouse")).toBe("townhouse"); expect(cbGroup("Condo")).toBe("condo"); expect(cbGroup("Single Family")).toBe("house");
+    const m = cbGroupMedians([...houses, ...towns]);
+    expect(m.townhouse! < m.house!).toBe(true);
+    // the cheapest townhouse is 0.92 x the townhouse median, every house is 1.0 x the house median: the townhouse first,
+    // but not all the townhouses before the houses just because they are cheaper per sq ft
+    const ids = pickCb([...houses, ...towns], parseLiveQuery("3 bed home in Miami under $400k"), 16).map((r) => r.id);
+    expect(ids[0]).toBe("t0"); expect(ids.indexOf("h0")).toBeLessThan(ids.indexOf("t7"));
   });
   it("leaves out manufactured homes", () => {
     const base = parseCbMatch(MATCH)!;
