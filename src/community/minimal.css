@@ -139,9 +139,9 @@
 .hunt .rh-ph .hunt-price { margin: 0 0 var(--s-2); }
 .hunt .rh-ph-lines { margin: 0; display: grid; gap: 4px; max-width: 420px; }
 .hunt .rh-ph-lines > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 2px 0; }
-.hunt .rh-ph-lines dt { flex: none; font-size: 14.5px; color: var(--c-ink-2); font-weight: 500; }
-.hunt .rh-ph-lines dd { min-width: 0; margin: 0; font-size: 15px; font-weight: 650; color: var(--c-ink); text-align: right; font-variant-numeric: tabular-nums; }
-.hunt .rh-ph-lines dd small { display: block; font-size: 12px; font-weight: 500; color: var(--c-ink-3); }
+.hunt .rh-ph-lines dt { flex: 0 1 auto; min-width: 0; font-size: 14.5px; color: var(--c-ink-2); font-weight: 500; }
+.hunt .rh-ph-lines dd { flex: none; max-width: 58%; white-space: nowrap; margin: 0; font-size: 15px; font-weight: 650; color: var(--c-ink); text-align: right; font-variant-numeric: tabular-nums; }
+.hunt .rh-ph-lines dd small { display: block; white-space: normal; font-size: 12px; font-weight: 500; color: var(--c-ink-3); }
 .hunt .rh-ph-lines dd.is-unknown { font-weight: 550; color: var(--c-warn); font-size: 14px; }
 .hunt .rh-ph .hv-rent { display: inline-block; margin-top: var(--s-2); }
 .hunt .rh-ph-quiet { display: flex; flex-wrap: wrap; gap: 2px 0; margin: var(--s-3) 0 0; font-size: 13px; line-height: 1.5; color: var(--c-ink-3); }
@@ -203,3 +203,20 @@
 .hunt .hv-me-stats > div, .hunt.is-dark .hv-me-stats > div { border: 0 !important; background: var(--c-fill) !important; box-shadow: none !important; }
 .hunt .hv-badge, .hunt.is-dark .hv-badge { border: 0 !important; background: var(--c-fill) !important; }
 .hunt .hv-badge:not(.is-on) { opacity: .75; }
+
+/* ---------------------------------------------------------------- desktop side card on a home page */
+.hunt .hv-aside-card, .hunt.is-dark .hv-aside-card { border: 1px solid var(--c-line) !important; box-shadow: none !important; border-radius: var(--r-xl); }
+.hunt .hv-aside-row .hv-save-inline, .hunt.is-dark .hv-aside-row .hv-save-inline { border: 0 !important; background: var(--c-fill) !important; border-radius: 999px !important; }
+.hunt .hv-detailbar .hv-detailbar-save, .hunt.is-dark .hv-detailbar .hv-detailbar-save { border: 0 !important; background: var(--c-fill) !important; }
+
+/* phone action bar: price never hidden behind the buttons */
+.hunt .hv-detailbar-price { flex: 1 1 auto; min-width: 0; overflow: hidden; }
+.hunt .hv-detailbar-price strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 374.98px) {
+  .hunt .hv-detailbar { gap: 6px; }
+  .hunt .hv-detailbar-price strong { font-size: 16px; }
+  .hunt .hv-detailbar .hunt-primary { padding: 0 12px !important; font-size: 14px; gap: 4px; }
+  .hunt .hv-detailbar .hunt-primary svg { display: none; }
+  .hunt :is(.hv-detailbar-save, .hv-detailbar .hv-share) { width: 40px; height: 40px; min-width: 40px; }
+}
+.hunt .hv-detailbar .hunt-primary { flex: none; }
