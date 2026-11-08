@@ -295,7 +295,7 @@ export async function initLang(): Promise<void> {
   try {
     const core = load("/i18n/es-core.json?v=3");
     const homes = load("/i18n/es-listings.json?v=3").catch(() => ({}));
-    const extra = load("/i18n/es-extra.json?v=13");
+    const extra = load("/i18n/es-extra.json?v=14");
     const data = load("/i18n/es-data.json?v=1").catch(() => ({})); // buying rules, guides... (scripts/build-es-data.mjs)
     // 7-nov-2026 (Carlos: "que cargue todo mucho más rápido"): the page used to stay hidden until the core AND the
     // listings dictionaries (~250 KB compressed) had loaded. Now only the core one holds the first paint; home titles
