@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 import {
   parseLiveQuery, liveKey, cbSearchUrls, parseCbMatch, pickCb, cbPhotos, liveScore, parseClaudeListings, slugFor, toEur, jobCost, fits, median, SHOW_MIN, type CbRow,
   pickMedian, parseReview, parseTranslations, translatePrompt, gateDecision, orderPhotos, textFlags, inconsistent, reviewPrompt, TITLE_EXAMPLES, parseCbFacts, niceArea,
+  resolveLive, placeOptions,
 } from "../../supabase/functions/realhunt-live-search/core";
+import { fixBedWords, bedWord, osa } from "../../supabase/functions/realhunt-live-search/words";
+import { tzCountry } from "../../supabase/functions/realhunt-live-search/places";
 
 describe("parseLiveQuery", () => {
   it("reads the owner's example in Spanish", () => {
@@ -51,6 +54,91 @@ describe("parseLiveQuery", () => {
     expect(parseLiveQuery("hi").reason).toBe("empty");
     expect(parseLiveQuery("house ".repeat(50)).reason).toBe("too_long");
     expect(parseLiveQuery("3 bedroom house").reason).toBe("no_place");
+  });
+});
+
+describe("parseLiveQuery v3: typos, the centre, places in several countries", () => {
+  it("reads the owner's Seville search with a typo (8-nov)", () => {
+    const p = parseLiveQuery("casa en sevilla de 3 habtiacioens en el centro por menos de 200k");
+    expect(p).toMatchObject({ ok: true, place: "Sevilla", min_beds: 3, max_price: 200000, max_eur: 200000, central: true, ptype_soft: true });
+    expect(p.country).toBe(null); // Spain, Colombia or Ohio: resolveLive decides or asks
+  });
+  it("tolerates misspelt bedroom words after a number", () => {
+    expect(parseLiveQuery("piso en Madrid de 2 habitacines").min_beds).toBe(2);
+    expect(parseLiveQuery("casa en Malaga tres dormitoros").min_beds).toBe(3);
+    expect(parseLiveQuery("4 bedromms house in Tampa").min_beds).toBe(4);
+    expect(parseLiveQuery("2 bedroms flat in Lisbon").min_beds).toBe(2);
+    expect(fixBedWords(" 3 habtiacioens ")).toBe(" 3 habitaciones ");
+    expect(fixBedWords(" casa en sevila ")).toBe(" casa en sevila "); // places are never "corrected"
+    expect(bedWord("bedford")).toBe(null);
+    expect(osa("habtiacioens", "habitaciones")).toBe(2);
+  });
+  it("reads the centre as a preference, never as the place", () => {
+    for (const q of ["flat in Madrid city centre", "piso en el centro de Madrid", "apartment downtown Madrid", "piso en el casco antiguo de Madrid", "homes in the old town of Madrid", "piso centrico en Madrid"]) {
+      const p = parseLiveQuery(q);
+      expect(p.place, q).toBe("Madrid");
+      expect(p.central, q).toBe(true);
+    }
+    expect(parseLiveQuery("flat in Madrid").central).toBeFalsy();
+    expect(liveKey(parseLiveQuery("piso en Madrid en el centro"))).not.toBe(liveKey(parseLiveQuery("piso en Madrid")));
+  });
+  it("knows the country of big cities without asking", () => {
+    expect(parseLiveQuery("piso en Madrid hasta 200k")).toMatchObject({ country: "Spain", geo: "gazetteer" });
+    expect(parseLiveQuery("2 bed flat in Lisboa")).toMatchObject({ country: "Portugal" });
+    expect(parseLiveQuery("casa en Roma")).toMatchObject({ country: "Italy" });
+    expect(parseLiveQuery("piso Malaga 2 habitaciones")).toMatchObject({ ok: true, place: "Malaga", country: "Spain" });
+  });
+  it("takes a bare place name as a search to buy there", () => {
+    const p = parseLiveQuery("Sevilla");
+    expect(p).toMatchObject({ ok: true, kind: "buy", place: "Sevilla", bare: true, country: null });
+    expect(parseLiveQuery("Madrid")).toMatchObject({ ok: true, bare: true, country: "Spain" });
+    expect(parseLiveQuery("hotel in Paris tonight").reason).toBe("not_homes");
+    expect(parseLiveQuery("nice house in Spain").place).toBe(null); // "nice" is a word here, not the city
+  });
+  it("asks which Sevilla, unless the visitor's context makes it clear", () => {
+    const q = parseLiveQuery("casa en sevilla de 3 habtiacioens en el centro por menos de 200k");
+    const es = resolveLive(q, { tz: "Europe/Madrid" });
+    expect(es.ask).toBe(null);
+    expect(es.p).toMatchObject({ country: "Spain", place: "Sevilla", currency: "EUR" });
+    const us = resolveLive(q, { tz: "America/New_York" });
+    expect(us.ask?.map((o) => o.id)).toEqual(["es", "co", "us-oh"]);
+    expect(resolveLive(q, { tz: "UTC" }).ask).toHaveLength(3);
+    // a bare name always asks
+    expect(resolveLive(parseLiveQuery("Sevilla"), { tz: "Europe/Madrid" }).ask).toHaveLength(3);
+    // the choice goes into the search
+    const oh = resolveLive(q, { choice: "us-oh" }).p;
+    expect(oh).toMatchObject({ country: "United States", state: "oh", city: "seville", currency: "USD", geo: "chosen" });
+    expect(oh.max_eur).toBe(179200);
+    expect(resolveLive(q, { choice: "co" }).p).toMatchObject({ country: "Colombia", place: "Sevilla" });
+    // the person said the country
+    expect(resolveLive(parseLiveQuery("piso en Sevilla, España"), {}).ask).toBe(null);
+    expect(parseLiveQuery("piso en Sevilla, España")).toMatchObject({ country: "Spain", place: "Sevilla" });
+    expect(parseLiveQuery("Seville, Ohio 3 bedroom house")).toMatchObject({ state: "oh", country: "United States" });
+  });
+  it("resolves Valencia, Córdoba, Mérida and Naples by the visitor's country", () => {
+    const v = parseLiveQuery("piso en Valencia 2 habitaciones hasta 180.000");
+    expect(v).toMatchObject({ ok: true, place: "Valencia", min_beds: 2, max_price: 180000, ptype: "apartment" });
+    expect(resolveLive(v, { tz: "Europe/Madrid" }).p.country).toBe("Spain");
+    expect(resolveLive(v, { tz: "America/Caracas" }).p.country).toBe("Venezuela");
+    expect(resolveLive(v, { tz: "Europe/Copenhagen" }).ask?.map((o) => o.country)).toEqual(["Spain", "Venezuela"]);
+    expect(resolveLive(parseLiveQuery("casa en Córdoba"), { tz: "America/Argentina/Cordoba" }).p.country).toBe("Argentina");
+    expect(resolveLive(parseLiveQuery("casa en Mérida 3 recamaras"), { tz: "America/Merida" }).p.country).toBe("Mexico");
+    const n = parseLiveQuery("3 bedroom house in Naples under $500k");
+    expect(resolveLive(n, { tz: "America/New_York" }).p).toMatchObject({ city: "naples", state: "fl", country: "United States" });
+    expect(resolveLive(n, { tz: "Europe/Berlin" }).ask?.map((o) => o.id)).toEqual(["it", "us-fl"]);
+    expect(resolveLive(parseLiveQuery("homes in Naples, FL"), { tz: "Europe/Berlin" }).ask).toBe(null);
+    // Seville, Ohio is small: a US visitor's "Seville" still asks
+    expect(resolveLive(parseLiveQuery("house in Seville"), { tz: "America/Chicago" }).ask).toHaveLength(3);
+    // US cities that exist only once keep working as before
+    expect(resolveLive(parseLiveQuery("3 bedroom house in Tampa under 350k"), { tz: "Europe/Madrid" })).toMatchObject({ ask: null, p: { city: "tampa", state: "fl" } });
+  });
+  it("knows the visitor's country from the time zone", () => {
+    expect(tzCountry("Europe/Madrid")).toBe("Spain");
+    expect(tzCountry("Atlantic/Canary")).toBe("Spain");
+    expect(tzCountry("America/Los_Angeles")).toBe("United States");
+    expect(tzCountry("Asia/Tokyo")).toBe(null);
+    expect(placeOptions("Sévilla").length).toBe(3); expect(placeOptions("Atlantis")).toEqual([]);
+    expect(placeOptions("SEVILLE").map((o) => o.id)).toEqual(["es", "co", "us-oh"]);
   });
 });
 
@@ -249,6 +337,12 @@ describe("fits", () => {
     expect(fits({ ...h, beds: 2 }, p)).toBe(false);
     expect(fits({ ...h, place: "Orlando, Florida" }, p)).toBe(false);
     expect(fits({ ...h, kind: "rent" }, p)).toBe(false);
+    // v3: a flat search does not answer with chalets (Valencia, 8-nov)
+    const flat = parseLiveQuery("piso en Valencia 2 habitaciones hasta 180.000");
+    const v = { kind: "buy" as const, country: "Spain", place: "Turís, Valencia, Spain", price_eur: 155000, beds: 3 };
+    expect(fits({ ...v, title: "Chalet on a 1,526 m² plot with pool" }, flat)).toBe(false);
+    expect(fits({ ...v, title: "Bright two-bed flat near the market" }, flat)).toBe(true);
+    expect(fits({ ...v, title: "Renovated home with terrace" }, flat)).toBe(true);
     expect(fits({ ...h, country: "Spain", place: "Madrid" }, parseLiveQuery("homes in Spain"))).toBe(true);
   });
 });
@@ -341,5 +435,109 @@ describe("55+ communities by name and MLS flag", () => {
     expect(AGE_RESTRICTED.test('seniorCommunity":true')).toBe(true);
     const m = '"subdivisionName":"DORSET AT CENTURY VILLAGE CONDO"'.match(new RegExp(CB_FACTS_RX));
     expect(m?.[1]).toContain("CENTURY VILLAGE");
+  });
+});
+
+describe("pisos.com, the free Spanish source (v3)", async () => {
+  const P = await import("../../supabase/functions/realhunt-live-search/pisos");
+  const fx = (await import("./fixtures/pisos-sevilla.json")).default as { cards: string[]; facts: string[]; images: string[] };
+  const { resolveLive: rl } = await import("../../supabase/functions/realhunt-live-search/core");
+  const sevilla = rl(parseLiveQuery("casa en sevilla de 3 habtiacioens en el centro por menos de 200k"), { tz: "Europe/Madrid" }).p;
+  it("builds search pages: centre first, bedrooms and budget in the URL, dearest first", () => {
+    const u = P.pisosSearchUrls(sevilla, 2).map((x) => x.url);
+    expect(u[0]).toBe("https://www.pisos.com/venta/pisos-sevilla_capital_casco_antiguo/con-3-habitaciones/hasta-181000/precio-desc/");
+    expect(u[1]).toBe("https://www.pisos.com/venta/pisos-sevilla_capital/con-3-habitaciones/hasta-181000/precio-desc/");
+    expect(u[2]).toBe("https://www.pisos.com/venta/pisos-sevilla_capital/con-3-habitaciones/hasta-181000/precio-desc/2/");
+    expect(u).toHaveLength(3);
+    expect(P.pisosLoc("Marbella")).toBe("marbella");
+    expect(P.pisosLoc("Seville")).toBe("sevilla_capital");
+    expect(P.pisosSearchUrls(parseLiveQuery("3 bedroom house in Miami"), 2)).toEqual([]);
+    expect(P.pisosSearchUrls(parseLiveQuery("chalet en Marbella"), 1)[0].url).toBe("https://www.pisos.com/venta/casas-marbella/");
+    expect(P.pisosSearchUrls(parseLiveQuery("piso en Madrid hasta 300.000"), 1)[0].url).toBe("https://www.pisos.com/venta/piso-madrid_capital/hasta-272000/precio-desc/");
+  });
+  it("reads result cards", () => {
+    const rows = fx.cards.map((c) => P.parsePisosCard(c)).filter(Boolean) as any[];
+    expect(rows.length).toBe(fx.cards.length);
+    expect(rows[0]).toMatchObject({ id: "67568763724_108900", price: 410000, beds: 3, baths: 2, sqm: 88, type: "piso", title: "Piso en calle de Afrodita", photos: 42 });
+    expect(rows[0].url).toBe("https://www.pisos.com/comprar/piso-bellavista_la_palmera_bellavista41014-67568763724_108900/");
+    expect(rows[0].photo).toMatch(/^https:\/\/fotos\.imghs\.net\/apps-wp\//);
+    expect(rows[0].desc).toMatch(/terraza/);
+    expect(P.pisosArea(rows[0].area, "Sevilla")).toBe("Bellavista, Sevilla");
+    expect(P.parsePisosCard("<div>nothing</div>")).toBe(null);
+    // central by the card's own district, never by the page it came from
+    expect(rows[0].central).toBe(false);
+    const old = fx.cards[0].replace(/ad-preview__subtitle">[^<]+/, 'ad-preview__subtitle">San Vicente (Distrito Casco Antiguo. Sevilla Capital)');
+    expect(P.parsePisosCard(old)!.central).toBe(true);
+  });
+  it("keeps cards that fit, inside the budget, without squatters", () => {
+    const rows = fx.cards.map((c) => P.parsePisosCard(c)).filter(Boolean) as any[];
+    const picked = P.pickPisos(rows, sevilla);
+    expect(picked.length).toBeGreaterThan(0);
+    for (const r of picked) { expect(r.price).toBeLessThanOrEqual(200000); expect(r.beds).toBeGreaterThanOrEqual(3); }
+    const squat = { ...rows[0], id: "x", price: 150000, desc: "Vivienda ocupada, sin posesión" };
+    expect(P.pickPisos([squat], sevilla)).toEqual([]);
+    expect(P.pisosBadText("Nuda propiedad")).toBe(true);
+  });
+  it("keeps only this listing's photos, biggest size, once each", () => {
+    const first = "https://fotos.imghs.net/mm-wp/1089/012/1089_XA963-2421012_1_2026093016061031250.jpg";
+    const ph = P.pisosPhotos(fx.images, first);
+    expect(ph[0]).toBe("https://fotos.imghs.net/apps-wp/1089/012/1089_XA963-2421012_1_2026093016061031250.jpg");
+    expect(ph.length).toBeGreaterThan(8);
+    expect(new Set(ph).size).toBe(ph.length);
+    expect(ph.every((u) => u.includes("1089_XA963-2421012_") && u.includes("/apps-wp/"))).toBe(true);
+    // agencies that name photos by a uuid: told apart by their folder
+    const u = (v: string, f: string, id: string) => `https://fotos.imghs.net/${v}/1005/${f}/${id}.jpg`;
+    const other = P.pisosPhotos([u("xl-wp", "3230", "a1"), u("fchm-wp", "3230", "b2"), u("fchm-wp", "9999", "c3"), u("appswm-wp", "3230", "a1")], u("mm-wp", "3230", "a1"));
+    expect(other).toEqual([u("apps-wp", "3230", "a1"), u("apps-wp", "3230", "b2")]);
+  });
+  it("reads a listing page's facts", () => {
+    const f = P.parsePisosFacts(fx.facts);
+    expect(f).toMatchObject({ lat: 37.3312538, lng: -5.9674503, fee: 92, condition: "En buen estado", baths: 2 });
+    expect(f.age).toMatch(/20 y 30/);
+    expect(P.decode("Ba&#xF1;os 88 m&#xB2;")).toBe("Baños 88 m²");
+  });
+});
+
+describe("daily spending caps (v3)", async () => {
+  const { dayBudget, CAPS } = await import("../../supabase/functions/realhunt-live-search/core");
+  it("gives a person US$2 a day", () => {
+    expect(CAPS.USER).toBe(2);
+    expect(dayBudget({ admin: false, user: 0, ip: 0, net: 0, all: 0 }).budget).toBe(2);
+    expect(dayBudget({ admin: false, user: 1.5, ip: 1.5, net: 1.5, all: 3 })).toMatchObject({ budget: 0.5, why: "user_budget" });
+  });
+  it("sums an IP address over all its accounts, so a new account does not start over", () => {
+    // a fresh account (user 0) on an address that already spent US$2
+    expect(dayBudget({ admin: false, user: 0, ip: 2, net: 2, all: 5 })).toMatchObject({ budget: 0, why: "user_budget" });
+    expect(dayBudget({ admin: false, user: 0, ip: 1.9, net: 1.9, all: 5 }).budget).toBeCloseTo(0.1);
+  });
+  it("lets a shared network a little more, then stops it", () => {
+    expect(dayBudget({ admin: false, user: 0, ip: 0, net: 5, all: 5 }).budget).toBe(1);
+    expect(dayBudget({ admin: false, user: 0, ip: 0, net: 6.2, all: 7 })).toMatchObject({ budget: 0, why: "user_budget" });
+  });
+  it("says when it is everyone's cap", () => {
+    expect(dayBudget({ admin: false, user: 0, ip: 0, net: 0, all: 29.9 })).toMatchObject({ why: "global_budget" });
+    expect(dayBudget({ admin: false, user: 0, ip: 0, net: 0, all: 31 }).budget).toBe(0);
+  });
+  it("gives admins their own budget, with no address caps", () => {
+    expect(dayBudget({ admin: true, user: 0.67, ip: 9, net: 9, all: 0.67 }).budget).toBeCloseTo(14.33);
+    expect(dayBudget({ admin: true, user: 15, ip: 0, net: 0, all: 15 })).toMatchObject({ budget: 0, why: "user_budget" });
+    expect(dayBudget({ admin: true, user: 1, ip: 0, net: 0, all: 30 })).toMatchObject({ budget: 0, why: "global_budget" });
+  });
+});
+
+describe("closest misses (v3)", async () => {
+  const { closestMisses } = await import("../../supabase/functions/realhunt-live-search/core");
+  it("lists checked listings that missed only on photos or score, best first", () => {
+    const base = { source: "web", show: false, url: "https://x", title: "t", price: 1, currency: "EUR", image: null, location: "" };
+    const out = closestMisses([
+      { ...base, id: "a", score: 81, photo_quality: 5, reasons: ["photos"] },
+      { ...base, id: "b", score: 60, photo_quality: 5, reasons: ["score", "photos", "flag:inconsistent_data"] },
+      { ...base, id: "c", score: 73, photo_quality: null, reasons: ["skip:review_cap", "not_reviewed"] },
+      { ...base, id: "d", score: 75, photo_quality: 6, reasons: ["score", "photos"] },
+      { ...base, id: "e", score: 90, photo_quality: 9, reasons: [], show: true },
+      { ...base, id: "f", score: 50, photo_quality: 8, reasons: ["score"] },
+    ]);
+    expect(out.map((x) => x.id)).toEqual(["a", "d"]);
+    expect(out[1].why).toEqual(["score", "photos"]);
   });
 });

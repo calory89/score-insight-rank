@@ -236,3 +236,15 @@ describe("saved searches", () => {
     expect(alertsLink(new URLSearchParams("country=Spain,Italy"))).toBe("/alerts");
   });
 });
+
+describe("parseQuery tolerates misspelt bedroom words (8-nov-2026)", () => {
+  it("reads 3 habtiacioens, 2 habitacines, tres dormitoros and 4 bedromms", async () => {
+    const { parseQuery } = await import("@/community/smartsearch");
+    expect(parseQuery("casa 3 habtiacioens").min_beds).toBe(3);
+    expect(parseQuery("piso 2 habitacines").min_beds).toBe(2);
+    expect(parseQuery("tres dormitoros").min_beds).toBe(3);
+    expect(parseQuery("4 bedromms house").min_beds).toBe(4);
+    expect(parseQuery("house in bedford").min_beds).toBe(null);
+  });
+});
+

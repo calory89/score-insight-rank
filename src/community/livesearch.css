@@ -81,3 +81,33 @@
 .lv-h-muted { color: var(--lv-muted); font-weight: 650; }
 .lv-results .hx-grid, .lv-similar .hx-grid { margin-top: 4px; }
 .lv-how p + p { margin-top: 8px; }
+
+/* v3 (8-nov-2026): free-search line, "Which Sevilla?" question, sign-up card, daily limit card, closest misses */
+.lv-free { margin: 10px 2px 0; font-size: 13.5px; color: var(--lv-muted); line-height: 1.45; }
+.lv-free .hunt-link { font-size: inherit; min-height: 32px; }
+.lv-ask { display: flex; gap: 10px; align-items: flex-start; margin: 18px 0; }
+.lv-ask-avatar { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--lv-accent); color: #fff; margin-top: 2px; }
+.lv-ask-bubble { flex: 1; min-width: 0; background: var(--lv-surface); border: 1px solid var(--lv-line); border-radius: 4px 18px 18px 18px; padding: 14px 16px 16px; box-shadow: 0 6px 24px rgba(17, 18, 20, .06); }
+.lv-ask-bubble strong { display: block; font-size: 16.5px; line-height: 1.35; }
+.lv-ask-bubble p { margin: 4px 0 0; color: var(--lv-muted); font-size: 14.5px; line-height: 1.5; }
+.lv-ask-opts { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 12px 0 0; }
+.lv-ask-chip { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1.5px solid var(--lv-tint-line); background: var(--lv-tint); color: var(--lv-accent-ink); font: inherit; font-size: 14.5px; cursor: pointer; text-align: left; }
+.lv-ask-chip:hover { border-color: var(--lv-accent); }
+.lv-ask-chip:focus-visible { outline: 2px solid var(--lv-accent); outline-offset: 2px; }
+.lv-ask-chip b { font-weight: 700; }
+@media (max-width: 480px) { .lv-ask-opts li, .lv-ask-chip { width: 100%; } }
+.lv-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.lv-actions .lv-btn { margin-top: 12px; }
+.lv-limit { border-color: var(--lv-tint-line); }
+.lv-closest h2 { font-size: 20px; letter-spacing: -.01em; margin: 26px 0 4px; }
+.lv-closest ul { list-style: none; padding: 0; margin: 12px 0 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+@media (min-width: 760px) { .lv-closest ul { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.lv-miss { display: flex; gap: 12px; align-items: center; padding: 10px; border: 1px solid var(--lv-line); border-radius: 14px; background: var(--lv-surface); color: var(--lv-ink); text-decoration: none; min-height: 44px; }
+.lv-miss:hover { border-color: var(--lv-tint-line); }
+.lv-miss:focus-visible { outline: 2px solid var(--lv-accent); outline-offset: 2px; }
+.lv-miss img, .lv-miss-noimg { flex: none; width: 96px; height: 72px; border-radius: 10px; object-fit: cover; background: var(--lv-soft); }
+.lv-miss-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.lv-miss-title { font-size: 14px; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.lv-miss-meta, .lv-miss-why { font-size: 12.5px; color: var(--lv-muted); overflow: hidden; text-overflow: ellipsis; }
+.lv-miss-meta { white-space: nowrap; }
+.lv-miss-ext { flex: none; color: var(--lv-muted); }

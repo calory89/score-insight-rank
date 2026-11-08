@@ -2,7 +2,9 @@
 // also used by the site's cards), so the edge function (Deno) and the unit tests (vitest, src/test/livesearch-core.test.ts)
 // load the very same file.
 import { FLAG_LABEL } from "./flags.ts";
-export { FLAG_LABEL };
+import { CENTRAL_RE, fixBedWords } from "./words.ts";
+import { findKnownPlace, isKnownPlace, pickPlace, placeOptions, type PlaceOpt } from "./places.ts";
+export { FLAG_LABEL, placeOptions, pickPlace, type PlaceOpt };
 //   parseLiveQuery   what a sentence asks for (buy or rent, place, bedrooms, budget), or why it is not a home search
 //   liveKey          one key per search meaning, used for the 24 h cache ("3 bed house Miami under $300k" = "casas en Miami...")
 //   cbSearchUrls / parseCbMatch / pickCb   the free Coldwell Banker fallback for US cities
@@ -36,10 +38,11 @@ const COUNTRIES: Record<string, string[]> = {
   Argentina: ["argentina"], Colombia: ["colombia"], Turkey: ["turkey", "turquia"], Morocco: ["morocco", "marruecos"], Bulgaria: ["bulgaria"], Malta: ["malta"],
   Ireland: ["ireland", "irlanda"], Switzerland: ["switzerland", "suiza"], Austria: ["austria"], Belgium: ["belgium", "belgica"], Finland: ["finland", "finlandia"],
   Hungary: ["hungary", "hungria"], Romania: ["romania", "rumania"], Albania: ["albania"], Montenegro: ["montenegro"], Slovenia: ["slovenia", "eslovenia"],
+  Venezuela: ["venezuela"], Nicaragua: ["nicaragua"], Chile: ["chile"], Bolivia: ["bolivia"], "Puerto Rico": ["puerto rico"], "Czech Republic": ["czech republic", "czechia", "republica checa", "chequia"],
 };
 const COUNTRY_ALIAS = new Map<string, string>();
 for (const [en, list] of Object.entries(COUNTRIES)) for (const a of list) COUNTRY_ALIAS.set(a, en);
-const COUNTRY_CURRENCY: Record<string, string> = { "United States": "USD", "United Kingdom": "GBP", Mexico: "MXN", Canada: "CAD", Denmark: "DKK", Sweden: "SEK", Norway: "NOK", Poland: "PLN", Japan: "JPY", Thailand: "THB", Switzerland: "CHF", Turkey: "TRY" };
+const COUNTRY_CURRENCY: Record<string, string> = { "Puerto Rico": "USD", "United States": "USD", "United Kingdom": "GBP", Mexico: "MXN", Canada: "CAD", Denmark: "DKK", Sweden: "SEK", Norway: "NOK", Poland: "PLN", Japan: "JPY", Thailand: "THB", Switzerland: "CHF", Turkey: "TRY" };
 
 export const US_STATES: Record<string, string> = {
   al: "alabama", az: "arizona", ar: "arkansas", ca: "california", co: "colorado", ct: "connecticut", de: "delaware", fl: "florida", ga: "georgia",
@@ -89,6 +92,16 @@ export type LiveQuery = {
   good_score: boolean;
   /** style / condition words the person typed ("moderna", "renovated", "con vistas"): features, never part of the place */
   features?: string[];
+  /** v3: "en el centro", "downtown", "casco antiguo": wants the centre (ranking and the web search), never part of the place */
+  central?: boolean;
+  /** v3: the only house word was the Spanish "casa(s)", which in Spanish usually means any home: flats count too */
+  ptype_soft?: boolean;
+  /** v3: the text is only a place name ("Sevilla"): a search for homes to buy there */
+  bare?: boolean;
+  /** v3: where the country came from: typed by the person, our US city list (a guess), the built-in gazetteer, a choice */
+  geo?: "said" | "us_list" | "gazetteer" | "chosen" | null;
+  /** v3: the currency was typed ("200k €", "$300k"), so a chosen country does not change it */
+  cur_typed?: boolean;
 };
 
 /** Style and condition words (accents already removed). "new" is kept when it starts a place name (New York, Nueva Zelanda). */
@@ -123,11 +136,13 @@ export function parseLiveQuery(input: string): LiveQuery {
   const out: LiveQuery = { ok: false, kind: "buy", place: null, city: null, state: null, country: null, min_beds: null, max_price: null, min_price: null, currency: "EUR", max_eur: null, min_eur: null, ptype: "any", good_score: false };
   if (raw.length < 3) return { ...out, reason: "empty" };
   if (raw.length > 200) return { ...out, reason: "too_long" };
-  let s = " " + norm(raw).replace(/[“”"¿?¡!;()]/g, " ").replace(/\s+/g, " ") + " ";
+  let s = " " + fixBedWords(norm(raw).replace(/[“”"¿?¡!;()]/g, " ").replace(/\s+/g, " ")) + " ";
+  if (CENTRAL_RE.test(s)) { out.central = true; s = s.replace(CENTRAL_RE, " ").replace(/\s+/g, " "); }
+  CENTRAL_RE.lastIndex = 0;
   const homeish = HOME_RE.test(s);
   if (RENT_RE.test(s)) out.kind = "rent";
   if (APT_RE.test(s)) out.ptype = "apartment";
-  else if (HOUSE_RE.test(s)) out.ptype = "house";
+  else if (HOUSE_RE.test(s)) { out.ptype = "house"; if (!HOUSE_RE.test(s.replace(/\b(casas?|houses)\b/g, " "))) out.ptype_soft = true; }
   if (SCORE_RE.test(s)) out.good_score = true;
   const bm = s.match(BED_RE);
   if (bm) { const v = NUMW[bm[1]] ?? Number(bm[1]); if (v > 0 && v < 20) out.min_beds = v; s = s.replace(BED_RE, " "); }
@@ -155,6 +170,7 @@ export function parseLiveQuery(input: string): LiveQuery {
   // place: "in X", "en X", "near X", or a known city / country anywhere
   const STOPW = /\s(under|below|less|max|up|for|with|al|per|por|a month|monthly|mensual|that|which|and|y|con|por|de|del|para|que|menos|hasta|desde|from|over|above|between|entre|cheap|barat[ao]s?|good|buena|best|mejor|in|en|to|a)\s.*$/;
   let placeTxt: string | null = null;
+  let saidCountry: string | null = null;
   // the first "in X" whose X is not a home word ("piso en alquiler en Madrid" -> Madrid)
   for (const pm of s.matchAll(/\s(?:in|en|near|around|cerca de|alrededor de|at)\s+(?=([a-z][a-z .'-]{1,60}))/g)) {
     const cand = (" " + pm[1] + " ").replace(STYLE_RE, " ").replace(/\s+/g, " ").replace(STOPW, " ").replace(/\s+/g, " ").trim();
@@ -173,24 +189,45 @@ export function parseLiveQuery(input: string): LiveQuery {
   if (stm) {
     const st = norm(stm[2]).trim();
     const code = US_STATES[st] ? st : STATE_BY_NAME.get(st) || null;
-    if (code) { out.state = code; out.country = "United States"; if (!city) city = norm(stm[1]).trim().replace(/^.*\s(?:in|en|near|cerca de)\s+/, "").trim(); }
+    if (code) { out.state = code; out.country = "United States"; out.geo = "said"; if (!city) city = norm(stm[1]).trim().replace(/^.*\s(?:in|en|near|cerca de)\s+/, "").trim(); }
   }
-  if (city) { out.city = city; out.state = out.state || US_CITIES.get(city) || null; out.country = "United States"; out.place = title(city); }
+  if (city) { out.city = city; out.state = out.state || US_CITIES.get(city) || null; out.country = "United States"; out.place = title(city); out.geo = out.geo || "us_list"; }
   // countries
   for (const [alias, en] of [...COUNTRY_ALIAS.entries()].sort((a, b) => b[0].length - a[0].length)) {
     if (alias.length < 3 && !/\b(us|uk)\b/.test(norm(raw).replace(/\s+/g, " "))) continue; // "us"/"uk" only when typed as such (not "en us...")
-    if (new RegExp(`(^|\\s)${alias.replace(/\./g, "\\.")}(?=\\s|,|$)`).test(hay)) { if (!out.country) out.country = en; break; }
+    if (new RegExp(`(^|\\s)${alias.replace(/\./g, "\\.")}(?=\\s|,|$)`).test(hay)) {
+      if (!out.country) { out.country = en; out.geo = "said"; }
+      // "Seville, Spain" after a US list guess: the person said the country
+      else if (out.geo === "us_list" && en !== "United States") { out.country = en; out.geo = "said"; out.state = null; out.city = null; }
+      saidCountry = alias;
+      break;
+    }
   }
+  // the place left once the country is taken out ("Sevilla, Spain" -> "Sevilla")
+  const dropCountry = (t: string) => (saidCountry ? (" " + t + " ").replace(new RegExp(`[\\s,]${saidCountry.replace(/\./g, "\\.")}(?=\\s|,|$)`), " ").replace(/[,\s]+/g, " ").trim() : t.trim());
+  if (placeTxt) placeTxt = dropCountry(placeTxt) || null;
   if (!out.place && placeTxt) {
     const ct = COUNTRY_ALIAS.get(placeTxt);
-    if (ct) out.country = out.country || ct;
+    if (ct) { if (!out.country) { out.country = ct; out.geo = "said"; } }
     else if (!HOME_RE.test(" " + placeTxt + " ")) out.place = title(placeTxt);
   }
+  // no "in X": a place we know anywhere in the sentence ("piso Valencia 2 habitaciones"), or the whole text ("Sevilla")
+  if (!out.place && !out.city) {
+    const rest = dropCountry(s.replace(STYLE_RE, " ").replace(/[,]/g, " ").replace(/\s+/g, " "));
+    if (rest && isKnownPlace(rest)) { out.place = title(rest); if (!homeish && out.min_beds == null && out.max_price == null) out.bare = true; }
+    else { const k = findKnownPlace(rest); if (k) out.place = title(k); }
+  }
+  // the country of a place we know by name (one country only); places with several are resolved by resolveLive
+  if (out.place && (!out.country || out.geo === "us_list")) {
+    const opts = placeOptions(out.city || out.place);
+    if (opts.length === 1 && !out.country) { applyOpt(out, opts[0], false); out.geo = "gazetteer"; }
+  }
+  out.cur_typed = !!cur;
   out.currency = cur || (out.country && COUNTRY_CURRENCY[out.country]) || "EUR";
   out.max_eur = toEur(out.max_price, out.currency);
   out.min_eur = toEur(out.min_price, out.currency);
 
-  const about = homeish || out.min_beds != null || (!!(out.place || out.country) && (out.max_price != null || out.min_price != null));
+  const about = homeish || out.min_beds != null || !!out.bare || (!!(out.place || out.country) && (out.max_price != null || out.min_price != null));
   if (!about || (OFF_RE.test(s) && !homeish)) return { ...out, reason: "not_homes" };
   if (!out.place && !out.country) return { ...out, reason: "no_place" };
   return { ...out, ok: true };
@@ -199,7 +236,44 @@ export function parseLiveQuery(input: string): LiveQuery {
 /** One key per meaning: same kind, place, bedrooms, budget (rounded to €1,000) and type. */
 export function liveKey(p: LiveQuery): string {
   const r = (n: number | null) => (n == null ? "" : String(Math.round(n / 1000)));
-  return [p.kind, norm(p.country || ""), norm(p.city || p.place || ""), p.state || "", "b" + (p.min_beds ?? ""), "x" + r(p.max_eur), "n" + r(p.min_eur), p.ptype, p.good_score ? "g" : ""].join("|");
+  return [p.kind, norm(p.country || ""), norm(p.city || p.place || ""), p.state || "", "b" + (p.min_beds ?? ""), "x" + r(p.max_eur), "n" + r(p.min_eur), p.ptype_soft ? "any" : p.ptype, p.good_score ? "g" : "", p.central ? "c" : ""].join("|");
+}
+
+/** Puts a chosen (or the only) place into a parsed search: its name, country and, for US places, city and state. */
+function applyOpt(p: LiveQuery, o: PlaceOpt, recurrency = true) {
+  p.place = o.name;
+  p.country = o.country;
+  p.state = o.state || null;
+  p.city = o.country === "United States" ? norm(o.name) : null;
+  if (recurrency && !p.cur_typed) {
+    p.currency = COUNTRY_CURRENCY[o.country] || "EUR";
+    p.max_eur = toEur(p.max_price, p.currency);
+    p.min_eur = toEur(p.min_price, p.currency);
+  }
+}
+
+/** Sets the country of a parsed search found some other way (e.g. a town only RealHunt's own homes know). */
+export function placeInto(p: LiveQuery, country: string) {
+  if (!p.place || p.country) return;
+  applyOpt(p, { id: "x", name: p.place, country, major: true });
+  p.geo = "gazetteer";
+}
+
+export type Resolved = { p: LiveQuery; ask: PlaceOpt[] | null };
+/**
+ * v3: a place name found in several countries ("Sevilla": Spain, Colombia, Ohio). `choice` is an option id the
+ * person picked (?in=es); without one, pickPlace decides from what they typed and their time zone, or we ask.
+ * Never spends anything: the page shows the question and the search starts once a place is chosen.
+ */
+export function resolveLive(p0: LiveQuery, ctx: { tz?: string | null; choice?: string | null } = {}): Resolved {
+  const p: LiveQuery = { ...p0 };
+  if (!p.ok || !p.place || p.geo === "said" || p.geo === "chosen") return { p, ask: null };
+  const opts = placeOptions(p.city || p.place);
+  if (opts.length < 2) return { p, ask: null };
+  const chosen = ctx.choice ? opts.find((o) => o.id === ctx.choice) : null;
+  const pick = chosen || pickPlace(opts, {}, { tz: ctx.tz, bare: p.bare });
+  if (pick) { applyOpt(p, pick); p.geo = chosen ? "chosen" : p.geo === "us_list" && pick.country === "United States" ? "us_list" : "gazetteer"; return { p, ask: null }; }
+  return { p: { ...p, country: null, state: null, city: null }, ask: opts };
 }
 
 // ---------------------------------------------------------------- Coldwell Banker (free fallback, US only)
@@ -318,7 +392,7 @@ export type ScoreIn = {
   price_eur: number | null; sqm: number | null; photos: number | null; beds: number | null; lat: number | null; lng: number | null; desc_len: number; kind: "buy" | "rent";
   photo_quality?: number | null; flags?: string[]; why_cheap?: string | null;
 };
-export const BLOCKING_FLAGS = ["manufactured_home", "land_lease", "timeshare", "fractional_share", "auction", "inconsistent_data", "not_a_home", "off_market"] as const;
+export const BLOCKING_FLAGS = ["manufactured_home", "land_lease", "timeshare", "fractional_share", "auction", "inconsistent_data", "not_a_home", "off_market", "squatted"] as const;
 export const SOFT_FLAGS = ["age_restricted", "needs_renovation", "tenant_occupied", "co_op", "cash_only", "hoa_assessment", "flood_zone"] as const;
 export const ALL_FLAGS: readonly string[] = [...BLOCKING_FLAGS, ...SOFT_FLAGS];
 export const FLAG_PENALTY: Record<string, number> = { age_restricted: 6, needs_renovation: 10, tenant_occupied: 5, co_op: 4, cash_only: 3, hoa_assessment: 5, flood_zone: 3 };
@@ -374,6 +448,8 @@ export function textFlags(text: string, x: { beds?: number | null; baths?: numbe
   if (/\b(tenant[- ]occupied|tenant in place|currently rented|leased until|sold with tenant|inquilino|okupad[oa]|ocupad[oa] ilegalmente)\b/.test(t)) out.add("tenant_occupied");
   if (/\b(fixer[- ]upper|handyman special|needs (major |a full |full |some )?(work|tlc|renovation|repairs|updating)|to renovate|a reformar|para reformar|sold as[- ]is|tear ?down|investor special)\b/.test(t)) out.add("needs_renovation");
   if (/\b(cash only|cash buyers only|solo contado)\b/.test(t)) out.add("cash_only");
+  // Spain (v3): squatted homes and homes sold without possession cannot be visited or lived in
+  if (/(okupad[ao]s?|ocupad[ao] ilegalmente|ocupad[ao] sin titulo|vivienda ocupada|inmueble ocupado|sin posesi[oó]n|no se puede visitar|squatters?)/.test(t)) out.add("squatted");
   if (/\b(special assessment|assessment due|assessments? pending)\b/.test(t)) out.add("hoa_assessment");
   if (inconsistent(x)) out.add("inconsistent_data");
   return [...out];
@@ -494,7 +570,7 @@ export function reviewPrompt(x: {
       "photos with a watermark or MLS logo where others exist, blurry, dark or near-duplicate photos, and photos that are not of this home.",
     `flags: any that apply, only from this list: ${ALL_FLAGS.join(", ")}. manufactured_home = mobile, manufactured or park home; land_lease = on rented land or with a lot fee; ` +
       "age_restricted = 55+ or senior community; inconsistent_data = only when the stated facts clearly cannot all be true (e.g. 5 bedrooms in 93 m²) or the photos clearly show a different kind of property than described; small differences or missing details are not inconsistent; " +
-      "not_a_home = land, a parking space, a commercial unit; off_market = sold, under contract or no longer listed; needs_renovation = the text or photos show it needs major work; " +
+      "squatted = occupied by squatters, sold without possession or cannot be visited (Spanish: okupada, sin posesión); not_a_home = land, a parking space, a commercial unit; off_market = sold, under contract or no longer listed; needs_renovation = the text or photos show it needs major work; " +
       "hoa_assessment = only when an extra one-off special assessment is stated (a normal monthly HOA or community fee is NOT a flag).",
     "title: a polished title in RealHunt's style, 6 to 14 words, sentence case, no price, no emoji, no address number, no em dashes; the best true feature first, then the type and the area. Examples: " +
       TITLE_EXAMPLES.map((t) => `"${t}"`).join("; ") + ".",
@@ -525,8 +601,52 @@ export function jobCost(model: string, u: Usage | null | undefined): number {
   return Math.round(usd * 1e5) / 1e5;
 }
 
+/**
+ * v3: the closest listings that did not pass the gate, for an honest "closest we found" list when nothing passed:
+ * checked by the AI, no blocking flag (no squat, no mobile home...), score 60 or more, best first, at most 4.
+ * They keep only what the card needs and why each one missed (photos, score).
+ */
+export type Miss = { id: string; url: string; title: string; title_es?: string | null; price: number | null; currency: string; price_eur: number | null; beds: number | null; sqm: number | null; location: string; image: string | null; score: number; photo_quality: number | null; why: string[]; central?: boolean | null };
+export function closestMisses(all: any[], n = 4): Miss[] {
+  return (all || [])
+    .filter((r) => r && r.show !== true && r.source === "web" && r.photo_quality != null && r.score >= 60 && !(r.reasons || []).some((x: string) => /^flag:|^skip:/.test(x)))
+    .sort((a, b) => b.score - a.score).slice(0, n)
+    .map((r) => ({
+      id: r.id, url: r.url, title: r.title, title_es: r.title_es || null, price: r.price, currency: r.currency, price_eur: r.price_eur, beds: r.beds, sqm: r.sqm, location: r.location,
+      image: r.image, score: r.score, photo_quality: r.photo_quality, central: r.central ?? null,
+      why: (r.reasons || []).filter((x: string) => x === "photos" || x === "score" || x === "few_photos"),
+    }));
+}
+
+// ---------------------------------------------------------------- the daily spending caps (v3)
+/**
+ * US$ of Claude per UTC day. A person (account) gets USER; one IP address gets IP in total, summed over every account
+ * and anonymous use from it, so a new account from the same address does not start over; one network address (the
+ * address Cloudflare sees, which a caller cannot fake) gets NET, a little more than IP because offices, universities
+ * and phone networks share one. Everyone who is not an admin shares GLOBAL. Admins have their own ADMIN each and
+ * ADMIN_POOL together, and none of the per-address caps.
+ */
+export const CAPS = { USER: 2, IP: 2, NET: 6, GLOBAL: 30, ADMIN: 15, ADMIN_POOL: 30 };
+export type Spent = { admin: boolean; user: number; ip: number; net: number; all: number };
+export function dayBudget(x: Spent, caps = CAPS): { budget: number; why: "user_budget" | "global_budget" | null; left: Record<string, number> } {
+  const left: Record<string, number> = x.admin
+    ? { user: caps.ADMIN - x.user, all: caps.ADMIN_POOL - x.all }
+    : { user: caps.USER - x.user, ip: caps.IP - x.ip, net: caps.NET - x.net, all: caps.GLOBAL - x.all };
+  const budget = Math.max(0, Math.min(...Object.values(left)));
+  const tightest = Object.entries(left).sort((a, b) => a[1] - b[1])[0][0];
+  // the person's own limit (their account, address or network) or everyone's: the page says which
+  return { budget: Math.round(budget * 1e5) / 1e5, why: tightest === "all" ? "global_budget" : "user_budget", left };
+}
+
 // ---------------------------------------------------------------- answering from our own data
-export type Have = { kind: "buy" | "rent"; country: string | null; place: string | null; price_eur: number | null; beds: number | null; sqm?: number | null };
+export type Have = { kind: "buy" | "rent"; country: string | null; place: string | null; price_eur: number | null; beds: number | null; sqm?: number | null; title?: string | null };
+/** v3: what kind of home a title describes, when it says so ("Hillside chalet..." is a house, "Top-floor flat..." a flat). */
+export function titleType(t: string | null | undefined): "house" | "apartment" | null {
+  const x = norm(t || "");
+  const flat = /\b(apartment|flat|condo|penthouse|studio|duplex|loft|piso|apartamento|atico)\b/.test(x);
+  const house = /\b(house|chalet|villa|cottage|farmhouse|finca|townhouse|bungalow|cabin|casa|masia|cortijo)\b/.test(x);
+  return flat && !house ? "apartment" : house && !flat ? "house" : null;
+}
 /** Does a home we already have (approved or found by an earlier live search) fit the search? */
 export function fits(h: Have, p: LiveQuery): boolean {
   if (h.kind !== p.kind) return false;
@@ -537,6 +657,10 @@ export function fits(h: Have, p: LiveQuery): boolean {
   if (p.max_eur && (h.price_eur == null || h.price_eur > p.max_eur)) return false;
   if (p.min_eur && (h.price_eur == null || h.price_eur < p.min_eur)) return false;
   if (p.min_beds && (h.beds == null || h.beds < p.min_beds)) return false;
+  // a flat was asked for: not a chalet (and a house, said in so many words, is not a flat)
+  const tt = titleType(h.title);
+  if (p.ptype === "apartment" && tt === "house") return false;
+  if (p.ptype === "house" && !p.ptype_soft && tt === "apartment") return false;
   return true;
 }
 

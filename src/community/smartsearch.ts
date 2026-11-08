@@ -214,11 +214,13 @@ const STYLE_GROUPS: Record<string, string[]> = {
 /** typed word -> the English word listings use */
 export const STYLE_WORDS = new Map<string, string>(Object.entries(STYLE_GROUPS).flatMap(([en, l]) => l.map((w) => [w, en] as const)));
 import { SYNONYMS, wordMatches } from "@/lib/synonyms";
+import { fixBedWords } from "../../supabase/functions/realhunt-live-search/words";
 export { SYNONYMS, wordMatches };
 
 export function parseQuery(input: string, places: Place[] = [], known?: (word: string) => boolean): Parsed {
   const out: Parsed = { country: [], place: null, max_price: null, min_price: null, min_beds: null, category: null, need: [], vibe: [], dmin: {}, words: [], ignored: [], sort: null, structured: false };
-  let s = " " + norm(input).replace(/[“”"¿?¡!;]/g, " ").replace(/\s+/g, " ") + " ";
+  // 8-nov-2026: a misspelt bedroom word after a number ("3 habtiacioens", "2 bedromms") counts too
+  let s = " " + fixBedWords(norm(input).replace(/[“”"¿?¡!;]/g, " ").replace(/\s+/g, " ")) + " ";
 
   // 1. bedrooms ("3 bedroom", "2 bed", "3-bed", "tres dormitorios")
   s = s.replace(BED_RE, (_m, n) => { const v = NUM_WORDS[n] ?? Number(n); if (v > 0 && v < 20) out.min_beds = Math.max(out.min_beds || 0, v); return " "; });

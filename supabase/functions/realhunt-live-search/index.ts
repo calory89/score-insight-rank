@@ -10,7 +10,7 @@
 // Order of work, cheapest first:
 //   1. our own data: approved RealHunt homes (score >= 80) and finds earlier live searches published (last 30 days,
 //      passed the gate). With 6 or more good matches it answers from them and spends nothing.
-//   2. Coldwell Banker (free, readable) for US cities.
+//   2. Coldwell Banker (free, readable) for US cities; pisos.com (free, readable, v3) for Spain (pisos.ts).
 //   3. Claude with web search + web fetch (ANTHROPIC_API_KEY; model ANTHROPIC_MODEL, default claude-sonnet-5-5), when
 //      the free source found fewer than 6 listings (most US portals block robots, so their pages cannot be checked).
 //   4. every candidate: read the page, a first score, then (only if it could still reach 80) the AI check:
@@ -23,20 +23,25 @@
 // A job may take several minutes: each invocation works for about a minute and a half, saves its state in
 // live_jobs.work and calls the function again ("work"); a poll re-starts a job whose invocation died.
 // Every search is saved in realhunt.live_jobs (with its cost: search + AI checks) and every listing in
-// realhunt.live_listings with its review, also the ones not shown. Spending caps: LIMITS below.
+// realhunt.live_listings with its review, also the ones not shown. Spending caps: LIMITS below and core.ts CAPS/dayBudget.
+// v3 (8-nov-2026): typo-tolerant parser, "en el centro" as a preference, places in several countries resolved from
+// the visitor's time zone or asked first (POST answers {status:"ask", options}; the choice comes back as `where`),
+// admins (realhunt.is_admin) with their own budget, per IP and per network daily caps, `closest` misses in the poll.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import * as C from "./core.ts";
+import * as PS from "./pisos.ts";
 
 export const LIMITS = {
   ANON_FREE_SEARCHES: 1, // searches without an account, per IP hash
   NET_ANON_PER_DAY: 60, // anonymous jobs per network address per UTC day (see whoIs)
   IP_JOBS_PER_DAY: 8, // new jobs per IP hash per UTC day (signed in or not)
   GLOBAL_JOBS_PER_DAY: 300,
-  USER_USD_PER_DAY: 1, // Claude spend (search + AI checks) per user (or per IP hash without an account) per UTC day
-  GLOBAL_USD_PER_DAY: 30,
+  // Claude spend (search + AI checks) per UTC day: core.ts CAPS (v3, 8-nov-2026: US$2 a person, US$2 an IP address
+  // summed over all its accounts and anonymous use, US$6 a network address, US$30 everyone; admins US$15 each, US$30 together)
+  ADMIN_JOBS_PER_DAY: 80,
   EST_CLAUDE_JOB_USD: 0.5, // what the web search part of one job may cost, checked against the caps before calling
   EST_REVIEW_USD: 0.03, // what one AI check may cost; each check runs only while the job's budget still covers it
-  MAX_REVIEWS: 12, // AI checks per job
+  MAX_REVIEWS: 18, // AI checks per job (about US$0.01 each with Haiku, 8-nov-2026)
   REUSE_ENOUGH: 6, // good matches we must already have to skip the web
   REUSE_DAYS: 30,
   CACHE_HOURS: 24,
@@ -44,7 +49,7 @@ export const LIMITS = {
   JOB_MAX_MS: 10 * 60_000, // a job stops after 10 minutes and finishes with what it has
   KICK_MS: 90_000, // a running job not updated for this long is re-started by the next poll
   STALE_MS: 300_000, // ... and after this long it is marked as failed
-  MAX_CANDS: 18,
+  MAX_CANDS: 22,
 };
 const REVIEW_MODEL = "claude-haiku-4-5";
 const MODELS = [Deno.env.get("ANTHROPIC_MODEL") || "claude-sonnet-5-5", "claude-sonnet-5-5", "claude-haiku-4-5"].filter((m, i, a) => a.indexOf(m) === i);
@@ -100,9 +105,11 @@ type Result = {
   // 8-nov-2026: Spanish versions, so the Spanish page never shows a card in English
   title_es?: string | null; why_great_es?: string | null; why_cheap_es?: string | null;
   hoa_monthly?: number | null; hoa_currency?: string | null; tax_annual?: number | null; hoa_unknown?: boolean;
+  /** v3: in the city centre (pisos.com district), when the person asked for the centre */
+  central?: boolean | null;
 };
-type Cand = { url: string; title: string; price: number | null; currency: string; beds: number | null; sqm: number | null; location: string; country: string | null; kind: "buy" | "rent"; image: string | null; provider: string; cb?: C.CbRow; lat?: number | null; lng?: number | null };
-type Who = { user: string | null; ipHash: string; netHash: string; ipSrc: string };
+type Cand = { url: string; title: string; price: number | null; currency: string; beds: number | null; sqm: number | null; location: string; country: string | null; kind: "buy" | "rent"; image: string | null; provider: string; cb?: C.CbRow; ps?: PS.PisosRow; lat?: number | null; lng?: number | null };
+type Who = { user: string | null; ipHash: string; netHash: string; ipSrc: string; admin?: boolean };
 type Work = { p: C.LiveQuery; q: string; lang: string; who: Who; t0: number; cands: Cand[]; i: number; median: number | null; median_from: string | null; country_medians: Record<string, number | null>; scan_medians?: Record<string, number | null>; budget: number; reviews: number; units: number; slices: number; note: string; provider: string; search_cost: number; done?: boolean };
 
 Deno.serve(async (req) => {
@@ -156,7 +163,9 @@ async function poll(id: string) {
       if (r.why_cheap && r.why_cheap === d.why_cheap) r.why_cheap_es = d.why_cheap_es || null;
     }
   }
-  return json({ job_id: j.id, status: j.status, progress: j.progress, stage: j.stage, results: shown, found: all.length, hidden: all.length - shown.length, note: j.note, parsed: j.parsed });
+  // v3: when nothing passed, the closest listings we checked, labelled honestly as not passing (they link to the portal)
+  const closest = j.status === "done" && shown.length < 3 ? C.closestMisses(all) : [];
+  return json({ job_id: j.id, status: j.status, progress: j.progress, stage: j.stage, results: shown, closest, found: all.length, hidden: all.length - shown.length, note: j.note, parsed: j.parsed });
 }
 // v1 results (no `show`) are never shown again: they were not checked by the AI
 const isShown = (r: Result) => r.show === true && r.score >= C.SHOW_MIN;
@@ -177,20 +186,35 @@ async function whoIs(req: Request): Promise<Who> {
   if (tok && tok !== ANON && tok.split(".").length === 3) {
     try { const { data } = await db.auth.getUser(tok); user = data?.user?.id || null; } catch { /* anonymous */ }
   }
-  return { user, ipHash, netHash, ipSrc: viaProxy ? "proxy" : "direct" };
+  let admin = false;
+  if (user) { try { const { data } = await db.rpc("is_admin", { _user_id: user }); admin = data === true; } catch { /* not admin */ } }
+  return { user, ipHash, netHash, ipSrc: viaProxy ? "proxy" : "direct", admin };
 }
 
 async function start(req: Request, body: any) {
   const q = String(body.q || "").replace(/\s+/g, " ").trim().slice(0, 300);
   const lang = body.lang === "es" ? "es" : "en";
   const who = await whoIs(req);
-  const p = C.parseLiveQuery(q);
-  const base = { q: q || "(empty)", lang, parsed: p, user_id: who.user, ip_hash: who.ipHash, usage: { ip_src: who.ipSrc, net: who.netHash } };
+  // v3: a place found in several countries is resolved from what was typed, the choice (?in=es) or the visitor's
+  // time zone; otherwise we ask before spending anything
+  const tz = typeof body.tz === "string" ? body.tz.slice(0, 60) : null;
+  const choice = typeof body.where === "string" ? body.where.slice(0, 12) : null;
+  const res = C.resolveLive(C.parseLiveQuery(q), { tz, choice });
+  const p = res.p;
+  // a town only our own homes know ("Ostuni", "Kavala"): its country from the site's snapshot
+  if (p.ok && p.place && !p.country && !res.ask) {
+    const want = p.place.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    const cs = new Set((await approved()).filter((r) => String(r.location_name || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/[,(]/).some((x: string) => x.trim() === want)).map((r) => r.country).filter(Boolean));
+    if (cs.size === 1) C.placeInto(p, [...cs][0] as string);
+  }
+  const base = { q: q || "(empty)", lang, parsed: p, user_id: who.user, ip_hash: who.ipHash, admin: !!who.admin, usage: { ip_src: who.ipSrc, net: who.netHash, tz, where: choice } };
+  // the slice keeps usage.net on every job, so spend per network address can be summed (dayBudget)
   const log = async (status: string, extra: Record<string, unknown> = {}) => {
     const { data } = await db.from("live_jobs").insert({ ...base, qkey: p.ok ? C.liveKey(p) : null, status, progress: 100, ...extra }).select("id").single();
     return data?.id as string | undefined;
   };
   if (!p.ok) { await log("rejected", { note: p.reason }); return json({ status: "rejected", reason: p.reason, parsed: p }); }
+  if (res.ask) { await log("ask", { note: "ambiguous_place" }); return json({ status: "ask", options: res.ask, parsed: p }); }
   const key = C.liveKey(p);
 
   // the same search in the last 24 h: reuse it (free for everyone, also without an account, and it lets a visitor
@@ -209,12 +233,14 @@ async function start(req: Request, body: any) {
   const today = dayStart();
   const real = ["queued", "running", "done", "error"];
   const [{ count: mine }, { count: all }] = await Promise.all([
-    db.from("live_jobs").select("id", { count: "exact", head: true }).eq("ip_hash", who.ipHash).in("status", real).gte("created_at", today),
-    db.from("live_jobs").select("id", { count: "exact", head: true }).in("status", real).gte("created_at", today),
+    who.admin ? db.from("live_jobs").select("id", { count: "exact", head: true }).eq("user_id", who.user!).in("status", real).gte("created_at", today)
+      : db.from("live_jobs").select("id", { count: "exact", head: true }).eq("ip_hash", who.ipHash).in("status", real).gte("created_at", today),
+    db.from("live_jobs").select("id", { count: "exact", head: true }).in("status", real).eq("admin", false).gte("created_at", today),
   ]);
-  if ((mine || 0) >= LIMITS.IP_JOBS_PER_DAY || (all || 0) >= LIMITS.GLOBAL_JOBS_PER_DAY) {
-    await log("capped", { note: (mine || 0) >= LIMITS.IP_JOBS_PER_DAY ? "ip_cap" : "global_cap" });
-    return json({ status: "capped", note: "tomorrow", parsed: p });
+  const ipCap = who.admin ? LIMITS.ADMIN_JOBS_PER_DAY : LIMITS.IP_JOBS_PER_DAY;
+  if ((mine || 0) >= ipCap || (!who.admin && (all || 0) >= LIMITS.GLOBAL_JOBS_PER_DAY)) {
+    await log("capped", { note: (mine || 0) >= ipCap ? "ip_cap" : "global_cap" });
+    return json({ status: "capped", note: (mine || 0) >= ipCap ? "ip_cap" : "global_cap", parsed: p });
   }
   const { data: job, error } = await db.from("live_jobs").insert({ ...base, qkey: key, status: "queued", progress: 2, stage: { k: "start" } }).select("id").single();
   if (error || !job) return json({ status: "error", note: "db" }, 500);
@@ -226,9 +252,10 @@ async function start(req: Request, body: any) {
 }
 
 // ---------------------------------------------------------------- the job, part 1: our data, then find candidates
-async function spentToday(col: string | null, val: string | null) {
+async function spentToday(col: string | null, val: string | number | boolean | null, nonAdmin = false) {
   let qy = db.from("live_jobs").select("cost_usd").gte("created_at", dayStart()).gt("cost_usd", 0).limit(5000);
-  if (col && val) qy = qy.eq(col, val);
+  if (col && val != null) qy = qy.eq(col, val);
+  if (nonAdmin) qy = qy.eq("admin", false); // an admin testing from home does not use up the family's allowance
   const { data } = await qy; return (data || []).reduce((s: number, r: any) => s + Number(r.cost_usd || 0), 0);
 }
 
@@ -246,7 +273,7 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
   if (p.kind === "buy") {
     for (const r of rows) {
       if ((Number(r.nota) || 0) < C.SHOW_MIN) continue;
-      if (!C.fits({ kind: "buy", country: r.country, place: `${r.location_name || ""}, ${r.country || ""}`, price_eur: Number(r.price_eur) || null, beds: r.bedrooms ?? null }, p)) continue;
+      if (!C.fits({ kind: "buy", country: r.country, place: `${r.location_name || ""}, ${r.country || ""}`, price_eur: Number(r.price_eur) || null, beds: r.bedrooms ?? null, title: r.title }, p)) continue;
       results.push({
         id: "rh-" + r.slug, source: "realhunt", provider: "realhunt", url: "https://realhunt.co/deal/" + r.slug, deal_slug: r.slug, deal_id: r.id, title: r.title, price: Number(r.price_eur) || null, currency: "EUR",
         price_eur: Number(r.price_eur) || null, beds: r.bedrooms ?? null, sqm: r.sqm ?? null, location: r.location_name || "", country: r.country, kind: "buy", image: abs(r.image_urls?.[0] || "") || null,
@@ -258,7 +285,7 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
   // finds earlier live searches checked and published (v2 only: shown = true)
   const { data: earlierAll } = await db.from("live_listings").select("url,kind,country,place,price_eur,beds,sqm,score,data,deal_slug,first_seen")
     .eq("kind", p.kind).eq("shown", true).gte("last_seen", new Date(Date.now() - LIMITS.REUSE_DAYS * 86400_000).toISOString()).order("score", { ascending: false }).limit(400);
-  const earlier = (earlierAll || []).filter((x: any) => (!p.country || !x.country || x.country === p.country) && C.fits({ kind: x.kind, country: x.country, place: x.place, price_eur: x.price_eur, beds: x.beds }, p));
+  const earlier = (earlierAll || []).filter((x: any) => (!p.country || !x.country || x.country === p.country) && C.fits({ kind: x.kind, country: x.country, place: x.place, price_eur: x.price_eur, beds: x.beds, title: x.data?.title }, p));
   const slugs = earlier.map((l: any) => l.deal_slug).filter(Boolean);
   const live = new Set<string>();
   if (slugs.length) { const { data } = await db.from("community_deals").select("slug").in("slug", slugs).eq("status", "approved"); for (const d of data || []) live.add(d.slug); }
@@ -294,14 +321,37 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
     if (cands.length) provider = "coldwellbanker";
     await set({ progress: 22, stage: { k: "found", n: cands.length } });
   }
+  // 2b. pisos.com for Spain (v3, free and readable; idealista and fotocasa block our reader)
+  if (p.kind === "buy" && p.country === "Spain") {
+    const urls = PS.pisosSearchUrls(p, 3);
+    if (urls.length) {
+      await set({ progress: 15, stage: { k: "searching_cb" } });
+      const pages = await Promise.all(urls.map((u) => cand({ action: "scan", url: u.url, rx: PS.PISOS_RX }, 45000).then((r: any) => ({ r }))));
+      const rowsPs = pages.flatMap(({ r }) => (Array.isArray(r?.matches) ? r.matches : []).map((m: string) => PS.parsePisosCard(m))).filter(Boolean) as PS.PisosRow[];
+      scanPpm = PS.pisosPpm(rowsPs);
+      for (const r of PS.pickPisos(rowsPs, p, 20)) {
+        if (cands.some((x) => x.url === r.url)) continue;
+        cands.push({ url: r.url, title: r.title, price: r.price, currency: "EUR", beds: r.beds, sqm: r.sqm, location: PS.pisosArea(r.area, p.place), country: "Spain", kind: "buy", image: r.photo, provider: "pisos.com", ps: r });
+      }
+      if (cands.some((c) => c.ps)) provider = [provider, "pisos.com"].filter(Boolean).join("+");
+      await set({ progress: 22, stage: { k: "found", n: cands.length }, usage: { ip_src: who.ipSrc, net: who.netHash, scanned: rowsPs.length, pages: pages.map((x: any) => (x.r?.matches ? x.r.matches.length : String(x.r?.error || "?").slice(0, 20))) } });
+    }
+  }
 
   // 3. the web: Claude with web search, within the caps (for US cities only when the free source found too few)
-  const [mine, all] = await Promise.all([who.user ? spentToday("user_id", who.user) : spentToday("ip_hash", who.ipHash), spentToday(null, null)]);
-  const budget = Math.max(0, Math.min(LIMITS.USER_USD_PER_DAY - mine, LIMITS.GLOBAL_USD_PER_DAY - all));
+  // admins: their own day budget and a pool of their own; everyone else: per person and the global cap
+  const [mine, ipSpent, netSpent, all] = await Promise.all([
+    who.user ? spentToday("user_id", who.user) : spentToday("ip_hash", who.ipHash, true), who.admin ? 0 : spentToday("ip_hash", who.ipHash, true),
+    who.admin ? 0 : spentToday("usage->>net", who.netHash, true), spentToday("admin", !!who.admin),
+  ]);
+  const day = C.dayBudget({ admin: !!who.admin, user: mine, ip: ipSpent, net: netSpent, all });
+  const budget = day.budget;
+  const budgetNote = () => day.why || "user_budget";
   const key = Deno.env.get("ANTHROPIC_API_KEY");
   if (!key) note = "no_key";
+  else if (budget < LIMITS.EST_REVIEW_USD * 2) note = budgetNote(); // not even the AI checks: say so at once
   else if (cands.length >= 6) { /* enough readable listings: no need to pay for a web search */ }
-  else if (budget < LIMITS.EST_CLAUDE_JOB_USD) note = mine + LIMITS.EST_CLAUDE_JOB_USD > LIMITS.USER_USD_PER_DAY ? "user_budget" : "global_budget";
+  else if (budget < LIMITS.EST_CLAUDE_JOB_USD) note = budgetNote();
   else {
     await set({ progress: 24, stage: { k: "searching" } });
     let prog = 24;
@@ -312,8 +362,10 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
       for (const it of c.items.filter((i) => C.withinAsk(i, p) && !C.blockedUrl(i.url))) if (!cands.some((x) => x.url === it.url)) cands.push({ ...it, image: it.image_url, provider: "claude" });
       if (c.error) note = "claude_" + c.error;
     } finally { clearInterval(tick); }
-    await set({ progress: 44, stage: { k: "found", n: cands.length }, usage: { ...(usage || {}), model: provider, ip_src: who.ipSrc, net: who.netHash } });
+    await set({ progress: 44, stage: { k: "found", n: cands.length }, usage: { ...(usage || {}), model: provider, ip_src: who.ipSrc, net: who.netHash, scanned: scanPpm.length } });
   }
+  // the page tells the person at once when the day's live searches are used up (never "nothing found")
+  if (note) await set({ note });
 
   // medians for the value part of the score (core.ts pickMedian)
   const country_medians: Record<string, number | null> = {};
@@ -379,21 +431,24 @@ const sourceKey = (u: string) => String(u).replace(/^https?:\/\/(www\.)?/, "").s
 
 async function checkOne(c: Cand, w: Work, results: Result[], spend: (usd: number) => void, step: (k: string) => PromiseLike<unknown>) {
   const p = w.p;
-  const [x, factsRaw] = await Promise.all([cand({ action: "extract", url: c.url }, 25000), c.cb ? cand({ action: "scan", url: c.url, rx: C.CB_FACTS_RX }, 25000) : Promise.resolve(null)]);
+  const factsRx = c.cb ? C.CB_FACTS_RX : c.ps ? PS.PISOS_FACTS_RX : null;
+  const [x, factsRaw] = await Promise.all([cand({ action: "extract", url: c.url }, 25000), factsRx ? cand({ action: "scan", url: c.url, rx: factsRx }, 25000) : Promise.resolve(null)]);
   await step("reading");
   const okPage = x && !x.error;
   const facts = c.cb ? C.parseCbFacts(factsRaw?.matches) : null;
+  const pf = c.ps ? PS.parsePisosFacts(factsRaw?.matches) : null;
   let photos: string[] = [];
   if (c.cb) photos = C.cbPhotos(okPage ? x.images || [] : [], c.cb.photo);
+  else if (c.ps) photos = PS.pisosPhotos(okPage ? x.images || [] : [], c.ps.photo);
   else if (okPage) photos = (x.images || []).filter((u: string) => /^https:\/\//.test(u));
   const price = c.price ?? (okPage ? x.price : null);
   const currency = c.price != null ? c.currency : (okPage && x.currency) || c.currency;
   const price_eur = C.toEur(price, currency);
   const beds = c.beds ?? (okPage ? x.bedrooms : null);
-  const baths = c.cb?.baths ?? facts?.baths ?? null;
+  const baths = c.cb?.baths ?? facts?.baths ?? c.ps?.baths ?? pf?.baths ?? null;
   const sqm = c.sqm ?? (okPage && !c.cb ? x.sqm : null);
-  const lat = c.lat ?? (okPage ? x.lat : null), lng = c.lng ?? (okPage && !c.cb ? x.lng : null);
-  const desc = (facts?.remarks || (okPage ? String(x.description || "") : "")).slice(0, 3000);
+  const lat = c.lat ?? pf?.lat ?? (okPage ? x.lat : null), lng = c.lng ?? pf?.lng ?? (okPage && !c.cb ? x.lng : null);
+  const desc = (facts?.remarks || (okPage ? String(x.description || "") : "") || c.ps?.desc || "").slice(0, 3000);
   const cityName = c.cb ? (c.cb.path.split("/")[2] || "").replace(/-/g, " ") : "";
   const stateName = p.state ? C.US_STATES[p.state] : "";
   const tc = (s: string) => s.toLowerCase().replace(/\b[a-z]/g, (m) => m.toUpperCase());
@@ -401,8 +456,8 @@ async function checkOne(c: Cand, w: Work, results: Result[], spend: (usd: number
   const country = c.country || p.country;
   // the same kind of home in the same city first (a townhouse against townhouses), then the job's median
   const median = (c.cb && w.scan_medians?.[C.cbGroup(c.cb.type)]) || w.median || (country ? w.country_medians[country] ?? null : null);
-  const ptype = c.cb?.type || (p.ptype !== "any" ? p.ptype : "");
-  const flags0 = C.textFlags([desc, c.title, facts?.text || "", facts?.style || "", facts?.body || ""].join(" "), { beds, baths, sqm });
+  const ptype = c.cb?.type || c.ps?.type || (p.ptype !== "any" ? p.ptype : "");
+  const flags0 = C.textFlags([desc, c.title, facts?.text || "", facts?.style || "", facts?.body || "", pf?.text || ""].join(" "), { beds, baths, sqm });
   if (facts?.senior && !flags0.includes("age_restricted")) flags0.push("age_restricted");
   const base = { price_eur, sqm, photos: okPage ? photos.length : null, beds, lat, lng, desc_len: desc.length, kind: c.kind };
   const ctx = { median_ppm: median, min_beds: p.min_beds };
@@ -429,7 +484,7 @@ async function checkOne(c: Cand, w: Work, results: Result[], spend: (usd: number
   if (!skip) {
     w.reviews++;
     await step("reviewing");
-    const rv = await aiReview(pics.slice(0, 6), { kind: c.kind, price, currency, price_eur, beds, baths, sqm, ptype, location: c.cb ? `${c.cb.address}` : location, country, ratio: pre.parts.ratio, text: desc, facts: facts ? facts.text : "" });
+    const rv = await aiReview(pics.slice(0, 6), { kind: c.kind, price, currency, price_eur, beds, baths, sqm, ptype, location: c.cb ? `${c.cb.address}` : location, country, ratio: pre.parts.ratio, text: desc, facts: facts ? facts.text : pf ? [pf.text, c.ps?.central ? "In the city centre district" : ""].filter(Boolean).join("; ") : "" });
     spend(rv.cost); w.budget -= rv.cost;
     review = rv.review; reviewed = rv.reviewed;
   } else await step("reviewing");
@@ -443,7 +498,7 @@ async function checkOne(c: Cand, w: Work, results: Result[], spend: (usd: number
   const why_cheap = review?.why_cheap || (soft.includes("age_restricted") && (pre.parts.ratio ?? 1) < 0.7 ? "Only for buyers aged 55 or more." : null);
   const why_cheap_es = review?.why_cheap ? review.why_cheap_es : why_cheap ? "Solo para compradores de 55 años o más." : null;
   const isCondo = /condo|co-?op|apartment|townhouse/i.test(ptype);
-  const hoa = review?.hoa_monthly ?? facts?.hoa ?? null;
+  const hoa = review?.hoa_monthly ?? facts?.hoa ?? pf?.fee ?? null;
   // Florida (Carlos, 7-nov-2026): the listing's tax is the seller's, with the homestead discount; a buyer pays about 1.8 % a year
   const fl = c.cb && p.state === "fl" && c.kind === "buy" && price;
   const est = fl ? Math.round((price! * 0.018) / 100) * 100 : 0;
@@ -457,6 +512,7 @@ async function checkOne(c: Cand, w: Work, results: Result[], spend: (usd: number
     title: (review?.title || existing?.title || c.title || (okPage && x.title) || "Home").slice(0, 160), price, currency, price_eur, beds, sqm,
     location, country, kind: c.kind, image: ordered[0] || c.image || null, image_urls: ordered.slice(0, 3), photos: okPage ? photos.length : null,
     score: sc.score, parts: { ...sc.parts, caps: sc.caps }, found_at: new Date().toISOString(),
+    central: c.ps ? c.ps.central : null,
     show: gate.show, reasons: gate.reasons, photo_quality: review?.photo_quality ?? null, flags: soft, why_cheap, why_great: review?.why_great || null,
     title_es: review?.title ? review.title_es : existing?.title_es || null, why_great_es: review?.why_great ? review.why_great_es : null, why_cheap_es,
     ai_checked_at: review ? new Date().toISOString() : existing?.ai_checked_at || null, hoa_monthly: hoa, hoa_currency: hoa || tax ? currency : null, tax_annual: tax, hoa_unknown: isCondo && !hoa,
@@ -647,9 +703,10 @@ async function regate(only: string[] | null, apply: boolean) {
 async function claude(key: string, p: C.LiveQuery, q: string, want: number): Promise<{ items: C.LiveItem[]; cost: number; usage: any; model: string; error?: string }> {
   const wants = [
     p.kind === "rent" ? "to rent" : "to buy",
-    p.ptype !== "any" ? (p.ptype === "apartment" ? "an apartment / flat / condo" : "a house") : "any home (house or apartment)",
+    p.ptype !== "any" && !p.ptype_soft ? (p.ptype === "apartment" ? "an apartment / flat / condo" : "a house") : "any home (house or apartment)",
     `in ${[p.place || p.city, p.state?.toUpperCase(), p.country].filter(Boolean).join(", ")}`,
     p.min_beds ? `at least ${p.min_beds} bedrooms` : "",
+    p.central ? "in or close to the city centre / old town" : "",
     p.max_price ? `price at most ${p.max_price} ${p.currency}${p.kind === "rent" ? " per month" : ""}` : "",
     p.min_price ? `price at least ${p.min_price} ${p.currency}` : "",
   ].filter(Boolean).join("; ");

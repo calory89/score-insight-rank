@@ -94,3 +94,30 @@ describe("live search v2 helpers", () => {
     expect(recallJob(null, "x")).toBeNull();
   });
 });
+
+describe("live search v3 helpers", async () => {
+  const L = await import("@/community/livelogic");
+  it("asks which Sevilla, or not, like the server", () => {
+    expect(L.understand("Sevilla", "Europe/Madrid", null).ask?.length).toBe(3);
+    expect(L.understand("Sevilla", "Europe/Madrid", "es").p).toMatchObject({ country: "Spain", place: "Sevilla" });
+    expect(L.understand("casa en sevilla de 3 habtiacioens en el centro por menos de 200k", "Europe/Madrid", null).ask).toBe(null);
+    expect(L.understand("3 bedroom house in Tampa under 350k", "UTC", null).ask).toBe(null);
+  });
+  it("tells the person's own limit from everyone's", () => {
+    expect(L.limitKind("none_80:user_budget")).toBe("mine");
+    expect(L.limitKind("user_budget")).toBe("mine");
+    expect(L.limitKind("ip_cap", "capped")).toBe("mine");
+    expect(L.limitKind("global_cap", "capped")).toBe("everyone");
+    expect(L.limitKind("none_80:global_budget")).toBe("everyone");
+    expect(L.limitKind("none_80")).toBe(null);
+    expect(L.limitKind(null)).toBe(null);
+  });
+  it("shows when the limits reset in local time", () => {
+    expect(L.resetTime("es", new Date("2026-11-08T15:00:00Z"))).toMatch(/^\d{1,2}:\d{2}/);
+  });
+  it("labels place options", () => {
+    const o = L.understand("Sevilla", null, null).ask!;
+    expect(L.optionParts(o[1])).toEqual({ name: "Sevilla", region: "Valle del Cauca", country: "Colombia" });
+    expect(L.optionParts(o[2])).toEqual({ name: "Seville", region: "Ohio", country: "United States" });
+  });
+});

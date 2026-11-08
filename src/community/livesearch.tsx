@@ -7,7 +7,7 @@
 // Without an account the first search is free; after that our own homes still show, with a gentle sign-in nudge.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Globe, Info, LogIn, RotateCcw, Search, Sparkles } from "lucide-react";
+import { Clock, ExternalLink, Globe, Info, LogIn, MapPin, RotateCcw, Search, Sparkles, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCommunity } from "./ctx";
@@ -18,6 +18,7 @@ import { learnTexts } from "@/lib/lang";
 import {
   parseLiveQuery, similarHomes, liveChips, stageParts, isFinal, mergeResults, fmtMoney, SHOW_MIN, LIVE_FREE_KEY, passes, resultToDeal,
   LIVE_JOBS_KEY, rememberJob, recallJob, queryKey, type LiveQuery, type LiveResult, type LiveStatus,
+  understand, visitorTz, limitKind, resetTime, optionParts, type PlaceOpt, type Miss,
 } from "./livelogic";
 import "./livesearch.css";
 
@@ -38,7 +39,7 @@ const ls = {
   jobs(): Record<string, { id: string; at: number }> { try { return JSON.parse(localStorage.getItem(LIVE_JOBS_KEY) || "{}") || {}; } catch { return {}; } },
 };
 
-type Phase = "idle" | "starting" | "running" | "done" | "error" | "capped" | "rejected" | "login";
+type Phase = "idle" | "starting" | "running" | "done" | "error" | "capped" | "rejected" | "login" | "ask";
 
 let rowsP: Promise<Row[]> | null = null;
 const loadRows = () => (rowsP ||= feedAll({ scope: "all", sort: "score" } as any).then((f: any) => (f.rows || []) as Row[]).catch(() => { rowsP = null; return [] as Row[]; }));
@@ -46,6 +47,11 @@ const loadRows = () => (rowsP ||= feedAll({ scope: "all", sort: "score" } as any
 export default function LiveSearchPage() {
   const [sp, setSp] = useSearchParams();
   const q = (sp.get("q") || "").trim();
+  // v3: the place the person picked when a name exists in several countries (?in=es, ?in=us-oh)
+  const where = (sp.get("in") || "").trim().slice(0, 12) || null;
+  const tz = useMemo(() => visitorTz(), []);
+  const [ask, setAsk] = useState<PlaceOpt[] | null>(null);
+  const [closest, setClosest] = useState<Miss[]>([]);
   const { user } = useAuth();
   const { requireUser } = useCommunity() || {};
   const [text, setText] = useState(q);
@@ -65,30 +71,35 @@ export default function LiveSearchPage() {
   useEffect(() => {
     const me = ++run.current;
     const alive = () => run.current === me;
-    setResults([]); setSt(null);
-    const local = q ? parseLiveQuery(q) : null;
+    setResults([]); setSt(null); setAsk(null); setClosest([]);
+    const und = q ? understand(q, tz, where) : null;
+    const local = und ? und.p : null;
     setParsed(local);
     if (!q) { setPhase("idle"); return; }
     if (local && !local.ok) { setPhase("rejected"); setSt({ status: "rejected", reason: local.reason }); return; }
+    // "Which Sevilla do you mean?": nothing is searched (or spent) until the person picks one
+    if (und?.ask) { setAsk(und.ask); setPhase("ask"); return; }
     let timer: ReturnType<typeof setTimeout> | undefined;
     (async () => {
       setPhase("starting");
-      let jobId = attempt === 0 ? recallJob(ls.jobs(), q) : null;
+      const jobQ = where ? q + " @" + where : q;
+      let jobId = attempt === 0 ? recallJob(ls.jobs(), jobQ) : null;
       if (!jobId) {
         const session = (await supabase.auth.getSession().catch(() => null))?.data?.session;
         const headers = { "Content-Type": "application/json", apikey: ENV.VITE_SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${session?.access_token || ENV.VITE_SUPABASE_PUBLISHABLE_KEY}` };
         let first: LiveStatus;
-        try { first = await api("", { method: "POST", headers, body: JSON.stringify({ q, lang: getLang() === "es" ? "es" : "en" }) }); }
+        try { first = await api("", { method: "POST", headers, body: JSON.stringify({ q, lang: getLang() === "es" ? "es" : "en", tz, where }) }); }
         catch { if (alive()) setPhase("error"); return; }
         if (!alive()) return;
         if (first.parsed) setParsed(first.parsed);
         if (first.status === "need_login") { setPhase("login"); return; }
+        if (first.status === "ask" && first.options?.length) { setAsk(first.options); setPhase("ask"); return; }
         if (first.status === "capped") { setPhase("capped"); setSt(first); return; }
         if (first.status === "rejected") { setPhase("rejected"); setSt(first); return; }
         if (!first.job_id) { setPhase("error"); return; }
         if (!session && !(first as any).cached) ls.set(LIVE_FREE_KEY, new Date().toISOString());
         jobId = first.job_id;
-        ls.set(LIVE_JOBS_KEY, JSON.stringify(rememberJob(ls.jobs(), q, jobId)));
+        ls.set(LIVE_JOBS_KEY, JSON.stringify(rememberJob(ls.jobs(), jobQ, jobId)));
       }
       setPhase("running");
       let fails = 0;
@@ -97,12 +108,13 @@ export default function LiveSearchPage() {
         try {
           const s: LiveStatus = await api(`?job=${encodeURIComponent(jobId!)}`, { headers: { apikey: ENV.VITE_SUPABASE_PUBLISHABLE_KEY } });
           if (!alive()) return;
-          if ((s as any).error === "not found") { const j = ls.jobs(); delete j[queryKey(q)]; ls.set(LIVE_JOBS_KEY, JSON.stringify(j)); setAttempt((a) => a + 1); return; }
+          if ((s as any).error === "not found") { const j = ls.jobs(); delete j[queryKey(jobQ)]; ls.set(LIVE_JOBS_KEY, JSON.stringify(j)); setAttempt((a) => a + 1); return; }
           fails = 0;
           setSt(s);
           if (s.parsed) setParsed(s.parsed);
           learnTexts(s.results); // each found home's own Spanish title and texts (8-nov-2026)
           setResults((prev) => mergeResults(prev, (s.results || []).filter(passes)));
+          setClosest(Array.isArray(s.closest) ? s.closest : []);
           if (isFinal(s.status)) { setPhase(s.status === "done" ? "done" : "error"); return; }
         } catch { if (++fails > 5) { if (alive()) setPhase("error"); return; } }
         timer = setTimeout(poll, 2500);
@@ -110,7 +122,7 @@ export default function LiveSearchPage() {
       poll();
     })();
     return () => { run.current++; if (timer) clearTimeout(timer); };
-  }, [q, user?.id, attempt]);
+  }, [q, where, user?.id, attempt]);
 
   const p = parsed;
   const chips = p?.ok ? liveChips(p) : [];
@@ -125,6 +137,10 @@ export default function LiveSearchPage() {
   const ours = phase === "done" && !results.length ? best80 : similar;
   const bySlug = useMemo(() => new Map(rows.map((r: any) => [r.slug, r])), [rows]);
 
+  const limit = phase === "capped" ? limitKind(st?.note, "capped") : limitKind(note);
+  const usedFree = !user && !!ls.get(LIVE_FREE_KEY);
+  const askName = ask?.[0] ? (p?.place || ask[0].name) : "";
+  const centralMissing = phase === "done" && !!p?.central && results.some((r) => r.source === "web") && !results.some((r: any) => r.central);
   const submit = (e: React.FormEvent) => { e.preventDefault(); const v = text.trim(); if (!v) return; if (v === q) setAttempt((a) => a + 1); else setSp({ q: v }); };
 
   return (
@@ -138,6 +154,12 @@ export default function LiveSearchPage() {
           <input type="search" value={text} onChange={(e) => setText(e.target.value)} aria-label={t("Search homes")} placeholder={t("Try: 3 bedroom house in Miami under $300k")} enterKeyHint="search" maxLength={200} />
           <button type="submit" className="lv-go" disabled={busy && text.trim() === q}>{t("Search")}</button>
         </form>
+        {!user && (
+          <p className="lv-free">
+            {usedFree || phase === "login" ? t("You used your free live search. A free account gives you more.") : t("1 free live search. A free account gives you more.")}{" "}
+            <button type="button" className="hunt-link" onClick={() => requireUser?.("up")}>{t("Create a free account")}</button>
+          </p>
+        )}
         {chips.length > 0 && (
           <ul className="lv-chips" aria-label={t("What we understood")}>
             {chips.map((c) => <li key={c.k}>{c.k === "beds" || c.k === "where" ? <>{c.value} {c.label && t(c.label)}</> : c.k === "max" || c.k === "min" ? <>{t(c.label)} {c.value}</> : t(c.label)}</li>)}
@@ -155,21 +177,50 @@ export default function LiveSearchPage() {
         </section>
       )}
 
-      {phase === "login" && (
-        <section className="lv-card lv-msg lv-nudge" role="status">
-          <LogIn size={20} aria-hidden="true" />
-          <div>
-            <strong>{t("Here are the best homes we already have for your search.")}</strong>
-            <p>{t("You used your free live search. Sign in (it is free) and we will also search estate agents and portals for this.")}</p>
-            <button type="button" className="hunt-secondary lv-btn" onClick={() => requireUser?.()}>{t("Sign in to search the web")}</button>
+      {phase === "ask" && ask && (
+        <section className="lv-ask" aria-live="polite">
+          <span className="lv-ask-avatar" aria-hidden="true"><Sparkles size={16} /></span>
+          <div className="lv-ask-bubble">
+            <strong>{t("Which one do you mean?")} <span translate="no" className="notranslate">{askName}</span></strong>
+            <p>{t("There is more than one place with this name. Pick one and we start the search.")}</p>
+            <ul className="lv-ask-opts">
+              {ask.map((o) => {
+                const op = optionParts(o);
+                return (
+                  <li key={o.id}>
+                    <button type="button" className="lv-ask-chip" onClick={() => setSp({ q, in: o.id })}>
+                      <MapPin size={15} aria-hidden="true" />
+                      <span><b translate="no" className="notranslate">{op.name}</b>{op.region && <>, {t(op.region)}</>}, {t(op.country)}</span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
         </section>
       )}
 
-      {phase === "capped" && (
-        <section className="lv-card lv-msg" role="status">
-          <Info size={20} aria-hidden="true" />
-          <div><strong>{t("Live search has reached today's limit. Please try again tomorrow.")}</strong><p>{t("Meanwhile, these are the closest homes we already have.")}</p></div>
+      {phase === "login" && (
+        <section className="lv-card lv-msg lv-login" role="status">
+          <LogIn size={20} aria-hidden="true" />
+          <div>
+            <strong>{t("Create a free account to keep searching agents and portals live.")}</strong>
+            <p>{t("Your first live search was free. Below are the homes we already have for this search.")}</p>
+            <div className="lv-actions">
+              <button type="button" className="hunt-primary lv-btn" onClick={() => requireUser?.("up")}><UserPlus size={16} aria-hidden="true" /> {t("Sign up free")}</button>
+              <button type="button" className="hunt-secondary lv-btn" onClick={() => requireUser?.("in")}><LogIn size={16} aria-hidden="true" /> {t("Log in")}</button>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {limit && (
+        <section className="lv-card lv-msg lv-limit" role="status">
+          <Clock size={20} aria-hidden="true" />
+          <div>
+            <strong>{limit === "everyone" ? t("Live search has reached today's limit for everyone.") : t("You've reached today's live search limit.")}</strong>
+            <p>{t("You can search again tomorrow, from")} {resetTime(getLang())}. {t("Meanwhile, here are the homes we already have for your search.")}</p>
+          </div>
         </section>
       )}
 
@@ -191,8 +242,9 @@ export default function LiveSearchPage() {
             <div className="lv-summary">
               {note === "from_earlier" ? <p>{t("These come from homes already on RealHunt and earlier searches, so the answer was instant.")}</p>
                 : results.length ? <p><b>{results.length}</b> {results.length === 1 ? t("home passed our AI check.") : t("homes passed our AI check.")}{st?.hidden ? <> {t("Listings we checked and left out:")} {st.hidden}</> : null}</p>
+                : limit ? <p>{t("Live web search was not used for this search because of today's limit, so these results come from homes we already have.")}</p>
                 : <p>{t("None of the listings we found today passed our AI check (good photos, good value, no surprises), so we do not show them. These RealHunt homes for your search do:")}</p>}
-              {/budget/.test(note) && <p className="lv-fine">{t("You have used today's live web searches, so these results come from our own data.")}</p>}
+              {centralMissing && <p className="lv-fine">{t("Few homes in the centre fit this budget, so these are in other parts of the city.")}</p>}
               {fresh > 0 && <p className="lv-fine">{t("New homes found today now have their own RealHunt page. A person will check them too.")}</p>}
             </div>
           )}
@@ -210,7 +262,34 @@ export default function LiveSearchPage() {
         </section>
       )}
 
-      {p?.ok && ours.length > 0 && (
+      {phase === "done" && closest.length > 0 && (
+        <section className="lv-closest" aria-label={t("Closest listings we checked")}>
+          <h2>{t("Closest listings we checked")}</h2>
+          <p className="lv-fine">{t("They did not pass our check (score 80 or more and good photos), so they have no RealHunt page. They open on the portal.")}</p>
+          <ul>
+            {closest.map((m) => (
+              <li key={m.id}>
+                <a href={m.url} target="_blank" rel="noopener noreferrer nofollow" className="lv-miss">
+                  {m.image ? <img src={m.image} alt="" loading="lazy" width={96} height={72} /> : <span className="lv-miss-noimg" aria-hidden="true" />}
+                  <span className="lv-miss-body">
+                    <b>{m.price != null ? fmtMoney(m.price, m.currency || "EUR") : ""}</b>
+                    <span className="lv-miss-title">{getLang() === "es" && m.title_es ? m.title_es : m.title}</span>
+                    <span className="lv-miss-meta">
+                      {[m.beds ? `${m.beds} ${t("bed")}` : "", m.sqm ? `${m.sqm} m²` : "", m.location].filter(Boolean).join(" · ")}
+                    </span>
+                    <span className="lv-miss-why">
+                      {t("AI estimate")} {m.score}/100{m.photo_quality != null && <> · {t("Photos")} {m.photo_quality}/10</>}
+                    </span>
+                  </span>
+                  <ExternalLink size={16} aria-hidden="true" className="lv-miss-ext" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {p?.ok && phase !== "ask" && ours.length > 0 && (
         <section className="lv-similar">
           <h2>{busy ? t("Meanwhile, the closest homes we have") : phase === "done" && !results.length ? t("Best RealHunt homes for this search") : t("More RealHunt homes for this search")}</h2>
           <div className="hx-grid">{ours.map((d, i) => <HomeCard key={d.slug} deal={d} pos={i + 1} />)}</div>
