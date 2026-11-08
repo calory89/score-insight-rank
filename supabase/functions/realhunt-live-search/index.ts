@@ -27,9 +27,15 @@
 // v3 (8-nov-2026): typo-tolerant parser, "en el centro" as a preference, places in several countries resolved from
 // the visitor's time zone or asked first (POST answers {status:"ask", options}; the choice comes back as `where`),
 // admins (realhunt.is_admin) with their own budget, per IP and per network daily caps, `closest` misses in the poll.
+// v4 (8-nov-2026, Carlos: "I said in the centre of Seville and they show me the outskirts"): the centre is real
+// geography (centre.ts). The city-centre point comes from a built-in table or, for other cities, from Nominatim once
+// (kept in the job's work, reused by later jobs for the same place). Every listing gets distance_to_centre_km and a
+// short fact ("1.2 km from the centre"); a "centre" search shows only central homes in `results`, the closest others
+// in `outside_centre` (never mixed), and says honestly in the note when nothing central passed.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import * as C from "./core.ts";
 import * as PS from "./pisos.ts";
+import * as CT from "./centre.ts";
 
 export const LIMITS = {
   ANON_FREE_SEARCHES: 1, // searches without an account, per IP hash
@@ -107,10 +113,14 @@ type Result = {
   hoa_monthly?: number | null; hoa_currency?: string | null; tax_annual?: number | null; hoa_unknown?: boolean;
   /** v3: in the city centre (pisos.com district), when the person asked for the centre */
   central?: boolean | null;
+  /** v4: km from the city-centre point (null without a map position), how that was decided, the card's fact */
+  distance_to_centre_km?: number | null; centre_status?: CT.CentreFit["status"] | null; centre_fact?: string | null; centre_fact_es?: string | null;
+  /** v4: for a "centre" search, whether it belongs in the main results (false: only in outside_centre) */
+  centre_ok?: boolean | null; lat?: number | null; lng?: number | null;
 };
 type Cand = { url: string; title: string; price: number | null; currency: string; beds: number | null; sqm: number | null; location: string; country: string | null; kind: "buy" | "rent"; image: string | null; provider: string; cb?: C.CbRow; ps?: PS.PisosRow; lat?: number | null; lng?: number | null };
 type Who = { user: string | null; ipHash: string; netHash: string; ipSrc: string; admin?: boolean };
-type Work = { p: C.LiveQuery; q: string; lang: string; who: Who; t0: number; cands: Cand[]; i: number; median: number | null; median_from: string | null; country_medians: Record<string, number | null>; scan_medians?: Record<string, number | null>; budget: number; reviews: number; units: number; slices: number; note: string; provider: string; search_cost: number; done?: boolean };
+type Work = { p: C.LiveQuery; q: string; lang: string; who: Who; t0: number; cands: Cand[]; i: number; median: number | null; median_from: string | null; country_medians: Record<string, number | null>; scan_medians?: Record<string, number | null>; budget: number; reviews: number; units: number; slices: number; note: string; provider: string; search_cost: number; done?: boolean; centre?: CT.Centre | null; outside_reviews?: number };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
@@ -135,6 +145,35 @@ Deno.serve(async (req) => {
   }
 });
 
+/** The centre fields of a result (v4). `central`: the person asked for the centre, so centre_ok decides the list. */
+function centreCols(f: CT.CentreFit | null, central: boolean) {
+  const fact = CT.centreFact(f);
+  return { distance_to_centre_km: f?.km ?? null, centre_status: f?.status ?? null, centre_fact: fact?.en ?? null, centre_fact_es: fact?.es ?? null, centre_ok: central ? CT.inCentre(f) : null };
+}
+
+/**
+ * The centre of a city not in centre.ts's table, from OpenStreetMap's Nominatim (free; one request, with a proper
+ * User-Agent as its policy asks). A city is looked up once: the answer is kept in the job's work and later jobs for
+ * the same place reuse it. Null when it cannot be found: the search then cannot enforce the centre and says nothing false.
+ */
+async function geocode(p: C.LiveQuery): Promise<CT.Centre | null> {
+  const name = p.place || p.city;
+  if (!name || !p.country) return null;
+  try {
+    const { data } = await db.from("live_jobs").select("c:work->centre").eq("parsed->>place", p.place).eq("parsed->>country", p.country).not("work->centre", "is", null).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    const c: any = (data as any)?.c;
+    if (c && Number.isFinite(c.lat) && Number.isFinite(c.lng)) return c as CT.Centre;
+  } catch { /* look it up */ }
+  const q = [name, p.state ? C.US_STATES[p.state] : "", p.country].filter(Boolean).join(", ");
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 6000);
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`, { signal: ctl.signal, headers: { "User-Agent": "RealHunt/1.0 (https://realhunt.co)", "Accept-Language": "en" } });
+    if (!r.ok) return null;
+    const arr = await r.json().catch(() => []);
+    return CT.centreFromGeocode(name, p.country, Array.isArray(arr) ? arr[0] : null);
+  } catch { return null; } finally { clearTimeout(t); }
+}
+
 async function poll(id: string) {
   if (!/^[0-9a-f-]{36}$/.test(id)) return json({ error: "bad job" }, 400);
   const { data: j } = await db.from("live_jobs").select("id,status,progress,stage,results,note,parsed,updated_at,provider,work").eq("id", id).maybeSingle();
@@ -149,7 +188,13 @@ async function poll(id: string) {
     background(chain(id));
   }
   const all: Result[] = Array.isArray(j.results) ? j.results : [];
-  const shown = all.filter(isShown);
+  // v4: a "centre" search shows only central homes; the closest others come apart in outside_centre
+  const centre: CT.Centre | null = j.work?.centre || null;
+  const wantsCentre = !!(j.parsed?.central && centre);
+  const shownAll = all.filter(isShown);
+  const shown = wantsCentre ? shownAll.filter((r) => r.centre_ok !== false) : shownAll;
+  // the closest others only: within 3 x the centre's radius (a home 8 km out is not "near the centre" to anyone)
+  const outside = wantsCentre ? shownAll.filter((r) => r.centre_ok === false && (r.distance_to_centre_km ?? 99) <= centre!.r_km * 3).sort((a, b) => (a.distance_to_centre_km ?? 99) - (b.distance_to_centre_km ?? 99)).slice(0, 6) : [];
   // 8-nov-2026: results saved before the Spanish texts existed get them from their home page row
   const slugs = shown.filter((r) => r.deal_slug && !r.title_es).map((r) => r.deal_slug!);
   if (slugs.length) {
@@ -164,8 +209,15 @@ async function poll(id: string) {
     }
   }
   // v3: when nothing passed, the closest listings we checked, labelled honestly as not passing (they link to the portal)
-  const closest = j.status === "done" && shown.length < 3 ? C.closestMisses(all) : [];
-  return json({ job_id: j.id, status: j.status, progress: j.progress, stage: j.stage, results: shown, closest, found: all.length, hidden: all.length - shown.length, note: j.note, parsed: j.parsed });
+  const closest = j.status === "done" && shown.length < 3 ? C.closestMisses(wantsCentre ? all.filter((r) => r.centre_ok !== false) : all) : [];
+  // the honest note in both languages (a cached job may have been started in the other one)
+  let message: { en: string; es: string } | null = null;
+  if (wantsCentre && j.status === "done" && !shown.length) {
+    const x = { place: centre!.name, max_price: j.parsed.max_price, currency: j.parsed.currency, min_beds: j.parsed.min_beds, kind: j.parsed.kind, ...CT.centreTally(all) };
+    message = { en: CT.centreNote(x, "en"), es: CT.centreNote(x, "es") };
+  }
+  const centreInfo = centre ? { name: centre.name, label: centre.label || null, lat: centre.lat, lng: centre.lng, radius_km: centre.r_km, src: centre.src, asked: !!j.parsed?.central, message: message?.en ?? null, message_es: message?.es ?? null } : null;
+  return json({ job_id: j.id, status: j.status, progress: j.progress, stage: j.stage, results: shown, outside_centre: outside, closest, found: all.length, hidden: all.length - shown.length - outside.length, note: j.note, parsed: j.parsed, centre: centreInfo });
 }
 // v1 results (no `show`) are never shown again: they were not checked by the AI
 const isShown = (r: Result) => r.show === true && r.score >= C.SHOW_MIN;
@@ -266,6 +318,12 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
   const set = (patch: Record<string, unknown>) => db.from("live_jobs").update({ ...patch, results, cost_usd: cost, updated_at: new Date().toISOString() }).eq("id", id);
   await set({ status: "running", progress: 5, stage: { k: "parsed" } });
 
+  // v4: the city-centre point (built-in table; Nominatim once for other cities, only when the centre was asked for)
+  const centre = CT.centreFor(p.city || p.place, p.country) || (p.central ? await geocode(p) : null);
+  const central = !!(p.central && centre);
+  const atCentre = (lat: number | null | undefined, lng: number | null | undefined, text: string) => (centre ? CT.centreFit(centre, { lat: lat ?? null, lng: lng ?? null, text }) : null);
+  const main = (r: Result) => !central || r.centre_ok !== false;
+
   // 1. our own data first
   await set({ progress: 8, stage: { k: "ours" } });
   const rows = await approved();
@@ -274,7 +332,10 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
     for (const r of rows) {
       if ((Number(r.nota) || 0) < C.SHOW_MIN) continue;
       if (!C.fits({ kind: "buy", country: r.country, place: `${r.location_name || ""}, ${r.country || ""}`, price_eur: Number(r.price_eur) || null, beds: r.bedrooms ?? null, title: r.title }, p)) continue;
+      // v4: a published home far from the centre stays published, but is not a result of a "centre" search
+      const f = atCentre(Number(r.lat) || null, Number(r.lng) || null, String(r.location_name || ""));
       results.push({
+        ...centreCols(f, central), lat: Number(r.lat) || null, lng: Number(r.lng) || null,
         id: "rh-" + r.slug, source: "realhunt", provider: "realhunt", url: "https://realhunt.co/deal/" + r.slug, deal_slug: r.slug, deal_id: r.id, title: r.title, price: Number(r.price_eur) || null, currency: "EUR",
         price_eur: Number(r.price_eur) || null, beds: r.bedrooms ?? null, sqm: r.sqm ?? null, location: r.location_name || "", country: r.country, kind: "buy", image: abs(r.image_urls?.[0] || "") || null,
         image_urls: (r.image_urls || []).slice(0, 3).map(abs), photos: r.image_urls?.length ?? null, score: Number(r.nota), found_at: r.approved_at || now, show: true, why_cheap: r.why_cheap || null, flags: r.ai_flags || [], ai_checked_at: r.ai_checked ? r.ai_checked_at : null,
@@ -287,16 +348,21 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
     .eq("kind", p.kind).eq("shown", true).gte("last_seen", new Date(Date.now() - LIMITS.REUSE_DAYS * 86400_000).toISOString()).order("score", { ascending: false }).limit(400);
   const earlier = (earlierAll || []).filter((x: any) => (!p.country || !x.country || x.country === p.country) && C.fits({ kind: x.kind, country: x.country, place: x.place, price_eur: x.price_eur, beds: x.beds, title: x.data?.title }, p));
   const slugs = earlier.map((l: any) => l.deal_slug).filter(Boolean);
-  const live = new Set<string>();
-  if (slugs.length) { const { data } = await db.from("community_deals").select("slug").in("slug", slugs).eq("status", "approved"); for (const d of data || []) live.add(d.slug); }
+  const live = new Map<string, any>();
+  if (slugs.length) { const { data } = await db.from("community_deals").select("slug,lat,lng,location_name").in("slug", slugs).eq("status", "approved"); for (const d of data || []) live.set(d.slug, d); }
   for (const l of earlier) {
     if (l.kind === "buy" && (!l.deal_slug || !live.has(l.deal_slug))) continue; // rejected by a person since
     if (l.deal_slug && results.some((r) => r.deal_slug === l.deal_slug)) continue;
-    results.push({ ...(l.data as Result), source: "earlier", score: l.score, show: true });
+    const d = l.deal_slug ? live.get(l.deal_slug) : null;
+    const lat = d?.lat ?? l.data?.lat ?? null, lng = d?.lng ?? l.data?.lng ?? null;
+    const f = atCentre(lat, lng, String(d?.location_name || l.data?.location || l.place || ""));
+    results.push({ ...(l.data as Result), ...centreCols(f, central), lat, lng, source: "earlier", score: l.score, show: true });
   }
-  results.sort((a, b) => b.score - a.score);
-  if (results.length >= LIMITS.REUSE_ENOUGH) {
-    results.splice(8);
+  results.sort((a, b) => Number(main(b)) - Number(main(a)) || b.score - a.score);
+  if (results.filter(main).length >= LIMITS.REUSE_ENOUGH) {
+    // the 8 best central ones, and up to 4 of the closest others for outside_centre
+    const keep = [...results.filter(main).slice(0, 8), ...results.filter((r) => !main(r)).sort((a, b) => (a.distance_to_centre_km ?? 99) - (b.distance_to_centre_km ?? 99)).slice(0, 4)];
+    results.splice(0, results.length, ...keep);
     await set({ status: "done", progress: 100, stage: { k: "done", n: results.length }, note: "from_earlier", provider: "ours", work: { done: true } });
     return;
   }
@@ -315,7 +381,15 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
     const clean = scanned.filter((r) => r.status === "ACTIVE" && !/land|lot|manufactured|mobile/i.test(r.type));
     scanPpm = C.cbPpm(clean);
     scanMedians = C.cbGroupMedians(clean);
-    for (const r of C.pickCb(scanned, p, 14)) {
+    let picked = C.pickCb(scanned, p, central ? 80 : 14);
+    if (central) {
+      // v4: downtown first by map position, then the 4 closest others (for outside_centre); the rest are not checked
+      const d = (r: C.CbRow) => atCentre(r.lat, r.lng, r.address);
+      const inC = picked.filter((r) => CT.inCentre(d(r)));
+      const out = picked.filter((r) => d(r)?.status === "outside").sort((a, b) => (d(a)!.km ?? 99) - (d(b)!.km ?? 99)).slice(0, 4);
+      picked = [...inC.slice(0, 14), ...out];
+    }
+    for (const r of picked) {
       cands.push({ url: r.url, title: "", price: r.price, currency: "USD", beds: r.beds, sqm: r.sqft ? Math.round(r.sqft * 0.092903) : null, location: r.address, country: "United States", kind: p.kind, image: r.photo, provider: "coldwellbanker", cb: r, lat: r.lat, lng: r.lng });
     }
     if (cands.length) provider = "coldwellbanker";
@@ -329,7 +403,7 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
       const pages = await Promise.all(urls.map((u) => cand({ action: "scan", url: u.url, rx: PS.PISOS_RX }, 45000).then((r: any) => ({ r }))));
       const rowsPs = pages.flatMap(({ r }) => (Array.isArray(r?.matches) ? r.matches : []).map((m: string) => PS.parsePisosCard(m))).filter(Boolean) as PS.PisosRow[];
       scanPpm = PS.pisosPpm(rowsPs);
-      for (const r of PS.pickPisos(rowsPs, p, 20)) {
+      for (const r of PS.pickPisos(rowsPs, p, 20, central ? centre : null)) {
         if (cands.some((x) => x.url === r.url)) continue;
         cands.push({ url: r.url, title: r.title, price: r.price, currency: "EUR", beds: r.beds, sqm: r.sqm, location: PS.pisosArea(r.area, p.place), country: "Spain", kind: "buy", image: r.photo, provider: "pisos.com", ps: r });
       }
@@ -338,6 +412,12 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
     }
   }
 
+  // v4: for a "centre" search, a candidate that may be central (the 4 closest others, read for outside_centre, do not count)
+  const likelyCentral = (x: Cand) => {
+    if (!central) return true;
+    const f = atCentre(x.lat, x.lng, x.ps ? CT.cardPlaceText(x.ps.area, centre!.name) : x.location);
+    return CT.inCentre(f) || (f?.status === "unknown" && !(x.ps && /distrito/i.test(x.ps.area)));
+  };
   // 3. the web: Claude with web search, within the caps (for US cities only when the free source found too few)
   // admins: their own day budget and a pool of their own; everyone else: per person and the global cap
   const [mine, ipSpent, netSpent, all] = await Promise.all([
@@ -350,14 +430,14 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
   const key = Deno.env.get("ANTHROPIC_API_KEY");
   if (!key) note = "no_key";
   else if (budget < LIMITS.EST_REVIEW_USD * 2) note = budgetNote(); // not even the AI checks: say so at once
-  else if (cands.length >= 6) { /* enough readable listings: no need to pay for a web search */ }
+  else if (cands.filter(likelyCentral).length >= 6) { /* enough readable listings: no need to pay for a web search */ }
   else if (budget < LIMITS.EST_CLAUDE_JOB_USD) note = budgetNote();
   else {
     await set({ progress: 24, stage: { k: "searching" } });
     let prog = 24;
     const tick = setInterval(() => { prog = Math.min(42, prog + 1); set({ progress: prog, stage: { k: "searching" } }).then(() => {}, () => {}); }, 4000);
     try {
-      const c = await claude(key, p, q, Math.max(1, 8 - results.length));
+      const c = await claude(key, p, q, Math.max(1, 8 - results.filter(main).length), central ? centre : null);
       cost = c.cost; usage = c.usage; provider = [provider, c.model].filter(Boolean).join("+");
       for (const it of c.items.filter((i) => C.withinAsk(i, p) && !C.blockedUrl(i.url))) if (!cands.some((x) => x.url === it.url)) cands.push({ ...it, image: it.image_url, provider: "claude" });
       if (c.error) note = "claude_" + c.error;
@@ -379,7 +459,7 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
     ...cands.filter((c) => !c.cb).map((c) => ppm(C.toEur(c.price, c.currency), c.sqm))];
   const m = C.pickMedian(scanPpm, local, p.country ? country_medians[p.country] ?? null : null);
 
-  const work: Work = { p, q, lang, who, t0, cands: cands.slice(0, LIMITS.MAX_CANDS), i: 0, median: m.ppm, median_from: m.from, country_medians, scan_medians: scanMedians, budget: Math.max(0, budget - cost), reviews: 0, units: 0, slices: 0, note, provider, search_cost: cost };
+  const work: Work = { p, q, lang, who, t0, cands: cands.slice(0, LIMITS.MAX_CANDS), i: 0, median: m.ppm, median_from: m.from, country_medians, scan_medians: scanMedians, budget: Math.max(0, budget - cost), reviews: 0, units: 0, slices: 0, note, provider, search_cost: cost, centre, outside_reviews: 0 };
   await set({ progress: 45, stage: { k: "checking", n: 0, of: work.cands.length }, work, provider: provider || "ours" });
   await slice(id, t0);
 }
@@ -397,7 +477,9 @@ async function slice(id: string, sliceT0 = Date.now()) {
   const set = (patch: Record<string, unknown>) => db.from("live_jobs").update({ ...patch, results, cost_usd: Math.round(cost * 1e5) / 1e5, work: w, updated_at: new Date().toISOString() }).eq("id", id);
   const step = (k: string, n?: number) => { w.units++; return set({ progress: pct(), stage: { k, n: n ?? Math.min(w.i, total), of: total } }); };
   w.slices++;
-  const shownCount = () => results.filter(isShown).length;
+  const wantsCentre = !!(w.p.central && w.centre);
+  const mainShown = (r: Result) => isShown(r) && (!wantsCentre || r.centre_ok !== false);
+  const shownCount = () => results.filter(mainShown).length;
   const tooLate = () => Date.now() - w.t0 > LIMITS.JOB_MAX_MS;
 
   // heartbeat: a slow listing (an import can take a minute) must not look like a dead job to the poll's re-start
@@ -414,13 +496,16 @@ async function slice(id: string, sliceT0 = Date.now()) {
   if (w.i < total && !tooLate() && shownCount() < 12) { await set({}); const st = await chain(id); if (!st.startsWith("200")) console.error("chain failed", id, st); return; }
 
   // done
-  results.sort((a, b) => Number(isShown(b)) - Number(isShown(a)) || b.score - a.score);
-  const good = results.filter(isShown).length;
+  results.sort((a, b) => Number(mainShown(b)) - Number(mainShown(a)) || Number(isShown(b)) - Number(isShown(a)) || b.score - a.score);
+  const good = results.filter(mainShown).length;
   w.done = true;
   const reviewCost = Math.round((cost - w.search_cost) * 1e5) / 1e5;
+  // v4: nothing central passed: say so, with how far the closest listing we checked is (codes such as user_budget
+  // stay in brackets, so the page still knows a limit was reached)
+  const centreNote = wantsCentre && !good ? CT.centreNote({ place: w.centre!.name, max_price: w.p.max_price, currency: w.p.currency, min_beds: w.p.min_beds, kind: w.p.kind, ...CT.centreTally(results) }, w.lang === "es" ? "es" : "en") + (w.note ? ` [${w.note}]` : "") : null;
   await set({
     status: "done", progress: 100, stage: { k: "done", n: good, of: results.length }, provider: w.provider || "ours",
-    note: good ? w.note || null : "none_80" + (w.note ? ":" + w.note : ""),
+    note: centreNote || (good ? w.note || null : "none_80" + (w.note ? ":" + w.note : "")),
     usage: { ...(j.usage || {}), reviews: w.reviews, review_cost: reviewCost, search_cost: w.search_cost, slices: w.slices, median_from: w.median_from, ms: Date.now() - w.t0 },
   });
   // fill the new homes' sub-scores now (the hourly cron does it too), so their pages show a full score
@@ -454,6 +539,11 @@ async function checkOne(c: Cand, w: Work, results: Result[], spend: (usd: number
   const tc = (s: string) => s.toLowerCase().replace(/\b[a-z]/g, (m) => m.toUpperCase());
   const location = c.cb ? [facts?.subdivision, tc(cityName), tc(stateName)].filter(Boolean).join(", ") : c.location || (okPage && x.locality) || "";
   const country = c.country || p.country;
+  // v4: where it stands against the city centre (map position first, then its own district)
+  const fit = w.centre ? CT.centreFit(w.centre, { lat, lng, text: c.ps ? CT.cardPlaceText(c.ps.area, w.centre.name) : [location, c.cb?.address].filter(Boolean).join(" ") }) : null;
+  const wantsCentre = !!(p.central && w.centre);
+  // a "centre" search checks a listing outside the centre only for the honest "closest" list: at most 4, within 2.5 x the radius
+  const outsideOk = wantsCentre && fit?.status === "outside" && (fit.km ?? 99) <= w.centre!.r_km * 2.5 && (w.outside_reviews || 0) < 4;
   // the same kind of home in the same city first (a townhouse against townhouses), then the job's median
   const median = (c.cb && w.scan_medians?.[C.cbGroup(c.cb.type)]) || w.median || (country ? w.country_medians[country] ?? null : null);
   const ptype = c.cb?.type || c.ps?.type || (p.ptype !== "any" ? p.ptype : "");
@@ -478,13 +568,15 @@ async function checkOne(c: Cand, w: Work, results: Result[], spend: (usd: number
   else if (!okPage && !c.cb) skip = "unreadable";
   else if (photos.length < 4 && !(existing?.image_urls?.length >= 4)) skip = "few_photos";
   else if (best.score < C.SHOW_MIN) skip = "cannot_reach_80";
+  else if (wantsCentre && !CT.inCentre(fit) && !outsideOk) skip = fit?.status === "outside" ? "far_from_centre" : "centre_unknown";
   else if (w.reviews >= LIMITS.MAX_REVIEWS) skip = "review_cap";
   else if (w.budget < LIMITS.EST_REVIEW_USD) skip = "budget";
   const pics = existing?.status === "pending" && existing.image_urls?.length >= 4 ? existing.image_urls : photos;
   if (!skip) {
     w.reviews++;
+    if (wantsCentre && !CT.inCentre(fit)) w.outside_reviews = (w.outside_reviews || 0) + 1;
     await step("reviewing");
-    const rv = await aiReview(pics.slice(0, 6), { kind: c.kind, price, currency, price_eur, beds, baths, sqm, ptype, location: c.cb ? `${c.cb.address}` : location, country, ratio: pre.parts.ratio, text: desc, facts: facts ? facts.text : pf ? [pf.text, c.ps?.central ? "In the city centre district" : ""].filter(Boolean).join("; ") : "" });
+    const rv = await aiReview(pics.slice(0, 6), { kind: c.kind, price, currency, price_eur, beds, baths, sqm, ptype, location: c.cb ? `${c.cb.address}` : location, country, ratio: pre.parts.ratio, text: desc, facts: [facts ? facts.text : pf ? [pf.text, c.ps?.central ? "In the city centre district" : ""].filter(Boolean).join("; ") : "", fit?.km != null ? `${fit.km} km from the city centre` : ""].filter(Boolean).join("; ") });
     spend(rv.cost); w.budget -= rv.cost;
     review = rv.review; reviewed = rv.reviewed;
   } else await step("reviewing");
@@ -513,6 +605,7 @@ async function checkOne(c: Cand, w: Work, results: Result[], spend: (usd: number
     location, country, kind: c.kind, image: ordered[0] || c.image || null, image_urls: ordered.slice(0, 3), photos: okPage ? photos.length : null,
     score: sc.score, parts: { ...sc.parts, caps: sc.caps }, found_at: new Date().toISOString(),
     central: c.ps ? c.ps.central : null,
+    ...centreCols(fit, wantsCentre), lat: lat ?? null, lng: lng ?? null,
     show: gate.show, reasons: gate.reasons, photo_quality: review?.photo_quality ?? null, flags: soft, why_cheap, why_great: review?.why_great || null,
     title_es: review?.title ? review.title_es : existing?.title_es || null, why_great_es: review?.why_great ? review.why_great_es : null, why_cheap_es,
     ai_checked_at: review ? new Date().toISOString() : existing?.ai_checked_at || null, hoa_monthly: hoa, hoa_currency: hoa || tax ? currency : null, tax_annual: tax, hoa_unknown: isCondo && !hoa,
@@ -700,13 +793,13 @@ async function regate(only: string[] | null, apply: boolean) {
 }
 
 // ---------------------------------------------------------------- Claude with web search
-async function claude(key: string, p: C.LiveQuery, q: string, want: number): Promise<{ items: C.LiveItem[]; cost: number; usage: any; model: string; error?: string }> {
+async function claude(key: string, p: C.LiveQuery, q: string, want: number, centre: CT.Centre | null = null): Promise<{ items: C.LiveItem[]; cost: number; usage: any; model: string; error?: string }> {
   const wants = [
     p.kind === "rent" ? "to rent" : "to buy",
     p.ptype !== "any" && !p.ptype_soft ? (p.ptype === "apartment" ? "an apartment / flat / condo" : "a house") : "any home (house or apartment)",
     `in ${[p.place || p.city, p.state?.toUpperCase(), p.country].filter(Boolean).join(", ")}`,
     p.min_beds ? `at least ${p.min_beds} bedrooms` : "",
-    p.central ? "in or close to the city centre / old town" : "",
+    p.central ? (centre ? `in the city centre: within about ${centre.r_km} km of ${centre.label || "the centre"} (not the outskirts, not nearby towns)` : "in the city centre / old town (not the outskirts, not nearby towns)") : "",
     p.max_price ? `price at most ${p.max_price} ${p.currency}${p.kind === "rent" ? " per month" : ""}` : "",
     p.min_price ? `price at least ${p.min_price} ${p.currency}` : "",
   ].filter(Boolean).join("; ");
