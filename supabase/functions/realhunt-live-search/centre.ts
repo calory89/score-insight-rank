@@ -92,6 +92,63 @@ mexico city|ciudad de mexico|cdmx = 19.4326,-99.1332,3,Mexico,Zócalo ; centro h
 buenos aires = -34.6037,-58.3816,3,Argentina,Obelisco ; microcentro, san nicolas, monserrat, retiro ; recoleta, san telmo, balvanera
 bogota = 4.5981,-74.0760,2.5,Colombia,La Candelaria ; la candelaria, centro ; chapinero, teusaquillo
 medellin = 6.2476,-75.5658,2.5,Colombia,Parque Berrío ; centro, la candelaria ; laureles, el poblado
+almería|almeria = 36.8686,-2.3120,1.5,Spain,Puerta de Purchena
+huelva = 37.2576,-6.9485,1.5,Spain,Plaza de las Monjas
+jaén|jaen = 37.7729,-3.7883,1.5,Spain,Plaza de Santa María
+castellón|castellon|castellon de la plana = 39.9860,-0.0377,1.5,Spain,Plaza Mayor
+tarragona = 41.1172,1.2546,1.5,Spain,Rambla Nova
+girona|gerona = 41.9793,2.8199,1.5,Spain,Plaça de la Independència
+lleida|lerida = 41.6148,0.6268,1.5,Spain,Plaça Paeria
+valladolid = 41.6200,-4.7260,1.5,Spain,Plaza Mayor
+salamanca = 40.9652,-5.6640,1.5,Spain,Plaza Mayor
+burgos = 42.3448,-3.6812,1.5,Spain,Plaza Mayor
+león|leon = 42.6341,-5.9714,1.5,Spain,Plaza de Santo Domingo
+oviedo = 43.3533,-5.8795,1.5,Spain,Plaza de la Escandalera
+gijón|gijon = 43.5449,-5.6627,1.5,Spain,Plaza Mayor
+santander = 43.4619,-3.8100,1.5,Spain,Plaza del Ayuntamiento
+coruña|a coruna|la coruna|a coruña = 43.3455,-8.4139,1.5,Spain,Plaza de María Pita
+vigo = 42.1986,-8.7280,1.5,Spain,Porta do Sol
+santiago de compostela = 42.9065,-8.5193,1.5,Spain,Praza do Obradoiro
+pamplona|iruna = 42.8157,-1.6522,1.5,Spain,Plaza del Castillo
+vitoria|vitoria gasteiz = 42.8506,-2.6614,1.5,Spain,Plaza de la Virgen Blanca
+logroño|logrono = 42.4661,-2.4397,1.5,Spain,Calle Portales
+toledo = 39.8559,-4.0243,1.5,Spain,Plaza de Zocodover
+cáceres|caceres = 39.4745,-6.3717,1.5,Spain,Plaza Mayor
+badajoz = 38.8782,-6.9701,1.5,Spain,Plaza de España
+mérida|merida = 38.9543,-6.3505,1.5,Spain,Plaza de España
+albacete = 38.9951,-1.8559,1.5,Spain,Plaza del Altozano
+cartagena = 37.6155,-0.9875,1.5,Spain,Plaza del Ayuntamiento
+elche|elx = 38.2653,-0.6988,1.5,Spain,Plaça de Baix
+benidorm = 38.5406,-0.1291,1.5,Spain,Plaza de la Constitución
+torrevieja = 37.9775,-0.6828,1.5,Spain,Plaza de la Constitución
+jerez|jerez de la frontera = 36.6817,-6.1377,1.5,Spain,Plaza del Arenal
+algeciras = 36.1312,-5.4474,1.5,Spain,Plaza Alta
+estepona = 36.4268,-5.1468,1.5,Spain,Plaza de las Flores
+fuengirola = 36.5388,-4.6234,1.5,Spain,Plaza de la Constitución
+torremolinos = 36.6243,-4.4995,1.5,Spain,Plaza de la Nogalera
+nerja = 36.7469,-3.8790,1.5,Spain,Balcón de Europa
+motril = 36.7451,-3.5208,1.5,Spain,Plaza de España
+ronda = 36.7421,-5.1666,1.5,Spain,Plaza de España
+las palmas|las palmas de gran canaria = 28.1289,-15.4349,1.5,Spain,Triana
+santa cruz de tenerife = 28.4672,-16.2508,1.5,Spain,Plaza de España
+ibiza|eivissa = 38.9744,1.4197,1.5,Spain,Vara de Rey
+segovia = 40.9481,-4.1172,1.5,Spain,Plaza Mayor
+ávila|avila = 40.6572,-4.6627,1.5,Spain,Plaza del Mercado Chico
+cuenca = 40.0661,-2.1314,1.5,Spain,Plaza Mayor
+guadalajara = 40.7400,-2.5059,1.5,Spain,Plaza Mayor
+huesca = 42.1361,-0.0298,1.5,Spain,Coso
+teruel = 40.6005,-0.9229,1.5,Spain,Plaza del Torico
+zamora = 41.6858,-5.9423,1.5,Spain,Plaza Mayor
+palencia = 42.4096,-4.6161,1.5,Spain,Plaza Mayor
+soria = 41.6013,-2.7219,1.5,Spain,Plaza Mayor
+lugo = 43.0395,-7.4568,1.5,Spain,Plaza Mayor
+ourense|orense = 42.1940,-7.5371,1.5,Spain,Praza Maior
+pontevedra = 42.4281,-8.6041,1.5,Spain,Praza da Ferrería
+ciudad real = 38.9597,-3.8829,1.5,Spain,Plaza Mayor
+coimbra = 40.2112,-8.4291,1.5,Portugal,Praça 8 de Maio
+braga = 41.5511,-8.4280,1.5,Portugal,Praça da República
+lagos = 37.1028,-8.6729,1.5,Portugal,Praça Gil Eanes
+albufeira = 37.0882,-8.2526,1.5,Portugal,Largo Engenheiro Duarte Pacheco
 `;
 
 const BY: Map<string, Centre> = new Map();
@@ -259,4 +316,13 @@ export function centreTally(all: { source?: string; centre_status?: string | nul
   const web = (all || []).filter((r) => r && r.source === "web");
   const kms = web.filter((r) => r.centre_status === "outside" && typeof r.distance_to_centre_km === "number").map((r) => r.distance_to_centre_km as number);
   return { checked_central: web.filter((r) => r.centre_status === "central" || r.centre_status === "near").length, closest_km: kms.length ? Math.min(...kms) : null };
+}
+
+/** A city centre from Open-Meteo's free geocoder (backup when Nominatim does not answer): its first result's point. */
+export function centreFromOpenMeteo(name: string, country: string, g: { latitude?: number; longitude?: number; population?: number } | null | undefined): Centre | null {
+  const lat = Number(g?.latitude), lng = Number(g?.longitude);
+  if (!g || !Number.isFinite(lat) || !Number.isFinite(lng) || (!lat && !lng)) return null;
+  const pop = Number(g.population) || 0;
+  const r = pop > 2_000_000 ? 3 : pop > 600_000 ? 2.2 : pop > 150_000 ? 1.6 : 1.3;
+  return { name, country, lat, lng, r_km: r, central: [], near: [], src: "geocoded" };
 }

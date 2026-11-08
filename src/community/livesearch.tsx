@@ -7,7 +7,7 @@
 // Without an account the first search is free; after that our own homes still show, with a gentle sign-in nudge.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ArrowRight, Clock, ExternalLink, Info, LogIn, MapPin, RotateCcw, Search, Sparkles, UserPlus } from "lucide-react";
+import { ArrowRight, CheckCircle2, Clock, ExternalLink, Info, LogIn, MapPin, RotateCcw, Search, Sparkles, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCommunity } from "./ctx";
@@ -142,6 +142,7 @@ export default function LiveSearchPage() {
   const inCentre = (d: any) => !p?.central || (ctr?.lat != null && ctr?.lng != null && d?.lat != null && d?.lng != null
     && kmBetween(ctr.lat, ctr.lng, Number(d.lat), Number(d.lng)) <= (ctr.radius_km || 1.8));
   const outSlugs = new Set(((st as any)?.outside_centre || []).map((r: any) => r?.deal_slug).filter(Boolean));
+  const endNote: string = (getLang() === "es" ? ctr && (ctr as any).message_es : ctr && (ctr as any).message) || "";
   const ours = (phase === "done" && !results.length ? best80 : similar).filter((d: any) => inCentre(d) && !outSlugs.has(d.slug));
   const bySlug = useMemo(() => new Map(rows.map((r: any) => [r.slug, r])), [rows]);
 
@@ -238,15 +239,23 @@ export default function LiveSearchPage() {
           <div className="lv-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} aria-label={t("Live search progress")}>
             <span style={{ width: progress + "%" }} className={busy ? "is-busy" : ""} />
           </div>
-          <p className="lv-status">
-            {phase === "error" ? <span>{t("The live search stopped early.")}</span>
-              : phase === "done" ? <span>{note === "from_earlier" ? t("Instant: from homes we already had.")
-                : results.length ? doneLine(results.length, st?.hidden)
-                : limit ? t("Today's limit is reached: these are homes we already have.")
-                : p?.central ? t("No home in the centre passed our checks today.")
-                : t("No new listing passed our check today. These homes do:")}</span>
-              : <><span>{shortStage(st?.stage)}</span><b>{`${progress}%`}</b></>}
-          </p>
+          {phase === "done" || phase === "error" ? (
+            // 8-nov-2026 (owner: the final line was too small, "I keep waiting and don't know if it's done"): a clear end card
+            <div className={"lv-end" + (phase === "error" ? " is-error" : results.length ? " is-found" : " is-none")} role="status">
+              <span className="lv-end-ico" aria-hidden="true">{phase === "error" ? <RotateCcw size={20} /> : results.length ? <CheckCircle2 size={22} /> : <Info size={22} />}</span>
+              <div className="lv-end-body">
+                <p className="lv-end-k">{phase === "error" ? t("Search interrupted") : t("Search finished")}</p>
+                <p className="lv-end-h">{phase === "error" ? t("The live search stopped early.")
+                  : results.length ? (note === "from_earlier" ? `${doneLine(results.length, st?.hidden)} ${t("(instant, from homes we already had)")}` : doneLine(results.length, st?.hidden))
+                  : limit ? t("Today's limit is reached: these are homes we already have.")
+                  : p?.central ? t("No home in the centre passed our checks today.")
+                  : t("No new listing passed our check today.")}</p>
+                {phase === "done" && !results.length && endNote && <p className="lv-end-s">{endNote}</p>}
+              </div>
+            </div>
+          ) : (
+            <p className="lv-status"><span>{shortStage(st?.stage)}</span><b>{`${progress}%`}</b></p>
+          )}
           {busy && <p className="lv-fine">{t("Takes a few minutes. You can leave and come back.")}</p>}
           {centralMissing && <p className="lv-fine">{t("Few homes in the centre fit this budget.")}</p>}
           {phase === "error" && <button type="button" className="hunt-secondary lv-btn" onClick={() => setAttempt((a) => a + 1)}><RotateCcw size={16} aria-hidden="true" /> {t("Try again")}</button>}

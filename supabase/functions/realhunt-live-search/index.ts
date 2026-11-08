@@ -156,6 +156,7 @@ function centreCols(f: CT.CentreFit | null, central: boolean) {
  * User-Agent as its policy asks). A city is looked up once: the answer is kept in the job's work and later jobs for
  * the same place reuse it. Null when it cannot be found: the search then cannot enforce the centre and says nothing false.
  */
+const ISO: Record<string, string> = { Spain: "ES", Portugal: "PT", Italy: "IT", France: "FR", Greece: "GR", "United States": "US", Mexico: "MX", Germany: "DE", "United Kingdom": "GB", Ireland: "IE", Netherlands: "NL", Colombia: "CO", Argentina: "AR", Croatia: "HR", Cyprus: "CY", Malta: "MT", Bulgaria: "BG", Poland: "PL", Denmark: "DK", Sweden: "SE", Switzerland: "CH", Austria: "AT", Belgium: "BE", Canada: "CA", Japan: "JP" };
 async function geocode(p: C.LiveQuery): Promise<CT.Centre | null> {
   const name = p.place || p.city;
   if (!name || !p.country) return null;
@@ -168,10 +169,21 @@ async function geocode(p: C.LiveQuery): Promise<CT.Centre | null> {
   const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 6000);
   try {
     const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`, { signal: ctl.signal, headers: { "User-Agent": "RealHunt/1.0 (https://realhunt.co)", "Accept-Language": "en" } });
-    if (!r.ok) return null;
-    const arr = await r.json().catch(() => []);
-    return CT.centreFromGeocode(name, p.country, Array.isArray(arr) ? arr[0] : null);
-  } catch { return null; } finally { clearTimeout(t); }
+    const arr = r.ok ? await r.json().catch(() => []) : [];
+    const c = CT.centreFromGeocode(name, p.country, Array.isArray(arr) ? arr[0] : null);
+    if (c) return c;
+  } catch { /* try the backup */ } finally { clearTimeout(t); }
+  // 8-nov-2026 (owner: "centro de Almería" stopped early): Nominatim sometimes refuses cloud servers; Open-Meteo's free
+  // geocoder is the backup, in the country asked for
+  const iso = ISO[p.country] || "";
+  const ctl2 = new AbortController(); const t2 = setTimeout(() => ctl2.abort(), 6000);
+  try {
+    const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?count=5&language=en&name=${encodeURIComponent(name)}`, { signal: ctl2.signal });
+    const d = r.ok ? await r.json().catch(() => null) : null;
+    const list: any[] = Array.isArray(d?.results) ? d.results : [];
+    const hit = list.find((x) => (iso && x.country_code === iso) || x.country === p.country) || null;
+    return CT.centreFromOpenMeteo(name, p.country, hit);
+  } catch { return null; } finally { clearTimeout(t2); }
 }
 
 async function poll(id: string) {
@@ -214,8 +226,11 @@ async function poll(id: string) {
   const closest = j.status === "done" && shown.length < 3 ? C.closestMisses(wantsCentre ? all.filter((r) => r.centre_ok !== false) : all) : [];
   // the honest note in both languages (a cached job may have been started in the other one)
   let message: { en: string; es: string } | null = null;
-  if (wantsCentre && j.status === "done" && !shown.length) {
-    const x = { place: centre!.name, max_price: j.parsed.max_price, currency: j.parsed.currency, min_beds: j.parsed.min_beds, kind: j.parsed.kind, ...CT.centreTally(all) };
+  if (wantsCentre && j.status === "done" && !shown.length && !centre) {
+    const place = j.parsed?.place || "";
+    message = { en: `We could not find where the centre of ${place} is. Try a district or neighbourhood name.`, es: `No hemos podido situar el centro de ${place}. Prueba con el nombre de un barrio.` };
+  } else if (wantsCentre && j.status === "done" && !shown.length && centre) {
+    const x = { place: centre.name, max_price: j.parsed.max_price, currency: j.parsed.currency, min_beds: j.parsed.min_beds, kind: j.parsed.kind, ...CT.centreTally(all) };
     message = { en: CT.centreNote(x, "en"), es: CT.centreNote(x, "es") };
   }
   const centreInfo = centre ? { name: centre.name, label: centre.label || null, lat: centre.lat, lng: centre.lng, radius_km: centre.r_km, src: centre.src, asked: !!j.parsed?.central, message: message?.en ?? null, message_es: message?.es ?? null } : null;
@@ -324,7 +339,8 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
   const centre = CT.centreFor(p.city || p.place, p.country) || (p.central ? await geocode(p) : null);
   const central = !!(p.central && centre);
   const atCentre = (lat: number | null | undefined, lng: number | null | undefined, text: string) => (centre ? CT.centreFit(centre, { lat: lat ?? null, lng: lng ?? null, text }) : null);
-  const main = (r: Result) => !central || r.centre_ok === true;
+  // asked for the centre but it could not be located: nothing counts as central (never a whole province as "centre")
+  const main = (r: Result) => (p.central ? central && r.centre_ok === true : true);
 
   // 1. our own data first
   await set({ progress: 8, stage: { k: "ours" } });
@@ -365,7 +381,7 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
     // the 8 best central ones, and up to 4 of the closest others for outside_centre
     const keep = [...results.filter(main).slice(0, 8), ...results.filter((r) => !main(r)).sort((a, b) => (a.distance_to_centre_km ?? 99) - (b.distance_to_centre_km ?? 99)).slice(0, 4)];
     results.splice(0, results.length, ...keep);
-    await set({ status: "done", progress: 100, stage: { k: "done", n: results.length }, note: "from_earlier", provider: "ours", work: { done: true } });
+    await set({ status: "done", progress: 100, stage: { k: "done", n: results.length }, note: "from_earlier", provider: "ours", work: { done: true, centre } });
     return;
   }
   await set({ progress: 12, stage: { k: "ours_some", n: results.length } });
