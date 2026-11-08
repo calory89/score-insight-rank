@@ -221,3 +221,16 @@
 }
 .hunt .hv-detailbar .hunt-primary { flex: none; }
 .hunt .hv-search input, .hunt.is-dark .hv-search input { background: transparent !important; border: 0 !important; }
+
+/* 8-nov-2026: the price in the phone action bar must never be cut ("134.40..."): it keeps its full width,
+   the location line gives way, and the buttons shrink a little on narrow phones. */
+.hv-detailbar .hv-detailbar-price { min-width: 0; flex: 1 1 auto; }
+.hv-detailbar .hv-detailbar-price strong { white-space: nowrap; overflow: visible; text-overflow: clip; display: block; }
+.hv-detailbar .hv-detailbar-price span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+@media (max-width: 400px) {
+  .hv-detailbar .hv-detailbar-price strong { font-size: 17px; }
+  .hv-detailbar .hv-detailbar-save, .hv-detailbar .hv-share { width: 40px; height: 40px; min-width: 40px; }
+}
+@media (max-width: 340px) {
+  .hv-detailbar .hv-detailbar-price span { display: none; }
+}
