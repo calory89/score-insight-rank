@@ -260,7 +260,7 @@ def lit(s: str) -> str: return "'" + s.replace("'", "''") + "'"
 
 
 # ----------------------------------------------------------------------------------------------- main
-def compute(homes: list[dict], prev: dict[str, dict], log=print) -> tuple[dict[str, dict], list[str]]:
+def compute(homes: list[dict], prev: dict[str, dict], log=print, sink=None) -> tuple[dict[str, dict], list[str]]:
     runways = load_runways()
     coast = Lines([dataset("coast.geojson")])
     rivers = Lines([dataset("rivers.geojson"), dataset("rivers_eu.geojson"), dataset("rivers_na.geojson")], rivers=True)
@@ -302,6 +302,7 @@ def compute(homes: list[dict], prev: dict[str, dict], log=print) -> tuple[dict[s
                                  "Not low-lying near the sea or a big river. Rough indicator, not an official flood map." if lv == "low" else
                                  "Ground height unknown: check the official flood map."}
             out[slug] = {"noise": noise, "flood": flood, "updated": UPDATED}
+            if sink: sink(slug, out[slug])
         except Exception as e:  # noqa: BLE001
             failed.append(f"{slug}: {e}"); log(f"  FAILED {slug}: {e}")
         if (i + 1) % 50 == 0: log(f"  {i + 1}/{len(homes)}")
@@ -312,14 +313,21 @@ def main() -> None:
     ap.add_argument("--slug"); ap.add_argument("--missing", action="store_true"); ap.add_argument("--dry", action="store_true")
     ap.add_argument("--out"); ap.add_argument("--token-file")
     ap.add_argument("--apply", help="write a JSON file made earlier with --out instead of computing")
+    ap.add_argument("--shard", help="i/n: only every n-th home starting at i (parallel runs)")
     ap.add_argument("--homes-url", help="read homes from the public snapshot (no token; use with --out, e.g. in GitHub Actions)")
     a = ap.parse_args()
     if a.homes_url:
         rows = json.load(urllib.request.urlopen(urllib.request.Request(a.homes_url, headers={"User-Agent": "rh-ops"}), timeout=120))["rows"]
         homes = [{"slug": r["slug"], "lat": r["lat"], "lng": r["lng"], "country": r.get("country"), "risks": r.get("risks")} for r in rows if r.get("lat") is not None and r.get("lng") is not None]
         if a.missing: homes = [h for h in homes if not ((h.get("risks") or {}).get("noise") or {}).get("roads_checked")]
-        print(f"{len(homes)} homes (public snapshot)")
-        res, failed = compute(homes, {h["slug"]: h.get("risks") for h in homes if h.get("risks")})
+        if a.shard:
+            i, n = (int(x) for x in a.shard.split("/")); homes = homes[i::n]
+        print(f"{len(homes)} homes (public snapshot)", flush=True)
+        out_path = a.out or "risks.json"
+        partial: dict = {}
+        def log(msg: str) -> None:
+            print(msg, flush=True)
+        res, failed = compute(homes, {h["slug"]: h.get("risks") for h in homes if h.get("risks")}, log=log, sink=lambda k, v: (partial.__setitem__(k, v), json.dump(partial, open(out_path, "w", encoding="utf8"), ensure_ascii=False)))
         json.dump(res, open(a.out or "risks.json", "w", encoding="utf8"), ensure_ascii=False, indent=0)
         print("roads checked:", sum(1 for r in res.values() if r["noise"]["roads_checked"]), "of", len(res), "failed:", len(failed))
         return
