@@ -23,7 +23,8 @@ export function thumb(url?: string | null): string {
   if (m) return `${THUMB_PREFIX}sb/${m[1]}.webp`;
   return u;
 }
-export const isThumb = (u: string) => u.startsWith(THUMB_PREFIX);
+// Any host: the media fallback can move a failed copy from realhunt-media to realhunt.co before this runs (8-nov-2026).
+export const isThumb = (u: string) => u.startsWith(THUMB_PREFIX) || /^https:\/\/realhunt\.co\/t\/(finds|sb)\//.test(u);
 
 /** onError for an <img src={thumb(original)}>: swap to the original once, then leave it to the caller. Returns true when it swapped. */
 export function onThumbError(img: HTMLImageElement, original?: string | null): boolean {
