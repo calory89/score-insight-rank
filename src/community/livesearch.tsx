@@ -257,8 +257,9 @@ export default function LiveSearchPage() {
       {outside.length > 0 && (
         <section className="lv-results lv-outside" aria-label={t("Outside the centre")}>
           <h2>{t("Outside the centre")}</h2>
+          {!results.length && <p className="lv-fine">{t("None in the centre passed our checks today. These are the closest good homes, outside the centre:")}</p>}
           <div className="hx-grid">
-            {outside.map((r, i) => <LiveHome key={r.id} r={r} pos={results.length + i + 1} own={r.deal_slug ? bySlug.get(r.deal_slug) : undefined} />)}
+            {outside.map((r, i) => <LiveHome key={r.id} r={r} pos={results.length + i + 1} noRank own={r.deal_slug ? bySlug.get(r.deal_slug) : undefined} />)}
           </div>
         </section>
       )}
@@ -310,10 +311,10 @@ export default function LiveSearchPage() {
 }
 
 /** A live result on the home page's own card: a real RealHunt page for homes to buy, the portal for rentals. */
-function LiveHome({ r, pos, own }: { r: LiveResult; pos: number; own?: any }) {
+function LiveHome({ r, pos, own, noRank }: { r: LiveResult; pos: number; own?: any; noRank?: boolean }) {
   // a home already in the site's snapshot: exactly the row the home page uses
   const deal = own || resultToDeal(r);
   const orig = r.price != null && r.currency && r.currency !== "EUR" ? fmtMoney(r.price, r.currency) : undefined;
   const ext = r.deal_slug ? undefined : r.url;
-  return <HomeCard deal={deal} pos={pos} href={ext} origPrice={orig} rent={r.kind === "rent"} dist={centreKm(r)} />;
+  return <HomeCard deal={deal} pos={pos} href={ext} origPrice={orig} rent={r.kind === "rent"} dist={centreKm(r)} noRank={noRank} />;
 }
