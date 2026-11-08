@@ -1,5 +1,4 @@
 import { QUICK, DIMS } from "./scores";
-import { fmt as fmtCost } from "./costs";
 import GUIDES_JSON from "@/data/guides.json";
 import DEST_JSON from "@/data/destinations.json";
 import { CardCheck } from "./check";
@@ -119,13 +118,13 @@ export function streakNow(): number {
 
 // ---------------------------------------------------------------- local currency and €/m²
 const REGION_CCY: Record<string, string> = { US: "USD", GB: "GBP", CH: "CHF", SE: "SEK", NO: "NOK", DK: "DKK", JP: "JPY", AU: "AUD", CA: "CAD", MX: "MXN", BR: "BRL", PL: "PLN", CZ: "CZK", HU: "HUF", IN: "INR", NZ: "NZD", ZA: "ZAR", SG: "SGD", HK: "HKD", IL: "ILS", TR: "TRY", KR: "KRW" };
-function visitorCurrency(): string | null {
+export function visitorCurrency(): string | null {
   const locs = (navigator.languages || [navigator.language || ""]).filter(Boolean);
   for (const l of locs) { const r = l.split("-")[1]?.toUpperCase(); if (r && REGION_CCY[r]) return REGION_CCY[r]; }
   return null;
 }
 let ratesPromise: Promise<Record<string, number> | null> | null = null;
-function rates() {
+export function rates() {
   if (ratesPromise) return ratesPromise;
   ratesPromise = (async () => {
     try {
@@ -250,7 +249,7 @@ export function MiniCard({ d }: { d: Row }) {
   return (
     <Link className="hunt-minicard" to={`/deal/${d.slug}`}>
       <PropertyImage src={thumb(d.image_urls?.[0])} fallback={thumb(d.image_urls?.[0]) !== d.image_urls?.[0] ? d.image_urls?.[0] : d.image_urls?.[1]} alt={niceTitle(d)} loading="lazy" width={480} height={360} />
-      <div><strong>{money(d.price_eur)}</strong>{(d as any).hoa_monthly > 0 && <em className="rh-mini-fee">+ {fmtCost(Number((d as any).hoa_monthly), (d as any).hoa_currency)}/mo HOA</em>}<CardCheck d={d as any} /><span>{niceTitle(d)}</span><small><MapPin size={11} /> {d.location_name || d.country}</small></div>
+      <div><strong>{money(d.price_eur)}</strong><CardCheck d={d as any} /><span>{niceTitle(d)}</span><small><MapPin size={11} /> {d.location_name || d.country}</small></div>
     </Link>
   );
 }

@@ -7,7 +7,7 @@
 // Without an account the first search is free; after that our own homes still show, with a gentle sign-in nudge.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Clock, ExternalLink, Globe, Info, LogIn, MapPin, RotateCcw, Search, Sparkles, UserPlus } from "lucide-react";
+import { ArrowRight, Clock, ExternalLink, Info, LogIn, MapPin, RotateCcw, Search, Sparkles, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCommunity } from "./ctx";
@@ -16,10 +16,11 @@ import { HomeCard, HomeCardSkeleton } from "./homecards";
 import { getLang, t } from "./i18n";
 import { learnTexts } from "@/lib/lang";
 import {
-  parseLiveQuery, similarHomes, liveChips, stageParts, isFinal, mergeResults, fmtMoney, SHOW_MIN, LIVE_FREE_KEY, passes, resultToDeal,
+  parseLiveQuery, similarHomes, liveChips, isFinal, mergeResults, fmtMoney, SHOW_MIN, LIVE_FREE_KEY, passes, resultToDeal,
   LIVE_JOBS_KEY, rememberJob, recallJob, queryKey, type LiveQuery, type LiveResult, type LiveStatus,
   understand, visitorTz, limitKind, resetTime, optionParts, type PlaceOpt, type Miss,
 } from "./livelogic";
+import { shortStage, doneLine, centreKm, outsideCentre } from "./liveui";
 import "./livesearch.css";
 
 const ENV = import.meta.env as any;
@@ -130,10 +131,8 @@ export default function LiveSearchPage() {
   const similar = useMemo(() => (p?.ok && rows.length ? similarHomes(rows as any[], p, 9).filter((d) => !shownSlugs.has(d.slug)).slice(0, 6) : []), [rows, p, shownSlugs]);
   const best80 = useMemo(() => (p?.ok && rows.length ? similarHomes(rows as any[], p, 9, SHOW_MIN).filter((d) => !shownSlugs.has(d.slug)).slice(0, 6) : []), [rows, p, shownSlugs]);
   const progress = phase === "done" ? 100 : Math.max(2, Math.min(99, st?.progress ?? (phase === "starting" ? 2 : 0)));
-  const stage = stageParts(st?.stage);
   const busy = phase === "starting" || phase === "running";
   const note = st?.note || "";
-  const fresh = results.filter((r) => r.source === "web").length;
   const ours = phase === "done" && !results.length ? best80 : similar;
   const bySlug = useMemo(() => new Map(rows.map((r: any) => [r.slug, r])), [rows]);
 
@@ -143,27 +142,30 @@ export default function LiveSearchPage() {
   const centralMissing = phase === "done" && !!p?.central && results.some((r) => r.source === "web") && !results.some((r: any) => r.central);
   const submit = (e: React.FormEvent) => { e.preventDefault(); const v = text.trim(); if (!v) return; if (v === q) setAttempt((a) => a + 1); else setSp({ q: v }); };
 
+  const shownChips = chips.filter((c) => c.k !== "score"); // "score 80 or more" is our rule, not something we understood
+  const dirty = !!text.trim() && text.trim() !== q;
+  const outside = useMemo(() => outsideCentre(st, results).filter(passes), [st, results]);
+
   return (
-    <div className="hunt-wrap lv-page">
+    <div className="hunt-wrap lv-page lv-min">
       <header className="lv-head">
-        <span className="lv-eyebrow"><Globe size={14} aria-hidden="true" /> {t("Live search")}</span>
-        <h1>{t("Search estate agents and portals, live")}</h1>
-        <p className="lv-sub">{t("Homes to buy or rent. We search agents and portals now, check every photo and detail with AI, and show only homes that score 80 or more.")}</p>
-        <form className="lv-form" role="search" onSubmit={submit}>
+        <h1>{t("Live search")}</h1>
+        <form className={"lv-form" + (dirty || !q ? " is-dirty" : "")} role="search" onSubmit={submit}>
           <Search size={18} aria-hidden="true" />
           <input type="search" value={text} onChange={(e) => setText(e.target.value)} aria-label={t("Search homes")} placeholder={t("Try: 3 bedroom house in Miami under $300k")} enterKeyHint="search" maxLength={200} />
-          <button type="submit" className="lv-go" disabled={busy && text.trim() === q}>{t("Search")}</button>
+          {(dirty || (!q && !!text.trim())) && <button type="submit" className="lv-go" aria-label={t("Search")}><ArrowRight size={18} aria-hidden="true" /><span>{t("Search")}</span></button>}
         </form>
+        {!q && <p className="lv-sub">{t("We search agents and portals now and show only homes that score 80 or more.")}</p>}
+        {shownChips.length > 0 && (
+          <ul className="lv-chips" aria-label={t("What we understood")}>
+            {shownChips.map((c) => <li key={c.k}>{c.k === "beds" || c.k === "where" ? <>{c.value} {c.label && t(c.label)}</> : c.k === "max" || c.k === "min" ? <>{t(c.label)} {c.value}</> : t(c.label)}</li>)}
+          </ul>
+        )}
         {!user && (
           <p className="lv-free">
-            {usedFree || phase === "login" ? t("You used your free live search. A free account gives you more.") : t("1 free live search. A free account gives you more.")}{" "}
-            <button type="button" className="hunt-link" onClick={() => requireUser?.("up")}>{t("Create a free account")}</button>
+            {usedFree || phase === "login" ? t("Your free live search is used.") : t("1 free live search.")}{" "}
+            <button type="button" className="hunt-link" onClick={() => requireUser?.("up")}>{t("Sign up for more")}</button>
           </p>
-        )}
-        {chips.length > 0 && (
-          <ul className="lv-chips" aria-label={t("What we understood")}>
-            {chips.map((c) => <li key={c.k}>{c.k === "beds" || c.k === "where" ? <>{c.value} {c.label && t(c.label)}</> : c.k === "max" || c.k === "min" ? <>{t(c.label)} {c.value}</> : t(c.label)}</li>)}
-          </ul>
         )}
       </header>
 
@@ -179,17 +181,15 @@ export default function LiveSearchPage() {
 
       {phase === "ask" && ask && (
         <section className="lv-ask" aria-live="polite">
-          <span className="lv-ask-avatar" aria-hidden="true"><Sparkles size={16} /></span>
           <div className="lv-ask-bubble">
             <strong>{t("Which one do you mean?")} <span translate="no" className="notranslate">{askName}</span></strong>
-            <p>{t("There is more than one place with this name. Pick one and we start the search.")}</p>
             <ul className="lv-ask-opts">
               {ask.map((o) => {
                 const op = optionParts(o);
                 return (
                   <li key={o.id}>
                     <button type="button" className="lv-ask-chip" onClick={() => setSp({ q, in: o.id })}>
-                      <MapPin size={15} aria-hidden="true" />
+                      <MapPin size={14} aria-hidden="true" />
                       <span><b translate="no" className="notranslate">{op.name}</b>{op.region && <>, {t(op.region)}</>}, {t(op.country)}</span>
                     </button>
                   </li>
@@ -225,29 +225,21 @@ export default function LiveSearchPage() {
       )}
 
       {(busy || phase === "done" || phase === "error") && (
-        <section className="lv-card lv-progress" aria-live="polite">
-          <div className="lv-progress-top">
-            <span className="lv-stage">
-              {phase === "error" ? t("The live search stopped early.") : phase === "done" ? t("Search finished") : <>{t(stage.text)}{stage.n != null && <> {stage.n}</>}{stage.of ? <> / {stage.of}</> : null}</>}
-            </span>
-            <b className="lv-pct">{progress}%</b>
-          </div>
+        <section className={"lv-progress" + (phase === "done" ? " is-done" : phase === "error" ? " is-error" : "")} aria-live="polite">
           <div className="lv-bar" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} aria-label={t("Live search progress")}>
             <span style={{ width: progress + "%" }} className={busy ? "is-busy" : ""} />
           </div>
-          {busy && <p className="lv-wait">{t("This will take a few minutes: we are filtering the best homes for you. Meanwhile, look at these:")}</p>}
-          {busy && <p className="lv-fine">{t("You can leave this page: come back to the same search and it carries on.")}</p>}
+          <p className="lv-status">
+            {phase === "error" ? <span>{t("The live search stopped early.")}</span>
+              : phase === "done" ? <span>{note === "from_earlier" ? t("Instant: from homes we already had.")
+                : results.length ? doneLine(results.length, st?.hidden)
+                : limit ? t("Today's limit is reached: these are homes we already have.")
+                : t("No new listing passed our check today. These homes do:")}</span>
+              : <><span>{shortStage(st?.stage)}</span><b>{`${progress}%`}</b></>}
+          </p>
+          {busy && <p className="lv-fine">{t("Takes a few minutes. You can leave and come back.")}</p>}
+          {centralMissing && <p className="lv-fine">{t("Few homes in the centre fit this budget.")}</p>}
           {phase === "error" && <button type="button" className="hunt-secondary lv-btn" onClick={() => setAttempt((a) => a + 1)}><RotateCcw size={16} aria-hidden="true" /> {t("Try again")}</button>}
-          {phase === "done" && (
-            <div className="lv-summary">
-              {note === "from_earlier" ? <p>{t("These come from homes already on RealHunt and earlier searches, so the answer was instant.")}</p>
-                : results.length ? <p><b>{results.length}</b> {results.length === 1 ? t("home passed our AI check.") : t("homes passed our AI check.")}{st?.hidden ? <> {t("Listings we checked and left out:")} {st.hidden}</> : null}</p>
-                : limit ? <p>{t("Live web search was not used for this search because of today's limit, so these results come from homes we already have.")}</p>
-                : <p>{t("None of the listings we found today passed our AI check (good photos, good value, no surprises), so we do not show them. These RealHunt homes for your search do:")}</p>}
-              {centralMissing && <p className="lv-fine">{t("Few homes in the centre fit this budget, so these are in other parts of the city.")}</p>}
-              {fresh > 0 && <p className="lv-fine">{t("New homes found today now have their own RealHunt page. A person will check them too.")}</p>}
-            </div>
-          )}
         </section>
       )}
 
@@ -262,10 +254,19 @@ export default function LiveSearchPage() {
         </section>
       )}
 
+      {outside.length > 0 && (
+        <section className="lv-results lv-outside" aria-label={t("Outside the centre")}>
+          <h2>{t("Outside the centre")}</h2>
+          <div className="hx-grid">
+            {outside.map((r, i) => <LiveHome key={r.id} r={r} pos={results.length + i + 1} own={r.deal_slug ? bySlug.get(r.deal_slug) : undefined} />)}
+          </div>
+        </section>
+      )}
+
       {phase === "done" && closest.length > 0 && (
         <section className="lv-closest" aria-label={t("Closest listings we checked")}>
           <h2>{t("Closest listings we checked")}</h2>
-          <p className="lv-fine">{t("They did not pass our check (score 80 or more and good photos), so they have no RealHunt page. They open on the portal.")}</p>
+          <p className="lv-fine">{t("They did not pass our check, so they open on the portal.")}</p>
           <ul>
             {closest.map((m) => (
               <li key={m.id}>
@@ -313,5 +314,5 @@ function LiveHome({ r, pos, own }: { r: LiveResult; pos: number; own?: any }) {
   const deal = own || resultToDeal(r);
   const orig = r.price != null && r.currency && r.currency !== "EUR" ? fmtMoney(r.price, r.currency) : undefined;
   const ext = r.deal_slug ? undefined : r.url;
-  return <HomeCard deal={deal} pos={pos} href={ext} origPrice={orig} rent={r.kind === "rent"} />;
+  return <HomeCard deal={deal} pos={pos} href={ext} origPrice={orig} rent={r.kind === "rent"} dist={centreKm(r)} />;
 }

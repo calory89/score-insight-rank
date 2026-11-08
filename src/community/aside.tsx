@@ -17,14 +17,13 @@ const COSTS = new Set(Object.keys(DEST).filter((k) => k !== "_meta"));
 export function DetailAside({ deal, listing }: { deal: Row; listing: ReactNode }) {
   const country = deal.country || "";
   const slug = country.toLowerCase().replace(/ /g, "-");
-  const perSqm = deal.sqm && deal.price_eur ? Math.round(deal.price_eur / deal.sqm) : null;
   return (
     <aside className="hv-aside" aria-label={t("Summary of this home")}>
       <div className="hv-aside-card">
         <div className="hv-aside-top">
           <div>
             <strong className="hv-aside-price">{money(deal.price_eur)}</strong>
-            <small>{[deal.sqm ? `${deal.sqm} m²` : "", perSqm ? `${money(perSqm)}/m²` : "", (deal as any).bedrooms ? `${(deal as any).bedrooms} ${t("bedrooms")}` : ""].filter(Boolean).join(" · ")}</small>
+            <small>{[deal.sqm ? `${deal.sqm} m²` : "", (deal as any).bedrooms ? `${(deal as any).bedrooms} ${t("bedrooms")}` : ""].filter(Boolean).join(" · ")}</small>
           </div>
           <ScoreBadge deal={deal} />
         </div>

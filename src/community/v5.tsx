@@ -455,6 +455,7 @@ export function ProfilePage() {
       </div>
       <div className="hv-me-links">
         <Link to="/hunt/saved" className="hunt-secondary">Saved homes and boards</Link>
+        {session?.admin && <Link to="/hunt/admin" className="hunt-secondary">{`Review (${session.pending_submissions || 0})`}</Link>}
         {user ? <Link to="/hunt/mine" className="hunt-secondary">My submissions</Link> : <button className="hunt-primary" onClick={requireUser}>Sign in to keep your streak on every device</button>}
         {session?.hunter && <Link to={`/hunter/${session.hunter.handle}`} className="hunt-secondary">Public profile ↗</Link>}
         <Link to="/leaderboard" className="hunt-secondary">Top hunters</Link>

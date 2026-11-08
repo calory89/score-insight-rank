@@ -1,0 +1,205 @@
+/* ==========================================================================
+   Minimal pass (8-nov-2026). Carlos: "much more minimal, easy... look at the texts, look at the buttons at the
+   top, so boxy". Loaded after ds.css, so it refines the design system instead of adding another layer of
+   one-off fixes. It changes how things look, never what they do.
+
+   - Fills instead of outlines: secondary buttons and chips are a soft grey fill with no border; only inputs
+     keep a hairline. Primary stays the one orange action on a screen.
+   - Pills for everything you press (buttons, chips, tabs), 16 px for surfaces (cards, photos, panels).
+   - One header row at every width: logo left, bell and account right on phones.
+   - Quieter type around prices: one price, then one muted line of facts.
+   ========================================================================== */
+
+.hunt {
+  --r-btn: 999px;
+  --c-fill: #F2F3F5;        /* secondary buttons, chips, quiet panels */
+  --c-fill-hover: #E8E9EC;
+}
+.hunt.is-dark {
+  --c-fill: #1F2023;
+  --c-fill-hover: #2A2C30;
+}
+
+/* ---------------------------------------------------------------- header: one row, always */
+.hunt .hunt-header,
+.hunt .hunt-header:has(.hunt-admin-link) {
+  display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between;
+  height: 64px; min-height: 64px; padding-top: 0; padding-bottom: 0;
+  border-bottom-color: var(--c-line);
+}
+.hunt .hunt-header nav,
+.hunt .hunt-header:has(.hunt-admin-link) nav { display: flex; flex-wrap: nowrap; align-items: center; gap: 2px; min-width: 0; }
+.hunt .hunt-header nav > a:not(.hunt-primary),
+.hunt .hunt-header nav > button:not(.hunt-primary),
+.hunt .hunt-header nav > .hv-theme-head > button { border-radius: var(--r-btn); }
+.hunt .hunt-header nav .hunt-primary { border-radius: var(--r-btn); }
+.hunt .hunt-header .hv-bell > button { width: 44px; height: 44px; border-radius: 50%; color: var(--c-ink); }
+.hunt .hunt-header .hv-bell > button:hover { background: var(--c-fill); }
+.hunt .hunt-header .rh-head-inbox { display: inline-flex; }
+.hunt .hunt-header .rh-head-inbox .hv-inbox-link { width: 44px; height: 44px; justify-content: center; border-radius: 50%; color: var(--c-ink); }
+.hunt .hunt-header .rh-head-inbox .hv-inbox-link:hover { background: var(--c-fill); }
+.hunt .hunt-header .rh-head-inbox .hv-inbox-link b { top: 4px; right: 2px; }
+.hunt .hunt-header .rh-lang { border: 0; background: var(--c-fill); }
+.hunt.is-dark .hunt-header .rh-lang { background: var(--c-fill); }
+
+/* Sign in: a quiet text button, no box */
+.hunt .hunt-header nav .hunt-account.rh-signin {
+  border: 0 !important; background: transparent; color: var(--c-ink);
+  min-height: 44px; padding: 0 14px !important; margin-left: 2px; border-radius: var(--r-btn);
+  font-size: 15px !important; font-weight: 600 !important;
+}
+.hunt .hunt-header nav .hunt-account.rh-signin:hover { background: var(--c-fill) !important; }
+
+/* account avatar and its menu */
+.hunt .rh-acct { position: relative; display: inline-flex; margin-left: 4px; }
+.hunt .rh-acct-btn {
+  position: relative; width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
+  display: grid; place-items: center; background: transparent; color: var(--c-ink);
+}
+.hunt .rh-acct-btn > span, .hunt .rh-acct-btn > svg {
+  width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--c-ink); color: var(--c-bg); font: 700 15px/1 var(--f-body);
+}
+.hunt .rh-acct-btn > svg { padding: 8px; }
+.hunt .rh-acct-btn:focus-visible { outline: 3px solid var(--c-focus); outline-offset: 1px; }
+.hunt .rh-acct-dot { position: absolute; top: 5px; right: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--c-accent); box-shadow: 0 0 0 2px var(--c-bg); }
+.hunt .rh-acct-menu {
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 130; min-width: 220px;
+  display: flex; flex-direction: column; padding: 6px; border-radius: var(--r-lg);
+  background: var(--c-surface); border: 1px solid var(--c-line); box-shadow: var(--e-3);
+}
+.hunt .rh-acct-menu a {
+  display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border-radius: 10px;
+  font-size: 15px; font-weight: 550; color: var(--c-ink) !important; text-decoration: none; white-space: nowrap;
+}
+.hunt .rh-acct-menu a svg { color: var(--c-ink-3); flex: none; }
+.hunt .rh-acct-menu a:hover, .hunt .rh-acct-menu a:focus-visible { background: var(--c-fill); outline: none; }
+.hunt .rh-acct-menu a.is-admin { margin-top: 4px; border-top: 1px solid var(--c-line); border-radius: 0 0 10px 10px; padding-top: 4px; }
+.hunt .rh-acct-menu a b { margin-left: auto; min-width: 24px; height: 22px; padding: 0 7px; border-radius: 999px; background: var(--c-accent); color: #fff; font-size: 12px; font-weight: 700; display: inline-grid; place-items: center; }
+
+/* by width */
+@media (max-width: 899.98px) {
+  .hunt .hunt-header nav .rh-head-inbox { display: none; } /* Messages is in the account menu */
+}
+@media (max-width: 700px) {
+  .hunt .hunt-header nav .rh-lang { display: none !important; }
+}
+@media (max-width: 599.98px) {
+  .hunt .hunt-header, .hunt .hunt-header:has(.hunt-admin-link) { height: 56px; min-height: 56px; }
+}
+@media (max-width: 359.98px) {
+  .hunt .hunt-header nav .hunt-account.rh-signin { padding: 0 10px !important; }
+}
+
+/* ---------------------------------------------------------------- buttons: pills, fills, no outlines */
+.hunt :is(.hunt-primary, .rh-btn-primary, .lv-go, .hunt-secondary, .rh-btn-secondary, .rf-alert, .rf-save, .hunt-more, .lv-btn, .hv-share) {
+  border-radius: var(--r-btn);
+}
+.hunt :is(.hunt-secondary, .rh-btn-secondary, .rf-alert, .rf-save, .hunt-more, .hv-share, .lv-btn:not(.lv-login)),
+.hunt.is-dark :is(.hunt-secondary, .rh-btn-secondary, .rf-alert, .rf-save, .hunt-more, .hv-share) {
+  background: var(--c-fill) !important; border-color: transparent !important; color: var(--c-ink) !important;
+}
+.hunt :is(.hunt-secondary, .rh-btn-secondary, .rf-alert, .rf-save, .hunt-more, .hv-share, .lv-btn):hover:not(:disabled),
+.hunt.is-dark :is(.hunt-secondary, .rh-btn-secondary, .rf-alert, .rf-save, .hunt-more, .hv-share):hover {
+  background: var(--c-fill-hover) !important; border-color: transparent !important;
+}
+.hunt .rf-save.is-on, .hunt.is-dark .rf-save.is-on { background: var(--c-accent-soft) !important; color: var(--c-accent-ink) !important; }
+.hunt .hv-detail-more .rh-card-tool { border-color: transparent; background: var(--c-fill); border-radius: var(--r-btn); }
+.hunt .hv-detail-more .rh-card-tool:hover { border-color: transparent; background: var(--c-fill-hover); }
+.hunt .hunt-link { text-decoration-color: color-mix(in srgb, currentColor 40%, transparent); }
+
+/* ---------------------------------------------------------------- chips: soft fill, no border */
+.hunt :is(.hunt-chips > button, .hunt-chips > a, .rf-life-chip, .hunt-mapfilters, .rh-mf-chip, .hm-regions button),
+.hunt.is-dark :is(.hunt-chips > button, .hunt-chips > a, .rf-life-chip, .hunt-mapfilters, .rh-mf-chip, .hm-regions button):not([aria-pressed="true"]):not([aria-current="page"]) {
+  border-color: transparent !important; background: var(--c-fill) !important; font-weight: 550;
+}
+.hunt :is(.hunt-chips > button, .hunt-chips > a, .rf-life-chip, .hunt-mapfilters, .rh-mf-chip):hover { background: var(--c-fill-hover) !important; }
+.hunt :is(.hunt-chips > button[aria-pressed="true"], .hunt-chips > a[aria-current="page"], .rf-life-chip[aria-pressed="true"]) { background: var(--c-ink) !important; }
+
+/* ---------------------------------------------------------------- cards: photo, price, one line of facts */
+.hunt .hx-price b { letter-spacing: -0.02em; }
+.hunt .hx-price small { font-weight: 550; opacity: .95; }
+.hunt .hx-text { display: flex; flex-direction: column; gap: 2px; }
+.hunt .hx-text > small { margin-top: 2px; }
+.hunt .hx-pos { font-size: 12px; padding: 5px 8px; }
+.hunt .hx-ai { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.hunt .hx-ai-badge, .hunt .hx-ai-flag, .hunt .rh-chk-chip {
+  display: inline-flex; align-items: center; gap: 5px; min-height: 24px; padding: 0 9px; border-radius: 999px;
+  border: 0 !important; font: 600 12px/1 var(--f-body);
+}
+.hunt .hx-ai-badge { background: var(--c-fill) !important; color: var(--c-ink-2) !important; }
+.hunt .hx-cheap { font-size: 13.5px; line-height: 1.45; color: var(--c-ink-3); margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.hunt .hx-cheap b { color: var(--c-ink-2); font-weight: 600; }
+.hunt .hx-dist { font-size: 13px; color: var(--c-ink-3); }
+.hunt .rh-chk-card { margin-top: 6px; }
+.hunt .rh-chk-chips { gap: 6px; }
+
+/* ---------------------------------------------------------------- home page price block */
+.hunt .rh-ph { margin: 0 0 var(--s-4); }
+.hunt .rh-ph .hunt-price { margin: 0 0 var(--s-2); }
+.hunt .rh-ph-lines { margin: 0; display: grid; gap: 4px; max-width: 420px; }
+.hunt .rh-ph-lines > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 2px 0; }
+.hunt .rh-ph-lines dt { flex: none; font-size: 14.5px; color: var(--c-ink-2); font-weight: 500; }
+.hunt .rh-ph-lines dd { min-width: 0; margin: 0; font-size: 15px; font-weight: 650; color: var(--c-ink); text-align: right; font-variant-numeric: tabular-nums; }
+.hunt .rh-ph-lines dd small { display: block; font-size: 12px; font-weight: 500; color: var(--c-ink-3); }
+.hunt .rh-ph-lines dd.is-unknown { font-weight: 550; color: var(--c-warn); font-size: 14px; }
+.hunt .rh-ph .hv-rent { display: inline-block; margin-top: var(--s-2); }
+.hunt .rh-ph-quiet { display: flex; flex-wrap: wrap; gap: 2px 0; margin: var(--s-3) 0 0; font-size: 13px; line-height: 1.5; color: var(--c-ink-3); }
+.hunt .rh-ph-quiet > span:not(:last-child)::after { content: "·"; margin: 0 7px; color: var(--c-ink-3); }
+.hunt .rh-ph-quiet .is-below { color: var(--c-good); }
+
+/* ---------------------------------------------------------------- home feed search: the same pill field as live search */
+.hunt .hv-search,
+.hunt.is-dark .hv-search {
+  height: 52px; border-radius: 999px !important; padding: 0 8px 0 18px;
+  background: var(--c-fill) !important; border: 1.5px solid transparent !important; box-shadow: none !important;
+}
+.hunt .hv-search:focus-within, .hunt.is-dark .hv-search:focus-within { background: var(--c-surface) !important; border-color: var(--c-ink-3) !important; }
+.hunt .hv-search > svg { color: var(--c-ink-3); }
+.hunt .hv-search input::placeholder { color: var(--c-ink-3); }
+.hunt .hv-search button, .hunt.is-dark .hv-search button { background-color: transparent !important; }
+.hunt .rf-chip { border: 0; background: var(--c-fill); color: var(--c-ink); font-weight: 550; min-height: 36px; }
+.hunt .rf-chip:hover { background: var(--c-fill-hover); }
+.hunt .rf-understood-label { color: var(--c-ink-3); }
+@media (pointer: coarse) { .hunt .rf-chip { min-height: 44px; } }
+
+/* ---------------------------------------------------------------- home page panels: fills, not frames */
+.hunt :is(.rh-chk, .rh-costs, .rh-ai-note, .rh-ai-cheap, .rh-risk),
+.hunt.is-dark :is(.rh-chk, .rh-costs, .rh-ai-note, .rh-ai-cheap, .rh-risk) {
+  border: 0 !important; background: var(--c-fill) !important; box-shadow: none !important; border-radius: var(--r-lg);
+}
+.hunt .rh-costs.is-unknown { background: var(--c-warn-soft) !important; }
+.hunt .rh-chk-sum dd { color: var(--c-ink) !important; }
+.hunt .hv-amenities li, .hunt.is-dark .hv-amenities li { border: 0; background: var(--c-fill); border-radius: 12px; font-weight: 550; }
+.hunt .hv-amenities li svg { color: var(--c-ink-3); }
+.hunt .hv-translate button { border: 0 !important; background: var(--c-fill) !important; border-radius: 999px !important; }
+.hunt .rh-chk-select select { border-color: transparent !important; background-color: var(--c-surface) !important; }
+
+/* ---------------------------------------------------------------- compare: sentence-case group titles, quiet "best" */
+.hunt .rh-cmp-gh { text-transform: none; letter-spacing: 0; font: 700 15px/1.2 var(--f-body); color: var(--c-ink); }
+.hunt .rh-cmp-best { text-transform: none; letter-spacing: 0; font: 600 12px/1 var(--f-body); }
+.hunt .rh-cmp-add-hint { text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 13px; }
+.hunt .rh-cmp-tools select, .hunt .rh-cmp-tools label { border-color: transparent !important; background-color: var(--c-fill) !important; border-radius: 999px !important; }
+
+/* ---------------------------------------------------------------- saved page: fills, not frames */
+.hunt :is(.rf-saved-page, .hv-boardcard, .hunt-sharesaved),
+.hunt.is-dark :is(.rf-saved-page, .hv-boardcard, .hunt-sharesaved) { border: 0 !important; background: var(--c-fill) !important; box-shadow: none !important; border-radius: var(--r-lg); }
+.hunt .hv-boardcard-new input { background: var(--c-surface) !important; border-color: transparent !important; }
+.hunt .hunt-sharesaved label { display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: 10px; min-height: 44px; text-align: left; font-size: 15px; font-weight: 550; }
+.hunt .hunt-sharesaved input[type="checkbox"] { flex: none; width: 20px; height: 20px; min-height: 0 !important; margin: 0; accent-color: var(--c-accent); }
+/* saved homes first: the list comes straight after the title, the tools (searches, boards, sharing) after it */
+.hunt .hunt-profile:has(> .rh-saved-grid) { display: flex; flex-direction: column; }
+.hunt .hunt-profile:has(> .rh-saved-grid) > * { order: 5; }
+.hunt .hunt-profile:has(> .rh-saved-grid) > h1 { order: 1; }
+.hunt .hunt-profile:has(> .rh-saved-grid) > .rh-saved-bar { order: 2; margin-top: 0; }
+.hunt .hunt-profile:has(> .rh-saved-grid) > .rh-saved-grid { order: 3; margin-bottom: var(--s-8); }
+.hunt .hunt-profile > .hunt-tabs { display: flex; flex-wrap: wrap; gap: 6px; border: 0; margin: var(--s-4) 0; }
+.hunt .hunt-profile > .hunt-tabs > a { min-height: 40px; display: inline-flex; align-items: center; padding: 0 14px; border-radius: 999px; background: var(--c-fill); color: var(--c-ink) !important; font-size: 14px; font-weight: 550; border: 0; text-decoration: none; }
+.hunt .hunt-profile-editor { border: 0 !important; background: var(--c-fill) !important; border-radius: var(--r-lg); }
+
+/* ---------------------------------------------------------------- profile (/me) */
+.hunt .hv-me-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.hunt .hv-me-links > :is(a, button) { white-space: normal; max-width: 100%; height: auto; min-height: 44px; padding-top: 10px; padding-bottom: 10px; text-align: center; }
+.hunt .hv-me-stats > div, .hunt.is-dark .hv-me-stats > div { border: 0 !important; background: var(--c-fill) !important; box-shadow: none !important; }
+.hunt .hv-badge, .hunt.is-dark .hv-badge { border: 0 !important; background: var(--c-fill) !important; }
+.hunt .hv-badge:not(.is-on) { opacity: .75; }
