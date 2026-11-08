@@ -23,12 +23,12 @@ test('failed responsive thumbnail retries the actual original, then a fallback, 
  expect(screen.getByRole('img',{name:'Bedroom'})).toHaveTextContent('Photo unavailable');
 });
 test('unknown images never receive invented thumbnail URLs',()=>{const {container}=render(<PropertyImage src="/imported-photo.webp" alt="Home"/>);expect(container.querySelector('source')).toBeNull();expect(screen.getByAltText('Home')).toHaveAttribute('src','/imported-photo.webp');});
-test('comparison is shared across cards, limited to three, and can be deselected',()=>{
- render(<>{['a','b','c','d'].map(slug=><ComparePick key={slug} deal={house(slug)}/>)}</>,{wrapper});
- for(let i=0;i<3;i++)fireEvent.click(screen.getAllByRole('button',{name:'Compare'})[0]);
- fireEvent.click(screen.getByRole('button',{name:'Compare'}));expect(mocks.notice).toHaveBeenCalledWith('Choose up to three homes. Remove one first.');
- expect(JSON.parse(localStorage.getItem('rh.compare.homes')!)).toEqual(['a','b','c']);
- fireEvent.click(screen.getAllByRole('button',{name:'Selected'})[0]);expect(JSON.parse(localStorage.getItem('rh.compare.homes')!)).toEqual(['b','c']);
+test('comparison is shared across cards, limited to four, and can be deselected',()=>{
+ render(<>{['a','b','c','d','e'].map(slug=><ComparePick key={slug} deal={house(slug)}/>)}</>,{wrapper});
+ for(let i=0;i<4;i++)fireEvent.click(screen.getAllByRole('button',{name:'Compare'})[0]);
+ fireEvent.click(screen.getByRole('button',{name:'Compare'}));expect(mocks.notice).toHaveBeenCalledWith('Choose up to four homes. Remove one first.');
+ expect(JSON.parse(localStorage.getItem('rh.compare.homes')!)).toEqual(['a','b','c','d']);
+ fireEvent.click(screen.getAllByRole('button',{name:'Selected'})[0]);expect(JSON.parse(localStorage.getItem('rh.compare.homes')!)).toEqual(['b','c','d']);
 });
 test('filters apply at once, without a second confirm step',()=>{
  const change=vi.fn();render(<Filters countries={{Italy:25}} value={{scope:'all'}} onChange={change}/>);

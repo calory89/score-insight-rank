@@ -1,4 +1,5 @@
 import { isGuestSaved, toggleGuestSave } from "./guestSaves";
+import { rememberSavedPrice } from "./savedPrice";
 import {PropertyImage, ComparePick} from "./BuyerTools";
 import {storage, usePreference} from "./buyer-state";
 import {t} from "./i18n";
@@ -237,6 +238,7 @@ export function SaveHeart({ deal, className = "hv-save" }: { deal: Deal; classNa
         if (!user) {
           // No account needed to save: kept in this browser and moved to the account on sign-in.
           const now = toggleGuestSave(deal as any);
+          if (now) rememberSavedPrice(deal.slug, deal.price_eur, true);
           setNotice(now ? "Saved on this device. Create a free account to keep it everywhere." : "Removed from saved.");
           if (now) { bumpStat("saves"); track("community_save", { find: deal.slug, meta: { guest: true } }); }
           bumpIx();
@@ -247,7 +249,7 @@ export function SaveHeart({ deal, className = "hv-save" }: { deal: Deal; classNa
           await call("save", { id: deal.id, saved: !saved });
           setSession((s: Session) => ({ ...s, saved: saved ? s.saved.filter((x) => x !== deal.id) : [...s.saved, deal.id] }));
           setNotice(saved ? "Removed from saved." : "Saved ✓ Add it to a board from its page.");
-          if (!saved) {bumpStat("saves");track("community_save",{find:deal.slug});}
+          if (!saved) {bumpStat("saves");track("community_save",{find:deal.slug});rememberSavedPrice(deal.slug, deal.price_eur, true);}
           bumpIx();
         } catch (err) { setNotice((err as Error).message); } finally { setBusy(false); }
       }}>

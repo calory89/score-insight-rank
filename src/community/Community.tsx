@@ -1,5 +1,5 @@
 import { TaxPanel } from "./taxes";
-import { CatalogBack, UnavailableHome, DecisionFacts, QuickHome, ComparisonTray, EmptyAlternatives, RankingExplanation, MotionControl, RentPreference } from "./BuyerTools";
+import { CatalogBack, UnavailableHome, DecisionFacts, QuickHome, ComparePick, EmptyAlternatives, RankingExplanation, MotionControl, RentPreference } from "./BuyerTools";
 import { storage, rememberCatalog, usePreference } from "./buyer-state";
 import {
   Fragment,
@@ -42,6 +42,7 @@ import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, Verifie
 import { CountriesPage } from "./countries";
 import { CostBadge } from "./costs";
 import { CardCheck, CheckLayer } from "./check";
+import { CompareTray, CompareRoute, PriceWatch, SavedHomes } from "./compareTools";
 const slugCountryKey = (c?: string | null) => String(c || "").toLowerCase().trim().replace(/\s+/g, "-");
 import { t } from "./i18n";
 import { FindHomePage, FindHomeCTA } from "./findhome";
@@ -171,7 +172,7 @@ function Shell({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Child pages set their own title in effects that run before this one, so they must be listed here or the
     // default title overwrites theirs (country pages, /method and /alerts showed the home title before 24-oct-2026).
-    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare-new-builds|costs|research|agents|homes\/|method|alerts|can-i-buy|buying-costs|about|top|guide|new|sitemap|swipe|map|leaderboard|winners|best|weather|saved|legal|hunter\/|b\/)/.test(location.pathname)) return;
+    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare|costs|research|agents|homes\/|method|alerts|can-i-buy|buying-costs|about|top|guide|new|sitemap|swipe|map|leaderboard|winners|best|weather|saved|legal|hunter\/|b\/)/.test(location.pathname)) return;
     document.title = "RealHunt: The best homes in every country, ranked by score";
   }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
@@ -308,6 +309,7 @@ function Shell({ children }: { children: ReactNode }) {
           </div>
         </footer>
         <TabBar />
+        <CompareTray />
         <AuthModal
           open={auth}
           onClose={() => setAuth(false)}
@@ -885,7 +887,6 @@ function Home() {
         <QuickSubmission />
       </section>
       {quick!==null && feed?.rows?.[quick] && <QuickHome rows={feed.rows} index={quick} onIndex={setQuick} onClose={()=>setQuick(null)}/>}
-      <ComparisonTray/>
       <p className="hunt-rules">
         {t("One anonymous vote per browser and home each week. Sign in to save homes, contribute or open the original listing.")} {" "}
         Every home has a price, real photos and a hand check. The list is ranked by score and changes every day.
@@ -1019,10 +1020,12 @@ function Detail() {
             <SaveHeart deal={d} className="hunt-save hv-save-inline" />
             <ShareButton deal={d as Row} scope={scope} label />
           </div>
+          <PriceWatch d={d} />
           <div className="hv-detail-more">
             <VideoTour deal={d} />
             <BoardButton deal={d} />
             <CompareButton deal={d} />
+            <ComparePick deal={d as Row} />
           </div>
           <p className="hunt-fine">
             {num(d.views)} views
@@ -1644,14 +1647,7 @@ function Mine() {
         <h1>Saved homes</h1>
         <SavedSearches />
         <p className="hunt-guest-note">Saved on this device. <button className="hunt-link" onClick={requireUser}>Create a free account</button> to keep them on your phone and computer and get an email if the price drops.</p>
-        <div className="hunt-small-grid">
-          {guest.map((d) => (
-            <Link className="hunt-mini" to={`/deal/${d.slug}`} key={d.id}>
-              <img src={d.image || "/favicon.png"} alt={d.title} />
-              <div><strong>{d.price_eur ? money(d.price_eur) : ""}</strong><h2>{d.title}</h2></div>
-            </Link>
-          ))}
-        </div>
+        <SavedHomes items={guest.map((g) => ({ id: g.id, slug: g.slug, title: g.title, price_eur: g.price_eur, image: g.image }))} />
       </div>
     );
   if (!user)
@@ -1684,20 +1680,7 @@ function Mine() {
       {!data ? (
         error ? null : <Loading />
       ) : pathname.endsWith("saved") ? (
-        <div className="hunt-small-grid">
-          {data.saved.map((d: any) => (
-            <Link className="hunt-mini" to={`/deal/${d.slug}`} key={d.slug}>
-              <img src={d.image_urls?.[0] || "/favicon.png"} alt={d.title} />
-              <div>
-                <strong>{money(d.price_eur)}</strong>
-                <h2>{d.title}</h2>
-              </div>
-            </Link>
-          ))}
-          {!data.saved.length && (
-            <p>No saved deals yet. Tap the bookmark on a discovery you love.</p>
-          )}
-        </div>
+        <SavedHomes items={data.saved.map((d: any) => ({ id: d.id, slug: d.slug, title: d.title, price_eur: d.price_eur ?? null, image: d.image_urls?.[0] || null }))} empty={<p>No saved deals yet. Tap the bookmark on a discovery you love.</p>} />
       ) : (
         <>
           <Link className="hunt-primary" to="/submit">
@@ -1983,6 +1966,8 @@ export default function Community() {
       <NewBuildsPage />
     ) : path === "/inbox" ? (
       <InboxPage />
+    ) : path === "/compare" ? (
+      <CompareRoute />
     ) : path === "/compare-new-builds" ? (
       <CompareBuilds />
     ) : path === "/costs" ? (

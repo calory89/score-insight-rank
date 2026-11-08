@@ -39,6 +39,12 @@ const ShortLinkRedirect = L(() => import("./pages/ShortLinkRedirect"));
 const Dashboard = L(() => import("./pages/Dashboard"));
 const Analysis = L(() => import("./pages/Analysis"));
 const Compare = L(() => import("./pages/Compare"));
+// /compare?ids=<slugs> compares homes (src/community/ComparePage.tsx); UUID ids keep the older analysis comparison.
+const CompareSwitch = () => {
+  const ids = new URLSearchParams(useLocation().search).get("ids") || "";
+  const legacy = ids !== "" && ids.split(",").filter(Boolean).every((p) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(p.trim()));
+  return legacy ? <Compare /> : <Community />;
+};
 const Settings = L(() => import("./pages/Settings"));
 const Admin = L(() => import("./pages/Admin"));
 const Rankings = L(() => import("./pages/Rankings"));
@@ -180,7 +186,7 @@ const AppRoutes = () => (
       <Route path="/analysis/loading" element={<Analysis />} />
       <Route path="/analysis/:id" element={<Analysis />} />
       <Route path="/r/:slug" element={<Analysis />} />
-      <Route path="/compare" element={<Compare />} />
+      <Route path="/compare" element={<CompareSwitch />} />
       <Route path="/settings" element={<Settings />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/rankings" element={<Rankings />} />
