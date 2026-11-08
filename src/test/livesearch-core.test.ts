@@ -8,7 +8,7 @@ describe("parseLiveQuery", () => {
   it("reads the owner's example in Spanish", () => {
     const p = parseLiveQuery("casas en Miami por menos de 300.000 € de 3 habitaciones con buena puntuación");
     expect(p.ok).toBe(true);
-    expect(p).toMatchObject({ kind: "buy", city: "miami", state: "fl", country: "United States", min_beds: 3, max_price: 300000, currency: "EUR", max_eur: 300000, good_score: true, ptype: "any" });
+    expect(p).toMatchObject({ kind: "buy", city: "miami", state: "fl", country: "United States", min_beds: 3, max_price: 300000, currency: "EUR", max_eur: 300000, good_score: true, ptype: "house" });
   });
   it("reads dollars and k", () => {
     const p = parseLiveQuery("3 bedroom house in Miami under $300k");
