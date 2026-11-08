@@ -183,3 +183,4 @@
 .hunt .lv-min .lv-how { border: 0; background: transparent; padding: 0; margin-top: 36px; }
 .hunt .lv-min .lv-how summary { font-size: 14px; font-weight: 600; color: var(--c-ink-2); }
 .hunt .lv-min .lv-how p { font-size: 13.5px; color: var(--c-ink-3); }
+.hunt .lv-min .lv-form input, .hunt.is-dark .lv-min .lv-form input { background: transparent !important; border: 0 !important; box-shadow: none !important; }
