@@ -34,6 +34,10 @@ async function api(path: string, init: RequestInit): Promise<any> {
   }
   throw new Error("network");
 }
+function kmBetween(a: number, b: number, c: number, d: number): number {
+  const r = Math.PI / 180, x = Math.sin(((c - a) * r) / 2) ** 2 + Math.cos(a * r) * Math.cos(c * r) * Math.sin(((d - b) * r) / 2) ** 2;
+  return 12742 * Math.asin(Math.sqrt(x));
+}
 const ls = {
   get(k: string) { try { return localStorage.getItem(k); } catch { return null; } },
   set(k: string, v: string) { try { localStorage.setItem(k, v); } catch { /* private mode */ } },
@@ -133,7 +137,12 @@ export default function LiveSearchPage() {
   const progress = phase === "done" ? 100 : Math.max(2, Math.min(99, st?.progress ?? (phase === "starting" ? 2 : 0)));
   const busy = phase === "starting" || phase === "running";
   const note = st?.note || "";
-  const ours = phase === "done" && !results.length ? best80 : similar;
+  // "centro" means the real city centre: our own homes only show when they sit inside it (8-nov-2026)
+  const ctr = (st as any)?.centre as { lat?: number; lng?: number; radius_km?: number } | undefined;
+  const inCentre = (d: any) => !p?.central || (ctr?.lat != null && ctr?.lng != null && d?.lat != null && d?.lng != null
+    && kmBetween(ctr.lat, ctr.lng, Number(d.lat), Number(d.lng)) <= (ctr.radius_km || 1.8));
+  const outSlugs = new Set(((st as any)?.outside_centre || []).map((r: any) => r?.deal_slug).filter(Boolean));
+  const ours = (phase === "done" && !results.length ? best80 : similar).filter((d: any) => inCentre(d) && !outSlugs.has(d.slug));
   const bySlug = useMemo(() => new Map(rows.map((r: any) => [r.slug, r])), [rows]);
 
   const limit = phase === "capped" ? limitKind(st?.note, "capped") : limitKind(note);
@@ -234,6 +243,7 @@ export default function LiveSearchPage() {
               : phase === "done" ? <span>{note === "from_earlier" ? t("Instant: from homes we already had.")
                 : results.length ? doneLine(results.length, st?.hidden)
                 : limit ? t("Today's limit is reached: these are homes we already have.")
+                : p?.central ? t("No home in the centre passed our checks today.")
                 : t("No new listing passed our check today. These homes do:")}</span>
               : <><span>{shortStage(st?.stage)}</span><b>{`${progress}%`}</b></>}
           </p>
@@ -257,7 +267,7 @@ export default function LiveSearchPage() {
       {outside.length > 0 && (
         <section className="lv-results lv-outside" aria-label={t("Outside the centre")}>
           <h2>{t("Outside the centre")}</h2>
-          {!results.length && <p className="lv-fine">{t("None in the centre passed our checks today. These are the closest good homes, outside the centre:")}</p>}
+          {!results.length && <p className="lv-fine">{t("The closest good homes, outside the centre:")}</p>}
           <div className="hx-grid">
             {outside.map((r, i) => <LiveHome key={r.id} r={r} pos={results.length + i + 1} noRank own={r.deal_slug ? bySlug.get(r.deal_slug) : undefined} />)}
           </div>
