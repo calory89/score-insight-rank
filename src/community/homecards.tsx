@@ -34,7 +34,7 @@ const where = (d: any) => (d.location_name && d.country && !String(d.location_na
  *   dist      km from the city centre (live search v4), shown as one quiet fact
  * Minimal pass (8-nov-2026): one price, one line of facts (m² · beds), title, place, at most two small badges.
  */
-export function HomeCard({ deal, pos, href: ext, origPrice, rent, dist }: { deal: any; pos: number; href?: string; origPrice?: string; rent?: boolean; dist?: number | null }) {
+export function HomeCard({ deal, pos, href: ext, origPrice, rent, dist, noRank }: { deal: any; pos: number; href?: string; origPrice?: string; rent?: boolean; dist?: number | null; noRank?: boolean }) {
   const s = useScore(deal);
   const href = ext || `/deal/${encodeURIComponent(deal.slug)}?tab=all`;
   const img = deal.image_urls?.[0];
@@ -48,10 +48,10 @@ export function HomeCard({ deal, pos, href: ext, origPrice, rent, dist }: { deal
   const linkProps = ext ? { href: ext, target: "_blank", rel: "noopener nofollow" } : { to: href };
   return (
     <div className="hx-wrap">
-      <Tag {...linkProps} className={"hx-card" + (pos <= 3 ? " is-podium" : "")} aria-label={label}>
+      <Tag {...linkProps} className={"hx-card" + (pos <= 3 && !noRank ? " is-podium" : "")} aria-label={label}>
         <span className="hx-img">
           {img ? <img src={thumb(img)} alt={`${title}, ${where(deal)}`} width={480} height={360} loading={pos <= 3 ? "eager" : "lazy"} fetchPriority={pos === 1 ? "high" : "auto"} decoding="async" onError={(e) => onThumbError(e.currentTarget, img)} /> : null}
-          <span className="hx-pos">#{pos}</span>
+          {!noRank && <span className="hx-pos">#{pos}</span>}
           {isNew(deal) && !ai ? <span className="hx-new">{t("New today")}</span> : Number(deal.price_drop) > 0 ? <span className="hx-new is-drop">{t("Price dropped")}</span> : null}
           {s && <span className={"hx-score " + gtone(s.n)} title={t("RealHunt score")}>{s.n}</span>}
           <span className="hx-price">

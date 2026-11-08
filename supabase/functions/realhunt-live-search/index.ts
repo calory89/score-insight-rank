@@ -190,11 +190,13 @@ async function poll(id: string) {
   const all: Result[] = Array.isArray(j.results) ? j.results : [];
   // v4: a "centre" search shows only central homes; the closest others come apart in outside_centre
   const centre: CT.Centre | null = j.work?.centre || null;
-  const wantsCentre = !!(j.parsed?.central && centre);
+  // 8-nov-2026 (owner: "centre of Sevilla" showed Palmete and Bellavista as results): a centre search shows only homes
+  // confirmed central, also while the centre point is still being looked up (before, those polls skipped the filter).
+  const wantsCentre = !!j.parsed?.central;
   const shownAll = all.filter(isShown);
-  const shown = wantsCentre ? shownAll.filter((r) => r.centre_ok !== false) : shownAll;
+  const shown = wantsCentre ? shownAll.filter((r) => r.centre_ok === true) : shownAll;
   // the closest others only: within 3 x the centre's radius (a home 8 km out is not "near the centre" to anyone)
-  const outside = wantsCentre ? shownAll.filter((r) => r.centre_ok === false && (r.distance_to_centre_km ?? 99) <= centre!.r_km * 3).sort((a, b) => (a.distance_to_centre_km ?? 99) - (b.distance_to_centre_km ?? 99)).slice(0, 6) : [];
+  const outside = wantsCentre && centre ? shownAll.filter((r) => r.centre_ok === false && (r.distance_to_centre_km ?? 99) <= centre.r_km * 3).sort((a, b) => (a.distance_to_centre_km ?? 99) - (b.distance_to_centre_km ?? 99)).slice(0, 6) : [];
   // 8-nov-2026: results saved before the Spanish texts existed get them from their home page row
   const slugs = shown.filter((r) => r.deal_slug && !r.title_es).map((r) => r.deal_slug!);
   if (slugs.length) {
@@ -322,7 +324,7 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
   const centre = CT.centreFor(p.city || p.place, p.country) || (p.central ? await geocode(p) : null);
   const central = !!(p.central && centre);
   const atCentre = (lat: number | null | undefined, lng: number | null | undefined, text: string) => (centre ? CT.centreFit(centre, { lat: lat ?? null, lng: lng ?? null, text }) : null);
-  const main = (r: Result) => !central || r.centre_ok !== false;
+  const main = (r: Result) => !central || r.centre_ok === true;
 
   // 1. our own data first
   await set({ progress: 8, stage: { k: "ours" } });
@@ -503,7 +505,7 @@ async function slice(id: string, sliceT0 = Date.now()) {
   const step = (k: string, n?: number) => { w.units++; return set({ progress: pct(), stage: { k, n: n ?? Math.min(w.i, total), of: total } }); };
   w.slices++;
   const wantsCentre = !!(w.p.central && w.centre);
-  const mainShown = (r: Result) => isShown(r) && (!wantsCentre || r.centre_ok !== false);
+  const mainShown = (r: Result) => isShown(r) && (!wantsCentre || r.centre_ok === true);
   const shownCount = () => results.filter(mainShown).length;
   const tooLate = () => Date.now() - w.t0 > LIMITS.JOB_MAX_MS;
 
