@@ -194,27 +194,64 @@ export function centreFact(f: CentreFit | null | undefined): { en: string; es: s
 export const inCentre = (f: CentreFit | null | undefined) => !!f && (f.status === "central" || f.status === "near");
 
 /**
- * The honest note when nothing central passed: "No home in central Sevilla under €200,000 with 3+ bedrooms passed our
- * checks today. Closest checked: 2.1 km from the centre." When central listings were checked and all missed the bar,
- * it says how many; closest_km is the nearest listing checked OUTSIDE the centre.
+ * The honest note when nothing central passed. Nothing central was read: "No home in central Sevilla under €200,000
+ * with 3+ bedrooms passed our checks today. Closest checked: 2.1 km from the centre." Central homes were read and all
+ * missed: "12 central homes checked (Madrid, under €350,000, 2+ bedrooms); none passed our photo and value checks
+ * today." closest_km is the nearest listing read OUTSIDE the centre.
  */
 export function centreNote(x: { place: string; max_eur?: number | null; max_price?: number | null; currency?: string; min_beds?: number | null; kind?: "buy" | "rent"; closest_km?: number | null; checked_central?: number }, lang: "en" | "es" = "en"): string {
   const cur = x.currency || "EUR";
   const amt = x.max_price ?? x.max_eur ?? null;
   const sym = cur === "EUR" ? "€" : cur === "USD" ? "$" : cur === "GBP" ? "£" : "";
-  const en = (n: number) => (sym ? sym + n.toLocaleString("en-US") : n.toLocaleString("en-US") + " " + cur);
-  const es = (n: number) => n.toLocaleString("de-DE") + " " + (sym || cur);
+  const en = (v: number) => (sym ? sym + v.toLocaleString("en-US") : v.toLocaleString("en-US") + " " + cur);
+  const es = (v: number) => v.toLocaleString("de-DE") + " " + (sym || cur);
   const near = x.closest_km != null ? x.closest_km.toFixed(1) : null;
   const rent = x.kind === "rent";
   const n = x.checked_central || 0;
   if (lang === "es") {
-    return [`Hoy ninguna vivienda ${rent ? "en alquiler " : ""}en el centro de ${x.place}`, amt ? `por menos de ${es(amt)}${rent ? " al mes" : ""}` : "", x.min_beds ? `con ${x.min_beds} o más habitaciones` : "", "ha pasado nuestras comprobaciones."].filter(Boolean).join(" ")
-      + (n ? ` Revisamos ${n === 1 ? "una" : n} en el centro y ${n === 1 ? "no alcanzó" : "ninguna alcanzó"} nuestro nivel.` : "")
-      + (near ? (n ? ` La más cercana fuera del centro está a ${near.replace(".", ",")} km.` : ` La más cercana que revisamos está a ${near.replace(".", ",")} km del centro.`) : "");
+    const what = [amt ? `por menos de ${es(amt)}${rent ? " al mes" : ""}` : "", x.min_beds ? `con ${x.min_beds} o más habitaciones` : ""].filter(Boolean).join(", ");
+    const head = n
+      ? `${n === 1 ? "Revisamos 1 vivienda" : `Revisamos ${n} viviendas`} ${rent ? "en alquiler " : ""}del centro de ${x.place}${what ? ` (${what})` : ""}; ${n === 1 ? "no ha pasado" : "ninguna ha pasado"} hoy nuestras comprobaciones de fotos y precio.`
+      : [`Hoy ninguna vivienda ${rent ? "en alquiler " : ""}en el centro de ${x.place}`, what.replace(", con", " con"), "ha pasado nuestras comprobaciones."].filter(Boolean).join(" ");
+    return head + (near ? (n ? ` La más cercana fuera del centro está a ${near.replace(".", ",")} km.` : ` La más cercana que revisamos está a ${near.replace(".", ",")} km del centro.`) : "");
   }
-  return [`No home ${rent ? "to rent " : ""}in central ${x.place}`, amt ? `under ${en(amt)}${rent ? " a month" : ""}` : "", x.min_beds ? `with ${x.min_beds}+ bedrooms` : "", "passed our checks today."].filter(Boolean).join(" ")
-    + (n ? (n === 1 ? " We checked 1 in the centre and it did not meet our bar." : ` We checked ${n} in the centre and none met our bar.`) : "")
-    + (near ? (n ? ` Closest checked outside the centre: ${near} km away.` : ` Closest checked: ${near} km from the centre.`) : "");
+  const what = [amt ? `under ${en(amt)}${rent ? " a month" : ""}` : "", x.min_beds ? `${x.min_beds}+ bedrooms` : ""].filter(Boolean).join(", ");
+  const head = n
+    ? `${n} central ${n === 1 ? "home" : "homes"} ${rent ? "to rent " : ""}checked (${[x.place, what].filter(Boolean).join(", ")}); ${n === 1 ? "it did not pass" : "none passed"} our photo and value checks today.`
+    : [`No home ${rent ? "to rent " : ""}in central ${x.place}`, amt ? `under ${en(amt)}${rent ? " a month" : ""}` : "", x.min_beds ? `with ${x.min_beds}+ bedrooms` : "", "passed our checks today."].filter(Boolean).join(" ");
+  return head + (near ? (n ? ` Closest checked outside the centre: ${near} km away.` : ` Closest checked: ${near} km from the centre.`) : "");
+}
+
+// ---------------------------------------------------------------- value against the centre (v5, 8-nov-2026)
+/**
+ * A centre search compares a central home with other central homes, not with the whole city (Carlos: Madrid had 20
+ * central candidates and none could reach 80, because central flats cost more per m² than the city's). Comparables:
+ * the central listings scanned in this job plus central live finds of the last 60 days, by kind (flat / house).
+ *  - 6 or more of the same kind: their median ("centre_type"), if it is within half to twice the all-central one
+ *  - else 6 or more central of any kind: their median ("centre")
+ *  - else the city median x CENTRE_PREMIUM ("city_premium"), or null without a city median
+ * The score formula and the photo gate are unchanged: a central home at the centre's median scores about 78, so
+ * only the better-value central homes (with good photos) reach 80; overpriced ones still do not.
+ */
+export const CENTRE_PREMIUM = 1.25;
+export const CENTRE_MIN_COMPS = 6;
+export type Group = "flat" | "house";
+export type CentreMedian = { ppm: number | null; from: "centre_type" | "centre" | "city_premium" | null; n: number };
+export function centreMedians(comps: { ppm: number; group: Group | null; id?: string }[], cityMedian: number | null, premium = CENTRE_PREMIUM, min = CENTRE_MIN_COMPS): Record<Group | "all", CentreMedian> {
+  const seen = new Set<string>();
+  const ok = (comps || []).filter((c) => c && Number.isFinite(c.ppm) && c.ppm > 0 && (!c.id || (!seen.has(c.id) && seen.add(c.id))));
+  const med = (v: number[]) => { const a = [...v].sort((x, y) => x - y); const m = Math.floor(a.length / 2); return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2; };
+  const fallback: CentreMedian = cityMedian && cityMedian > 0 ? { ppm: Math.round(cityMedian * premium), from: "city_premium", n: ok.length } : { ppm: null, from: null, n: ok.length };
+  const all: CentreMedian = ok.length >= min ? { ppm: Math.round(med(ok.map((c) => c.ppm))), from: "centre", n: ok.length } : fallback;
+  // a kind's own median only when it is plausible next to all central homes (half to twice it): a handful of odd
+  // "houses" in a city centre (a farmhouse of the province, a typo) must not set the bar
+  const of = (g: Group): CentreMedian => {
+    const v = ok.filter((c) => c.group === g).map((c) => c.ppm);
+    if (v.length < min) return all;
+    const x = Math.round(med(v));
+    return all.from === "centre" && all.ppm && (x < all.ppm * 0.5 || x > all.ppm * 2) ? all : { ppm: x, from: "centre_type", n: v.length };
+  };
+  return { flat: of("flat"), house: of("house"), all };
 }
 
 /** For the note: how many central listings were read today (from the web, not homes we already had) and the nearest one read outside. */

@@ -236,7 +236,7 @@ export function parseLiveQuery(input: string): LiveQuery {
 /** One key per meaning: same kind, place, bedrooms, budget (rounded to €1,000) and type. */
 export function liveKey(p: LiveQuery): string {
   const r = (n: number | null) => (n == null ? "" : String(Math.round(n / 1000)));
-  return [p.kind, norm(p.country || ""), norm(p.city || p.place || ""), p.state || "", "b" + (p.min_beds ?? ""), "x" + r(p.max_eur), "n" + r(p.min_eur), p.ptype_soft ? "any" : p.ptype, p.good_score ? "g" : "", p.central ? "c2" : ""].join("|"); // c2 (8-nov-2026): the centre became real geography; older "centre" answers are not reused
+  return [p.kind, norm(p.country || ""), norm(p.city || p.place || ""), p.state || "", "b" + (p.min_beds ?? ""), "x" + r(p.max_eur), "n" + r(p.min_eur), p.ptype_soft ? "any" : p.ptype, p.good_score ? "g" : "", p.central ? "c3" : ""].join("|"); // c2 (8-nov-2026): the centre became real geography; c3: values against central comparables; older "centre" answers are not reused
 }
 
 /** Puts a chosen (or the only) place into a parsed search: its name, country and, for US places, city and state. */

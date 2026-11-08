@@ -120,7 +120,7 @@ type Result = {
 };
 type Cand = { url: string; title: string; price: number | null; currency: string; beds: number | null; sqm: number | null; location: string; country: string | null; kind: "buy" | "rent"; image: string | null; provider: string; cb?: C.CbRow; ps?: PS.PisosRow; lat?: number | null; lng?: number | null };
 type Who = { user: string | null; ipHash: string; netHash: string; ipSrc: string; admin?: boolean };
-type Work = { p: C.LiveQuery; q: string; lang: string; who: Who; t0: number; cands: Cand[]; i: number; median: number | null; median_from: string | null; country_medians: Record<string, number | null>; scan_medians?: Record<string, number | null>; budget: number; reviews: number; units: number; slices: number; note: string; provider: string; search_cost: number; done?: boolean; centre?: CT.Centre | null; outside_reviews?: number };
+type Work = { p: C.LiveQuery; q: string; lang: string; who: Who; t0: number; cands: Cand[]; i: number; median: number | null; median_from: string | null; country_medians: Record<string, number | null>; scan_medians?: Record<string, number | null>; budget: number; reviews: number; units: number; slices: number; note: string; provider: string; search_cost: number; done?: boolean; centre?: CT.Centre | null; outside_reviews?: number; centre_medians?: Record<string, CT.CentreMedian> | null };
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
@@ -374,6 +374,9 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
   let note = ""; let provider = ""; let usage: any = null;
   let scanPpm: number[] = [];
   let scanMedians: Record<string, number | null> = {};
+  // v5: central comparables for a centre search (value against the centre, not the whole city)
+  const comps: { ppm: number; group: CT.Group | null; id?: string }[] = [];
+  const cbKind = (t: string): CT.Group => (C.cbGroup(t) === "condo" ? "flat" : "house");
   if (p.city && p.state) {
     await set({ progress: 15, stage: { k: "searching_cb" } });
     const pages = await Promise.all(C.cbSearchUrls(p, 5).map((u) => cand({ action: "scan", url: u, rx: C.CB_RX }, 45000)));
@@ -381,6 +384,7 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
     const clean = scanned.filter((r) => r.status === "ACTIVE" && !/land|lot|manufactured|mobile/i.test(r.type));
     scanPpm = C.cbPpm(clean);
     scanMedians = C.cbGroupMedians(clean);
+    if (central) for (const r of clean) if (r.sqft && r.sqft > 150 && r.price >= 20000 && CT.inCentre(atCentre(r.lat, r.lng, r.address))) comps.push({ ppm: (C.toEur(r.price, "USD") || 0) / (r.sqft * 0.092903), group: cbKind(r.type), id: r.url });
     let picked = C.pickCb(scanned, p, central ? 80 : 14);
     if (central) {
       // v4: downtown first by map position, then the 4 closest others (for outside_centre); the rest are not checked
@@ -401,8 +405,12 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
     if (urls.length) {
       await set({ progress: 15, stage: { k: "searching_cb" } });
       const pages = await Promise.all(urls.map((u) => cand({ action: "scan", url: u.url, rx: PS.PISOS_RX }, 45000).then((r: any) => ({ r }))));
-      const rowsPs = pages.flatMap(({ r }) => (Array.isArray(r?.matches) ? r.matches : []).map((m: string) => PS.parsePisosCard(m))).filter(Boolean) as PS.PisosRow[];
+      const parse = (list: { r: any }[]) => list.flatMap(({ r }) => (Array.isArray(r?.matches) ? r.matches : []).map((m: string) => PS.parsePisosCard(m))).filter(Boolean) as PS.PisosRow[];
+      // v5: pages marked comps (the centre without the budget) are comparables only, never candidates
+      const rowsPs = parse(pages.filter((_, i) => !urls[i].comps));
+      const compRows = parse(pages);
       scanPpm = PS.pisosPpm(rowsPs);
+      if (central) for (const r of compRows) if (r.sqm && r.sqm >= 25 && CT.inCentre(CT.centreFit(centre!, { text: CT.cardPlaceText(r.area, centre!.name) }))) comps.push({ ppm: r.price / r.sqm, group: PS.pisosGroup(r.type), id: r.url });
       for (const r of PS.pickPisos(rowsPs, p, 20, central ? centre : null)) {
         if (cands.some((x) => x.url === r.url)) continue;
         cands.push({ url: r.url, title: r.title, price: r.price, currency: "EUR", beds: r.beds, sqm: r.sqm, location: PS.pisosArea(r.area, p.place), country: "Spain", kind: "buy", image: r.photo, provider: "pisos.com", ps: r });
@@ -458,8 +466,25 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
   const local = [...(prev || []).filter((x: any) => !want || String(x.place || "").toLowerCase().includes(want)).map((x: any) => ppm(Number(x.price_eur), Number(x.sqm))),
     ...cands.filter((c) => !c.cb).map((c) => ppm(C.toEur(c.price, c.currency), c.sqm))];
   const m = C.pickMedian(scanPpm, local, p.country ? country_medians[p.country] ?? null : null);
+  // v5: a centre search values each home against central comparables: this job's central scan plus central live finds
+  // of the last 60 days (centre.ts centreMedians); the city median x a centre premium only when there are too few
+  let centreMedians: Record<string, CT.CentreMedian> | null = null;
+  if (central) {
+    const { data: near } = await db.from("live_listings").select("url,price_eur,sqm,place,data->lat,data->lng,data->title,data->centre_status,data->location")
+      .eq("kind", p.kind).ilike("place", `%${centre!.name}%`).gte("last_seen", new Date(Date.now() - 60 * 86400_000).toISOString()).limit(1000);
+    for (const x of (near || []) as any[]) {
+      const v = ppm(Number(x.price_eur) || null, Number(x.sqm) || null);
+      if (!v) continue;
+      const f = x.lat != null && x.lng != null ? atCentre(Number(x.lat), Number(x.lng), "") : x.centre_status ? { status: x.centre_status } as CT.CentreFit : atCentre(null, null, String(x.location || ""));
+      if (!CT.inCentre(f)) continue;
+      const tt = C.titleType(x.title);
+      comps.push({ ppm: v, group: tt === "house" ? "house" : tt === "apartment" ? "flat" : null, id: x.url });
+    }
+    centreMedians = CT.centreMedians(comps, m.ppm);
+  }
 
-  const work: Work = { p, q, lang, who, t0, cands: cands.slice(0, LIMITS.MAX_CANDS), i: 0, median: m.ppm, median_from: m.from, country_medians, scan_medians: scanMedians, budget: Math.max(0, budget - cost), reviews: 0, units: 0, slices: 0, note, provider, search_cost: cost, centre, outside_reviews: 0 };
+  // a listing already in the results (an earlier find) is not checked again: it would show twice
+  const work: Work = { p, q, lang, who, t0, cands: cands.filter((c) => !results.some((r) => r.url === c.url)).slice(0, LIMITS.MAX_CANDS), i: 0, median: m.ppm, median_from: centreMedians ? centreMedians.all.from : m.from, centre_medians: centreMedians, country_medians, scan_medians: scanMedians, budget: Math.max(0, budget - cost), reviews: 0, units: 0, slices: 0, note, provider, search_cost: cost, centre, outside_reviews: 0 };
   await set({ progress: 45, stage: { k: "checking", n: 0, of: work.cands.length }, work, provider: provider || "ours" });
   await slice(id, t0);
 }
@@ -506,7 +531,7 @@ async function slice(id: string, sliceT0 = Date.now()) {
   await set({
     status: "done", progress: 100, stage: { k: "done", n: good, of: results.length }, provider: w.provider || "ours",
     note: centreNote || (good ? w.note || null : "none_80" + (w.note ? ":" + w.note : "")),
-    usage: { ...(j.usage || {}), reviews: w.reviews, review_cost: reviewCost, search_cost: w.search_cost, slices: w.slices, median_from: w.median_from, ms: Date.now() - w.t0 },
+    usage: { ...(j.usage || {}), reviews: w.reviews, review_cost: reviewCost, search_cost: w.search_cost, slices: w.slices, median_from: w.median_from, centre_medians: w.centre_medians || undefined, ms: Date.now() - w.t0 },
   });
   // fill the new homes' sub-scores now (the hourly cron does it too), so their pages show a full score
   if (results.some((r) => r.source === "web" && r.deal_slug && isShown(r))) await db.rpc("community_dims_fill").then(() => {}, () => {});
@@ -545,7 +570,12 @@ async function checkOne(c: Cand, w: Work, results: Result[], spend: (usd: number
   // a "centre" search checks a listing outside the centre only for the honest "closest" list: at most 4, within 2.5 x the radius
   const outsideOk = wantsCentre && fit?.status === "outside" && (fit.km ?? 99) <= w.centre!.r_km * 2.5 && (w.outside_reviews || 0) < 4;
   // the same kind of home in the same city first (a townhouse against townhouses), then the job's median
-  const median = (c.cb && w.scan_medians?.[C.cbGroup(c.cb.type)]) || w.median || (country ? w.country_medians[country] ?? null : null);
+  // v5: a centre search compares with central homes of the same kind (centre.ts centreMedians)
+  const kind: CT.Group | null = c.ps ? PS.pisosGroup(c.ps.type) : c.cb ? (C.cbGroup(c.cb.type) === "condo" ? "flat" : "house") : (() => { const t = C.titleType(c.title); return t === "house" ? "house" : t === "apartment" ? "flat" : null; })();
+  // only for central homes: a home outside the centre (read for the honest "closest" list) keeps the city median, or
+  // it would look far cheaper than it is
+  const cm = wantsCentre && w.centre_medians && CT.inCentre(fit) ? (kind && w.centre_medians[kind]) || w.centre_medians.all : null;
+  const median = cm?.ppm || (c.cb && w.scan_medians?.[C.cbGroup(c.cb.type)]) || w.median || (country ? w.country_medians[country] ?? null : null);
   const ptype = c.cb?.type || c.ps?.type || (p.ptype !== "any" ? p.ptype : "");
   const flags0 = C.textFlags([desc, c.title, facts?.text || "", facts?.style || "", facts?.body || "", pf?.text || ""].join(" "), { beds, baths, sqm });
   if (facts?.senior && !flags0.includes("age_restricted")) flags0.push("age_restricted");
