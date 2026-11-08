@@ -40,7 +40,7 @@ describe("parseLiveQuery", () => {
 
 describe("liveKey", () => {
   it("gives the same key to the same search in two languages", () => {
-    expect(liveKey(parseLiveQuery("homes in Miami under €300,000 with 3 bedrooms"))).toBe(liveKey(parseLiveQuery("casas en Miami por menos de 300.000 € de 3 habitaciones")));
+    expect(liveKey(parseLiveQuery("houses in Miami under €300,000 with 3 bedrooms"))).toBe(liveKey(parseLiveQuery("casas en Miami por menos de 300.000 € de 3 habitaciones")));
     expect(liveKey(parseLiveQuery("homes in Miami under €300,000"))).not.toBe(liveKey(parseLiveQuery("homes in Miami under €400,000")));
     expect(liveKey(parseLiveQuery("rent a home in Miami"))).not.toBe(liveKey(parseLiveQuery("buy a home in Miami")));
   });
