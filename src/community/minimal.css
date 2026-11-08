@@ -234,3 +234,8 @@
 @media (max-width: 340px) {
   .hv-detailbar .hv-detailbar-price span { display: none; }
 }
+
+/* 8-nov-2026: Top 100 index cards were white with faint text in dark mode. */
+.hunt.is-dark .tp-index-card { background: #1A1B1E; border-color: #2C2E33; color: #ECECEE; }
+.hunt.is-dark .tp-index-card strong { color: #F4F4F5; }
+.hunt.is-dark .tp-index-card small, .hunt.is-dark .tp-index-card ol { color: #A9ADB4; }
