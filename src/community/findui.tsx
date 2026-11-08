@@ -93,9 +93,19 @@ export function FindSearch({ value, inputRef }: { value: string; inputRef?: RefO
     if (pathname === "/") setParams(next);
     else navigate("/" + (next.toString() ? "?" + next.toString() : ""));
   };
+  // 8-nov-2026 (Carlos: "no deberías tener que hacer click para buscar en los portales"): a home search with a
+  // place ("3 bedroom house in Tampa under $350k") goes straight to the live search, which shows our closest homes
+  // at once and searches the web meanwhile. Plain place names and filters stay on the feed.
   const submit = (raw: string) => {
     const s = raw.trim();
     setOpen(false); setActive(-1);
+    if (s.split(/\s+/).length >= 3) {
+      import("./livelogic").then((m) => { if (m.wantsLive(s)) navigate(liveHref(s)); else submitFeed(s); }, () => submitFeed(s));
+      return;
+    }
+    submitFeed(s);
+  };
+  const submitFeed = (s: string) => {
     if (!s) { const next = new URLSearchParams(params); next.delete("q"); next.delete("search"); writeUnderstood({ ids: [], ignored: [] }); setUnderstood({ ids: [], ignored: [] }); go(next); return; }
     const p = parseQuery(s, places, data?.known);
     let next: URLSearchParams;

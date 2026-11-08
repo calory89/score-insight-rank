@@ -1,9 +1,13 @@
-// Pure helpers for realhunt-live-search (8-nov-2026). No imports and no Deno or browser globals, so the edge
-// function (Deno) and the unit tests (vitest, src/test/livesearch-core.test.ts) load the very same file.
+// Pure helpers for realhunt-live-search (8-nov-2026). No Deno or browser globals and only one local import (./flags.ts,
+// also used by the site's cards), so the edge function (Deno) and the unit tests (vitest, src/test/livesearch-core.test.ts)
+// load the very same file.
+import { FLAG_LABEL } from "./flags.ts";
+export { FLAG_LABEL };
 //   parseLiveQuery   what a sentence asks for (buy or rent, place, bedrooms, budget), or why it is not a home search
 //   liveKey          one key per search meaning, used for the 24 h cache ("3 bed house Miami under $300k" = "casas en Miami...")
 //   cbSearchUrls / parseCbMatch / pickCb   the free Coldwell Banker fallback for US cities
 //   liveScore        the provisional "AI estimate" score 0-100 (formula documented below)
+//   textFlags / parseReview / gateDecision / orderPhotos / reviewPrompt   the quality gate (Claude vision) of v2
 //   parseClaudeListings   defensive reading of Claude's JSON answer; drops any URL that did not come from a search result
 
 // ---------------------------------------------------------------- money
@@ -223,7 +227,23 @@ export function parseCbMatch(m: string): CbRow | null {
   };
 }
 
-/** ACTIVE listings that fit the search, cheapest per sq ft first (rows without a size go last). */
+/** Price per m² in € of the scanned rows that have a size: the same-city comparables for the value score. */
+export function cbPpm(rows: CbRow[]): number[] {
+  return rows.filter((r) => r.sqft && r.sqft > 150 && r.price >= 20000).map((r) => (toEur(r.price, "USD") || 0) / (r.sqft! * 0.092903)).filter((v) => v > 0);
+}
+/** Flats, townhouses and houses are compared with their own kind (a townhouse always looks cheap next to houses). */
+export const cbGroup = (type: string) => (/condo|co-?op|apartment/i.test(type) ? "condo" : /town/i.test(type) ? "townhouse" : "house");
+/** Median € per m² of each kind among the scanned rows (8 or more of that kind), plus "all". */
+export function cbGroupMedians(rows: CbRow[]): Record<string, number | null> {
+  const out: Record<string, number | null> = { all: rows.length ? median(cbPpm(rows)) : null };
+  for (const g of ["condo", "townhouse", "house"]) { const v = cbPpm(rows.filter((r) => cbGroup(r.type) === g)); out[g] = v.length >= 8 ? median(v) : null; }
+  return out;
+}
+/**
+ * ACTIVE listings that fit the search, best value per sq ft first (rows without a size go last). 8-nov-2026: rows
+ * under half the city's median per sq ft are left out (with 8+ rows to compare): that cheap is nearly always a
+ * mobile home, a 55+ community, a share or a typo, which the owner does not want at the top.
+ */
 export function pickCb(rows: CbRow[], p: LiveQuery, limit = 16): CbRow[] {
   const max = usd(p, p.max_eur), min = usd(p, p.min_eur);
   const seen = new Set<string>();
@@ -241,7 +261,13 @@ export function pickCb(rows: CbRow[], p: LiveQuery, limit = 16): CbRow[] {
     return true;
   });
   const pp = (r: CbRow) => (r.sqft && r.sqft > 150 ? r.price / r.sqft : Infinity);
-  return ok.sort((a, b) => pp(a) - pp(b) || a.price - b.price).slice(0, limit);
+  const sized = ok.filter((r) => Number.isFinite(pp(r)));
+  const all = sized.length >= 8 ? median(sized.map(pp)) : null;
+  const gm: Record<string, number | null> = {};
+  for (const g of ["condo", "townhouse", "house"]) { const v = sized.filter((r) => cbGroup(r.type) === g).map(pp); gm[g] = v.length >= 8 ? median(v) : all; }
+  // value against its own kind; rows without a size go last
+  const rel = (r: CbRow) => { const m = gm[cbGroup(r.type)]; return Number.isFinite(pp(r)) ? (m ? pp(r) / m : pp(r) / 1e6) : Infinity; };
+  return ok.filter((r) => !Number.isFinite(rel(r)) || !gm[cbGroup(r.type)] || rel(r) >= 0.5).sort((a, b) => rel(a) - rel(b) || a.price - b.price).slice(0, limit);
 }
 
 /** Photos of this listing only (CB pages also show photos of other homes), at 1280 px. */
@@ -258,43 +284,195 @@ export function cbPhotos(images: string[], firstPhoto: string | null): string[] 
 }
 
 // ---------------------------------------------------------------- the provisional score ("AI estimate")
-/** Only listings at or above this provisional score are shown; the rest are saved but not shown. */
+/** Only listings at or above this provisional score (and through the quality gate below) are shown. */
 export const SHOW_MIN = 80;
+/** The photo set must be at least this good (1-10, judged by Claude vision) to be shown. */
+export const PHOTO_MIN = 7;
 /**
- * liveScore: a first estimate before a person checks the home. 0-100, four parts:
- *  - value (max 45): price per m² in € against a median: for homes to buy, the median of approved RealHunt homes in
- *    the same country; for rentals (or a country we have no homes in), the median of comparable listings found by
- *    live searches in the same place (at least 4). ratio r = price_per_m2 / median; 45 * (1.6 - r) / 1.1, clamped
- *    0-45: half the median = 45, the median = 24.5, 1.6 x the median or more = 0.
- *    No size or no median to compare with: 22.5 (the middle, neither good nor bad). Under 0.3 x the median is
- *    also 22.5: a price that low usually means something unusual (a share, rented land, an auction, a typo).
- *  - photos (max 15): 15 * min(photos, 12) / 12. When the page could not be read (the portal blocks robots) the
- *    number is unknown and counts 7.5 (the middle).
- *  - bedrooms (max 15): 15 when it has at least the bedrooms asked for, 10 when none were asked, 0 otherwise
- *    (also 0 when the listing does not say).
+ * liveScore v2 (8-nov-2026): a first estimate before a person checks the home. 0-100, four parts and two rules:
+ *  - value (max 40): price per m² in € against a median of comparable homes. The median is, in this order:
+ *    the listings of the same city scanned for this search (at least 8), earlier live finds in the same place
+ *    (at least 4), approved RealHunt homes in the same country. ratio r = price_per_m2 / median;
+ *    value = 40 * (1.6 - r) / 1.1, clamped 0-40: half the median = 40, the median = 21.8, 1.6 x the median = 0.
+ *    No size or no median: 20 (the middle).
+ *  - photos (max 20): 5 * min(photos, 12) / 12 for how many there are, plus 15 * (quality - 1) / 9 for how good
+ *    they are (quality 1-10 from the AI check; before the check it counts 7.5, the middle). Could not read the
+ *    page: 2.5 + 7.5.
+ *  - bedrooms (max 15): 15 when it has at least the bedrooms asked for, 10 when none were asked, 0 otherwise.
  *  - completeness (max 25): 5 each for price, size, bedrooms, map position and a description of 80+ characters.
- * So a home reaches 80 only when it is complete, well photographed, fits the bedrooms asked for and costs about
- * the median per m² or less.
+ *  - caveats: each non-blocking flag the check found takes points off (FLAG_PENALTY: 55+ community -6,
+ *    needs renovation -10, tenant occupied -5, co-op -4, cash only -3). A blocking flag (BLOCKING_FLAGS) caps it at 60.
+ *  - too cheap to be true: a price under half the median caps the score at 79 unless the check explains why it is
+ *    cheap (why_cheap). Under 0.3 x the median the value part also counts at most 30.
+ * So a home reaches 80 only when it is complete, has good photos, fits the bedrooms asked for, costs about the
+ * median per m² or less, and anything unusually cheap is explained.
  */
-export type ScoreIn = { price_eur: number | null; sqm: number | null; photos: number | null; beds: number | null; lat: number | null; lng: number | null; desc_len: number; kind: "buy" | "rent" };
+export type ScoreIn = {
+  price_eur: number | null; sqm: number | null; photos: number | null; beds: number | null; lat: number | null; lng: number | null; desc_len: number; kind: "buy" | "rent";
+  photo_quality?: number | null; flags?: string[]; why_cheap?: string | null;
+};
+export const BLOCKING_FLAGS = ["manufactured_home", "land_lease", "timeshare", "fractional_share", "auction", "inconsistent_data", "not_a_home", "off_market"] as const;
+export const SOFT_FLAGS = ["age_restricted", "needs_renovation", "tenant_occupied", "co_op", "cash_only", "hoa_assessment", "flood_zone"] as const;
+export const ALL_FLAGS: readonly string[] = [...BLOCKING_FLAGS, ...SOFT_FLAGS];
+export const FLAG_PENALTY: Record<string, number> = { age_restricted: 6, needs_renovation: 10, tenant_occupied: 5, co_op: 4, cash_only: 3, hoa_assessment: 5, flood_zone: 3 };
 export function liveScore(x: ScoreIn, ctx: { median_ppm: number | null; min_beds: number | null }) {
   const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
-  let value = 22.5;
+  let value = 20;
+  let ratio: number | null = null;
   if (x.price_eur && x.sqm && x.sqm >= 15 && ctx.median_ppm && ctx.median_ppm > 0) {
-    const r = x.price_eur / x.sqm / ctx.median_ppm;
-    value = r < 0.3 ? 22.5 : clamp((45 * (1.6 - r)) / 1.1, 0, 45);
+    ratio = x.price_eur / x.sqm / ctx.median_ppm;
+    value = clamp((40 * (1.6 - ratio)) / 1.1, 0, 40);
+    if (ratio < 0.3) value = Math.min(value, 30);
   }
-  const photos = x.photos == null ? 7.5 : (15 * Math.min(Math.max(x.photos, 0), 12)) / 12;
+  const q = x.photo_quality != null && Number.isFinite(x.photo_quality) ? clamp(x.photo_quality, 1, 10) : null;
+  const photos = (x.photos == null ? 2.5 : (5 * Math.min(Math.max(x.photos, 0), 12)) / 12) + (q == null ? 7.5 : (15 * (q - 1)) / 9);
   const beds = ctx.min_beds ? ((x.beds ?? 0) >= ctx.min_beds ? 15 : 0) : 10;
   const complete = 5 * [x.price_eur, x.sqm, x.beds, x.lat != null && x.lng != null ? 1 : null, x.desc_len >= 80 ? 1 : null].filter((v) => v != null && v !== 0).length;
-  const score = Math.round(clamp(value + photos + beds + complete, 0, 100));
-  return { score, parts: { value: Math.round(value * 10) / 10, photos: Math.round(photos * 10) / 10, beds, complete } };
+  const flags = [...new Set(x.flags || [])];
+  const penalty = flags.reduce((s, f) => s + (FLAG_PENALTY[f] || 0), 0);
+  let score = Math.round(clamp(value + photos + beds + complete - penalty, 0, 100));
+  const caps: string[] = [];
+  if (flags.some((f) => (BLOCKING_FLAGS as readonly string[]).includes(f))) { score = Math.min(score, 60); caps.push("blocking_flag"); }
+  if (ratio != null && ratio < 0.5 && !String(x.why_cheap || "").trim()) { score = Math.min(score, SHOW_MIN - 1); caps.push("cheap_unexplained"); }
+  const r1 = (v: number) => Math.round(v * 10) / 10;
+  return { score, parts: { value: r1(value), photos: r1(photos), beds, complete, penalty, ratio: ratio == null ? null : Math.round(ratio * 100) / 100 }, caps };
 }
 export function median(nums: number[]): number | null {
   const a = nums.filter((n) => Number.isFinite(n) && n > 0).sort((x, y) => x - y);
   if (!a.length) return null;
   const m = Math.floor(a.length / 2);
   return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2;
+}
+/** The median to compare with: same-city scan (8+), earlier finds in the place (4+), then the country's RealHunt homes. */
+export function pickMedian(scan: number[], local: number[], country: number | null): { ppm: number | null; from: "scan" | "local" | "country" | null } {
+  const s = scan.filter((v) => v > 0), l = local.filter((v) => v > 0);
+  if (s.length >= 8) return { ppm: median(s), from: "scan" };
+  if (l.length + s.length >= 4) return { ppm: median([...s, ...l]), from: "local" };
+  if (country && country > 0) return { ppm: country, from: "country" };
+  return { ppm: null, from: null };
+}
+
+// ---------------------------------------------------------------- the quality gate (Claude vision)
+/** Flags anyone can read in the listing text or the portal's facts, before (and besides) the AI check. */
+export function textFlags(text: string, x: { beds?: number | null; baths?: number | null; sqm?: number | null } = {}): string[] {
+  const t = " " + String(text || "").toLowerCase().replace(/\s+/g, " ") + " ";
+  const out = new Set<string>();
+  if (/\b(mobile home|manufactured home|manufactured housing|double ?wide|single ?wide|park model|trailer home|mobile home park)\b/.test(t)) out.add("manufactured_home");
+  if (/\b(land lease|leased land|lot rent|lot fee|ground lease|rented land)\b/.test(t)) out.add("land_lease");
+  if (AGE_RESTRICTED.test(text || "")) out.add("age_restricted");
+  if (/\b(timeshare|time share|interval ownership)\b/.test(t)) out.add("timeshare");
+  if (/\b(fractional ownership|undivided interest|1\/\d+ share|share of the property|cuota parte|nuda propiedad|bare ownership)\b/.test(t)) out.add("fractional_share");
+  if (/\b(auction|subasta|foreclosure auction|bid deadline|starting bid)\b/.test(t)) out.add("auction");
+  if (/\b(co-?op|cooperative apartment|cooperative building)\b/.test(t)) out.add("co_op");
+  if (/\b(tenant[- ]occupied|tenant in place|currently rented|leased until|sold with tenant|inquilino|okupad[oa]|ocupad[oa] ilegalmente)\b/.test(t)) out.add("tenant_occupied");
+  if (/\b(fixer[- ]upper|handyman special|needs (major |a full |full |some )?(work|tlc|renovation|repairs|updating)|to renovate|a reformar|para reformar|sold as[- ]is|tear ?down|investor special)\b/.test(t)) out.add("needs_renovation");
+  if (/\b(cash only|cash buyers only|solo contado)\b/.test(t)) out.add("cash_only");
+  if (/\b(special assessment|assessment due|assessments? pending)\b/.test(t)) out.add("hoa_assessment");
+  if (inconsistent(x)) out.add("inconsistent_data");
+  return [...out];
+}
+/** 5 bedrooms in 93 m² is not a real 5-bedroom home: about 12 m² a bedroom, 6 a bathroom and 20 for the rest. */
+export function inconsistent(x: { beds?: number | null; baths?: number | null; sqm?: number | null }): boolean {
+  const b = Number(x.beds) || 0, ba = Number(x.baths) || 0, m = Number(x.sqm) || 0;
+  if (!m || !b) return false;
+  return m < 12 * b + 6 * ba + 20;
+}
+
+export type Review = {
+  photo_quality: number; order: number[]; flags: string[]; title: string; why_great: string; why_cheap: string | null;
+  hoa_monthly: number | null; tax_annual: number | null; note: string;
+};
+/** Reads Claude's review JSON defensively: numbers clamped, only known flags, photo indexes in range, no em dashes. */
+export function parseReview(text: string, nPhotos: number): Review | null {
+  const a = String(text || "").indexOf("{"), b = String(text || "").lastIndexOf("}");
+  if (a < 0 || b <= a) return null;
+  let o: any;
+  try { o = JSON.parse(text.slice(a, b + 1)); } catch { return null; }
+  if (!o || typeof o !== "object") return null;
+  const q = Number(o.photo_quality);
+  if (!Number.isFinite(q)) return null;
+  const clean = (s: unknown, n: number) => String(s ?? "").replace(/\s*[—–]\s*/g, ", ").replace(/\s+/g, " ").trim().slice(0, n);
+  const order: number[] = [];
+  for (const v of Array.isArray(o.order) ? o.order : []) { const i = Number(v); if (Number.isInteger(i) && i >= 0 && i < nPhotos && !order.includes(i)) order.push(i); }
+  const num = (v: unknown) => { const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.round(n) : null; };
+  const cheap = cleanCheap(clean(o.why_cheap, 260));
+  return {
+    photo_quality: Math.max(1, Math.min(10, Math.round(q))), order,
+    flags: [...new Set((Array.isArray(o.flags) ? o.flags : []).map((f: unknown) => String(f).toLowerCase().trim()).filter((f: string) => ALL_FLAGS.includes(f)))] as string[],
+    title: clean(o.title, 120), why_great: clean(o.why_great, 700), why_cheap: cheap && !/^(null|none|n\/a)$/i.test(cheap) ? cheap : null,
+    hoa_monthly: num(o.hoa_monthly), tax_annual: num(o.tax_annual), note: clean(o.note, 200),
+  };
+}
+
+/** why_cheap must be a reason, not the price comparison again: clauses about medians or percentages are dropped. */
+export function cleanCheap(s: string | null | undefined): string | null {
+  const parts = String(s || "").split(/(?<=[.;])\s+|;\s*/).map((x) => x.replace(/[.;]\s*$/, "").trim()).filter(Boolean);
+  const keep = parts.filter((x) => !/median|\d+\s?%|per cent|percent|comparable|below (the )?(area|market|average)|priced (at|below|under)|good value|great value|strong (buyer )?value|bargain|suggest/i.test(x));
+  if (!keep.length || /^(null|none|n\/a)$/i.test(keep[0])) return null;
+  const out = keep.join("; ");
+  return (out.charAt(0).toUpperCase() + out.slice(1)).slice(0, 220).replace(/[,;:\s]+$/, "") + ".";
+}
+
+/** The gate: shown only with score >= 80, photos >= 7/10, at least 4 good photos and no blocking flag. */
+export function gateDecision(score: number, review: Review | null, goodPhotos: number): { show: boolean; reasons: string[] } {
+  const reasons: string[] = [];
+  if (!review) return { show: false, reasons: ["not_reviewed"] };
+  if (score < SHOW_MIN) reasons.push("score");
+  if (review.photo_quality < PHOTO_MIN) reasons.push("photos");
+  if (goodPhotos < 4) reasons.push("few_photos");
+  for (const f of review.flags) if ((BLOCKING_FLAGS as readonly string[]).includes(f)) reasons.push("flag:" + f);
+  if (!review.title) reasons.push("no_title");
+  return { show: reasons.length === 0, reasons };
+}
+
+/** Photos in the order to publish: the reviewed ones the AI kept, best first, then the ones it did not see. */
+export function orderPhotos(photos: string[], review: Pick<Review, "order"> | null, reviewed: number, max = 10): string[] {
+  if (!review) return photos.slice(0, max);
+  const kept = review.order.filter((i) => i < reviewed).map((i) => photos[i]).filter(Boolean);
+  return [...kept, ...photos.slice(reviewed)].slice(0, max);
+}
+
+/** RealHunt's own titles, so the AI writes in the same voice. */
+export const TITLE_EXAMPLES = [
+  "Lakefront three-bedroom house with a screened patio in Country Park, Boca Raton",
+  "Corner three-bed condo with three balconies in Downtown Hollywood",
+  "Top-floor two-bed condo in a gated resort-style community in Doral",
+  "Blue 1907 cottage with 9-foot ceilings and a new kitchen",
+  "Renovated house with a two-car garage and a 2024 roof in Greenbriar (55+ community), Boca Raton",
+];
+export function reviewPrompt(x: {
+  kind: "buy" | "rent"; price: number | null; currency: string; price_eur: number | null; beds: number | null; baths?: number | null; sqm: number | null; ptype: string;
+  location: string; country: string | null; ratio: number | null; text: string; facts: string; nPhotos: number;
+}): string {
+  const pct = x.ratio != null ? Math.round(x.ratio * 100) : null;
+  return [
+    "You are the listing editor of RealHunt, a site of the best-value homes for foreign buyers. Check this listing and its photos honestly.",
+    `Listing: ${x.kind === "rent" ? "for rent (monthly)" : "for sale"}, ${x.price != null ? x.price + " " + x.currency : "price unknown"}${x.price_eur && x.currency !== "EUR" ? ` (about EUR ${x.price_eur})` : ""}, ` +
+      `${x.beds ?? "?"} bedrooms, ${x.baths ?? "?"} bathrooms, ${x.sqm ?? "?"} m², type: ${x.ptype || "?"}, place: ${[x.location, x.country].filter(Boolean).join(", ")}.`,
+    pct != null ? `Its price per m² is ${pct}% of the median of comparable homes in the area.` : "We have no area median to compare the price with.",
+    `Portal facts: ${x.facts || "none"}`,
+    `Listing text: ${String(x.text || "").slice(0, 2500) || "none"}`,
+    `The ${x.nPhotos} photos are numbered 0 to ${x.nPhotos - 1} in the order given.`,
+    "Return ONLY this JSON, no prose:",
+    '{"photo_quality": 1-10, "order": [photo indexes, best first], "flags": [], "title": "", "why_great": "", "why_cheap": null, "hoa_monthly": null, "tax_annual": null, "note": ""}',
+    "photo_quality: the photos as a set for a premium home feed. 9-10 bright professional photos of an attractive home; 7-8 good clear photos; 5-6 dated, dark, cluttered, " +
+      "small or with a big watermark; 1-4 not real photos of the home (parking lots, maps, logos, street views only, renderings) or a run-down home.",
+    "order: the photos worth publishing, best first: an attractive exterior or the living room first. Leave out floor plans, maps, logos, text banners, " +
+      "photos with a watermark or MLS logo where others exist, blurry, dark or near-duplicate photos, and photos that are not of this home.",
+    `flags: any that apply, only from this list: ${ALL_FLAGS.join(", ")}. manufactured_home = mobile, manufactured or park home; land_lease = on rented land or with a lot fee; ` +
+      "age_restricted = 55+ or senior community; inconsistent_data = only when the stated facts clearly cannot all be true (e.g. 5 bedrooms in 93 m²) or the photos clearly show a different kind of property than described; small differences or missing details are not inconsistent; " +
+      "not_a_home = land, a parking space, a commercial unit; off_market = sold, under contract or no longer listed; needs_renovation = the text or photos show it needs major work; " +
+      "hoa_assessment = only when an extra one-off special assessment is stated (a normal monthly HOA or community fee is NOT a flag).",
+    "title: a polished title in RealHunt's style, 6 to 14 words, sentence case, no price, no emoji, no address number, no em dashes; the best true feature first, then the type and the area. Examples: " +
+      TITLE_EXAMPLES.map((t) => `"${t}"`).join("; ") + ".",
+    "why_great: 2 to 4 short sentences in plain English about what is good about this home, using only facts from the listing text, the portal facts and what the photos clearly show. " +
+      "No invented facts, no superlatives you cannot back, no promises about value or returns, no em dashes.",
+    "why_cheap: if the price per m² is under 70% of the median, or a flag explains a low price, one plain sentence with the concrete reason a buyer pays less, " +
+      "as the listing states it or the photos show it: the kind of home, its age or condition, the location (e.g. next to a main road), high monthly fees, restrictions, a tenant " +
+      '(e.g. "Mobile home on rented land: you pay a monthly lot fee.", "Only for buyers aged 55 or more.", "Needs a full renovation.", "Small 1960s building far from the beach."). ' +
+      "Never just repeat that the price is below the area, never praise the value. If you cannot see a concrete reason, null. If the price is not unusually low, null.",
+    "hoa_monthly / tax_annual: the monthly community (HOA) fee and the yearly property tax in the listing currency, only if stated; else null. note: one short internal note.",
+  ].join("\n");
 }
 
 // ---------------------------------------------------------------- what a search costs (Claude API)
@@ -330,8 +508,31 @@ export function fits(h: Have, p: LiveQuery): boolean {
 
 /** Age-restricted (55+) communities are cheap per m² but not open to most buyers: they are never shown as a top pick. */
 // Also the best-known 55+ communities in South Florida by name (Century Village, Kings Point) and the MLS flag.
-export const AGE_RESTRICTED = /\b55\s?\+|\b(55 and (over|older)|over 55|age[- ]restricted|age[- ]qualified|senior (community|living)|adult community|century village|kings point)\b|seniorCommunityYN"\s*:\s*true/i;
-export const CB_FACTS_RX = '"((?:subdivisionName|seniorCommunityYN|buildingName)"\\s*:\\s*(?:"[^"]{0,120}"|true|false))';
+export const AGE_RESTRICTED = /\b55\s?\+|\b(55 and (over|older)|over 55|age[- ]restricted|age[- ]qualified|senior (community|living)|adult community|century village|kings point)\b|seniorCommunity(YN)?"\s*:\s*true/i;
+// 8-nov-2026: also the remarks, style, fee and tax, so the AI check and the cost badge have the portal's own facts
+export const CB_FACTS_RX = '"((?:subdivisionName|seniorCommunityYN|seniorCommunity|buildingName|publicRemarks|architectureStyle|bodyType|ownershipType|associationFee|associationFeeFrequency|taxAnnualAmount|yearBuilt|bathsTotal|bathroomsTotalInteger)"\\s*:\\s*(?:"[^"]{0,1500}"|-?[\\d.]+|true|false))';
+export type CbFacts = { remarks: string; subdivision: string; senior: boolean; style: string; body: string; hoa: number | null; hoa_freq: string; tax: number | null; year: number | null; baths: number | null; text: string };
+/** "DORSET AT CENTURY VILLAGE CONDO SEC 2" -> "Dorset at Century Village": an MLS subdivision as a place name. */
+export function niceArea(s: string): string {
+  const t = String(s || "").replace(/\btwnhms?\b|\btwnhs\b|\btwnhses\b/gi, "Townhomes").replace(/\bhts\b/gi, "Heights").replace(/\bests?\b/gi, "Estates").replace(/\bvlg\b/gi, "Village").replace(/\b(condo(minium)?s?|unit|units|sec(tion)?|phase|ph|addn?|addition|replat|resub|rev|revised|sub(div(ision)?)?|amd|amended|plat|pb|pg|no|bldg|blk|lot|tract|[ivx]{1,4}|\d+\w*)\b\.?/gi, " ")
+    .replace(/[#,;:()]/g, " ").replace(/\s+/g, " ").trim();
+  if (t.length < 3 || /^(none|unknown|n\/a|na|other|not in subdivision|no subdivision)$/i.test(t)) return "";
+  return t.toLowerCase().replace(/\b[a-z]/g, (c) => c.toUpperCase()).replace(/\b(At|Of|The|And|On|In)\b/g, (w) => w.toLowerCase()).replace(/^./, (c) => c.toUpperCase());
+}
+/** Reads the facts CB_FACTS_RX matched on a Coldwell Banker listing page. */
+export function parseCbFacts(matches: string[] | null | undefined): CbFacts {
+  const m = Array.isArray(matches) ? matches : [];
+  const g = (k: string) => { for (const x of m) { const r = x.match(new RegExp(`^${k}"\\s*:\\s*(?:"([^"]*)"|([^,}]+))`)); if (r) return (r[1] ?? r[2] ?? "").trim(); } return ""; };
+  const n = (k: string) => { const v = Number(g(k)); return Number.isFinite(v) && v > 0 ? v : null; };
+  const freq = g("associationFeeFrequency").toLowerCase();
+  let hoa = n("associationFee");
+  if (hoa && /quarter/.test(freq)) hoa = Math.round(hoa / 3); else if (hoa && /annual|year/.test(freq)) hoa = Math.round(hoa / 12);
+  const remarks = g("publicRemarks").replace(/\\r\\n|\\n|\\r/g, " ").replace(/\s+/g, " ").trim();
+  return {
+    remarks, subdivision: niceArea(g("subdivisionName")), senior: /seniorCommunity(YN)?"\s*:\s*true/.test(m.join(" ")), style: g("architectureStyle"), body: g("bodyType"), hoa, hoa_freq: freq, tax: n("taxAnnualAmount"),
+    year: n("yearBuilt"), baths: n("bathsTotal") ?? n("bathroomsTotalInteger"), text: m.filter((x) => !/^publicRemarks/.test(x)).join("; ").slice(0, 900),
+  };
+}
 
 /** Drops web results that clearly do not match what was asked (Claude sometimes adds near misses). */
 export function withinAsk(it: { kind: "buy" | "rent"; price: number | null; currency: string; beds: number | null }, p: LiveQuery): boolean {
@@ -342,6 +543,13 @@ export function withinAsk(it: { kind: "buy" | "rent"; price: number | null; curr
   if (p.min_beds && it.beds != null && it.beds < p.min_beds) return false;
   return true;
 }
+
+// ---------------------------------------------------------------- which portals can be read
+/** Portals our reader (realhunt-candidates "extract") can open, tested 8-nov-2026: Claude is asked to prefer them. */
+export const READABLE_PORTALS = ["coldwellbanker.com", "pisos.com", "habitaclia.com", "thinkspain.com", "imovirtual.com"];
+/** Portals that block automatic reading: their listings can never pass the AI check, so they are not even tried. */
+export const BLOCKED_PORTALS = /(^|\.)(idealista\.(com|pt|it)|fotocasa\.es|yaencontre\.com|zillow\.com|redfin\.com|homes\.com|realtor\.com|trulia\.com|casa\.sapo\.pt|supercasa\.pt|kyero\.com|green-acres\.\w+|spainhouses\.net|engelvoelkers\.com|rightmove\.co\.uk|zoopla\.co\.uk)$/i;
+export const blockedUrl = (u: string) => { try { return BLOCKED_PORTALS.test(new URL(u).hostname.replace(/^www\./, "")); } catch { return true; } };
 
 // ---------------------------------------------------------------- Claude's answer
 export type LiveItem = { url: string; title: string; price: number | null; currency: string; beds: number | null; sqm: number | null; location: string; kind: "buy" | "rent"; image_url: string | null; country: string | null };

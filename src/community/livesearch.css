@@ -74,3 +74,10 @@
 .lv-how { margin: 30px 0 0; padding: 14px 16px; border-radius: 14px; background: var(--lv-soft); border: 1px solid var(--lv-line); }
 .lv-how summary { cursor: pointer; font-weight: 650; display: flex; align-items: center; gap: 8px; min-height: 32px; }
 .lv-how p { margin: 10px 0 0; font-size: 14px; line-height: 1.55; color: var(--lv-muted); }
+
+/* v2 (8-nov-2026) */
+.lv-nudge { border-color: var(--lv-line); background: var(--lv-surface); }
+.lv-nudge > svg { color: var(--lv-muted); }
+.lv-h-muted { color: var(--lv-muted); font-weight: 650; }
+.lv-results .hx-grid, .lv-similar .hx-grid { margin-top: 4px; }
+.lv-how p + p { margin-top: 8px; }

@@ -1,0 +1,30 @@
+/* 8-nov-2026: homes published by the live search's AI check (aicheck.tsx, homecards.tsx). */
+.hx-ai { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.hx-ai-badge, .hx-ai-flag { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 700; line-height: 1; padding: 5px 8px; border-radius: 999px; }
+.hx-ai-badge { background: #EEF2FF; color: #3730A3; }
+.hx-ai-flag { background: #FFF4E5; color: #8A4B00; }
+.hx-text small.hx-cheap { white-space: normal; color: #3B3E44; font-size: 13px; line-height: 1.35; margin-top: 6px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.hx-cheap b { color: #B4380A; font-weight: 700; }
+.hx-price .hx-mo { font-size: 15px; font-weight: 700; }
+.hx-price small.hx-orig { font-size: 12px; opacity: .85; }
+.hunt.is-dark .hx-ai-badge { background: #272B4D; color: #C7CCFF; }
+.hunt.is-dark .hx-ai-flag { background: #3A2A14; color: #FFD08A; }
+.hunt.is-dark .hx-text small.hx-cheap { color: #D4D6DA; }
+.hunt.is-dark .hx-cheap b { color: #FF9A6B; }
+
+.rh-ai-note { margin: 14px 0; padding: 14px 16px; border-radius: 16px; background: #F6F7FF; border: 1px solid #DDE1FF; }
+.rh-ai-note p { margin: 0; font-size: 14px; line-height: 1.45; color: #2B2F45; }
+.rh-ai-note .rh-ai-head { display: flex; align-items: flex-start; gap: 8px; font-weight: 700; }
+.rh-ai-note .rh-ai-head svg { flex: none; margin-top: 2px; color: #4F46E5; }
+.rh-ai-note .rh-ai-sub { margin-top: 4px; color: #545a73; font-weight: 400; font-size: 13px; }
+.rh-ai-note .hx-ai { margin-top: 10px; }
+.rh-ai-cheap { margin: 14px 0; padding: 14px 16px; border-radius: 16px; background: #FFF6EE; border: 1px solid #FFD9BF; }
+.rh-ai-cheap strong { display: block; color: #B4380A; font-size: 14px; margin-bottom: 4px; }
+.rh-ai-cheap p { margin: 0; font-size: 15px; line-height: 1.45; color: #2B2F33; }
+.hunt.is-dark .rh-ai-note { background: #1C1F33; border-color: #33385C; }
+.hunt.is-dark .rh-ai-note p { color: #E3E5F5; }
+.hunt.is-dark .rh-ai-note .rh-ai-sub { color: #AEB3CF; }
+.hunt.is-dark .rh-ai-note .rh-ai-head svg { color: #A5A9FF; }
+.hunt.is-dark .rh-ai-cheap { background: #2B1E14; border-color: #5A3A22; }
+.hunt.is-dark .rh-ai-cheap strong { color: #FF9A6B; }
+.hunt.is-dark .rh-ai-cheap p { color: #EDE4DC; }

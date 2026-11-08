@@ -11,7 +11,10 @@ export const LIVE_FREE_KEY = "rh.live.used";
 export type LiveResult = {
   id: string; source: "realhunt" | "earlier" | "web"; provider: string; url: string; deal_slug: string | null; title: string; price: number | null; currency: string;
   price_eur: number | null; beds: number | null; sqm: number | null; location: string; country: string | null; kind: "buy" | "rent"; image: string | null; photos: number | null;
-  score: number; parts?: Record<string, number>; found_at: string;
+  score: number; parts?: Record<string, unknown>; found_at: string;
+  // v2 (8-nov-2026): the AI check
+  show?: boolean; deal_id?: string | null; image_urls?: string[]; photo_quality?: number | null; flags?: string[]; why_cheap?: string | null; ai_checked_at?: string | null;
+  hoa_monthly?: number | null; hoa_currency?: string | null; tax_annual?: number | null; hoa_unknown?: boolean;
 };
 export type LiveStatus = { job_id?: string; status: string; progress?: number; stage?: { k: string; n?: number; of?: number } | null; results?: LiveResult[]; found?: number; hidden?: number; note?: string | null; parsed?: LiveQuery; reason?: string };
 
@@ -83,7 +86,9 @@ export function stageParts(st: LiveStatus["stage"]): { text: string; n?: number;
     case "searching": return { text: "Searching estate agents and portals" };
     case "searching_cb": return { text: "Searching more listings in this city" };
     case "found": return { text: "Listings found:", n: st.n };
-    case "checking": return { text: "Checking listing", n: st.n, of: st.of };
+    case "checking": case "reading": return { text: "Reading listing", n: st.n, of: st.of };
+    case "reviewing": return { text: "AI is checking the photos and details of listing", n: st.n, of: st.of };
+    case "publishing": return { text: "Creating the home page for listing", n: st.n, of: st.of };
     case "done": return { text: "Done" };
     default: return { text: "Starting" };
   }
@@ -96,4 +101,43 @@ export function mergeResults(prev: LiveResult[], next: LiveResult[]): LiveResult
   const seen = new Set(prev.map((r) => r.id));
   const byId = new Map(next.map((r) => [r.id, r]));
   return [...prev.filter((r) => byId.has(r.id)).map((r) => byId.get(r.id)!), ...next.filter((r) => !seen.has(r.id))];
+}
+
+/** v2: only results that passed the AI check (or are RealHunt homes) are shown. */
+export const passes = (r: LiveResult) => r.show !== false && r.score >= SHOW_MIN && (r.source !== "web" || r.show === true);
+
+/** A live result as the row HomeCard expects (the same card as the home page). */
+export function resultToDeal(r: LiveResult): Record<string, any> {
+  const imgs = r.image_urls?.length ? r.image_urls : r.image ? [r.image] : [];
+  return {
+    id: r.deal_id || r.id, slug: r.deal_slug || r.id, title: r.title, price_eur: r.price_eur, sqm: r.sqm, bedrooms: r.beds, location_name: r.location, country: r.country,
+    image_urls: imgs, ai_checked: !!r.ai_checked_at, ai_checked_at: r.ai_checked_at || null,
+    why_cheap: r.why_cheap || null, ai_flags: r.flags || [], hoa_monthly: r.hoa_monthly ?? null, hoa_currency: r.hoa_currency ?? null, tax_annual: r.tax_annual ?? null, hoa_unknown: !!r.hoa_unknown,
+    nota: r.score,
+  };
+}
+
+/** Should the main search box send this sentence to the live search? Only a home search with a place. */
+export function wantsLive(q: string): boolean {
+  const p = parseLiveQuery(q);
+  if (!p.ok) return false;
+  if (p.city) return true;
+  // "near the sea", "in the mountains" are features, not places: those stay on the feed's filters
+  const place = n(p.place || "");
+  return !!place && !/^(the|a|an|el|la|los|las)\b/.test(place) && !/\b(sea|beach|coast|ocean|lake|river|mountains?|city|centre|center|countryside|town|village|airport|park|mar|playa|costa|montana|campo|ciudad|centro)\b/.test(place);
+}
+
+// Coming back to the page resumes the same job (the server also reuses a search made in the last 24 h).
+export const LIVE_JOBS_KEY = "rh.live.jobs";
+export const queryKey = (q: string) => n(q).replace(/[^a-z0-9€$£]+/g, " ").trim();
+export function rememberJob(store: Record<string, { id: string; at: number }>, q: string, id: string, now = Date.now()) {
+  const next: Record<string, { id: string; at: number }> = {};
+  for (const [k, v] of Object.entries(store || {})) if (v && now - v.at < 24 * 3600_000) next[k] = v;
+  next[queryKey(q)] = { id, at: now };
+  const keys = Object.keys(next).sort((a, b) => next[b].at - next[a].at).slice(0, 20);
+  return Object.fromEntries(keys.map((k) => [k, next[k]]));
+}
+export function recallJob(store: Record<string, { id: string; at: number }> | null, q: string, now = Date.now()): string | null {
+  const v = store?.[queryKey(q)];
+  return v && now - v.at < 24 * 3600_000 && /^[0-9a-f-]{36}$/.test(v.id) ? v.id : null;
 }
