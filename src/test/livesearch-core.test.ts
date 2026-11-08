@@ -685,3 +685,20 @@ describe("value against the centre (v5, 8-nov-2026)", async () => {
     expect(liveScore({ price_eur: 4600 * 70, sqm: 70, photos: 20, beds: 2, lat: 40.41, lng: -3.70, desc_len: 400, kind: "buy", photo_quality: 8, flags: [] }, { median_ppm: 3500, min_beds: 2 }).score).toBeLessThan(80);
   });
 });
+
+describe("centre table and geocoder backup (8-nov-2026, Almería)", async () => {
+  const CT = await import("../../supabase/functions/realhunt-live-search/centre");
+  it("knows Almería and other provincial capitals", () => {
+    const a = CT.centreFor("Almeria", "Spain")!;
+    expect(a).toBeTruthy();
+    expect(CT.centreFor("almería")).toBe(a);
+    expect(CT.centreFor("A Coruña", "Spain")).toBeTruthy();
+    // Benizalón (Almería province, about 40 km away) is not the centre of Almería
+    expect(CT.centreFit(a, { lat: 37.213, lng: -2.2407, text: "Benizalón, Almería, Spain" }).status).toBe("outside");
+  });
+  it("builds a centre from Open-Meteo", () => {
+    const c = CT.centreFromOpenMeteo("Almeria", "Spain", { latitude: 36.84, longitude: -2.46, population: 190000 })!;
+    expect(c.r_km).toBe(1.6);
+    expect(CT.centreFromOpenMeteo("X", "Spain", null)).toBeNull();
+  });
+});
