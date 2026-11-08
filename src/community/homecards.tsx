@@ -49,7 +49,7 @@ export function HomeCard({ deal, pos, href: ext, origPrice, rent }: { deal: any;
           <span className="hx-price">
             <b>{money(deal.price_eur)}{rent && <span className="hx-mo"> {t("a month")}</span>}</b>
             {origPrice && <small className="hx-orig">{origPrice}</small>}
-            {deal.sqm || deal.bedrooms ? <small>{[deal.sqm ? `${deal.sqm} m²` : "", perSqm && !rent ? `${money(perSqm)}/m²` : "", deal.bedrooms ? `${deal.bedrooms} 🛏` : ""].filter(Boolean).join(" · ")}</small> : null}
+            {deal.sqm || deal.bedrooms ? <small>{[deal.sqm ? `${deal.sqm} m²` : "", perSqm && !rent ? `${money(perSqm)}/m²` : "", deal.bedrooms ? `${deal.bedrooms} ${deal.bedrooms === 1 ? "bed" : "beds"}` : ""].filter(Boolean).join(" · ")}</small> : null}
           </span>
         </span>
         <span className="hx-text">

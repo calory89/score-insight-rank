@@ -163,12 +163,12 @@ export function CanBuyPage() {
       {g?.steps?.length > 0 && <section>
         <h2>{L(`The steps to buy in ${the(name)}`, `Los pasos para comprar en ${the(name)}`)}</h2>
         <ol className="rh2-steps">{g.steps.map(([h]) => <li key={h}>{h}</li>)}</ol>
-        <p><Link className="hunt-link" to={`/guide/${country}`}>{t("The full guide, step by step")} →</Link></p>
+        <p><Link className="hunt-link" to={`/guide/${country}`}>{t("The full guide, step by step")}</Link></p>
       </section>}
       <section>
         <h2>{t("Best homes in")} {ES ? the(name) : name}</h2>
         {!homesAll ? <div className="hunt-skeleton-list" /> : homes.length ? <div className="hunt-minigrid rh2-homes">{homes.map((h) => <MiniCard key={h.slug} d={h} />)}</div> : <p>{t("No homes here right now.")} <Link className="hunt-link" to={`/alerts?country=${encodeURIComponent(name)}`}>{t("Get an alert when one appears")}</Link></p>}
-        {allHere.length > homes.length && <p><Link className="hunt-link" to={`/homes/${country}`}>{L(`All ${allHere.length} homes in ${the(name)}`, `Las ${allHere.length} viviendas en ${the(name)}`)} →</Link></p>}
+        {allHere.length > homes.length && <p><Link className="hunt-link" to={`/homes/${country}`}>{L(`All ${allHere.length} homes in ${the(name)}`, `Las ${allHere.length} casas en ${the(name)}`)}</Link></p>}
       </section>
       <section>
         <h2>{t("Questions")}</h2>

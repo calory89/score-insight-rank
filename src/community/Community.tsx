@@ -87,6 +87,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
+  MapPin,
 } from "lucide-react";
 import {
   api,
@@ -108,6 +109,7 @@ import "./ux-oct.css";
 import "./brand-oct.css";
 import "./oct23.css";
 import "./homecards.css";
+import "./ds.css"; // design system, last so it settles the older layers
 // Imported titles often repeat the price ("€35,000 · Your own home") right under the big price, or
 // say nothing at all ("Property - Japan"). Show something a person would actually write.
 function cleanTitle(d: Pick<Deal, "title" | "location_name" | "country" | "sqm">) {
@@ -248,12 +250,13 @@ function Shell({ children }: { children: ReactNode }) {
           </Link>
           <nav aria-label="Main navigation">
             <Link to="/top" className="hunt-browse hunt-top100" aria-label="Top 100"><Trophy size={16} /> Top 100</Link>
+            <Link to="/map" className="hunt-browse hunt-maplink" aria-current={location.pathname === "/map" ? "page" : undefined}><MapPin size={16} /> {t("Map")}</Link>
             <Link to="/extension" className="hunt-browse hunt-ext" title="Free Chrome extension: see the score of any home on any property site"><Gauge size={16} /> Score any home</Link>
             <Link to="/?search=1" className="hunt-browse">
               <Search size={16} />
               Search
             </Link>
-            <Link to="/hunt/saved" aria-label="Saved deals">
+            <Link to="/hunt/saved" className="hunt-savedlink" aria-label="Saved homes">
               <Bookmark size={19} />
             </Link>
             <NotifBell />
@@ -272,8 +275,7 @@ function Shell({ children }: { children: ReactNode }) {
             {session?.admin && <Link to="/hunt/admin" className="hunt-admin-link">Review ({session.pending_submissions || 0})</Link>}
             <Link className="hunt-primary" to="/submit">
               <Plus size={16} />
-              <span className="hunt-submit-long">{t("Submit a Deal")}</span>
-              <span className="hunt-submit-short">{t("Submit")}</span>
+              <span>{t("Post a home")}</span>
             </Link>
           </nav>
         </header>
@@ -318,8 +320,8 @@ function Shell({ children }: { children: ReactNode }) {
           open={auth}
           onClose={() => setAuth(false)}
           redirect={location.pathname + location.search}
-          title="Join the hunt"
-          subtitle="Just your email. Open the original listings, save homes, comment and submit your own finds."
+          title="Sign in or create a free account"
+          subtitle="Save homes, get alerts and open the original listings. All you need is your email."
         />
       </div>
     </Ctx.Provider>
@@ -636,22 +638,22 @@ function QuickSubmission({ initialUrl = "", standalone = false }: { initialUrl?:
     finally { submitting.current = false; setBusy(false); }
   }
   return <section className={"hunt-quick-submit" + (standalone ? " hunt-quick-standalone" : "")} aria-label="Share a property">
-    {standalone ? <h1>Found a great property?</h1> : <h2>Found a great property?</h2>}
-    <p>Share a link. We review. Everyone votes.</p>
+    {standalone ? <h1>{t("Share a home you found")}</h1> : <h2>{t("Share a home you found")}</h2>}
+    <p>{t("Paste the link. A person checks it, and if it scores well it goes live.")}</p>
     {result ? <div role="status" className="hunt-quick-success">
       <strong>{result.duplicate ? "This property is already published." : result.already ? "This property is already in your submissions." : "Received. Your property is pending admin review."}</strong>
-      <Link to={result.duplicate ? `/deal/${result.duplicate}` : "/hunt/mine"}>{result.duplicate ? "View and vote →" : "View my submissions →"}</Link>
+      <Link to={result.duplicate ? `/deal/${result.duplicate}` : "/hunt/mine"}>{result.duplicate ? t("View home") : t("View my submissions")}</Link>
       <button onClick={() => { setResult(null); setUrl(""); setNote(""); }}>Share another property</button>
     </div> : <form onSubmit={send}>
       <div className="hunt-quick-row">
-        <label><span className="sr-only">Property listing URL</span><input type="url" name="property_url" required maxLength={2000} placeholder="Paste a property link…" value={url} onChange={e => setUrl(e.target.value)} /></label>
-        <button type="submit" aria-label="Send property" className="hunt-primary" disabled={busy || (!!user && !session)}>{busy ? "Sending…" : standalone ? "Send property" : "Send"}<ArrowUpRight size={17} /></button>
+        <label><span className="sr-only">Property listing URL</span><input type="url" name="property_url" required maxLength={2000} placeholder="Paste a listing link" value={url} onChange={e => setUrl(e.target.value)} /></label>
+        <button type="submit" aria-label="Send property" className="hunt-primary" disabled={busy || (!!user && !session)}>{busy ? t("Sending…") : t("Send link")}</button>
       </div>
       {standalone && user && <label className="hunt-quick-note">Anything we should know? <span>(optional)</span><textarea maxLength={800} value={note} onChange={e => setNote(e.target.value)} /></label>}
       <label className="hunt-honeypot" aria-hidden="true">Website<input name="website" tabIndex={-1} autoComplete="off" value={honeypot} onChange={e => setHoneypot(e.target.value)} /></label>
-      {standalone && <p className="hunt-fine">Free account · Track every submission.</p>}
+      {standalone && <p className="hunt-fine">{t("Free account. Track every home you send.")}</p>}
     </form>}
-    {standalone && !result && <Link className="hunt-full-details" to={`/submit?details=1${url ? `&url=${encodeURIComponent(url)}` : ""}`}>Add full property details instead →</Link>}
+    {standalone && !result && <Link className="hunt-full-details" to={`/submit?details=1${url ? `&url=${encodeURIComponent(url)}` : ""}`}>{t("Add full details instead")}</Link>}
     {error && <ErrorBox error={error} />}
     {auth && <AuthModal open onClose={() => setAuth(false)} initialMode="up" redirect={destination}
       title="Create a free account to submit your property"
@@ -835,8 +837,8 @@ function Home() {
     <div className="hunt-wrap hunt-home hv-home" onClickCapture={rememberCatalog}>
       <MapFab search={location.search} />
       <section className="hv-hero hx-hero">
-        <h1>{t("The best homes in every country, ranked.")}</h1>
-        {feed?.countries_count && <p className="hx-sub">{(() => { const v = Object.values(feed.countries_count as Record<string, number>); return `${num(v.reduce((a, b) => a + b, 0))} ${t("homes in")} ${v.length} ${t("countries, each checked by a person and scored from 70 to 98. We link to the seller; we do not sell.")}`; })()} <Link to="/method">{t("How the score works")}</Link></p>}
+        <h1>{t("The best homes abroad, checked and scored")}</h1>
+        {feed?.countries_count && <p className="hx-sub">{(() => { const v = Object.values(feed.countries_count as Record<string, number>); return <>{num(v.reduce((a, b) => a + b, 0))} {t("homes in")} {v.length} {t("countries, each checked by a person and given a score out of 100. We send you to the seller; we never sell.")}</>; })()} <Link to="/method">{t("How the score works")}</Link></p>}
         <FindSearch value={q} inputRef={searchRef} />
       </section>
       <FeedFilters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_price: minPrice, min_beds: minBeds, price_drop: priceDrop, min_sqm: minSqm, sort, q, min_score: minScore, need, dim_min: dimMin }} onChange={setFilters} total={feed?.total} busy={busy} />
@@ -852,7 +854,6 @@ function Home() {
           <HomesMap params={{ scope, country, category, max_price: maxPrice, min_sqm: minSqm, q: searchQuery(q), terms } as any} embedded className="hm-feed" />
         </Suspense>
       )}
-      {q && feed && <p className="hv-searchnote">{feed.total} {feed.total === 1 ? "home" : "homes"} for “{q}”</p>}
       {error && <ErrorBox error={error} retry={() => load()} />}
       <div className="hx-grid" aria-busy={!feed && busy}>
         {!feed && busy
@@ -880,12 +881,12 @@ function Home() {
           action={<div className="hunt-row"><Link to="/" className="hunt-primary">See all homes</Link><Link to={`/alerts?${new URLSearchParams({ ...(country && !country.includes(",") ? { country } : {}), ...(maxPrice ? { max: String(maxPrice) } : {}) }).toString()}`} className="hunt-secondary">{t("Email me when one appears")}</Link><Link to="/submit" className="hunt-link">{t("Post a home")}</Link><EmptyAlternatives params={{scope,country,category,max_price:maxPrice,min_sqm:minSqm,sort,q}}/></div>} />
       )}
       {feed && feed.rows.length < feed.total && !busy && (
-        <button className="hunt-more" onClick={() => load(true)}>{t("More discoveries")}</button>
+        <button className="hunt-more" onClick={() => load(true)}>{t("Show more homes")}</button>
       )}
       {plain && !q && <HomeFaq />}
       <section className="hunt-join hv-join">
         <div>
-          <span className="hunt-eyebrow">FOUND ONE WE MISSED?</span>
+          <span className="hunt-eyebrow">{t("Found a home we missed?")}</span>
           <h2>{t("Post it. If it scores well, it rises.")}</h2>
           <p>Paste the listing link. Every home gets a human check before it goes live.</p>
         </div>
@@ -893,8 +894,8 @@ function Home() {
       </section>
       {quick!==null && feed?.rows?.[quick] && <QuickHome rows={feed.rows} index={quick} onIndex={setQuick} onClose={()=>setQuick(null)}/>}
       <p className="hunt-rules">
-        {t("One anonymous vote per browser and home each week. Sign in to save homes, contribute or open the original listing.")} {" "}
-        Every home has a price, real photos and a hand check. The list is ranked by score and changes every day.
+        {t("Save homes without an account. Sign in to keep them on every device.")}{" "}
+        {t("Every home has a price, real photos and a hand check. The list is ranked by score and changes every day.")}
       </p>
     </div>
   );
@@ -987,7 +988,7 @@ function Detail() {
   if (!d) return <DealSkeleton />;
   const listing = (d.has_source || safeUrl(d.source_url)) ? (
     <OriginalListingLink href={d.source_url || undefined} className="hunt-primary" target="_blank" rel="noopener noreferrer">
-      {t("View listing")}{!(user || d.source_url) && <span className="rh-cta-extra"><span aria-hidden="true"> · </span>{t("free account")}</span>} <ArrowUpRight size={17} />
+      {t("View listing")} <ArrowUpRight size={17} />
     </OriginalListingLink>
   ) : null;
   return (
@@ -1030,12 +1031,10 @@ function Detail() {
           <div className="hv-detail-more">
             <VideoTour deal={d} />
             <BoardButton deal={d} />
-            <CompareButton deal={d} />
             <ComparePick deal={d as Row} />
           </div>
           <p className="hunt-fine">
-            {num(d.views)} views
-            · {num(d.saves)} saves
+            {num(d.views)} {t("views")}{Number(d.saves) > 0 && <>{", "}{num(d.saves)} {t("saves")}</>}
           </p>
           <ScoreBars deal={d} />
           <DecisionFacts deal={d as Row}/><TaxPanel deal={d as Row}/><Nearby deal={d} />
@@ -1057,7 +1056,7 @@ function Detail() {
               if (requireUser()) setReport(true);
             }}
           >
-            <Flag size={13} /> {t("Report this deal")}
+            <Flag size={14} /> {t("Report a problem")}
           </button>
           <p className="hunt-fine">
             Agent or owner of this home?{" "}
@@ -1113,8 +1112,8 @@ function Detail() {
       <HomeNav prev={swipe.prev} next={swipe.next} pos={swipe.pos} />
       <SimilarHomes slug={d.slug} />
       <section className="hunt-discussion" id="discussion">
-        <h2>Local knowledge makes better decisions.</h2>
-        <p>Ask a question. Share what you know. Keep it helpful.</p>
+        <h2>{t("Comments and questions")}</h2>
+        <p>{t("Ask a question or share what you know about the area.")}</p>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
@@ -1131,7 +1130,7 @@ function Detail() {
             }
           }}
         >
-          <label htmlFor="comment">Join the conversation</label>
+          <label htmlFor="comment">{t("Your comment")}</label>
           <textarea
             id="comment"
             value={text}
@@ -1139,7 +1138,7 @@ function Detail() {
             minLength={2}
             maxLength={1200}
             required
-            placeholder="What should someone know about this property?"
+            placeholder="What should a buyer know about this home or the area?"
           />
           <button className="hunt-primary" disabled={busy}>
             {busy ? "Posting…" : "Post comment"}
@@ -1148,7 +1147,7 @@ function Detail() {
         {!data && <p className="hunt-fine">Loading comments…</p>}
         {data && data.comments.length === 0 && (
           <p className="hunt-fine">
-            No comments yet. Be the first to add useful context.
+            {t("No comments yet. Ask the first question.")}
           </p>
         )}
         {(data?.comments || []).map((c: any) => (
@@ -1312,7 +1311,7 @@ function Submit() {
       <Link to="/" className="hunt-back">
         ← Back to the ranking
       </Link>
-      <span className="hunt-eyebrow">PASS A GOOD FIND ALONG</span>
+      <span className="hunt-eyebrow">{t("Share a good find")}</span>
       <h1>Submit a Deal</h1>
       <p>
         Found something special? Share the original listing.
@@ -1498,7 +1497,7 @@ function Hunter() {
   }, [handle, session?.token]);
   return (
     <div className="hunt-wrap hunt-profile">
-      <span className="hunt-eyebrow">MEET THE HUNTER</span>
+      <span className="hunt-eyebrow">{t("Meet the hunter")}</span>
       <h1>{data?.profile?.display_name || `@${handle}`}</h1>
       <p>
         @{handle}
@@ -1550,7 +1549,7 @@ function Winners() {
   }, [session?.token]);
   return (
     <div className="hunt-wrap hunt-profile">
-      <span className="hunt-eyebrow">THE FINDS THAT ROSE TO THE TOP</span>
+      <span className="hunt-eyebrow">{t("The finds that rose to the top")}</span>
       <h1>
         Weekly winners <Trophy size={32} />
       </h1>
@@ -1658,25 +1657,26 @@ function Mine() {
     );
   if (!user)
     return (
-      <div className="hunt-empty">
-        <h1>Your next favourite place.</h1>
-        <p>Sign in to keep your saves and discoveries together.</p>
-        <button className="hunt-primary" onClick={requireUser}>
-          Sign in
-        </button>
-        <p><Link to="/">Or see the top homes first →</Link></p>
+      <div className="hunt-wrap hunt-empty rh-saved-empty">
+        <h1>{pathname.endsWith("saved") ? t("Saved homes") : t("My submissions")}</h1>
+        <p>{t("Tap the bookmark on any home to keep it here. No account needed.")}</p>
+        <div className="hunt-row">
+          <Link className="hunt-primary" to="/">{t("Browse homes")}</Link>
+          <button className="hunt-secondary" onClick={requireUser}>{t("Sign in")}</button>
+        </div>
+        <p className="hunt-fine">{t("Saved homes on another device? Sign in to see them here.")}</p>
         {pathname.endsWith("saved") && <SavedSearches />}
       </div>
     );
   return (
     <div className="hunt-wrap hunt-profile">
-      <h1>{pathname.endsWith("saved") ? "Saved deals" : "My submissions"}</h1>
+      <h1>{pathname.endsWith("saved") ? t("Saved homes") : t("My submissions")}</h1>
       {pathname.endsWith("saved") && <SavedSearches />}
       {pathname.endsWith("saved") && <BoardsSection />}
       {pathname.endsWith("saved") && <ShareSavedToggle />}
       <nav className="hunt-tabs">
         <Link to="/hunt/mine">My submissions</Link>
-        <Link to="/hunt/saved">Saved deals</Link>
+        <Link to="/hunt/saved">{t("Saved homes")}</Link>
         {session?.hunter && (
           <Link to={`/hunter/${session.hunter.handle}`}>Public profile ↗</Link>
         )}
@@ -1686,12 +1686,12 @@ function Mine() {
       {!data ? (
         error ? null : <Loading />
       ) : pathname.endsWith("saved") ? (
-        <SavedHomes items={data.saved.map((d: any) => ({ id: d.id, slug: d.slug, title: d.title, price_eur: d.price_eur ?? null, image: d.image_urls?.[0] || null }))} empty={<p>No saved deals yet. Tap the bookmark on a discovery you love.</p>} />
+        <SavedHomes items={data.saved.map((d: any) => ({ id: d.id, slug: d.slug, title: d.title, price_eur: d.price_eur ?? null, image: d.image_urls?.[0] || null }))} empty={<p>{t("No saved homes yet. Tap the bookmark on any home to keep it here.")}</p>} />
       ) : (
         <>
           <Link className="hunt-primary" to="/submit">
             <Plus size={16} />
-            Find your next deal
+            {t("Post a home")}
           </Link>
           <div className="hunt-submission-summary" aria-label="Submission totals">
             <span><strong>{data.deals.length}</strong> submitted</span>

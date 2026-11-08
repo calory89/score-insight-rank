@@ -410,7 +410,7 @@ export function TabBar() {
       <Link to="/" aria-current={is("/") ? "page" : undefined} onClick={() => { if (pathname === "/") window.scrollTo({ top: 0, behavior: "smooth" }); }}><HomeIcon size={21} /><span>Explore</span></Link>
       <Link to="/top" aria-current={is("/top") ? "page" : undefined}><Trophy size={21} /><span>Top 100</span></Link>
       <Link to="/map" aria-current={is("/map") ? "page" : undefined}><MapPin size={21} /><span>Map</span></Link>
-      <Link to="/hunt/saved" aria-current={is("/hunt/saved") ? "page" : undefined}><Bookmark size={21} /><span>Saved</span></Link>
+      <Link to="/hunt/saved" aria-current={is("/hunt/saved") ? "page" : undefined}><Bookmark size={21} /><span>{isEs() ? "Guardadas" : "Saved"}</span></Link>
       <Link to="/me" aria-current={is("/me") || is("/hunt/mine") ? "page" : undefined}><User size={21} /><span>Profile</span></Link>
     </nav>
   );

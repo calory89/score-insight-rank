@@ -175,7 +175,7 @@ test('a signed-in visitor submits just a link for private review', async () => {
   fireEvent.click(button);
   expect(await screen.findByRole('status')).toHaveTextContent('pending admin review');
   expect(mocks.rpc).toHaveBeenCalledWith('community_api',expect.objectContaining({p_action:'quick_submit',p_payload:expect.objectContaining({url:'https://example.org/new-home'})}));
-  expect(screen.getByRole('link',{name:'View my submissions →'})).toHaveAttribute('href','/hunt/mine');
+  expect(screen.getByRole('link',{name:'View my submissions'})).toHaveAttribute('href','/hunt/mine');
 });
 test('submission failures preserve the link and never claim it was received', async () => {
   mocks.user={id:'signed-in'};
