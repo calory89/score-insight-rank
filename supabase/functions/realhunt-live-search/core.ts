@@ -42,7 +42,7 @@ const COUNTRIES: Record<string, string[]> = {
 };
 const COUNTRY_ALIAS = new Map<string, string>();
 for (const [en, list] of Object.entries(COUNTRIES)) for (const a of list) COUNTRY_ALIAS.set(a, en);
-const COUNTRY_CURRENCY: Record<string, string> = { "Puerto Rico": "USD", "United States": "USD", "United Kingdom": "GBP", Mexico: "MXN", Canada: "CAD", Denmark: "DKK", Sweden: "SEK", Norway: "NOK", Poland: "PLN", Japan: "JPY", Thailand: "THB", Switzerland: "CHF", Turkey: "TRY" };
+export const COUNTRY_CURRENCY: Record<string, string> = { "Puerto Rico": "USD", "United States": "USD", "United Kingdom": "GBP", Mexico: "MXN", Canada: "CAD", Denmark: "DKK", Sweden: "SEK", Norway: "NOK", Poland: "PLN", Japan: "JPY", Thailand: "THB", Switzerland: "CHF", Turkey: "TRY", Australia: "AUD", "New Zealand": "NZD", Indonesia: "IDR", Brazil: "BRL", Argentina: "USD", Colombia: "COP", "Costa Rica": "USD", "Dominican Republic": "USD", Ecuador: "USD", Panama: "USD", "El Salvador": "USD", Peru: "USD", Uruguay: "USD", Chile: "USD", "United Arab Emirates": "AED", "South Africa": "ZAR", Morocco: "MAD", Bulgaria: "EUR", Iceland: "ISK", "Czech Republic": "CZK", Czechia: "CZK", Hungary: "HUF", Romania: "RON", Vietnam: "USD", Georgia: "USD", Philippines: "USD", Malaysia: "USD", Ghana: "USD", Kenya: "USD", Egypt: "USD", Albania: "EUR", Montenegro: "EUR", Serbia: "EUR", "Bosnia and Herzegovina": "EUR", "North Macedonia": "EUR", Turkiye: "TRY", Cambodia: "USD", "Sri Lanka": "USD", India: "USD", Nigeria: "USD", Guatemala: "USD", Honduras: "USD", Nicaragua: "USD", Belize: "USD", Bahamas: "USD", Jamaica: "USD", Barbados: "USD", Paraguay: "USD", Bolivia: "USD", Venezuela: "USD", Cuba: "USD" };
 
 export const US_STATES: Record<string, string> = {
   al: "alabama", az: "arizona", ar: "arkansas", ca: "california", co: "colorado", ct: "connecticut", de: "delaware", fl: "florida", ga: "georgia",
@@ -102,6 +102,12 @@ export type LiveQuery = {
   geo?: "said" | "us_list" | "gazetteer" | "chosen" | null;
   /** v3: the currency was typed ("200k €", "$300k"), so a chosen country does not change it */
   cur_typed?: boolean;
+  /** 9-nov-2026: the place's point and size from a geocoder (any town in the world), for the centre */
+  lat?: number | null;
+  lng?: number | null;
+  pop?: number | null;
+  /** 9-nov-2026: region / state / province of the place, when known */
+  region?: string | null;
 };
 
 /** Style and condition words (accents already removed). "new" is kept when it starts a place name (New York, Nueva Zelanda). */
@@ -757,4 +763,122 @@ export function slugFor(url: string, opts: { city?: string | null; address?: str
   let h = 0; for (let i = 0; i < url.length; i++) h = (h * 31 + url.charCodeAt(i)) | 0;
   const host = (() => { try { return new URL(url).hostname.replace(/^www\./, "").split(".")[0].replace(/[^a-z0-9]/g, ""); } catch { return "web"; } })();
   return `live-${host.slice(0, 20) || "web"}-${Math.abs(h).toString(36)}`;
+}
+
+
+// ---------------------------------------------------------------- 9-nov-2026: any query, any town in the world
+// Owner: "tiene que aparecer cualquier ciudad o pueblo del mundo, como si fuera Google, que acepte todo; solo si no se
+// encuentra nada se dice". The rule parser above knows a gazetteer; anything it cannot place (or cuts short, or
+// refuses in another language) is read by a small model, then the place is found with a free geocoder.
+
+export type Understood = {
+  home: boolean; kind: "buy" | "rent" | null; place: string | null; region: string | null; country: string | null;
+  country_code: string | null; central: boolean; min_beds: number | null; max_price: number | null; currency: string | null;
+  ptype: "house" | "apartment" | "any" | null;
+};
+
+const CUT_RE = /^(de|del|de la|de las|de los|la|las|los|el|di|da|do|dos|das|del mar|sur|norte|on|upon|by|sur mer|am|an der|im|bei|al|al-|el-|beach|springs|city|bay|island|islands|mar|grande|nova|novo|nuevo|nueva|vieja|viejo|real|alta|alto)\b/;
+
+/** Does the rule parser need help? Not understood, no country, or a place name it cut short ("Vejer" of "Vejer de la Frontera"). */
+export function needsUnderstanding(p: LiveQuery, q: string): boolean {
+  if (!p.ok) return p.reason === "not_homes" || p.reason === "no_place";
+  if (!p.place) return !p.country;
+  if (!p.country) return true;
+  const n = norm(q), pl = norm(p.place);
+  const i = n.indexOf(pl);
+  if (i < 0) return true;
+  const after = n.slice(i + pl.length).trim();
+  return CUT_RE.test(after);
+}
+
+export function understandPrompt(q: string, tz: string | null): string {
+  return [
+    "A person typed this into a property search box (any language):",
+    JSON.stringify(q),
+    tz ? `Their time zone: ${tz} (use it only to pick between places with the same name).` : "",
+    "Return only JSON, no prose:",
+    '{"home":true|false,"kind":"buy"|"rent"|null,"place":"the town, city, district or area exactly as a map knows it, in its usual English or local spelling, without the country","region":"state/province/island or null","country":"country in English or null","country_code":"ISO 3166-1 alpha-2 or null","central":true|false,"min_beds":number|null,"max_price":number|null,"currency":"ISO 4217 of the budget or null","ptype":"house"|"apartment"|"any"|null}',
+    "home: false only when it is clearly not about buying or renting homes, flats, land or property.",
+    "central: true only when they explicitly ask for the city centre, old town or downtown (words like centro, centre, downtown, casco antiguo); a named neighbourhood is not central.",
+    "If the place exists in several countries, pick the most likely from the words and time zone. Keep full names (\"Vejer de la Frontera\", \"Playa del Carmen\", \"Cangas de Onís\").",
+  ].filter(Boolean).join("\n");
+}
+
+export function parseUnderstood(text: string): Understood | null {
+  const m = String(text || "").match(/\{[\s\S]*\}/);
+  if (!m) return null;
+  let o: any; try { o = JSON.parse(m[0]); } catch { return null; }
+  const str = (v: unknown) => (typeof v === "string" && v.trim() && v.trim().toLowerCase() !== "null" ? v.trim().slice(0, 80) : null);
+  const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) && v > 0 ? v : null);
+  const cc = str(o.country_code);
+  return {
+    home: o.home !== false, kind: o.kind === "rent" ? "rent" : o.kind === "buy" ? "buy" : null,
+    place: str(o.place), region: str(o.region), country: str(o.country), country_code: cc && /^[A-Za-z]{2}$/.test(cc) ? cc.toUpperCase() : null,
+    central: o.central === true, min_beds: num(o.min_beds) && o.min_beds < 20 ? Math.round(o.min_beds) : null,
+    max_price: num(o.max_price), currency: str(o.currency)?.toUpperCase() || null,
+    ptype: o.ptype === "house" || o.ptype === "apartment" ? o.ptype : o.ptype === "any" ? "any" : null,
+  };
+}
+
+export type GeoHit = { name: string; country: string; country_code: string; region: string | null; lat: number; lng: number; pop: number | null };
+/** The best Open-Meteo result for what the model understood: same country, then same region, then the largest. */
+export function pickGeo(results: any[], u: Pick<Understood, "country_code" | "region"> & { place?: string | null }): GeoHit | null {
+  // the geocoder matches loosely ("Sumba" -> "Sumbar"): keep only the same name (accents and case aside)
+  const want = u.place ? norm(u.place).replace(/[^a-z0-9]+/g, " ").trim() : "";
+  const same = (n: unknown) => !want || norm(String(n || "")).replace(/[^a-z0-9]+/g, " ").trim() === want;
+  const list = (Array.isArray(results) ? results : []).filter((r) => r && Number.isFinite(r.latitude) && Number.isFinite(r.longitude) && same(r.name));
+  const inC = u.country_code ? list.filter((r) => String(r.country_code || "").toUpperCase() === u.country_code) : list;
+  const pool = inC.length ? inC : u.country_code ? [] : list;
+  if (!pool.length) return null;
+  const reg = u.region ? norm(u.region) : "";
+  const inR = reg ? pool.filter((r) => [r.admin1, r.admin2, r.admin3].some((a) => a && (norm(a).includes(reg) || reg.includes(norm(a))))) : [];
+  const best = (inR.length ? inR : pool).slice().sort((a, b) => (b.population || 0) - (a.population || 0))[0];
+  return { name: best.name, country: best.country, country_code: String(best.country_code || "").toUpperCase(), region: best.admin1 || null, lat: best.latitude, lng: best.longitude, pop: best.population || null };
+}
+
+const COUNTRY_FIX: Record<string, string> = { "United States of America": "United States", USA: "United States", UK: "United Kingdom", "Czech Republic": "Czechia", "Türkiye": "Turkey", Turkiye: "Turkey" };
+/** Merges what the model understood (and where the geocoder put it) into the rule parse; numbers the rules read win. */
+export function mergeUnderstood(p0: LiveQuery, u: Understood, g: GeoHit | null): LiveQuery {
+  const p: LiveQuery = { ...p0 };
+  if (!u.home) return { ...p, ok: false, reason: "not_homes" };
+  const place = g?.name || u.place || p.place;
+  const country0 = g?.country || u.country || p.country;
+  const country = country0 ? COUNTRY_FIX[country0] || country0 : null;
+  // nowhere on the map: say so instead of searching the whole world
+  if (!country) return { ...p, ok: false, reason: "no_place" };
+  p.ok = true; delete p.reason;
+  p.place = place; p.country = country; p.region = g?.region || u.region || null;
+  p.state = null; p.city = null;
+  if (country === "United States") {
+    const st = Object.entries(US_STATES).find(([, n]) => p.region && norm(p.region) === n)?.[0] || null;
+    p.state = st; p.city = place ? norm(place) : null;
+  }
+  if (g) { p.lat = g.lat; p.lng = g.lng; p.pop = g.pop; }
+  if (u.kind && p.kind === "buy" && u.kind === "rent") p.kind = "rent";
+  if (p.min_beds == null && u.min_beds != null) p.min_beds = u.min_beds;
+  if (u.central) p.central = true;
+  if (p.ptype === "any" && u.ptype && u.ptype !== "any") p.ptype = u.ptype;
+  if (p.max_price == null && u.max_price != null) p.max_price = u.max_price;
+  if (!p.cur_typed) {
+    const typed = u.currency && FX_TO_EUR[u.currency] && p0.max_price == null && u.max_price != null ? u.currency : null;
+    p.currency = typed || (country && COUNTRY_CURRENCY[country]) || (country && EURO_LIKE.test(country) ? "EUR" : country ? "USD" : "EUR");
+  }
+  p.max_eur = toEur(p.max_price, p.currency);
+  p.min_eur = toEur(p.min_price, p.currency);
+  p.geo = "said";
+  return p;
+}
+const EURO_LIKE = /^(Spain|Portugal|France|Italy|Germany|Greece|Ireland|Netherlands|Belgium|Austria|Finland|Croatia|Cyprus|Malta|Slovenia|Slovakia|Estonia|Latvia|Lithuania|Luxembourg|Andorra|Monaco|San Marino|Montenegro|Kosovo)$/;
+
+/** One card per real home: listings with the same price, bedrooms, size and place are the same flat sold by two agencies. */
+export function sameHomeOnce<T extends { price?: number | null; beds?: number | null; sqm?: number | null; location?: string | null; score?: number | null }>(rows: T[]): T[] {
+  const seen = new Set<string>();
+  const out: T[] = [];
+  for (const r of rows.slice().sort((a, b) => (b.score ?? 0) - (a.score ?? 0))) {
+    const k = r.price && (r.sqm || r.beds) ? [r.price, r.beds ?? "", r.sqm ?? "", norm(r.location || "")].join("|") : null;
+    if (k && seen.has(k)) continue;
+    if (k) seen.add(k);
+    out.push(r);
+  }
+  return rows.filter((r) => out.includes(r));
 }

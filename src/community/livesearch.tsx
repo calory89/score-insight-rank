@@ -81,7 +81,10 @@ export default function LiveSearchPage() {
     const local = und ? und.p : null;
     setParsed(local);
     if (!q) { setPhase("idle"); return; }
-    if (local && !local.ok) { setPhase("rejected"); setSt({ status: "rejected", reason: local.reason }); return; }
+    // 9-nov-2026: the page only refuses empty or overlong text; anything else (any town, any language) goes to the
+    // server, which reads it with a model and a geocoder when these rules cannot
+    if (local && !local.ok && (local.reason === "empty" || local.reason === "too_long")) { setPhase("rejected"); setSt({ status: "rejected", reason: local.reason }); return; }
+    if (local && (!local.ok || !local.country)) setParsed(null);
     // "Which Sevilla do you mean?": nothing is searched (or spent) until the person picks one
     if (und?.ask) { setAsk(und.ask); setPhase("ask"); return; }
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -183,7 +186,7 @@ export default function LiveSearchPage() {
         <section className="lv-card lv-msg" role="status">
           <Info size={20} aria-hidden="true" />
           <div>
-            <strong>{st?.reason === "no_place" ? t("Tell us where: a city or a country.") : t("Live search only looks for homes to buy or rent.")}</strong>
+            <strong>{st?.reason === "no_place" ? t("We could not find that place. Try a city, town or country.") : t("Live search only looks for homes to buy or rent.")}</strong>
             <p>{t("For example:")} <button type="button" className="hunt-link" onClick={() => setSp({ q: "3 bedroom house in Miami under $300k" })}>3 bedroom house in Miami under $300k</button></p>
           </div>
         </section>
