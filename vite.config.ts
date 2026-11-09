@@ -16,8 +16,12 @@ function preloadPublicRoute() {
         if (!context.bundle) return;
         const bundle = context.bundle;
         const routes: Record<string, string[]> = {};
-        for (const page of ["Home", "FindDetail", "Weather"]) {
-          const entry = Object.values(bundle).find(item => item.type === "chunk" && item.facadeModuleId?.endsWith(`/pages/${page}.tsx`));
+        // 9-nov-2026: "/" and the main public pages render community/Community.tsx (not pages/Home.tsx any more),
+        // so that is the chunk to start downloading early; Home stays for /from/<account>.
+        for (const page of ["Community", "Home", "FindDetail", "Weather"]) {
+          const want = page === "Community" ? "/community/Community.tsx" : `/pages/${page}.tsx`;
+          const entry = Object.values(bundle).find(item => item.type === "chunk" && item.facadeModuleId?.endsWith(want))
+            || Object.values(bundle).find(item => item.type === "chunk" && Object.keys(item.modules).some(m => m.endsWith(want)));
           if (!entry || entry.type !== "chunk") continue;
           const seen = new Set<string>();
           const visit = (file: string) => {
@@ -29,7 +33,7 @@ function preloadPublicRoute() {
           visit(entry.fileName);
           routes[page] = [...seen].map(file => `/${file}`);
         }
-        return [{ tag: "script", injectTo: "head" as const, children: `(()=>{const p=location.pathname,r=${JSON.stringify(routes)},k=p==='/'||/^\\/(country|from)\\//.test(p)?'Home':/^\\/find\\//.test(p)?'FindDetail':/^\\/weather\\/?$/.test(p)?'Weather':null;for(const href of r[k]||[]){const l=document.createElement('link');l.rel='modulepreload';l.href=href;l.crossOrigin='';document.head.appendChild(l)}})();` }];
+        return [{ tag: "script", injectTo: "head" as const, children: `(()=>{const p=location.pathname,r=${JSON.stringify(routes)},k=p==='/'||/^\\/(deal|map|top|live-search|homes|hunt|compare|score|blog|guide|costs|can-i-buy|buying-costs)(\\/|$)/.test(p)?'Community':/^\\/from\\//.test(p)?'Home':/^\\/find\\//.test(p)?'FindDetail':/^\\/weather\\/?$/.test(p)?'Weather':null;for(const href of r[k]||[]){const l=document.createElement('link');l.rel='modulepreload';l.href=href;l.crossOrigin='';document.head.appendChild(l)}if(p==='/'||/^\\/(deal|map|homes|compare|live-search)(\\/|$)/.test(p)){try{window.__rhSnap=fetch('/data/rh-static.json',{cache:'no-cache'}).then(function(x){if(!x.ok)throw 0;return x.json()});window.__rhSnap.catch(function(){})}catch(e){}}})();` }];
       },
     },
   };

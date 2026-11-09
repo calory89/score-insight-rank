@@ -6,6 +6,7 @@
 // community_feed / community_quick_counts / community_near / community_nearby / community_scores.
 // Visitor tracking writes are skipped. Only explicit actions (sign in, vote, save, submit, admin)
 // still talk to the database, so the Cloud backend can stay paused and the site keeps working.
+import { snapshotRaw } from "@/lib/snapshotRaw";
 import { mediaDeep } from "./media";
 import { wordMatches } from "./synonyms"; // FIND layer: "apartment" also finds flats and condos
 import { supabase } from "@/integrations/supabase/client";
@@ -16,10 +17,7 @@ type Snap = { v: number; generated: string; meta: Row; live: { live: number; tod
 
 let snapP: Promise<Snap> | null = null;
 export function snapshot(): Promise<Snap> {
-  return (snapP ||= fetch("/data/rh-static.json", { cache: "no-cache" }).then((r) => {
-    if (!r.ok) throw new Error("static data " + r.status);
-    return r.json().then(mediaDeep).then((s: Snap) => { learnTexts(s.rows); return s; });
-  }).catch((e) => { snapP = null; throw e; }));
+  return (snapP ||= snapshotRaw().then(mediaDeep).then((s: Snap) => { learnTexts(s.rows); return s; }).catch((e) => { snapP = null; throw e; }));
 }
 
 const now = () => Date.now();

@@ -40,16 +40,20 @@ export const usePageTracking = () => {
     // Insert visit record
     const trackVisit = async () => {
       try {
-        const { data } = await (supabase.from("page_visits" as any).insert({
+        // 9-nov-2026 security: the id is made here, so nothing has to be read back (visitors can no longer read or
+        // edit each other's visit rows); the time on page is written through the visit_done RPC, tied to the session
+        const id = crypto.randomUUID();
+        const { error } = await (supabase.from("page_visits" as any).insert({
+          id,
           session_id: sessionId,
           path: location.pathname,
           referrer: document.referrer || null,
           user_agent: navigator.userAgent,
-        }).select("id").abortSignal(controller.signal).single() as any);
-        if (data && active) {
-          visitIdRef.current = data.id;
+        }).abortSignal(controller.signal) as any);
+        if (!error && active) {
+          visitIdRef.current = id;
           // Try to detect country via edge function
-          supabase.functions.invoke("track-visit", { body: { visit_id: data.id } }).catch(() => {});
+          supabase.functions.invoke("track-visit", { body: { visit_id: id } }).catch(() => {});
         }
       } catch { /* silent */ } finally { clearTimeout(timer); }
     };
@@ -60,10 +64,7 @@ export const usePageTracking = () => {
       active = false; clearTimeout(timer); controller.abort();
       const timeOnPage = Date.now() - startTimeRef.current;
       if (visitIdRef.current) {
-        (supabase.from("page_visits" as any).update({
-          time_on_page_ms: timeOnPage,
-          is_bounce: timeOnPage < 10000, // < 10s = bounce
-        }).eq("id", visitIdRef.current) as any).then(() => {});
+        (supabase.rpc("visit_done" as any, { p_id: visitIdRef.current, p_session: sessionId, p_ms: timeOnPage } as any) as any).then(() => {}, () => {});
       }
     };
   }, [location.pathname, consentVersion]);
