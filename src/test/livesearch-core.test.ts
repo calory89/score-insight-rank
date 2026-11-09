@@ -736,3 +736,17 @@ describe("same home from two agencies (9-nov-2026)", async () => {
     expect(C.sameHomeOnce([a, b, c]).map((x) => x.id)).toEqual(["a", "c"]);
   });
 });
+
+describe("portal map (9-nov-2026)", async () => {
+  const PT = await import("../../supabase/functions/realhunt-live-search/portals");
+  it("knows each country's portals and which block robots", () => {
+    expect(PT.portalsFor("Spain")[0].d).toBe("idealista.com");
+    expect(PT.isBlocked("https://www.idealista.com/inmueble/123/")).toBe(true);
+    expect(PT.isBlocked("https://www.pisos.com/comprar/piso-x-1/")).toBe(false);
+    expect(PT.isBlocked("https://www.zillow.com/homedetails/1")).toBe(true);
+    const h = PT.searchHint("Spain");
+    expect(h).toContain("pisos.com"); expect(h).toContain("Never return");
+    expect(PT.searchHint("Atlantis")).toContain("estate agents");
+    expect(PT.PORTALS.length).toBeGreaterThan(45);
+  });
+});

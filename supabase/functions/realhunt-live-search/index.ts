@@ -36,6 +36,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import * as C from "./core.ts";
 import * as PS from "./pisos.ts";
 import * as CT from "./centre.ts";
+import * as PT from "./portals.ts";
 
 export const LIMITS = {
   ANON_FREE_SEARCHES: 1, // searches without an account, per IP hash
@@ -303,6 +304,43 @@ async function geoFind(u: C.Understood): Promise<C.GeoHit | null> {
   } catch { return null; } finally { clearTimeout(t2); }
 }
 
+// ---------------------------------------------------------------- 9-nov-2026: portal readability test
+const BROWSER_UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
+const WALL_RE = /captcha|cf-chl|just a moment|px-captcha|datadome|access denied|pardon our interruption|are you a robot|robot check|enable javascript and cookies|request unsuccessful|incapsula|perimeterx|verify you are human|unusual traffic/i;
+async function probePortal(p: { cc: string; d: string; probe: string }) {
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 15000);
+  const t0 = Date.now();
+  try {
+    const r = await fetch(p.probe, { signal: ctl.signal, redirect: "follow", headers: { "User-Agent": BROWSER_UA, Accept: "text/html,application/xhtml+xml", "Accept-Language": "en,es;q=0.8" } });
+    const html = r.ok ? (await r.text()).slice(0, 600_000) : (await r.body?.cancel(), "");
+    const wall = WALL_RE.test(html.slice(0, 60_000));
+    const prices = (html.match(/(?:[€$£]\s?\d{2,3}(?:[.,\s]\d{3})+|\d{2,3}(?:[.,\s]\d{3})+\s?(?:€|eur|kr|zł|lei|лв|₺|usd|aed|thb|฿|r\$|¥|円|czk|kč|ft|chf))/gi) || []).length;
+    const read = r.ok && !wall && html.length > 15_000 && prices >= 5;
+    // then one listing from that page: a link on the same site with a long number in it (most portals' listing ids)
+    let listing: any = null;
+    if (r.ok && html.length > 15_000) {
+      const base = new URL(r.url);
+      const host = base.hostname.replace(/^www\./, "");
+      const links = [...html.matchAll(/href="([^"#]{12,300})"/g)].map((m) => { try { return new URL(m[1].replace(/&amp;/g, "&"), base).toString(); } catch { return ""; } })
+        .filter((u) => u && new URL(u).hostname.replace(/^www\./, "").endsWith(host.split(".").slice(-2).join(".")) && /\d{5,}/.test(new URL(u).pathname) && !/(login|signin|account|privacy|cookie|blog|news|search|suche|agent|agency|developer|help|static|assets|cdn|bundle|chunk|_next|wp-json|media\.|images?\.|\/img\/|\/image)/i.test(u)
+          && !/\.(css|js|png|jpe?g|webp|svg|ico|gif|woff2?|json|xml)(\?|$)/i.test(new URL(u).pathname) && new URL(u).pathname.split("/").filter(Boolean).length >= 2);
+      // the most common listing-looking path shape on the page
+      const u = links.sort((a, b) => new URL(b).pathname.length - new URL(a).pathname.length)[Math.min(2, Math.max(0, links.length - 1))];
+      if (u) {
+        const c2 = new AbortController(); const t2 = setTimeout(() => c2.abort(), 12000);
+        try {
+          const r2 = await fetch(u, { signal: c2.signal, redirect: "follow", headers: { "User-Agent": BROWSER_UA, Accept: "text/html,application/xhtml+xml", "Accept-Language": "en,es;q=0.8" } });
+          const h2 = r2.ok ? (await r2.text()).slice(0, 600_000) : (await r2.body?.cancel(), "");
+          const w2 = WALL_RE.test(h2.slice(0, 60_000));
+          const img = (h2.match(/\.(?:jpe?g|webp)/gi) || []).length;
+          listing = { url: u.slice(0, 160), status: r2.status, bytes: h2.length, wall: w2, imgs: img, read: r2.ok && h2.length > 15_000 && (!w2 || img >= 10) && img >= 3 };
+        } catch (e) { listing = { url: u.slice(0, 160), status: 0, error: String(e).slice(0, 60), read: false }; } finally { clearTimeout(t2); }
+      }
+    }
+    return { cc: p.cc, d: p.d, status: r.status, bytes: html.length, wall, prices, read, listing, ms: Date.now() - t0, final: r.url !== p.probe ? r.url.slice(0, 120) : undefined };
+  } catch (e) { return { cc: p.cc, d: p.d, status: 0, error: String(e).slice(0, 80), read: false, ms: Date.now() - t0 }; } finally { clearTimeout(t); }
+}
+
 async function start(req: Request, body: any) {
   const q = String(body.q || "").replace(/\s+/g, " ").trim().slice(0, 300);
   const lang = body.lang === "es" ? "es" : "en";
@@ -326,6 +364,14 @@ async function start(req: Request, body: any) {
     const want = p.place.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     const cs = new Set((await approved()).filter((r) => String(r.location_name || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/[,(]/).some((x: string) => x.trim() === want)).map((r) => r.country).filter(Boolean));
     if (cs.size === 1) C.placeInto(p, [...cs][0] as string);
+  }
+  // admin: can our robot read each country's portals? {probe:true, secret, only?:["ES",..]} (9-nov-2026)
+  if (body.probe === true && body.secret && body.secret === (await secret())) {
+    const only: string[] | null = Array.isArray(body.only) ? body.only : null;
+    const list = PT.PORTALS.filter((c) => !only || only.includes(c.cc)).flatMap((c) => c.portals.map((p) => ({ cc: c.cc, ...p })));
+    const out: any[] = [];
+    for (let i = 0; i < list.length; i += 16) out.push(...(await Promise.all(list.slice(i, i + 16).map((p) => probePortal(p)))));
+    return json({ status: "probed", n: out.length, results: out });
   }
   // admin check of how a query is read (no job, no search): {dry:true, secret}
   if (body.dry === true && body.secret && body.secret === (await secret())) return json({ status: "parsed", parsed: p, ask: res.ask, parse_cost: parseCost });
@@ -518,7 +564,7 @@ async function begin(id: string, p: C.LiveQuery, q: string, lang: string, who: W
     try {
       const c = await claude(key, p, q, Math.max(1, 8 - results.filter(main).length), central ? centre : null);
       cost = c.cost; usage = c.usage; provider = [provider, c.model].filter(Boolean).join("+");
-      for (const it of c.items.filter((i) => C.withinAsk(i, p) && !C.blockedUrl(i.url))) if (!cands.some((x) => x.url === it.url)) cands.push({ ...it, image: it.image_url, provider: "claude" });
+      for (const it of c.items.filter((i) => C.withinAsk(i, p) && !PT.isBlocked(i.url))) if (!cands.some((x) => x.url === it.url)) cands.push({ ...it, image: it.image_url, provider: "claude" });
       if (c.error) note = "claude_" + c.error;
     } finally { clearInterval(tick); }
     await set({ progress: 44, stage: { k: "found", n: cands.length }, usage: { ...(usage || {}), model: provider, ip_src: who.ipSrc, net: who.netHash, scanned: scanPpm.length } });
@@ -910,7 +956,8 @@ async function claude(key: string, p: C.LiveQuery, q: string, want: number, cent
     "(e.g. Redfin, Trulia, homes.com, Idealista, Rightmove category pages): open 1 to 3 of the most relevant list pages with web_fetch and take the " +
     "individual listing URLs, prices and details shown there (make relative links absolute with that page's domain). If you are not sure a listing is current or matches, leave it out. " +
     "Leave out mobile or manufactured homes, homes on rented land, 55+ communities, auctions, timeshares, shares of a property and homes that need a full renovation. " +
-    `Only listings whose page our robot can read count: prefer ${C.READABLE_PORTALS.join(", ")} and estate agents' own websites; never return listings from idealista, fotocasa, yaencontre, zillow, redfin, homes.com, realtor.com, trulia, casa.sapo, supercasa, kyero, engelvoelkers, rightmove, zoopla, immobiliare.it, casa.it, subito.it, leboncoin, otodom or properstar (they block robots). ` +
+    // 9-nov-2026: where to look comes from the country's portal map (portals.ts), tested from our server
+    `Only listings whose page our robot can read count. ${PT.searchHint(p.country)} ` +
     "Reply with ONLY a JSON array, no prose, no code fences: " +
     '[{"url":"","title":"","price":0,"currency":"USD","beds":0,"sqm":0,"location":"town, region","country":"country name in English","kind":"buy","image_url":""}]. ' +
     "price is a number in the listing currency (monthly rent for rentals), sqm is the living area in square metres (convert from sq ft by multiplying by 0.0929), " +
