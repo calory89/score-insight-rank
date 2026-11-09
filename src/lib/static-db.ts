@@ -10,14 +10,33 @@ import { snapshotRaw } from "@/lib/snapshotRaw";
 import { mediaDeep } from "./media";
 import { wordMatches } from "./synonyms"; // FIND layer: "apartment" also finds flats and condos
 import { supabase } from "@/integrations/supabase/client";
-import { learnTexts } from "./lang";
+import { learnTexts, getLang } from "./lang";
 
 type Row = Record<string, any>;
 type Snap = { v: number; generated: string; meta: Row; live: { live: number; today: number }; flags: Record<string, boolean>; rows: Row[] };
 
+// The published snapshot carries no Spanish texts (vite.config.ts splitSpanishTexts): Spanish visitors get them from
+// /data/rh-static-es.json and they are joined before any home is shown, so the page is never half translated.
+async function joinSpanish(rows: Row[]): Promise<void> {
+  const get = () => fetch("/data/rh-static-es.json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error("es " + r.status); return r.json(); });
+  let es: Record<string, (string | null)[]> | null = null;
+  try {
+    const early: Promise<any> | undefined = typeof window !== "undefined" ? (window as any).__rhSnapEs : undefined;
+    es = await (early ? early.catch(get) : get().catch(get));
+  } catch { return; }
+  if (!es) return;
+  for (const r of rows) {
+    const t = es[r.slug];
+    if (!t) continue;
+    if (t[0]) r.title_es = t[0];
+    if (t[1]) r.why_great_es = t[1];
+    if (t[2]) r.why_cheap_es = t[2];
+  }
+}
+
 let snapP: Promise<Snap> | null = null;
 export function snapshot(): Promise<Snap> {
-  return (snapP ||= snapshotRaw().then(mediaDeep).then((s: Snap) => { learnTexts(s.rows); return s; }).catch((e) => { snapP = null; throw e; }));
+  return (snapP ||= snapshotRaw().then(mediaDeep).then(async (s: Snap) => { if ((s as any).es === "split" && getLang() === "es") await joinSpanish(s.rows); learnTexts(s.rows); return s; }).catch((e) => { snapP = null; throw e; }));
 }
 
 const now = () => Date.now();
