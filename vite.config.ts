@@ -4,6 +4,35 @@ import path from "path";
 import fs from "fs";
 import { prerenderPages } from "./seo/prerender";
 
+// 9-nov-2026 speed: the Spanish copies of every home's texts (about 60 KB compressed, a fifth of the snapshot) are
+// only needed by Spanish visitors. The committed public/data/rh-static.json keeps them (other scripts read it); the
+// PUBLISHED copy is split here: dist/data/rh-static.json without *_es (flag es:"split") and
+// dist/data/rh-static-es.json = { slug: [title_es, why_great_es, why_cheap_es] }. src/lib/static-db.ts joins them
+// back for Spanish before any home is shown.
+function splitSpanishTexts() {
+  return {
+    name: "split-spanish-texts",
+    apply: "build" as const,
+    closeBundle() {
+      const file = path.resolve(__dirname, "dist/data/rh-static.json");
+      if (!fs.existsSync(file)) return;
+      const snap = JSON.parse(fs.readFileSync(file, "utf8"));
+      if (!Array.isArray(snap.rows) || snap.es === "split") return;
+      const es: Record<string, (string | null)[]> = {};
+      for (const r of snap.rows) {
+        const t = [r.title_es ?? null, r.why_great_es ?? null, r.why_cheap_es ?? null];
+        if (r.slug && t.some(Boolean)) es[r.slug] = t;
+        delete r.title_es; delete r.why_great_es; delete r.why_cheap_es;
+      }
+      snap.es = "split";
+      fs.writeFileSync(file, JSON.stringify(snap));
+      fs.writeFileSync(path.resolve(__dirname, "dist/data/rh-static-es.json"), JSON.stringify(es));
+      console.log(`[split-spanish-texts] ${Object.keys(es).length} homes with Spanish texts`);
+    },
+  };
+}
+
+
 // Start the current catalogue/detail page's static imports while the HTML is being
 // parsed, instead of waiting for React -> router -> lazy page -> dependencies.
 // Other routes and all dynamic features stay lazy; URLs come from this build.
@@ -33,7 +62,7 @@ function preloadPublicRoute() {
           visit(entry.fileName);
           routes[page] = [...seen].map(file => `/${file}`);
         }
-        return [{ tag: "script", injectTo: "head" as const, children: `(()=>{const p=location.pathname,r=${JSON.stringify(routes)},k=p==='/'||/^\\/(deal|map|top|live-search|homes|hunt|compare|score|blog|guide|costs|can-i-buy|buying-costs)(\\/|$)/.test(p)?'Community':/^\\/from\\//.test(p)?'Home':/^\\/find\\//.test(p)?'FindDetail':/^\\/weather\\/?$/.test(p)?'Weather':null;for(const href of r[k]||[]){const l=document.createElement('link');l.rel='modulepreload';l.href=href;l.crossOrigin='';document.head.appendChild(l)}if(p==='/'||/^\\/(deal|map|homes|compare|live-search)(\\/|$)/.test(p)){try{window.__rhSnap=fetch('/data/rh-static.json',{cache:'no-cache'}).then(function(x){if(!x.ok)throw 0;return x.json()});window.__rhSnap.catch(function(){})}catch(e){}}})();` }];
+        return [{ tag: "script", injectTo: "head" as const, children: `(()=>{const p=location.pathname,r=${JSON.stringify(routes)},k=p==='/'||/^\\/(deal|map|top|live-search|homes|hunt|compare|score|blog|guide|costs|can-i-buy|buying-costs)(\\/|$)/.test(p)?'Community':/^\\/from\\//.test(p)?'Home':/^\\/find\\//.test(p)?'FindDetail':/^\\/weather\\/?$/.test(p)?'Weather':null;for(const href of r[k]||[]){const l=document.createElement('link');l.rel='modulepreload';l.href=href;l.crossOrigin='';document.head.appendChild(l)}if(p==='/'||/^\\/(deal|map|homes|compare|live-search)(\\/|$)/.test(p)){try{window.__rhSnap=fetch('/data/rh-static.json',{cache:'no-cache'}).then(function(x){if(!x.ok)throw 0;return x.json()});window.__rhSnap.catch(function(){});if(document.documentElement.getAttribute('data-lang')==='es'){window.__rhSnapEs=fetch('/data/rh-static-es.json',{cache:'no-cache'}).then(function(x){if(!x.ok)throw 0;return x.json()});window.__rhSnapEs.catch(function(){})}}catch(e){}}})();` }];
       },
     },
   };
@@ -48,7 +77,7 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  plugins: [react(), preloadPublicRoute(), prerenderPages()].filter(Boolean),
+  plugins: [react(), preloadPublicRoute(), prerenderPages(), splitSpanishTexts()].filter(Boolean),
   resolve: {
     dedupe: ["react", "react-dom"],
     alias: {
