@@ -43,14 +43,15 @@ export const usePageTracking = () => {
         // 9-nov-2026 security: the id is made here, so nothing has to be read back (visitors can no longer read or
         // edit each other's visit rows); the time on page is written through the visit_done RPC, tied to the session
         const id = crypto.randomUUID();
-        const { error } = await (supabase.from("page_visits" as any).insert({
+        const { error, status } = await (supabase.from("page_visits" as any).insert({
           id,
           session_id: sessionId,
           path: location.pathname,
           referrer: document.referrer || null,
           user_agent: navigator.userAgent,
         }).abortSignal(controller.signal) as any);
-        if (!error && active) {
+        // status 201 = the row was really written (visit rows are skipped in static mode, see lib/static-db.ts)
+        if (!error && status === 201 && active) {
           visitIdRef.current = id;
           // Try to detect country via edge function
           supabase.functions.invoke("track-visit", { body: { visit_id: id } }).catch(() => {});
