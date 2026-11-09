@@ -910,7 +910,7 @@ async function claude(key: string, p: C.LiveQuery, q: string, want: number, cent
     "(e.g. Redfin, Trulia, homes.com, Idealista, Rightmove category pages): open 1 to 3 of the most relevant list pages with web_fetch and take the " +
     "individual listing URLs, prices and details shown there (make relative links absolute with that page's domain). If you are not sure a listing is current or matches, leave it out. " +
     "Leave out mobile or manufactured homes, homes on rented land, 55+ communities, auctions, timeshares, shares of a property and homes that need a full renovation. " +
-    `Only listings whose page our robot can read count: prefer ${C.READABLE_PORTALS.join(", ")} and estate agents' own websites; never return listings from idealista, fotocasa, yaencontre, zillow, redfin, homes.com, realtor.com, trulia, casa.sapo, supercasa, kyero, engelvoelkers, rightmove or zoopla (they block robots). ` +
+    `Only listings whose page our robot can read count: prefer ${C.READABLE_PORTALS.join(", ")} and estate agents' own websites; never return listings from idealista, fotocasa, yaencontre, zillow, redfin, homes.com, realtor.com, trulia, casa.sapo, supercasa, kyero, engelvoelkers, rightmove, zoopla, immobiliare.it, casa.it, subito.it, leboncoin, otodom or properstar (they block robots). ` +
     "Reply with ONLY a JSON array, no prose, no code fences: " +
     '[{"url":"","title":"","price":0,"currency":"USD","beds":0,"sqm":0,"location":"town, region","country":"country name in English","kind":"buy","image_url":""}]. ' +
     "price is a number in the listing currency (monthly rent for rentals), sqm is the living area in square metres (convert from sq ft by multiplying by 0.0929), " +

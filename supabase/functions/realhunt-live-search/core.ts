@@ -711,9 +711,9 @@ export function withinAsk(it: { kind: "buy" | "rent"; price: number | null; curr
 
 // ---------------------------------------------------------------- which portals can be read
 /** Portals our reader (realhunt-candidates "extract") can open, tested 8-nov-2026: Claude is asked to prefer them. */
-export const READABLE_PORTALS = ["coldwellbanker.com", "pisos.com", "habitaclia.com", "thinkspain.com", "imovirtual.com"];
+export const READABLE_PORTALS = ["coldwellbanker.com", "pisos.com", "habitaclia.com", "thinkspain.com", "imovirtual.com", "bienici.com", "immowelt.de", "gate-away.com"];
 /** Portals that block automatic reading: their listings can never pass the AI check, so they are not even tried. */
-export const BLOCKED_PORTALS = /(^|\.)(idealista\.(com|pt|it)|fotocasa\.es|yaencontre\.com|zillow\.com|redfin\.com|homes\.com|realtor\.com|trulia\.com|casa\.sapo\.pt|supercasa\.pt|kyero\.com|green-acres\.\w+|spainhouses\.net|engelvoelkers\.com|rightmove\.co\.uk|zoopla\.co\.uk)$/i;
+export const BLOCKED_PORTALS = /(^|\.)(idealista\.(com|pt|it)|fotocasa\.es|yaencontre\.com|zillow\.com|redfin\.com|homes\.com|realtor\.com|trulia\.com|casa\.sapo\.pt|supercasa\.pt|kyero\.com|green-acres\.\w+|spainhouses\.net|engelvoelkers\.com|rightmove\.co\.uk|zoopla\.co\.uk|immobiliare\.it|casa\.it|subito\.it|leboncoin\.fr|otodom\.pl|properstar\.\w+|immonet\.de)$/i;
 export const blockedUrl = (u: string) => { try { return BLOCKED_PORTALS.test(new URL(u).hostname.replace(/^www\./, "")); } catch { return true; } };
 
 // ---------------------------------------------------------------- Claude's answer
@@ -840,7 +840,8 @@ const COUNTRY_FIX: Record<string, string> = { "United States of America": "Unite
 /** Merges what the model understood (and where the geocoder put it) into the rule parse; numbers the rules read win. */
 export function mergeUnderstood(p0: LiveQuery, u: Understood, g: GeoHit | null): LiveQuery {
   const p: LiveQuery = { ...p0 };
-  if (!u.home) return { ...p, ok: false, reason: "not_homes" };
+  // the rules already saw a home search ("casas en Qwertyland"): a place nobody can find is "no_place", not "not homes"
+  if (!u.home) return { ...p, ok: false, reason: p0.ok || p0.reason === "no_place" ? "no_place" : "not_homes" };
   const place = g?.name || u.place || p.place;
   const country0 = g?.country || u.country || p.country;
   const country = country0 ? COUNTRY_FIX[country0] || country0 : null;
