@@ -1,3 +1,4 @@
+import sys
 #!/usr/bin/env python3
 """Regenerate public/data/* (the homes the public site reads, see src/lib/static-db.ts) from the live database.
 
@@ -71,6 +72,13 @@ meta.pop("total", None)
 os.makedirs(os.path.join(OUT, "top"), exist_ok=True)
 json.dump({"v": 1, "generated": datetime.datetime.now(datetime.timezone.utc).isoformat(), "meta": meta, "live": live, "flags": flags, "rows": rows},
           open(os.path.join(OUT, "rh-static.json"), "w", encoding="utf8"), separators=(",", ":"), ensure_ascii=False)
+# the lighter copies visitors download (see scripts/split_es.py)
+try:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import split_es
+    print("split_es:", split_es.split(OUT), "homes with Spanish texts")
+except Exception as e:
+    print("split_es failed (the site keeps serving the full snapshot):", e)
 lists = {d: rpc("top_list", {"p_dest": d}) for d in ["bali", "phuket", "tulum", "batumi", "samui"]}
 json.dump(lists, open(os.path.join(OUT, "top-lists.json"), "w", encoding="utf8"), separators=(",", ":"), ensure_ascii=False)
 slugs = sorted({x["slug"] for v in lists.values() for x in (v or []) if re.match(r"^[a-z0-9-]+$", x["slug"])})
