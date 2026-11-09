@@ -165,7 +165,9 @@ async function geocode(p: C.LiveQuery): Promise<CT.Centre | null> {
     const c: any = (data as any)?.c;
     if (c && Number.isFinite(c.lat) && Number.isFinite(c.lng)) return c as CT.Centre;
   } catch { /* look it up */ }
-  const q = [name, p.state ? C.US_STATES[p.state] : "", p.country].filter(Boolean).join(", ");
+  // a place the geocoder already found when the search was read (9-nov-2026)
+  if (p.lat != null && p.lng != null) return CT.centreFromOpenMeteo(name, p.country, { latitude: p.lat, longitude: p.lng, population: p.pop || 0 });
+  const q = [name, p.state ? C.US_STATES[p.state] : "", p.region || "", p.country].filter(Boolean).join(", ");
   const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 6000);
   try {
     const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(q)}`, { signal: ctl.signal, headers: { "User-Agent": "RealHunt/1.0 (https://realhunt.co)", "Accept-Language": "en" } });
@@ -205,7 +207,8 @@ async function poll(id: string) {
   // 8-nov-2026 (owner: "centre of Sevilla" showed Palmete and Bellavista as results): a centre search shows only homes
   // confirmed central, also while the centre point is still being looked up (before, those polls skipped the filter).
   const wantsCentre = !!j.parsed?.central;
-  const shownAll = all.filter(isShown);
+  // 9-nov-2026: the same home listed by two agencies (same price, bedrooms, size and place) shows once
+  const shownAll = C.sameHomeOnce(all.filter(isShown));
   const shown = wantsCentre ? shownAll.filter((r) => r.centre_ok === true) : shownAll;
   // the closest others only: within 3 x the centre's radius (a home 8 km out is not "near the centre" to anyone)
   const outside = wantsCentre && centre ? shownAll.filter((r) => r.centre_ok === false && (r.distance_to_centre_km ?? 99) <= centre.r_km * 3).sort((a, b) => (a.distance_to_centre_km ?? 99) - (b.distance_to_centre_km ?? 99)).slice(0, 6) : [];
@@ -260,6 +263,46 @@ async function whoIs(req: Request): Promise<Who> {
   return { user, ipHash, netHash, ipSrc: viaProxy ? "proxy" : "direct", admin };
 }
 
+// ---------------------------------------------------------------- 9-nov-2026: understanding any query
+async function understand(q: string, tz: string | null): Promise<{ u: C.Understood | null; cost: number }> {
+  const key = Deno.env.get("ANTHROPIC_API_KEY");
+  if (!key) return { u: null, cost: 0 };
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 9000);
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST", signal: ctl.signal, headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({ model: REVIEW_MODEL, max_tokens: 300, messages: [{ role: "user", content: C.understandPrompt(q, tz) }] }),
+    });
+    const d = await r.json().catch(() => ({}));
+    const cost = C.jobCost(REVIEW_MODEL, d?.usage);
+    if (!r.ok) { console.error("understand", r.status, d?.error?.message); return { u: null, cost }; }
+    const text = (Array.isArray(d.content) ? d.content : []).filter((b: any) => b.type === "text").map((b: any) => b.text).join("\n");
+    return { u: C.parseUnderstood(text), cost };
+  } catch (e) { console.error("understand", e); return { u: null, cost: 0 }; } finally { clearTimeout(t); }
+}
+
+async function geoFind(u: C.Understood): Promise<C.GeoHit | null> {
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 5000);
+  try {
+    const url = `https://geocoding-api.open-meteo.com/v1/search?count=10&language=en&name=${encodeURIComponent(u.place || "")}` + (u.country_code ? `&countryCode=${u.country_code}` : "");
+    const r = await fetch(url, { signal: ctl.signal });
+    const d = r.ok ? await r.json().catch(() => null) : null;
+    const hit = C.pickGeo(d?.results || [], u);
+    if (hit) return hit;
+  } catch { /* try Nominatim */ } finally { clearTimeout(t); }
+  const ctl2 = new AbortController(); const t2 = setTimeout(() => ctl2.abort(), 6000);
+  try {
+    const q = [u.place, u.region, u.country].filter(Boolean).join(", ");
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=1&q=${encodeURIComponent(q)}` + (u.country_code ? `&countrycodes=${u.country_code.toLowerCase()}` : ""), { signal: ctl2.signal, headers: { "User-Agent": "RealHunt/1.0 (https://realhunt.co)", "Accept-Language": "en" } });
+    const a = r.ok ? await r.json().catch(() => []) : [];
+    const x = Array.isArray(a) ? a[0] : null;
+    if (!x) return null;
+    const lat = Number(x.lat), lng = Number(x.lon);
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    return { name: u.place!, country: x.address?.country || u.country || "", country_code: String(x.address?.country_code || u.country_code || "").toUpperCase(), region: x.address?.state || x.address?.province || u.region, lat, lng, pop: null };
+  } catch { return null; } finally { clearTimeout(t2); }
+}
+
 async function start(req: Request, body: any) {
   const q = String(body.q || "").replace(/\s+/g, " ").trim().slice(0, 300);
   const lang = body.lang === "es" ? "es" : "en";
@@ -269,14 +312,24 @@ async function start(req: Request, body: any) {
   const tz = typeof body.tz === "string" ? body.tz.slice(0, 60) : null;
   const choice = typeof body.where === "string" ? body.where.slice(0, 12) : null;
   const res = C.resolveLive(C.parseLiveQuery(q), { tz, choice });
-  const p = res.p;
+  let p = res.p;
+  // 9-nov-2026: any town in the world, any language: what the rules cannot place is read by a small model and found
+  // on a free geocoder (Open-Meteo, then Nominatim). Only when nothing is found do we say so.
+  let parseCost = 0;
+  if (!res.ask && C.needsUnderstanding(p, q)) {
+    const u = await understand(q, tz);
+    parseCost = u.cost;
+    if (u.u) p = C.mergeUnderstood(p, u.u, u.u.place ? await geoFind(u.u) : null);
+  }
   // a town only our own homes know ("Ostuni", "Kavala"): its country from the site's snapshot
   if (p.ok && p.place && !p.country && !res.ask) {
     const want = p.place.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     const cs = new Set((await approved()).filter((r) => String(r.location_name || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/[,(]/).some((x: string) => x.trim() === want)).map((r) => r.country).filter(Boolean));
     if (cs.size === 1) C.placeInto(p, [...cs][0] as string);
   }
-  const base = { q: q || "(empty)", lang, parsed: p, user_id: who.user, ip_hash: who.ipHash, admin: !!who.admin, usage: { ip_src: who.ipSrc, net: who.netHash, tz, where: choice } };
+  // admin check of how a query is read (no job, no search): {dry:true, secret}
+  if (body.dry === true && body.secret && body.secret === (await secret())) return json({ status: "parsed", parsed: p, ask: res.ask, parse_cost: parseCost });
+  const base = { q: q || "(empty)", lang, parsed: p, user_id: who.user, ip_hash: who.ipHash, admin: !!who.admin, usage: { ip_src: who.ipSrc, net: who.netHash, tz, where: choice, parse_cost: parseCost || undefined } };
   // the slice keeps usage.net on every job, so spend per network address can be summed (dayBudget)
   const log = async (status: string, extra: Record<string, unknown> = {}) => {
     const { data } = await db.from("live_jobs").insert({ ...base, qkey: p.ok ? C.liveKey(p) : null, status, progress: 100, ...extra }).select("id").single();

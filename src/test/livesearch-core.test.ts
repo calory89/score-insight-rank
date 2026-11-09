@@ -702,3 +702,37 @@ describe("centre table and geocoder backup (8-nov-2026, Almería)", async () => 
     expect(CT.centreFromOpenMeteo("X", "Spain", null)).toBeNull();
   });
 });
+
+describe("any town in the world (9-nov-2026)", async () => {
+  const C = await import("../../supabase/functions/realhunt-live-search/core");
+  it("asks for help when the rules cut a name or miss the country", () => {
+    expect(C.needsUnderstanding(C.parseLiveQuery("casa en Vejer de la Frontera"), "casa en Vejer de la Frontera")).toBe(true);
+    expect(C.needsUnderstanding(C.parseLiveQuery("appartamento a Lecce"), "appartamento a Lecce")).toBe(true);
+    expect(C.needsUnderstanding(C.parseLiveQuery("3 bed house in Odense"), "3 bed house in Odense")).toBe(false);
+  });
+  it("keeps the geocoder to the same name and country", () => {
+    const res = [{ name: "Sumbar", country: "Indonesia", country_code: "ID", admin1: "Central Java", latitude: -7, longitude: 110, population: 5000 }];
+    expect(C.pickGeo(res, { place: "Sumba", country_code: "ID", region: null })).toBeNull();
+    const ok = C.pickGeo([{ name: "Cuenca", country: "Spain", country_code: "ES", latitude: 40, longitude: -2, population: 50000 }, { name: "Cuenca", country: "Ecuador", country_code: "EC", admin1: "Azuay", latitude: -2.9, longitude: -79, population: 300000 }], { place: "Cuenca", country_code: "EC", region: null });
+    expect(ok?.country).toBe("Ecuador");
+  });
+  it("merges: model's place and country, rule numbers win, local currency", () => {
+    const p0 = C.parseLiveQuery("2 habitaciones en Vejer de la Frontera por menos de 200.000 euros");
+    const u = C.parseUnderstood('{"home":true,"kind":"buy","place":"Vejer de la Frontera","region":"Andalusia","country":"Spain","country_code":"ES","central":false,"min_beds":2,"max_price":200000,"currency":"EUR","ptype":"any"}')!;
+    const p = C.mergeUnderstood(p0, u, null);
+    expect(p.ok).toBe(true); expect(p.place).toBe("Vejer de la Frontera"); expect(p.country).toBe("Spain"); expect(p.max_eur).toBe(200000);
+    const q = C.mergeUnderstood(C.parseLiveQuery("condo in Playa del Carmen"), C.parseUnderstood('{"home":true,"place":"Playa del Carmen","country":"Mexico","country_code":"MX"}')!, null);
+    expect(q.currency).toBe("MXN");
+    expect(C.mergeUnderstood(q, C.parseUnderstood('{"home":false}')!, null).ok).toBe(false);
+  });
+});
+
+describe("same home from two agencies (9-nov-2026)", async () => {
+  const C = await import("../../supabase/functions/realhunt-live-search/core");
+  it("keeps one", () => {
+    const a = { id: "a", price: 290000, beds: 5, sqm: 160, location: "Vejer de la Frontera", score: 81 };
+    const b = { ...a, id: "b" };
+    const c = { ...a, id: "c", price: 250000 };
+    expect(C.sameHomeOnce([a, b, c]).map((x) => x.id)).toEqual(["a", "c"]);
+  });
+});
