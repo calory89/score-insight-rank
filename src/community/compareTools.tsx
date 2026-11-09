@@ -3,6 +3,7 @@
 //  - CompareTray: bottom tray "Compare (2)" on every page except /compare, opens /compare?ids=...
 //  - PriceWatch: "Tell me if the price drops" on a home page (realhunt.community_watch_home, double opt-in)
 //  - SavedHomes: saved page cards with a "Price dropped" badge, the change since saved and "Compare saved"
+import { snapshotRaw } from "@/lib/snapshotRaw";
 import { lazy, Suspense, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Bell, Check, Scale, X } from "lucide-react";
@@ -20,7 +21,7 @@ import "./compare-tools.css";
 // The public snapshot, read directly (importing @/lib/static-db here would patch supabase.rpc a second time).
 let rowsP: Promise<any[]> | null = null;
 export function loadRows(): Promise<any[]> {
-  return (rowsP ||= fetch("/data/rh-static.json", { cache: "no-cache" }).then((r) => { if (!r.ok) throw new Error("data " + r.status); return r.json(); })
+  return (rowsP ||= snapshotRaw()
     .then((s: any) => mediaDeep(s).rows || []).catch((e) => { rowsP = null; throw e; }));
 }
 

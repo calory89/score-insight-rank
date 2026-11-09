@@ -16,6 +16,7 @@ import { weatherShell } from "../src/pages/wx/shell";
 import { DIMS, AMEN } from "../src/community/dims";
 import { regionOf, slugify, HOME_TYPES } from "../src/community/regions";
 import { homeArticle } from "../src/community/homeArticle";
+import { toMedia } from "../src/lib/media";
 import { type CanBuyData, STATUS_LABEL, UPDATED, canBuyPairs, canBuyCountries, canBuySlug, ruleFor, residencyFor, canBuyFaq, canBuyMeta, fill, costLines, costCountries, nameOf, fmtMoney } from "../src/community/seo2data";
 
 const SITE = "https://realhunt.co";
@@ -171,7 +172,9 @@ function build(root: string) {
         },
       });
     }
-    page(url, `${d.title} · RealHunt`, d.desc, d.image || DEF, body, ld, { lastmod: homeDay(r), group: "homes" });
+    // 9-nov-2026 speed: the main photo starts downloading with the HTML, not after the app and the data (LCP)
+    const hero = r.image_urls?.[0] ? toMedia(String(r.image_urls[0])) : "";
+    page(url, `${d.title} · RealHunt`, d.desc, d.image || DEF, body, ld, { lastmod: homeDay(r), group: "homes", head: hero ? `<link rel="preload" as="image" href="${esc(hero)}" fetchpriority="high" />` : undefined });
   }
 
   // Answers computed from the homes on the site and src/data/destinations.json, so they stay true after every update.

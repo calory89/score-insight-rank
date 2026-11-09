@@ -3,6 +3,7 @@
 //   /can-i-buy                              who can buy where, by nationality
 //   /can-i-buy/<nationality>-in-<country>   the answer for one nationality and one country
 //   /buying-costs and /buying-costs/<k>     calculator: what you pay on top of the price
+import { snapshotRaw } from "@/lib/snapshotRaw";
 import "./seo2.css";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -50,7 +51,7 @@ const ls = {
 // All published homes by country, best score first (the same static snapshot the feed uses).
 let homesP: Promise<Record<string, Row[]>> | null = null;
 function homesByCountry() {
-  return (homesP ||= fetch("/data/rh-static.json", { cache: "no-cache" }).then((r) => r.json()).then(mediaDeep).then((s: any) => {
+  return (homesP ||= snapshotRaw().then(mediaDeep).then((s: any) => {
     const by: Record<string, Row[]> = {};
     for (const r of (s.rows || []) as any[]) if (r?.slug && r.price_eur > 0) (by[countryKey(r.country)] ||= []).push(r);
     for (const k of Object.keys(by)) by[k].sort((a: any, b: any) => (b.nota || 0) - (a.nota || 0) || (a.rank ?? 1e9) - (b.rank ?? 1e9));
