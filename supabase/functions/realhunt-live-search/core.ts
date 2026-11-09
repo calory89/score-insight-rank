@@ -615,7 +615,8 @@ export function jobCost(model: string, u: Usage | null | undefined): number {
 export type Miss = { id: string; url: string; title: string; title_es?: string | null; price: number | null; currency: string; price_eur: number | null; beds: number | null; sqm: number | null; location: string; image: string | null; score: number; photo_quality: number | null; why: string[]; central?: boolean | null; distance_to_centre_km?: number | null; centre_fact?: string | null; centre_fact_es?: string | null };
 export function closestMisses(all: any[], n = 4): Miss[] {
   return (all || [])
-    .filter((r) => r && r.show !== true && r.source === "web" && r.photo_quality != null && r.score >= 60 && !(r.reasons || []).some((x: string) => /^flag:|^skip:/.test(x)))
+    // 9-nov-2026 (owner): a home that needs work is never offered, not even as "closest"
+    .filter((r) => r && r.show !== true && r.source === "web" && r.photo_quality != null && r.score >= 60 && !(r.reasons || []).some((x: string) => /^flag:|^skip:/.test(x)) && !(r.flags || []).includes("needs_renovation"))
     .sort((a, b) => b.score - a.score).slice(0, n)
     .map((r) => ({
       id: r.id, url: r.url, title: r.title, title_es: r.title_es || null, price: r.price, currency: r.currency, price_eur: r.price_eur, beds: r.beds, sqm: r.sqm, location: r.location,
@@ -858,7 +859,9 @@ export function mergeUnderstood(p0: LiveQuery, u: Understood, g: GeoHit | null):
   if (u.kind && p.kind === "buy" && u.kind === "rent") p.kind = "rent";
   if (p.min_beds == null && u.min_beds != null) p.min_beds = u.min_beds;
   if (u.central) p.central = true;
-  if (p.ptype === "any" && u.ptype && u.ptype !== "any") p.ptype = u.ptype;
+  // 9-nov-2026 (owner: "3 bed home in madrid city centre" searched only "casas" and read 2 homes): the rules saw no
+  // house word, so a "house" from the model ("home", "vivienda") is soft: flats count too
+  if (p.ptype === "any" && u.ptype && u.ptype !== "any") { p.ptype = u.ptype; if (u.ptype === "house") p.ptype_soft = true; }
   if (p.max_price == null && u.max_price != null) p.max_price = u.max_price;
   if (!p.cur_typed) {
     const typed = u.currency && FX_TO_EUR[u.currency] && p0.max_price == null && u.max_price != null ? u.currency : null;

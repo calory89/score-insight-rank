@@ -326,3 +326,32 @@ export function centreFromOpenMeteo(name: string, country: string, g: { latitude
   const r = pop > 2_000_000 ? 3 : pop > 600_000 ? 2.2 : pop > 150_000 ? 1.6 : 1.3;
   return { name, country, lat, lng, r_km: r, central: [], near: [], src: "geocoded" };
 }
+
+// ---------------------------------------------------------------- another town in the listing's own title (9-nov-2026)
+// Owner: "3 bed home in madrid city centre" showed "Three-bedroom cave house ... in Benamaurel, Granada": the agent filed
+// it on pisos.com under Cortes-Huertas, Madrid (pin 300 m from Sol). The title we wrote from the listing names the
+// real town, so a title that names another known city or province, and never the searched place, is the wrong place.
+const PROVINCES = ["a coruna", "alava", "albacete", "alicante", "almeria", "asturias", "avila", "badajoz", "barcelona", "burgos", "caceres", "cadiz", "cantabria", "castellon", "ciudad real", "cordoba", "cuenca", "girona", "granada", "guadalajara", "gipuzkoa", "huelva", "huesca", "islas baleares", "mallorca", "jaen", "la rioja", "las palmas", "leon", "lleida", "lugo", "madrid", "malaga", "murcia", "navarra", "ourense", "palencia", "pontevedra", "salamanca", "santa cruz de tenerife", "tenerife", "segovia", "sevilla", "soria", "tarragona", "teruel", "toledo", "valencia", "valladolid", "bizkaia", "zamora", "zaragoza", "ceuta", "melilla", "andalucia", "andalusia", "catalonia", "cataluna", "galicia", "aragon", "extremadura", "castilla la mancha", "castilla y leon", "canary islands", "balearic islands", "basque country", "pais vasco"];
+const KNOWN = new Set<string>([...BY.keys(), ...PROVINCES]);
+/** The places a title says it is in: what follows its last " in " / " en " ("in Benamaurel, Granada" -> benamaurel, granada). */
+export function titlePlaces(title: string | null | undefined): string[] {
+  // like norm(), but keeping the commas that separate "town, province"
+  const t = " " + String(title || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9, ]+/g, " ").replace(/\s+/g, " ") + " ";
+  const i = Math.max(t.lastIndexOf(" in "), t.lastIndexOf(" en "));
+  if (i < 0) return [];
+  const parts = t.slice(i + 4).split(",").map((x) => x.trim()).filter(Boolean);
+  // each part as written, plus any known city or province inside it ("malaga centro" -> malaga)
+  return parts.flatMap((w) => [w, ...[...KNOWN].filter((k) => k !== w && has(w, k))]);
+}
+/** True when the listing's title puts it in another known city or province and never names the searched place. */
+export function wrongPlace(place: string | null | undefined, x: { title?: string | null; title_es?: string | null; central?: string[]; near?: string[] }): boolean {
+  const want = norm(place || "").trim();
+  if (!want) return false;
+  const ok = new Set([want, ...(x.central || []), ...(x.near || [])]);
+  for (const title of [x.title, x.title_es]) {
+    if (!title) continue;
+    if (has(" " + norm(title).replace(/[^a-z0-9 ]+/g, " ") + " ", want)) continue;
+    if (titlePlaces(title).some((w) => KNOWN.has(w) && !ok.has(w))) return true;
+  }
+  return false;
+}
