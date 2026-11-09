@@ -202,9 +202,11 @@ async function poll(id: string) {
     await db.from("live_jobs").update({ updated_at: new Date().toISOString() }).eq("id", id);
     background(chain(id));
   }
-  const all: Result[] = Array.isArray(j.results) ? j.results : [];
   // v4: a "centre" search shows only central homes; the closest others come apart in outside_centre
   const centre: CT.Centre | null = j.work?.centre || null;
+  // 9-nov-2026: a listing whose own title names another town or province is the wrong place (agent filed it wrongly)
+  const wantPlace = centre?.name || j.parsed?.city || j.parsed?.place || "";
+  const all: Result[] = (Array.isArray(j.results) ? j.results : []).filter((r: Result) => !CT.wrongPlace(wantPlace, { title: r.title, title_es: (r as any).title_es, central: centre?.central, near: centre?.near }));
   // 8-nov-2026 (owner: "centre of Sevilla" showed Palmete and Bellavista as results): a centre search shows only homes
   // confirmed central, also while the centre point is still being looked up (before, those polls skipped the filter).
   const wantsCentre = !!j.parsed?.central;
