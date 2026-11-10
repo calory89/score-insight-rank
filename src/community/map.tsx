@@ -42,7 +42,7 @@ export default function MapView() {
         <span>{t("Hide noisy or flood-risk homes")}</span>
       </label>
       <p className="hunt-fine hunt-mapcount">{n === null ? t("Loading…") : <><span>{`${n} homes`}</span> · <span>{t("Pins show the village, not the exact house.")}</span></>}</p>
-      <Suspense fallback={<div className="hm hm-page"><div className="hm-map" /></div>}>
+      <Suspense fallback={<><div className="hm-regions" /><div className="hm hm-page"><div className="hm-map" /></div></>}>
         <HomesMap params={f} focus={focus} className="hm-page" onCount={setN} hideRisky={quiet} />
       </Suspense>
     </div>

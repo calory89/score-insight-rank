@@ -30,8 +30,6 @@ import { useLiveStats } from "@/components/realhunt/LiveStats";
 import { lazy, Suspense } from "react";
 import { DevBlock, ClaimListing, BuyerPicks, NewBuildsPage, DevLeaderboard } from "./v8";
 import { InboxPage, CompareBuilds, CostsIndex, CostsPage, NewBuildReport, AgentsPage, TranslateBar, InboxLink } from "./v10";
-import { TopListPage, TopProjectPage, TopClaimPage, TopMinePage, TopIndexPage } from "./top";
-import { TopMethodPage, AboutPage } from "./topTrustUI";
 import { HomeMethodPage } from "./method";
 import { DetailAside } from "./aside";
 import { StaticPage } from "./staticpage";
@@ -39,14 +37,12 @@ import { InlineAlert, HomeFaq, MortgageCalc, AlertConfirmPage, HomeArticle } fro
 import { regionOf, slugify } from "./regions";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, GUIDES, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
-import { CountriesPage } from "./countries";
 import { CardCheck, CheckLayer } from "./check";
 import { CompareTray, CompareRoute, PriceWatch, SavedHomes } from "./compareTools";
 const slugCountryKey = (c?: string | null) => String(c || "").toLowerCase().trim().replace(/\s+/g, "-");
 import { t } from "./i18n";
 import { FindHomePage, FindHomeCTA } from "./findhome";
-import ExtensionRoute from "./extension";
-import BestRoute from "./best";
+import BestRoute from "./best"; // stays here: its CSS must keep its place in the cascade
 import { ScoreBars, BestPerCountry, RankRow, RankHead, RankSkeleton, ScoreHelp, NearestHomes, NearCity } from "./scores";
 import { HomeCard, HomeCardSkeleton } from "./homecards";
 import { LogoMark } from "@/components/realhunt/Logo";
@@ -64,9 +60,22 @@ import { useTheme, ThemeButton, Welcome, BoardButton, BoardsSection, BoardPage, 
 import { Ctx, useCommunity } from "./ctx";
 import { AccountMenu } from "./accountmenu";
 import { PriceHead } from "./pricehead";
+import { seedBootRow, openedHere } from "./bootrow";
+seedBootRow(rowCache); // a home page opened directly paints from the row in its own HTML (seo/dealShell.ts)
 const MapView = lazy(() => import("./map"));
 const LiveSearchPage = lazy(() => import("./livesearch"));
 const HomesMap = lazy(() => import("./homesmap"));
+// 10-nov-2026 speed: pages that are not the feed or a home (Top 100, /about, /extension, /countries) were
+// part of this file's download (about 190 KB of code before compression on every home page). Loaded when opened.
+const TopListPage = lazy(() => import("./top").then((m) => ({ default: m.TopListPage })));
+const TopProjectPage = lazy(() => import("./top").then((m) => ({ default: m.TopProjectPage })));
+const TopClaimPage = lazy(() => import("./top").then((m) => ({ default: m.TopClaimPage })));
+const TopMinePage = lazy(() => import("./top").then((m) => ({ default: m.TopMinePage })));
+const TopIndexPage = lazy(() => import("./top").then((m) => ({ default: m.TopIndexPage })));
+const TopMethodPage = lazy(() => import("./topTrustUI").then((m) => ({ default: m.TopMethodPage })));
+const AboutPage = lazy(() => import("./topTrustUI").then((m) => ({ default: m.AboutPage })));
+const CountriesPage = lazy(() => import("./countries").then((m) => ({ default: m.CountriesPage })));
+const ExtensionRoute = lazy(() => import("./extension"));
 // Growth pages (/can-i-buy, /buying-costs), loaded only when opened.
 const CanBuyIndex = lazy(() => import("./seo2").then((m) => ({ default: m.CanBuyIndex })));
 const CanBuyPage = lazy(() => import("./seo2").then((m) => ({ default: m.CanBuyPage })));
@@ -949,7 +958,7 @@ function Detail() {
   }
   // Paint at once from the row the feed already had; the full record fills in behind it.
   const cached = slug ? rowCache.get(slug) : undefined;
-  useEffect(() => { setData(null); bumpIx(); bumpStat("opened"); window.scrollTo(0, 0); }, [slug]);
+  useEffect(() => { setData(null); bumpIx(); bumpStat("opened"); if (!openedHere(slug)) window.scrollTo(0, 0); }, [slug]);
   const swipe = useHomeSwipe(slug);
   useEffect(() => {
     if (session) load();
@@ -2009,7 +2018,7 @@ export default function Community() {
     ) : path === "/live-search" ? (
       <Suspense fallback={<Loading />}><LiveSearchPage /></Suspense>
     ) : path === "/map" ? (
-      <Suspense fallback={<Loading />}><MapView /></Suspense>
+      <Suspense fallback={<div className="hunt-wrap hunt-mappage" style={{ minHeight: "100vh" }} aria-busy="true" />}><MapView /></Suspense>
     ) : path === "/leaderboard" ? (
       <LeaderboardPage />
     ) : path === "/invite" ? (
@@ -2045,5 +2054,6 @@ export default function Community() {
     ) : (
       <Home />
     );
-  return <Shell>{page}</Shell>;
+  // The fallback keeps a screen of height, so the footer does not show for a moment and then jump away (layout shift).
+  return <Shell><Suspense fallback={<div style={{ minHeight: "100vh" }}><Loading /></div>}>{page}</Suspense></Shell>;
 }

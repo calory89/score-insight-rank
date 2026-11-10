@@ -381,15 +381,7 @@ body:has(.rh-cmp-tray) .hunt { padding-bottom: calc(var(--tab-h) + 76px + env(sa
 }
 
 /* ---------------------------------------------------------------- outside the .hunt shell: cookie banner, sign-in dialog */
-.rh-cookie-banner > div { border-radius: 16px !important; }
-.rh-cookie-banner button { min-height: 44px; border-radius: 12px !important; font-weight: 600; font-size: 14px !important; }
-/* both choices carry the same weight (consent must not be nudged) */
-.rh-cookie-banner :is(.rh-cb-accept, .rh-cb-essential) { background: #fff !important; color: #111214 !important; border: 1px solid #D3D5D9 !important; }
-.rh-cookie-banner :is(.rh-cb-accept, .rh-cb-essential):hover { border-color: #111214 !important; }
-html.rh-dark .rh-cookie-banner > div { background: #161719 !important; border-color: #2A2C30 !important; color: #ECEDEE; }
-html.rh-dark .rh-cookie-banner p { color: #CDCFD3 !important; }
-html.rh-dark .rh-cookie-banner a { color: #ECEDEE !important; }
-html.rh-dark .rh-cookie-banner :is(.rh-cb-accept, .rh-cb-essential) { background: #161719 !important; color: #ECEDEE !important; border-color: #3A3D42 !important; }
+/* cookie banner: see src/components/realhunt/cookie-banner.css */
 
 .rh-auth { font-family: Inter, system-ui, sans-serif; }
 .rh-auth .rh-btn-primary { background: #D4420C !important; border-radius: 12px !important; box-shadow: none !important; color: #fff !important; font-weight: 600; }
