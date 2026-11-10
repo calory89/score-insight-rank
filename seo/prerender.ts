@@ -8,6 +8,9 @@
 // if it was prerendered and is worth indexing. Thin pages (a price band with fewer than MIN_LIST homes) still
 // get a file, so the link works and shares well, but carry noindex and stay out of the sitemap.
 //
+// Spanish (10-nov-2026): every page that is fully Spanish also exists as /es/<same path>, with hreflang in both
+// versions and its own sitemap part. How those pages are made, measured and decided: seo/es.ts.
+//
 // Data: src/data/deal-meta.json and public/data/rh-static.json (refreshed daily by rh-og-cards.yml and
 // scripts/build_static.py), plus the blog, search, top and destination JSON files in src/data.
 import path from "path";
@@ -19,7 +22,9 @@ import { homeArticle } from "../src/community/homeArticle";
 import { toMedia } from "../src/lib/media";
 import { writeLlmsFull } from "./llmsFull";
 import { thumb } from "../src/lib/thumbs";
-import { type CanBuyData, STATUS_LABEL, UPDATED, canBuyPairs, canBuyCountries, canBuySlug, ruleFor, residencyFor, canBuyFaq, canBuyMeta, fill, costLines, costCountries, nameOf, fmtMoney } from "../src/community/seo2data";
+import { type CanBuyData, statusLabel, UPDATED, UPDATED_ES, canBuyPairs, canBuyCountries, canBuySlug, ruleFor, residencyFor, canBuyFaq, canBuyMeta, fill, costLines, costCountries, nameOf, fmtMoney } from "../src/community/seo2data";
+import { homeArticleEs } from "../src/community/homeArticleEs";
+import { type EsPass, type PageRec, type Twin, createEsPass, writeEsTwins, coverageSummary } from "./es";
 
 const SITE = "https://realhunt.co";
 // Country names for the Spanish copies (/es/...). A country not listed keeps its English name.
@@ -38,7 +43,7 @@ const eur = (n: number) => "€" + Math.round(n).toLocaleString("en");
 const day = (s?: string | null) => (s && /^\d{4}-\d{2}-\d{2}/.test(s) ? s.slice(0, 10) : null);
 const maxDay = (xs: (string | null | undefined)[]) => xs.map(day).filter(Boolean).sort().pop() || null;
 // "in the Netherlands", "in the United States"
-const the = (n: string) => (/^(United |Netherlands$|Dominican Republic$|Czech Republic$|Philippines$)/.test(n) ? "the " + n : n);
+const theEn = (n: string) => (/^(United |Netherlands$|Dominican Republic$|Czech Republic$|Philippines$)/.test(n) ? "the " + n : n);
 const slugCountry = (c: string) => String(c || "").toLowerCase().trim().replace(/\s+/g, "-");
 const crumbs = (items: [string, string][]) => ({
   "@context": "https://schema.org", "@type": "BreadcrumbList",
@@ -46,6 +51,30 @@ const crumbs = (items: [string, string][]) => ({
 });
 const navHtml = (items: [string, string][]) =>
   `<nav aria-label="Breadcrumb">${items.map(([n, u], i) => (i === items.length - 1 ? esc(n) : `<a href="${esc(u.replace(SITE, "") || "/")}">${esc(n)}</a>`)).join(" › ")}</nav>`;
+
+/** index.html with one page's title, description, canonical, share card, structured data and static content. */
+export function renderHtml(html: string, { url, title, desc, image, body, ld, o }: PageRec): string {
+  let h = html;
+  if (body) h = h.replace('<div id="root"></div>', () => `<div id="root">${body}</div>`);
+  if (o.head) h = h.replace("</head>", () => o.head + "</head>");
+  // 10-nov-2026: Spanish copies live under /es/. Both versions carry the three alternate links.
+  if (o.alt) h = h.replace("</head>", () => `<link rel="alternate" hreflang="en" href="${esc(o.alt!.en)}" /><link rel="alternate" hreflang="es" href="${esc(o.alt!.es)}" /><link rel="alternate" hreflang="x-default" href="${esc(o.alt!.en)}" /></head>`);
+  if (o.lang === "es") h = h.replace('<html lang="en">', '<html lang="es">').replace('<meta property="og:locale" content="en_US" />', '<meta property="og:locale" content="es_ES" />');
+  if (ld?.length) h = h.replace("</head>", () => ld.map((x) => `<script type="application/ld+json">${JSON.stringify(x).replace(/</g, "\\u003c")}</script>`).join("") + "</head>");
+  const rep = (re: RegExp, val: string) => { h = h.replace(re, () => val); };
+  rep(/<title>[^<]*<\/title>/, `<title>${esc(title)}</title>`);
+  rep(/<meta name="description" content="[^"]*"\s*\/?>/, `<meta name="description" content="${esc(desc)}" />`);
+  rep(/<link rel="canonical" href="[^"]*"\s*\/?>/, `<link rel="canonical" href="${esc(url)}" />`);
+  rep(/<meta property="og:title" content="[^"]*"\s*\/?>/, `<meta property="og:title" content="${esc(title)}" />`);
+  rep(/<meta property="og:description" content="[^"]*"\s*\/?>/, `<meta property="og:description" content="${esc(desc)}" />`);
+  rep(/<meta property="og:image" content="[^"]*"\s*\/?>/, `<meta property="og:image" content="${esc(image)}" />`);
+  rep(/<meta property="og:url" content="[^"]*"\s*\/?>/, `<meta property="og:url" content="${esc(url)}" />`);
+  rep(/<meta name="twitter:title" content="[^"]*"\s*\/?>/, `<meta name="twitter:title" content="${esc(title)}" />`);
+  rep(/<meta name="twitter:description" content="[^"]*"\s*\/?>/, `<meta name="twitter:description" content="${esc(desc)}" />`);
+  rep(/<meta name="twitter:image" content="[^"]*"\s*\/?>/, `<meta name="twitter:image" content="${esc(image)}" />`);
+  if (o.noindex) rep(/<meta name="robots" content="[^"]*"\s*\/?>/, `<meta name="robots" content="noindex, follow" />`);
+  return h;
+}
 
 export function prerenderPages() {
   let outDir = "dist";
@@ -60,34 +89,24 @@ export function prerenderPages() {
   };
 }
 
-function build(root: string) {
+// Runs twice: in English (writes the pages, feeds and sitemap) and, called from the end of that run, in Spanish
+// (`es` set): the same templates with the Spanish data, recorded and turned into /es/ pages by seo/es.ts.
+function build(root: string, es?: EsPass) {
+  const the = es ? es.the : theEn;
+  const lg = es ? "es" as const : "en" as const;
+  const out: typeof fs.writeFileSync = es ? () => {} : fs.writeFileSync; // feeds, llms.txt and build.json: English run only
   const indexFile = path.join(root, "index.html");
   if (!fs.existsSync(indexFile)) return;
   const html = fs.readFileSync(indexFile, "utf8");
   const entries: Entry[] = [{ url: `${SITE}/`, lastmod: null, group: "pages" }];
-  const readJson = (f: string, d: any) => { const p = path.resolve(process.cwd(), f); return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : d; };
+  const altOf = new Map<string, string>(); // English URL -> Spanish URL, for every page that has a Spanish copy
+  const readJson = (f: string, d: any) => { const p = path.resolve(process.cwd(), f); const v = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : d; return es ? es.data(f, v) : v; };
   const abs = (u: string) => (String(u || "").startsWith("http") ? u : SITE + u);
 
   const page = (url: string, title: string, desc: string, image: string, body?: string, ld?: object[], o: Opts = {}) => {
-    let h = html;
-    if (body) h = h.replace('<div id="root"></div>', () => `<div id="root">${body}</div>`);
-    if (o.head) h = h.replace("</head>", () => o.head + "</head>");
-    // 10-nov-2026: Spanish copies live under /es/ (see index.html: the app reads the prefix as "Spanish" and drops it).
-    if (o.alt) h = h.replace("</head>", () => `<link rel="alternate" hreflang="en" href="${esc(o.alt!.en)}" /><link rel="alternate" hreflang="es" href="${esc(o.alt!.es)}" /><link rel="alternate" hreflang="x-default" href="${esc(o.alt!.en)}" /></head>`);
-    if (o.lang === "es") h = h.replace('<html lang="en">', '<html lang="es">').replace('<meta property="og:locale" content="en_US" />', '<meta property="og:locale" content="es_ES" />');
-    if (ld?.length) h = h.replace("</head>", () => ld.map((x) => `<script type="application/ld+json">${JSON.stringify(x).replace(/</g, "\\u003c")}</script>`).join("") + "</head>");
-    const rep = (re: RegExp, val: string) => { h = h.replace(re, () => val); };
-    rep(/<title>[^<]*<\/title>/, `<title>${esc(title)}</title>`);
-    rep(/<meta name="description" content="[^"]*"\s*\/?>/, `<meta name="description" content="${esc(desc)}" />`);
-    rep(/<link rel="canonical" href="[^"]*"\s*\/?>/, `<link rel="canonical" href="${esc(url)}" />`);
-    rep(/<meta property="og:title" content="[^"]*"\s*\/?>/, `<meta property="og:title" content="${esc(title)}" />`);
-    rep(/<meta property="og:description" content="[^"]*"\s*\/?>/, `<meta property="og:description" content="${esc(desc)}" />`);
-    rep(/<meta property="og:image" content="[^"]*"\s*\/?>/, `<meta property="og:image" content="${esc(image)}" />`);
-    rep(/<meta property="og:url" content="[^"]*"\s*\/?>/, `<meta property="og:url" content="${esc(url)}" />`);
-    rep(/<meta name="twitter:title" content="[^"]*"\s*\/?>/, `<meta name="twitter:title" content="${esc(title)}" />`);
-    rep(/<meta name="twitter:description" content="[^"]*"\s*\/?>/, `<meta name="twitter:description" content="${esc(desc)}" />`);
-    rep(/<meta name="twitter:image" content="[^"]*"\s*\/?>/, `<meta name="twitter:image" content="${esc(image)}" />`);
-    if (o.noindex) rep(/<meta name="robots" content="[^"]*"\s*\/?>/, `<meta name="robots" content="noindex, follow" />`);
+    if (es) { if (o.lang !== "es") es.add(url, title, desc, image, body, ld, o); return; } // Spanish run: recorded, decided at the end (seo/es.ts)
+    if (o.alt && o.lang !== "es") altOf.set(o.alt.en, o.alt.es); // an English page whose Spanish copy is written by hand below
+    const h = renderHtml(html, { url, title, desc, image, body, ld, o });
     const rel = url.replace(/^https:\/\/realhunt\.co\/?/, "");
     const dir = path.join(root, rel);
     fs.mkdirSync(dir, { recursive: true });
@@ -150,7 +169,7 @@ function build(root: string) {
       const near = r.nearby || {};
       const nearList = [["sea", "Sea"], ["lake", "Lake"], ["shop", "Shop"], ["train", "Train"], ["airport", "Airport"], ["hospital", "Hospital"]]
         .filter(([k]) => near[k]?.km != null).map(([k, l]) => `<li>${esc(l)}: ${esc(near[k].name || "")} · ${esc(near[k].km)} km</li>`).join("");
-      const art = homeArticle(r, { countryHomes: byCountry.get(cc) || [r], regionHomes: rp?.homes, regionName: rp?.name, dest: destForArticle[cc] || null, hasGuide: !!guidesForArticle[cc] });
+      const art = (es ? homeArticleEs : homeArticle)(r, { countryHomes: byCountry.get(cc) || [r], regionHomes: rp?.homes, regionName: rp?.name, dest: destForArticle[cc] || null, hasGuide: !!guidesForArticle[cc] });
       const sameRegion = rp ? rp.homes.filter((x) => x.slug !== r.slug).slice(0, 6) : [];
       const similar = (sameRegion.length >= 3 ? sameRegion : ranked.filter((x) => x.slug !== r.slug && x.country === r.country).slice(0, 6));
       const bands = PRICE_BANDS.filter((p) => p >= r.price_eur).slice(0, 1);
@@ -355,7 +374,7 @@ function build(root: string) {
     page(`${SITE}/es`, "RealHunt: las mejores casas de cada país, ordenadas por nota", descEs, DEF,
       `${css}<main class="rh-static rh-hs" id="rh-home-static"><h1>Las mejores casas en el extranjero, revisadas y con nota</h1><p>${esc(descEs)}</p>`
       + `<ol>${topEs.map(cardEs).join("")}</ol><h2>Casas por país</h2><p>${countryLinks.filter(([, x]) => x.homes.filter((h) => h.title_es).length >= MIN_LIST).map(([k, x]) => `<a href="/es/homes/${esc(k)}">${esc(esC(x.name))} (${x.homes.length})</a>`).join(" · ")}</p><p><a href="/">English</a></p></main>`
-      + `<script>if(location.pathname!=="/"){var e=document.getElementById("rh-home-static");if(e)e.parentNode.removeChild(e)}</script>`,
+      + `<script>if(!/^\\/es\\/?$/.test(location.pathname)){var e=document.getElementById("rh-home-static");if(e)e.parentNode.removeChild(e)}</script>`,
       [{ "@context": "https://schema.org", "@type": "ItemList", name: "Las mejores casas en RealHunt", inLanguage: "es", numberOfItems: rows.length,
         itemListElement: topEs.map((h, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/es/deal/${h.slug}`, name: h.title_es })) }],
       { lastmod: maxDay(rows.map(homeDay)), group: "es", lang: "es", alt: { en: `${SITE}/`, es: `${SITE}/es` } });
@@ -438,13 +457,13 @@ function build(root: string) {
     + `<ol>${newest.map((r) => homeLi(r).replace("</li>", ` · added ${esc(day(r.publish_at || r.approved_at) || "")}</li>`)).join("")}</ol></main>`,
     [crumbs([["RealHunt", SITE + "/"], ["New homes", SITE + "/new"]])], { lastmod: maxDay(newest.map(homeDay)), group: "pages", head: `<link rel="alternate" type="application/rss+xml" title="RealHunt: new homes" href="${SITE}/new.xml" />` });
   const rssDate = (s: string) => new Date(s).toUTCString();
-  fs.writeFileSync(path.join(root, "feed.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>RealHunt: new homes</title><link>${SITE}/new</link><atom:link href="${SITE}/feed.xml" rel="self" type="application/rss+xml"/><description>New homes on RealHunt, checked by a person and scored from 70 to 98.</description><language>en</language>`
+  out(path.join(root, "feed.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>RealHunt: new homes</title><link>${SITE}/new</link><atom:link href="${SITE}/feed.xml" rel="self" type="application/rss+xml"/><description>New homes on RealHunt, checked by a person and scored from 70 to 98.</description><language>en</language>`
     + newest.map((r) => { const u = `${SITE}/deal/${r.slug}`; const img = r.image_urls?.[0] ? abs(r.image_urls[0]) : ""; return `<item><title>${esc(`${eur(r.price_eur)} · ${r.title}`)}</title><link>${u}</link><guid isPermaLink="true">${u}</guid><pubDate>${rssDate(r.publish_at || r.approved_at)}</pubDate><description>${esc(`${r.location_name || r.country}. ${r.sqm ? r.sqm + " m². " : ""}RealHunt score ${r.nota ?? ""}. ${r.why_great || ""}`)}</description>${img ? `<enclosure url="${esc(img)}" type="image/${img.endsWith(".webp") ? "webp" : "jpeg"}" length="0"/>` : ""}</item>`; }).join("")
     + `</channel></rss>\n`);
 
   // /new.xml: the 50 newest homes as RSS (same items as /feed.xml, which keeps its 40 for existing subscribers).
   const newest50 = rows.filter((r) => r.publish_at || r.approved_at).slice().sort((a, b) => String(b.publish_at || b.approved_at).localeCompare(String(a.publish_at || a.approved_at))).slice(0, 50);
-  fs.writeFileSync(path.join(root, "new.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>RealHunt: the 50 newest homes</title><link>${SITE}/new</link><atom:link href="${SITE}/new.xml" rel="self" type="application/rss+xml"/><description>The 50 newest homes on RealHunt, each checked by a person and scored from 70 to 98.</description><language>en</language>`
+  out(path.join(root, "new.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>RealHunt: the 50 newest homes</title><link>${SITE}/new</link><atom:link href="${SITE}/new.xml" rel="self" type="application/rss+xml"/><description>The 50 newest homes on RealHunt, each checked by a person and scored from 70 to 98.</description><language>en</language>`
     + newest50.map((r) => { const u = `${SITE}/deal/${r.slug}`; const img = r.image_urls?.[0] ? abs(r.image_urls[0]) : ""; return `<item><title>${esc(`${eur(r.price_eur)} · ${r.title}`)}</title><link>${u}</link><guid isPermaLink="true">${u}</guid><pubDate>${rssDate(r.publish_at || r.approved_at)}</pubDate><category>${esc(r.country)}</category><description>${esc(`${r.location_name || r.country}. ${r.sqm ? r.sqm + " m². " : ""}${r.bedrooms ? r.bedrooms + " bedrooms. " : ""}RealHunt score ${r.nota ?? ""}. ${r.why_great || ""}`)}</description>${img ? `<enclosure url="${esc(img)}" type="image/${img.endsWith(".webp") ? "webp" : "jpeg"}" length="0"/>` : ""}</item>`; }).join("")
     + `</channel></rss>\n`);
 
@@ -519,7 +538,7 @@ function build(root: string) {
   // RSS of the latest 30 posts (/blog/rss.xml), linked from the head of every blog page.
   const byDate = posts.filter((p) => /^[a-z0-9-]+$/.test(p.slug)).slice().sort((a, b) => String(b.date).localeCompare(String(a.date))).slice(0, 30);
   fs.mkdirSync(path.join(root, "blog"), { recursive: true });
-  fs.writeFileSync(path.join(root, "blog", "rss.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>RealHunt Research</title><link>${SITE}/blog</link><atom:link href="${SITE}/blog/rss.xml" rel="self" type="application/rss+xml"/><description>Data and plain-English guides on cheap homes around the world, from the homes on RealHunt.</description><language>en</language>`
+  out(path.join(root, "blog", "rss.xml"), `<?xml version="1.0" encoding="UTF-8"?>\n<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>RealHunt Research</title><link>${SITE}/blog</link><atom:link href="${SITE}/blog/rss.xml" rel="self" type="application/rss+xml"/><description>Data and plain-English guides on cheap homes around the world, from the homes on RealHunt.</description><language>en</language>`
     + (byDate[0] ? `<lastBuildDate>${new Date(byDate[0].updated || byDate[0].date).toUTCString()}</lastBuildDate>` : "")
     + byDate.map((p) => { const u = `${SITE}/blog/${p.slug}`; const img = p.image ? abs(p.image) : ""; return `<item><title>${esc(p.title)}</title><link>${u}</link><guid isPermaLink="true">${u}</guid><pubDate>${new Date(p.date).toUTCString()}</pubDate><description>${esc(p.desc)}</description>${(p.tags || []).map((t: string) => `<category>${esc(t)}</category>`).join("")}${img ? `<enclosure url="${esc(img)}" type="image/${img.endsWith(".webp") ? "webp" : img.endsWith(".png") ? "png" : "jpeg"}" length="0"/>` : ""}</item>`; }).join("")
     + `</channel></rss>\n`);
@@ -670,58 +689,60 @@ function build(root: string) {
   // ---------- Can I buy there? /can-i-buy and /can-i-buy/<nationality>-in-<country> (src/community/seo2.tsx) ----------
   // Rules: src/data/canbuy.json; costs and taxes: destinations.json; steps: guides.json. Logic shared in seo2data.ts.
   const cb: CanBuyData = readJson("src/data/canbuy.json", { nationalities: {}, countries: {}, eu: [], schengen: [], _meta: {} });
+  const upd = es ? UPDATED_ES : UPDATED;
   const cbCountries = canBuyCountries(cb, dest, guides);
   const cbPairs = canBuyPairs(cb, dest, guides);
-  const pill = (st: string) => `<strong>${esc(STATUS_LABEL[st as keyof typeof STATUS_LABEL])}</strong>`;
+  const pill = (st: string) => `<strong>${esc(statusLabel(st as "yes", lg))}</strong>`;
+  const buyersOf = (nv: { label: string; adj_pl?: string }) => (es ? `Compradores ${nv.adj_pl || nv.label.toLowerCase()}` : `${nv.label} buyers`);
   const cbTrail: [string, string][] = [["RealHunt", SITE + "/"], ["Can I buy there?", SITE + "/can-i-buy"]];
   if (cbPairs.length) {
-    page(`${SITE}/can-i-buy`, `Can I buy property abroad? Rules by nationality for ${cbCountries.length} countries (${UPDATED}) · RealHunt`,
+    page(`${SITE}/can-i-buy`, `Can I buy property abroad? Rules by nationality for ${cbCountries.length} countries (${upd}) · RealHunt`,
       "Can Americans, British, Canadians, Australians and Europeans buy a home in Spain, Italy, Denmark, Switzerland, Mexico and more? The short answer for each nationality, with costs and taxes.", DEF,
-      `<main class="rh-static">${navHtml(cbTrail)}<h1>Can I buy property there? Rules by nationality</h1><p>Whether you can buy a home, on what conditions, and what it costs on top of the price, for ${Object.keys(cb.nationalities).length} nationalities in ${cbCountries.length} countries. General information, not legal advice. Updated ${UPDATED}.</p>`
-      + Object.entries(cb.nationalities).map(([nk, nv]) => `<h2>${esc(nv.label)} buyers</h2><ul>${cbCountries.filter((c) => nv.home !== c).map((c) => { const r = ruleFor(cb, nk, c)!; return `<li><a href="/can-i-buy/${canBuySlug(nk, c)}">Can ${esc(nv.noun)} buy property in ${esc(the(guides[c].name))}?</a> ${pill(r.s)}</li>`; }).join("")}</ul>`).join("")
+      `<main class="rh-static">${navHtml(cbTrail)}<h1>Can I buy property there? Rules by nationality</h1><p>Whether you can buy a home, on what conditions, and what it costs on top of the price, for ${Object.keys(cb.nationalities).length} nationalities in ${cbCountries.length} countries. General information, not legal advice. Updated ${upd}.</p>`
+      + Object.entries(cb.nationalities).map(([nk, nv]) => `<h2>${esc(buyersOf(nv))}</h2><ul>${cbCountries.filter((c) => nv.home !== c).map((c) => { const r = ruleFor(cb, nk, c)!; return `<li><a href="/can-i-buy/${canBuySlug(nk, c)}">Can ${esc(nv.noun)} buy property in ${esc(the(guides[c].name))}?</a> ${pill(r.s)}</li>`; }).join("")}</ul>`).join("")
       + `<p><a href="/buying-costs">Buying-cost calculator</a> · <a href="/guide">Buying guides by country</a> · <a href="/countries">Compare two countries</a></p></main>`,
       [crumbs(cbTrail)], { group: "content" });
   }
   for (const { nat, country, slug } of cbPairs) {
     const nv = cb.nationalities[nat]; const r = ruleFor(cb, nat, country)!; const name = guides[country].name; const d = dest[country] || {}; const g = guides[country];
     const url = `${SITE}/can-i-buy/${slug}`;
-    const m = canBuyMeta(cb, nat, country, name);
+    const m = canBuyMeta(cb, nat, country, name, lg);
     const hs = homesOf(country);
-    const faq = canBuyFaq(cb, nat, country, { dest: d, guide: g, name, homes: hs });
-    const ex = costLines(150000, d);
-    const res = residencyFor(cb, nat, country, name);
-    const trail: [string, string][] = [...cbTrail, [`${nv.label} buyers in ${name}`, url]];
+    const faq = canBuyFaq(cb, nat, country, { dest: d, guide: g, name, homes: hs }, lg);
+    const ex = costLines(150000, d, "EUR", lg);
+    const res = residencyFor(cb, nat, country, name, lg);
+    const trail: [string, string][] = [...cbTrail, [es ? `${buyersOf(nv)} en ${the(name)}` : `${nv.label} buyers in ${name}`, url]];
     const top = hs.slice(0, 6);
     page(url, m.title, m.desc, top[0] ? homeImg(top[0]) : DEF,
       `<main class="rh-static"><article>${navHtml(trail)}<h1>${esc(m.h1)}</h1>`
-      + `<p>Short answer: ${pill(r.s)}.</p><p>${esc(fill(r.a, nv))}</p><p>General information, not legal advice. Updated ${UPDATED}.</p>`
+      + `<p>Short answer: ${pill(r.s)}.</p><p>${esc(fill(r.a, nv))}</p><p>General information, not legal advice. Updated ${upd}.</p>`
       + (ex ? `<h2>What it costs to buy</h2><p>About ${esc(d.purchase_costs_pct)}% on top of the price. On a €150,000 home that is ${esc(ex.fees)}, so ${esc(ex.total)} in total.</p>${d.purchase_costs_breakdown ? `<p>${esc(d.purchase_costs_breakdown)}</p>` : ""}<p><a href="/buying-costs/${country}">Work it out for your price</a></p>` : "")
       + `<h2>Every year</h2>${d.annual_property_tax ? `<p>Yearly property tax: ${esc(d.annual_property_tax)}</p>` : ""}${g.yearly ? `<p>${esc(g.yearly)}</p>` : ""}${d.rental_income_tax ? `<p>Tax on rental income: ${esc(d.rental_income_tax)}</p>` : ""}`
       + (res.length ? `<h2>Living there</h2>${res.map((x) => `<p>${esc(x)}</p>`).join("")}` : "")
-      + (nv.notes.length ? `<h2>Good to know as ${esc(nv.noun)}</h2><ul>${nv.notes.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "")
+      + (nv.notes.length ? `<h2>Good to know as ${esc(es ? nv.adj || nv.noun : nv.noun)}</h2><ul>${nv.notes.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : "")
       + (g.steps?.length ? `<h2>The steps to buy in ${esc(the(name))}</h2><ol>${g.steps.map(([h]) => `<li>${esc(h)}</li>`).join("")}</ol><p><a href="/guide/${country}">The full guide, step by step</a></p>` : "")
       + (top.length ? `<h2>Best homes in ${esc(name)}</h2><ol>${top.map(homeLi).join("")}</ol>${hs.length > top.length ? `<p><a href="/homes/${country}">All ${hs.length} homes in ${esc(the(name))}</a></p>` : ""}` : "")
       + `<h2>Questions</h2>${faq.map(([q, a]) => `<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join("")}`
       + `<p><a href="/guide/${country}">How to buy in ${esc(the(name))}</a> · <a href="/costs/${country}">Costs, taxes and sources</a></p>`
       + `<h2>Other nationalities in ${esc(name)}</h2><p>${Object.keys(cb.nationalities).filter((k) => k !== nat && cb.nationalities[k].home !== country).map((k) => `<a href="/can-i-buy/${canBuySlug(k, country)}">${esc(cb.nationalities[k].label)}</a>`).join(" · ")}</p>`
-      + `<h2>${esc(nv.label)} buyers in other countries</h2><p>${cbCountries.filter((c) => c !== country && c !== nv.home).map((c) => `<a href="/can-i-buy/${canBuySlug(nat, c)}">${esc(guides[c].name)}</a>`).join(" · ")}</p>`
+      + `<h2>${esc(buyersOf(nv))} ${es ? "en otros países" : "in other countries"}</h2><p>${cbCountries.filter((c) => c !== country && c !== nv.home).map((c) => `<a href="/can-i-buy/${canBuySlug(nat, c)}">${esc(guides[c].name)}</a>`).join(" · ")}</p>`
       + `</article></main>`,
       [crumbs(trail), faqLd(faq)], { group: "content", lastmod: "2026-11-07" });
   }
 
   // ---------- Buying-cost calculator: /buying-costs and /buying-costs/<country> (src/community/seo2.tsx) ----------
-  const calcKeys = costCountries(dest, guides);
+  const calcKeys = costCountries(dest, guides, lg);
   const calcTrail: [string, string][] = [["RealHunt", SITE + "/"], ["Buying costs", SITE + "/buying-costs"]];
-  const exTable = (d: any) => `<table><thead><tr><th>Price</th><th>Taxes and fees</th><th>Total</th></tr></thead><tbody>${[150000, 300000].map((p) => { const x = costLines(p, d)!; return `<tr><td>${esc(fmtMoney(p))}</td><td>${esc(x.fees)}</td><td>${esc(x.total)}</td></tr>`; }).join("")}</tbody></table>`;
+  const exTable = (d: any) => `<table><thead><tr><th>Price</th><th>Taxes and fees</th><th>Total</th></tr></thead><tbody>${[150000, 300000].map((p) => { const x = costLines(p, d, "EUR", lg)!; return `<tr><td>${esc(fmtMoney(p, "EUR", lg))}</td><td>${esc(x.fees)}</td><td>${esc(x.total)}</td></tr>`; }).join("")}</tbody></table>`;
   page(`${SITE}/buying-costs`, `Buying costs calculator: taxes and fees in ${calcKeys.length} countries · RealHunt`, `Enter a price and see what you pay on top in taxes and fees when you buy a home in ${calcKeys.length} countries, from Spain and Italy to Japan and Mexico.`, DEF,
     `<main class="rh-static">${navHtml(calcTrail)}<h1>What does it cost to buy a home abroad?</h1><p>Taxes and fees you pay on top of the price: transfer tax or VAT, notary, land registry and lawyer. Worked example for a €150,000 home:</p>`
-    + `<table><thead><tr><th>Country</th><th>On top of the price</th><th>On €150,000</th></tr></thead><tbody>${calcKeys.map((k) => { const x = costLines(150000, dest[k])!; return `<tr><td><a href="/buying-costs/${k}">${esc(nameOf(k, guides))}</a></td><td>${esc(dest[k].purchase_costs_pct)}%</td><td>${esc(x.fees)}</td></tr>`; }).join("")}</tbody></table>`
+    + `<table><thead><tr><th>Country</th><th>On top of the price</th><th>On €150,000</th></tr></thead><tbody>${calcKeys.map((k) => { const x = costLines(150000, dest[k], "EUR", lg)!; return `<tr><td><a href="/buying-costs/${k}">${esc(nameOf(k, guides, lg))}</a></td><td>${esc(dest[k].purchase_costs_pct)}%</td><td>${esc(x.fees)}</td></tr>`; }).join("")}</tbody></table>`
     + `<p>General information, not tax or legal advice. <a href="/can-i-buy">Can I buy there?</a> · <a href="/costs">Real costs and rental yields</a></p></main>`,
     [crumbs(calcTrail)], { group: "content" });
   for (const k of calcKeys) {
-    const d = dest[k]; const n = nameOf(k, guides); const url = `${SITE}/buying-costs/${k}`;
+    const d = dest[k]; const n = nameOf(k, guides, lg); const url = `${SITE}/buying-costs/${k}`;
     const trail: [string, string][] = [...calcTrail, [n, url]];
-    const e150 = costLines(150000, d)!;
+    const e150 = costLines(150000, d, "EUR", lg)!;
     page(url, `Buying costs calculator for ${the(n)}: taxes and fees on top of the price · RealHunt`, `What you pay on top of the price when you buy a home in ${the(n)}: about ${d.purchase_costs_pct}% in taxes and fees, so ${e150.fees} on a €150,000 home. With a calculator and worked examples.`, DEF,
       `<main class="rh-static">${navHtml(trail)}<h1>Buying costs in ${esc(the(n))}</h1><p>About ${esc(d.purchase_costs_pct)}% on top of the price in taxes and fees. Use the calculator on this page for your price, or see the worked examples:</p>`
       + `<h2>Worked examples</h2>${exTable(d)}`
@@ -746,27 +767,46 @@ function build(root: string) {
     `<main class="rh-static" data-rh-keep data-rh-static>${navHtml([["RealHunt", SITE + "/"], ["Site map", SITE + "/sitemap"]])}<h1>Site map</h1>`
     + ["pages", "places", "content", "top", "homes"].map((g) => `<h2>${esc(groupNames[g])} (${byGroup(g).length})</h2><ul>${byGroup(g).map((e) => `<li><a href="${esc(label(e.url))}">${esc(label(e.url))}</a></li>`).join("")}</ul>`).join("")
     + `</main>`, undefined, { group: "pages" });
-  fs.writeFileSync(path.join(root, "llms.txt"), `# RealHunt\n\n> RealHunt lists cheap homes for sale around the world (mostly under €100,000), each checked by a person and graded from 70 to 98 against every other home on the site. It is not an estate agent: every home links to its original listing.\n\nToday: ${rows.length} homes in ${countryLinks.length} countries. Updated ${today}.\n\n## Key pages\n\n- [Best homes](${SITE}/): all homes, best score first, with filters.\n- [How the score works](${SITE}/method): the 11 sub-scores and what the grade means.\n- [New homes](${SITE}/new) and [RSS](${SITE}/feed.xml)\n- [Prices by country](${SITE}/research/prices): median price and price per m² by country.\n- [Buying costs abroad](${SITE}/costs)\n- [Buying guides by country](${SITE}/guide)\n- [Can I buy there? Rules by nationality](${SITE}/can-i-buy)\n- [Buying-cost calculator](${SITE}/buying-costs)\n- [Compare two countries](${SITE}/countries)\n- [New builds Top 100](${SITE}/top): Bali, Phuket, Tulum, Batumi, Koh Samui.\n- [Research and guides](${SITE}/blog) and [RSS](${SITE}/blog/rss.xml)\n- [Site map](${SITE}/sitemap)\n- [Full reference text](${SITE}/llms-full.txt): method, costs, guides and every home in one file.\n\n## Countries\n\n${countryLinks.map(([k, v]) => `- [${v.name}](${SITE}/homes/${k}): ${v.homes.length} homes`).join("\n")}\n`);
+  out(path.join(root, "llms.txt"), `# RealHunt\n\n> RealHunt lists cheap homes for sale around the world (mostly under €100,000), each checked by a person and graded from 70 to 98 against every other home on the site. It is not an estate agent: every home links to its original listing.\n\nToday: ${rows.length} homes in ${countryLinks.length} countries. Updated ${today}.\n\n## Key pages\n\n- [Best homes](${SITE}/): all homes, best score first, with filters.\n- [How the score works](${SITE}/method): the 11 sub-scores and what the grade means.\n- [New homes](${SITE}/new) and [RSS](${SITE}/feed.xml)\n- [Prices by country](${SITE}/research/prices): median price and price per m² by country.\n- [Buying costs abroad](${SITE}/costs)\n- [Buying guides by country](${SITE}/guide)\n- [Can I buy there? Rules by nationality](${SITE}/can-i-buy)\n- [Buying-cost calculator](${SITE}/buying-costs)\n- [Compare two countries](${SITE}/countries)\n- [New builds Top 100](${SITE}/top): Bali, Phuket, Tulum, Batumi, Koh Samui.\n- [Research and guides](${SITE}/blog) and [RSS](${SITE}/blog/rss.xml)\n- [Site map](${SITE}/sitemap)\n- [Full reference text](${SITE}/llms-full.txt): method, costs, guides and every home in one file.\n\n## Countries\n\n${countryLinks.map(([k, v]) => `- [${v.name}](${SITE}/homes/${k}): ${v.homes.length} homes`).join("\n")}\n`);
 
   // llms-full.txt: the reference content of the pages above as one text file for AI assistants (seo/llmsFull.ts)
-  try { console.log(`[rh-prerender-pages] llms-full.txt: ${writeLlmsFull(root, entries, rows, today)} pages`); } catch (e) { console.warn("[rh-prerender-pages] llms-full.txt failed", e); }
+  if (!es) try { console.log(`[rh-prerender-pages] llms-full.txt: ${writeLlmsFull(root, entries, rows, today)} pages`); } catch (e) { console.warn("[rh-prerender-pages] llms-full.txt failed", e); }
 
   // build.json: which commit is live and when it was built (check with curl https://realhunt.co/build.json).
-  fs.writeFileSync(path.join(root, "build.json"), JSON.stringify({ commit: (process.env.RH_COMMIT || process.env.GITHUB_SHA || "local").slice(0, 7), built_at: new Date().toISOString(), homes: rows.length, indexable_pages: entries.length }) + "\n");
+  out(path.join(root, "build.json"), JSON.stringify({ commit: (process.env.RH_COMMIT || process.env.GITHUB_SHA || "local").slice(0, 7), built_at: new Date().toISOString(), homes: rows.length, indexable_pages: entries.length }) + "\n");
 
-  writeSitemaps(root, entries);
+  if (es) return;
+  // ---------- Spanish twins (/es/...): the same run in Spanish, then the pages that are fully Spanish are written,
+  // linked with hreflang in both versions and listed in sitemap-es.xml (seo/es.ts) ----------
+  let twins: Twin[] = [];
+  try {
+    const pass = createEsPass();
+    build(root, pass);
+    const rep = writeEsTwins(root, pass, (r) => renderHtml(html, r), altOf);
+    twins = rep.twins;
+    const sum = coverageSummary(rep);
+    fs.writeFileSync(path.join(root, "es-coverage.json"), JSON.stringify(sum, null, 1) + "\n");
+    console.log(`[rh-prerender-pages] Spanish: ${twins.length} twins written by seo/es.ts + ${rep.byHand?.pages || 0} written by hand above (${rep.byHand?.failed.length || 0} of those with English left) + ${rep.thin || 0} noindex copies; ${rep.failed.length} pages not fully Spanish, left out. Twins by group: ` + Object.entries(sum.groups).map(([g, v]) => `${g} ${v.twins}/${v.pages}`).join(", "));
+  } catch (e) { console.warn("[rh-prerender-pages] Spanish pages skipped:", (e as Error).message); twins = []; }
+  for (const t of twins) altOf.set(t.en, t.es);
+  writeSitemaps(root, entries, twins, altOf);
   console.log(`[rh-prerender-pages] ${entries.length} indexable pages in the sitemap`);
 }
 
-// The sitemap is an index of four parts, so Search Console shows indexing per type of page.
-function writeSitemaps(root: string, entries: Entry[]) {
+// The sitemap is an index of parts, so Search Console shows indexing per type of page. Pages with a Spanish twin
+// carry their alternates (xhtml:link) in both the English part and sitemap-es.xml, which lists the /es/ URLs.
+function writeSitemaps(root: string, entries: Entry[], twins: Twin[] = [], altOf = new Map<string, string>()) {
+  const enOf = new Map([...altOf].map(([en, es]) => [es, en]));
+  const alts = (u: string) => { const en = enOf.get(u) || u, es = altOf.get(en); return es ? `<xhtml:link rel="alternate" hreflang="en" href="${esc(en)}"/><xhtml:link rel="alternate" hreflang="es" href="${esc(es)}"/><xhtml:link rel="alternate" hreflang="x-default" href="${esc(en)}"/>` : ""; };
   const groups = new Map<string, Entry[]>();
   for (const e of entries) { if (!groups.has(e.group)) groups.set(e.group, []); groups.get(e.group)!.push(e); }
+  // sitemap-es.xml: the Spanish pages written by hand above plus the twins of seo/es.ts
+  if (twins.length) groups.set("es", [...(groups.get("es") || []), ...twins.map((t) => ({ url: t.es, lastmod: t.lastmod, group: "es", images: t.images }))]);
   const parts: string[] = [];
   for (const [g, list] of groups) {
     const name = `sitemap-${g}.xml`;
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"${list.some((e) => e.images?.length) ? ' xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"' : ""}>\n`
-      + list.map((e) => `  <url><loc>${esc(e.url)}</loc>${e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : ""}${(e.images || []).map((i) => `<image:image><image:loc>${esc(i)}</image:loc></image:image>`).join("")}</url>\n`).join("") + "</urlset>\n";
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"${list.some((e) => e.images?.length) ? ' xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"' : ""}${list.some((e) => alts(e.url)) ? ' xmlns:xhtml="http://www.w3.org/1999/xhtml"' : ""}>\n`
+      + list.map((e) => `  <url><loc>${esc(e.url)}</loc>${e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : ""}${alts(e.url)}${(e.images || []).map((i) => `<image:image><image:loc>${esc(i)}</image:loc></image:image>`).join("")}</url>\n`).join("") + "</urlset>\n";
     fs.writeFileSync(path.join(root, name), xml);
     const last = list.map((e) => e.lastmod).filter(Boolean).sort().pop();
     parts.push(`  <sitemap><loc>${SITE}/${name}</loc>${last ? `<lastmod>${last}</lastmod>` : ""}</sitemap>\n`);

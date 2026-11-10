@@ -5,6 +5,7 @@
 // choice (?lang=, the EN/ES switch, saved rh_lang) always wins and is remembered. index.html mirrors this.
 // Components keep writing English; this module swaps the rendered text in place (text nodes and a few
 // attributes) from a dictionary built from the source code, so no page can be left half translated.
+import { isEsPath, stripEs, switchTarget } from "./esPath";
 export type Lang = "en" | "es";
 
 /** ISO codes of the Spanish-speaking countries (Cloudflare loc / cf-ipcountry values). */
@@ -23,8 +24,9 @@ export function pickLang(o: { q?: string | null; saved?: string | null; geo?: st
 
 export function detectLang(): Lang {
   let q: string | null = null, saved: string | null = null, geo: string | null = null, tz = "";
+  try { if (isEsPath(location.pathname)) return "es"; } catch { /* ignore */ } // a Spanish URL (/es/...) is always Spanish
   try { q = new URLSearchParams(location.search).get("lang"); } catch { /* ignore */ }
-  // /es/... pages: index.html has already dropped the prefix and left this mark (10-nov-2026)
+  // /es/... pages: index.html leaves this mark (10-nov-2026)
   try { if ((window as any).__rhUrlLang === "es") q = "es"; } catch { /* ignore */ }
   try { saved = localStorage.getItem("rh_lang"); geo = localStorage.getItem("rh_geo"); } catch { /* storage blocked */ }
   try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch { /* ignore */ }
@@ -53,6 +55,9 @@ export function setLang(l: Lang) {
   try { localStorage.setItem("rh_lang", l); } catch { /* ignore */ }
   if (l === current) return;
   // A reload is the cleanest switch: every page, title and dialog renders again in the new language.
+  // From a Spanish URL (/es/x) the switch to English goes to the same page without the prefix (src/lib/esPath.ts).
+  const away = switchTarget(location.href, l);
+  if (away) { location.assign(away); return; }
   const u = new URL(location.href); u.searchParams.delete("lang");
   location.replace(u.toString());
 }
@@ -191,6 +196,14 @@ export function learnTexts(rows: unknown): void {
   if (started) { walk(document.body); titleLast = ""; doTitle(); }
 }
 
+/** Build-time use (seo/es.ts): the translator the Spanish site runs in the browser, loaded with the given
+ * dictionaries, for the prerendered Spanish pages. Never called in the browser. */
+export function buildTranslator(dicts: Record<string, string>[]): (s: string) => string {
+  current = "es";
+  for (const d of dicts) addDict(d);
+  return tr;
+}
+
 /** Translate one visible string. Returns the input when no translation exists. */
 export function tr(s: string): string {
   if (current !== "es" || !s) return s;
@@ -289,15 +302,15 @@ async function load(file: string) {
 
 /** Called once from main.tsx before React renders. Never blocks for long. */
 export async function initLang(): Promise<void> {
-  try { const q = new URLSearchParams(location.search).get("lang"); if (q === "es" || q === "en") localStorage.setItem("rh_lang", q); } catch { /* ignore */ }
+  try { const q = new URLSearchParams(location.search).get("lang"); if ((q === "es" || q === "en") && !isEsPath(location.pathname)) localStorage.setItem("rh_lang", q); } catch { /* ignore */ }
   try { document.documentElement.lang = current; document.documentElement.setAttribute("data-lang", current); } catch { /* ignore */ }
   if (current !== "es") { reveal(); return; }
   const safety = setTimeout(reveal, 1500);
-  const legal = /^\/(legal|network|privacy|terms)/.test(location.pathname);
+  const legal = /^\/(legal|network|privacy|terms)/.test(stripEs(location.pathname));
   try {
     const core = load("/i18n/es-core.json?v=3");
     const homes = load("/i18n/es-listings.json?v=3").catch(() => ({}));
-    const extra = load("/i18n/es-extra.json?v=19");
+    const extra = load("/i18n/es-extra.json?v=20");
     const data = load("/i18n/es-data.json?v=1").catch(() => ({})); // buying rules, guides... (scripts/build-es-data.mjs)
     // 7-nov-2026 (Carlos: "que cargue todo mucho más rápido"): the page used to stay hidden until the core AND the
     // listings dictionaries (~250 KB compressed) had loaded. Now only the core one holds the first paint; home titles

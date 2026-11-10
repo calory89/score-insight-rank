@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import fs from "fs";
 import { prerenderPages } from "./seo/prerender";
+import { fileBudget } from "./seo/budget";
 
 // 9-nov-2026 speed: the Spanish copies of every home's texts (about 60 KB compressed, a fifth of the snapshot) are
 // only needed by Spanish visitors. The committed public/data/rh-static.json keeps them (other scripts read it); the
@@ -62,7 +63,8 @@ function preloadPublicRoute() {
           visit(entry.fileName);
           routes[page] = [...seen].map(file => `/${file}`);
         }
-        return [{ tag: "script", injectTo: "head" as const, children: `(()=>{const p=location.pathname,r=${JSON.stringify(routes)},k=p==='/'||/^\\/(deal|map|top|live-search|homes|hunt|compare|score|blog|guide|costs|can-i-buy|buying-costs)(\\/|$)/.test(p)?'Community':/^\\/from\\//.test(p)?'Home':/^\\/find\\//.test(p)?'FindDetail':/^\\/weather\\/?$/.test(p)?'Weather':null;for(const href of r[k]||[]){const l=document.createElement('link');l.rel='modulepreload';l.href=href;l.crossOrigin='';document.head.appendChild(l)}if(p==='/'||/^\\/(deal|map|homes|compare|live-search)(\\/|$)/.test(p)){try{window.__rhSnap=fetch('/data/rh-static.json',{cache:'no-cache'}).then(function(x){if(!x.ok)throw 0;return x.json()});window.__rhSnap.catch(function(){});if(document.documentElement.getAttribute('data-lang')==='es'){window.__rhSnapEs=fetch('/data/rh-static-es.json',{cache:'no-cache'}).then(function(x){if(!x.ok)throw 0;return x.json()});window.__rhSnapEs.catch(function(){})}}catch(e){}}})();` }];
+        // 10-nov-2026: a Spanish URL (/es/deal/x) is treated like /deal/x; data-lang is already "es" there (index.html).
+        return [{ tag: "script", injectTo: "head" as const, children: `(()=>{const p=location.pathname.replace(/^\\/es(?=\\/|$)/,'')||'/',r=${JSON.stringify(routes)},k=p==='/'||/^\\/(deal|map|top|live-search|homes|hunt|compare|score|blog|guide|costs|can-i-buy|buying-costs)(\\/|$)/.test(p)?'Community':/^\\/from\\//.test(p)?'Home':/^\\/find\\//.test(p)?'FindDetail':/^\\/weather\\/?$/.test(p)?'Weather':null;for(const href of r[k]||[]){const l=document.createElement('link');l.rel='modulepreload';l.href=href;l.crossOrigin='';document.head.appendChild(l)}if(p==='/'||/^\\/(deal|map|homes|compare|live-search)(\\/|$)/.test(p)){try{window.__rhSnap=fetch('/data/rh-static.json',{cache:'no-cache'}).then(function(x){if(!x.ok)throw 0;return x.json()});window.__rhSnap.catch(function(){});if(document.documentElement.getAttribute('data-lang')==='es'){window.__rhSnapEs=fetch('/data/rh-static-es.json',{cache:'no-cache'}).then(function(x){if(!x.ok)throw 0;return x.json()});window.__rhSnapEs.catch(function(){})}}catch(e){}}})();` }];
       },
     },
   };
@@ -77,7 +79,7 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  plugins: [react(), preloadPublicRoute(), prerenderPages(), splitSpanishTexts()].filter(Boolean),
+  plugins: [react(), preloadPublicRoute(), prerenderPages(), splitSpanishTexts(), fileBudget()].filter(Boolean),
   resolve: {
     dedupe: ["react", "react-dom"],
     alias: {
