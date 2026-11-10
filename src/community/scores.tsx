@@ -90,7 +90,7 @@ export function BestPerCountry({ onCountry }: { onCountry?: (c: string) => void 
       <div className="rh-best-row">
         {rows.map((r) => (
           <a key={r.id} href={`/deal/${encodeURIComponent(r.slug)}?tab=all`} className="rh-best-card">
-            <span className="rh-best-img">{r.image_urls?.[0] && <ThumbImg src={r.image_urls[0]} alt="" loading="lazy" />}<span className={"hv-score " + gtone(r.nota)}>{r.nota}</span></span>
+            <span className="rh-best-img">{r.image_urls?.[0] && <ThumbImg src={r.image_urls[0]} alt={r.title || ""} loading="lazy" />}<span className={"hv-score " + gtone(r.nota)}>{r.nota}</span></span>
             <b>{r.country}</b><small>{`${eur(r.price_eur)} · ${r.location_name || ""}`}</small>
           </a>
         ))}
@@ -223,7 +223,7 @@ export function NearCity() {
           const rows = data[c]; const min = Math.min(...rows.map((r) => r.price_eur));
           return (
             <article key={c} className="rh-nc-card">
-              <a href={`/?q=${encodeURIComponent(c)}`} className="rh-nc-imgs">{rows.slice(0, 3).map((r) => <ThumbImg key={r.id} src={r.image_urls?.[0]} alt="" loading="lazy" />)}</a>
+              <a href={`/?q=${encodeURIComponent(c)}`} className="rh-nc-imgs">{rows.slice(0, 3).map((r) => <ThumbImg key={r.id} src={r.image_urls?.[0]} alt={r.title || ""} loading="lazy" />)}</a>
               <div className="rh-nc-body">
                 <b>{`${t("Near")} ${c}`}</b>
                 <small>{`${t("From")} ${money(min)} · ${t("best score")} ${Math.max(...rows.map((r) => r.nota || 0))}`}</small>

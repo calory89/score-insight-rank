@@ -211,6 +211,10 @@ export type EsPass = ReturnType<typeof createEsPass>;
 
 // /sitemap lists the English URLs written by the English run; sitemap-es.xml is the Spanish list.
 const NO_TWIN = new Set([SITE + "/sitemap"]);
+/** A Spanish page that seo/prerender.ts writes by hand is kept as it is (another session owns those templates), even
+ * though the twin built here from the English template carries more (links by price, type and region, questions,
+ * the article). false = the twin replaces the hand-written file whenever it passes the check. */
+export const BY_HAND_WINS = true;
 export type Render = (r: PageRec) => string;
 export type TwinReport = { thin?: number; byHand?: { pages: number; words: number; english: number; failed: { url: string; english: number; words: number; hits: string[] }[] }; twins: Twin[]; groups: Record<string, { pages: number; twins: number; words: number; english: number; by_hand?: number }>; failed: { url: string; english: number; words: number; hits: string[] }[] };
 
@@ -242,7 +246,7 @@ export function planTwins(pass: EsPass) {
 export function writeEsTwins(root: string, pass: EsPass, render: Render, written = new Map<string, string>()): TwinReport {
   // `written`: English URL -> Spanish URL of the pages whose Spanish copy seo/prerender.ts writes by hand (the front
   // page and the homes). Those stay as they are; they count as Spanish pages for the links of the others.
-  const planned = planTwins(pass).map((p) => (written.has(p.r.url) ? { ...p, ok: false, by_hand: true } : { ...p, by_hand: false }));
+  const planned = planTwins(pass).map((p) => (BY_HAND_WINS && written.has(p.r.url) ? { ...p, mine: p.ok, ok: false, by_hand: true } : { ...p, mine: p.ok, by_hand: false }));
   const has = new Set([...planned.filter((p) => p.ok).map((p) => p.r.url), ...written.keys()]);
   // internal links: to the Spanish twin when the target has one, otherwise the English page stays linked
   const link = (u: string) => (u.startsWith(SITE) && has.has(u === SITE ? SITE + "/" : u) ? esUrl(u) : u);
@@ -292,7 +296,16 @@ export function writeEsTwins(root: string, pass: EsPass, render: Render, written
     const slug = /\/deal\/([^/]+)$/.exec(en)?.[1];
     const c = slug ? country.get(slug) : "";
     const cUrl = c ? `${SITE}/homes/${c.toLowerCase().trim().replace(/\s+/g, "-")}` : "";
-    if (cUrl && has.has(cUrl) && !written.has(cUrl)) h = h.replace('<p><a href="/es">Las mejores casas</a>', () => `<p><a href="${esUrl(cUrl).slice(SITE.length)}">Todas las casas en ${esc(pass.the(c!))}</a> · <a href="/es">Las mejores casas</a>`);
+    // a country page written by hand: the links to its Spanish price, type and region pages and its questions,
+    // taken from the twin of the same page, so those pages are reachable from it
+    const twin = planned.find((p) => p.r.url === en && p.mine && p.body);
+    if (twin && /\/homes\/[^/]+$/.test(en) && !h.includes("Por precio:") && !h.includes("Por región:")) {
+      const b = href(twin.body!);
+      const nav = (b.match(/<p>Por (?:precio|tipo|región): [\s\S]*?<\/p>/g) || []).join("");
+      const faq = /<h2>Preguntas sobre comprar en [\s\S]*?(?=<h2>Otros países<\/h2>)/.exec(b)?.[0] || "";
+      if (nav || faq) h = h.replace("<h2>Otros países</h2>", () => nav + faq + "<h2>Otros países</h2>");
+    }
+    if (cUrl && has.has(cUrl)) h = h.replace('<p><a href="/es">Las mejores casas</a>', () => `<p><a href="${esUrl(cUrl).slice(SITE.length)}">Todas las casas en ${esc(pass.the(c!))}</a> · <a href="/es">Las mejores casas</a>`);
     fs.writeFileSync(file, h);
     const cover = measureHtml(h);
     byHand.pages++; byHand.words += cover.words; byHand.english += cover.english;

@@ -106,7 +106,7 @@ const COUNTRIES: [string, string][] = [["spain", "Spain"], ["italy", "Italy"], [
 type L = [string, string, boolean?];
 const GROUPS: { key: string; title: string; links: L[] }[] = [
   { key: "homes", title: "Homes", links: [["/", "All homes"], ["/cheap-houses", "Cheap houses"], ["/new-builds", "New builds"], ["/new", "New homes"], ["/top", "Top 100 rankings"], ["/insider", "Insider"], ["/alerts", "Alerts"], ["/help-buying", "Help buying", true], ...COUNTRIES.map(([k, l]) => [`/homes/${k}`, `Homes in ${l}`, true] as L)] },
-  { key: "research", title: "Research", links: [["/blog", "Research"], ["/costs", "Real costs"], ["/research/prices", "Prices by country"], ["/research/new-builds", "New-build report"], ["/method", "How the score works"], ["/top/how-we-rank", "How we rank"], ["/guide", "Guides", true]] },
+  { key: "research", title: "Research", links: [["/blog", "Research"], ["/costs", "Real costs"], ["/research/prices", "Prices by country"], ["/what-100k-buys", "What €100,000 buys"], ["/price-drops", "Price drops"], ["/sources", "Where the homes come from"], ["/research/new-builds", "New-build report"], ["/method", "How the score works"], ["/top/how-we-rank", "How we rank"], ["/guide", "Guides", true]] },
   { key: "company", title: "Company", links: [["/about", "About us"], ["/agents", "For agents"], ["/network", "For developers"], ["/leaderboard", "Hunters", true], ["/invite", "Invite", true], ["/sitemap", "Site map"]] },
   { key: "legal", title: "Legal", links: [["/legal/privacy", "Privacy"], ["/legal/terms", "Terms"]] },
 ];
