@@ -6,8 +6,7 @@ import { money } from "./api";
 import { fmt } from "./costs";
 import { t } from "./i18n";
 import { RentLine } from "./v6";
-import { countryMedians, areaMedians } from "./oct24";
-import { regionOf } from "./regions";
+import { countryMedians, areaMedians, areaParts } from "./oct24";
 import { rates, visitorCurrency } from "./extras";
 import { priceSummary, vsMedian, MONTHLY_LABEL } from "./priceLogic";
 import type { CheckRow } from "./checkLogic";
@@ -31,16 +30,17 @@ export function PriceHead({ d }: { d: CheckRow & { sqm?: number | null } }) {
   const s = priceSummary(d);
   const [median, setMedian] = useState<number | null>(null);
   const [area, setArea] = useState<string | null>(null);
-  const region = regionOf(d as any);
+  const parts = areaParts(d as any).join("|");
   useEffect(() => {
     let on = true;
     if (d.country) Promise.all([countryMedians(), areaMedians()]).then(([m, a]) => {
       if (!on) return;
-      const rm = region ? a[d.country + "|" + region] : null;
-      setMedian(rm || m[d.country as string] || null); setArea(rm ? region : null);
+      // the most local place with at least 3 homes: "Lake Como" before "Lombardy" before the country
+      const hit = parts.split("|").find((x) => x && a[d.country + "|" + x]);
+      setMedian((hit && a[d.country + "|" + hit]) || m[d.country as string] || null); setArea(hit || null);
     });
     return () => { on = false; };
-  }, [d.country, region]);
+  }, [d.country, parts]);
   const local = useLocalCurrency(d.price_eur);
   const per = d.price_eur && d.sqm ? Math.round(d.price_eur / d.sqm) : null;
   const vs = vsMedian(d.price_eur, d.sqm, median, area || d.country);

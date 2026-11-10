@@ -26,7 +26,7 @@ const DEF = `${SITE}/og-home.jpg`;
 const MIN_LIST = 3;
 const PRICE_BANDS = [20000, 40000, 60000, 80000, 100000, 150000];
 
-type Opts = { noindex?: boolean; lastmod?: string | null; group?: "pages" | "homes" | "places" | "content" | "top"; head?: string; images?: string[] };
+type Opts = { noindex?: boolean; lastmod?: string | null; group?: "pages" | "homes" | "places" | "content" | "top" | "es"; head?: string; images?: string[]; lang?: "es"; alt?: { en: string; es: string } };
 type Entry = { url: string; lastmod: string | null; group: string; images?: string[] };
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -69,6 +69,9 @@ function build(root: string) {
     let h = html;
     if (body) h = h.replace('<div id="root"></div>', () => `<div id="root">${body}</div>`);
     if (o.head) h = h.replace("</head>", () => o.head + "</head>");
+    // 10-nov-2026: Spanish copies live under /es/ (see index.html: the app reads the prefix as "Spanish" and drops it).
+    if (o.alt) h = h.replace("</head>", () => `<link rel="alternate" hreflang="en" href="${esc(o.alt!.en)}" /><link rel="alternate" hreflang="es" href="${esc(o.alt!.es)}" /><link rel="alternate" hreflang="x-default" href="${esc(o.alt!.en)}" /></head>`);
+    if (o.lang === "es") h = h.replace('<html lang="en">', '<html lang="es">').replace('<meta property="og:locale" content="en_US" />', '<meta property="og:locale" content="es_ES" />');
     if (ld?.length) h = h.replace("</head>", () => ld.map((x) => `<script type="application/ld+json">${JSON.stringify(x).replace(/</g, "\\u003c")}</script>`).join("") + "</head>");
     const rep = (re: RegExp, val: string) => { h = h.replace(re, () => val); };
     rep(/<title>[^<]*<\/title>/, `<title>${esc(title)}</title>`);
@@ -182,7 +185,28 @@ function build(root: string) {
     const hero = r?.image_urls?.[0] ? toMedia(String(r.image_urls[0])) : "";
     page(url, `${d.title} · RealHunt`, d.desc, d.image || DEF, body, ld, { lastmod: homeDay(r), group: "homes", head: hero ? `<link rel="preload" as="image" href="${esc(hero)}" fetchpriority="high" />` : undefined,
       // 10-nov-2026: the home's photos in the sitemap (Google Images), up to 5 per home
-      images: (r?.image_urls || []).slice(0, 5).map((u: string) => abs(String(u))) });
+      images: (r?.image_urls || []).slice(0, 5).map((u: string) => abs(String(u))),
+      alt: r?.title_es ? { en: url, es: `${SITE}/es/deal/${d.slug}` } : undefined });
+    // The same home in Spanish (title and texts already translated in the data; the article has its own Spanish writer).
+    if (r?.title_es) {
+      const esUrl = `${SITE}/es/deal/${d.slug}`;
+      const euro = (n: number) => Math.round(n).toLocaleString("es-ES") + " €";
+      const simEs = (rp && rp.homes.length > 3 ? rp.homes : byCountry.get(cc) || []).filter((x) => x.slug !== r.slug && x.title_es).slice(0, 6);
+      const descEs = String(r.why_great_es || r.title_es).replace(/\s+/g, " ").slice(0, 155);
+      const bodyEs = `<main class="rh-static"><article><nav aria-label="Ruta"><a href="/es">RealHunt</a> › ${esc(r.title_es)}</nav><h1>${esc(r.title_es)}</h1>`
+        + `<p><strong>${esc(euro(r.price_eur))}</strong> · ${esc(r.location_name || cName)}${r.sqm ? ` · ${esc(r.sqm)} m²` : ""}${r.bedrooms ? ` · ${esc(r.bedrooms)} dormitorios` : ""}${r.sqm && r.price_eur ? ` · ${esc(euro(r.price_eur / r.sqm))}/m²` : ""}</p>`
+        + (r.image_urls?.[0] ? `<p><img src="${esc(r.image_urls[0])}" alt="${esc(r.title_es + ", " + (r.location_name || cName))}" width="760" loading="eager" style="max-width:100%;height:auto;border-radius:12px"></p>` : "")
+        + (r.nota != null ? `<h2>Nota RealHunt: ${esc(r.nota)} / 98</h2><p>Todas las casas de RealHunt pasan antes una revisión hecha por una persona, por eso la nota empieza en 70. El resto compara esta casa con todas las demás de la web.</p>` : "")
+        + (r.why_great_es ? `<h2>Por qué está en la lista</h2><p>${esc(r.why_great_es)}</p>` : "")
+        + (r.why_cheap_es ? `<h2>Por qué es tan barata</h2><p>${esc(r.why_cheap_es)}</p>` : "")
+        + (r.source_domain ? `<p>Anunciada en ${esc(r.source_domain)}. RealHunt no es una inmobiliaria y no vende esta casa: el anuncio original te pone en contacto con el vendedor.</p>` : "")
+        + (simEs.length ? `<h2>Más casas parecidas</h2><ul>${simEs.map((x) => `<li><a href="/es/deal/${esc(x.slug)}"><strong>${esc(euro(x.price_eur))}</strong> · ${esc(x.title_es)}</a> · ${esc(x.location_name || x.country)}</li>`).join("")}</ul>` : "")
+        + `<p><a href="/es">Las mejores casas</a> · <a href="/deal/${esc(d.slug)}">English</a></p></article></main>`;
+      page(esUrl, `${euro(r.price_eur)} · ${r.title_es} · RealHunt`, descEs, d.image || DEF, bodyEs,
+        [{ "@context": "https://schema.org", "@type": "RealEstateListing", url: esUrl, name: r.title_es, description: r.why_great_es || descEs, inLanguage: "es", image: (r.image_urls || []).slice(0, 5).map((u: string) => abs(String(u))),
+          offers: { "@type": "Offer", price: r.price_eur, priceCurrency: "EUR", availability: "https://schema.org/InStock", url: esUrl } }],
+        { lastmod: homeDay(r), group: "es", lang: "es", alt: { en: url, es: esUrl }, head: hero ? `<link rel="preload" as="image" href="${esc(hero)}" fetchpriority="high" />` : undefined });
+    }
   }
 
   // Answers computed from the homes on the site and src/data/destinations.json, so they stay true after every update.
@@ -319,7 +343,19 @@ function build(root: string) {
       + `<script>if(location.pathname!=="/"){var e=document.getElementById("rh-home-static");if(e)e.parentNode.removeChild(e)}</script>`,
       [{ "@context": "https://schema.org", "@type": "ItemList", name: "The best homes on RealHunt", numberOfItems: rows.length,
         itemListElement: top.map((h, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/deal/${h.slug}`, name: h.title })) }],
-      { lastmod: maxDay(rows.map(homeDay)), group: "pages" });
+      { lastmod: maxDay(rows.map(homeDay)), group: "pages", alt: { en: `${SITE}/`, es: `${SITE}/es` } });
+    const topEs = ranked.filter((r) => r.title_es).slice(0, 24);
+    const euro = (n: number) => Math.round(n).toLocaleString("es-ES") + " €";
+    const cardEs = (r: any, i: number) =>
+      `<li><a href="/es/deal/${esc(r.slug)}">${cardImg(r, i).replace(/alt="[^"]*"/, `alt="${esc(`${r.title_es}, ${r.location_name || r.country}`)}"`)}<strong>${esc(euro(r.price_eur))}</strong><span>${esc(r.title_es)}</span><small>${esc(r.location_name || r.country)}${r.nota != null ? ` · nota ${esc(r.nota)}` : ""}${r.sqm ? ` · ${esc(r.sqm)} m²` : ""}</small></a></li>`;
+    const descEs = `${rows.length} casas en venta en ${countryLinks.length} países, revisadas una a una por una persona, puntuadas de 70 a 98 y ordenadas de mejor a peor. Casas nuevas cada día.`;
+    page(`${SITE}/es`, "RealHunt: las mejores casas de cada país, ordenadas por nota", descEs, DEF,
+      `${css}<main class="rh-static rh-hs" id="rh-home-static"><h1>Las mejores casas en el extranjero, revisadas y con nota</h1><p>${esc(descEs)}</p>`
+      + `<ol>${topEs.map(cardEs).join("")}</ol><p><a href="/">English</a></p></main>`
+      + `<script>if(location.pathname!=="/"){var e=document.getElementById("rh-home-static");if(e)e.parentNode.removeChild(e)}</script>`,
+      [{ "@context": "https://schema.org", "@type": "ItemList", name: "Las mejores casas en RealHunt", inLanguage: "es", numberOfItems: rows.length,
+        itemListElement: topEs.map((h, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/es/deal/${h.slug}`, name: h.title_es })) }],
+      { lastmod: maxDay(rows.map(homeDay)), group: "es", lang: "es", alt: { en: `${SITE}/`, es: `${SITE}/es` } });
   }
 
   // ---------- What €100,000 buys (/what-100k-buys): the best-scored home at or under €100,000 in each country ----------
