@@ -26,6 +26,8 @@ export function detectLang(): Lang {
   let q: string | null = null, saved: string | null = null, geo: string | null = null, tz = "";
   try { if (isEsPath(location.pathname)) return "es"; } catch { /* ignore */ } // a Spanish URL (/es/...) is always Spanish
   try { q = new URLSearchParams(location.search).get("lang"); } catch { /* ignore */ }
+  // /es/... pages: index.html leaves this mark (10-nov-2026)
+  try { if ((window as any).__rhUrlLang === "es") q = "es"; } catch { /* ignore */ }
   try { saved = localStorage.getItem("rh_lang"); geo = localStorage.getItem("rh_geo"); } catch { /* storage blocked */ }
   try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch { /* ignore */ }
   return pickLang({ q, saved, geo, tz });

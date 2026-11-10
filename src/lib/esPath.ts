@@ -69,6 +69,20 @@ function fixHead() {
   if (o && oh) { const w = withEsUrl(oh, site); if (w !== oh) o.setAttribute("content", w); }
 }
 
+/** The hreflang links belong to the prerendered page they came with. Paths that have no file of their own are served
+ * the front page's HTML (the worker's app shell), which carries the front page's alternates: drop them there, so a
+ * page without a Spanish twin never claims one. Runs on every URL, with or without the prefix. */
+export function dropStaleAlternates(): void {
+  if (typeof document === "undefined") return;
+  const norm = (p: string) => (p.length > 1 ? p.replace(/\/+$/, "") : p);
+  const here = norm(location.pathname);
+  const mine = document.querySelector(`link[rel="alternate"][hreflang="${isEsPath(here) ? "es" : "en"}"]`);
+  if (!mine) return;
+  let path = "";
+  try { path = norm(new URL(mine.getAttribute("href") || "", location.href).pathname); } catch { /* ignore */ }
+  if (path !== here) document.querySelectorAll('link[rel="alternate"][hreflang]').forEach((e) => e.remove());
+}
+
 let installed = false;
 /** Called once from main.tsx. Does nothing on URLs without the /es prefix. */
 export function installEsUrls(): void {

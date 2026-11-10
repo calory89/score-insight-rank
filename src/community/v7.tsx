@@ -7,6 +7,7 @@ import { isEs } from "@/lib/lang";
 //  - Blog (/blog, /blog/:slug): data articles from src/data/blog.json, prerendered by vite.config.ts.
 //  - Search pages (/cheap-houses, /cheap-houses/:slug): src/data/search-pages.json, rebuilt daily by
 //    scripts/search_pages.py, prerendered with their content for search engines.
+import { ES_BOOT, stripEs } from "@/lib/esPath";
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Lock, Share2, Copy, Check, Sparkles, Clock, ChevronRight, Star } from "lucide-react";
@@ -153,7 +154,7 @@ function useInternalLinks() {
     const href = a?.getAttribute("href");
     if (!a || !href || !href.startsWith("/") || ev.metaKey || ev.ctrlKey || ev.shiftKey || a.target) return;
     ev.preventDefault();
-    navigate(href);
+    navigate(ES_BOOT ? stripEs(href) : href); // under /es/ the link in the page already carries the prefix the router adds
     window.scrollTo(0, 0);
   };
 }

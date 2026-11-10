@@ -19,15 +19,15 @@ export const SITE = "https://realhunt.co";
 /** A Spanish page may keep at most this share of English words (names of portals, "Top 100", a brand)... */
 export const MAX_ENGLISH = 0.004;
 /** ...and never more than this many, however long the page is. */
-export const MAX_ENGLISH_WORDS = 3;
+export const MAX_ENGLISH_WORDS = 0;
 
-export type PageOpts = { noindex?: boolean; lastmod?: string | null; group?: string; head?: string; images?: string[] };
+export type PageOpts = { noindex?: boolean; lastmod?: string | null; group?: string; head?: string; images?: string[]; lang?: "es"; alt?: { en: string; es: string } };
 export type PageRec = { url: string; title: string; desc: string; image: string; body?: string; ld?: object[]; o: PageOpts };
 export type Cover = { words: number; english: number; hits: string[] };
 export type Twin = { en: string; es: string; lastmod: string | null; group: string; images?: string[] };
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-const unesc = (s: string) => s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&");
+const unesc = (s: string) => s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#(\d+);/g, (_m, n) => String.fromCodePoint(Number(n))).replace(/&#x([0-9a-f]+);/gi, (_m, n) => String.fromCodePoint(parseInt(n, 16))).replace(/&nbsp;/g, " ").replace(/&amp;/g, "&");
 
 // ------------------------------------------------------------------------------------------ Spanish URLs
 /** https://realhunt.co/deal/x -> https://realhunt.co/es/deal/x ; https://realhunt.co/ -> https://realhunt.co/es */
@@ -40,12 +40,12 @@ export const hreflangTags = (en: string) =>
 // English words that are not Spanish words. Left out on purpose because Spanish uses them too: no, a, me, has, sea,
 // come, sale, son, sin, real, final, legal, local, total, rural, general, hospital, hotel, plan, portal, original,
 // per (per cápita), top, email, chalet, villa, loft, golf.
-const EN_WORDS = new Set(("the and of for with from in on at by to is are was were be been this that these those it its you your we our they their or not but if as than then there here how what which who when where why can could will would should may must have had does did get got all any each every more most less least other others some new best good cheap cheaper cheapest home homes house houses apartment apartments bedroom bedrooms bed beds bathroom buy buying buyer buyers sell seller sellers tax taxes fee fees year years yearly month months monthly day days week weeks near nearby score scores scored ranked checked about above under over up down out into after before between added updated listed listing listings price prices cost costs size country countries question questions sources features steps guide guides rules map research alerts examples contact calculator median foreigner foreigners foreign abroad living compare free see read know first also only just right now today builds follow need needs yes none biggest went gone since asking agencies behind directly takes opens own furnished worked goes whether starts starting sorted square metre metres describe chosen choose picked unsubscribe much many little few same next previous back found looking wanted write partnership privacy terms takedown requests nobody higher through still passed passes passing graded compares against weather valuation flatter lawyer notary turned renovated made").split(/\s+/));
+const EN_WORDS = new Set(("the and of for with from in on at by to is are was were be been this that these those it its you your we our they their or not but if than then there here how what which who when where why can could will would should may must have had does did get got all any each every more most less least other others some new best good cheap cheaper cheapest home homes house houses apartment apartments bedroom bedrooms bed beds bathroom buy buying buyer buyers sell seller sellers tax taxes fee fees year years yearly month months monthly day days week weeks near nearby score scores scored ranked checked about above under over up down out into after before between added updated listed listing listings price prices cost costs size country countries question questions sources features steps guide guides rules map research alerts examples contact calculator median foreigner foreigners foreign abroad living compare free see read know first also only just right now today builds follow need needs yes none biggest went gone since asking agencies behind directly takes opens own furnished worked goes whether starts starting sorted square metre metres chosen choose picked unsubscribe much many little few same next previous back found looking wanted write partnership privacy terms takedown requests nobody higher through still passed passes passing graded compares against weather valuation flatter lawyer notary turned renovated made").split(/\s+/));
 
 // English names of countries and regions that Spanish writes differently: always English, wherever they appear.
-const EN_PLACES = new Set("spain italy france germany sweden denmark japan greece poland netherlands switzerland kingdom states cyprus norway finland ireland turkey hungary croatia romania belgium morocco brazil thailand philippines latvia lithuania slovakia slovenia czechia tuscany sicily sardinia lombardy piedmont brittany normandy andalusia catalonia scandinavia".split(" "));
+const EN_PLACES = new Set("spain italy france germany sweden denmark japan greece poland netherlands switzerland kingdom states cyprus norway finland ireland turkey hungary croatia romania belgium morocco brazil thailand philippines latvia lithuania slovakia slovenia czechia tuscany sicily sardinia lombardy piedmont brittany normandy andalusia catalonia scandinavia dominican republic".split(" "));
 // Foreign terms that Spanish texts keep as they are.
-const KEPT = /\b(tiny houses?|council tax|walk-in|chill-out|check-in|sq ft|off-grid|open house|bed and breakfast|new york|new jersey|new hampshire|new brunswick|new england)\b/gi;
+const KEPT = /\b(tiny houses?|club ?house|town ?house|council tax|walk-in|chill-out|check-in|sq ft|off-grid|open house|bed and breakfast|new york|new jersey|new hampshire|new brunswick|new england)\b/gi;
 const WORD = /[A-Za-zÀ-ÖØ-öø-ÿ]+(?:['’][A-Za-z]+)?/g;
 /** Counts the words of a text and how many of them are still English. Names are left alone: a marker word next to
  * a capitalised name ("New York", "Lake Como", "Isle of Man", "Montecatini in Val di Cecina") does not count, and
@@ -72,7 +72,7 @@ export function englishLeft(text: string): Cover {
       if (isCap(w)) {
         if (i > 0 && (nameNext || namePrev)) continue;            // "in New York", "RealHunt Research"
         if (i === 0 && nameNext) continue;                        // a name: "Little River, South Carolina"
-      } else if (namePrev && nameNext) continue;                  // "Isle of Man", "Montecatini in Val di Cecina"
+      } else if (isCap(prev) && isCap(next)) continue;                  // "Isle of Man", "Montecatini in Val di Cecina"
       english++; if (hits.length < 12) hits.push(w);
     }
   }
@@ -134,8 +134,8 @@ const IN_TOWN = /^(\d+) homes in town in (.+?), from (€[\d,]+)\. Checked by a 
 
 // Place names inside a longer text ("Homes under €60,000 in Italy (6)", "Jarocin, Greater Poland"): the site
 // translator only knows them at the start of a string or after a comma. Longest first.
-const MORE_PLACES: Record<string, string> = { "Northern Sweden": "norte de Suecia", "Central Sweden": "centro de Suecia", "Southern Sweden": "sur de Suecia", "Greater Poland": "Gran Polonia", "Lesser Poland": "Pequeña Polonia", "New Mexico": "Nuevo México", "South Carolina": "Carolina del Sur", "North Carolina": "Carolina del Norte", "West Virginia": "Virginia Occidental", "Black Sea": "mar Negro", Florence: "Florencia", Copenhagen: "Copenhague", London: "Londres", Lisbon: "Lisboa", Rome: "Roma", Milan: "Milán" };
-const PLACE_NAMES = ["United States", "United Kingdom", "Dominican Republic", "Czech Republic", "Costa Rica", "Lake Como", "Nova Scotia", "New Brunswick", "North Jutland", "West Jutland", "East Jutland", "Central Jutland", "St. Gallen", "Spain", "Italy", "Sweden", "Japan", "Mexico", "Canada", "France", "Germany", "Greece", "Croatia", "Romania", "Hungary", "Finland", "Norway", "Denmark", "Scandinavia", "Ireland", "Thailand", "Turkey", "Morocco", "Brazil", "Panama", "Philippines", "Malaysia", "Slovakia", "Slovenia", "Poland", "Czechia", "Switzerland", "Belgium", "Netherlands", "Latvia", "Lithuania", "Cyprus", "Tuscany", "Lazio", "Sicily", "Sardinia", "Piedmont", "Lombardy", "Puglia", "Abruzzo", "Umbria", "Brittany", "Normandy", "Andalusia", "Catalonia", "Pennsylvania", "Bern", "Geneva", "Lucerne", "Grisons", "Ticino", "Funen"];
+const MORE_PLACES: Record<string, string> = { "Northern Sweden": "norte de Suecia", "Central Sweden": "centro de Suecia", "Southern Sweden": "sur de Suecia", "Greater Poland": "Gran Polonia", "Lesser Poland": "Pequeña Polonia", "New Mexico": "Nuevo México", "South Carolina": "Carolina del Sur", "North Carolina": "Carolina del Norte", "West Virginia": "Virginia Occidental", "Black Sea": "mar Negro", "Dominican Republic": "República Dominicana", "Czech Republic": "República Checa", Florence: "Florencia", Copenhagen: "Copenhague", London: "Londres", Lisbon: "Lisboa", Rome: "Roma", Milan: "Milán" };
+const PLACE_NAMES = ["United States", "United Kingdom", "Costa Rica", "Lake Como", "Nova Scotia", "New Brunswick", "North Jutland", "West Jutland", "East Jutland", "Central Jutland", "St. Gallen", "Spain", "Italy", "Sweden", "Japan", "Mexico", "Canada", "France", "Germany", "Greece", "Croatia", "Romania", "Hungary", "Finland", "Norway", "Denmark", "Scandinavia", "Ireland", "Thailand", "Turkey", "Morocco", "Brazil", "Panama", "Philippines", "Malaysia", "Slovakia", "Slovenia", "Poland", "Czechia", "Switzerland", "Belgium", "Netherlands", "Latvia", "Lithuania", "Cyprus", "Tuscany", "Lazio", "Sicily", "Sardinia", "Piedmont", "Lombardy", "Puglia", "Abruzzo", "Umbria", "Brittany", "Normandy", "Andalusia", "Catalonia", "Pennsylvania", "Bern", "Geneva", "Lucerne", "Grisons", "Ticino", "Funen"];
 const PLACE_MAP: Record<string, string> = { ...Object.fromEntries(PLACE_NAMES.map((n) => [n, esPlace(n)])), ...MORE_PLACES };
 const PLACE_ANY = new RegExp(`(?<![\\p{L}\\p{N}-])(${Object.keys(PLACE_MAP).sort((x, y) => y.length - x.length).map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?![\\p{L}\\p{N}-])`, "gu");
 /** Spanish names for the places the site knows, wherever they stand in a text, and the notes some homes carry
@@ -166,7 +166,8 @@ export function pageTranslator(tr: (s: string) => string): (s: string) => string
     return wrap(t);
   };
   return (s: string) => String(s ?? "").split(/(\s*›\s*)/).map((x, i) => (i % 2 ? x : one(x))).join("")
-    .replace(/(\d)\.(\d{1,2})(?=(?:\s?[-–]\s?\d+(?:[.,]\d+)?)?\s?%)/g, "$1,$2");
+    .replace(/(\d)\.(\d{1,2})(?=(?:\s?[-–]\s?\d+(?:[.,]\d+)?)?\s?%)/g, "$1,$2")
+    .replace(/(?<!\.)\.\.(?!\.)/g, "."); // a data text that ends in a full stop inside a sentence that adds its own
 }
 
 // ------------------------------------------------------------------------------------------ the Spanish pass
@@ -188,7 +189,7 @@ export function createEsPass(cwd = process.cwd()) {
     lang: "es" as const,
     tr, recs,
     /** "the Netherlands" -> "los Países Bajos": country name in Spanish with its article, as written after "en". */
-    the: (n: string) => theEs(esPlace(n)),
+    the: (n: string) => theEs(PLACE_MAP[n] || esPlace(n)),
     /** A data file as the Spanish pass must see it. Keys, slugs, countries and numbers never change: only texts. */
     data(file: string, v: any): any {
       const name = file.replace(/^.*\//, "");
@@ -211,7 +212,7 @@ export type EsPass = ReturnType<typeof createEsPass>;
 // /sitemap lists the English URLs written by the English run; sitemap-es.xml is the Spanish list.
 const NO_TWIN = new Set([SITE + "/sitemap"]);
 export type Render = (r: PageRec) => string;
-export type TwinReport = { twins: Twin[]; groups: Record<string, { pages: number; twins: number; words: number; english: number }>; failed: { url: string; english: number; words: number; hits: string[] }[] };
+export type TwinReport = { thin?: number; byHand?: { pages: number; words: number; english: number; failed: { url: string; english: number; words: number; hits: string[] }[] }; twins: Twin[]; groups: Record<string, { pages: number; twins: number; words: number; english: number; by_hand?: number }>; failed: { url: string; english: number; words: number; hits: string[] }[] };
 
 /** Translates, measures and decides every recorded page; nothing is written. `render` is prerender's page -> HTML. */
 export function planTwins(pass: EsPass) {
@@ -229,7 +230,7 @@ export function planTwins(pass: EsPass) {
     const cover = englishLeft(seen.concat(ldText).join("\n"));
     if (missing) for (const t of seen.concat(ldText)) if (englishLeft(t).english) { const g = r.o.group || "pages"; const k = g + "\t" + t.replace(/\d[\d.,]*/g, "N").slice(0, 400); missing.set(k, (missing.get(k) || 0) + 1); }
     // A page with no content of its own in the HTML (the app draws it) is not a Spanish page for a crawler.
-    const ok = !r.o.noindex && !!r.body && !NO_TWIN.has(r.url) && passes(cover);
+    const ok = !!r.body && !NO_TWIN.has(r.url) && passes(cover);
     return { r, title, desc, body, head, cover, ok };
   });
   if (missing) fs.writeFileSync(path.resolve(process.cwd(), "dist/es-missing.json"), JSON.stringify([...missing.entries()].sort((a, b) => b[1] - a[1]).map(([k, n]) => [n, ...k.split("\t")]), null, 0).replace(/\],\[/g, "],\n["));
@@ -238,9 +239,11 @@ export function planTwins(pass: EsPass) {
 
 /** Writes dist/es/<path>/index.html for every page that passed, adds hreflang to both versions and returns the twins
  * (for the sitemap) and the numbers by group. */
-export function writeEsTwins(root: string, pass: EsPass, render: Render): TwinReport {
-  const planned = planTwins(pass);
-  const has = new Set(planned.filter((p) => p.ok).map((p) => p.r.url));
+export function writeEsTwins(root: string, pass: EsPass, render: Render, written = new Map<string, string>()): TwinReport {
+  // `written`: English URL -> Spanish URL of the pages whose Spanish copy seo/prerender.ts writes by hand (the front
+  // page and the homes). Those stay as they are; they count as Spanish pages for the links of the others.
+  const planned = planTwins(pass).map((p) => (written.has(p.r.url) ? { ...p, ok: false, by_hand: true } : { ...p, by_hand: false }));
+  const has = new Set([...planned.filter((p) => p.ok).map((p) => p.r.url), ...written.keys()]);
   // internal links: to the Spanish twin when the target has one, otherwise the English page stays linked
   const link = (u: string) => (u.startsWith(SITE) && has.has(u === SITE ? SITE + "/" : u) ? esUrl(u) : u);
   const href = (html: string) => html.replace(/(<a\b[^>]*?\shref=")(\/[^"]*)"/g, (m, pre: string, h: string) => {
@@ -249,34 +252,72 @@ export function writeEsTwins(root: string, pass: EsPass, render: Render): TwinRe
   });
   const groups: TwinReport["groups"] = {};
   const twins: Twin[] = []; const failed: TwinReport["failed"] = [];
+  let thin = 0;
+  const write = (es: string, h: string) => {
+    const dir = path.join(root, es.slice(SITE.length + 1));
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, "index.html"), baseLdEs(h, pass.tr)); // + the two JSON-LD blocks every page inherits from index.html
+  };
   for (const p of planned) {
     const g = p.r.o.group || "pages";
     const G = (groups[g] ||= { pages: 0, twins: 0, words: 0, english: 0 });
-    if (p.r.o.noindex) continue;
+    if (p.r.o.noindex) {
+      // A thin page (noindex, not in the sitemap, no hreflang) still gets its Spanish copy when it is fully Spanish,
+      // so a visitor or a crawler that follows a link from a Spanish page stays in Spanish.
+      if (p.ok && !p.by_hand) { write(esUrl(p.r.url), render({ url: esUrl(p.r.url), title: p.title, desc: p.desc, image: p.r.image, body: p.body ? href(p.body) : undefined, ld: (p.r.ld || []).map((x) => translateLd(x, pass.tr, link) as object), o: { ...p.r.o, head: p.head, lang: "es" } })); thin++; }
+      continue;
+    }
+    if (p.by_hand) { G.pages++; G.twins++; G.by_hand = (G.by_hand || 0) + 1; continue; }
     G.pages++; G.words += p.cover.words; G.english += p.cover.english;
     if (!p.ok) { failed.push({ url: p.r.url, english: p.cover.english, words: p.cover.words, hits: p.r.body ? p.cover.hits : ["(no static body)"] }); continue; }
     G.twins++;
     const en = p.r.url, es = esUrl(en);
     const ld = (p.r.ld || []).map((x) => translateLd(x, pass.tr, link) as object);
-    let h = render({ url: es, title: p.title, desc: p.desc, image: p.r.image, body: p.body ? href(p.body) : undefined, ld, o: { ...p.r.o, head: (p.head || "") + hreflangTags(en) } });
-    h = h.replace(/<html lang="en"/, '<html lang="es"').replace(/(<meta property="og:locale" content=")en_US"/, '$1es_ES"');
-    // the two JSON-LD blocks every page inherits from index.html (Organization, WebSite)
-    h = h.replace(/(<script type="application\/ld\+json">)\s*(\{[\s\S]*?\})\s*(<\/script>)/g, (m, a: string, j: string, b: string) => {
-      try { const o = JSON.parse(j); if (o["@type"] !== "Organization" && o["@type"] !== "WebSite") return m; if (typeof o.description === "string") o.description = pass.tr(o.description); return a + JSON.stringify(o).replace(/</g, "\\u003c") + b; } catch { return m; }
-    });
-    const dir = path.join(root, es.slice(SITE.length + 1));
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(path.join(dir, "index.html"), h);
+    let h = render({ url: es, title: p.title, desc: p.desc, image: p.r.image, body: p.body ? href(p.body) : undefined, ld, o: { ...p.r.o, head: p.head, lang: "es", alt: { en, es } } });
+    write(es, h);
     // the English page gets the same three links
     const enFile = path.join(root, en.slice(SITE.length + 1), "index.html");
     if (fs.existsSync(enFile)) { const eh = fs.readFileSync(enFile, "utf8"); if (!eh.includes('hreflang="es"')) fs.writeFileSync(enFile, eh.replace("</head>", () => hreflangTags(en) + "</head>")); }
     twins.push({ en, es, lastmod: p.r.o.lastmod ?? null, group: g, images: p.r.o.images });
   }
-  return { twins, groups, failed };
+  // The pages written by hand: same check, the inherited JSON-LD in Spanish, place names in Spanish, and a link to
+  // the Spanish country page when there is one.
+  const byHand = { pages: 0, words: 0, english: 0, failed: [] as TwinReport["failed"] };
+  const country = new Map<string, string>(((JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "public/data/rh-static.json"), "utf8")).rows || []) as any[]).map((r) => [String(r.slug), String(r.country || "")]));
+  for (const [en, es] of written) {
+    const file = path.join(root, es.slice(SITE.length + 1), "index.html");
+    if (!fs.existsSync(file)) continue;
+    let h = baseLdEs(fs.readFileSync(file, "utf8"), pass.tr);
+    h = h.replace(/(<div id="root">)([\s\S]*)(<\/div>\s*<script)/, (_m, a: string, b: string, c: string) => a + translateHtml(b, placesEs) + c);
+    const slug = /\/deal\/([^/]+)$/.exec(en)?.[1];
+    const c = slug ? country.get(slug) : "";
+    const cUrl = c ? `${SITE}/homes/${c.toLowerCase().trim().replace(/\s+/g, "-")}` : "";
+    if (cUrl && has.has(cUrl) && !written.has(cUrl)) h = h.replace('<p><a href="/es">Las mejores casas</a>', () => `<p><a href="${esUrl(cUrl).slice(SITE.length)}">Todas las casas en ${esc(pass.the(c!))}</a> · <a href="/es">Las mejores casas</a>`);
+    fs.writeFileSync(file, h);
+    const cover = measureHtml(h);
+    byHand.pages++; byHand.words += cover.words; byHand.english += cover.english;
+    if (!passes(cover)) byHand.failed.push({ url: es, english: cover.english, words: cover.words, hits: cover.hits });
+  }
+  return { twins, groups, failed, byHand, thin };
 }
+
+/** The visible text, title, description and JSON-LD texts of a finished page, measured. For the Spanish pages that
+ * seo/prerender.ts writes by hand. */
+export function measureHtml(html: string): Cover {
+  const seen: string[] = [];
+  const t = /<title>([^<]*)<\/title>/.exec(html); if (t) seen.push(unesc(t[1]));
+  const d = /<meta name="description" content="([^"]*)"/.exec(html); if (d) seen.push(unesc(d[1]));
+  for (const m of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) { try { translateLd(JSON.parse(m[1]), (x) => x, (u) => u, (x) => seen.push(x)); } catch { /* not JSON */ } }
+  const root = /<div id="root">([\s\S]*)<\/div>\s*<script/.exec(html);
+  if (root) translateHtml(root[1], (x) => x, (x) => seen.push(x));
+  return englishLeft(seen.join("\n"));
+}
+const baseLdEs = (h: string, tr: (s: string) => string) => h.replace(/(<script type="application\/ld\+json">)\s*(\{[\s\S]*?\})\s*(<\/script>)/g, (m, a: string, j: string, b: string) => {
+  try { const o = JSON.parse(j); if (o["@type"] !== "Organization" && o["@type"] !== "WebSite") return m; if (typeof o.description === "string") o.description = tr(o.description); return a + JSON.stringify(o).replace(/</g, "\\u003c") + b; } catch { return m; }
+});
 
 /** Lines for the build log and for dist/es-coverage.json. */
 export function coverageSummary(rep: TwinReport) {
   const groups = Object.fromEntries(Object.entries(rep.groups).map(([g, v]) => [g, { ...v, spanish_pct: v.words ? Math.round((1 - v.english / v.words) * 10000) / 100 : 0 }]));
-  return { max_english_share: MAX_ENGLISH, max_english_words: MAX_ENGLISH_WORDS, twins: rep.twins.length, groups, not_published: rep.failed.length, not_published_sample: rep.failed.slice(0, 400) };
+  return { noindex_copies: rep.thin || 0, written_by_hand: rep.byHand, max_english_share: MAX_ENGLISH, max_english_words: MAX_ENGLISH_WORDS, twins: rep.twins.length, groups, not_published: rep.failed.length, not_published_sample: rep.failed.slice(0, 400) };
 }

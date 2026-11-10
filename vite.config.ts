@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import fs from "fs";
 import { prerenderPages } from "./seo/prerender";
+import { fileBudget } from "./seo/budget";
 
 // 9-nov-2026 speed: the Spanish copies of every home's texts (about 60 KB compressed, a fifth of the snapshot) are
 // only needed by Spanish visitors. The committed public/data/rh-static.json keeps them (other scripts read it); the
@@ -78,7 +79,7 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  plugins: [react(), preloadPublicRoute(), prerenderPages(), splitSpanishTexts()].filter(Boolean),
+  plugins: [react(), preloadPublicRoute(), prerenderPages(), splitSpanishTexts(), fileBudget()].filter(Boolean),
   resolve: {
     dedupe: ["react", "react-dom"],
     alias: {

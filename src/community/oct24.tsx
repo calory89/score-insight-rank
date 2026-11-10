@@ -78,14 +78,18 @@ export function countryMedians() {
 }
 // 10-nov-2026 (owner: a Lake Como home read "39% above the median in Italy", which sounds dear on a site of good-value
 // homes): compare with the home's own region when it has at least 3 homes with a size, else with the country.
+/** The places in a home's location, most local first, without the country: "San Siro, Lake Como, Lombardy" -> all three. */
+export const areaParts = (r: { location_name?: string | null; country?: string | null }) => {
+  const c = String(r.country || "").toLowerCase();
+  return [...new Set(String(r.location_name || "").split(",").map((x) => x.trim()).filter((x) => x && x.toLowerCase() !== c))];
+};
 let areaMeds: Promise<Record<string, number>> | null = null;
 export function areaMedians() {
   return (areaMeds ||= snapshotRaw().then(mediaDeep).then((s: any) => {
     const by: Record<string, number[]> = {};
     for (const r of (s.rows || []) as any[]) {
       if (!(r.sqm > 0 && r.price_eur > 0)) continue;
-      const rg = regionOf(r);
-      if (rg) (by[r.country + "|" + rg] ||= []).push(r.price_eur / r.sqm);
+      for (const part of areaParts(r)) (by[r.country + "|" + part] ||= []).push(r.price_eur / r.sqm);
     }
     const out: Record<string, number> = {};
     for (const [c, xs] of Object.entries(by)) if (xs.length >= 3) { xs.sort((a, b) => a - b); out[c] = xs[Math.floor(xs.length / 2)]; }
