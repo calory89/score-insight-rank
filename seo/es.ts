@@ -40,8 +40,12 @@ export const hreflangTags = (en: string) =>
 // English words that are not Spanish words. Left out on purpose because Spanish uses them too: no, a, me, has, sea,
 // come, sale, son, sin, real, final, legal, local, total, rural, general, hospital, hotel, plan, portal, original,
 // per (per cápita), top, email, chalet, villa, loft, golf.
-const EN_WORDS = new Set(("the and of for with from in on at by to is are was were be been this that these those it its you your we our they their or not but if as than then there here how what which who when where why can could will would should may must have had does did get got all any each every more most less least other others some new best good cheap cheaper cheapest home homes house houses flat flats apartment apartments bedroom bedrooms bed beds bath baths bathroom price prices cost costs buy buying buyer buyers sell seller sellers rent rental rentals tax taxes fee fees year years yearly month months monthly day days week weeks country countries region regions town towns village villages city lake near nearby score scores scored ranked rank checked check person people about above under over up down out into after before between size space garden terrace pool view views land garage cellar attic water airport shop train added updated listed listing listings source sources guide guides step steps question questions answer answers rule rules foreigner foreigners foreign abroad live living work works compare map alert alerts free see read know first also only just right now today side short full build builds ranking rankings developer developers project projects beach feed reader follow median research report quote page site need needs made list yes none biggest cut drop drops went gone since asking agent agents estate commission agencies behind deal deals directly takes opens own plot cabin furnished worked example examples enter pay paid money goes where whether calculator income yield holiday long term start starts starting sorted cheapest square metre metres meter meters describe chosen chose choose pick picked popular unsubscribe click one two three ten most least much many little few same next previous back show shows found find finds finder look looks looking want wants wanted love save saved saves share shared sign open close closed contact write team press partnership policy privacy terms cookie cookies takedown request requests photo photos picture pictures run runs founder company makes make earns earn pays nobody higher sponsored cards marked through still link links pass passed passes passing hand start grade grades graded compares against home's condition extras weather detail interest survey valuation flatter date inspection lawyer notary sold wrong button turned ruins bare major minor needs renovated ready move features nearby made minutes hours away walk drive station school schools").split(/\s+/));
+const EN_WORDS = new Set(("the and of for with from in on at by to is are was were be been this that these those it its you your we our they their or not but if as than then there here how what which who when where why can could will would should may must have had does did get got all any each every more most less least other others some new best good cheap cheaper cheapest home homes house houses apartment apartments bedroom bedrooms bed beds bathroom buy buying buyer buyers sell seller sellers tax taxes fee fees year years yearly month months monthly day days week weeks near nearby score scores scored ranked checked about above under over up down out into after before between added updated listed listing listings price prices cost costs size country countries question questions sources features steps guide guides rules map research alerts examples contact calculator median foreigner foreigners foreign abroad living compare free see read know first also only just right now today builds follow need needs yes none biggest went gone since asking agencies behind directly takes opens own furnished worked goes whether starts starting sorted square metre metres describe chosen choose picked unsubscribe much many little few same next previous back found looking wanted write partnership privacy terms takedown requests nobody higher through still passed passes passing graded compares against weather valuation flatter lawyer notary turned renovated made").split(/\s+/));
 
+// English names of countries and regions that Spanish writes differently: always English, wherever they appear.
+const EN_PLACES = new Set("spain italy france germany sweden denmark japan greece poland netherlands switzerland kingdom states cyprus norway finland ireland turkey hungary croatia romania belgium morocco brazil thailand philippines latvia lithuania slovakia slovenia czechia tuscany sicily sardinia lombardy piedmont brittany normandy andalusia catalonia scandinavia".split(" "));
+// Foreign terms that Spanish texts keep as they are.
+const KEPT = /\b(tiny houses?|council tax|walk-in|chill-out|check-in|sq ft|off-grid|open house|bed and breakfast|new york|new jersey|new hampshire|new brunswick|new england)\b/gi;
 const WORD = /[A-Za-zÀ-ÖØ-öø-ÿ]+(?:['’][A-Za-z]+)?/g;
 /** Counts the words of a text and how many of them are still English. Names are left alone: a marker word next to
  * a capitalised name ("New York", "Lake Como", "Isle of Man", "Montecatini in Val di Cecina") does not count, and
@@ -49,7 +53,9 @@ const WORD = /[A-Za-zÀ-ÖØ-öø-ÿ]+(?:['’][A-Za-z]+)?/g;
 export function englishLeft(text: string): Cover {
   let words = 0, english = 0; const hits: string[] = [];
   // sentence-like units, so a capital that only starts a sentence is not read as a name
-  for (const unit of String(text || "").split(/(?<=[.!?:;·›|()])\s+|\s+[·›|]\s+|\n+/)) {
+  // a short aside in brackets is the original name of a tax or a place: "(closing costs)", "(Black Sea)"
+  const clean = String(text || "").replace(KEPT, " ").replace(/\(([^()\d]*)\)/g, (m, x: string) => (x.trim().split(/\s+/).length <= 4 ? " " : m));
+  for (const unit of clean.split(/(?<=[.!?:;·›|()])\s+|\s+[·›|]\s+|\n+/)) {
     const toks: string[] = [];
     for (const chunk of unit.split(/\s+/)) {
       if (!chunk || /[A-Za-z0-9][./@][A-Za-z0-9]/.test(chunk) && !/\d[.,]\d/.test(chunk) || /^https?:/i.test(chunk)) continue; // gate-away.com, a@b.co
@@ -59,12 +65,13 @@ export function englishLeft(text: string): Cover {
     const isEn = (w?: string) => !!w && EN_WORDS.has(w.toLowerCase());
     for (let i = 0; i < toks.length; i++) {
       const w = toks[i]; words++;
+      if (EN_PLACES.has(w.toLowerCase()) && isCap(w)) { english++; if (hits.length < 12) hits.push(w); continue; }
       if (!isEn(w)) continue;
       const prev = toks[i - 1], next = toks[i + 1];
       const nameNext = isCap(next) && !isEn(next), namePrev = isCap(prev) && !isEn(prev);
       if (isCap(w)) {
         if (i > 0 && (nameNext || namePrev)) continue;            // "in New York", "RealHunt Research"
-        if (i === 0 && nameNext && toks.length <= 3) continue;    // a bare name: "New York", "Lake Como"
+        if (i === 0 && nameNext) continue;                        // a name: "Little River, South Carolina"
       } else if (namePrev && nameNext) continue;                  // "Isle of Man", "Montecatini in Val di Cecina"
       english++; if (hits.length < 12) hits.push(w);
     }
@@ -111,6 +118,57 @@ export function translateLd(x: unknown, tr: (s: string) => string, link: (u: str
   return x;
 }
 
+/** The site translator works on whole strings. The static pages also have breadcrumbs ("RealHunt › Guides"), text that
+ * starts after a link or a label (": about 8% on top of the price", ", or"), labels that end in a colon ("Price:") and
+ * decimals before a percent sign, which Spanish writes with a comma. */
+// Sentences the site translator cannot take as one string: a label followed by a long Spanish text from the data
+// (it only tries its patterns on strings under 400 characters), and one sentence its own counting rule gets to first.
+const LEAD: [RegExp, string][] = [
+  [/^Plan for about ([\d.,–-]+)% on top of the price: /, "Calcula alrededor de un $1% además del precio: "],
+  [/^About ([\d.,–-]+)% on top of the price: /, "Alrededor de un $1% además del precio: "],
+  [/^About ([\d.,–-]+)%: /, "Alrededor de un $1%: "],
+  [/^Yearly property tax: /, "Impuesto anual sobre la propiedad: "],
+  [/^Tax on rental income: /, "Impuesto sobre los ingresos por alquiler: "],
+];
+const IN_TOWN = /^(\d+) homes in town in (.+?), from (€[\d,]+)\. Checked by a person, scored from 70 to 98 and ranked best first\.$/;
+
+// Place names inside a longer text ("Homes under €60,000 in Italy (6)", "Jarocin, Greater Poland"): the site
+// translator only knows them at the start of a string or after a comma. Longest first.
+const MORE_PLACES: Record<string, string> = { "Northern Sweden": "norte de Suecia", "Central Sweden": "centro de Suecia", "Southern Sweden": "sur de Suecia", "Greater Poland": "Gran Polonia", "Lesser Poland": "Pequeña Polonia", "New Mexico": "Nuevo México", "South Carolina": "Carolina del Sur", "North Carolina": "Carolina del Norte", "West Virginia": "Virginia Occidental", "Black Sea": "mar Negro", Florence: "Florencia", Copenhagen: "Copenhague", London: "Londres", Lisbon: "Lisboa", Rome: "Roma", Milan: "Milán" };
+const PLACE_NAMES = ["United States", "United Kingdom", "Dominican Republic", "Czech Republic", "Costa Rica", "Lake Como", "Nova Scotia", "New Brunswick", "North Jutland", "West Jutland", "East Jutland", "Central Jutland", "St. Gallen", "Spain", "Italy", "Sweden", "Japan", "Mexico", "Canada", "France", "Germany", "Greece", "Croatia", "Romania", "Hungary", "Finland", "Norway", "Denmark", "Scandinavia", "Ireland", "Thailand", "Turkey", "Morocco", "Brazil", "Panama", "Philippines", "Malaysia", "Slovakia", "Slovenia", "Poland", "Czechia", "Switzerland", "Belgium", "Netherlands", "Latvia", "Lithuania", "Cyprus", "Tuscany", "Lazio", "Sicily", "Sardinia", "Piedmont", "Lombardy", "Puglia", "Abruzzo", "Umbria", "Brittany", "Normandy", "Andalusia", "Catalonia", "Pennsylvania", "Bern", "Geneva", "Lucerne", "Grisons", "Ticino", "Funen"];
+const PLACE_MAP: Record<string, string> = { ...Object.fromEntries(PLACE_NAMES.map((n) => [n, esPlace(n)])), ...MORE_PLACES };
+const PLACE_ANY = new RegExp(`(?<![\\p{L}\\p{N}-])(${Object.keys(PLACE_MAP).sort((x, y) => y.length - x.length).map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})(?![\\p{L}\\p{N}-])`, "gu");
+/** Spanish names for the places the site knows, wherever they stand in a text, and the notes some homes carry
+ * after their town ("(35 min to Billund)"). */
+export const placesEs = (s: string) => s.replace(PLACE_ANY, (m) => PLACE_MAP[m] || m)
+  .replace(/\((\d+) min to ([^()]+)\)/g, "(a $1 min de $2)").replace(/\(about (\d+) min from ([^()]+)\)/g, "(a unos $1 min de $2)").replace(/\(between ([^()]+) and ([^()]+)\)/g, "(entre $1 y $2)");
+
+export function pageTranslator(tr: (s: string) => string): (s: string) => string {
+  const left = (s: string) => englishLeft(s).english;
+  const one = (s: string, depth = 0): string => {
+    const m = /^(\s*[:;,.]?\s*)([\s\S]*?)(\s*)$/.exec(s)!;
+    const core = m[2];
+    if (!core) return s;
+    const wrap = (t: string) => m[1] + t + m[3];
+    for (const [re, es] of LEAD) { const x = re.exec(core); if (x) return wrap(x[0].replace(re, es) + one(core.slice(x[0].length), depth)); }
+    const it = IN_TOWN.exec(core);
+    if (it) return wrap(`${it[1]} casas en ciudad en ${placesEs(tr(it[2]))}, desde ${tr(it[3])}. Revisadas por una persona, con nota de 70 a 98 y ordenadas de mejor a peor.`);
+    let t = placesEs(tr(core));
+    if (t === core && /:$/.test(core)) { const u = tr(core.slice(0, -1)); if (u !== core.slice(0, -1)) t = u + ":"; }       // "Price:"
+    // Still some English: translate the parts on their own ("A · B", "Tuscany (12)") and keep the better result.
+    if (depth < 3 && left(t)) {
+      const tries: string[] = [];
+      if (core.includes(" · ")) tries.push(core.split(" · ").map((x) => one(x, depth + 1)).join(" · "));
+      const par = /^([^()]*\S) \(([^()]*)\)$/.exec(core);
+      if (par) tries.push(`${one(par[1], depth + 1)} (${one(par[2], depth + 1)})`);
+      for (const x of tries) if (left(x) < left(t)) t = x;
+    }
+    return wrap(t);
+  };
+  return (s: string) => String(s ?? "").split(/(\s*›\s*)/).map((x, i) => (i % 2 ? x : one(x))).join("")
+    .replace(/(\d)\.(\d{1,2})(?=(?:\s?[-–]\s?\d+(?:[.,]\d+)?)?\s?%)/g, "$1,$2");
+}
+
 // ------------------------------------------------------------------------------------------ the Spanish pass
 export function createEsPass(cwd = process.cwd()) {
   const read = (f: string, d: any = {}) => { const p = path.resolve(cwd, f); return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : d; };
@@ -118,8 +176,10 @@ export function createEsPass(cwd = process.cwd()) {
   const rows: any[] = (snap.rows || []).filter((r: any) => r?.slug);
   const homeTexts: Record<string, string> = {};
   for (const r of rows) for (const k of ["title", "why_great", "why_cheap"]) { const en = String(r[k] || "").trim(), es = String(r[k + "_es"] || "").trim(); if (en && es && en !== es) homeTexts[en] = es; }
-  // Site dictionaries last, so a sentence the Spanish site already shows reads the same here.
-  const tr = buildTranslator([read("seo/es-templates.json"), read("public/i18n/es-core.json"), read("public/i18n/es-listings.json"), read("public/i18n/es-extra.json"), read("public/i18n/es-data.json"), homeTexts]);
+  // The site's own dictionaries, then the home texts, then the sentences of the prerender templates (which only
+  // define what the site dictionaries do not have).
+  const tpl = read("seo/es-templates.json"); delete tpl._note;
+  const tr = pageTranslator(buildTranslator([read("public/i18n/es-core.json"), read("public/i18n/es-listings.json"), read("public/i18n/es-extra.json"), read("public/i18n/es-data.json"), homeTexts, tpl]));
   const recs: PageRec[] = [];
   const num = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
   const placeEs = (s: string) => String(s || "").split(", ").map((x) => esPlace(x.trim())).join(", ");
@@ -155,6 +215,8 @@ export type TwinReport = { twins: Twin[]; groups: Record<string, { pages: number
 
 /** Translates, measures and decides every recorded page; nothing is written. `render` is prerender's page -> HTML. */
 export function planTwins(pass: EsPass) {
+  // RH_ES_DEBUG=1: dist/es-missing.json lists the strings that still have English words, most frequent first
+  const missing: Map<string, number> | null = process.env.RH_ES_DEBUG ? new Map() : null;
   const planned = pass.recs.map((r) => {
     const seen: string[] = [];
     const note = (s: string) => { seen.push(s); };
@@ -165,10 +227,12 @@ export function planTwins(pass: EsPass) {
     const ldText: string[] = [];
     (r.ld || []).forEach((x) => translateLd(x, pass.tr, (u) => u, (s) => ldText.push(s)));
     const cover = englishLeft(seen.concat(ldText).join("\n"));
+    if (missing) for (const t of seen.concat(ldText)) if (englishLeft(t).english) { const g = r.o.group || "pages"; const k = g + "\t" + t.replace(/\d[\d.,]*/g, "N").slice(0, 400); missing.set(k, (missing.get(k) || 0) + 1); }
     // A page with no content of its own in the HTML (the app draws it) is not a Spanish page for a crawler.
     const ok = !r.o.noindex && !!r.body && !NO_TWIN.has(r.url) && passes(cover);
     return { r, title, desc, body, head, cover, ok };
   });
+  if (missing) fs.writeFileSync(path.resolve(process.cwd(), "dist/es-missing.json"), JSON.stringify([...missing.entries()].sort((a, b) => b[1] - a[1]).map(([k, n]) => [n, ...k.split("\t")]), null, 0).replace(/\],\[/g, "],\n["));
   return planned;
 }
 
