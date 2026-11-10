@@ -22,6 +22,9 @@ import { thumb } from "../src/lib/thumbs";
 import { type CanBuyData, STATUS_LABEL, UPDATED, canBuyPairs, canBuyCountries, canBuySlug, ruleFor, residencyFor, canBuyFaq, canBuyMeta, fill, costLines, costCountries, nameOf, fmtMoney } from "../src/community/seo2data";
 
 const SITE = "https://realhunt.co";
+// Country names for the Spanish copies (/es/...). A country not listed keeps its English name.
+const ES_COUNTRY: Record<string, string> = { Bulgaria: "Bulgaria", Canada: "Canadá", Cyprus: "Chipre", Denmark: "Dinamarca", "Dominican Republic": "República Dominicana", France: "Francia", Germany: "Alemania", Greece: "Grecia", Italy: "Italia", Japan: "Japón", Mexico: "México", Netherlands: "Países Bajos", Norway: "Noruega", Poland: "Polonia", Portugal: "Portugal", Spain: "España", Sweden: "Suecia", Switzerland: "Suiza", "United Kingdom": "Reino Unido", "United States": "Estados Unidos", Albania: "Albania", Croatia: "Croacia", Turkey: "Turquía", Romania: "Rumanía", Hungary: "Hungría", Ireland: "Irlanda", Finland: "Finlandia", Austria: "Austria", Belgium: "Bélgica", Montenegro: "Montenegro", Georgia: "Georgia", Thailand: "Tailandia", Indonesia: "Indonesia" };
+const esC = (n: string) => ES_COUNTRY[n] || n;
 const DEF = `${SITE}/og-home.jpg`;
 const MIN_LIST = 3;
 const PRICE_BANDS = [20000, 40000, 60000, 80000, 100000, 150000];
@@ -263,7 +266,7 @@ function build(root: string) {
       [crumbs(trail), { "@context": "https://schema.org", "@type": "ItemList", name: `Best homes for sale in ${name}`, numberOfItems: homes.length,
         itemListElement: top.map((h, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/deal/${h.slug}`, name: h.title })) },
        ...(faq.length && !thin ? [{ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) }] : [])],
-      { noindex: thin, lastmod: maxDay(homes.map(homeDay)), group: "places" });
+      { noindex: thin, lastmod: maxDay(homes.map(homeDay)), group: "places", alt: !thin && homes.filter((h) => h.title_es).length >= MIN_LIST ? { en: url, es: `${SITE}/es/homes/${c}` } : undefined });
     for (const p of PRICE_BANDS) {
       const list = homes.filter((h) => h.price_eur <= p);
       const bUrl = `${url}/under-${p}`;
@@ -351,11 +354,27 @@ function build(root: string) {
     const descEs = `${rows.length} casas en venta en ${countryLinks.length} países, revisadas una a una por una persona, puntuadas de 70 a 98 y ordenadas de mejor a peor. Casas nuevas cada día.`;
     page(`${SITE}/es`, "RealHunt: las mejores casas de cada país, ordenadas por nota", descEs, DEF,
       `${css}<main class="rh-static rh-hs" id="rh-home-static"><h1>Las mejores casas en el extranjero, revisadas y con nota</h1><p>${esc(descEs)}</p>`
-      + `<ol>${topEs.map(cardEs).join("")}</ol><p><a href="/">English</a></p></main>`
+      + `<ol>${topEs.map(cardEs).join("")}</ol><h2>Casas por país</h2><p>${countryLinks.filter(([, x]) => x.homes.filter((h) => h.title_es).length >= MIN_LIST).map(([k, x]) => `<a href="/es/homes/${esc(k)}">${esc(esC(x.name))} (${x.homes.length})</a>`).join(" · ")}</p><p><a href="/">English</a></p></main>`
       + `<script>if(location.pathname!=="/"){var e=document.getElementById("rh-home-static");if(e)e.parentNode.removeChild(e)}</script>`,
       [{ "@context": "https://schema.org", "@type": "ItemList", name: "Las mejores casas en RealHunt", inLanguage: "es", numberOfItems: rows.length,
         itemListElement: topEs.map((h, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/es/deal/${h.slug}`, name: h.title_es })) }],
       { lastmod: maxDay(rows.map(homeDay)), group: "es", lang: "es", alt: { en: `${SITE}/`, es: `${SITE}/es` } });
+  }
+
+  // ---------- Countries in Spanish (/es/homes/<country>): the same ranking with the Spanish titles ----------
+  for (const [c, v] of countryLinks) {
+    const list = v.homes.filter((h) => h.title_es);
+    if (list.length < MIN_LIST) continue;
+    const euro = (n: number) => Math.round(n).toLocaleString("es-ES") + " €";
+    const en = `${SITE}/homes/${c}`, es = `${SITE}/es/homes/${c}`;
+    const dEs = `${list.length} casas en venta (${esC(v.name)}), desde ${euro(Math.min(...list.map((h) => h.price_eur)))}. Cada una revisada por una persona, puntuada de 70 a 98 y ordenada de mejor a peor.`;
+    page(es, `Las mejores casas en venta: ${esC(v.name)} (${list.length}) · RealHunt`, dEs, homeImg(list[0]),
+      `<main class="rh-static"><nav aria-label="Ruta"><a href="/es">RealHunt</a> › ${esc(esC(v.name))}</nav><h1>Las mejores casas en venta: ${esc(esC(v.name))}</h1><p>${esc(dEs)}</p>`
+      + `<ol>${list.slice(0, 50).map((r) => `<li><a href="/es/deal/${esc(r.slug)}"><strong>${esc(euro(r.price_eur))}</strong> · ${esc(r.title_es)}</a> · ${esc(r.location_name || r.country)}${r.nota != null ? ` · nota ${esc(r.nota)}` : ""}${r.sqm ? ` · ${esc(r.sqm)} m²` : ""}</li>`).join("")}</ol>`
+      + `<h2>Otros países</h2><p>${countryLinks.filter(([k, x]) => k !== c && x.homes.filter((h) => h.title_es).length >= MIN_LIST).map(([k, x]) => `<a href="/es/homes/${esc(k)}">${esc(esC(x.name))} (${x.homes.length})</a>`).join(" · ")}</p><p><a href="/homes/${esc(c)}">English</a></p></main>`,
+      [{ "@context": "https://schema.org", "@type": "ItemList", name: `Las mejores casas en venta: ${esC(v.name)}`, inLanguage: "es", numberOfItems: list.length,
+        itemListElement: list.slice(0, 50).map((h, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/es/deal/${h.slug}`, name: h.title_es })) }],
+      { lastmod: maxDay(list.map(homeDay)), group: "es", lang: "es", alt: { en, es } });
   }
 
   // ---------- What €100,000 buys (/what-100k-buys): the best-scored home at or under €100,000 in each country ----------
