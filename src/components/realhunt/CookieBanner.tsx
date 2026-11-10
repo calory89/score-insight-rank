@@ -2,6 +2,7 @@ import { track } from "@/lib/rh";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
+import "./cookie-banner.css";
 
 const KEY = "rh_consent";
 const enableTracking = () => { try { (window as any).rhEnablePixel?.(); } catch {} };

@@ -22,6 +22,7 @@ import { homeArticle } from "../src/community/homeArticle";
 import { toMedia } from "../src/lib/media";
 import { writeLlmsFull } from "./llmsFull";
 import { thumb } from "../src/lib/thumbs";
+import { dealShell, DEAL_SHELL_HEAD } from "./dealShell";
 import { type CanBuyData, statusLabel, UPDATED, UPDATED_ES, canBuyPairs, canBuyCountries, canBuySlug, ruleFor, residencyFor, canBuyFaq, canBuyMeta, fill, costLines, costCountries, nameOf, fmtMoney } from "../src/community/seo2data";
 import { homeArticleEs } from "../src/community/homeArticleEs";
 import { type EsPass, type PageRec, type Twin, createEsPass, writeEsTwins, coverageSummary } from "./es";
@@ -150,6 +151,8 @@ function build(root: string, es?: EsPass) {
   for (const r of ranked) { const k = slugCountry(r.country); if (k) (byCountry.get(k) || byCountry.set(k, []).get(k)!).push(r); }
   const destForArticle: Record<string, any> = readJson("src/data/destinations.json", {});
   const guidesForArticle: Record<string, any> = readJson("src/data/guides.json", {});
+  const cardColors: Record<string, string> = readJson("src/data/card-colors.json", {});
+  const lowRes = (r: any) => { const u = toMedia(String(r?.image_urls?.[0] || "")); const t = u ? thumb(u) : ""; return t && t !== u ? t : ""; };
   for (const d of deals) {
     if (!d?.slug || !/^[A-Za-z0-9_-]+$/.test(d.slug)) continue;
     const r = bySlug.get(d.slug);
@@ -173,9 +176,15 @@ function build(root: string, es?: EsPass) {
       const sameRegion = rp ? rp.homes.filter((x) => x.slug !== r.slug).slice(0, 6) : [];
       const similar = (sameRegion.length >= 3 ? sameRegion : ranked.filter((x) => x.slug !== r.slug && x.country === r.country).slice(0, 6));
       const bands = PRICE_BANDS.filter((p) => p >= r.price_eur).slice(0, 1);
-      body = `<main class="rh-static"><article>${navHtml(trail)}<h1>${esc(r.title)}</h1>`
+      // 10-nov-2026 speed: the top of the home page (header, main photo, title, price) is drawn by the HTML where the
+      // app will draw it, and the row is embedded so the app shows the home without waiting for the snapshot.
+      const rg = regionOf(r);
+      const shell = dealShell({
+        row: r, lowRes: lowRes(r), photos: (r.image_urls || []).filter(Boolean).map((u: string) => toMedia(String(u))), color: cardColors[r.slug],
+        crumbs: [[r.country || "", cc ? `/homes/${cc}` : ""], ...(rg ? [[rg, rp ? `/homes/${rp.cc}/${rp.slug}` : ""] as [string, string]] : [])].filter(([l]) => l) as [string, string][],
+      });
+      body = shell + `<main class="rh-static"><article>${navHtml(trail)}`
         + `<p><strong>${esc(eur(r.price_eur))}</strong> · ${esc(r.location_name || cName)}${r.sqm ? ` · ${esc(r.sqm)} m²` : ""}${r.bedrooms ? ` · ${esc(r.bedrooms)} bedrooms` : ""}${r.sqm && r.price_eur ? ` · ${esc(eur(r.price_eur / r.sqm))}/m²` : ""}</p>`
-        + (r.image_urls?.[0] ? `<p><img src="${esc(r.image_urls[0])}" alt="${esc(r.title + ", " + (r.location_name || cName))}" width="760" loading="eager" style="max-width:100%;height:auto;border-radius:12px"></p>` : "")
         + (r.nota != null ? `<h2>RealHunt score: ${esc(r.nota)} / 98</h2><p>Every home on RealHunt passed a hand check first, so the grade starts at 70. The rest compares this home with every other home on the site. <a href="/method">How the score works</a>.</p><ul>${dims.map(([k, l, help]) => `<li>${esc(l)}: <strong>${esc(r.dims[k])}</strong>/100 · ${esc(help)}</li>`).join("")}</ul>` : "")
         + (r.why_great ? `<h2>Why it made the list</h2><p>${esc(r.why_great)}</p>` : "")
         + art.sections.map((x) => `<h2>${esc(x.h)}</h2>${x.p.map((t) => `<p>${esc(t)}</p>`).join("")}`).join("")
@@ -203,9 +212,10 @@ function build(root: string, es?: EsPass) {
         },
       });
     }
-    // 9-nov-2026 speed: the main photo starts downloading with the HTML, not after the app and the data (LCP)
-    const hero = r?.image_urls?.[0] ? toMedia(String(r.image_urls[0])) : "";
-    page(url, `${d.title} · RealHunt`, d.desc, d.image || DEF, body, ld, { lastmod: homeDay(r), group: "homes", head: hero ? `<link rel="preload" as="image" href="${esc(hero)}" fetchpriority="high" />` : undefined,
+    // 9-nov-2026 speed: the main photo starts downloading with the HTML, not after the app and the data (LCP).
+    // 10-nov-2026: its small card copy when there is one (painted first, the full photo sharpens over it), else the photo.
+    const hero = r?.image_urls?.[0] ? lowRes(r) || toMedia(String(r.image_urls[0])) : "";
+    page(url, `${d.title} · RealHunt`, d.desc, d.image || DEF, body, ld, { lastmod: homeDay(r), group: "homes", head: (hero ? `<link rel="preload" as="image" href="${esc(hero)}" fetchpriority="high" />` : "") + (r ? DEAL_SHELL_HEAD : "") || undefined,
       // 10-nov-2026: the home's photos in the sitemap (Google Images), up to 5 per home
       images: (r?.image_urls || []).slice(0, 5).map((u: string) => abs(String(u))),
       alt: r?.title_es ? { en: url, es: `${SITE}/es/deal/${d.slug}` } : undefined });
@@ -215,9 +225,10 @@ function build(root: string, es?: EsPass) {
       const euro = (n: number) => Math.round(n).toLocaleString("es-ES") + " €";
       const simEs = (rp && rp.homes.length > 3 ? rp.homes : byCountry.get(cc) || []).filter((x) => x.slug !== r.slug && x.title_es).slice(0, 6);
       const descEs = String(r.why_great_es || r.title_es).replace(/\s+/g, " ").slice(0, 155);
-      const bodyEs = `<main class="rh-static"><article><nav aria-label="Ruta"><a href="/es">RealHunt</a> › ${esc(r.title_es)}</nav><h1>${esc(r.title_es)}</h1>`
+      // same first paint as the English page (seo/dealShell.ts), with the Spanish title in the HTML
+      const bodyEs = dealShell({ row: r, lang: "es", lowRes: lowRes(r), photos: (r.image_urls || []).filter(Boolean).map((u: string) => toMedia(String(u))), color: cardColors[r.slug], crumbs: [] })
+        + `<main class="rh-static" lang="es"><article><nav aria-label="Ruta"><a href="/es">RealHunt</a> › ${esc(r.title_es)}</nav>`
         + `<p><strong>${esc(euro(r.price_eur))}</strong> · ${esc(r.location_name || cName)}${r.sqm ? ` · ${esc(r.sqm)} m²` : ""}${r.bedrooms ? ` · ${esc(r.bedrooms)} dormitorios` : ""}${r.sqm && r.price_eur ? ` · ${esc(euro(r.price_eur / r.sqm))}/m²` : ""}</p>`
-        + (r.image_urls?.[0] ? `<p><img src="${esc(r.image_urls[0])}" alt="${esc(r.title_es + ", " + (r.location_name || cName))}" width="760" loading="eager" style="max-width:100%;height:auto;border-radius:12px"></p>` : "")
         + (r.nota != null ? `<h2>Nota RealHunt: ${esc(r.nota)} / 98</h2><p>Todas las casas de RealHunt pasan antes una revisión hecha por una persona, por eso la nota empieza en 70. El resto compara esta casa con todas las demás de la web.</p>` : "")
         + (r.why_great_es ? `<h2>Por qué está en la lista</h2><p>${esc(r.why_great_es)}</p>` : "")
         + (r.why_cheap_es ? `<h2>Por qué es tan barata</h2><p>${esc(r.why_cheap_es)}</p>` : "")
@@ -227,7 +238,7 @@ function build(root: string, es?: EsPass) {
       page(esUrl, `${euro(r.price_eur)} · ${r.title_es} · RealHunt`, descEs, d.image || DEF, bodyEs,
         [{ "@context": "https://schema.org", "@type": "RealEstateListing", url: esUrl, name: r.title_es, description: r.why_great_es || descEs, inLanguage: "es", image: (r.image_urls || []).slice(0, 5).map((u: string) => abs(String(u))),
           offers: { "@type": "Offer", price: r.price_eur, priceCurrency: "EUR", availability: "https://schema.org/InStock", url: esUrl } }],
-        { lastmod: homeDay(r), group: "es", lang: "es", alt: { en: url, es: esUrl }, head: hero ? `<link rel="preload" as="image" href="${esc(hero)}" fetchpriority="high" />` : undefined });
+        { lastmod: homeDay(r), group: "es", lang: "es", alt: { en: url, es: esUrl }, head: (hero ? `<link rel="preload" as="image" href="${esc(hero)}" fetchpriority="high" />` : "") + DEAL_SHELL_HEAD });
     }
   }
 

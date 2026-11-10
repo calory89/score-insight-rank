@@ -69,6 +69,9 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
   // Region buttons: the map opens on Europe (most homes), so homes elsewhere (Miami, Bali, Mexico...) get a
   // visible shortcut instead of hiding off-screen until someone presses "See all homes".
   const [regions, setRegions] = useState<{ k: string; label: string; n: number; b: L.LatLngBounds }[]>([]);
+  // 10-nov-2026 layout stability: the row of region buttons keeps its place while the homes load, so the map does not
+  // jump down when the buttons arrive (it was the biggest layout shift on /map). It folds only if there is one region.
+  const [regionsKnown, setRegionsKnown] = useState(false);
   const navigate = useNavigate();
   const openSlug = useRef<string | null>(null);
   const keepOpen = useRef(false);
@@ -165,7 +168,7 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
       ["af", "Africa & Middle East", (la, lo) => lo > -30 && lo < 60 && !(la > 27 && la < 72 && lo < 45)],
     ];
     const regs = REG.map(([k, label, f]) => { const g = list.filter((d) => f(d.lat!, d.lng!)); return { k, label, n: g.length, b: L.latLngBounds(g.map((d) => [d.lat!, d.lng!] as L.LatLngExpression)) }; }).filter((r) => r.n > 0);
-    setRegions(regs.length > 1 ? regs : []);
+    setRegions(regs.length > 1 ? regs : []); setRegionsKnown(true);
     let focusedMk: L.Marker | null = null;
     // 12-oct-2026 (Carlos: "when you zoom, what opens no longer fits"). The card now sits above the pin
     // (not on top of it), is re-measured when its photo loads, is kept inside the map (clear of the
@@ -297,8 +300,8 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
 
   return (
     <>
-    {regions.length > 1 && !embedded && <div className="hm-regions" role="group" aria-label={t("Go to a region")}>
-      <span>{t("Go to")}</span>
+    {(regions.length > 1 || !regionsKnown) && !embedded && <div className="hm-regions" role="group" aria-label={t("Go to a region")}>
+      {regions.length > 1 && <span>{t("Go to")}</span>}
       {regions.map((r) => <button key={r.k} type="button" onClick={() => fitRegion(r.b)}>{t(r.label)} <b>{r.n}</b></button>)}
     </div>}
     <div ref={wrap} className={`hm ${full ? "is-full" : ""} ${embedded ? "is-embedded" : ""} ${className}`} onClick={() => !armed && setArmed(true)}>

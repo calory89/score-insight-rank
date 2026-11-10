@@ -2974,7 +2974,8 @@ html.rh-dark, html.rh-dark body { background: #0C0D0E; }
 .rh-home-article summary { cursor: pointer; font-weight: 600; }
 
 /* Region shortcuts above the homes map (7-nov-2026: they used to sit on the map, over pins and legend) */
-.hm-regions { display: flex; align-items: center; gap: 6px; margin: 0 0 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.hm-regions { display: flex; align-items: center; gap: 6px; min-height: 40px; margin: 0 0 8px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+@media (pointer: coarse) { .hm-regions { min-height: 48px; } } /* 44 px buttons on touch: the row keeps this height while the homes load */
 .hm-regions::-webkit-scrollbar { display: none; }
 .hm-regions > span { font-size: 13px; color: var(--muted, #5f6368); flex: 0 0 auto; }
 .hm-regions button { flex: 0 0 auto; background: var(--card, #fff); color: inherit; border: 1px solid rgba(0,0,0,.14); border-radius: 999px; padding: 7px 12px; font: 600 13px Inter, system-ui, sans-serif; cursor: pointer; min-height: 36px; }
