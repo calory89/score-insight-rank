@@ -3,7 +3,7 @@
 // being stitched together by the dictionary. `dest` must be the Spanish destinations entry (localizeRows with
 // src/data/destinations-es.json); the costs note, yearly tax and "can foreigners buy" then come in Spanish too.
 import type { Article, ArticleCtx } from "./homeArticle";
-import { esPlace } from "@/lib/lang";
+import { esPlace } from "../lib/lang"; // relative: seo/prerender.ts (no "@" alias at build time) uses this file too
 import { theEs } from "./seo2data";
 
 type Row = Record<string, any>;

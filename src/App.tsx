@@ -14,6 +14,7 @@ import React, { Suspense, useEffect, useState } from "react";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { useFeatureFlag } from "@/hooks/useFeatureFlag";
 import OfflineBanner from "@/components/OfflineBanner";
+import { routerBase, EsHop } from "@/lib/esRoute";
 
 // Everything is lazy: the first paint only ships React, the router, auth and the page you asked for.
 // v11-oct: after a new deploy, an open tab asks for old page files that no longer exist ("Failed to fetch dynamically
@@ -295,6 +296,7 @@ const AppRoutes = () => (
       <Route path="/admin/extension" element={<AdminExtension />} />
       <Route path="/admin/activity" element={<AdminActivity />} />
       <Route path="/admin/activity/:tab" element={<AdminActivity />} />
+      <Route path="/es/*" element={<EsHop />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </Suspense>
@@ -311,7 +313,7 @@ const App = () => (
               <OfflineBanner />
               <Toaster />
               <Sonner />
-              <BrowserRouter>
+              <BrowserRouter basename={routerBase()}>
                 <ScrollKeeper />
                 <Extras />
                 <PageTracker>
