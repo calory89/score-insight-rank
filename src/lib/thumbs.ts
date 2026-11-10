@@ -27,7 +27,10 @@ export function thumb(url?: string | null): string {
 export const isThumb = (u: string) => u.startsWith(THUMB_PREFIX) || /^https:\/\/realhunt\.co\/t\/(finds|sb)\//.test(u);
 
 /** onError for an <img src={thumb(original)}>: swap to the original once, then leave it to the caller. Returns true when it swapped. */
-export function onThumbError(img: HTMLImageElement, original?: string | null): boolean {
+// Structural type (not HTMLImageElement): seo/prerender.ts imports thumb() from this file and is type-checked
+// without the DOM library (tsconfig.node.json), which broke the build on 10-nov-2026.
+type ImgLike = { currentSrc?: string; src: string; dataset: Record<string, string | undefined>; removeAttribute(name: string): void };
+export function onThumbError(img: ImgLike, original?: string | null): boolean {
   if (original && isThumb(img.currentSrc || img.src) && img.dataset.thumbFailed !== "1") {
     img.dataset.thumbFailed = "1";
     img.removeAttribute("srcset");
