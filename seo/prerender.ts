@@ -17,6 +17,7 @@ import { DIMS, AMEN } from "../src/community/dims";
 import { regionOf, slugify, HOME_TYPES } from "../src/community/regions";
 import { homeArticle } from "../src/community/homeArticle";
 import { toMedia } from "../src/lib/media";
+import { thumb } from "../src/lib/thumbs";
 import { type CanBuyData, STATUS_LABEL, UPDATED, canBuyPairs, canBuyCountries, canBuySlug, ruleFor, residencyFor, canBuyFaq, canBuyMeta, fill, costLines, costCountries, nameOf, fmtMoney } from "../src/community/seo2data";
 
 const SITE = "https://realhunt.co";
@@ -24,8 +25,8 @@ const DEF = `${SITE}/og-home.jpg`;
 const MIN_LIST = 3;
 const PRICE_BANDS = [20000, 40000, 60000, 80000, 100000, 150000];
 
-type Opts = { noindex?: boolean; lastmod?: string | null; group?: "pages" | "homes" | "places" | "content" | "top"; head?: string };
-type Entry = { url: string; lastmod: string | null; group: string };
+type Opts = { noindex?: boolean; lastmod?: string | null; group?: "pages" | "homes" | "places" | "content" | "top"; head?: string; images?: string[] };
+type Entry = { url: string; lastmod: string | null; group: string; images?: string[] };
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const cap = (s: string) => s.replace(/-/g, " ").replace(/\b\w/g, (ch) => ch.toUpperCase());
@@ -84,7 +85,11 @@ function build(root: string) {
     const dir = path.join(root, rel);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, "index.html"), h);
-    if (!o.noindex && !entries.some((e) => e.url === url)) entries.push({ url, lastmod: o.lastmod ?? null, group: o.group || "pages" });
+    if (!o.noindex) {
+      const had = entries.find((e) => e.url === url);
+      if (had) { if (o.lastmod) had.lastmod = o.lastmod; if (o.images?.length) had.images = o.images; }
+      else entries.push({ url, lastmod: o.lastmod ?? null, group: o.group || "pages", images: o.images });
+    }
   };
 
   // ---------- Homes ----------
@@ -173,8 +178,10 @@ function build(root: string) {
       });
     }
     // 9-nov-2026 speed: the main photo starts downloading with the HTML, not after the app and the data (LCP)
-    const hero = r.image_urls?.[0] ? toMedia(String(r.image_urls[0])) : "";
-    page(url, `${d.title} · RealHunt`, d.desc, d.image || DEF, body, ld, { lastmod: homeDay(r), group: "homes", head: hero ? `<link rel="preload" as="image" href="${esc(hero)}" fetchpriority="high" />` : undefined });
+    const hero = r?.image_urls?.[0] ? toMedia(String(r.image_urls[0])) : "";
+    page(url, `${d.title} · RealHunt`, d.desc, d.image || DEF, body, ld, { lastmod: homeDay(r), group: "homes", head: hero ? `<link rel="preload" as="image" href="${esc(hero)}" fetchpriority="high" />` : undefined,
+      // 10-nov-2026: the home's photos in the sitemap (Google Images), up to 5 per home
+      images: (r?.image_urls || []).slice(0, 5).map((u: string) => abs(String(u))) });
   }
 
   // Answers computed from the homes on the site and src/data/destinations.json, so they stay true after every update.
@@ -287,6 +294,85 @@ function build(root: string) {
       [crumbs(trail), { "@context": "https://schema.org", "@type": "ItemList", name: `Homes for sale in ${place}`, numberOfItems: g.homes.length,
         itemListElement: g.homes.slice(0, 50).map((h, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/deal/${h.slug}`, name: h.title })) }],
       { lastmod: maxDay(g.homes.map(homeDay)), group: "places" });
+  }
+
+  // ---------- Home page (10-nov-2026): the best homes and the country links in the HTML itself ----------
+  // Before, "/" reached crawlers (and the first paint) as an empty page. The block removes itself on any other
+  // path, because the worker serves this same file for app pages that have no file of their own (/saved, /account).
+  {
+    const top = ranked.slice(0, 24);
+    const cardImg = (r: any, i: number) => {
+      const u = r.image_urls?.[0] ? thumb(toMedia(String(r.image_urls[0]))) : "";
+      return u ? `<img src="${esc(u)}" alt="${esc(`${r.title}, ${r.location_name || r.country}`)}" width="480" height="360" ${i < 2 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" onerror="this.style.visibility='hidden'" />` : "";
+    };
+    const card = (r: any, i: number) =>
+      `<li><a href="/deal/${esc(r.slug)}">${cardImg(r, i)}<strong>${esc(eur(r.price_eur))}</strong><span>${esc(r.title)}</span><small>${esc(r.location_name || r.country)}${r.nota != null ? ` · score ${esc(r.nota)}` : ""}${r.sqm ? ` · ${esc(r.sqm)} m²` : ""}</small></a></li>`;
+    const css = `<style>.rh-hs{max-width:1180px}.rh-hs ol{list-style:none;padding:0;margin:20px 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}.rh-hs li a{display:block;color:inherit;text-decoration:none}.rh-hs img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:14px;background:#eceef1}.rh-hs strong{display:block;font-size:19px;margin-top:8px}.rh-hs span{display:block;font-weight:600;line-height:1.3}.rh-hs small{color:#5b6470}</style>`;
+    const homeDesc = `${rows.length} homes for sale in ${countryLinks.length} countries, each one checked by a person, scored from 70 to 98 and ranked best first. New homes every day.`;
+    page(`${SITE}/`, "RealHunt: the best homes in every country, ranked by score",
+      "The best homes in Europe, the US, Canada, Mexico and beyond, each one scored from 70 to 98 and ranked best first. New homes every day.", DEF,
+      `${css}<main class="rh-static rh-hs" id="rh-home-static"><h1>The best homes abroad, checked and scored</h1><p>${esc(homeDesc)}</p>`
+      + `<ol>${top.map(card).join("")}</ol>`
+      + `<h2>Homes by country</h2><p>${countryLinks.map(([k, v]) => `<a href="/homes/${esc(k)}">${esc(v.name)} (${v.homes.length})</a>`).join(" · ")}</p>`
+      + `<p><a href="/new">New homes</a> · <a href="/price-drops">Price drops</a> · <a href="/what-100k-buys">What €100,000 buys</a> · <a href="/cheap-houses">Cheap houses by country and price</a> · <a href="/can-i-buy">Can I buy there?</a> · <a href="/buying-costs">Buying costs</a> · <a href="/map">Map</a> · <a href="/blog">Guides and research</a> · <a href="/method">How the score works</a></p></main>`
+      + `<script>if(location.pathname!=="/"){var e=document.getElementById("rh-home-static");if(e)e.parentNode.removeChild(e)}</script>`,
+      [{ "@context": "https://schema.org", "@type": "ItemList", name: "The best homes on RealHunt", numberOfItems: rows.length,
+        itemListElement: top.map((h, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/deal/${h.slug}`, name: h.title })) }],
+      { lastmod: maxDay(rows.map(homeDay)), group: "pages" });
+  }
+
+  // ---------- What €100,000 buys (/what-100k-buys): the best-scored home at or under €100,000 in each country ----------
+  {
+    const picks = countryLinks.map(([k, v]) => ({ k, name: v.name, h: v.homes.find((h) => h.price_eur <= 100000) })).filter((x) => x.h)
+      .sort((a, b) => (b.h.sqm || 0) - (a.h.sqm || 0));
+    const u = `${SITE}/what-100k-buys`; const trail: [string, string][] = [["RealHunt", SITE + "/"], ["What €100,000 buys", u]];
+    const sized = picks.filter((x) => x.h.sqm > 0);
+    const big = sized[0], small = sized[sized.length - 1];
+    const d100 = `The best-scored home you can buy for €100,000 or less in each of ${picks.length} countries, side by side: price, size, place and score. Updated every day.`;
+    page(u, `What €100,000 buys in ${picks.length} countries · RealHunt`, d100, picks[0] ? homeImg(picks[0].h) : DEF,
+      `<main class="rh-static" data-rh-keep data-rh-static>${navHtml(trail)}<h1>What €100,000 buys in ${picks.length} countries</h1><p>${esc(d100)}</p>`
+      + (big && small && big !== small ? `<p>The most space for the money is in ${esc(big.name)}: ${esc(big.h.sqm)} m² for ${esc(eur(big.h.price_eur))}. The least is in ${esc(small.name)}: ${esc(small.h.sqm)} m² for ${esc(eur(small.h.price_eur))}.</p>` : "")
+      + `<table><thead><tr><th>Country</th><th>Best home under €100,000</th><th>Price</th><th>Size</th><th>€/m²</th><th>Score</th></tr></thead><tbody>`
+      + picks.map(({ k, name, h }) => `<tr><td><a href="/homes/${esc(k)}/under-100000">${esc(name)}</a></td><td><a href="/deal/${esc(h.slug)}">${esc(h.title)}</a><br><small>${esc(h.location_name || name)}</small></td><td>${esc(eur(h.price_eur))}</td><td>${h.sqm ? esc(h.sqm) + " m²" : "–"}</td><td>${h.sqm ? esc(eur(h.price_eur / h.sqm)) : "–"}</td><td>${esc(h.nota ?? "–")}</td></tr>`).join("")
+      + `</tbody></table><p>Each row is the home with the highest RealHunt score at or under €100,000 in that country today. Buying costs are extra: see <a href="/buying-costs">buying costs by country</a> and <a href="/can-i-buy">whether you can buy there</a>.</p></main>`,
+      [crumbs(trail), { "@context": "https://schema.org", "@type": "ItemList", name: "What €100,000 buys, by country", numberOfItems: picks.length,
+        itemListElement: picks.map((x, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/deal/${x.h.slug}`, name: `${x.name}: ${x.h.title}` })) }],
+      { noindex: picks.length < MIN_LIST, lastmod: maxDay(picks.map((x) => homeDay(x.h))), group: "content" });
+  }
+
+  // ---------- Price drops (/price-drops): homes whose asking price went down since we listed them ----------
+  {
+    const drops = ranked.filter((r) => Number(r.price_drop) > 0).sort((a, b) => Number(b.price_drop) / (b.price_eur + Number(b.price_drop)) - Number(a.price_drop) / (a.price_eur + Number(a.price_drop)));
+    const u = `${SITE}/price-drops`; const trail: [string, string][] = [["RealHunt", SITE + "/"], ["Price drops", u]];
+    const dd = drops.length ? `${drops.length} homes on RealHunt whose asking price has gone down since we listed them, biggest cut first.` : "Homes on RealHunt whose asking price has gone down since we listed them. None right now: save a home to be told when its price drops.";
+    page(u, "Price drops: homes that just got cheaper · RealHunt", dd, drops[0] ? homeImg(drops[0]) : DEF,
+      `<main class="rh-static" data-rh-keep data-rh-static>${navHtml(trail)}<h1>Price drops</h1><p>${esc(dd)}</p>`
+      + (drops.length ? `<ol>${drops.slice(0, 100).map((r) => homeLi(r).replace("</li>", ` · was ${esc(eur(r.price_eur + Number(r.price_drop)))} (−${Math.round((Number(r.price_drop) / (r.price_eur + Number(r.price_drop))) * 100)}%)</li>`)).join("")}</ol>` : "")
+      + `<p><a href="/new">New homes</a> · <a href="/alerts">Get new homes by email</a> · <a href="/">The best homes</a></p></main>`,
+      [crumbs(trail)], { noindex: drops.length < MIN_LIST, lastmod: maxDay(drops.map(homeDay)), group: "content" });
+  }
+
+  // ---------- Where the homes come from (/sources and /sources/<portal>) ----------
+  {
+    const bySrc = new Map<string, any[]>();
+    for (const r of ranked) { const dom = String(r.source_domain || "").toLowerCase().replace(/^www\./, ""); if (!dom || /instagram|facebook|tiktok/.test(dom)) continue; (bySrc.get(dom) || bySrc.set(dom, []).get(dom)!).push(r); }
+    const srcs = [...bySrc.entries()].sort((a, b) => b[1].length - a[1].length);
+    const sSlug = (dom: string) => dom.replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const u = `${SITE}/sources`; const trail: [string, string][] = [["RealHunt", SITE + "/"], ["Sources", u]];
+    page(u, `Where RealHunt homes come from: ${srcs.length} property portals`, `Every home on RealHunt links to its original listing. These are the ${srcs.length} portals and agencies behind the ${ranked.length} homes on the site today.`, DEF,
+      `<main class="rh-static" data-rh-keep data-rh-static>${navHtml(trail)}<h1>Where the homes come from</h1><p>Every home on RealHunt links to its original listing, so you deal directly with the seller or the agent. RealHunt is not an estate agent and takes no commission. These are the portals and agencies behind the homes on the site today.</p>`
+      + `<ul>${srcs.map(([dom, l]) => `<li>${l.length >= MIN_LIST ? `<a href="/sources/${esc(sSlug(dom))}">${esc(dom)}</a>` : esc(dom)}: ${l.length} ${l.length === 1 ? "home" : "homes"} (${esc([...new Set(l.map((h) => h.country))].slice(0, 4).join(", "))})</li>`).join("")}</ul></main>`,
+      [crumbs(trail)], { noindex: srcs.length < MIN_LIST, group: "content" });
+    for (const [dom, l] of srcs) {
+      if (l.length < MIN_LIST) continue;
+      const su = `${SITE}/sources/${sSlug(dom)}`; const st: [string, string][] = [...trail, [dom, su]];
+      const sd = `${l.length} homes from ${dom} that passed the RealHunt check, scored from 70 to 98 and ranked best first, from ${eur(Math.min(...l.map((h) => h.price_eur)))}.`;
+      page(su, `Best homes from ${dom} (${l.length}) · RealHunt`, sd, homeImg(l[0]),
+        `<main class="rh-static" data-rh-keep data-rh-static>${navHtml(st)}<h1>Best homes from ${esc(dom)}</h1><p>${esc(sd)} Each one opens its original listing on ${esc(dom)}.</p><ol>${l.slice(0, 100).map(homeLi).join("")}</ol><p><a href="/sources">All sources</a></p></main>`,
+        [crumbs(st), { "@context": "https://schema.org", "@type": "ItemList", name: `Best homes from ${dom}`, numberOfItems: l.length,
+          itemListElement: l.slice(0, 50).map((h, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/deal/${h.slug}`, name: h.title })) }],
+        { lastmod: maxDay(l.map(homeDay)), group: "content" });
+    }
   }
 
   // ---------- New homes (/new) and RSS feed (/feed.xml): the newest 40 homes, refreshed on every build ----------
@@ -620,8 +706,8 @@ function writeSitemaps(root: string, entries: Entry[]) {
   const parts: string[] = [];
   for (const [g, list] of groups) {
     const name = `sitemap-${g}.xml`;
-    const xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-      + list.map((e) => `  <url><loc>${esc(e.url)}</loc>${e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : ""}</url>\n`).join("") + "</urlset>\n";
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"${list.some((e) => e.images?.length) ? ' xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"' : ""}>\n`
+      + list.map((e) => `  <url><loc>${esc(e.url)}</loc>${e.lastmod ? `<lastmod>${e.lastmod}</lastmod>` : ""}${(e.images || []).map((i) => `<image:image><image:loc>${esc(i)}</image:loc></image:image>`).join("")}</url>\n`).join("") + "</urlset>\n";
     fs.writeFileSync(path.join(root, name), xml);
     const last = list.map((e) => e.lastmod).filter(Boolean).sort().pop();
     parts.push(`  <sitemap><loc>${SITE}/${name}</loc>${last ? `<lastmod>${last}</lastmod>` : ""}</sitemap>\n`);

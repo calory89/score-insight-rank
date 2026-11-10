@@ -76,6 +76,22 @@ export function countryMedians() {
     return out;
   }).catch(() => ({})));
 }
+// 10-nov-2026 (owner: a Lake Como home read "39% above the median in Italy", which sounds dear on a site of good-value
+// homes): compare with the home's own region when it has at least 3 homes with a size, else with the country.
+let areaMeds: Promise<Record<string, number>> | null = null;
+export function areaMedians() {
+  return (areaMeds ||= snapshotRaw().then(mediaDeep).then((s: any) => {
+    const by: Record<string, number[]> = {};
+    for (const r of (s.rows || []) as any[]) {
+      if (!(r.sqm > 0 && r.price_eur > 0)) continue;
+      const rg = regionOf(r);
+      if (rg) (by[r.country + "|" + rg] ||= []).push(r.price_eur / r.sqm);
+    }
+    const out: Record<string, number> = {};
+    for (const [c, xs] of Object.entries(by)) if (xs.length >= 3) { xs.sort((a, b) => a - b); out[c] = xs[Math.floor(xs.length / 2)]; }
+    return out;
+  }).catch(() => ({})));
+}
 export function PerSqmVsCountry({ price, sqm, country }: { price?: number | null; sqm?: number | null; country?: string | null }) {
   const [med, setMed] = useState<number | null>(null);
   useEffect(() => { let on = true; if (country) countryMedians().then((m) => { if (on) setMed(m[country] || null); }); return () => { on = false; }; }, [country]);

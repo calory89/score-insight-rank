@@ -181,7 +181,7 @@ function Shell({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Child pages set their own title in effects that run before this one, so they must be listed here or the
     // default title overwrites theirs (country pages, /method and /alerts showed the home title before 24-oct-2026).
-    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare|costs|research|agents|homes\/|method|alerts|can-i-buy|buying-costs|about|top|guide|new|sitemap|swipe|map|leaderboard|winners|best|weather|saved|legal|hunter\/|b\/|live-search)/.test(location.pathname)) return;
+    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare|costs|research|agents|homes\/|method|alerts|can-i-buy|buying-costs|about|top|guide|new|sitemap|what-100k-buys|price-drops|sources|swipe|map|leaderboard|winners|best|weather|saved|legal|hunter\/|b\/|live-search)/.test(location.pathname)) return;
     document.title = "RealHunt: The best homes in every country, ranked by score";
   }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
@@ -1984,7 +1984,7 @@ export default function Community() {
       <AboutPage />
     ) : path === "/method" ? (
       <HomeMethodPage />
-    ) : path === "/new" || path === "/research/prices" || path === "/sitemap" ? (
+    ) : path === "/new" || path === "/research/prices" || path === "/sitemap" || path === "/what-100k-buys" || path === "/price-drops" || path === "/sources" || path.startsWith("/sources/") ? (
       <StaticPage />
     ) : path === "/top/mine" ? (
       <TopMinePage />

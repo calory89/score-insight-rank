@@ -6,7 +6,8 @@ import { money } from "./api";
 import { fmt } from "./costs";
 import { t } from "./i18n";
 import { RentLine } from "./v6";
-import { countryMedians } from "./oct24";
+import { countryMedians, areaMedians } from "./oct24";
+import { regionOf } from "./regions";
 import { rates, visitorCurrency } from "./extras";
 import { priceSummary, vsMedian, MONTHLY_LABEL } from "./priceLogic";
 import type { CheckRow } from "./checkLogic";
@@ -29,10 +30,20 @@ function useLocalCurrency(eur: number | null | undefined): string {
 export function PriceHead({ d }: { d: CheckRow & { sqm?: number | null } }) {
   const s = priceSummary(d);
   const [median, setMedian] = useState<number | null>(null);
-  useEffect(() => { let on = true; if (d.country) countryMedians().then((m) => { if (on) setMedian(m[d.country as string] || null); }); return () => { on = false; }; }, [d.country]);
+  const [area, setArea] = useState<string | null>(null);
+  const region = regionOf(d as any);
+  useEffect(() => {
+    let on = true;
+    if (d.country) Promise.all([countryMedians(), areaMedians()]).then(([m, a]) => {
+      if (!on) return;
+      const rm = region ? a[d.country + "|" + region] : null;
+      setMedian(rm || m[d.country as string] || null); setArea(rm ? region : null);
+    });
+    return () => { on = false; };
+  }, [d.country, region]);
   const local = useLocalCurrency(d.price_eur);
   const per = d.price_eur && d.sqm ? Math.round(d.price_eur / d.sqm) : null;
-  const vs = vsMedian(d.price_eur, d.sqm, median, d.country);
+  const vs = vsMedian(d.price_eur, d.sqm, median, area || d.country);
   if (d.price_eur == null) return null;
   return (
     <div className="rh-ph">
