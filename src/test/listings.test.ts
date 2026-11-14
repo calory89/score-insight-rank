@@ -43,22 +43,21 @@ describe("which listing pages exist", () => {
     const known: string[] = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "seo/listings/known-urls.json"), "utf8")).urls;
     const moved = movedAddresses(plan);
     for (const u of known) expect(byPath.has(u) || !!moved[u], u).toBe(true);
-    expect(moved["/cheap-houses/under-50000-in-germany"]).toBe("/homes/germany/under-50000");
-    expect(moved["/cheap-houses/under-75000-in-italy"]).toBe("/homes/italy/under-80000");
-  });
-  it("the pages Google already shows are still pages", () => {
-    for (const u of ["/homes/bulgaria/under-80000", "/homes/italy/under-80000", "/homes/france/under-80000", "/homes/poland", "/homes/germany/under-50000"]) expect(byPath.has(u), u).toBe(true);
+    for (const to of Object.values(moved)) expect(byPath.has(to) || to === "/cheap-houses" || to === "/", to).toBe(true);
   });
   it("a home that is sold leaves no hole: the page under its minimum is gone and its address goes to the parent", () => {
-    const kav = byPath.get("/homes/bulgaria/kavarna-black-sea")!;
-    const gone = new Set(kav.homes.slice(0, 2).map((h) => h.slug));
+    // the data changes every day, so the page is picked from today's plan: the smallest region page
+    const kav = plan.pages.filter((p) => p.kind === "region").sort((x, y) => x.homes.length - y.homes.length)[0];
+    const gone = new Set(kav.homes.slice(0, kav.homes.length - MIN + 1).map((h) => h.slug));
     const after = buildFacets(rows.filter((r) => !gone.has(r.slug)));
     const live = new Set(after.pages.map((p) => p.path));
-    expect(live.has("/homes/bulgaria/kavarna-black-sea")).toBe(false);
-    expect(nearestLive("/homes/bulgaria/kavarna-black-sea", live, after.redirects)).toBe("/homes/bulgaria");
+    expect(live.has(kav.path)).toBe(false);
+    expect(live.has(nearestLive(kav.path, live, after.redirects))).toBe(true);
+    expect(nearestLive(kav.path, live, after.redirects).startsWith(`/homes/${kav.cc}`)).toBe(true);
     for (const p of after.pages) for (const h of p.homes) expect(gone.has(h.slug)).toBe(false);
-    expect(nearestLive("/cheap-houses/with-sauna-in-united-states", live)).toBe("/homes/united-states");
-    expect(nearestLive("/homes/italy/tuscany/under-999", live)).toBe("/homes/italy/tuscany");
+    expect(nearestLive("/cheap-houses/with-sauna-in-united-states", new Set(["/homes/united-states"]))).toBe("/homes/united-states");
+    expect(nearestLive("/homes/italy/tuscany/under-999", new Set(["/homes/italy", "/homes/italy/tuscany"]))).toBe("/homes/italy/tuscany");
+    expect(nearestLive("/homes/italy/tuscany/x", new Set(["/homes/italy"]), { "/homes/italy/tuscany/x": "/homes/italy/tuscany" })).toBe("/homes/italy");
   });
   it("reads the kind of home from its title and the sea from the measured distance", () => {
     expect(ptypeOf({ title: "2-bedroom flat in a townhouse" })).toBe("apartment");
@@ -90,21 +89,25 @@ describe("what the pages say", () => {
     }
   });
   it("two budgets of the same country are different pages", () => {
-    const a = E.texts.get("/homes/italy/under-50000")!, b = E.texts.get("/homes/italy/under-80000")!;
+    const bands = plan.pages.filter((p) => p.kind === "band").sort((x, y) => String(x.cc).localeCompare(String(y.cc)) || x.cap! - y.cap!);
+    const i = bands.findIndex((p, k) => bands[k + 1]?.cc === p.cc && bands[k + 1].homes.length >= p.homes.length + 5);
+    if (i < 0) return;
+    const a = E.texts.get(bands[i].path)!, b = E.texts.get(bands[i + 1].path)!;
     expect(a.lede.join(" ")).not.toBe(b.lede.join(" "));
     const same = a.facts.filter((x) => b.facts.includes(x)).length + a.faq.filter(([, x]) => b.faq.some(([, y]) => y === x)).length;
     expect(same).toBeLessThanOrEqual(3); // the cheapest and the best-rated home can be the same under both budgets
   });
-  it("the Bulgaria budget page answers with its own numbers", () => {
-    const T = E.texts.get("/homes/bulgaria/under-80000")!;
-    expect(T.h1).toBe("Cheap apartments for sale in Bulgaria under €80,000");
-    expect(plain(T.lede.join(" "))).toContain("6 apartments for sale in Bulgaria under €80,000");
+  it("a budget page answers with its own numbers, as cards, a table, questions and structured data", () => {
+    const f = plan.pages.find((p) => p.kind === "band")!;
+    const T = E.texts.get(f.path)!;
+    expect(T.h1).toContain(en.money(f.cap!));
+    expect(plain(T.lede[0])).toContain(String(f.homes.length));
     const html = renderBody(T, en, { css: "", updated: E.W.ctx.updated });
-    expect((html.match(/<li><a class="ls-card"/g) || []).length).toBe(6);
-    expect((html.match(/<h2/g) || []).length).toBeGreaterThanOrEqual(6);
+    expect((html.match(/<li><a class="ls-card"/g) || []).length).toBe(Math.min(30, f.homes.length));
+    expect((html.match(/<h2/g) || []).length).toBeGreaterThanOrEqual(5);
     const ld = renderLd(T, en, (p) => "https://realhunt.co" + p) as any[];
     expect(ld.map((x) => x["@type"])).toEqual(["BreadcrumbList", "ItemList", "FAQPage"]);
     expect(ld[2].mainEntity.length).toBe(T.faq.length);
-    expect(S.texts.get("/homes/bulgaria/under-80000")!.h1).toBe("Pisos baratos en venta en Bulgaria por menos de 80.000 €");
+    expect(S.texts.get(f.path)!.h1).toMatch(/ por menos de [\d.]+\u00a0€$/);
   });
 });

@@ -60,11 +60,13 @@
 .rh-static[data-ls] .ls-foot { margin-top: 32px; }
 .hunt.is-dark .rh-static[data-ls] .ls-watch li { background: #2A2416; }
 @media (max-width: 640px) {
-  .rh-static[data-ls] .ls-c-place, .rh-static[data-ls] .ls-c-added, .rh-static[data-ls] .ls-c-beds { display: none; }
-  .rh-static[data-ls] tbody th { min-width: 150px; }
-  .rh-static[data-ls] th, .rh-static[data-ls] td { padding: 9px 10px; }
+  /* phones: home, price, size and score fit without scrolling; the rest is on the cards above */
+  .rh-static[data-ls] .ls-c-place, .rh-static[data-ls] .ls-c-added, .rh-static[data-ls] .ls-c-beds, .rh-static[data-ls] .ls-c-pp { display: none; }
+  .rh-static[data-ls] table { font-size: 13.5px; }
+  .rh-static[data-ls] tbody th { min-width: 120px; font-size: 13.5px; }
+  .rh-static[data-ls] th, .rh-static[data-ls] td { padding: 9px 8px; }
   .rh-static[data-ls] .ls-grid { grid-template-columns: 1fr; }
   .rh-static[data-ls] .ls-kpi { grid-template-columns: repeat(2, 1fr); }
   .rh-static[data-ls] .ls-b em { -webkit-line-clamp: 2; }
 }
-@media (min-width: 641px) and (max-width: 900px) { .rh-static[data-ls] .ls-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 641px) and (max-width: 900px) { .rh-static[data-ls] .ls-grid { grid-template-columns: repeat(2, 1fr); } .rh-static[data-ls] .ls-kpi { grid-template-columns: repeat(3, 1fr); } }

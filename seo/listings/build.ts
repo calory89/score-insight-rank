@@ -139,8 +139,8 @@ export function finishListings(root: string, plan: ListingPlan, render: Render, 
     const target = SITE + prefix + to;
     let h = render({ url: target, title: `${P.moved} · RealHunt`, desc: P.moved, image: `${SITE}/og-home.jpg`,
       body: `<main class="rh-static" data-rh-moved="${prefix + to}"><p>${P.moved} <a href="${prefix + to}">${target.replace("https://", "")}</a></p></main>`,
-      o: { head: `<meta http-equiv="refresh" content="0;url=${prefix + to}" />`, lang: P.lang === "es" ? "es" : undefined } });
-    // the canonical is the page it moved to; nothing else on this page is for search engines
+      o: { noindex: true, head: `<meta http-equiv="refresh" content="0;url=${prefix + to}" />`, lang: P.lang === "es" ? "es" : undefined } });
+    // the canonical is the page it moved to and the file is noindex: nothing on it is for search engines
     h = h.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g, "");
     fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, "index.html"), h); n++;
   };
