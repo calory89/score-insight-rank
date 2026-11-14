@@ -3,7 +3,7 @@ name: Uptime check (realhunt.co)
 # repository (GitHub's own notification), so nothing else has to be set up. scripts/uptime_check.py
 on:
   schedule:
-    - cron: "7,37 * * * *"
+    - cron: "7 */4 * * *"   # every 4 hours: enough to notice an outage, light on Actions minutes
   workflow_dispatch:
 permissions:
   contents: read
