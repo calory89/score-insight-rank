@@ -1,0 +1,98 @@
+{
+ "_note": "German texts of src/data/destinations.json for the listing pages (seo/listings/packkit.ts destFor). Numbers and dates must match the English file; names of taxes and procedures stay in the country's language.",
+ "spain": {
+  "can_foreigners_buy": "Ja, derzeit ohne Einschränkungen. Die Regierung hat eine Steuer von 100 % (oder ein Verbot) für Käufer von außerhalb der EU ohne Wohnsitz in Spanien vorgeschlagen; beschlossen ist das nicht.",
+  "purchase_costs_breakdown": "Neubau: 10 % IVA (Mehrwertsteuer) + 0,5-1,5 % AJD (Stempelsteuer) + Notar 0,5-1 % + Anwalt 1-2 %; Bestandsimmobilie: statt IVA und AJD die Grunderwerbsteuer ITP von 6-11 %.",
+  "annual_property_tax": "IBI: 0,4-1,1 % des Katasterwerts (je nach Gemeinde), dazu Einkommensteuer auf einen fiktiven Mietwert bei nicht vermieteten Immobilien.",
+  "holiday_rental_rules": "Nötig sind die Ferienvermietungslizenz der Region und die Nummer des landesweiten Registers für Kurzzeitvermietung (Pflicht seit 1. Juli 2025); neue Ferienvermietungen in Mehrfamilienhäusern brauchen die Zustimmung von 3/5 der Eigentümer (seit 3. April 2025)."
+ },
+ "italy": {
+  "can_foreigners_buy": "Ja für EU-Bürger; Käufer von außerhalb der EU brauchen Gegenseitigkeit zwischen den Staaten (gegeben für die USA, Großbritannien, Kanada und Australien).",
+  "purchase_costs_breakdown": "Registersteuer von 9 % bei einer Zweitwohnung (Bestand) oder Mehrwertsteuer bei Neubauten; Notar 1-2 % + Anwalt rund 1 % + Makler rund 3 %.",
+  "annual_property_tax": "IMU: 0,4-1,06 % auf Zweitwohnungen (bezogen auf den Katasterwert).",
+  "holiday_rental_rules": "Jede Ferienvermietung braucht den landesweiten CIN-Code, der in Anzeigen und an der Immobilie stehen muss; ab der dritten Immobilie gilt die Vermietung als Gewerbe (mit Umsatzsteuerpflicht)."
+ },
+ "sweden": {
+  "can_foreigners_buy": "Ja. Für den Hauskauf in Schweden gibt es keine Vorgaben zu Staatsangehörigkeit oder Wohnsitz; für die Eintragung des Eigentums brauchen Sie aber eine schwedische Personennummer oder eine Koordinationsnummer (samordningsnummer).",
+  "purchase_costs_breakdown": "Stempelsteuer für die Eigentumseintragung (lagfart) von 1,5 % des Kaufpreises oder des Steuerwerts, je nachdem, was höher ist, plus 825 SEK Gebühr; bei Finanzierung mit neuen Pfandbriefen (pantbrev) 2 % ihres Betrags plus 375 SEK Gebühr; Rechtsberatung nach Wunsch; den Makler bezahlt in der Regel der Verkäufer, und bei einer Genossenschaftswohnung (bostadsrätt) fällt keine lagfart an.",
+  "annual_property_tax": "Für Häuser fällt eine kommunale Grundstücksabgabe (kommunal fastighetsavgift) von 10.425 SEK im Jahr 2026 an, oder 0,75 % des Steuerwerts, wenn das weniger ist."
+ },
+ "denmark": {
+  "can_foreigners_buy": "Ohne Wohnsitz in Dänemark oder fünf Jahre früheren Aufenthalt brauchen Sie eine Genehmigung der Behörde Civilstyrelsen. EU- und EWR-Bürger, die in Dänemark wohnen und gemeldet sind, können einen ständigen Wohnsitz ohne Genehmigung kaufen, wenn sie beim Grundbuchgericht eine Erklärung abgeben. Für Ferienhäuser (sommerhuse) ist eine Genehmigung nötig, und die bekommt nur, wer eine besonders enge Bindung an Dänemark hat, etwa durch viele Jahre Urlaub dort.",
+  "purchase_costs_breakdown": "Eintragungsgebühr für die Urkunde (tinglysningsafgift) von 1.850 DKK plus 0,6 % des Kaufpreises, rund 1 % für einen Anwalt des Käufers und bei Finanzierung eine Eintragungsgebühr für die Hypothek von 1.825 DKK plus 1,25 % des Darlehens; den Makler bezahlt in der Regel der Verkäufer.",
+  "annual_property_tax": "Eigentümer zahlen die Immobilienwertsteuer (ejendomsværdiskat) von 0,51 % auf 80 % des amtlichen Werts (1,4 % oberhalb von 9,2 Mio. DKK) und die kommunale Grundsteuer (grundskyld), deren Satz jede Gemeinde festlegt, höchstens 30 Promille des Bodenwerts."
+ },
+ "france": {
+  "can_foreigners_buy": "Ja. Ausländer können in Frankreich ohne größere Einschränkungen Immobilien kaufen. Käufer von außerhalb der EU brauchen keine Genehmigung, die Formalitäten können aber länger dauern.",
+  "purchase_costs_breakdown": "Grunderwerbsteuern (droits de mutation) von rund 5,8 %, oder rund 6,3 % in Departements, die ihren Satz für 2025 bis März 2028 angehoben haben; Notargebühr (émoluments) nach gestaffeltem Tarif von 3,87 % bis 0,799 % plus 20 % Mehrwertsteuer, rund 1,3 % bei einer Immobilie für 150.000 €; Abgabe für die Grundbuchsicherung (contribution de sécurité immobilière) 0,10 %; Auslagen (débours) von rund 800 bis 1.200 €; die Maklergebühr steckt meist im Angebotspreis (FAI) und wird vom Verkäufer bezahlt, manchmal geteilt.",
+  "annual_property_tax": "Eigentümer zahlen jährlich die Grundsteuer (taxe foncière), die die örtlichen Behörden festlegen. Für eine möblierte Zweitwohnung kommt die Wohnsteuer (taxe d'habitation) hinzu, auf die manche Gemeinden einen Zuschlag von 5 % bis 60 % erheben."
+ },
+ "greece": {
+  "can_foreigners_buy": "Ja. Käufer von außerhalb der EU und der EFTA brauchen in ausgewiesenen Grenzgebieten eine Genehmigung (Teile Nordgriechenlands und Inseln der östlichen Ägäis wie der Dodekanes mit Rhodos). Die Regierung hat für Käufer von außerhalb der EU eine Grunderwerbsteuer von 15 % ab 1. Januar 2027 angekündigt; im September 2026 war sie noch nicht endgültig.",
+  "purchase_costs_breakdown": "Grunderwerbsteuer 3,09 % des Kaufpreises oder des steuerlichen Werts, je nachdem, was höher ist; Notar rund 0,8-1 % plus Mehrwertsteuer; Grundbuchgebühren rund 0,5-0,7 %; Anwalt 1-2 % plus Mehrwertsteuer; mit Makler zahlt der Käufer meist zusätzlich 1-3 % Provision plus Mehrwertsteuer.",
+  "annual_property_tax": "Wer am 1. Januar Eigentümer ist, zahlt die einheitliche Immobiliensteuer (ENFIA). Sie wird je Immobilie aus Lage, Größe, Alter und amtlichem Zonenwert berechnet; übersteigt der gesamte Immobilienbesitz in Griechenland 500.000 €, kommt ein Zuschlag hinzu."
+ },
+ "bulgaria": {
+  "can_foreigners_buy": "Ja, Gebäude und Wohnungen, mit ähnlichen Rechten wie Einheimische. Grund und Boden können Ausländer nach Angaben des Global Property Guide nicht direkt besitzen; üblich ist dafür eine bulgarische Gesellschaft.",
+  "purchase_costs_breakdown": "Grunderwerbsteuer 0,1-3 % (je nach Gemeinde; Sofia 2,5 %) + Notar 0,1-1,5 % + Anwalt 0,5-1 % + Makler 2,5-3 %.",
+  "annual_property_tax": "0,01-0,45 % des Steuerwerts der Immobilie, dazu eine kommunale Müllgebühr.",
+  "holiday_rental_rules": "Ferienunterkünfte müssen nach dem Tourismusgesetz bei der Gemeinde kategorisiert oder registriert sein; die Kurtaxe beträgt 0,20-3,00 BGN pro Nacht."
+ },
+ "portugal": {
+  "can_foreigners_buy": "Ja, mit denselben Rechten wie portugiesische Staatsbürger (im September 2025 wurde eine höhere IMT für ausländische Käufer von Zweitwohnungen angekündigt).",
+  "purchase_costs_breakdown": "Grunderwerbsteuer IMT 0-8 % (progressiv) + Stempelsteuer 0,8 % + Notar und Register 0,9-1,2 % + Anwalt 1,25-2 %.",
+  "annual_property_tax": "IMI: 0,3-0,45 % des Steuerwerts (städtische Immobilien), festgelegt von der Gemeinde.",
+  "holiday_rental_rules": "Die Registrierung als Alojamento Local (AL) ist Pflicht; seit November 2024 können Gemeinden neue AL-Lizenzen in Begrenzungszonen aussetzen (Lissabon und Porto tun das); Eigentümergemeinschaften können mit mehr als 50 % der Eigentümer widersprechen."
+ },
+ "germany": {
+  "can_foreigners_buy": "Ja. Für Ausländer gibt es beim Immobilienkauf in Deutschland keine Einschränkungen; Käufer von außerhalb der EU brauchen für ein Darlehen aber meist mehr Eigenkapital.",
+  "purchase_costs_breakdown": "Grunderwerbsteuer von 3,5 % bis 6,5 % je nach Bundesland (3,5 % in Bayern, 6,5 % in Brandenburg, Nordrhein-Westfalen, im Saarland und in Schleswig-Holstein), dazu Notar- und Grundbuchkosten von rund 1,5-2 %; hat der Verkäufer den Makler beauftragt, zahlt der Käufer nach dem Gesetz die Hälfte der Provision, und die kommt hinzu.",
+  "annual_property_tax": "Eigentümer zahlen Grundsteuer, seit 2025 berechnet als Grundsteuerwert x Steuermesszahl x Hebesatz, den jede Gemeinde festlegt."
+ },
+ "poland": {
+  "can_foreigners_buy": "Bürger der EU, des EWR und der Schweiz kaufen zu denselben Bedingungen wie Polen. Andere Ausländer können eine Wohnung ohne Genehmigung kaufen, brauchen für ein Haus oder ein Grundstück aber in der Regel eine Genehmigung des Innenministeriums (MSWiA).",
+  "purchase_costs_breakdown": "Steuer auf zivilrechtliche Geschäfte (PCC) von 2 % des Werts, vom Käufer binnen 14 Tagen nach der Urkunde zu zahlen; Notargebühr (taksa notarialna) von höchstens 1.010 PLN plus 0,4 % des Werts über 60.000 PLN, dazu 23 % Mehrwertsteuer; Gerichtsgebühr von 200 PLN für die Eintragung des Eigentums ins Grundbuch (plus 100 PLN für ein neues Grundbuchblatt); Anwalt nach Wunsch, rund 1 %; die Maklergebühr (rund 2-3 %) hängt von der Vereinbarung ab.",
+  "annual_property_tax": "Eigentümer zahlen eine örtliche Immobiliensteuer (podatek od nieruchomości), die die Gemeinde festlegt; 2026 liegt die Obergrenze für Wohnungen und Häuser bei 1,25 PLN pro m² Nutzfläche."
+ },
+ "netherlands": {
+  "can_foreigners_buy": "Ja. Es gibt keine Vorgaben zu Staatsangehörigkeit oder Wohnsitz und keinen Aufschlag für ausländische Käufer. Einige Städte, etwa Den Haag, verbieten es, günstigere Wohnungen nach dem Kauf ohne Genehmigung zu vermieten (opkoopbescherming).",
+  "purchase_costs_breakdown": "Grunderwerbsteuer (overdrachtsbelasting) von 8 %, wenn Sie nicht selbst einziehen, etwa bei einer Vermietungs- oder Ferienimmobilie, oder 2 %, wenn die Immobilie Ihr Hauptwohnsitz wird; Notargebühr für die Übertragungsurkunde von rund 500 EUR; Gebühren des Katasters (Kadaster); bei Finanzierung die Kosten der Hypothek; den eigenen Makler bezahlt der Verkäufer.",
+  "annual_property_tax": "Eigentümer zahlen die kommunale Grundsteuer (onroerendezaakbelasting, OZB) auf den amtlichen WOZ-Wert zu einem Satz, den jede Gemeinde festlegt, in der Praxis ein Promillewert; Mieter von Wohnungen zahlen sie nicht."
+ },
+ "cyprus": {
+  "can_foreigners_buy": "EU-Bürger kaufen ohne Einschränkungen. Käufer von außerhalb der EU brauchen eine Genehmigung des Ministerrats, die über den District Officer beantragt wird, und dürfen in der Regel nur eine Immobilie oder ein Grundstück von bis zu 4.014 m² erwerben.",
+  "purchase_costs_breakdown": "Übertragungsgebühren des Grundbuchamts von 3 % bis 85.000 €, 5 % bis 170.000 € und 8 % darüber, bei Wiederverkäufen ohne Mehrwertsteuer halbiert (1,5 %, 2,5 % und 4 %); die Stempelsteuer ist seit 1. Januar 2026 abgeschafft; Anwalt rund 1 % plus Mehrwertsteuer; kleinere Gebühren des Grundbuchamts.",
+  "annual_property_tax": "Eine jährliche staatliche Immobiliensteuer gibt es nicht (2017 abgeschafft); Eigentümer zahlen kommunale Gebühren von rund 90 bis 300 € im Jahr, dazu Abwasser- und Gemeindeabgaben."
+ },
+ "switzerland": {
+  "can_foreigners_buy": "Nach der Lex Koller kaufen EU- und EFTA-Bürger mit Wohnsitz in der Schweiz und Inhaber einer Bewilligung C wie Schweizer; Inhaber einer Bewilligung B von außerhalb der EU können eine Wohnung kaufen, in der sie selbst wohnen. Wer im Ausland lebt, braucht eine kantonale Bewilligung und kann in der Regel nur eine Ferienwohnung in einem Tourismusort kaufen, im Rahmen landesweiter Kontingente; eine geplante Verschärfung war 2026 in der Vernehmlassung.",
+  "purchase_costs_breakdown": "Handänderungssteuer (droits de mutation) von 0 % bis rund 3,3 % je nach Kanton; Notar rund 0,1-0,5 %; Grundbuchgebühr, ein kleiner fester Betrag oder Prozentsatz; Anwalt nach Wunsch 1-2 %; die Maklergebühr (2-3 %) bezahlt der Verkäufer.",
+  "annual_property_tax": "Mehr als die Hälfte der Kantone erhebt eine jährliche Liegenschaftssteuer, meist 0,01-0,3 % des Steuerwerts; außerdem zahlen Eigentümer kantonale Vermögenssteuer auf den Wert der Immobilie abzüglich der Hypothek."
+ },
+ "united-states": {
+  "can_foreigners_buy": "Ja. Ein bundesweites Verbot für Ausländer gibt es nicht, aber rund 30 Bundesstaaten haben Beschränkungen eingeführt, und Texas und Florida schränken Käufer aus bestimmten Ländern wie China ein.",
+  "purchase_costs_breakdown": "Die Abschlusskosten (closing costs) unterscheiden sich je nach Bundesstaat und liegen meist bei 2-5 % der Darlehenssumme: Titelrecherche und Titelversicherung, Eintragungsgebühren, Anwalt, Wertgutachten und Bankgebühren; seit August 2024 muss der Verkäufer den Makler des Käufers nicht mehr bezahlen, sodass der Käufer ihn selbst bezahlt, wenn der Verkäufer nicht zustimmt; FIRPTA greift nicht beim Kauf, wohl aber, wenn ein Ausländer später verkauft: Dann behält der Käufer in der Regel 15 % des Verkaufspreises ein.",
+  "annual_property_tax": "Die Grundsteuer (property tax) wird örtlich festgelegt; 2024 lag sie in der größten Stadt jedes Bundesstaats im Schnitt bei rund 1,22 % des Werts, von 0,30 % in Honolulu bis 3,02 % in Detroit."
+ },
+ "japan": {
+  "can_foreigners_buy": "Ja. Ausländer können Grundstücke und Häuser zu denselben Bedingungen wie Japaner als Volleigentum kaufen, sogar mit einem Touristenvisum; ein Visum oder Aufenthaltsrecht ergibt sich aus dem Kauf aber nicht.",
+  "purchase_costs_breakdown": "Der Käufer zahlt eine Maklergebühr von höchstens 3 % plus 60.000 ¥ plus 10 % Verbrauchsteuer (für günstige leerstehende Häuser bis 8 Mio. ¥ gilt eine Sonderobergrenze von bis zu 330.000 ¥ einschließlich Steuer), Eintragungssteuer von 1,5 % auf das Grundstück (bis März 2029) und regulär 2 % auf das Gebäude, Grunderwerbsteuer von 3 % des Steuerwerts, Stempelsteuer und das Honorar des Rechtsschreibers (shiho-shoshi) von rund 100.000 bis 200.000 ¥.",
+  "annual_property_tax": "Die Vermögensteuer auf Sachanlagen beträgt 1,4 % des amtlich festgesetzten Werts, in Stadtgebieten kommt eine Stadtplanungssteuer von bis zu 0,3 % hinzu; für kleine Wohngrundstücke gilt eine niedrigere Bemessungsgrundlage."
+ },
+ "mexico": {
+  "can_foreigners_buy": "Ja, in der Sperrzone (bis 50 km von der Küste oder 100 km von den Grenzen, dazu gehören Tulum und Playa del Carmen) aber nur über einen Bank-Treuhandvertrag (fideicomiso) oder eine mexikanische Gesellschaft; anderswo ist direktes Eigentum möglich.",
+  "purchase_costs_breakdown": "Erwerbsteuer 2-5 % + Notar 0,5-1 % + Anwalt 1-1,5 % (laut Global Property Guide zusammen 3,5-7,5 %), dazu 0,5-1,5 % für die Einrichtung des fideicomiso und die Genehmigung; TheLatinvestor rechnet mit 5-8 %.",
+  "annual_property_tax": "Kommunale Grundsteuer (predial), örtlich nach dem Katasterwert festgelegt; meist gering, oft niedriger als das Hausgeld.",
+  "holiday_rental_rules": "Quintana Roo: Pflicht zur Registrierung im RETUR-Q (seit August 2025, jährlich zu erneuern), dazu eine Betriebslizenz des Bundesstaats und die Steuernummer RFC; 6 % Beherbergungssteuer; Bußgelder bis 100.000 MXN."
+ },
+ "canada": {
+  "can_foreigners_buy": "Vorerst meist nicht: Ein Bundesgesetz verbietet Nicht-Kanadiern bis 1. Januar 2027 den Kauf von Wohnimmobilien in Städten und größeren Orten, mit Ausnahmen etwa für Inhaber einer Arbeitserlaubnis und für Ehepartner von Staatsbürgern oder Personen mit Daueraufenthalt. Ländliche Gebiete und kleine Orte sind nicht betroffen. Die Regierung hat erklärt, das Verbot nicht einfach verlängern zu wollen; eine Nachfolgeregelung wird geprüft.",
+  "purchase_costs_breakdown": "Käufer zahlen in der Regel die gestaffelte Grunderwerbsteuer der Provinz (Ontario: 0,5 % bis 55.000 $ und 1 % von 55.000 $ bis 250.000 $), Anwaltskosten von rund 500 bis 1.500 $, eine Titelversicherung von rund 250 $ und ein Gutachten für 300 bis 1.000 $; die Makler bezahlt meist der Verkäufer. Ausländische Käufer zahlen außerdem in ganz Ontario die Spekulationssteuer für Nichtansässige von 25 % und in British Columbia 20 % Zusatzsteuer im Großraum Vancouver und in vier weiteren Regionen.",
+  "annual_property_tax": "Die Grundsteuer legt jede Stadt als Anteil am Steuerwert fest, 2026 von rund 0,3 % in Vancouver bis 2,12 % in Saint John."
+ },
+ "dominican-republic": {
+  "can_foreigners_buy": "Ja. Ausländer haben beim Kauf von Grundstücken und Häusern dieselben Rechte wie dominikanische Staatsbürger, ohne Einschränkungen.",
+  "purchase_costs_breakdown": "Der Käufer zahlt 3 % Übertragungssteuer (0 % bei begünstigten Erstkäufen nach den Tourismusanreizen CONFOTUR), Anwaltskosten von rund 1-2 % und Notarkosten von rund 0,25-1 %, dazu die Eintragung; die Maklergebühr von 2-3 % bezahlt der Verkäufer.",
+  "annual_property_tax": "Die jährliche Steuer IPI beträgt 1 % auf den Teil des gesamten dominikanischen Immobilienvermögens einer Person, der nach der Bewertung der Steuerbehörde DGII 2026 über 10.695.494 RD$ liegt; eine einzelne günstige Immobilie bleibt daher oft unter der Schwelle."
+ }
+}
