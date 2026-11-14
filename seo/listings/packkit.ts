@@ -81,7 +81,7 @@ const EN = "the and of for with from by to is are was were this that these those
 const SAME: Record<NewLang, string> = {
   de: "was also will see land pool",
   ru: "",
-  fr: "or but four village minutes large question questions guide score compare cottage close",
+  fr: "or but four village minutes large question questions guide score compare cottage close taxes",
   nl: "of is was we over week best had are land flat score room pool",
   pl: "to by we",
 };

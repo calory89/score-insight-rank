@@ -6,16 +6,18 @@ import type { Kind } from "../listings/facets";
 import type { NewLang } from "../listings/packkit";
 import { de } from "../listings/pack.de";
 import { ru } from "../listings/pack.ru";
+import { fr } from "../listings/pack.fr";
 
 export const MAX_TOTAL = 2500;
 const CORE: Kind[] = ["country", "band", "region", "setting", "ptype", "beds", "area", "regionBand", "town", "gband"];
 const ALL: Kind[] = [...CORE, "feature", "gfeature", "combo", "near", "ccyBand"];
 
-export const PACKS: Partial<Record<NewLang, Pack>> = { de, ru };
+export const PACKS: Partial<Record<NewLang, Pack>> = { de, ru, fr };
 /** `kinds`: the families the language's pack words well; `max`: its share of MAX_TOTAL (the page of all searches not counted). */
 export const CONFIG: Partial<Record<NewLang, { kinds: Kind[]; max: number }>> = {
   de: { kinds: ALL, max: 560 },
-  // Russian: the families its pack words without case endings on place names; Bulgaria first, then Greece and Cyprus
-  ru: { kinds: CORE, max: 300 },
+  // Russian: the families its pack words without case endings on place names, in every country whose homes have a Russian title
+  ru: { kinds: [...CORE, "ccyBand"], max: 300 },
+  fr: { kinds: ALL, max: 560 },
 };
 export { CORE, ALL };
