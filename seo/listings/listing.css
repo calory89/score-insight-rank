@@ -80,3 +80,6 @@
   .rh-static[data-ls] .ls-b em { -webkit-line-clamp: 2; }
 }
 @media (min-width: 641px) and (max-width: 900px) { .rh-static[data-ls] .ls-grid { grid-template-columns: repeat(2, 1fr); } .rh-static[data-ls] .ls-kpi { grid-template-columns: repeat(3, 1fr); } }
+/* Links to the same page in the languages that have no app (seo/langs/build.ts adds them to the English and Spanish pages) */
+.rh-static[data-ls] .ls-langs { margin: 22px 0 0; font-size: 14px; color: var(--c-ink-3, #62666E); display: flex; flex-wrap: wrap; align-items: center; gap: 0 4px; }
+.rh-static[data-ls] .ls-langs a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; }

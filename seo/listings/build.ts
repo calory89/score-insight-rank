@@ -12,7 +12,8 @@ import { localizeRows, costCountries } from "../../src/community/seo2data";
 import { buildFacets, nearestLive, countrySlug, type Facet, type Home } from "./facets";
 import { factsFor, dayOf, type Ctx } from "./facts";
 import { compose, renderBody, renderLd, SITE, WAIT, type Site, type Text } from "./page";
-import type { Pack } from "./pack";
+import type { Pack, Lang } from "./pack";
+import { isNewLang, destFor } from "./packkit";
 import { en } from "./pack.en";
 import { es } from "./pack.es";
 import { loadFx } from "./fx";
@@ -45,10 +46,12 @@ export const listingRows = (): Home[] => (read("public/data/rh-static.json", { r
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 type World = { ctx: Ctx; site: Site; colors: Record<string, string> };
-function world(plan: ListingPlan, rows: Home[], lang: "en" | "es" | "de" | "ru"): World {
+function world(plan: ListingPlan, rows: Home[], lang: Lang): World {
   const snap = read("public/data/rh-static.json", {});
   let dest: Record<string, any> = read("src/data/destinations.json");
   if (lang === "es") dest = localizeRows(dest, read("src/data/destinations-es.json"));
+  // German, Russian, French, Dutch, Polish: only the texts translated for that language (seo/listings/dest.<lang>.json)
+  if (isNewLang(lang)) dest = destFor(dest, lang);
   const guides: Record<string, { name: string }> = read("src/data/guides.json");
   const byCountry = new Map<string, Home[]>();
   for (const r of rows) { const cc = countrySlug(r.country); if (cc) (byCountry.get(cc) || byCountry.set(cc, []).get(cc)!).push(r); }
@@ -60,7 +63,7 @@ function world(plan: ListingPlan, rows: Home[], lang: "en" | "es" | "de" | "ru")
   const names: Record<string, string> = { bali: "Bali", lombok: "Lombok", albania: "Albania", mexico: "Mexico", spain: "Spain", montenegro: "Montenegro", georgia: "Georgia", "northern-cyprus": "Northern Cyprus", vietnam: "Vietnam", italy: "Italy", portugal: "Portugal", bulgaria: "Bulgaria" };
   return {
     ctx: { all: rowsByScore(rows), byCountry, pages: plan.pages, dest, updated, fx: loadFx() },
-    site: { pages: plan.pages, live: plan.live, hasGuide: (cc) => !!guides[cc], hasCalc: (cc) => calc.has(cc), hasCosts: (cc) => !!dest[cc] && !!(names[cc] || guides[cc]?.name), restricted, notes: notesFor },
+    site: { pages: plan.pages, live: plan.live, hasGuide: (cc) => !!guides[cc], hasCalc: (cc) => calc.has(cc), hasCosts: (cc) => !!dest[cc] && !!(names[cc] || guides[cc]?.name), restricted, notes: isNewLang(lang) ? () => [] : notesFor },
     colors: read("src/data/card-colors.json"),
   };
 }

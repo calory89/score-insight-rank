@@ -34,7 +34,7 @@ export const MIN = 3;
 export const MIN_NEW = 5;
 export const PRIMARY_BANDS = [30000, 50000, 80000, 100000, 150000, 200000, 300000];
 export const MINOR_BANDS = [10000, 15000, 20000, 40000, 60000]; // older addresses: kept only when they list something the others do not
-export const GLOBAL_BANDS = [30000, 50000, 75000, 100000];
+export const GLOBAL_BANDS = [20000, 30000, 50000, 75000, 100000]; // 20000 (15-nov-2026): "casas por 20.000 euros", "maison 20 000 euros", the round figure people type
 export const DUP = 0.9;
 
 export type Home = Record<string, any>;
