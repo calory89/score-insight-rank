@@ -1,0 +1,159 @@
+// Listing pages: /homes/<country>[/<budget | region | setting | type | bedrooms>[/<town | budget>]] and
+// /cheap-houses[/<search>] (14-nov-2026). Called by seo/prerender.ts in its English run and again in its Spanish
+// run; seo/listings/facets.ts decides which pages exist, facts.ts what is true about each, pack.<lang>.ts how to
+// say it and page.ts the HTML. Before this file the family came from two generators (the loops in prerender.ts and
+// scripts/search_pages.py) with different rules, no shared template and no Spanish for /cheap-houses.
+//
+// The pages are the page: the app shows this same HTML (src/community/listingRoute.tsx), so what a crawler reads,
+// what paints first and what the visitor sees after the app loads are the same homes in the same order.
+import fs from "fs";
+import path from "path";
+import { localizeRows, costCountries } from "../../src/community/seo2data";
+import { buildFacets, nearestLive, countrySlug, type Facet, type Home } from "./facets";
+import { factsFor, dayOf, type Ctx } from "./facts";
+import { compose, renderBody, renderLd, SITE, WAIT, type Site, type Text } from "./page";
+import type { Pack } from "./pack";
+import { en } from "./pack.en";
+import { es } from "./pack.es";
+
+export type PageFn = (url: string, title: string, desc: string, image: string, body?: string, ld?: object[], o?: Record<string, any>) => void;
+const read = (f: string, d: any = {}) => { const p = path.resolve(process.cwd(), f); return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : d; };
+const minify = (css: string) => css.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, " ").replace(/\s*([{}:;,>])\s*/g, "$1").replace(/;}/g, "}").trim();
+let cssCache = "";
+export const listingCss = () => (cssCache ||= minify(fs.readFileSync(path.resolve(process.cwd(), "seo/listings/listing.css"), "utf8")));
+
+/** The plan for this build: pages, redirects and the lookups the rest of the prerender needs to link only to pages
+ * that exist. */
+export function listingPlan(rows: Home[]) {
+  const plan = buildFacets(rows);
+  const live = new Set(plan.pages.filter((p) => !p.thin).map((p) => p.path));
+  return {
+    ...plan, live,
+    /** The tightest budget page of a country that holds this price, or "". */
+    bandFor(cc: string, price: number): { cap: number; path: string } | null {
+      const b = plan.pages.filter((p) => p.kind === "band" && p.cc === cc && p.cap! >= price).sort((a, c) => a.cap! - c.cap!)[0];
+      return b ? { cap: b.cap!, path: b.path } : null;
+    },
+  };
+}
+export type ListingPlan = ReturnType<typeof listingPlan>;
+/** The homes as they are in the snapshot (English texts and their Spanish side by side), whatever run this is. */
+export const listingRows = (): Home[] => (read("public/data/rh-static.json", { rows: [] }).rows || []).filter((r: Home) => r?.slug);
+const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+type World = { ctx: Ctx; site: Site; colors: Record<string, string> };
+function world(plan: ListingPlan, rows: Home[], lang: "en" | "es" | "de" | "ru"): World {
+  const snap = read("public/data/rh-static.json", {});
+  let dest: Record<string, any> = read("src/data/destinations.json");
+  if (lang === "es") dest = localizeRows(dest, read("src/data/destinations-es.json"));
+  const guides: Record<string, { name: string }> = read("src/data/guides.json");
+  const byCountry = new Map<string, Home[]>();
+  for (const r of rows) { const cc = countrySlug(r.country); if (cc) (byCountry.get(cc) || byCountry.set(cc, []).get(cc)!).push(r); }
+  const days = rows.map((r) => dayOf(r.approved_at) || dayOf(r.publish_at)).filter(Boolean).sort();
+  const updated = dayOf(snap.generated) || days[days.length - 1] || new Date().toISOString().slice(0, 10);
+  const calc = new Set(costCountries(read("src/data/destinations.json"), guides));
+  const names: Record<string, string> = { bali: "Bali", lombok: "Lombok", albania: "Albania", mexico: "Mexico", spain: "Spain", montenegro: "Montenegro", georgia: "Georgia", "northern-cyprus": "Northern Cyprus", vietnam: "Vietnam", italy: "Italy", portugal: "Portugal", bulgaria: "Bulgaria" };
+  return {
+    ctx: { all: rowsByScore(rows), byCountry, pages: plan.pages, dest, updated },
+    site: { pages: plan.pages, live: plan.live, hasGuide: (cc) => !!guides[cc], hasCalc: (cc) => calc.has(cc), hasCosts: (cc) => !!dest[cc] && !!(names[cc] || guides[cc]?.name) },
+    colors: read("src/data/card-colors.json"),
+  };
+}
+const rowsByScore = (rows: Home[]) => rows.filter((r) => r?.slug && r.price_eur > 0).slice().sort((a, b) => (b.nota ?? 0) - (a.nota ?? 0) || (a.rank ?? 1e9) - (b.rank ?? 1e9) || String(a.slug).localeCompare(String(b.slug)));
+
+/** The words of every page of the plan in one language (null where the language cannot name something). */
+export function composeAll(plan: ListingPlan, rows: Home[], P: Pack): { W: World; texts: Map<string, Text | null> } {
+  const W = world(plan, rows, P.lang);
+  const texts = new Map<string, Text | null>();
+  for (const f of plan.pages) texts.set(f.path, compose(factsFor(f, W.ctx), P, W.site));
+  return { W, texts };
+}
+
+/** Writes the listing pages through the prerender's own `page` (so the sitemap, the Spanish pass and the title
+ * pass treat them like any other page). `lang` is the run: "es" when called from the Spanish pass. */
+export function listingPages(plan: ListingPlan, rows: Home[], page: PageFn, lang: "en" | "es"): number {
+  const P = lang === "es" ? es : en;
+  const { W, texts } = composeAll(plan, rows, P);
+  const css = listingCss();
+  let n = 0;
+  for (const f of plan.pages) {
+    const T = texts.get(f.path); if (!T) continue;
+    const url = SITE + f.path;
+    page(url, T.title, T.desc, T.image, renderBody(T, P, { css, colors: W.colors, updated: W.ctx.updated }), renderLd(T, P, (p) => SITE + p),
+      { noindex: !!f.thin, lastmod: T.lastmod, group: "places", images: T.cards.slice(0, 5).map((h) => (h.image_urls?.[0] ? (String(h.image_urls[0]).startsWith("http") ? String(h.image_urls[0]) : SITE + h.image_urls[0]) : "")).filter(Boolean) });
+    n++;
+  }
+  // The hub: every search, grouped, with its count.
+  const hubT = hub(plan, P);
+  page(`${SITE}/cheap-houses`, hubT.title, hubT.desc, `${SITE}/og-home.jpg`, hubT.body(css), hubT.ld, { group: "places" });
+  return n + 1;
+}
+
+function hub(plan: ListingPlan, P: Pack) {
+  const esL = P.lang === "es";
+  const t = esL
+    ? { h1: "Casas baratas en venta, por lo que buscas", title: "Casas baratas en venta por país, precio y tipo", lede: (n: number, c: number, s: number) => `${n} viviendas en ${c} países, repartidas en ${s} búsquedas: por presupuesto, junto al mar, de pueblo, con jardín o piscina y por país. Cada página lista viviendas reales con foto, precio, tamaño y nota.`, all: "En todos los países", by: "Por país", homes: "viviendas" }
+    : { h1: "Cheap houses for sale, by what you are looking for", title: "Cheap houses for sale by country, price and type", lede: (n: number, c: number, s: number) => `${n} homes in ${c} countries, split into ${s} searches: by budget, by the sea, in villages, with a garden or a pool, and by country. Every page lists real homes with photo, price, size and score.`, all: "In every country", by: "By country", homes: "homes" };
+  const global = plan.pages.filter((p) => !p.cc);
+  const hubs = plan.pages.filter((p) => p.kind === "country" && !p.thin).sort((a, b) => b.homes.length - a.homes.length);
+  const total = new Set(plan.pages.flatMap((p) => p.homes.map((h) => h.slug))).size;
+  const a = (p: Facet, label = P.label(p)) => `<a class="ls-chip" href="${p.path}">${esc(label)} <small>${p.homes.length}</small></a>`;
+  const country = (c: Facet) => {
+    const kids = plan.pages.filter((p) => p.cc === c.cc && p !== c && !p.thin && ["band", "setting", "ptype", "beds", "feature"].includes(p.kind));
+    const order = ["band", "setting", "ptype", "beds", "feature"];
+    kids.sort((x, y) => order.indexOf(x.kind) - order.indexOf(y.kind) || (x.cap || 0) - (y.cap || 0) || (x.beds || 0) - (y.beds || 0));
+    return `<h3><a href="${c.path}">${esc(P.country(c.country!))}</a> · ${c.homes.length} ${t.homes}</h3><p>${kids.map((p) => a(p)).join(" ")}</p>`;
+  };
+  const lede = t.lede(total, hubs.length, plan.pages.filter((p) => !p.thin).length);
+  return {
+    title: t.title, desc: lede.slice(0, 300),
+    body: (css: string) => `<main class="rh-static" data-rh-keep data-rh-static data-ls><style>${css}</style>${WAIT}<nav class="ls-crumbs" aria-label="Breadcrumb"><a href="/">${P.crumbRoot}</a> › <span>${P.crumbCheap}</span></nav><h1>${t.h1}</h1><p class="ls-lede">${lede}</p>`
+      + `<h2>${t.all}</h2><div class="ls-more"><p><b>${P.more.budget}</b> ${global.filter((p) => p.kind === "gband").map((p) => a(p)).join(" ")}</p><p><b>${P.more.feature}</b> ${global.filter((p) => p.kind === "gfeature").map((p) => a(p)).join(" ")}</p></div>`
+      + `<h2>${t.by}</h2><div class="ls-more">${hubs.map(country).join("")}</div></main>`,
+    ld: [{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: P.crumbRoot, item: SITE + "/" }, { "@type": "ListItem", position: 2, name: P.crumbCheap, item: SITE + "/cheap-houses" }] }] as object[],
+  };
+}
+
+// ------------------------------------------------------------------------------------------------ after the twins
+export type Render = (r: { url: string; title: string; desc: string; image: string; body?: string; ld?: object[]; o: Record<string, any> }) => string;
+
+/** Addresses that used to be listing pages and are not generated today: seo/listings/known-urls.json remembers every
+ * address ever published (seo/listings/record.ts adds to it in the daily data job). */
+export function movedAddresses(plan: ListingPlan): Record<string, string> {
+  const known: string[] = read("seo/listings/known-urls.json", { urls: [] }).urls || [];
+  const all = new Set([...plan.pages.map((p) => p.path), "/cheap-houses"]);
+  const out: Record<string, string> = {};
+  for (const u of known) if (!all.has(u)) { const to = nearestLive(u, all, plan.redirects); if (to !== u) out[u] = to; }
+  return out;
+}
+
+/** After the Spanish twins are on disk: the pages that redirect from older addresses (English, and Spanish when the
+ * target has a Spanish page) and dist/redirects.json for the worker. */
+export function finishListings(root: string, plan: ListingPlan, render: Render, hasEs: (enUrl: string) => boolean): { moved: number; redirects: number } {
+  const moved = movedAddresses(plan);
+  const redirects: Record<string, string> = { ...plan.redirects, ...moved };
+  let n = 0;
+  const write = (from: string, to: string, P: Pack, prefix: string) => {
+    const dir = path.join(root, (prefix + from).replace(/^\//, ""));
+    if (fs.existsSync(path.join(dir, "index.html"))) return; // a real page lives here
+    const target = SITE + prefix + to;
+    let h = render({ url: target, title: `${P.moved} · RealHunt`, desc: P.moved, image: `${SITE}/og-home.jpg`,
+      body: `<main class="rh-static" data-rh-moved="${prefix + to}"><p>${P.moved} <a href="${prefix + to}">${target.replace("https://", "")}</a></p></main>`,
+      o: { noindex: true, head: `<meta http-equiv="refresh" content="0;url=${prefix + to}" />`, lang: P.lang === "es" ? "es" : undefined } });
+    // the canonical is the page it moved to and the file is noindex: nothing on it is for search engines
+    h = h.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/g, "");
+    fs.mkdirSync(dir, { recursive: true }); fs.writeFileSync(path.join(dir, "index.html"), h); n++;
+  };
+  for (const [from, to] of Object.entries(moved)) {
+    write(from, to, en, "");
+    if (hasEs(SITE + to)) write(from, to, es, "/es");
+  }
+  // dist/redirects.json: every address of this family that should answer 301. Merged with what another step wrote.
+  const file = path.join(root, "redirects.json");
+  let prev: Record<string, string> = {};
+  try { if (fs.existsSync(file)) prev = JSON.parse(fs.readFileSync(file, "utf8")); } catch { prev = {}; }
+  const merged: Record<string, string> = { ...prev };
+  for (const [from, to] of Object.entries(redirects)) { merged[from] = to; if (hasEs(SITE + to)) merged["/es" + from] = "/es" + to; }
+  fs.writeFileSync(file, JSON.stringify(merged, null, 1) + "\n");
+  return { moved: n, redirects: Object.keys(redirects).length };
+}

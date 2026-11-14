@@ -141,6 +141,7 @@ const PLACE_ANY = new RegExp(`(?<![\\p{L}\\p{N}-])(${Object.keys(PLACE_MAP).sort
 /** Spanish names for the places the site knows, wherever they stand in a text, and the notes some homes carry
  * after their town ("(35 min to Billund)"). */
 export const placesEs = (s: string) => s.replace(PLACE_ANY, (m) => PLACE_MAP[m] || m)
+  .replace(/(^|, |· |\()near (?=\p{Lu})/gu, "$1cerca de ") // "Lundby, near Skælskør" (14-nov-2026)
   .replace(/\((\d+) min to ([^()]+)\)/g, "(a $1 min de $2)").replace(/\(about (\d+) min from ([^()]+)\)/g, "(a unos $1 min de $2)").replace(/\(between ([^()]+) and ([^()]+)\)/g, "(entre $1 y $2)");
 
 export function pageTranslator(tr: (s: string) => string): (s: string) => string {
