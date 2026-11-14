@@ -11,35 +11,53 @@
 //    page, unless a smaller budget already holds three quarters of them ("everything we list in Bulgaria is under €80,000" is the answer to a budget search).
 //  - Only homes in the snapshot count, and the snapshot only holds homes that are for sale. A page that falls
 //    under its minimum is not generated and its address goes into the redirects.
-import { regionOf, slugify } from "../../src/community/regions";
+//
+// 15-nov-2026, new families through the same rules (3 homes, no near-copies, an address for every page that goes):
+//  - traits read from the data or stated in the listing text (seo/listings/traits.ts): move-in ready, sea view,
+//    within 500 m of the sea, land, fireplace, garage, island, mountains, airport, price per m², score 90+,
+//    hand-picked, new this month, price cuts, single-storey, period features, good weather, quiet, low community
+//    fee, cave houses, unusual buildings... at /cheap-houses/<trait>-in-<country> and /cheap-houses/<trait>;
+//  - ranked lists (the 20 cheapest, the 20 with most space for the money), same addresses;
+//  - a trait with a budget, for the pairs in COMBOS and only the COMBO_MAX with most homes;
+//  - budgets in pounds and dollars at the ECB rate of the day (/cheap-houses/under-50000-pounds-in-<country>);
+//  - named areas (/homes/spain/costa-blanca, /homes/japan/kansai) and homes within 100 km of a big city
+//    (/cheap-houses/near-barcelona), from seo/listings/places.ts;
+//  - regions get one name per region (places.ts), so "Alicante (about 25 min from Elche)" counts for Alicante.
+// A family with no page today (fewer than 3 homes) needs nothing else: the page is generated the day the homes are there.
+import { slugify } from "../../src/community/regions";
+import { regionIndex, regionName, AREAS, inArea, CITIES, NEAR_KM, kmTo } from "./places";
+import { TRAITS, COMBOS, COMBO_MAX, CCY_BANDS, RANK_N, bedsOf, ptypeOf, dayOfHome } from "./traits";
+import { loadFx, type Fx } from "./fx";
+export { ptypeOf, bedsOf };
 
 export const MIN = 3;
 export const MIN_NEW = 5;
 export const PRIMARY_BANDS = [30000, 50000, 80000, 100000, 150000, 200000, 300000];
-export const MINOR_BANDS = [20000, 40000, 60000]; // older addresses: kept only when they list something the others do not
+export const MINOR_BANDS = [10000, 15000, 20000, 40000, 60000]; // older addresses: kept only when they list something the others do not
 export const GLOBAL_BANDS = [30000, 50000, 75000, 100000];
 export const DUP = 0.9;
 
 export type Home = Record<string, any>;
-export type Kind = "country" | "band" | "region" | "setting" | "ptype" | "beds" | "feature" | "town" | "regionBand" | "gband" | "gfeature";
+export type Kind = "country" | "band" | "region" | "setting" | "ptype" | "beds" | "feature" | "town" | "regionBand" | "gband" | "gfeature"
+  | "combo" | "ccyBand" | "area" | "near";
 export type Facet = {
   path: string; kind: Kind; homes: Home[]; parent: string; thin?: boolean;
   cc?: string; country?: string; cap?: number; region?: string; regionSlug?: string; town?: string; key?: string; beds?: number;
+  /** ccyBand: `cap` is in this currency; capEur is the same budget in euros at `rate` (units of ccy per euro). */
+  ccy?: "GBP" | "USD"; capEur?: number; rate?: number;
+  /** area: slug in places.AREAS; near: slug in places.CITIES. */
+  area?: string; city?: string;
+  /** ranked list: `homes` is in the order of the ranking, not by score. */
+  ranked?: boolean;
 };
+/** The budget of a page in euros, whatever currency its address names (0 when it has none). */
+export const eurCap = (f: Pick<Facet, "kind" | "cap" | "capEur">) => (f.kind === "ccyBand" ? Math.floor(f.capEur || 0) : f.cap || 0);
 
 export const countrySlug = (c: string) => String(c || "").toLowerCase().trim().replace(/\s+/g, "-");
 // Imports tagged with a region instead of a country: home pages only.
 const NOT_COUNTRY = new Set(["scandinavia"]);
 
 // ---------------------------------------------------------------- what a home is (always from the English texts)
-const APT = /\b(flat|apartment|studio|condo|penthouse|duplex|loft|maisonette)s?\b/i;
-const HOUSE = /\b(house|villa|cottage|cabin|farmhouse|townhouse|bungalow|chalet|cortijo|finca|farm|mill|trullo|masseria|barn|lodge)s?\b/i;
-export function ptypeOf(r: Home): "apartment" | "house" | "" {
-  const t = String(r.title || "");
-  const a = APT.exec(t), h = HOUSE.exec(t);
-  if (a && (!h || a.index < h.index)) return "apartment";
-  return h ? "house" : "";
-}
 const text = (r: Home) => `${r.title || ""} ${r.why_great || ""} ${r.location_name || ""}`;
 const amen = (r: Home, a: string) => Array.isArray(r.amen) && r.amen.includes(a);
 /** By the sea: the measured distance to the shore when we have it (5 km or less), else the category a person gave it. */
@@ -62,7 +80,13 @@ export const FEATURES: [string, (r: Home) => boolean, number][] = [
   ["cabins-and-cottages", (r) => /\b(cabin|cottage|stuga|log house|chalet)s?\b/i.test(text(r)), MIN],
   ["with-a-terrace", (r) => amen(r, "terrace") || /\b(terrace|balcony|patio|veranda)\b/i.test(String(r.title || "")), MIN],
 ];
-const RESERVED = new Set(["apartments", "houses", ...SETTINGS.map(([k]) => k), ...FEATURES.map(([k]) => k)]);
+const RESERVED = new Set(["apartments", "houses", ...SETTINGS.map(([k]) => k), ...FEATURES.map(([k]) => k), ...AREAS.map((a) => a.slug)]);
+/** Which homes a key of a combination names: a setting, a feature, a trait or a kind of home. */
+function testOf(key: string, today: string): ((r: Home) => boolean) | null {
+  if (key === "apartments" || key === "houses") return (r) => ptypeOf(r) === (key === "apartments" ? "apartment" : "house");
+  const s = SETTINGS.find(([k]) => k === key) || FEATURES.find(([k]) => k === key); if (s) return s[1];
+  const t = TRAITS.find((x) => x.key === key && !x.rank); return t ? (r) => t.test(r, { today }) : null;
+}
 const reserved = (slug: string) => RESERVED.has(slug) || /^under-\d+$/.test(slug) || /^\d-bedroom$/.test(slug);
 
 export const jaccard = (a: Set<string>, b: Set<string>) => {
@@ -73,32 +97,43 @@ export const jaccard = (a: Set<string>, b: Set<string>) => {
 const byScore = (a: Home, b: Home) => (b.nota ?? 0) - (a.nota ?? 0) || (a.rank ?? 1e9) - (b.rank ?? 1e9) || String(a.slug).localeCompare(String(b.slug));
 
 export type Plan = { pages: Facet[]; redirects: Record<string, string> };
+export type Opts = { fx?: Fx; today?: string };
 
 /** Every listing page for these homes and where the addresses that are not generated should go. */
-export function buildFacets(all: Home[]): Plan {
+export function buildFacets(all: Home[], opts: Opts = {}): Plan {
   const rows = all.filter((r) => r?.slug && r.price_eur > 0).slice().sort(byScore);
   const pages: Facet[] = [];
   const redirects: Record<string, string> = {};
+  regionIndex(rows);
+  const fx = opts.fx || loadFx();
+  const today = opts.today || rows.map(dayOfHome).filter(Boolean).sort().pop() || new Date().toISOString().slice(0, 10);
+  const scopes: { kept: { f: Facet; set: Set<string> }[] }[] = [];
 
   // One scope = pages that must not copy each other (a country, or the pages for all countries).
   const scope = () => {
     const kept: { f: Facet; set: Set<string> }[] = [];
+    scopes.push({ kept });
     return {
       kept,
       /** Adds the page unless it is too small or a near-copy; returns the page that stands at this address. */
-      add(f: Facet, min: number, allowCopyOf?: string): Facet | null {
+      add(f: Facet, min: number, allowCopyOf?: string, cross = false): Facet | null {
         // too small: budgets always had an address (the old build wrote one per country and price), the rest are
         // covered by the URL memory (seo/listings/known-urls.json) when they existed before
         if (f.homes.length < min) { if (f.kind === "band") redirects[f.path] = f.parent; return null; }
         const set = new Set(f.homes.map((h) => String(h.slug)));
         let twin: Facet | null = null, best = 0;
-        for (const k of kept) { if (k.f.path === allowCopyOf) continue; const j = jaccard(set, k.set); if (j >= DUP && j > best) { best = j; twin = k.f; } }
+        // `cross`: the page must not copy a page of any scope (a page for all countries against one of a country)
+        for (const k of cross ? scopes.flatMap((sc) => sc.kept) : kept) { if (k.f.path === allowCopyOf) continue; const j = jaccard(set, k.set); if (j >= DUP && j > best) { best = j; twin = k.f; } }
         if (twin) { redirects[f.path] = twin.path; return twin; }
         kept.push({ f, set }); pages.push(f);
         return f;
       },
+      /** The same for a page that crosses countries: it must not copy a page of any country either. */
+      addCross(f: Facet, min: number): Facet | null { return this.add(f, min, undefined, true); },
     };
   };
+  const ranked = (list: Home[], order: (a: Home, b: Home) => number) => list.slice().sort(order).slice(0, RANK_N);
+  const combos: { S: ReturnType<typeof scope>; f: Facet; order: number }[] = [];
 
   const byCountry = new Map<string, Home[]>();
   for (const r of rows) { const cc = countrySlug(r.country); if (cc) (byCountry.get(cc) || byCountry.set(cc, []).get(cc)!).push(r); }
@@ -128,7 +163,7 @@ export function buildFacets(all: Home[]): Plan {
     for (const [key, test] of SETTINGS) S.add({ path: `${hub}/${key}`, kind: "setting", cc, country, key, homes: homes.filter(test), parent: hub }, MIN);
     // regions
     const regs = new Map<string, { name: string; homes: Home[] }>();
-    for (const h of homes) { const name = regionOf(h); const s = slugify(name); if (!s || reserved(s)) continue; (regs.get(s) || regs.set(s, { name, homes: [] }).get(s)!).homes.push(h); }
+    for (const h of homes) { const name = regionName(h); const s = slugify(name); if (!s || reserved(s)) continue; (regs.get(s) || regs.set(s, { name, homes: [] }).get(s)!).homes.push(h); }
     const regList = [...regs.entries()].sort((a, b) => b[1].homes.length - a[1].homes.length || a[0].localeCompare(b[0]));
     const regionPages = new Map<string, Facet>();
     for (const [s, g] of regList) {
@@ -139,7 +174,7 @@ export function buildFacets(all: Home[]): Plan {
     for (const [key, t] of [["apartments", "apartment"], ["houses", "house"]] as const)
       S.add({ path: `${hub}/${key}`, kind: "ptype", cc, country, key, homes: homes.filter((h) => ptypeOf(h) === t), parent: hub }, MIN_NEW);
     for (const b of [1, 2, 3, 4])
-      S.add({ path: `${hub}/${b}-bedroom`, kind: "beds", cc, country, beds: b, homes: homes.filter((h) => (b === 4 ? Number(h.bedrooms) >= 4 : Number(h.bedrooms) === b)), parent: hub }, MIN_NEW);
+      S.add({ path: `${hub}/${b}-bedroom`, kind: "beds", cc, country, beds: b, homes: homes.filter((h) => (b === 4 ? bedsOf(h) >= 4 : bedsOf(h) === b)), parent: hub }, MIN_NEW);
     for (const [key, test, min] of FEATURES)
       S.add({ path: `/cheap-houses/${key}-in-${cc}`, kind: "feature", cc, country, key, homes: homes.filter(test), parent: hub }, min);
 
@@ -153,6 +188,31 @@ export function buildFacets(all: Home[]): Plan {
         S.add({ path: `${rf.path}/under-${p}`, kind: "regionBand", cc, country, region: rf.region, regionSlug: s, cap: p, homes: rf.homes.filter((h) => h.price_eur <= p), parent: rf.path }, MIN_NEW);
     }
 
+    // ---- 15-nov-2026: traits, ranked lists, named areas, budgets in pounds and dollars, trait + budget
+    for (const a of AREAS) if (a.cc === cc) {
+      const path = `${hub}/${a.slug}`;
+      if (pages.some((p) => p.path === path)) continue; // a region already has this name
+      const af: Facet = { path, kind: "area", cc, country, area: a.slug, homes: homes.filter((h) => inArea(a, h, bySea)), parent: hub };
+      // budgets inside an area with enough homes, like the budgets inside a region
+      if (S.add(af, MIN) === af && af.homes.length >= MIN_NEW * 2) for (const p of PRIMARY_BANDS)
+        S.add({ path: `${path}/under-${p}`, kind: "regionBand", cc, country, area: a.slug, cap: p, homes: af.homes.filter((h) => h.price_eur <= p), parent: path }, MIN_NEW);
+    }
+    for (const t of TRAITS) {
+      const list = homes.filter((h) => t.test(h, { today }));
+      S.add({ path: `/cheap-houses/${t.key}-in-${cc}`, kind: "feature", cc, country, key: t.key, homes: t.rank ? ranked(list, t.rank) : list, parent: hub, ...(t.rank ? { ranked: true } : {}) }, t.min ?? MIN);
+    }
+    for (const [ccy, word, caps] of CCY_BANDS) { const rate = fx.rates[ccy]; if (!(rate > 0)) continue;
+      for (const cap of caps) { const capEur = cap / rate;
+        S.add({ path: `/cheap-houses/under-${cap}-${word}-in-${cc}`, kind: "ccyBand", cc, country, cap, ccy, capEur, rate, homes: homes.filter((h) => h.price_eur <= capEur), parent: hub }, MIN_NEW);
+      }
+    }
+    COMBOS.forEach(([key, cap, global], order) => {
+      if (global && COMBOS.findIndex(([k, c]) => k === key && c === cap) !== order) return; // the pair is listed twice: once is enough
+      const test = testOf(key, today); if (!test) return;
+      const list = homes.filter((h) => h.price_eur <= cap && test(h));
+      if (list.length >= MIN) combos.push({ S, order, f: { path: `/cheap-houses/${key}-under-${cap}-in-${cc}`, kind: "combo", cc, country, key, cap, homes: list, parent: hub } });
+    });
+
     // Older /cheap-houses addresses that named the same search as a /homes page: they follow that page.
     const where = (p: string): string => (pages.some((f) => f.path === p) ? p : redirects[p] ? where(redirects[p]) : hub);
     for (const p of [30000, 50000, 75000]) redirects[`/cheap-houses/under-${p}-in-${cc}`] = where(`${hub}/under-${p === 75000 ? 80000 : p}`);
@@ -165,6 +225,28 @@ export function buildFacets(all: Home[]): Plan {
   for (const p of GLOBAL_BANDS) G.add({ path: `/cheap-houses/under-${p}`, kind: "gband", cap: p, homes: rows.filter((h) => h.price_eur <= p), parent: "/cheap-houses" }, MIN);
   for (const [key, test] of [...SETTINGS.filter(([k]) => k !== "in-town"), ...FEATURES.map(([k, t]) => [k, t] as [string, (r: Home) => boolean])])
     G.add({ path: `/cheap-houses/${key}`, kind: "gfeature", key, homes: rows.filter(test), parent: "/cheap-houses" }, MIN);
+  for (const t of TRAITS) if (t.global !== false) {
+    const list = rows.filter((h) => t.test(h, { today }));
+    G.addCross({ path: `/cheap-houses/${t.key}`, kind: "gfeature", key: t.key, homes: t.rank ? ranked(list, t.rank) : list, parent: "/cheap-houses", ...(t.rank ? { ranked: true } : {}) }, t.min ?? MIN);
+  }
+  for (const [ccy, word, caps] of CCY_BANDS) { const rate = fx.rates[ccy]; if (!(rate > 0)) continue;
+    for (const cap of caps) { const capEur = cap / rate;
+      G.add({ path: `/cheap-houses/under-${cap}-${word}`, kind: "ccyBand", cap, ccy, capEur, rate, homes: rows.filter((h) => h.price_eur <= capEur), parent: "/cheap-houses" }, MIN_NEW);
+    }
+  }
+  for (const [slug, , , lat, lng] of CITIES)
+    G.addCross({ path: `/cheap-houses/near-${slug}`, kind: "near", city: slug, homes: rows.filter((h) => { const d = kmTo(h, lat, lng); return d != null && d <= NEAR_KM; }), parent: "/cheap-houses" }, MIN_NEW);
+  // Trait + budget: the COMBO_MAX with most homes, in the order of COMBOS when two have the same number.
+  COMBOS.forEach(([key, cap, global], order) => {
+    const test = global ? testOf(key, today) : null; if (!test) return;
+    const list = rows.filter((h) => h.price_eur <= cap && test(h));
+    if (list.length >= MIN) combos.push({ S: G, order, f: { path: `/cheap-houses/${key}-under-${cap}`, kind: "combo", key, cap, homes: list, parent: "/cheap-houses" } });
+  });
+  let kept = 0;
+  for (const c of combos.sort((a, b) => b.f.homes.length - a.f.homes.length || Number(!a.f.cc) - Number(!b.f.cc) || a.order - b.order || a.f.path.localeCompare(b.f.path))) {
+    if (kept >= COMBO_MAX) break;
+    if (c.S.add(c.f, MIN, undefined, true) === c.f) kept++;
+  }
 
   // A redirect never points at another redirect or at itself.
   const live = new Set(pages.map((f) => f.path));
@@ -178,6 +260,9 @@ export function nearestLive(path: string, live: Set<string>, redirects: Record<s
   if (redirects[path] && live.has(redirects[path])) return redirects[path];
   const m = /^\/cheap-houses\/.+-in-([a-z-]+)$/.exec(path);
   if (m) {
+    // "stone-houses-under-50000-in-italy": first the same trait without the budget
+    const c = /^\/cheap-houses\/(.+)-under-\d+-in-([a-z-]+)$/.exec(path);
+    if (c) for (const p of [`/cheap-houses/${c[1]}-in-${c[2]}`, `/homes/${c[2]}/${c[1]}`]) if (live.has(p)) return p;
     // "by-the-sea-in-united-states": the country is the longest tail that has a page
     const parts = m[1].split("-");
     for (let i = 0; i < parts.length; i++) { const hub = `/homes/${parts.slice(i).join("-")}`; if (live.has(hub)) return hub; }

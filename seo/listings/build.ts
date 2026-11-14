@@ -15,6 +15,9 @@ import { compose, renderBody, renderLd, SITE, WAIT, type Site, type Text } from 
 import type { Pack } from "./pack";
 import { en } from "./pack.en";
 import { es } from "./pack.es";
+import { loadFx } from "./fx";
+import { season } from "./traits";
+import { notesFor } from "./notes";
 
 export type PageFn = (url: string, title: string, desc: string, image: string, body?: string, ld?: object[], o?: Record<string, any>) => void;
 const read = (f: string, d: any = {}) => { const p = path.resolve(process.cwd(), f); return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : d; };
@@ -51,11 +54,13 @@ function world(plan: ListingPlan, rows: Home[], lang: "en" | "es" | "de" | "ru")
   for (const r of rows) { const cc = countrySlug(r.country); if (cc) (byCountry.get(cc) || byCountry.set(cc, []).get(cc)!).push(r); }
   const days = rows.map((r) => dayOf(r.approved_at) || dayOf(r.publish_at)).filter(Boolean).sort();
   const updated = dayOf(snap.generated) || days[days.length - 1] || new Date().toISOString().slice(0, 10);
+  const rules: Record<string, Record<string, { s?: string }>> = read("src/data/buyrules.json");
+  const restricted = (cc: string) => ["eu", "uk", "na", "other"].some((g) => { const s = rules[cc]?.[g]?.s; return !!s && s !== "green"; });
   const calc = new Set(costCountries(read("src/data/destinations.json"), guides));
   const names: Record<string, string> = { bali: "Bali", lombok: "Lombok", albania: "Albania", mexico: "Mexico", spain: "Spain", montenegro: "Montenegro", georgia: "Georgia", "northern-cyprus": "Northern Cyprus", vietnam: "Vietnam", italy: "Italy", portugal: "Portugal", bulgaria: "Bulgaria" };
   return {
-    ctx: { all: rowsByScore(rows), byCountry, pages: plan.pages, dest, updated },
-    site: { pages: plan.pages, live: plan.live, hasGuide: (cc) => !!guides[cc], hasCalc: (cc) => calc.has(cc), hasCosts: (cc) => !!dest[cc] && !!(names[cc] || guides[cc]?.name) },
+    ctx: { all: rowsByScore(rows), byCountry, pages: plan.pages, dest, updated, fx: loadFx() },
+    site: { pages: plan.pages, live: plan.live, hasGuide: (cc) => !!guides[cc], hasCalc: (cc) => calc.has(cc), hasCosts: (cc) => !!dest[cc] && !!(names[cc] || guides[cc]?.name), restricted, notes: notesFor },
     colors: read("src/data/card-colors.json"),
   };
 }
@@ -84,12 +89,12 @@ export function listingPages(plan: ListingPlan, rows: Home[], page: PageFn, lang
     n++;
   }
   // The hub: every search, grouped, with its count.
-  const hubT = hub(plan, P);
+  const hubT = hub(plan, P, W.ctx.updated);
   page(`${SITE}/cheap-houses`, hubT.title, hubT.desc, `${SITE}/og-home.jpg`, hubT.body(css), hubT.ld, { group: "places" });
   return n + 1;
 }
 
-function hub(plan: ListingPlan, P: Pack) {
+function hub(plan: ListingPlan, P: Pack, updated: string) {
   const esL = P.lang === "es";
   const t = esL
     ? { h1: "Casas baratas en venta, por lo que buscas", title: "Casas baratas en venta por país, precio y tipo", lede: (n: number, c: number, s: number) => `${n} viviendas en ${c} países, repartidas en ${s} búsquedas: por presupuesto, junto al mar, de pueblo, con jardín o piscina y por país. Cada página lista viviendas reales con foto, precio, tamaño y nota.`, all: "En todos los países", by: "Por país", homes: "viviendas" }
@@ -99,16 +104,22 @@ function hub(plan: ListingPlan, P: Pack) {
   const total = new Set(plan.pages.flatMap((p) => p.homes.map((h) => h.slug))).size;
   const a = (p: Facet, label = P.label(p)) => `<a class="ls-chip" href="${p.path}">${esc(label)} <small>${p.homes.length}</small></a>`;
   const country = (c: Facet) => {
-    const kids = plan.pages.filter((p) => p.cc === c.cc && p !== c && !p.thin && ["band", "setting", "ptype", "beds", "feature"].includes(p.kind));
-    const order = ["band", "setting", "ptype", "beds", "feature"];
+    const order = ["band", "ccyBand", "setting", "area", "ptype", "beds", "feature", "combo"];
+    const kids = plan.pages.filter((p) => p.cc === c.cc && p !== c && !p.thin && order.includes(p.kind));
     kids.sort((x, y) => order.indexOf(x.kind) - order.indexOf(y.kind) || (x.cap || 0) - (y.cap || 0) || (x.beds || 0) - (y.beds || 0));
     return `<h3><a href="${c.path}">${esc(P.country(c.country!))}</a> · ${c.homes.length} ${t.homes}</h3><p>${kids.map((p) => a(p)).join(" ")}</p>`;
   };
   const lede = t.lede(total, hubs.length, plan.pages.filter((p) => !p.thin).length);
+  // what is in season: the families of the coming season, two months ahead (seo/listings/traits.ts)
+  const sn = season(Number(updated.slice(5, 7)));
+  const inSeason = sn ? sn.keys.map((k) => global.find((p) => p.kind === "gfeature" && p.key === k)).filter((p): p is Facet => !!p) : [];
+  const chips = (label: string, list: Facet[]) => (list.length ? `<p><b>${esc(label)}</b> ${list.map((p) => a(p)).join(" ")}</p>` : "");
   return {
     title: t.title, desc: lede.slice(0, 300),
-    body: (css: string) => `<main class="rh-static" data-rh-keep data-rh-static data-ls><style>${css}</style>${WAIT}<nav class="ls-crumbs" aria-label="Breadcrumb"><a href="/">${P.crumbRoot}</a> › <span>${P.crumbCheap}</span></nav><h1>${t.h1}</h1><p class="ls-lede">${lede}</p>`
-      + `<h2>${t.all}</h2><div class="ls-more"><p><b>${P.more.budget}</b> ${global.filter((p) => p.kind === "gband").map((p) => a(p)).join(" ")}</p><p><b>${P.more.feature}</b> ${global.filter((p) => p.kind === "gfeature").map((p) => a(p)).join(" ")}</p></div>`
+    body: (css: string) => `<main class="rh-static" data-rh-keep data-rh-static data-ls><nav class="ls-crumbs" aria-label="Breadcrumb"><a href="/">${P.crumbRoot}</a> › <span>${P.crumbCheap}</span></nav><style>${css}</style>${WAIT}<h1>${t.h1}</h1><p class="ls-lede">${lede}</p>`
+      + (sn && inSeason.length ? `<h2>${esc(P.season.title)}</h2><div class="ls-more ls-season">${chips(P.season[sn.name], inSeason)}</div>` : "")
+      + `<h2>${t.all}</h2><div class="ls-more">${chips(P.more.budget, global.filter((p) => p.kind === "gband"))}${chips(P.more.ccy, global.filter((p) => p.kind === "ccyBand"))}${chips(P.more.feature, global.filter((p) => p.kind === "gfeature" && !p.ranked))}`
+      + `${chips(P.more.combo, global.filter((p) => p.kind === "combo"))}${chips(P.more.ranked, global.filter((p) => p.kind === "gfeature" && p.ranked))}${chips(P.more.near, global.filter((p) => p.kind === "near"))}</div>`
       + `<h2>${t.by}</h2><div class="ls-more">${hubs.map(country).join("")}</div></main>`,
     ld: [{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: P.crumbRoot, item: SITE + "/" }, { "@type": "ListItem", position: 2, name: P.crumbCheap, item: SITE + "/cheap-houses" }] }] as object[],
   };

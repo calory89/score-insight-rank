@@ -4,8 +4,11 @@
 import fs from "fs";
 import path from "path";
 import { buildFacets } from "./facets";
+import { refreshFx } from "./fx";
 
 const root = process.cwd();
+// the budgets in pounds and dollars use the ECB rate of the day; the plan below is built with the refreshed rate
+console.log(`[listings] exchange rates: ${await refreshFx(root)}`);
 const file = path.join(root, "seo/listings/known-urls.json");
 const rows = JSON.parse(fs.readFileSync(path.join(root, "public/data/rh-static.json"), "utf8")).rows || [];
 const before: string[] = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")).urls || [] : [];

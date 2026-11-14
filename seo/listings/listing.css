@@ -6,14 +6,24 @@
 .rh-staticwrap .rh-static[data-ls] { max-width: none; padding: 4px 0 40px; }
 .rh-static[data-ls][data-ls-wait] { visibility: hidden; }
 .rh-static[data-ls] a { color: var(--c-accent-ink, #B8370A); text-underline-offset: 3px; }
-.rh-static[data-ls] .ls-crumbs { font-size: 13px; color: var(--c-ink-3, #62666E); margin: 0 0 12px; }
-.rh-static[data-ls] .ls-crumbs a { color: inherit; }
+/* .rh-bc is the breadcrumb the site-wide pass (seo/polish.ts) writes in place of ours */
+.rh-static[data-ls] .ls-crumbs, .rh-static[data-ls] .rh-bc { font-size: 13px; color: var(--c-ink-3, #62666E); margin: 0 0 12px; }
+.rh-static[data-ls] .ls-crumbs a, .rh-static[data-ls] .rh-bc a { color: inherit; }
 .rh-static[data-ls] h1 { font: 800 clamp(27px, 4.6vw, 42px)/1.08 var(--f-display, system-ui, sans-serif); letter-spacing: -.02em; margin: 0 0 8px; text-wrap: balance; color: var(--c-ink, #111214); }
 .rh-static[data-ls] h2 { font: 800 clamp(20px, 2.6vw, 26px)/1.2 var(--f-display, system-ui, sans-serif); letter-spacing: -.01em; margin: 40px 0 14px; text-wrap: balance; color: var(--c-ink, #111214); }
 .rh-static[data-ls] h3 { font: 700 17px/1.35 var(--f-body, system-ui, sans-serif); margin: 20px 0 4px; color: var(--c-ink, #111214); }
 .rh-static[data-ls] p { margin: 0 0 12px; max-width: 76ch; }
 .rh-static[data-ls] .ls-upd { font-size: 13px; color: var(--c-ink-3, #62666E); margin: 0 0 14px; }
 .rh-static[data-ls] .ls-lede { font-size: 17px; line-height: 1.6; margin: 0 0 18px; }
+.rh-static[data-ls] .ls-how { font-size: 14.5px; line-height: 1.55; color: var(--c-ink-2, #3D4047); margin: -6px 0 18px; padding-left: 12px; border-left: 3px solid var(--c-line, #E4E5E8); }
+.rh-static[data-ls] .ls-first { margin: 0 0 18px; padding: 14px 16px 6px; border-radius: 14px; background: var(--c-warn-soft, #FFF6E5); max-width: 860px; }
+.rh-static[data-ls] .ls-first b { display: block; margin: 0 0 4px; }
+.rh-static[data-ls] .ls-first p { margin: 0 0 6px; }
+.hunt.is-dark .rh-static[data-ls] .ls-first { background: #2A2416; }
+.rh-static[data-ls] .ls-fx { font-weight: 500; font-size: 12.5px; color: var(--c-ink-3, #62666E); white-space: nowrap; }
+.rh-static[data-ls] .ls-notebox { margin: 40px 0 0; padding: 18px 18px 6px; border: 1px solid var(--c-line, #E4E5E8); border-radius: 16px; max-width: 860px; }
+.rh-static[data-ls] .ls-notebox h2 { margin: 0 0 10px; font-size: clamp(18px, 2.2vw, 22px); }
+.rh-static[data-ls] .ls-season { margin: 0 0 8px; }
 .rh-static[data-ls] .ls-kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 10px; margin: 0 0 16px; }
 .rh-static[data-ls] .ls-kpi div { background: var(--c-fill, #F2F3F5); border-radius: 14px; padding: 12px 14px; min-width: 0; }
 .rh-static[data-ls] .ls-kpi dt { font-size: 12px; color: var(--c-ink-3, #62666E); }
