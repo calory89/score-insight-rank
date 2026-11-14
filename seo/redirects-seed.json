@@ -1,0 +1,13 @@
+{
+  "_note": "Old addresses that still get impressions or links and have no page any more. seo/polish.ts adds to these on every build (the old /country/<x> address of every country, homes listed twice, pages of the last build that are gone) and writes the full list to dist/redirects.json for the worker that serves the site. to: null means 410 Gone.",
+  "redirects": [
+    { "from": "/browse", "to": "/", "status": 301 },
+    { "from": "/finds", "to": "/", "status": 301 },
+    { "from": "/heatmap", "to": "/weather", "status": 301 },
+    { "from": "/deal/marsala-34000", "to": "/homes/italy", "status": 301 },
+    { "from": "/deal/Dc2FknAIzJt", "to": "/homes/sweden", "status": 301 },
+    { "from": "/deal/DccwxoxINB2", "to": "/homes/sweden", "status": 301 },
+    { "from": "/deal/DbjsJpRGdDa", "to": "/homes/sweden", "status": 301 },
+    { "from": "/deal/us-aventura-18181-804-279k", "to": "/homes/united-states", "status": 301 }
+  ]
+}
