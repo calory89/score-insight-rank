@@ -53,7 +53,9 @@ jobs:
           VITE_SUPABASE_PROJECT_ID: oykcsmextclpdnugixqz
         run: |
           npm ci --legacy-peer-deps
-          npx vite build
+          # SEO checks (seo/polishAudit.ts) fail the build in CI (quality.yml); here they only warn, so a data oddity
+          # in the daily import (two agencies, same title) never stops the site from publishing
+          RH_SEO_SOFT=1 npx vite build
           grep -rl 'nylmhdtlshhtjkuvfbms.supabase.co' dist --include=*.html | xargs -r sed -i 's#https://nylmhdtlshhtjkuvfbms.supabase.co#https://realhunt.co/__sb/realhunt#g'
           if grep -rq 'nylmhdtlshhtjkuvfbms' dist/assets; then echo 'old supabase url still in bundle'; exit 1; fi
           test -f dist/index.html && test -f dist/sitemap.xml
