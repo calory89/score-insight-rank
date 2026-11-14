@@ -6,7 +6,8 @@ export const storage = {
 };
 export function backToCatalog() {
   const path = storage.get<string>("rh.catalog.return", "/");
-  return /^\/(?:\?[^#]*)?$/.test(path) ? path : "/";
+  // the feed with its filters, or a listing page the visitor came from (15-nov-2026)
+  return /^\/(?:\?[^#]*)?$/.test(path) || /^\/(?:homes|cheap-houses)(?:\/[a-z0-9-]+){0,4}$/.test(path) ? path : "/";
 }
 export function rememberCatalog() { storage.set("rh.catalog.return", location.pathname + location.search); }
 export function usePreference<T>(key: string, fallback: T) {

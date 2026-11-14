@@ -11,10 +11,13 @@
 //
 // An address that is no longer a page (a search that fell under its minimum of homes) answers with a small file that
 // names where it moved; an address with no file at all falls back to `fallback` (the older app page).
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, Suspense, lazy, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ES_BOOT, stripEs, withEs } from "@/lib/esPath";
 import { isEs } from "@/lib/lang";
+
+// 15-nov-2026: share row, sortable table and "previous / next" memory, added once the page is on screen
+const ListingTools = lazy(() => import("./n9/ListingTools"));
 
 type Got = { html?: string; title?: string; desc?: string; spanish?: boolean; moved?: string } | null;
 const SEL = "#root [data-rh-static][data-ls]";
@@ -49,6 +52,7 @@ export function ListingRoute({ fallback }: { fallback: ReactNode }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const spanish = ES_BOOT || isEs();
+  const host = useRef<HTMLDivElement>(null);
   const boot = first && first.path === pathname ? first : null;
   const [page, setPage] = useState<{ path: string; html: string; spanish: boolean } | "none" | null>(boot ? { path: pathname, html: boot.html, spanish: boot.spanish } : null);
   useEffect(() => {
@@ -69,10 +73,11 @@ export function ListingRoute({ fallback }: { fallback: ReactNode }) {
   if (page === "none") return <>{fallback}</>;
   if (!page || page.path !== pathname) return <div className="hunt-wrap hunt-page"><div className="hunt-skeleton-list" /></div>;
   // Links inside the page move inside the app. Spanish pages link to /es/...; the router adds or drops that prefix itself.
-  return <div className="hunt-wrap hunt-page rh-staticwrap" translate={page.spanish ? "no" : undefined} onClick={(e) => {
+  return <><div ref={host} className="hunt-wrap hunt-page rh-staticwrap" translate={page.spanish ? "no" : undefined} onClick={(e) => {
     const a = (e.target as HTMLElement).closest("a"); const href = a?.getAttribute("href") || "";
     if (a && href.startsWith("/") && !a.target && !e.metaKey && !e.ctrlKey && !e.shiftKey) { e.preventDefault(); navigate(stripEs(href)); }
-  }} dangerouslySetInnerHTML={{ __html: page.html }} />;
+  }} dangerouslySetInnerHTML={{ __html: page.html }} />
+    <Suspense fallback={null}><ListingTools key={page.path} host={host} path={pathname} spanish={page.spanish} /></Suspense></>;
 }
 
 /** /cheap-houses/<search> with no page: say so and offer the list of searches. */

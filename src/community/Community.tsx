@@ -40,6 +40,9 @@ import { InlineAlert, HomeFaq, MortgageCalc, AlertConfirmPage, HomeArticle } fro
 import { regionOf, slugify } from "./regions";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost } from "./v7";
 import { ListingRoute, ListingMissing } from "./listingRoute";
+import { isGone } from "./n9/status";
+import { returningSince } from "./n9/visit";
+import { SaveNudgeMount } from "./n9/mount";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, GUIDES, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { CardCheck, CheckLayer } from "./check";
 import { CompareTray, CompareRoute, PriceWatch, SavedHomes } from "./compareTools";
@@ -85,6 +88,11 @@ const CanBuyIndex = lazy(() => import("./seo2").then((m) => ({ default: m.CanBuy
 const CanBuyPage = lazy(() => import("./seo2").then((m) => ({ default: m.CanBuyPage })));
 // Free calculators (/tools/..., /buying-costs/...): prerendered pages, the sums are added in the browser (src/tools/).
 const ToolsPage = lazy(() => import("../tools/ToolsPage"));
+// 15-nov-2026 (round n9): home status, "what we checked", feedback, returning visitors. All lazy, see src/community/n9.
+const GoneNotice = lazy(() => import("./n9/HomeStatus").then((m) => ({ default: m.GoneNotice })));
+const CheckedBlock = lazy(() => import("./n9/HomeStatus").then((m) => ({ default: m.CheckedBlock })));
+const Helpful = lazy(() => import("./n9/Helpful"));
+const SinceVisit = lazy(() => import("./n9/SinceVisit"));
 import {
   ArrowUp,
   ArrowUpRight,
@@ -302,6 +310,7 @@ function Shell({ children }: { children: ReactNode }) {
           </div>
         )}
         <div className="hunt-main hv-page" key={location.pathname + langV}>{children}</div>
+        <SaveNudgeMount signedIn={!!user} />
         <RelatedBlock />
         <nav className="rh-footer-countries" aria-label="Homes by country">
           {[["spain","Spain"],["italy","Italy"],["denmark","Denmark"],["sweden","Sweden"],["france","France"],["poland","Poland"],["united-states","United States"],["japan","Japan"],["germany","Germany"],["netherlands","Netherlands"],["greece","Greece"],["switzerland","Switzerland"],["mexico","Mexico"],["canada","Canada"],["bulgaria","Bulgaria"]].map(([k, l]) => <Link key={k} to={`/homes/${k}`}>{t("Homes in")} {t(l)}</Link>)}
@@ -855,6 +864,7 @@ function Home() {
       </section>
       <FeedFilters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_price: minPrice, min_beds: minBeds, price_drop: priceDrop, min_sqm: minSqm, sort, q, min_score: minScore, need, dim_min: dimMin }} onChange={setFilters} total={feed?.total} busy={busy} />
       <FindBar />
+      {plain && sort === "score" && returningSince() != null && <div className="n9-since-slot"><Suspense fallback={null}><SinceVisit /></Suspense></div>}
       {!plain || maxPrice || minPrice || minBeds || priceDrop || minSqm || minScore || need.length || sort !== "score" || showMap ? (
       <div className="rh-results-bar" ref={resultsRef}>
         <p role="status" aria-live="polite"><strong>{busy && !feed ? t("Updating results…") : feed ? `${num(feed.total)} ${t("homes")}${country ? ` in ${country.split(",").join(", ")}` : ""}` : ""}</strong>
@@ -1018,6 +1028,7 @@ function Detail() {
           <StatusTags deal={d as Row} />
           <VerifiedLine deal={d as Row} />
           <AiCheckNote d={d as any} />
+          {isGone(d as any) && <div className="n9-gone-slot"><Suspense fallback={null}><GoneNotice deal={d as any} /></Suspense></div>}
           {(d as any).developer && <DevBlock deal={d as Row} />}
           <p className="hv-detail-where">{FLAG_[d.country] || "📍"} {d.location_name}</p>
           <p>
@@ -1046,6 +1057,7 @@ function Detail() {
           </p>
           <ScoreBars deal={d} />
           <DecisionFacts deal={d as Row}/><TaxPanel deal={d as Row}/><Nearby deal={d} />
+          <Suspense fallback={null}><CheckedBlock deal={d as any} /></Suspense>
           <Availability dealId={d.id} />
           <CostPanel deal={d as Row} />
           {d.price_eur ? <MortgageCalc price={d.price_eur} /> : null}
@@ -1119,6 +1131,7 @@ function Detail() {
       )}
       <HomeNav prev={swipe.prev} next={swipe.next} pos={swipe.pos} />
       <SimilarHomes slug={d.slug} />
+      <Suspense fallback={null}><Helpful id={"deal/" + d.slug} /></Suspense>
       <section className="hunt-discussion" id="discussion">
         <h2>{t("Comments and questions")}</h2>
         <p>{t("Ask a question or share what you know about the area.")}</p>

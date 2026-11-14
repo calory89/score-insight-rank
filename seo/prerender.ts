@@ -23,6 +23,7 @@ import { toMedia } from "../src/lib/media";
 import { writeLlmsFull } from "./llmsFull";
 import { thumb } from "../src/lib/thumbs";
 import { dealShell, DEAL_SHELL_HEAD } from "./dealShell";
+import { dealStatusHtml, dealAvailability } from "./dealStatus";
 import { type CanBuyData, statusLabel, UPDATED, UPDATED_ES, canBuyPairs, canBuyCountries, canBuySlug, ruleFor, residencyFor, canBuyFaq, canBuyMeta, fill, costLines, costCountries, nameOf, fmtMoney } from "../src/community/seo2data";
 import { homeArticleEs } from "../src/community/homeArticleEs";
 import { type EsPass, type PageRec, type Twin, createEsPass, writeEsTwins, coverageSummary } from "./es";
@@ -192,6 +193,7 @@ function build(root: string, es?: EsPass) {
       });
       body = shell + `<main class="rh-static"><article>${navHtml(trail)}`
         + `<p><strong>${esc(eur(r.price_eur))}</strong> · ${esc(r.location_name || cName)}${r.sqm ? ` · ${esc(r.sqm)} m²` : ""}${r.bedrooms ? ` · ${esc(r.bedrooms)} bedrooms` : ""}${r.sqm && r.price_eur ? ` · ${esc(eur(r.price_eur / r.sqm))}/m²` : ""}</p>`
+        + dealStatusHtml(r, "en")
         + (r.nota != null ? `<h2>RealHunt score: ${esc(r.nota)} / 98</h2><p>Every home on RealHunt passed a hand check first, so the grade starts at 70. The rest compares this home with every other home on the site. <a href="/method">How the score works</a>.</p><ul>${dims.map(([k, l, help]) => `<li>${esc(l)}: <strong>${esc(r.dims[k])}</strong>/100 · ${esc(help)}</li>`).join("")}</ul>` : "")
         + (r.why_great ? `<h2>Why it made the list</h2><p>${esc(r.why_great)}</p>` : "")
         + art.sections.map((x) => `<h2>${esc(x.h)}</h2>${x.p.map((t) => `<p>${esc(t)}</p>`).join("")}`).join("")
@@ -208,7 +210,7 @@ function build(root: string, es?: EsPass) {
       ld.push({
         "@context": "https://schema.org", "@type": "RealEstateListing", url, name: r.title, description: r.why_great || d.desc,
         image: images, datePosted: day(r.publish_at || r.approved_at) || undefined,
-        offers: { "@type": "Offer", price: r.price_eur, priceCurrency: "EUR", availability: "https://schema.org/InStock", url },
+        offers: { "@type": "Offer", price: r.price_eur, priceCurrency: "EUR", availability: dealAvailability(r), url },
         about: {
           "@type": "SingleFamilyResidence", name: r.title,
           address: { "@type": "PostalAddress", addressLocality: r.location_name || undefined, addressRegion: rg || undefined, addressCountry: cName || undefined },
@@ -236,6 +238,7 @@ function build(root: string, es?: EsPass) {
       const bodyEs = dealShell({ row: r, lang: "es", lowRes: lowRes(r), photos: (r.image_urls || []).filter(Boolean).map((u: string) => toMedia(String(u))), color: cardColors[r.slug], crumbs: [] })
         + `<main class="rh-static" lang="es"><article><nav aria-label="Ruta"><a href="/es">RealHunt</a> › ${esc(r.title_es)}</nav>`
         + `<p><strong>${esc(euro(r.price_eur))}</strong> · ${esc(r.location_name || cName)}${r.sqm ? ` · ${esc(r.sqm)} m²` : ""}${r.bedrooms ? ` · ${esc(r.bedrooms)} dormitorios` : ""}${r.sqm && r.price_eur ? ` · ${esc(euro(r.price_eur / r.sqm))}/m²` : ""}</p>`
+        + dealStatusHtml(r, "es")
         + (r.nota != null ? `<h2>Nota RealHunt: ${esc(r.nota)} / 98</h2><p>Todas las casas de RealHunt pasan antes una revisión hecha por una persona, por eso la nota empieza en 70. El resto compara esta casa con todas las demás de la web.</p>` : "")
         + (r.why_great_es ? `<h2>Por qué está en la lista</h2><p>${esc(r.why_great_es)}</p>` : "")
         + (r.why_cheap_es ? `<h2>Por qué es tan barata</h2><p>${esc(r.why_cheap_es)}</p>` : "")
@@ -244,7 +247,7 @@ function build(root: string, es?: EsPass) {
         + `<p><a href="/es">Las mejores casas</a> · <a href="/deal/${esc(d.slug)}">English</a></p></article></main>`;
       page(esUrl, `${euro(r.price_eur)} · ${r.title_es} · RealHunt`, descEs, d.image || DEF, bodyEs,
         [{ "@context": "https://schema.org", "@type": "RealEstateListing", url: esUrl, name: r.title_es, description: r.why_great_es || descEs, inLanguage: "es", image: (r.image_urls || []).slice(0, 5).map((u: string) => abs(String(u))),
-          offers: { "@type": "Offer", price: r.price_eur, priceCurrency: "EUR", availability: "https://schema.org/InStock", url: esUrl } }],
+          offers: { "@type": "Offer", price: r.price_eur, priceCurrency: "EUR", availability: dealAvailability(r), url: esUrl } }],
         { lastmod: homeDay(r), group: "es", lang: "es", alt: { en: url, es: esUrl }, head: (hero ? `<link rel="preload" as="image" href="${esc(hero)}" fetchpriority="high" />` : "") + DEAL_SHELL_HEAD });
     }
   }

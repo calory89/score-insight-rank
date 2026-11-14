@@ -1,4 +1,5 @@
 import { QUICK, DIMS } from "./scores";
+import { AlertSurveyMount, HelpfulMount, TocMount } from "./n9/mount";
 import { GLOSSARY_OF } from "./knowledgeRoutes";
 import GUIDES_JSON from "@/data/guides.json";
 import DEST_JSON from "@/data/destinations.json";
@@ -468,7 +469,7 @@ export function AlertForm({ countries, initial, compact = false, onApply }: { co
         <label><span>{t("Any type")}</span><select value={cat} onChange={(e) => setCat(e.target.value)}><option value="">{t("Any type")}</option>{categories.map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label>
       </div>
       {onApply && <button type="button" className="hunt-secondary" onClick={() => { prefs(); onApply({ country: picked.length === 1 ? picked[0] : "", max_price: max < 100000 ? max : null, category: cat }); }}>{t("Show my homes")}</button>}
-      {state === "ok" ? <p className="hunt-info-done"><Check size={16} /> Almost done: we sent you an email to confirm. Open it in the next few minutes (check spam too) and your alerts start.</p> : (
+      {state === "ok" ? <><p className="hunt-info-done"><Check size={16} /> Almost done: we sent you an email to confirm. Open it in the next few minutes (check spam too) and your alerts start.</p><AlertSurveyMount /></> : (
         <div className="hunt-row">
           <input type="email" required placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="Email" />
           <button className="hunt-primary" disabled={state === "busy"}>{t("Email me new matches")}</button>
@@ -733,6 +734,7 @@ export function GuidePage() {
       <nav className="hv-crumbs"><Link to="/">RealHunt</Link> › <Link to="/guide">{t("Guides")}</Link> › <span>{g.name}</span></nav>
       <h1>How to buy a home in {theC(g.name)} as a foreigner</h1>
       <p>{t("The steps, papers and taxes, in plain words. General information, not legal advice: use a local lawyer before you sign.")}</p>
+      <TocMount within=".hunt-guide" />
       {c?.can_foreigners_buy && <><h2>{t("Can foreigners buy?")}</h2><p>{c.can_foreigners_buy}</p></>}
       <h2>{t("The steps")}</h2>
       <ol className="hunt-steps">{g.steps.map(([h, b]) => <li key={h}><strong>{h}</strong><p>{b}</p></li>)}</ol>
@@ -751,6 +753,7 @@ export function GuidePage() {
       {homes.length > 0 && <><h2>{t("Best homes in")} {g.name}</h2><div className="hunt-minigrid">{homes.map((d) => <MiniCard key={d.id} d={d} />)}</div></>}
       {others.length > 0 && <><h2>{t("Compare")} {g.name}</h2><p className="hunt-chips">{others.map((k) => <Link key={k} to={`/countries/${[key, k].sort().join("-vs-")}`}>{g.name} vs {GUIDES[k].name}</Link>)}</p></>}
       {c?.sources?.length > 0 && <p className="hunt-fine">{t("Sources")}: {c.sources.map((u: string, i: number) => <span key={u}>{i ? " · " : ""}<a href={u} target="_blank" rel="noopener noreferrer nofollow">{u.replace(/^https?:\/\/(www\.)?/, "").split("/")[0]}</a></span>)}. {t("Checked")} {c.as_of}.</p>}
+      <HelpfulMount id={"guide/" + key} />
       <Byline kind="guide" />
     </div>
   );
