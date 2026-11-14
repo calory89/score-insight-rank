@@ -126,7 +126,7 @@ export function citeBlock(k: Kit, title: string, path: string, today: string): s
 
 /** The frame of every page: styles, breadcrumb, eyebrow, heading and the script that makes the buttons work. */
 export function frame(k: Kit, o: { crumbs: [string, string][]; eyebrow: string; h1: string; body: string }): string {
-  return `<main class="rh-static rhx" data-rh-keep data-rh-static data-rhx-js${k.es ? ' lang="es"' : ""}>${CSS}${crumbNav(k, o.crumbs)}<p class="rhx-eyebrow">${esc(o.eyebrow)}</p><h1>${esc(o.h1)}</h1>${o.body}<script src="/rh-assets.js" defer></script></main>`;
+  return `<main class="rh-static rhx" data-rh-keep data-rh-static data-rhx-js${k.es ? ' lang="es"' : ""}>${crumbNav(k, o.crumbs)}${CSS}<p class="rhx-eyebrow">${esc(o.eyebrow)}</p><h1>${esc(o.h1)}</h1>${o.body}<script src="/rh-assets.js" defer></script></main>`;
 }
 
 export const ORG = { "@type": "Organization", name: "RealHunt", url: SITE + "/", logo: SITE + "/apple-touch-icon.png" };
