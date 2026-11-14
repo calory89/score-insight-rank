@@ -5,6 +5,7 @@ import fs from "fs";
 import { prerenderPages } from "./seo/prerender";
 import { fileBudget } from "./seo/budget";
 import { polishPages } from "./seo/polish";
+import { techChecks } from "./seo/tech/plugin";
 
 // 9-nov-2026 speed: the Spanish copies of every home's texts (about 60 KB compressed, a fifth of the snapshot) are
 // only needed by Spanish visitors. The committed public/data/rh-static.json keeps them (other scripts read it); the
@@ -49,23 +50,32 @@ function preloadPublicRoute() {
         const routes: Record<string, string[]> = {};
         // 9-nov-2026: "/" and the main public pages render community/Community.tsx (not pages/Home.tsx any more),
         // so that is the chunk to start downloading early; Home stays for /from/<account>.
-        for (const page of ["Community", "Home", "FindDetail", "Weather"]) {
-          const want = page === "Community" ? "/community/Community.tsx" : `/pages/${page}.tsx`;
+        // 15-nov-2026: "Map" is the chain behind /map (the page, the map itself and Leaflet), three lazy steps deep.
+        // Each step used to be discovered only after the one before had downloaded and run; now all of them start
+        // with the HTML, together with the connection to the tile server. Measured: on a slow line (1.6 Mbit/s) the
+        // map's first tile still arrives at about 5.6 s, because what limits it there is the 460 KB of scripts and
+        // the 205 KB of data in front of it; the gain is on lines where the round trips are what costs.
+        const styles: Record<string, string[]> = {};
+        for (const page of ["Community", "Home", "FindDetail", "Weather", "Map"]) {
+          const want = page === "Community" ? "/community/Community.tsx" : page === "Map" ? "/community/homesmap.tsx" : `/pages/${page}.tsx`;
           const entry = Object.values(bundle).find(item => item.type === "chunk" && item.facadeModuleId?.endsWith(want))
             || Object.values(bundle).find(item => item.type === "chunk" && Object.keys(item.modules).some(m => m.endsWith(want)));
           if (!entry || entry.type !== "chunk") continue;
-          const seen = new Set<string>();
+          const seen = new Set<string>(), css = new Set<string>();
           const visit = (file: string) => {
             if (seen.has(file)) return;
             const chunk = bundle[file];
             if (!chunk || chunk.type !== "chunk") return;
             seen.add(file); chunk.imports.forEach(visit);
+            for (const c of (chunk as any).viteMetadata?.importedCss || []) css.add(c);
           };
           visit(entry.fileName);
+          if (page === "Map") { const mapPage = Object.values(bundle).find(item => item.type === "chunk" && (item.facadeModuleId?.endsWith("/community/map.tsx") || Object.keys(item.modules).some(m => m.endsWith("/community/map.tsx")))); if (mapPage) visit(mapPage.fileName); }
           routes[page] = [...seen].map(file => `/${file}`);
+          if (page === "Map") styles[page] = [...css].map(file => `/${file}`);
         }
         // 10-nov-2026: a Spanish URL (/es/deal/x) is treated like /deal/x; data-lang is already "es" there (index.html).
-        return [{ tag: "script", injectTo: "head" as const, children: `(()=>{const p=location.pathname.replace(/^\\/es(?=\\/|$)/,'')||'/',r=${JSON.stringify(routes)},k=p==='/'||/^\\/(deal|map|top|live-search|homes|hunt|compare|score|blog|guide|costs|can-i-buy|buying-costs)(\\/|$)/.test(p)?'Community':/^\\/from\\//.test(p)?'Home':/^\\/find\\//.test(p)?'FindDetail':/^\\/weather\\/?$/.test(p)?'Weather':null;for(const href of r[k]||[]){const l=document.createElement('link');l.rel='modulepreload';l.href=href;l.crossOrigin='';document.head.appendChild(l)}if(p==='/'||/^\\/(deal|map|homes|compare|live-search)(\\/|$)/.test(p)){try{window.__rhSnap=fetch('/data/rh-static.json',{cache:'no-cache'}).then(function(x){if(!x.ok)throw 0;return x.json()});window.__rhSnap.catch(function(){});if(document.documentElement.getAttribute('data-lang')==='es'){window.__rhSnapEs=fetch('/data/rh-static-es.json',{cache:'no-cache'}).then(function(x){if(!x.ok)throw 0;return x.json()});window.__rhSnapEs.catch(function(){})}}catch(e){}}})();` }];
+        return [{ tag: "script", injectTo: "head" as const, children: `(()=>{const p=location.pathname.replace(/^\\/es(?=\\/|$)/,'')||'/',r=${JSON.stringify(routes)},k=p==='/'||/^\\/(deal|map|top|live-search|homes|hunt|compare|score|blog|guide|costs|can-i-buy|buying-costs)(\\/|$)/.test(p)?'Community':/^\\/from\\//.test(p)?'Home':/^\\/find\\//.test(p)?'FindDetail':/^\\/weather\\/?$/.test(p)?'Weather':null,m=p==='/map',add=function(rel,href,as){const l=document.createElement('link');l.rel=rel;l.href=href;if(as)l.as=as;if(rel==='modulepreload')l.crossOrigin='';document.head.appendChild(l)};if(m)add('preconnect','https://tile.openstreetmap.org');for(const href of (r[k]||[]).concat(m?r.Map||[]:[]))add('modulepreload',href);if(m)for(const href of ${JSON.stringify(styles.Map || [])})add('preload',href,'style');if(p==='/'||/^\\/(deal|map|homes|compare|live-search)(\\/|$)/.test(p)){try{window.__rhSnap=fetch('/data/rh-static.json',{cache:'no-cache'}).then(function(x){if(!x.ok)throw 0;return x.json()});window.__rhSnap.catch(function(){});if(document.documentElement.getAttribute('data-lang')==='es'){window.__rhSnapEs=fetch('/data/rh-static-es.json',{cache:'no-cache'}).then(function(x){if(!x.ok)throw 0;return x.json()});window.__rhSnapEs.catch(function(){})}}catch(e){}}})();` }];
       },
     },
   };
@@ -80,7 +90,7 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  plugins: [react(), preloadPublicRoute(), prerenderPages(), polishPages(), splitSpanishTexts(), fileBudget()].filter(Boolean),
+  plugins: [react(), preloadPublicRoute(), prerenderPages(), polishPages(), splitSpanishTexts(), techChecks(), fileBudget()].filter(Boolean),
   resolve: {
     dedupe: ["react", "react-dom"],
     alias: {
