@@ -312,6 +312,8 @@ function Shell({ children }: { children: ReactNode }) {
             {t("Checked by people. Ranked by score.")}
             <br />
             {t("Listings belong to their original publishers. RealHunt is not the seller.")}
+            <br />
+            {t("Our text and figures are free to quote with a link (CC BY 4.0).")} <Link to="/research/open-data">{t("Open data")}</Link>
           </p>
           <FooterLinks admin={!!session?.admin} />
           <div className="hunt-footer-tools">

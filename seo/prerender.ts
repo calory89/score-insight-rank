@@ -30,6 +30,7 @@ import { writeAssets, finishAssets } from "./assets";
 import { writeTools } from "./tools";
 import { listingPlan, listingRows, listingPages, finishListings } from "./listings/build";
 import { writeKnowledge, finishKnowledge } from "./knowledge/build";
+import { writeReach, finishReach } from "./reach";
 
 const SITE = "https://realhunt.co";
 // Country names for the Spanish copies (/es/...). A country not listed keeps its English name.
@@ -210,7 +211,7 @@ function build(root: string, es?: EsPass) {
         offers: { "@type": "Offer", price: r.price_eur, priceCurrency: "EUR", availability: "https://schema.org/InStock", url },
         about: {
           "@type": "SingleFamilyResidence", name: r.title,
-          address: { "@type": "PostalAddress", addressLocality: r.location_name || undefined, addressCountry: cName || undefined },
+          address: { "@type": "PostalAddress", addressLocality: r.location_name || undefined, addressRegion: rg || undefined, addressCountry: cName || undefined },
           ...(r.lat != null && r.lng != null ? { geo: { "@type": "GeoCoordinates", latitude: r.lat, longitude: r.lng } } : {}),
           ...(r.sqm ? { floorSize: { "@type": "QuantitativeValue", value: r.sqm, unitCode: "MTK" } } : {}),
           ...(r.bedrooms ? { numberOfBedrooms: r.bedrooms } : {}),
@@ -634,6 +635,9 @@ function build(root: string, es?: EsPass) {
   // ---------- Glossaries, guides by subject and questions with sources (seo/knowledge) ----------
   if (!es) try { console.log(`[rh-prerender-pages] knowledge pages: ${writeKnowledge({ root, page, rows, dest, guides, cb, today, image: DEF })}`); } catch (e) { console.warn("[rh-prerender-pages] knowledge pages failed", e); }
 
+  // ---------- Directories, country facts, open data files and search by address (seo/reach) ----------
+  if (!es) try { console.log("[rh-prerender-pages] reach:", JSON.stringify(writeReach({ root, page, rows, dest, guides, today, image: DEF }))); } catch (e) { console.warn("[rh-prerender-pages] reach pages failed", e); }
+
   // ---------- HTML sitemap (/sitemap) and llms.txt, from the pages generated above ----------
   const label = (u: string) => decodeURIComponent(u.replace(SITE, "") || "/");
   const groupNames: Record<string, string> = { pages: "Main pages", places: "Countries, regions and prices", content: "Guides, costs and research", top: "New builds: Top 100", homes: "Homes" };
@@ -665,6 +669,7 @@ function build(root: string, es?: EsPass) {
   } catch (e) { console.warn("[rh-prerender-pages] Spanish pages skipped:", (e as Error).message); twins = []; }
   try { console.log("[rh-prerender-pages] linkable pages:", JSON.stringify(finishAssets(root, today))); } catch (e) { console.warn("[rh-prerender-pages] linkable pages (finish) failed", e); }
   try { console.log("[rh-prerender-pages] knowledge:", JSON.stringify(finishKnowledge(root))); } catch (e) { console.warn("[rh-prerender-pages] knowledge (finish) failed", e); }
+  try { console.log("[rh-prerender-pages] reach:", JSON.stringify(finishReach(root, rows, today))); } catch (e) { console.warn("[rh-prerender-pages] reach (finish) failed", e); }
   for (const t of twins) altOf.set(t.en, t.es);
   // Older listing addresses that no longer have a page of their own, and dist/redirects.json (seo/listings/build.ts)
   try { const m = finishListings(root, plan, (r) => renderHtml(html, r as PageRec), (u) => altOf.has(u)); console.log(`[rh-prerender-pages] listings: ${plan.live.size} pages, ${m.redirects} redirects, ${m.moved} moved-page files`); } catch (e) { console.warn("[rh-prerender-pages] listing redirects skipped:", (e as Error).message); }

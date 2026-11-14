@@ -11,4 +11,6 @@ installEsUrls(); // Spanish URLs (/es/...): links, history and canonical keep th
 initLang().finally(() => {
   startLang();
   createRoot(document.getElementById("root")!).render(<App />);
+  // 15-nov-2026: measurement helpers (src/measure) load when the browser is idle, in their own chunk
+  ((window as any).requestIdleCallback || ((cb: () => void) => setTimeout(cb, 3000)))(() => { import("./measure").then((m) => m.start()).catch(() => {}); });
 });

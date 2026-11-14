@@ -5,6 +5,7 @@ import fs from "fs";
 import { prerenderPages } from "./seo/prerender";
 import { fileBudget } from "./seo/budget";
 import { polishPages } from "./seo/polish";
+import { reachAfter } from "./seo/reach";
 
 // 9-nov-2026 speed: the Spanish copies of every home's texts (about 60 KB compressed, a fifth of the snapshot) are
 // only needed by Spanish visitors. The committed public/data/rh-static.json keeps them (other scripts read it); the
@@ -80,7 +81,7 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  plugins: [react(), preloadPublicRoute(), prerenderPages(), polishPages(), splitSpanishTexts(), fileBudget()].filter(Boolean),
+  plugins: [react(), preloadPublicRoute(), prerenderPages(), polishPages(), reachAfter(), splitSpanishTexts(), fileBudget()].filter(Boolean),
   resolve: {
     dedupe: ["react", "react-dom"],
     alias: {

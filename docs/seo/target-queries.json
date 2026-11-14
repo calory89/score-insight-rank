@@ -1,0 +1,506 @@
+{
+ "_nota": "Lista fija de 100 búsquedas objetivo en seis idiomas (idea 914), cada una con la página que debe atenderla hoy. scripts/seo_report.py cruza la lista con Consultas.csv de Search Console. Las búsquedas en alemán, ruso, francés y neerlandés apuntan a la página en inglés hasta que exista la versión en ese idioma: cambia 'page' cuando se publique. No cambies las búsquedas sin anotarlo en docs/seo/experimentos.md, o las semanas dejan de ser comparables.",
+ "fijada": "2026-11-15",
+ "queries": [
+  {
+   "q": "cheap houses for sale in Spain",
+   "lang": "en",
+   "page": "/homes/spain"
+  },
+  {
+   "q": "cheap houses for sale in Italy",
+   "lang": "en",
+   "page": "/homes/italy"
+  },
+  {
+   "q": "cheap houses for sale in France",
+   "lang": "en",
+   "page": "/homes/france"
+  },
+  {
+   "q": "cheap houses for sale in Portugal",
+   "lang": "en",
+   "page": "/homes/portugal"
+  },
+  {
+   "q": "cheap houses for sale in Greece",
+   "lang": "en",
+   "page": "/homes/greece"
+  },
+  {
+   "q": "cheap houses for sale in Sweden",
+   "lang": "en",
+   "page": "/homes/sweden"
+  },
+  {
+   "q": "cheap houses for sale in Denmark",
+   "lang": "en",
+   "page": "/homes/denmark"
+  },
+  {
+   "q": "cheap houses for sale in Germany",
+   "lang": "en",
+   "page": "/homes/germany"
+  },
+  {
+   "q": "cheap houses for sale in Poland",
+   "lang": "en",
+   "page": "/homes/poland"
+  },
+  {
+   "q": "cheap houses for sale in Japan",
+   "lang": "en",
+   "page": "/homes/japan"
+  },
+  {
+   "q": "cheap houses for sale in Bulgaria",
+   "lang": "en",
+   "page": "/homes/bulgaria"
+  },
+  {
+   "q": "cheap houses for sale in the United States",
+   "lang": "en",
+   "page": "/homes/united-states"
+  },
+  {
+   "q": "houses under 50000 euros in Spain",
+   "lang": "en",
+   "page": "/homes/spain/under-50000"
+  },
+  {
+   "q": "houses under 50000 euros in Italy",
+   "lang": "en",
+   "page": "/homes/italy/under-50000"
+  },
+  {
+   "q": "houses under 50000 euros in France",
+   "lang": "en",
+   "page": "/homes/france/under-50000"
+  },
+  {
+   "q": "houses under 50000 euros in Germany",
+   "lang": "en",
+   "page": "/homes/germany/under-50000"
+  },
+  {
+   "q": "houses under 50000 euros in Sweden",
+   "lang": "en",
+   "page": "/homes/sweden/under-50000"
+  },
+  {
+   "q": "houses under 50000 euros in Japan",
+   "lang": "en",
+   "page": "/homes/japan/under-50000"
+  },
+  {
+   "q": "how to buy a house in Spain as a foreigner",
+   "lang": "en",
+   "page": "/guide/spain"
+  },
+  {
+   "q": "how to buy a house in Italy as a foreigner",
+   "lang": "en",
+   "page": "/guide/italy"
+  },
+  {
+   "q": "how to buy a house in France as a foreigner",
+   "lang": "en",
+   "page": "/guide/france"
+  },
+  {
+   "q": "how to buy a house in Portugal as a foreigner",
+   "lang": "en",
+   "page": "/guide/portugal"
+  },
+  {
+   "q": "how to buy a house in Greece as a foreigner",
+   "lang": "en",
+   "page": "/guide/greece"
+  },
+  {
+   "q": "how to buy a house in Japan as a foreigner",
+   "lang": "en",
+   "page": "/guide/japan"
+  },
+  {
+   "q": "buying costs Spain property",
+   "lang": "en",
+   "page": "/buying-costs/spain"
+  },
+  {
+   "q": "buying costs Italy property",
+   "lang": "en",
+   "page": "/buying-costs/italy"
+  },
+  {
+   "q": "buying costs France property",
+   "lang": "en",
+   "page": "/buying-costs/france"
+  },
+  {
+   "q": "buying costs Portugal property",
+   "lang": "en",
+   "page": "/buying-costs/portugal"
+  },
+  {
+   "q": "buying costs Germany property",
+   "lang": "en",
+   "page": "/buying-costs/germany"
+  },
+  {
+   "q": "buying costs Sweden property",
+   "lang": "en",
+   "page": "/buying-costs/sweden"
+  },
+  {
+   "q": "casas baratas en España",
+   "lang": "es",
+   "page": "/es/homes/spain"
+  },
+  {
+   "q": "casas baratas en Italia",
+   "lang": "es",
+   "page": "/es/homes/italy"
+  },
+  {
+   "q": "casas baratas en Francia",
+   "lang": "es",
+   "page": "/es/homes/france"
+  },
+  {
+   "q": "casas baratas en Portugal",
+   "lang": "es",
+   "page": "/es/homes/portugal"
+  },
+  {
+   "q": "casas baratas en Grecia",
+   "lang": "es",
+   "page": "/es/homes/greece"
+  },
+  {
+   "q": "casas baratas en Suecia",
+   "lang": "es",
+   "page": "/es/homes/sweden"
+  },
+  {
+   "q": "casas baratas en Dinamarca",
+   "lang": "es",
+   "page": "/es/homes/denmark"
+  },
+  {
+   "q": "casas baratas en Alemania",
+   "lang": "es",
+   "page": "/es/homes/germany"
+  },
+  {
+   "q": "casas baratas en Japón",
+   "lang": "es",
+   "page": "/es/homes/japan"
+  },
+  {
+   "q": "casas baratas en Bulgaria",
+   "lang": "es",
+   "page": "/es/homes/bulgaria"
+  },
+  {
+   "q": "casas por menos de 50.000 euros en España",
+   "lang": "es",
+   "page": "/es/homes/spain/under-50000"
+  },
+  {
+   "q": "casas por menos de 50.000 euros en Italia",
+   "lang": "es",
+   "page": "/es/homes/italy/under-50000"
+  },
+  {
+   "q": "casas por menos de 50.000 euros en Francia",
+   "lang": "es",
+   "page": "/es/homes/france/under-50000"
+  },
+  {
+   "q": "casas por menos de 50.000 euros en Alemania",
+   "lang": "es",
+   "page": "/es/homes/germany/under-50000"
+  },
+  {
+   "q": "casas por menos de 50.000 euros en Japón",
+   "lang": "es",
+   "page": "/es/homes/japan/under-50000"
+  },
+  {
+   "q": "comprar casa en Italia siendo extranjero",
+   "lang": "es",
+   "page": "/es/guide/italy"
+  },
+  {
+   "q": "comprar casa en Francia siendo extranjero",
+   "lang": "es",
+   "page": "/es/guide/france"
+  },
+  {
+   "q": "comprar casa en Portugal siendo extranjero",
+   "lang": "es",
+   "page": "/es/guide/portugal"
+  },
+  {
+   "q": "comprar casa en Grecia siendo extranjero",
+   "lang": "es",
+   "page": "/es/guide/greece"
+  },
+  {
+   "q": "comprar casa en Japón siendo extranjero",
+   "lang": "es",
+   "page": "/es/guide/japan"
+  },
+  {
+   "q": "gastos de comprar una casa en España",
+   "lang": "es",
+   "page": "/es/buying-costs/spain"
+  },
+  {
+   "q": "gastos de comprar una casa en Italia",
+   "lang": "es",
+   "page": "/es/buying-costs/italy"
+  },
+  {
+   "q": "gastos de comprar una casa en Francia",
+   "lang": "es",
+   "page": "/es/buying-costs/france"
+  },
+  {
+   "q": "gastos de comprar una casa en Portugal",
+   "lang": "es",
+   "page": "/es/buying-costs/portugal"
+  },
+  {
+   "q": "gastos de comprar una casa en Alemania",
+   "lang": "es",
+   "page": "/es/buying-costs/germany"
+  },
+  {
+   "q": "günstige häuser in italien kaufen",
+   "lang": "de",
+   "page": "/homes/italy"
+  },
+  {
+   "q": "günstige häuser in spanien kaufen",
+   "lang": "de",
+   "page": "/homes/spain"
+  },
+  {
+   "q": "günstige häuser in schweden kaufen",
+   "lang": "de",
+   "page": "/homes/sweden"
+  },
+  {
+   "q": "günstige häuser in dänemark kaufen",
+   "lang": "de",
+   "page": "/homes/denmark"
+  },
+  {
+   "q": "günstige häuser in frankreich kaufen",
+   "lang": "de",
+   "page": "/homes/france"
+  },
+  {
+   "q": "günstige häuser in polen kaufen",
+   "lang": "de",
+   "page": "/homes/poland"
+  },
+  {
+   "q": "günstige häuser in griechenland kaufen",
+   "lang": "de",
+   "page": "/homes/greece"
+  },
+  {
+   "q": "günstige häuser in portugal kaufen",
+   "lang": "de",
+   "page": "/homes/portugal"
+  },
+  {
+   "q": "günstige häuser in japan kaufen",
+   "lang": "de",
+   "page": "/homes/japan"
+  },
+  {
+   "q": "günstige häuser in bulgarien kaufen",
+   "lang": "de",
+   "page": "/homes/bulgaria"
+  },
+  {
+   "q": "haus kaufen italien unter 50000",
+   "lang": "de",
+   "page": "/homes/italy/under-50000"
+  },
+  {
+   "q": "haus in schweden kaufen als deutscher",
+   "lang": "de",
+   "page": "/guide/sweden"
+  },
+  {
+   "q": "купить дом в болгарии недорого",
+   "lang": "ru",
+   "page": "/homes/bulgaria"
+  },
+  {
+   "q": "купить дом в испании недорого",
+   "lang": "ru",
+   "page": "/homes/spain"
+  },
+  {
+   "q": "купить дом в италии недорого",
+   "lang": "ru",
+   "page": "/homes/italy"
+  },
+  {
+   "q": "купить дом в греции недорого",
+   "lang": "ru",
+   "page": "/homes/greece"
+  },
+  {
+   "q": "купить дом в франции недорого",
+   "lang": "ru",
+   "page": "/homes/france"
+  },
+  {
+   "q": "купить дом в германии недорого",
+   "lang": "ru",
+   "page": "/homes/germany"
+  },
+  {
+   "q": "купить дом в польше недорого",
+   "lang": "ru",
+   "page": "/homes/poland"
+  },
+  {
+   "q": "купить дом в японии недорого",
+   "lang": "ru",
+   "page": "/homes/japan"
+  },
+  {
+   "q": "купить дом в португалии недорого",
+   "lang": "ru",
+   "page": "/homes/portugal"
+  },
+  {
+   "q": "купить дом на кипре недорого",
+   "lang": "ru",
+   "page": "/homes/cyprus"
+  },
+  {
+   "q": "купить квартиру в болгарии за 8000 евро",
+   "lang": "ru",
+   "page": "/homes/bulgaria/under-80000"
+  },
+  {
+   "q": "недвижимость в болгарии для иностранцев",
+   "lang": "ru",
+   "page": "/guide/bulgaria"
+  },
+  {
+   "q": "maison pas chère à vendre en italie",
+   "lang": "fr",
+   "page": "/homes/italy"
+  },
+  {
+   "q": "maison pas chère à vendre en espagne",
+   "lang": "fr",
+   "page": "/homes/spain"
+  },
+  {
+   "q": "maison pas chère à vendre au portugal",
+   "lang": "fr",
+   "page": "/homes/portugal"
+  },
+  {
+   "q": "maison pas chère à vendre en grèce",
+   "lang": "fr",
+   "page": "/homes/greece"
+  },
+  {
+   "q": "maison pas chère à vendre en suède",
+   "lang": "fr",
+   "page": "/homes/sweden"
+  },
+  {
+   "q": "maison pas chère à vendre en bulgarie",
+   "lang": "fr",
+   "page": "/homes/bulgaria"
+  },
+  {
+   "q": "maison pas chère à vendre au japon",
+   "lang": "fr",
+   "page": "/homes/japan"
+  },
+  {
+   "q": "maison pas chère à vendre en pologne",
+   "lang": "fr",
+   "page": "/homes/poland"
+  },
+  {
+   "q": "acheter une maison en italie",
+   "lang": "fr",
+   "page": "/guide/italy"
+  },
+  {
+   "q": "frais achat maison espagne",
+   "lang": "fr",
+   "page": "/buying-costs/spain"
+  },
+  {
+   "q": "maison à vendre moins de 50000 euros",
+   "lang": "fr",
+   "page": "/homes/france/under-50000"
+  },
+  {
+   "q": "goedkoop huis kopen in spanje",
+   "lang": "nl",
+   "page": "/homes/spain"
+  },
+  {
+   "q": "goedkoop huis kopen in italië",
+   "lang": "nl",
+   "page": "/homes/italy"
+  },
+  {
+   "q": "goedkoop huis kopen in frankrijk",
+   "lang": "nl",
+   "page": "/homes/france"
+  },
+  {
+   "q": "goedkoop huis kopen in zweden",
+   "lang": "nl",
+   "page": "/homes/sweden"
+  },
+  {
+   "q": "goedkoop huis kopen in portugal",
+   "lang": "nl",
+   "page": "/homes/portugal"
+  },
+  {
+   "q": "goedkoop huis kopen in duitsland",
+   "lang": "nl",
+   "page": "/homes/germany"
+  },
+  {
+   "q": "goedkoop huis kopen in denemarken",
+   "lang": "nl",
+   "page": "/homes/denmark"
+  },
+  {
+   "q": "goedkoop huis kopen in griekenland",
+   "lang": "nl",
+   "page": "/homes/greece"
+  },
+  {
+   "q": "huis kopen in zweden",
+   "lang": "nl",
+   "page": "/guide/sweden"
+  },
+  {
+   "q": "huis kopen spanje kosten",
+   "lang": "nl",
+   "page": "/buying-costs/spain"
+  }
+ ]
+}
