@@ -33,6 +33,7 @@ import { InboxPage, CompareBuilds, CostsIndex, CostsPage, NewBuildReport, Agents
 import { HomeMethodPage } from "./method";
 import { DetailAside } from "./aside";
 import { StaticPage } from "./staticpage";
+import { RelatedBlock } from "./related";
 import { InlineAlert, HomeFaq, MortgageCalc, AlertConfirmPage, HomeArticle } from "./oct24";
 import { regionOf, slugify } from "./regions";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost } from "./v7";
@@ -298,6 +299,7 @@ function Shell({ children }: { children: ReactNode }) {
           </div>
         )}
         <div className="hunt-main hv-page" key={location.pathname + langV}>{children}</div>
+        <RelatedBlock />
         <nav className="rh-footer-countries" aria-label="Homes by country">
           {[["spain","Spain"],["italy","Italy"],["denmark","Denmark"],["sweden","Sweden"],["france","France"],["poland","Poland"],["united-states","United States"],["japan","Japan"],["germany","Germany"],["netherlands","Netherlands"],["greece","Greece"],["switzerland","Switzerland"],["mexico","Mexico"],["canada","Canada"],["bulgaria","Bulgaria"]].map(([k, l]) => <Link key={k} to={`/homes/${k}`}>{t("Homes in")} {t(l)}</Link>)}
         </nav>
@@ -1994,7 +1996,7 @@ export default function Community() {
       <AboutPage />
     ) : path === "/method" ? (
       <HomeMethodPage />
-    ) : path === "/new" || path === "/research/prices" || path === "/sitemap" || path === "/what-100k-buys" || path === "/price-drops" || path === "/sources" || path.startsWith("/sources/") ? (
+    ) : path === "/new" || path === "/research/prices" || path === "/sitemap" || path.startsWith("/sitemap/") || path === "/what-100k-buys" || path === "/price-drops" || path === "/sources" || path.startsWith("/sources/") ? (
       <StaticPage />
     ) : path === "/top/mine" ? (
       <TopMinePage />
