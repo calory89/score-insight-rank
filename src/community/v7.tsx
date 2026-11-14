@@ -1,4 +1,5 @@
 import { isEs } from "@/lib/lang";
+import { Byline } from "./byline";
 // RealHunt v7 (23-sep-2026): growth pass.
 //  - Insider: the secret weekly Top 5 (7-nov-2026, Carlos: "enseña todas a todos": every home is public as soon
 //    as it is approved, so the 48-hour early window is gone)
@@ -214,6 +215,7 @@ export function BlogPost() {
       <p className="hv-post-by">{post.author} · {fmtDate(post.date)} · {post.minutes} min read</p>
       <div className="hv-post-body" onClick={onClick} dangerouslySetInnerHTML={{ __html: post.html }} />
       <p className="hv-post-note">Prices and counts are from homes published on RealHunt on {fmtDate(post.date)}. Homes sell; the live list is always on the <Link to="/">front page</Link>.</p>
+      <Byline kind="blog" />
       <InsiderCTA />
       <h2>More from RealHunt Research</h2>
       <div className="hv-blog-list is-small">

@@ -12,7 +12,7 @@ const ent = (s: string) => s.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").repl
 
 /** The static body of a prerendered page as plain markdown-like text. */
 export function htmlToText(html: string): string {
-  let h = html.replace(/<(script|style|nav|svg|form|button)[\s\S]*?<\/\1>/gi, "").replace(/<img[^>]*>/gi, "");
+  let h = html.replace(/<(script|style|nav|svg|form|button|textarea|label|select)[\s\S]*?<\/\1>/gi, "").replace(/<img[^>]*>/gi, "");
   h = h.replace(/<a [^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi, (_, href: string, t: string) => {
     const text = t.replace(/<[^>]+>/g, "").trim();
     if (!text) return "";
@@ -27,7 +27,7 @@ export function htmlToText(html: string): string {
 const mainOf = (file: string): string => {
   if (!fs.existsSync(file)) return "";
   const h = fs.readFileSync(file, "utf8");
-  const a = h.indexOf('<main class="rh-static"');
+  const a = h.indexOf('<main class="rh-static'); // also "rh-static rhx": the data hub and trust pages (seo/assets.ts)
   if (a < 0) return "";
   const b = h.indexOf("</main>", a);
   return b < 0 ? "" : h.slice(a, b);
@@ -41,7 +41,7 @@ export function writeLlmsFull(root: string, entries: Entry[], rows: any[], today
   const CAPS = [200_000, 420_000, 380_000, 150_000, 300_000, 250_000, 100_000];
   const order = (e: Entry) => {
     const p = e.url.replace(SITE, "");
-    if (/^\/(method|about|research)/.test(p)) return 0;
+    if (/^\/(method|about|research|editorial-policy|for-ai|press)/.test(p)) return 0;
     if (/^\/(costs|guide)(\/|$)/.test(p)) return 1;
     if (/^\/(blog|countries)(\/|$)/.test(p)) return 2;
     if (/^\/buying-costs(\/|$)/.test(p)) return 3;

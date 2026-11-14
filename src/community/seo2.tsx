@@ -18,6 +18,7 @@ import { isEs } from "@/lib/lang";
 import { mediaDeep } from "@/lib/media";
 import { MiniCard, type Row } from "./extras";
 import { t } from "./i18n";
+import { ShareAnswer } from "./shareAnswer";
 import {
   type CanBuyData, type Lang, type Status, UPDATED, countryKey, nameOf, costLines, costCountries,
   canBuyCountries, canBuySlug, parseCanBuySlug, ruleFor, residencyFor, canBuyFaq, canBuyMeta, fill, fmtMoney,
@@ -140,6 +141,7 @@ export function CanBuyPage() {
         <p>{fill(r.a, n)}</p>
         <small>{t("General information, not legal advice.")} <Updated /></small>
       </section>
+      <ShareAnswer question={meta.h1} status={statusLabel(r.s, LANG)} rule={fill(r.a, n)} url={`https://realhunt.co${ES ? "/es" : ""}/can-i-buy/${slug}`} />
       <div className="rh2-facts">
         {ex && <div><small>{t("Costs on top of the price")}</small><b>{ex.pct}</b><span>{ex.fees} {t("on a €150,000 home")}</span></div>}
         {allHere.length > 0 && <div><small>{t("Homes on RealHunt")}</small><b>{allHere.length}</b><span>{t("from")} {money(Math.min(...allHere.map((h: any) => h.price_eur)))}</span></div>}
