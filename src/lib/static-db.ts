@@ -43,6 +43,8 @@ const now = () => Date.now();
 const pub = (r: Row) => Date.parse(r.publish_at || r.approved_at || 0) || 0;
 const visible = (r: Row) => !r.publish_at || pub(r) <= now();
 const num = (v: any, d = 0) => { const n = Number(v); return Number.isFinite(n) ? n : d; };
+/** Same rule as isGone() in src/community/n9/status.ts: more "advert gone" reports than "still available" ones. */
+const advertGone = (e: Row) => num(e.sold_reports) >= 1 && num(e.sold_reports) > num(e.available_reports);
 const has = (s: any, w: string) => String(s ?? "").toLowerCase().includes(w.toLowerCase());
 
 function feed(snap: Snap, p: Row = {}) {
@@ -90,8 +92,13 @@ function feed(snap: Snap, p: Row = {}) {
       if (fresh) { nf++; key.set(e.id, 4 * nf); } else { no++; key.set(e.id, no + Math.floor((no - 1) / 3)); }
     }
   }
+  // 15-nov-2026: homes whose original advert is gone (nightly check or visitor reports, src/community/n9/status.ts)
+  // stay on the site but go after every home that can still be bought, in any order. Explicit lists (saved homes,
+  // comparisons: `ids`) keep their own order.
+  const gone = (e: Row) => (!ids && advertGone(e) ? 1 : 0);
   const cmp = (a: Row, b: Row) => {
-    let d = 0;
+    let d = gone(a) - gone(b);
+    if (d) return d;
     if (sort === "price_asc") d = num(a.price_eur) - num(b.price_eur);
     else if (sort === "price_desc") d = num(b.price_eur) - num(a.price_eur);
     else if (sort === "new") d = pub(b) - pub(a);
@@ -194,7 +201,7 @@ const READS: Record<string, (s: Snap, a: Row) => any> = {
     if (!d) return [];
     const sea = (x: Row) => num(x.nearby?.sea_km, 99) < 2;
     const lp = (x: Row) => Math.abs(Math.log(Math.max(num(x.price_eur), 1) / Math.max(num(d.price_eur, num(x.price_eur)), 1)));
-    return s.rows.filter((x) => x.slug !== d.slug && visible(x) && (x.image_urls || []).length && x.price_eur != null)
+    return s.rows.filter((x) => x.slug !== d.slug && visible(x) && !advertGone(x) && (x.image_urls || []).length && x.price_eur != null)
       .sort((x, y) => (+(y.country === d.country) - +(x.country === d.country)) || (+(sea(y) === sea(d)) - +(sea(x) === sea(d))) || (+(y.category === d.category) - +(x.category === d.category)) || (lp(x) - lp(y)))
       .slice(0, Math.min(num(a?.p_limit, 6), 12)).map((x) => { const e = { ...x }; delete e.dims; return e; });
   },

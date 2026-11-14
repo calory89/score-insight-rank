@@ -4,6 +4,7 @@ import RHNav from "@/components/realhunt/RHNav";
 import RHFooter from "@/components/realhunt/RHFooter";
 import useDocumentMeta from "@/hooks/useDocumentMeta";
 import { toast } from "@/hooks/use-toast";
+import { COMPANY } from "@/lib/rh";
 
 const Contact = () => {
   useDocumentMeta({
@@ -82,6 +83,11 @@ const Contact = () => {
                 <span className="block text-[15px] text-ink">Within one business day</span>
               </span>
             </div>
+            {/* 15-nov-2026: who is behind the site and where, as on the legal pages (also in the static HTML and JSON-LD: seo/reach) */}
+            <address className="rh-card !p-4 not-italic text-[14px] leading-relaxed text-ink">
+              <span className="block text-[12px] uppercase tracking-wider text-ink-soft">Company</span>
+              {COMPANY.name}<br />{COMPANY.address}
+            </address>
           </div>
         </div>
 

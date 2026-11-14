@@ -47,6 +47,7 @@ if (typeof document !== "undefined") {
 }
 export const track = async (event: string, extra: { find?: string; meta?: any; path?: string } = {}) => {
   if (!permitted() || Date.now() < pausedUntil || QUEUE.length >= 100) return;
+  try { window.dispatchEvent(new CustomEvent("rh:track", { detail: event })); } catch { /* only the name of the event, for src/measure */ }
   try {
     let exp: any = null; try { exp = JSON.parse(sessionStorage.getItem("rh_exp_assign") || "null"); } catch {}
     let internal = false; try { if (new URLSearchParams(location.search).get("rh_me") === "1") localStorage.setItem("rh_internal", "1"); internal = localStorage.getItem("rh_internal") === "1"; } catch {}
