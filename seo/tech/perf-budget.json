@@ -1,0 +1,20 @@
+{
+  "goal": "The main photo (or the first text of a list) is on screen in under 2.5 seconds on a phone with a 4G connection, on home pages and on listing pages. Layout shift under 0.1. Measured with seo/tech/measure.cjs (Chrome, 1.6 Mbit/s, 150 ms latency, 4x slower processor).",
+  "measured_on": "2026-11-15",
+  "kb_are": "gzip, as seo/tech/serve.mjs sends them; the live site uses Brotli and is about 15% lighter",
+  "pages": {
+    "home": "/",
+    "deal": "first /deal page",
+    "country": "/homes/spain",
+    "band": "/homes/bulgaria/under-80000",
+    "map": "/map"
+  },
+  "max": {
+    "html_kb": 30,
+    "blocking_css_kb": 28,
+    "entry_js_kb": 86,
+    "route_js_kb": 460,
+    "requests_in_html": 40,
+    "high_priority_images": 3
+  }
+}

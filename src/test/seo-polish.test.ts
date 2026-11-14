@@ -119,7 +119,7 @@ describe("the pass over a built site", () => {
     }
     put("top/bali", html({ title: "Top 100 new builds in Bali · RealHunt", path: "/top/bali", body: `<main class="rh-static"><h1>Top 100 new builds in Bali</h1><p>${words(bali)}</p><a href="/top/bali/thin-project">Thin</a></main>` }));
     put("top/bali/thin-project", html({ title: "Thin project, Canggu: Bali Top 100 · RealHunt", path: "/top/bali/thin-project", body: `<main class="rh-static"><h1>Thin project</h1><p>${words(40)}</p></main>`, head: alt("/top/bali/thin-project") }));
-    put("legal/terms", html({ title: "Terms of use · RealHunt", path: "/legal/terms" }));
+    put("help/terms", html({ title: "Terms of use · RealHunt", path: "/help/terms" }));
     fs.writeFileSync(path.join(root, "sitemap-homes.xml"), `<urlset><url><loc>https://realhunt.co/deal/it-b</loc><lastmod>2026-10-02</lastmod><image:image><image:loc>https://realhunt.co/finds/it-b.webp</image:loc></image:image></url></urlset>`);
     fs.writeFileSync(path.join(root, "sitemap.xml"), "<sitemapindex></sitemapindex>");
     // what seo/listings leaves: its redirects and a "moved" stub for an old address
@@ -160,7 +160,7 @@ describe("the pass over a built site", () => {
   });
   it("gives every indexable page one h1, a breadcrumb in the data and on the page, and a related block", () => {
     run();
-    const terms = read("legal/terms");
+    const terms = read("help/terms");
     expect(terms.match(/<h1/g)?.length).toBe(1);
     expect(terms).toContain("<h1>Terms of use</h1>");
     const band = read("homes/italy/under-60000");
@@ -224,7 +224,7 @@ describe("the pass over a built site", () => {
     run(state, "2026-11-20");
     expect(xml()).toContain("<loc>https://realhunt.co/top/bali</loc><lastmod>2026-11-20</lastmod>");
     expect(xml()).toContain("<loc>https://realhunt.co/deal/it-b</loc><lastmod>2026-10-02</lastmod>");
-    expect(xml()).toContain("<loc>https://realhunt.co/legal/terms</loc></url>"); // no date before, no change, still no date
+    expect(xml()).toContain("<loc>https://realhunt.co/help/terms</loc></url>"); // no date before, no change, still no date
     expect(xml()).not.toContain("<loc>https://realhunt.co/deal/it-c</loc><lastmod>2026-11-20");
     const red = JSON.parse(fs.readFileSync(path.join(root, "redirects.json"), "utf8"));
     expect(red["/deal/it-f"]).toBe("/homes/italy");
@@ -238,5 +238,71 @@ describe("the pass over a built site", () => {
     // the pass itself removed the hreflang that pointed at the noindex twin, so that check stays clean
     expect(rep.failures.join("\n")).not.toMatch(/hreflang/);
     expect(rep.summary.hreflang_problems).toBe(0);
+  });
+
+  // ---- 15-nov-2026: seo/tech
+  it("keeps legal pages out of the index, with their Spanish twins (ideas 126, 131)", () => {
+    put("legal/terms", html({ title: "Terms of use · RealHunt", path: "/legal/terms", body: `<main class="rh-static"><h1>Terms of use</h1><p>${words(400)}</p></main>`, head: alt("/legal/terms") }));
+    put("es/legal/terms", html({ title: "Condiciones de uso · RealHunt", path: "/es/legal/terms", lang: "es", body: `<main class="rh-static" lang="es"><h1>Condiciones de uso</h1><p>${words(400)}</p></main>`, head: alt("/legal/terms") }));
+    const rep = run();
+    expect(rep.noindex_by_polish["legal page"]).toBe(2);
+    for (const p of ["legal/terms", "es/legal/terms"]) { expect(read(p)).toContain('content="noindex, follow"'); expect(read(p)).not.toContain("hreflang"); }
+    expect(fs.readdirSync(root).filter((f) => f.endsWith(".xml")).map((f) => fs.readFileSync(path.join(root, f), "utf8")).join("")).not.toContain("/legal/terms");
+    expect(rep.tech!.noindex["legal page"]).toBe(2);
+    expect(rep.failures).toEqual([]);
+  });
+  it("gives a listing page the app's header strip, cleans links and em dashes, and writes the owner's report", () => {
+    put("homes/italy/under-60000", html({ title: "Homes under €60,000 in Italy (5) · RealHunt", path: "/homes/italy/under-60000", body: `<main class="rh-static" data-rh-keep data-rh-static data-ls><h1>Homes under €60,000 in Italy</h1><p>${words(200)} A cottage \u2014 by the lake.</p><a href="/homes/italy?utm_source=x">Homes in Italy</a> <a href="/old/listing">The old list</a></main>` }));
+    const rep = run();
+    const band = read("homes/italy/under-60000");
+    expect(band).toContain('<div id="root"><div class="rh-sitehead" data-rh-sitehead>');
+    expect(band).not.toContain("\u2014");
+    expect(band).toContain("A cottage, by the lake.");
+    expect(band).toContain('<a href="/homes/italy">Homes in Italy</a>');
+    expect(band).toContain('<a href="/homes/italy">The old list</a>');
+    expect(read("homes/italy")).not.toContain("rh-sitehead");
+    // one trail on the page: the listing's own, rewritten in place
+    put("homes/italy/by-the-sea", html({ title: "Homes by the sea in Italy (5) · RealHunt", path: "/homes/italy/by-the-sea", body: `<main class="rh-static" data-rh-keep data-rh-static data-ls><style>.x{}</style><nav class="ls-crumbs" aria-label="Breadcrumb"><a href="/">RealHunt</a> › <span>By the sea</span></nav><h1>Homes by the sea in Italy</h1><p>${words(200)}</p><a href="/homes/italy">Homes in Italy</a></main>` }));
+    fs.writeFileSync(path.join(root, "homes/italy/index.html"), read("homes/italy").replace("</ol>", '</ol><a href="/homes/italy/by-the-sea">By the sea</a>'));
+    run();
+    const sea = read("homes/italy/by-the-sea");
+    expect(sea.match(/<nav\b/g)?.length).toBe(1);
+    expect(sea).toContain('<nav class="ls-crumbs" aria-label="Breadcrumb"><a href="/">RealHunt</a> › <a href="/homes/italy">');
+    expect(rep.tech!.summary).toMatchObject({ pages_with_em_dash_replaced: 1, tracking_parameters_removed: 1, links_pointed_past_a_redirect: 1 });
+    expect(rep.failures).toEqual([]);
+    const report = fs.readFileSync(path.join(root, "seo-report/index.html"), "utf8");
+    expect(report).toContain("Informe SEO de la última publicación");
+    expect(report).toContain("noindex, nofollow");
+    expect(JSON.parse(fs.readFileSync(path.join(root, "seo-audit.json"), "utf8")).tech.summary.checked).toBeGreaterThan(10);
+    // a second pass over the same folder does not take the report for a page of the site
+    const again = run();
+    expect(run().summary.pages).toBe(again.summary.pages);
+    expect(read("homes/italy/by-the-sea").match(/<nav\b/g)?.length).toBe(1);
+  });
+  it("sends the all-lowercase spelling of a home's address to the home (idea 106)", () => {
+    const up = { ...homes[0], slug: "It-AbC", title: "Stone house upper", price_eur: 31000 };
+    fs.writeFileSync(path.join(dir, "public/data/rh-static.json"), JSON.stringify({ rows: [...homes, up] }));
+    put("deal/It-AbC", html({ title: "€31,000 · Stone house upper · RealHunt", path: "/deal/It-AbC", body: `<main class="rh-static"><article><h1>Stone house upper</h1><p>${words(160)}</p><a href="/homes/italy">Italy</a></article></main>` }));
+    fs.writeFileSync(path.join(root, "homes/italy/index.html"), read("homes/italy").replace("</ol>", '<li><a href="/deal/It-AbC">Stone house upper</a></li></ol>'));
+    run();
+    const red = JSON.parse(fs.readFileSync(path.join(root, "redirects.json"), "utf8"));
+    expect(red["/deal/it-abc"]).toBe("/deal/It-AbC");
+    expect(red["/deal/it-a"]).toBeUndefined(); // already lowercase: nothing to add
+  });
+  it("remembers when each title last changed and flags one that changes again within four weeks (idea 1000)", () => {
+    run(null, "2026-11-01");
+    const s1: State = JSON.parse(fs.readFileSync(path.join(root, "seo-state.json"), "utf8"));
+    expect(s1.titles!["/top/bali"][1]).toBe(""); // first build: nothing to compare with
+    const retitle = (t: string) => fs.writeFileSync(path.join(root, "top/bali/index.html"), read("top/bali").replace(/<title>[^<]*<\/title>/, `<title>${t}</title>`));
+    retitle("Bali Top 100: new builds ranked · RealHunt");
+    const r2 = run(s1, "2026-11-10");
+    const s2: State = JSON.parse(fs.readFileSync(path.join(root, "seo-state.json"), "utf8"));
+    expect(s2.titles!["/top/bali"]).toEqual([expect.any(String), "2026-11-10", 0]);
+    expect(r2.tech!.summary.titles_changed_since_last_build).toBe(1);
+    expect(r2.tech!.lists.title_changed_twice_in_28_days).toBeUndefined();
+    retitle("The 100 best new builds in Bali · RealHunt");
+    const r3 = run(s2, "2026-11-20");
+    expect(r3.tech!.lists.title_changed_twice_in_28_days?.[0]).toContain("/top/bali");
+    expect(r3.failures).toEqual([]); // a warning for the owner, not a stopped publication
   });
 });

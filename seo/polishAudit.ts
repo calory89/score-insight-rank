@@ -16,6 +16,8 @@ export type Audit = {
   lists: Record<string, string[]>;
   sitemaps?: Record<string, number>;
   spanish?: unknown;
+  /** seo/tech/audit.ts: house rules, clicks from the front page, redirects, scripts from other sites */
+  tech?: import("./tech/audit").TechAudit;
 };
 
 // Paths that are files or services, not pages.

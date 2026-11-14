@@ -27,7 +27,7 @@ export const STR = {
   en: {
     breadcrumb: "Breadcrumb", title: "Keep exploring", homesIn: "Homes in", allHomes: "All homes", regionsOf: "Regions of", inRegions: "Inside the regions", buyingIn: "Buying in",
     guide: "How to buy, step by step", costs: "Costs and taxes", calc: "Buying-cost calculator", cheapIn: "Cheap houses in", compare: "Compare countries",
-    similar: "Similar homes", otherCountries: "Other countries", sameSearch: "The same search in other countries", moreResearch: "More research",
+    similar: "Similar homes", homesNow: "Homes for sale now in", countries: "Homes by country", otherCountries: "Other countries", sameSearch: "The same search in other countries", moreResearch: "More research",
     moreSources: "Other portals", otherDest: "Other destinations", newBuilds: "New builds", explore: "RealHunt", more: "More",
     siteMap: "Site map", smDesc: "Every page on RealHunt in one place: countries, regions, price lists, guides, cost pages, comparisons, research and homes.",
     smAll: (name: string, n: number) => `${name}: all ${n} pages`, smGroupTitle: (name: string) => `${name}: site map`,
@@ -37,7 +37,7 @@ export const STR = {
   es: {
     breadcrumb: "Ruta", title: "Sigue explorando", homesIn: "Casas en", allHomes: "Todas las casas", regionsOf: "Regiones de", inRegions: "Dentro de las regiones", buyingIn: "Comprar en",
     guide: "Cómo comprar, paso a paso", costs: "Gastos e impuestos", calc: "Calculadora de gastos de compra", cheapIn: "Casas baratas en", compare: "Comparar países",
-    similar: "Casas parecidas", otherCountries: "Otros países", sameSearch: "La misma búsqueda en otros países", moreResearch: "Más artículos",
+    similar: "Casas parecidas", homesNow: "Casas en venta ahora en", countries: "Casas por país", otherCountries: "Otros países", sameSearch: "La misma búsqueda en otros países", moreResearch: "Más artículos",
     moreSources: "Otros portales", otherDest: "Otros destinos", newBuilds: "Obra nueva", explore: "RealHunt", more: "Más",
     siteMap: "Mapa del sitio", smDesc: "Todas las páginas de RealHunt en un solo lugar: países, regiones, listas por precio, guías, gastos, comparaciones, artículos y casas.",
     smAll: (name: string, n: number) => `${name}: las ${n} páginas`, smGroupTitle: (name: string) => `${name}: mapa del sitio`,
@@ -176,6 +176,8 @@ export function relatedRows(pg: Pg, c: RelCtx): Row[] {
   else if (pg.kind === "band" || pg.kind === "type" || pg.kind === "region" || pg.kind === "place" || pg.kind === "canbuy") country(pg.cc, false);
   else if (pg.kind === "guide" || pg.kind === "costs" || pg.kind === "calc") {
     country(pg.cc, false);
+    // a guide also shows what is for sale today: the five best-scored homes of its country (idea 123)
+    if (pg.kind === "guide") add(`${s.homesNow} ${c.inThe(pg.cc, lang)}`, K("deal", pg.cc).slice().sort((x, y) => (Number(c.bySlug.get(y.en.slice(6))?.nota) || 0) - (Number(c.bySlug.get(x.en.slice(6))?.nota) || 0) || x.path.localeCompare(y.path)).slice(0, 5).flatMap((p) => link(p)), true);
     const all = K(pg.kind); const i = all.indexOf(pg);
     add(s.otherCountries, after(all, Math.max(i, 0), 6).flatMap((p) => link(p, c.nameOf(p.cc, lang))));
   } else if (pg.kind === "pair") {
@@ -187,13 +189,24 @@ export function relatedRows(pg: Pg, c: RelCtx): Row[] {
     if (pg.cc) country(pg.cc, false);
     const same = K("cheap").filter((p) => p.path !== pg.path && p.cc && p.cc !== pg.cc && p.en.slice(14).split("-in-")[0] === theme);
     add(s.sameSearch, some(same, 10, pg.path).flatMap((p) => link(p, c.nameOf(p.cc, lang))));
-  } else if (pg.kind === "blog") { const all = K("blog"); add(s.moreResearch, after(all, Math.max(all.indexOf(pg), 0), 4).flatMap((p) => link(p)), true); }
+  } else if (pg.kind === "blog") {
+    // a post links to lists that update themselves, so it does not age when its homes are sold (idea 124): the
+    // countries it names (most homes first), or the main lists when it names none
+    const body = (/<div id="root">([\s\S]*)<\/div>\s*<script/.exec(pg.html)?.[1] ?? pg.html).replace(/<(script|style)\b[\s\S]*?<\/\1>/g, " ").toLowerCase();
+    const head = `${pg.title} ${pg.h1[0] || ""}`.toLowerCase();
+    // the country in the headline first, then the others it names, most homes first
+    const rank = (p: Pg) => (head.includes(c.nameOf(p.cc, lang).toLowerCase()) ? 100000 : 0) + K("deal", p.cc).length;
+    const named = K("country").filter((p) => p.cc && body.includes(c.nameOf(p.cc, lang).toLowerCase())).sort((x, y) => rank(y) - rank(x) || x.path.localeCompare(y.path)).slice(0, 6);
+    add(s.countries, named.length ? named.flatMap((p) => link(p, `${s.homesIn} ${c.inThe(p.cc, lang)}`)) : [...link(at("/cheap-houses")), ...link(at("/new")), ...link(at("/price-drops"))]);
+    const all = K("blog"); add(s.moreResearch, after(all, Math.max(all.indexOf(pg), 0), 4).flatMap((p) => link(p)), true); }
   else if (pg.kind === "source") { const all = K("source"); add(s.moreSources, after(all, Math.max(all.indexOf(pg), 0), 6).flatMap((p) => link(p))); }
   else if (pg.kind === "topdest") add(s.otherDest, [...K("topdest").flatMap((p) => link(p)), ...link(at("/top/how-we-rank"))]);
   else if (pg.kind === "project") add(s.newBuilds, [...link(at("/" + pg.en.split("/").slice(1, 3).join("/"))), ...link(at("/top/how-we-rank"))]);
 
   // The two rows below are the site's footer for the HTML a crawler reads. Inside the app the real footer has these
   // links, so the app hides the rows (src/community/related.css) and shows only what belongs to this page.
+  // the menu of countries, written in the HTML of the front page and the section pages (idea 121)
+  if (pg.kind === "home" || pg.kind === "hub") add(s.countries, K("country").slice().sort((x, y) => K("deal", y.cc).length - K("deal", x.cc).length || x.path.localeCompare(y.path)).flatMap((p) => link(p, c.nameOf(p.cc, lang))), false, true);
   add(s.explore, EXPLORE.flatMap(([en, l, es]) => link(at(en), lang === "es" ? es : l)), false, true);
   if (pg.kind === "home" || pg.kind === "hub" || pg.kind === "page") add(s.more, MORE.flatMap(([en, l, es]) => link(at(en), lang === "es" ? es : l)), false, true);
   return rows;
