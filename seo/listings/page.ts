@@ -3,8 +3,8 @@
 // twin and the German and Russian versions always say the same facts about the same homes in the same order.
 import { thumb } from "../../src/lib/thumbs";
 import { toMedia } from "../../src/lib/media";
-import { regionOf } from "../../src/community/regions";
-import type { Facet, Home } from "./facets";
+import { type Facet, type Home, eurCap } from "./facets";
+import { regionName } from "./places";
 import { type Facts, type Ref, ref } from "./facts";
 import type { Pack, Named } from "./pack";
 
@@ -31,9 +31,18 @@ export type Text = {
   moreTitle: string; more: [string, Link[]][];
   foot: string[]; footLinks: Link[];
   image: string; lastmod: string | null;
+  /** Country pages where not everybody can buy freely: the rule, above the homes. */
+  first: string;
+  /** How a home gets on this list (families of 15-nov-2026); "" when the name says it all. */
+  how: string;
+  /** Budgets in pounds or dollars: the cards and the table add the approximate amount in that currency. */
+  fx: { ccy: string; rate: number } | null;
+  /** Sourced notes for this page (seo/listings/notes.ts). */
+  notes: Note[];
 };
+export type Note = { id: string; h: string; p: string[]; sources: [string, string][]; asOf: string };
 
-export type Site = { pages: Facet[]; live: Set<string>; hasGuide(cc: string): boolean; hasCalc(cc: string): boolean; hasCosts(cc: string): boolean };
+export type Site = { pages: Facet[]; live: Set<string>; hasGuide(cc: string): boolean; hasCalc(cc: string): boolean; hasCosts(cc: string): boolean; restricted?(cc: string): boolean; notes?(F: Facts, lang: string): Note[] };
 
 const firstSentence = (s: string) => {
   const one = String(s || "").replace(/\s+/g, " ").trim().split(/(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑÄÖÜА-Я¿¡0-9€])/)[0] || "";
@@ -56,8 +65,9 @@ export function compose(F: Facts, P: Pack, site: Site): Text | null {
   const money = P.money;
 
   // ---- top
-  const lede = [P.l1(F.n, what, money(F.min), money(F.max)), P.l2(home(F.cheapest), pl(F.cheapest.town), money(F.cheapest.price), F.cheapest.sqm, F.cheapest.beds)];
-  const parent = P.parent(F.parent.kind, F.parent.n, F.parent.kind === "region" ? pl(F.parent.name) : F.parent.name ? P.inC(F.parent.name) : "", F.parent.countries);
+  const lede = [f.ranked ? P.l1rank(what, money(F.min), money(F.max)) : P.l1(F.n, what, money(F.min), money(F.max)), P.l2(home(F.cheapest), pl(F.cheapest.town), money(F.cheapest.price), F.cheapest.sqm, F.cheapest.beds)];
+  const areaLabel = f.area ? P.label({ kind: "area", area: f.area, cc: f.cc }) : "";
+  const parent = P.parent(F.parent.kind, F.parent.n, F.parent.kind === "region" ? (f.regionSlug ? pl(F.parent.name) : areaLabel) : F.parent.name ? P.inC(F.parent.name) : "", F.parent.countries);
   lede.push(F.isAll && F.parent.kind !== "site"
     ? P.l3all(money(F.median), F.ppsqm ? P.perSqm(F.ppsqm) : "", money(F.max), parent)
     : P.l3(money(F.median), F.ppsqm ? P.perSqm(F.ppsqm) : "", money(F.parent.median), F.parent.ppsqm && F.ppsqm ? P.perSqm(F.parent.ppsqm) : "", parent));
@@ -69,11 +79,32 @@ export function compose(F: Facts, P: Pack, site: Site): Text | null {
   // ---- sibling pages (same country, or all countries)
   const sib = (kind: Facet["kind"], extra: (p: Facet) => boolean = () => true) => site.pages.filter((p) => !p.thin && p.kind === kind && p.cc === f.cc && extra(p));
   const link = (p: Facet): Link => [P.label(p), p.path, p.homes.length];
-  const bands = (f.regionSlug ? sib("regionBand", (p) => p.regionSlug === f.regionSlug) : []).concat(sib(f.cc ? "band" : "gband")).sort((a, b) => (a.kind === b.kind ? a.cap! - b.cap! : a.kind === "regionBand" ? -1 : 1));
+  const bands = (f.regionSlug || f.area ? sib("regionBand", (p) => p.regionSlug === f.regionSlug && p.area === f.area) : []).concat(sib(f.cc ? "band" : "gband")).sort((a, b) => (a.kind === b.kind ? a.cap! - b.cap! : a.kind === "regionBand" ? -1 : 1));
   const chips: Link[] = bands.filter((p) => p.kind === (f.kind === "regionBand" ? "regionBand" : f.cc ? "band" : "gband")).map(link);
 
+  // ---- how a home gets on this list, and the numbers only this family has
+  const x = F.x;
+  const how = P.how(F, {
+    regions: (x.areaRegions || []).map((r) => `${pl(r.name)} (${r.n})`).join(", "), total: x.rank?.of || 0, parent,
+    cap: x.fx ? P.ccy(x.fx.cap, x.fx.ccy) : "", eur: x.fx ? money(x.fx.capEur) : "", rate: x.fx ? x.fx.rate.toFixed(4) : "", date: x.fx?.date ? P.date(x.fx.date) : "",
+  });
+  const own: string[] = [];
+  if (x.rank) own.push(P.x.rank(f.key!, F.n, home(x.rank.last), f.key === "cheapest" ? money(x.rank.v) : P.perSqm(x.rank.v), x.rank.of));
+  if (x.dist) own.push(P.x.dist(P.city(f.city || ""), x.dist.med, home(x.dist.near), x.dist.km, x.dist.far));
+  if (x.vs) own.push(P.x.vs(lk(x.vs.path, P.label(x.vs.label)), money(F.median), F.n, money(x.vs.med), x.vs.n, x.vs.pct));
+  if (x.islands) own.push(P.x.islands(named(x.islands)));
+  if (x.sea) own.push(P.x.sea(x.sea.n, x.sea.med, home(x.sea.near), x.sea.m));
+  if (x.airport) own.push(P.x.airport(x.airport.med, home(x.airport.near), x.airport.km, x.airport.name, x.airport.list, x.airport.code, x.airport.codes));
+  if (x.plot) own.push(P.x.plot(x.plot.med, home(x.plot.max), x.plot.m2));
+  if (x.ppsqm) own.push(P.x.ppsqm(home(x.ppsqm.low), P.perSqm(x.ppsqm.v), P.perSqm(x.ppsqm.high)));
+  if (x.score) own.push(P.x.score(F.n, x.score.pct, parent, x.score.n95));
+  if (x.fee) own.push(P.x.fee(x.fee.n, P.ccy(x.fee.min, x.fee.ccy), P.ccy(x.fee.max, x.fee.ccy), P.ccy(x.fee.min * 12, x.fee.ccy), P.ccy(x.fee.max * 12, x.fee.ccy)));
+  if (x.drop) own.push(P.x.drop(home(x.drop.max), x.drop.pct, money(x.drop.amount), x.drop.med));
+  if (x.days) own.push(P.x.days(x.days.med, home(x.days.max), x.days.v));
+  if (x.elev) own.push(P.x.elev(x.elev.n, x.elev.med, home(x.elev.max), x.elev.v));
+
   // ---- facts
-  const facts: string[] = [];
+  const facts: string[] = [...own];
   if (F.step) facts.push(P.fStep(money(F.step.from), money(f.cap!), F.step.n, home(F.step.best), F.step.best.nota, money(F.step.best.price)));
   if (F.next && F.next.n > F.n) facts.push(P.fNext(money(F.next.cap), F.next.n - F.n));
   if (F.sqmMedian && F.sqmMax) facts.push(P.fSize(F.sqmMedian, F.sqmMax.sqm, home(F.sqmMax)));
@@ -89,16 +120,19 @@ export function compose(F: Facts, P: Pack, site: Site): Text | null {
   const lowHigh = f.kind === "country" && regs3.length >= 2 && low.median < high.median
     ? [{ name: pl(low.name), n: low.n, median: money(low.median) }, { name: pl(high.name), n: high.n, median: money(high.median) }] as const : null;
   if (lowHigh) facts.push(P.fRegions(lowHigh[0], lowHigh[1]));
+  if (x.amen.length >= 2) facts.push(P.x.amen(x.amen));
   if (F.scoreMax) facts.push(P.fScore(F.scoreMin, F.scoreMax, home(F.best)));
   if (F.newest?.day) facts.push(P.fNew(F.new30, home(F.newest), P.date(F.newest.day)));
 
   // ---- costs
+  const first = f.kind === "country" && !f.thin && F.dest?.can_foreigners_buy && site.restricted?.(f.cc!) ? String(F.dest.can_foreigners_buy) : "";
   const costs: string[] = []; const costLinks: Link[] = []; let costNote = "";
   const d = F.dest;
   if (d && f.cc) {
-    if (d.can_foreigners_buy) costs.push(P.cForeign(String(d.can_foreigners_buy)));
+    if (d.can_foreigners_buy && !first) costs.push(P.cForeign(String(d.can_foreigners_buy)));
     if (F.cost) {
       costs.push(P.cCosts(F.cost.pct, String(d.purchase_costs_breakdown || ""), money(F.median), money(F.cost.lo), money(F.cost.hi), money(F.cost.totalLo), money(F.cost.totalHi)));
+      if (f.kind === "country") costs.push(P.cExamples(F.cost.examples.map(([p, lo, hi]) => [money(p), money(lo), money(hi)])));
       if (f.cap && F.cost.maxAsk) costs.push(P.cAllIn(money(f.cap), money(F.cost.maxAsk), F.cost.fit, F.n));
     }
     if (d.annual_property_tax && f.kind === "country") costs.push(P.cTax(String(d.annual_property_tax)));
@@ -143,6 +177,10 @@ export function compose(F: Facts, P: Pack, site: Site): Text | null {
     push(qCheapest()); push(qCount()); push(qSize());
     if (F.cost && F.cost.maxAsk) faq.push([P.qAllIn(money(f.cap!), inC), P.aAllIn(money(f.cap!), F.cost.pct, money(F.cost.capLo), money(F.cost.capHi), money(F.cost.maxAsk), F.cost.fit)]);
     if (f.kind === "band") push(qWhere());
+  } else if (f.ranked) {
+    if (f.key === "cheapest") push(qCheapest());
+    push(qWhere()); push(qSize());
+    if (!f.cc && F.countries.length >= 2) faq.push([P.qCountries(what), P.aCountries(F.countries.slice(0, 6).map((c) => ({ name: P.country(c.name), n: c.n })))]);
   } else if (f.kind === "region" || f.kind === "town") {
     push(qCheapest());
     const here = pl(f.kind === "town" ? f.town! : f.region!), wider = f.kind === "town" && F.parent.kind === "region" ? pl(f.region!) : P.country(f.country!);
@@ -165,15 +203,28 @@ export function compose(F: Facts, P: Pack, site: Site): Text | null {
     group(P.more.beds, sib("beds").sort((a, b) => a.beds! - b.beds!).map(link));
     if (f.regionSlug) group(P.more.town, sib("town", (p) => p.regionSlug === f.regionSlug).map(link));
     group(P.more.region, sib("region").slice(0, 24).map(link));
-    group(P.more.feature, sib("feature").map(link));
+    group(P.more.area, sib("area").map(link));
+    group(P.more.feature, sib("feature", (p) => !p.ranked).map(link));
+    group(P.more.ranked, sib("feature", (p) => !!p.ranked).map(link));
+    // trait + budget: on a trait or a budget page the ones that share it, elsewhere the biggest
+    const combos = sib("combo");
+    const mine = combos.filter((p) => (f.key && p.key === f.key) || (f.cap && f.kind !== "ccyBand" && p.cap === f.cap));
+    group(P.more.combo, (mine.length ? mine : combos).slice(0, 12).map(link));
+    group(P.more.ccy, sib("ccyBand").sort((a, b) => String(a.ccy).localeCompare(String(b.ccy)) || a.cap! - b.cap!).map(link));
+    const here = new Set(f.homes.map((h) => h.slug));
+    group(P.more.near, site.pages.filter((p) => p.kind === "near" && p.homes.some((h) => here.has(h.slug))).map(link));
     // the same search in other countries
-    const same = site.pages.filter((p) => !p.thin && p.cc !== f.cc && p.kind === f.kind && (f.kind === "band" ? p.cap === f.cap : f.kind === "beds" ? p.beds === f.beds : ["setting", "ptype", "feature"].includes(f.kind) ? p.key === f.key : false))
+    const same = site.pages.filter((p) => !p.thin && p.cc && p.cc !== f.cc && p.kind === f.kind && (f.kind === "band" ? p.cap === f.cap : f.kind === "beds" ? p.beds === f.beds : ["setting", "ptype", "feature"].includes(f.kind) ? p.key === f.key : f.kind === "combo" ? p.key === f.key && p.cap === f.cap : f.kind === "ccyBand" ? p.ccy === f.ccy && p.cap === f.cap : false))
       .sort((a, b) => b.homes.length - a.homes.length).slice(0, 10);
     if (same.length) group(P.more.elsewhere(P.label(f)), same.map((p): Link => [P.country(p.country!), p.path, p.homes.length]));
     if (f.kind === "country") group(P.more.countries, site.pages.filter((p) => p.kind === "country" && !p.thin).sort((a, b) => b.homes.length - a.homes.length).map((p): Link => [P.country(p.country!), p.path, p.homes.length]));
   } else {
     group(P.more.budget, bands.map(link));
-    group(P.more.feature, site.pages.filter((p) => p.kind === "gfeature").map(link));
+    group(P.more.feature, site.pages.filter((p) => p.kind === "gfeature" && !p.ranked).map(link));
+    group(P.more.ranked, site.pages.filter((p) => p.kind === "gfeature" && p.ranked).map(link));
+    group(P.more.combo, site.pages.filter((p) => p.kind === "combo" && !p.cc).map(link));
+    group(P.more.ccy, site.pages.filter((p) => p.kind === "ccyBand" && !p.cc).map(link));
+    group(P.more.near, site.pages.filter((p) => p.kind === "near").map(link));
     group(P.more.countries, F.countries.filter((c) => c.path).slice(0, 14).map((c): Link => [P.country(c.name), c.path, c.n]));
   }
 
@@ -181,7 +232,7 @@ export function compose(F: Facts, P: Pack, site: Site): Text | null {
   const foot = [F.sources.length ? P.sources(F.sources) : "", P.notAgent].filter(Boolean);
   const footLinks: Link[] = [];
   if (f.cc && f.kind !== "country" && site.live.has(`/homes/${f.cc}`)) footLinks.push([P.allIn(inC, F.parent.kind === "country" ? F.parent.n : site.pages.find((p) => p.path === `/homes/${f.cc}`)!.homes.length), `/homes/${f.cc}`]);
-  if (f.country) footLinks.push([P.alert(inC), `/alerts?country=${encodeURIComponent(f.country)}${f.cap ? `&max=${f.cap}` : ""}`], [P.filter, `/?${new URLSearchParams({ country: f.country, ...(f.cap ? { price: String(f.cap) } : {}) })}#filters`]);
+  if (f.country) footLinks.push([P.alert(inC), `/alerts?country=${encodeURIComponent(f.country)}${eurCap(f) ? `&max=${eurCap(f)}` : ""}`], [P.filter, `/?${new URLSearchParams({ country: f.country, ...(eurCap(f) ? { price: String(eurCap(f)) } : {}) })}#filters`]);
   footLinks.push([P.more.all, "/cheap-houses"], [P.method, "/method"]);
 
   // ---- breadcrumb
@@ -189,18 +240,19 @@ export function compose(F: Facts, P: Pack, site: Site): Text | null {
   if (f.cc) {
     if (f.kind !== "country") crumbs.push([P.crumbCountry(P.country(f.country!)), `/homes/${f.cc}`]);
     if ((f.kind === "town" || f.kind === "regionBand") && f.regionSlug) crumbs.push([pl(f.region!), `/homes/${f.cc}/${f.regionSlug}`]);
+    if (f.kind === "regionBand" && f.area) crumbs.push([areaLabel, `/homes/${f.cc}/${f.area}`]);
     crumbs.push([f.kind === "country" ? P.crumbCountry(P.country(f.country!)) : P.label(f), f.path]);
   } else crumbs.push([P.crumbCheap, "/cheap-houses"], [P.label(f), f.path]);
 
   const cards = f.homes.slice(0, CARDS);
   const rows = f.homes.slice().sort((a, b) => a.price_eur - b.price_eur || String(a.slug).localeCompare(String(b.slug))).slice(0, ROWS);
-  for (const h of new Set([...cards, ...rows])) { tt(h); pl(ref(h).town); const rg = regionOf(h); if (rg) pl(rg); }
+  for (const h of new Set([...cards, ...rows])) { tt(h); pl(ref(h).town); const rg = regionName(h); if (rg) pl(rg); }
   if (!ok) return null;
   const img = f.homes.find((h) => h.image_urls?.[0])?.image_urls?.[0];
   return {
     path: f.path, h1, title: P.title(h1, F.n, money(F.min)), desc: P.desc(F, what), crumbs,
     updated: P.updated(P.date(F.updated), F.newest?.day ? P.date(F.newest.day) : null), lede, kpi, chips,
-    gridTitle: P.gridTitle(F.n, cards.length), gridMore: F.n > cards.length ? P.gridMore(cards.length, F.n) : "", cards,
+    gridTitle: f.ranked ? P.gridTitleRank(f.key!, F.n) : P.gridTitle(F.n, cards.length), gridMore: F.n > cards.length ? P.gridMore(cards.length, F.n) : "", cards,
     tableTitle: P.tableTitle(F.n, rows.length), rows,
     factsTitle: P.factsTitle(F), facts,
     costsTitle: costs.length || costTable.length ? (f.cc ? P.costsTitle(inC) : P.costTableTitle) : "", costs, costLinks, costNote, costTable,
@@ -208,6 +260,7 @@ export function compose(F: Facts, P: Pack, site: Site): Text | null {
     moreTitle: P.moreTitle(F), more, foot, footLinks,
     image: img ? (String(img).startsWith("http") ? String(img) : SITE + img) : `${SITE}/og-home.jpg`,
     lastmod: F.newest?.day || null,
+    first, how, fx: x.fx ? { ccy: x.fx.ccy, rate: x.fx.rate } : null, notes: site.notes ? site.notes(F, P.lang) : [],
   };
 }
 
@@ -225,8 +278,10 @@ export function renderBody(T: Text, P: Pack, o: RenderOpts): string {
   const R = (s: string) => rich(s, href);
   const a = ([text, path, n]: Link, cur = false, cls = "") => `<a${cls ? ` class="${cls}"` : ""} href="${href(path)}"${cur ? ' aria-current="page"' : ""}>${esc(text)}${n != null ? ` <small>${n}</small>` : ""}</a>`;
   const isNew = (h: Home) => { const d = ref(h).day; return !!d && (Date.parse(o.updated) - Date.parse(d)) / 86400000 <= NEW_DAYS; };
-  const placeOf = (h: Home) => { const t = P.place(ref(h).town, undefined, "card") || ref(h).town; const rg = regionOf(h); const r = rg ? P.place(rg, undefined, "card") || rg : ""; return r && r !== t ? `${t}, ${r}` : t; };
-  const meta = (h: Home) => [h.sqm > 0 ? `${h.sqm} m²` : "", Number(h.bedrooms) > 0 ? P.card.beds(Number(h.bedrooms)) : "", h.sqm > 0 ? P.perSqm(Math.round(h.price_eur / h.sqm)) : ""].filter(Boolean).join(" · ");
+  const placeOf = (h: Home) => { const t = P.place(ref(h).town, undefined, "card") || ref(h).town; const rg = regionName(h); const r = rg ? P.place(rg, undefined, "card") || rg : ""; return r && r !== t ? `${t}, ${r}` : t; };
+  // the rounded amount in pounds or dollars next to the euro price, on the pages whose budget is in that currency
+  const approx = (h: Home) => (T.fx ? ` <small class="ls-fx">≈ ${esc(P.ccy(Math.round((h.price_eur * T.fx.rate) / 100) * 100, T.fx.ccy))}</small>` : "");
+  const meta = (h: Home) => [h.sqm > 0 ? `${h.sqm} m²` : "", ref(h).beds > 0 ? P.card.beds(ref(h).beds) : "", h.sqm > 0 ? P.perSqm(Math.round(h.price_eur / h.sqm)) : ""].filter(Boolean).join(" · ");
   const card = (h: Home, i: number) => {
     const full = h.image_urls?.[0] ? toMedia(String(h.image_urls[0])) : ""; const small = full ? thumb(full) : "";
     const title = P.homeTitle(h) || ""; const why = firstSentence(P.homeWhy(h));
@@ -237,17 +292,24 @@ export function renderBody(T: Text, P: Pack, o: RenderOpts): string {
     return `<li><a class="ls-card" href="${href(`/deal/${h.slug}`)}"><span class="ls-ph"${o.colors?.[h.slug] ? ` style="background:${esc(o.colors[h.slug])}"` : ""}>${img}`
       + (h.nota != null ? `<b class="ls-score">${esc(P.card.score)} ${esc(h.nota)}</b>` : "")
       + (drop >= 1 ? `<i class="ls-tag ls-drop">${esc(P.card.drop(drop))}</i>` : isNew(h) ? `<i class="ls-tag">${esc(P.card.isNew)}</i>` : "")
-      + `</span><span class="ls-b"><strong>${esc(P.money(h.price_eur))}</strong><span class="ls-t">${esc(title)}</span><small>${esc(placeOf(h))}</small>`
+      + `</span><span class="ls-b"><strong>${esc(P.money(h.price_eur))}${approx(h)}</strong><span class="ls-t">${esc(title)}</span><small>${esc(placeOf(h))}</small>`
       + (meta(h) ? `<small class="ls-m">${esc(meta(h))}</small>` : "") + (why ? `<em>${esc(why)}</em>` : "") + `</span></a></li>`;
   };
-  const row = (h: Home) => `<tr><th scope="row"><a href="${href(`/deal/${h.slug}`)}">${esc(P.homeTitle(h) || "")}</a></th><td class="ls-c-place">${esc(placeOf(h))}</td><td class="ls-n">${esc(P.money(h.price_eur))}</td>`
-    + `<td class="ls-n">${h.sqm > 0 ? `${esc(h.sqm)} m²` : "·"}</td><td class="ls-n ls-c-pp">${h.sqm > 0 ? esc(P.perSqm(Math.round(h.price_eur / h.sqm))) : "·"}</td><td class="ls-n ls-c-beds">${Number(h.bedrooms) > 0 ? esc(h.bedrooms) : "·"}</td>`
+  const row = (h: Home) => `<tr><th scope="row"><a href="${href(`/deal/${h.slug}`)}">${esc(P.homeTitle(h) || "")}</a></th><td class="ls-c-place">${esc(placeOf(h))}</td><td class="ls-n">${esc(P.money(h.price_eur))}${approx(h)}</td>`
+    + `<td class="ls-n">${h.sqm > 0 ? `${esc(h.sqm)} m²` : "·"}</td><td class="ls-n ls-c-pp">${h.sqm > 0 ? esc(P.perSqm(Math.round(h.price_eur / h.sqm))) : "·"}</td><td class="ls-n ls-c-beds">${ref(h).beds > 0 ? ref(h).beds : "·"}</td>`
     + `<td class="ls-n">${h.nota != null ? esc(h.nota) : "·"}</td><td class="ls-n ls-c-added">${ref(h).day ? `<time datetime="${ref(h).day}">${esc(P.dateShort(ref(h).day!))}</time>` : "·"}</td></tr>`;
   const th = P.th;
-  return `<main class="rh-static" data-rh-keep data-rh-static data-ls${o.lang ? ` lang="${o.lang}"` : ""}><style>${o.css}</style>${WAIT}`
+  const notes = T.notes.map((n) => `<section class="ls-notebox" id="note-${esc(n.id)}"><h2>${esc(n.h)}</h2>${n.p.map((x) => `<p>${R(x)}</p>`).join("")}`
+    + `<p class="ls-note">${esc(P.noteSource)}: ${n.sources.map(([name, u]) => `<a href="${esc(u)}" rel="noopener nofollow">${esc(name)}</a>`).join(", ")}. ${esc(P.noteAsOf(n.asOf))}</p></section>`).join("");
+  // The breadcrumb is the first thing in <main>: the site-wide pass (seo/polish.ts) puts its own breadcrumb there and
+  // only takes this one out when it finds it first. With the styles in front, every listing page showed two.
+  return `<main class="rh-static" data-rh-keep data-rh-static data-ls${o.lang ? ` lang="${o.lang}"` : ""}>`
     + `<nav class="ls-crumbs" aria-label="Breadcrumb">${T.crumbs.map(([n, p], i) => (i === T.crumbs.length - 1 ? `<span>${esc(n)}</span>` : `<a href="${href(p)}">${esc(n)}</a>`)).join(" › ")}</nav>`
+    + `<style>${o.css}</style>${WAIT}`
     + `<h1>${esc(T.h1)}</h1><p class="ls-upd">${esc(T.updated)}</p>`
     + `<p class="ls-lede">${T.lede.map(R).join(" ")}</p>`
+    + (T.first ? `<aside class="ls-first"><b>${esc(P.firstTitle)}</b><p>${esc(T.first)}</p><p class="ls-links"><a href="${href("/can-i-buy")}">${esc(P.cLinks.nat)}</a> · <a href="#costs">${esc(T.costsTitle)}</a></p></aside>` : "")
+    + (T.how ? `<p class="ls-how">${R(T.how)}</p>` : "")
     + `<dl class="ls-kpi">${T.kpi.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>`
     + (T.chips.length > 1 ? `<nav class="ls-chips" aria-label="${esc(P.more.budget)}">${T.chips.map((c) => a(c, c[1] === T.path, "ls-chip")).join("")}</nav>` : "")
     + `<h2 id="homes">${esc(T.gridTitle)}</h2><ol class="ls-grid">${T.cards.map(card).join("")}</ol>` + (T.gridMore ? `<p class="ls-note">${esc(T.gridMore)}</p>` : "")
@@ -256,6 +318,7 @@ export function renderBody(T: Text, P: Pack, o: RenderOpts): string {
     + (T.costsTitle ? `<h2 id="costs">${esc(T.costsTitle)}</h2>` + T.costs.map((x) => `<p>${R(x)}</p>`).join("")
       + (T.costTable.length ? `<div class="ls-tw"><table class="ls-ct"><thead><tr><th scope="col">${esc(P.costTh.country)}</th><th scope="col" class="ls-n">${esc(P.costTh.homes)}</th><th scope="col" class="ls-n">${esc(P.costTh.from)}</th><th scope="col" class="ls-n">${esc(P.costTh.costs)}</th></tr></thead><tbody>${T.costTable.map((c) => `<tr><th scope="row">${c.path ? `<a href="${href(c.path)}">${esc(P.country(c.name))}</a>` : esc(P.country(c.name))}</th><td class="ls-n">${c.n}</td><td class="ls-n">${esc(P.money(c.min))}</td><td class="ls-n">${esc(c.pct.replace(/-/g, "–"))}%</td></tr>`).join("")}</tbody></table></div>` : "")
       + (T.costLinks.length ? `<p class="ls-links">${T.costLinks.map((l) => a(l)).join(" · ")}</p>` : "") + (T.costNote ? `<p class="ls-note">${esc(T.costNote)}</p>` : "") : "")
+    + notes
     + (T.watch.length ? `<h2 id="watch">${esc(P.watchTitle)}</h2><ul class="ls-facts ls-watch">${T.watch.map((x) => `<li>${R(x)}</li>`).join("")}</ul>` : "")
     + (T.faq.length ? `<h2 id="faq">${esc(P.faqTitle)}</h2><div class="ls-faq">${T.faq.map(([q, x]) => `<h3>${esc(q)}</h3><p>${esc(plain(x))}</p>`).join("")}</div>` : "")
     + (T.more.length ? `<h2 id="more">${esc(T.moreTitle)}</h2><div class="ls-more">${T.more.map(([l, links]) => `<p><b>${esc(l)}</b> ${links.map((x) => a(x, false, "ls-chip")).join(" ")}</p>`).join("")}</div>` : "")

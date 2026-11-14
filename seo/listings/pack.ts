@@ -35,7 +35,38 @@ export type Pack = {
   crumbRoot: string; crumbCheap: string;
   crumbCountry(c: string): string;
   /** Short label of this page among its siblings: "Under €80,000", "Tuscany", "By the sea", "2 bedrooms". */
-  label(F: Pick<Facts["f"], "kind" | "cap" | "region" | "town" | "key" | "beds" | "country" | "cc">): string;
+  label(F: Pick<Facts["f"], "kind" | "cap" | "region" | "town" | "key" | "beds" | "country" | "cc" | "ccy" | "area" | "city">): string;
+  // ---- families of 15-nov-2026 (traits, ranked lists, budgets in pounds and dollars, areas, near a city)
+  /** An amount in pounds or dollars: "£50,000". */
+  ccy(n: number, ccy: string): string;
+  /** The name of a city of places.CITIES in this language. */
+  city(slug: string): string;
+  /** One or two sentences on how a home gets on this list and what that does not prove; "" for the families whose
+   * name says it all. `v` carries what the sentence needs (already in this language). */
+  how(F: Facts, v: { regions: string; total: number; parent: string; cap: string; eur: string; rate: string; date: string }): string;
+  /** First sentence of a ranked list ("The 20 cheapest ... cost from X to Y"). */
+  l1rank(what: string, min: string, max: string): string;
+  gridTitleRank(key: string, n: number): string;
+  x: {
+    amen(list: [string, number][]): string;
+    /** `name`/`list` are the airports' English names, `code`/`codes` their IATA codes (for the languages that would otherwise print English). */
+    airport(med: number, title: string, km: number, name: string, list: Named[], code: string, codes: Named[]): string;
+    sea(n: number, med: number, title: string, m: number): string;
+    plot(med: number, title: string, m2: number): string;
+    ppsqm(title: string, low: string, high: string): string;
+    score(n: number, pct: number, parent: string, n95: number): string;
+    fee(n: number, min: string, max: string, yearMin: string, yearMax: string): string;
+    drop(title: string, pct: number, amount: string, med: number): string;
+    days(med: number, title: string, v: number): string;
+    elev(n: number, med: number, title: string, v: number): string;
+    islands(list: Named[]): string;
+    dist(city: string, med: number, title: string, km: number, far: number): string;
+    rank(key: string, n: number, title: string, v: string, of: number): string;
+    vs(other: string, med: string, n: number, oMed: string, on: number, pct: number): string;
+  };
+  /** The note blocks with a source (seo/listings/notes.ts). */
+  noteSource: string; noteAsOf(asOf: string): string;
+  season: { title: string; winter: string; summer: string };
   // ---- top of the page
   updated(date: string, newest: string | null): string;
   l1(n: number, what: string, min: string, max: string): string;
@@ -70,6 +101,10 @@ export type Pack = {
   cCosts(pct: string, breakdown: string, med: string, lo: string, hi: string, totalLo: string, totalHi: string): string;
   cAllIn(cap: string, maxAsk: string, fit: number, n: number): string;
   cTax(text: string): string;
+  /** The same percentage worked out on three round prices (country pages). */
+  cExamples(rows: [price: string, lo: string, hi: string][]): string;
+  /** The box above the homes in countries where not everybody can buy freely (src/data/buyrules.json). */
+  firstTitle: string;
   cNote(asOf: string): string;
   cLinks: { calc(inC: string): string; detail: string; guide: string; nat: string };
   costTableTitle: string; costTh: { country: string; homes: string; from: string; costs: string };
@@ -102,7 +137,8 @@ export type Pack = {
   qCountries(what: string): string; aCountries(list: Named[]): string;
   // ---- other searches
   moreTitle(F: Facts): string;
-  more: { budget: string; region: string; setting: string; type: string; beds: string; feature: string; town: string; elsewhere(label: string): string; countries: string; all: string };
+  more: { budget: string; region: string; setting: string; type: string; beds: string; feature: string; town: string; elsewhere(label: string): string; countries: string; all: string;
+    area: string; combo: string; ccy: string; near: string; ranked: string };
   allIn(inC: string, n: number): string;
   // ---- foot
   sources(list: [string, number][]): string;

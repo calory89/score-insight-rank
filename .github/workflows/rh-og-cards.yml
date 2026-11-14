@@ -26,7 +26,7 @@ jobs:
         run: |
           git config user.name "realhunt-bot"
           git config user.email "bot@realhunt.co"
-          git add public/data public/og/deal src/data/deal-meta.json public/og-default-60k.jpg seo/listings/known-urls.json
+          git add public/data public/og/deal src/data/deal-meta.json public/og-default-60k.jpg seo/listings/known-urls.json seo/listings/fx.json
           git diff --cached --quiet || (git commit -m "Daily data: homes, share cards and listing addresses" && git push)
       - name: ping IndexNow (Bing and others)
         run: python3 scripts/indexnow.py
