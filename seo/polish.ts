@@ -20,14 +20,20 @@ import { regionOf, slugify, HOME_TYPES } from "../src/community/regions";
 import { esPlace } from "../src/lib/lang";
 import { theEs } from "../src/community/seo2data";
 import { type Kind, type Lang, pickTitle, polishDesc, stripBrand } from "./polishMeta";
+import { EXTRA_NOINDEX } from "./tech/indexPolicy";
 import { type RelCtx, relatedRows, renderRelated, REL_HEAD, sitemapPages, GROUPS, groupOf, STR } from "./polishRelated";
 import { audit, type Audit } from "./polishAudit";
+import { techAudit, techHeal } from "./tech/audit";
+import { hreflangTags, sitemapAlternates } from "./tech/locales";
+import { withSiteHead } from "./tech/siteHead";
+import { writeReport } from "./tech/report";
 
 export const SITE = "https://realhunt.co";
 /** A page type listed in NOINDEX_RULES is still indexed when its own text (in the HTML) has at least this many words. */
 export const SUBSTANCE_WORDS = 250;
 /** Pages that get impressions in Search Console today (brief of 14-nov-2026): never set to noindex here. */
-export const HAS_IMPRESSIONS = new Set(["/", "/homes/bulgaria/under-80000", "/top/bali", "/blog/bali-phuket-tulum-batumi-400-new-builds-scored", "/homes/italy/under-80000", "/homes/france/under-80000", "/legal/terms", "/cheap-houses/under-50000-in-germany"]);
+// 15-nov-2026: /legal/terms left this list. Its 14 impressions help nobody who is looking for a home (idea 131).
+export const HAS_IMPRESSIONS = new Set(["/", "/homes/bulgaria/under-80000", "/top/bali", "/blog/bali-phuket-tulum-batumi-400-new-builds-scored", "/homes/italy/under-80000", "/homes/france/under-80000", "/cheap-houses/under-50000-in-germany"]);
 /** Page types that are noindex unless they pass SUBSTANCE_WORDS. Why, with the numbers of 14-nov-2026:
  *  - /top/<city>/<project>: 417 pages with 35 to 65 words each (a name, a price and one sentence).
  *  - /find-my-home/<city>, /new-builds/<country>: 12 + 8 pages with no text of their own, the same screen with one word changed.
@@ -41,8 +47,13 @@ export const NOINDEX_RULES: [RegExp, number, string][] = [
   [/^\/(swipe|leaderboard|winners|insider|developers)$/, SUBSTANCE_WORDS, "app screen"],
   [/^\/(extension\/privacy|network\/(start|agreement|example))$/, SUBSTANCE_WORDS, "form, contract or demo"],
   [/^\/sources\/[^/]+$/, 150, "portal list"],
+  // terms, privacy, cookies, takedown: pages a visitor must be able to read and no search should land on
+  [/^\/legal\/[^/]+$/, Infinity, "legal page"],
+  ...EXTRA_NOINDEX,
 ];
 
+/** The titles of the last build: [hash of the title, day it last changed, changes in the 28 days before that]. */
+export type TitleState = Record<string, [string, string, number?]>;
 export type Pg = {
   path: string; en: string; lang: Lang; file: string; html: string;
   title: string; title0: string; desc: string; canon: string; noindex: boolean; noindex0: boolean; why?: string;
@@ -104,7 +115,7 @@ export function classify(en: string): { kind: Kind; cc: string } {
   return { kind: s.length === 1 ? "hub" : "page", cc: "" };
 }
 
-const SKIP_DIRS = new Set(["assets", "data", "finds", "og", "i18n", "images", "t", "videos", "badge", "fonts"]);
+const SKIP_DIRS = new Set(["assets", "data", "finds", "og", "i18n", "images", "t", "videos", "badge", "fonts", "seo-report"]);
 function walk(dir: string, out: string[], top = true) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     if (e.isDirectory()) { if (!(top && SKIP_DIRS.has(e.name))) walk(path.join(dir, e.name), out, false); }
@@ -132,7 +143,7 @@ export function readPage(p: string, file: string, html: string): Pg {
 }
 
 // ------------------------------------------------------------------------------------------ state of the last build
-export type State = { v: 1; built: string; pages: Record<string, [string, string, string?]>; redirects: Redirect[] };
+export type State = { v: 1; built: string; pages: Record<string, [string, string, string?]>; redirects: Redirect[]; titles?: TitleState };
 export type Redirect = { from: string; to: string | null; status: 301 | 410 };
 /** The state file of the build that is live now (hashes and dates per page, redirects so far). Without it (first
  * build, no network) pages keep the dates the data gives them and no page is stamped with today's date. */
@@ -276,6 +287,10 @@ export function polish(root: string, opts: PolishOpts = {}): Audit {
     const nav = `<nav class="rh-bc" aria-label="${S(pg.lang).breadcrumb}">${pg.trail.map(([n, p], i) => (i === pg.trail.length - 1 ? `<span aria-current="page">${esc(n)}</span>` : `<a href="${esc(p)}">${esc(n)}</a>`)).join(" › ")}</nav>`;
     const r = rootOf(pg.html); const m0 = mains(r)[0];
     if (!m0) return;
+    // a listing page (seo/listings) draws its own trail further down, after its styles: that one is rewritten in
+    // place. Before 15-nov-2026 a second trail was added above it and the page showed two.
+    const own = /<nav class="ls-crumbs"[^>]*>[\s\S]*?<\/nav>/.exec(m0);
+    if (own) { pg.html = setRoot(pg.html, r.replace(m0, () => m0.replace(own[0], () => nav.replace('class="rh-bc"', 'class="ls-crumbs"')))); return; }
     const open = /^<main\b[^>]*>(?:\s*<article\b[^>]*>)?/.exec(m0)![0];
     const rest = m0.slice(open.length);
     const old = /^\s*<nav\b[^>]*>[\s\S]*?<\/nav>/.exec(rest);
@@ -330,7 +345,7 @@ export function polish(root: string, opts: PolishOpts = {}): Audit {
     const ok = en && es && live(en.path) && live(es.path) && (pg === en || pg === es);
     const had = Object.keys(pg.alt).length > 0 && !pg.made;
     if (had && !ok) { pg.html = pg.html.replace(ALT, ""); pg.alt = {}; }
-    if (pg.made && ok) pg.html = addHead(pg.html.replace(ALT, ""), `<link rel="alternate" hreflang="en" href="${abs(en!.path)}" /><link rel="alternate" hreflang="es" href="${abs(es!.path)}" /><link rel="alternate" hreflang="x-default" href="${abs(en!.path)}" />`);
+    if (pg.made && ok) pg.html = addHead(pg.html.replace(ALT, ""), hreflangTags(en!.path, (p) => live(p), SITE));
     if (pg.made && !ok) pg.alt = {};
   }
 
@@ -428,8 +443,27 @@ export function polish(root: string, opts: PolishOpts = {}): Audit {
   for (const [from, to] of Object.entries(redirects)) { let t = to, n = 0; while (t !== "410" && redirects[t] && redirects[t] !== t && n++ < 5) t = redirects[t]; if (t !== to) redirects[from] = t; }
   for (const from of Object.keys(redirects)) if (pages.has(from) && !pages.get(from)!.dupOf) delete redirects[from]; // the address is a page
 
+  // ---- 6b. what code can fix by itself (seo/tech/audit.ts), then the first paint of the pages the app takes over
+  const techFixed = techHeal(pages, redirects);
+  for (const pg of pages.values()) { pg.html = withSiteHead(pg); pg.links = hrefs(rootOf(pg.html)); }
+  // titles: when each one last changed, so a title that changes again within four weeks is seen (idea 1000)
+  const tHash = (t: string) => crypto.createHash("sha1").update(t).digest("hex").slice(0, 8);
+  const days = (a: string, b: string) => Math.round((Date.parse(b) - Date.parse(a)) / 86400000);
+  state.titles = {};
+  for (const pg of pages.values()) {
+    if (!live(pg.path)) continue;
+    const h = tHash(pg.title), was = prev?.titles?.[pg.path];
+    state.titles[pg.path] = !was ? [h, ""] : was[0] === h ? was : [h, today, was[1] && days(was[1], today) < 28 ? (was[2] || 0) + 1 : 0];
+  }
+  const tech = techAudit({ pages, live, redirects, rows, titles: state.titles, prevTitles: prev?.titles, placeNames: [...new Set([...Object.values(ccName.en), ...Object.values(ccName.es), ...rows.flatMap((r) => String(r.location_name || "").split(",").map((x: string) => x.trim()))])].filter(Boolean) });
+  tech.summary.fixed_here = Object.values(techFixed).reduce((x, y) => x + y, 0);
+  for (const [k, v] of Object.entries(techFixed)) tech.summary[k] = v;
+
   // ---- 8. audit
   const rep = audit({ pages, live, appRoute, healed, ldNotes, lastmod, redirects: Object.keys(redirects).length, stubs, es: (() => { try { return JSON.parse(fs.readFileSync(path.join(root, "es-coverage.json"), "utf8")); } catch { return null; } })() });
+
+  rep.tech = tech;
+  for (const f of tech.failures) rep.failures.push("tech: " + f);
 
   if (opts.write !== false) {
     for (const pg of pages.values()) { fs.mkdirSync(path.dirname(pg.file), { recursive: true }); fs.writeFileSync(pg.file, pg.html); }
@@ -438,7 +472,7 @@ export function polish(root: string, opts: PolishOpts = {}): Audit {
     for (const g of names) {
       const list = maps.get(g)!.sort((a, b) => a.path.localeCompare(b.path));
       const img = (p: Pg) => old.get(p.path)?.images || [];
-      const alts = (p: Pg) => (p.alt.en && p.alt.es ? `<xhtml:link rel="alternate" hreflang="en" href="${esc(abs(p.alt.en))}"/><xhtml:link rel="alternate" hreflang="es" href="${esc(abs(p.alt.es))}"/><xhtml:link rel="alternate" hreflang="x-default" href="${esc(abs(p.alt.en))}"/>` : "");
+      const alts = (p: Pg) => (p.alt.en && p.alt.es ? sitemapAlternates(p.alt.en, (x) => live(x), SITE) : "");
       const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"${list.some((p) => img(p).length) ? ' xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"' : ""}${list.some((p) => alts(p)) ? ' xmlns:xhtml="http://www.w3.org/1999/xhtml"' : ""}>\n`
         + list.map((p) => `  <url><loc>${esc(abs(p.path))}</loc>${lastmod.get(p.path) ? `<lastmod>${lastmod.get(p.path)}</lastmod>` : ""}${alts(p)}${img(p).map((i) => `<image:image><image:loc>${esc(i)}</image:loc></image:image>`).join("")}</url>\n`).join("") + "</urlset>\n";
       fs.writeFileSync(path.join(root, `sitemap-${g}.xml`), xml);
@@ -452,6 +486,16 @@ export function polish(root: string, opts: PolishOpts = {}): Audit {
     rep.sitemaps = sm;
     fs.writeFileSync(path.join(root, "seo-audit.json"), JSON.stringify(rep, null, 1) + "\n");
     // build.json: the number of indexable pages after this pass
+    // idea 101: the pages worth asking Google for by hand, the three countries that already get impressions first
+    const perCc = new Map<string, number>(); for (const r of rows) { const k = slugCountry(r.country); perCc.set(k, (perCc.get(k) || 0) + 1); }
+    const enLive = [...pages.values()].filter((p) => p.lang === "en" && live(p.path));
+    const first3 = ["bulgaria", "italy", "france"];
+    const capOf = (p: Pg) => Number(/under-(\d+)$/.exec(p.en)?.[1] || 0);
+    const toIndex = [...new Set([
+      ...first3.flatMap((c) => [...enLive.filter((p) => p.kind === "band" && p.cc === c).sort((x, y) => capOf(x) - capOf(y)).slice(0, 3), ...enLive.filter((p) => p.kind === "country" && p.cc === c)]),
+      ...enLive.filter((p) => p.kind === "country" && !first3.includes(p.cc)).sort((x, y) => (perCc.get(y.cc) || 0) - (perCc.get(x.cc) || 0)),
+    ].map((p) => p.path))].slice(0, 20);
+    writeReport(root, rep, { today, rows: rows.length, toIndex });
     try { const bf = path.join(root, "build.json"); const b = JSON.parse(fs.readFileSync(bf, "utf8")); b.indexable_pages = rep.summary.indexable; fs.writeFileSync(bf, JSON.stringify(b) + "\n"); } catch { /* no build.json */ }
   }
   return rep;
@@ -493,6 +537,9 @@ function buildRedirects({ pages, live, prev, cwd, slugCountry, rows }: { pages: 
   for (const r of [...seed, ...(prev?.redirects || [])]) put(r.from, r.to);
   // 2. the old country address of the app: /country/<x> -> /homes/<x>
   for (const c of new Set(rows.map((r) => slugCountry(r.country)).filter(Boolean))) for (const pre of ["", "/es"]) if (exists(`${pre}/homes/${c}`)) put(`${pre}/country/${c}`, `${pre}/homes/${c}`);
+  // 2b. a home whose address has capital letters (/deal/Dc2FknAIzJt): the all-lowercase spelling goes to it (idea 106)
+  const slugs = new Set(rows.map((r) => String(r.slug)));
+  for (const r of rows) { const s = String(r.slug), low = s.toLowerCase(); if (low !== s && !slugs.has(low)) for (const pre of ["", "/es"]) if (exists(`${pre}/deal/${s}`)) put(`${pre}/deal/${low}`, `${pre}/deal/${s}`); }
   // 3. a home listed twice: the second address goes to the first
   for (const pg of pages.values()) if (pg.dupOf) out.set(pg.path, { from: pg.path, to: pg.dupOf, status: 301 });
   // 4. pages of the last build that are gone now (a home that was sold: to its country)

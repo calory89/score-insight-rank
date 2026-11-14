@@ -97,9 +97,15 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
       zoomControl: false, worldCopyJump: true, scrollWheelZoom: !embedded, dragging: !(embedded && touch), touchZoom: true,
       doubleClickZoom: true, tapTolerance: 18, zoomSnap: 0.5, minZoom: 2, maxZoom: 19,
     }).setView(around ? [around.lat, around.lng] : [44, 8], around?.zoom ?? 4);
-    const street = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap", maxZoom: 19 });
+    const street = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap", maxZoom: 19 }) /* one host (the one OpenStreetMap asks for): one connection, opened early from the HTML of /map (vite.config.ts) */;
     const sat = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { attribution: "Imagery © Esri", maxZoom: 19 });
-    street.addTo(m);
+    // 15-nov-2026 speed: on /map the first view is replaced as soon as the homes arrive (fit to where they are), so
+    // tiles asked for before that were thrown away (nine downloads) and the map was drawn twice. The street layer
+    // now goes in with the first real view
+    // (see place() below), or after 2.5 s if the homes are slow. A map that knows its centre shows tiles at once.
+    const addTiles = () => { try { if (!m.hasLayer(street) && !m.hasLayer(sat)) street.addTo(m); } catch { /* the map was closed */ } };
+    (m as any)._hmTiles = addTiles;
+    if (around || focus) addTiles(); else setTimeout(addTiles, 2500);
     L.control.zoom({ position: "bottomright", zoomInTitle: t("Zoom in"), zoomOutTitle: t("Zoom out") }).addTo(m);
     (m as any)._hmLayers = { street, sat };
     layer.current = L.layerGroup().addTo(m);
@@ -271,8 +277,11 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
         // view where every country is one overlapping bubble ("See all homes" still shows everything).
         const eu = list.filter((d) => d.lat! > 27 && d.lat! < 72 && d.lng! > -30 && d.lng! < 45);
         const b0 = eu.length >= Math.max(5, list.length * 0.6) && eu.length < list.length ? L.latLngBounds(eu.map((d) => [d.lat!, d.lng!] as L.LatLngExpression)) : bounds.current;
-        m.fitBounds(b0, { padding: [30, 30], maxZoom: 10 });
+        // the first view goes straight to its place (no animation): the tiles are asked for once, at the final zoom
+        const tl0 = (m as any)._hmLayers; const shown = !!tl0 && (m.hasLayer(tl0.street) || m.hasLayer(tl0.sat));
+        m.fitBounds(b0, { padding: [30, 30], maxZoom: 10, animate: shown });
       }
+      (m as any)._hmTiles?.();
       draw();
       if (focusedMk && openFocus) { (focusedMk as L.Marker).openPopup(); fitPopup(); }
     };
