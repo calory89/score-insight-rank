@@ -9,6 +9,7 @@ import { UI } from "../../seo/langs/strings";
 import { PACKS, CONFIG, MAX_TOTAL } from "../../seo/langs/config";
 import { de } from "../../seo/listings/pack.de";
 import { ru } from "../../seo/listings/pack.ru";
+import { fr } from "../../seo/listings/pack.fr";
 
 const rows = listingRows();
 const W = { map: { Tuscany: "Toskana", "Black Sea": "Schwarzes Meer" }, near: (n: string, card: boolean) => (card ? `bei ${n}` : `Umgebung von ${n}`), central: (n: string) => `Zentrum von ${n}`, area: (n: string) => `Raum ${n}` };
@@ -49,7 +50,7 @@ describe("the gate against English", () => {
     expect(titleIn("de", { slug: "not-a-home", title: "x" })).toBeNull();
   });
   it("no translated title has an em dash or English left, and none is empty", () => {
-    for (const lang of ["de", "ru"] as const) for (const [slug, e] of Object.entries(titlesOf(lang))) {
+    for (const lang of ["de", "ru", "fr"] as const) for (const [slug, e] of Object.entries(titlesOf(lang))) {
       expect(e.t.length, slug).toBeGreaterThan(5);
       expect(e.t, slug).not.toMatch(/—/);
       expect(englishIn(lang, e.t), `${lang} ${slug}: ${e.t}`).toEqual([]);
@@ -59,10 +60,11 @@ describe("the gate against English", () => {
     const en = JSON.parse(fs.readFileSync("src/data/destinations.json", "utf8"));
     const d = destFor(en, "ru");
     expect(d.bulgaria.can_foreigners_buy).toMatch(/[а-я]/);
-    expect(d.spain.can_foreigners_buy).toBeUndefined();          // not translated: left out, never shown in English
+    expect(d["united-kingdom"]?.can_foreigners_buy).toBeUndefined();   // not translated: left out, never shown in English
+    expect(destFor(en, "fr").spain.can_foreigners_buy).toMatch(/^Oui/);
     expect(d.spain.purchase_costs_pct).toBe(en.spain.purchase_costs_pct);
     const pcts = (x: string) => (String(x).match(/\d+[.,]\d+(?=\s?%)/g) || []).map((n) => n.replace(",", ".")).sort();
-    for (const lang of ["de", "ru"]) for (const [cc, t] of Object.entries(destTexts(lang))) {
+    for (const lang of ["de", "ru", "fr"]) for (const [cc, t] of Object.entries(destTexts(lang))) {
       if (cc === "_note") continue;
       for (const k of ["purchase_costs_breakdown", "annual_property_tax"]) if ((t as any)[k]) for (const n of pcts(en[cc][k])) expect(pcts((t as any)[k]), `${lang} ${cc} ${k} ${n}`).toContain(n);
     }
@@ -75,10 +77,14 @@ describe("which pages a language gets", () => {
     expect(langs.reduce((a, l) => a + l.pages.length + 1, 0)).toBeLessThanOrEqual(MAX_TOTAL);
     for (const l of langs) expect(l.pages.length).toBeLessThanOrEqual(CONFIG[l.lang]!.max);
   });
-  it("German covers every country with homes; Russian only the countries whose homes and rules are translated", () => {
+  it("German, French and Russian cover every country whose homes and buying rules are translated", () => {
     const cc = (lang: string) => new Set(langs.find((l) => l.lang === lang)!.pages.map((p) => p.f.cc).filter(Boolean));
-    for (const c of ["spain", "italy", "sweden", "denmark", "france", "greece", "bulgaria"]) expect(cc("de").has(c), c).toBe(true);
-    expect([...cc("ru")].sort()).toEqual(["bulgaria", "cyprus", "greece"]);
+    for (const lang of ["de", "fr", "ru"]) for (const c of ["spain", "italy", "sweden", "denmark", "france", "greece", "bulgaria", "cyprus", "portugal", "united-states", "japan"]) expect(cc(lang).has(c), `${lang} ${c}`).toBe(true);
+    for (const lang of ["de", "fr", "ru"]) expect(langs.find((l) => l.lang === lang)!.dropped.filter((d) => /title|place/.test(d.why)), lang).toEqual([]);
+    // no buying rules for the United Kingdom in any of them: no pages there
+    for (const lang of ["de", "fr", "ru"]) expect(cc(lang).has("united-kingdom"), lang).toBe(false);
+    // Russian keeps to the families its pack words
+    expect(langs.find((l) => l.lang === "ru")!.pages.every((p) => CONFIG.ru!.kinds.includes(p.f.kind))).toBe(true);
   });
   it("a home without a title takes its pages out of the language", () => {
     const one = rows.find((r) => r.country === "Bulgaria")!;
@@ -90,7 +96,7 @@ describe("which pages a language gets", () => {
   });
   it("every language with a pack has its interface words and nothing else is published", () => {
     for (const l of NEW_LANGS) expect(!!PACKS[l]).toBe(!!UI[l] && !!CONFIG[l]);
-    expect(langs.map((l) => l.lang)).toEqual(["de", "ru"]);
+    expect(langs.map((l) => l.lang)).toEqual(NEW_LANGS.filter((l) => !!PACKS[l]));
   });
 });
 
@@ -101,6 +107,22 @@ describe("wording", () => {
     expect(de.qCheapest("günstigste Wohnung zum Kauf in Spanien")).toBe("Welches ist die günstigste Wohnung zum Kauf in Spanien?");
     expect(de.qPrice("Haus zum Kauf in Italien")).toBe("Was kostet ein Haus zum Kauf in Italien?");
     expect(de.inC("Switzerland")).toBe("in der Schweiz");
+  });
+  it("French writes amounts, dates and elisions the French way, with a non-breaking space before ? and :", () => {
+    expect(fr.money(50000)).toBe("50\u00a0000\u00a0€");
+    expect(fr.date("2026-11-13")).toBe("13 novembre 2026");
+    expect(fr.date("2026-11-01")).toBe("1er novembre 2026");
+    expect(fr.qCheapest("maison la moins chère à vendre en Espagne")).toBe("Quelle est la maison la moins chère à vendre en Espagne\u00a0?");
+    expect(fr.qCheapest("appartement le moins cher à vendre en Italie")).toBe("Quel est l'appartement le moins cher à vendre en Italie\u00a0?");
+    expect(fr.qPrice("bien à vendre au Portugal")).toBe("Combien coûte un bien à vendre au Portugal\u00a0?");
+    expect(fr.qCount("appartements à vendre à Aventura (Floride)")).toBe("Combien y a-t-il d'appartements à vendre à Aventura (Floride)\u00a0?");
+    expect(fr.inC("Netherlands")).toBe("aux Pays-Bas");
+    expect(fr.place("Tuscany")).toBe("Toscane");
+    expect(fr.place("near Ringsted", undefined, "card")).toBe("près de Ringsted");
+    expect(fr.place("near Aalborg")).toBe("environs d'Aalborg");
+    expect(fr.label({ kind: "near", city: "alicante" } as never)).toBe("Près d'Alicante");
+    expect(fr.title("Maisons à vendre en Toscane (Italie)", 13, "16\u00a0000\u00a0€")).toBe("Maisons à vendre en Toscane (Italie)\u00a0: 13 annonces dès 16\u00a0000\u00a0€");
+    expect(fr.fType(1, 12)).toBe("Type\u00a0: 1 appartement et 12 maisons.");
   });
   it("Russian numbers agree with their noun", () => {
     expect(ru.title("Недорогие квартиры", 6, "58 900 €")).toContain("6 предложений");

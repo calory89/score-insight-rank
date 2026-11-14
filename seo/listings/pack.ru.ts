@@ -1,9 +1,10 @@
 // Russian wording of the listing pages (15-nov-2026), written in Russian: seo/listings/pack.ts says what each entry
 // is for. Sentences are built so that names of towns never need a case ending ("город: Kavarna"), numbers agree with
 // their noun (1 квартира, 2 квартиры, 5 квартир) and addresses stay in Latin letters (/ru/homes/bulgaria).
-// Families covered: countries, budgets, regions, areas, settings, kind of home, bedrooms (seo/langs/config.ts).
+// Families covered: countries, budgets, regions, areas, settings, kind of home, bedrooms (seo/langs/config.ts),
+// in every country whose homes have a Russian title and whose buying rules are translated (since 15-nov-2026: all).
 import type { Pack, Facts, Form, Named } from "./pack";
-import { cityBySlug, NEAR_KM } from "./places";
+import { areaBySlug, cityBySlug, NEAR_KM } from "./places";
 import { titleIn, placeIn, grouped, NB, type PlaceWords } from "./packkit";
 
 const num = (n: number) => grouped(n, NB);
@@ -29,13 +30,45 @@ const PLACES: PlaceWords = {
     Varna: "Варна", Kavarna: "Каварна", Pomorie: "Поморие", Byala: "Бяла", Burgas: "Бургас", "Black Sea": "Чёрное море", "Sunny Beach": "Солнечный берег", Nessebar: "Несебр", "Sveti Vlas": "Святой Влас",
     Crete: "Крит", Halkidiki: "Халкидики", Lesbos: "Лесбос", Messinia: "Мессения", "North Evia": "Северная Эвбея", Evia: "Эвбея", Pelion: "Пелион", Rhodes: "Родос", Samos: "Самос", Skopelos: "Скопелос", Sporades: "Спорады", Corfu: "Корфу", Peloponnese: "Пелопоннес",
     Famagusta: "Фамагуста", Paphos: "Пафос", Protaras: "Протарас", "Coral Bay": "Корал-Бэй",
+    // Regions of the other countries (15-nov-2026). Small towns keep the spelling of their country.
+    Abruzzo: "Абруццо", Apulia: "Апулия", Calabria: "Калабрия", "Lake Como": "озеро Комо", Como: "Комо", Lazio: "Лацио", Lombardy: "Ломбардия", Marche: "Марке", Piedmont: "Пьемонт", Sardinia: "Сардиния", Sicily: "Сицилия", Tuscany: "Тоскана", Umbria: "Умбрия",
+    "County Durham": "графство Дарем", Northumberland: "Нортумберленд",
+    Aude: "Од", Aveyron: "Аверон", Charente: "Шаранта", "Corrèze": "Коррез", Creuse: "Крёз", Dijon: "Дижон", Dordogne: "Дордонь", Grenoble: "Гренобль", "Haute-Garonne": "Верхняя Гаронна", "Haute-Marne": "Верхняя Марна", "Haute-Vienne": "Верхняя Вьенна",
+    "Le Havre": "Гавр", "Le Mans": "Ле-Ман", "Loir-et-Cher": "Луар и Шер", Marseille: "Марсель", Mulhouse: "Мюлуз", Nord: "Нор", "Nouvelle-Aquitaine": "Новая Аквитания", Occitanie: "Окситания", Orne: "Орн", Perpignan: "Перпиньян",
+    "Puy-de-Dôme": "Пюи-де-Дом", Roubaix: "Рубе", "Saint-Étienne": "Сент-Этьен", Toulouse: "Тулуза", Vienne: "Вьенна", Yonne: "Йонна",
+    "A Coruña": "Ла-Корунья", Albacete: "Альбасете", Alicante: "Аликанте", "Almería": "Альмерия", Asturias: "Астурия", Barcelona: "Барселона", Cantabria: "Кантабрия", "Castellón": "Кастельон", "Cádiz": "Кадис", Fuerteventura: "Фуэртевентура",
+    Gipuzkoa: "Гипускоа", Girona: "Жирона", "Gran Canaria": "Гран-Канария", Granada: "Гранада", Huelva: "Уэльва", "La Palma": "Ла-Пальма", "Las Palmas": "Лас-Пальмас", Lugo: "Луго", Madrid: "Мадрид", Murcia: "Мурсия", "Málaga": "Малага",
+    Salamanca: "Саламанка", Sevilla: "Севилья", Tarragona: "Таррагона", Tenerife: "Тенерифе", Teruel: "Теруэль", Valencia: "Валенсия", Valladolid: "Вальядолид", Cartagena: "Картахена", Torrevieja: "Торревьеха",
+    "Central Jutland": "Центральная Ютландия", "East Jutland": "Восточная Ютландия", "North Jutland": "Северная Ютландия", "West Jutland": "Западная Ютландия", "South Jutland": "Южная Ютландия", "Sønderjylland": "Южная Ютландия (Sønderjylland)",
+    Falster: "Фальстер", Funen: "Фюн", Lolland: "Лолланн", Mors: "Морс", Thy: "Тю", "West Zealand": "Западная Зеландия",
+    Fukui: "Фукуи", Gifu: "Гифу", Gunma: "Гумма", Hyogo: "Хёго", Kagawa: "Кагава", Kanagawa: "Канагава", Kyoto: "Киото", Nagano: "Нагано", Niigata: "Ниигата", Oita: "Оита", Okayama: "Окаяма", Shiga: "Сига", Shizuoka: "Сидзуока", Tochigi: "Тотиги",
+    Wakayama: "Вакаяма", Yamanashi: "Яманаси",
+    Beja: "Бежа", "Bragança": "Браганса", "Castelo Branco": "Каштелу-Бранку", Portalegre: "Порталегри", "Santarém": "Сантарен", Tavira: "Тавира", Algarve: "Алгарве", Viseu: "Визеу", "Évora": "Эвора",
+    Arkansas: "Арканзас", Florida: "Флорида", Illinois: "Иллинойс", Indiana: "Индиана", Kentucky: "Кентукки", Maine: "Мэн", Maryland: "Мэриленд", "Allegheny Mountains": "Аллеганские горы", Michigan: "Мичиган", Missouri: "Миссури",
+    "New York": "штат Нью-Йорк", "North Carolina": "Северная Каролина", Ohio: "Огайо", Oklahoma: "Оклахома", Pennsylvania: "Пенсильвания", "South Carolina": "Южная Каролина", Texas: "Техас", "West Virginia": "Западная Виргиния",
+    Wisconsin: "Висконсин", "Lake Superior region": "район озера Верхнее", Aventura: "Авентура", "French Island": "French Island", "Canadohta Lake": "Canadohta Lake", "Big Wolf Lake": "Big Wolf Lake", "East Palestine": "East Palestine",
+    "New Brunswick": "Нью-Брансуик", Newfoundland: "Ньюфаундленд", "Nova Scotia": "Новая Шотландия", Saskatchewan: "Саскачеван", "Prince Edward Island": "Остров Принца Эдуарда",
+    Bern: "Берн", "Neuchâtel": "Невшатель", "St. Gallen": "Санкт-Галлен", Valais: "Вале", "Samaná": "Самана", "San Pedro de Macorís": "Сан-Педро-де-Макорис", Jalisco: "Халиско", Puebla: "Пуэбла", Sinaloa: "Синалоа",
+    Blekinge: "Блекинге", "Central Sweden": "Центральная Швеция", "Northern Sweden": "Северная Швеция", Dalsland: "Дальсланд", "Gävleborg": "Евлеборг", "Jämtland": "Емтланд", "Jönköping": "Йёнчёпинг", Kronoberg: "Крунуберг", "Malmö": "Мальмё",
+    Medelpad: "Медельпад", Norrbotten: "Норрботтен", "Skåne": "Сконе", "Småland": "Смоланд", "Värmland": "Вермланд", "Västerbotten": "Вестерботтен", "Västernorrland": "Вестерноррланд", "Västra Götaland": "Вестра-Гёталанд", Telemark: "Телемарк",
+    Amsterdam: "Амстердам", Bremen: "Бремен", Chemnitz: "Хемниц", Gelsenkirchen: "Гельзенкирхен", Krefeld: "Крефельд", Magdeburg: "Магдебург", Wuppertal: "Вупперталь",
+    Bytom: "Бытом", Gniezno: "Гнезно", "Greater Poland": "Великопольское воеводство", "Kuyavia-Pomerania": "Куявско-Поморское воеводство", "Lower Silesia": "Нижнесилезское воеводство", Lubusz: "Любушское воеводство",
+    Masovia: "Мазовецкое воеводство", Opole: "Опольское воеводство", Podlaskie: "Подляское воеводство", Pomerania: "Поморское воеводство", Silesia: "Силезское воеводство", Subcarpathia: "Подкарпатское воеводство",
+    "Warmia-Masuria": "Варминьско-Мазурское воеводство", "Wałbrzych": "Валбжих", "West Pomerania": "Западно-Поморское воеводство", Zabrze: "Забже", "Łódź": "Лодзь", "Świętokrzyskie": "Свентокшиское воеводство",
   },
   near: (n, card) => (card ? `рядом: ${n}` : `окрестности: ${n}`),
   central: (n) => `${n}, центр`,
   area: (n) => `${n} и окрестности`,
 };
 const place = (n: string, _cc?: string, where?: "card") => placeIn(PLACES, n, where);
-const AREA: Record<string, [string, string]> = { "black-sea-coast": ["Черноморское побережье", "на черноморском побережье"], peloponnese: ["Пелопоннес", "на Пелопоннесе"] };
+const AREA: Record<string, [string, string]> = { "black-sea-coast": ["Черноморское побережье", "на черноморском побережье"], peloponnese: ["Пелопоннес", "на Пелопоннесе"],
+  "costa-del-sol": ["Коста-дель-Соль", "на побережье Коста-дель-Соль"], "costa-blanca": ["Коста-Бланка", "на побережье Коста-Бланка"], "costa-calida": ["Коста-Калида", "на побережье Коста-Калида"], "costa-de-almeria": ["Коста-де-Альмерия", "на побережье Коста-де-Альмерия"],
+  "canary-islands": ["Канарские острова", "на Канарских островах"], "balearic-islands": ["Балеарские острова", "на Балеарских островах"], "green-spain": ["Зелёная Испания", "на севере Испании («Зелёная Испания»)"], algarve: ["Алгарве", "в Алгарве"],
+  "southern-italy": ["Южная Италия", "на юге Италии"], "abruzzo-and-marche": ["Абруццо и Марке", "в Абруццо и Марке"], lunigiana: ["Луниджана", "в Луниджане"], "lake-maggiore": ["Лаго-Маджоре", "у озера Лаго-Маджоре"], "lake-garda": ["Озеро Гарда", "у озера Гарда"],
+  limousin: ["Лимузен", "в Лимузене"], hokkaido: ["Хоккайдо", "на Хоккайдо"], tohoku: ["Тохоку", "в регионе Тохоку"], kanto: ["Канто", "в регионе Канто"], chubu: ["Тюбу", "в регионе Тюбу"], kansai: ["Кансай", "в регионе Кансай"], chugoku: ["Тюгоку", "в регионе Тюгоку"],
+  shikoku: ["Сикоку", "на Сикоку"], kyushu: ["Кюсю", "на Кюсю"], norrland: ["Норрланд", "в Норрланде"], jutland: ["Ютландия", "в Ютландии"], "lolland-falster": ["Лолланн и Фальстер", "на островах Лолланн и Фальстер"],
+  "amsterdam-zuidoost": ["Амстердам-Зёйдост", "в районе Амстердам-Зёйдост"], "eastern-germany": ["Саксония, Саксония-Анхальт и Тюрингия", "в Саксонии, Саксонии-Анхальт и Тюрингии"], masuria: ["Мазурия", "в Мазурии"],
+  "atlantic-canada": ["Атлантическая Канада", "в атлантических провинциях Канады"] };
 const areaL = (f: { area?: string }) => AREA[f.area || ""]?.[0] || "";
 const areaIn = (f: { area?: string }) => AREA[f.area || ""]?.[1] || "";
 const city = (slug: string) => cityBySlug(slug)?.[1] || slug;
@@ -79,7 +112,7 @@ function phrase(F: Facts, c: Case): string {
   }
 }
 const what = (F: Facts, form: Form = "many") => phrase(F, CASE[form]);
-const ccy = (n: number, c: string) => `${num(n)} ${c === "GBP" ? "фунтов" : c === "USD" ? "долларов" : "евро"}`;
+const ccy = (n: number, c: string) => `${num(n)} ${c === "GBP" ? "фунтов стерлингов" : c === "USD" ? "долларов США" : "евро"}`;
 const AMEN: Record<string, string> = { garden: "с садом", terrace: "с террасой", garage: "с гаражом", pool: "с бассейном", fireplace: "с камином", sauna: "с сауной" };
 const LABEL: Record<string, string> = { "by-the-sea": "У моря", "village-houses": "В деревнях", "in-town": "В городе", apartments: "Квартиры", houses: "Дома" };
 
@@ -101,7 +134,7 @@ export const ru: Pack = {
   crumbRoot: "RealHunt", crumbCheap: "Недорогие дома",
   crumbCountry: (c) => `Недвижимость ${IN_BY_NAME[c] || c}`,
   label: (f) => (f.kind === "area" ? areaL(f) : f.kind === "near" ? `Рядом: ${city(f.city || "")}` : f.kind === "ccyBand" ? `До ${ccy(f.cap!, f.ccy!)}`
-    : f.cap ? `До ${money(f.cap)}` : f.kind === "region" ? place(String(f.region)) || String(f.region) : f.kind === "town" ? String(f.town) : f.kind === "beds" ? (f.beds === 4 ? "4 и более спален" : bedsN(f.beds!)) : f.kind === "country" ? country(String(f.country)) : LABEL[f.key!] || String(f.key)),
+    : f.cap ? `До ${money(f.cap)}` : f.kind === "region" ? upper(place(String(f.region)) || String(f.region)) : f.kind === "town" ? String(f.town) : f.kind === "beds" ? (f.beds === 4 ? "4 и более спален" : bedsN(f.beds!)) : f.kind === "country" ? country(String(f.country)) : LABEL[f.key!] || String(f.key)),
   updated: (d, newest) => `Обновлено ${d}${newest ? ` Последний объект добавлен ${newest}` : ""}`,
   l1: (n, w, min, max) => (min === max ? `Число ${w} на RealHunt сегодня: ${n}, цена у всех одна: ${min}.` : `Число ${w} на RealHunt сегодня: ${n}, цены от ${min} до ${max}.`),
   l2: (title, town, price, sqm, beds) => `Самый дешёвый вариант стоит ${price}: ${title}, ${town}${sqm || beds ? ` (${[sqm ? `${sqm} м²` : "", beds ? bedsN(beds) : ""].filter(Boolean).join(", ")})` : ""}.`,
@@ -114,7 +147,7 @@ export const ru: Pack = {
   card: { isNew: "Новый", drop: (p) => `Цена снижена на ${p}${NB}%`, score: "Оценка", beds: (n) => `${n} спал.`, noPhoto: "Фото в объявлении" },
   tableTitle: (n, shown) => (n === shown ? `Сравнение всех объектов (${n}), от дешёвых к дорогим` : `Сравнение: ${shown} самых дешёвых из ${n}`),
   th: { home: "Объект", place: "Место", price: "Цена", size: "Площадь", ppsqm: "За м²", beds: "Спален", score: "Оценка", added: "Добавлен" },
-  factsTitle: (F) => (F.f.cap ? `Что можно купить за ${money(F.f.cap)}${F.f.area ? ` ${areaIn(F.f)}` : F.f.region ? "" : F.f.country ? ` ${inC(F.f.country)}` : ""}` : `Объекты в цифрах (${F.n})`),
+  factsTitle: (F) => (F.f.kind === "ccyBand" ? `Что можно купить за ${ccy(F.f.cap!, F.f.ccy!)}${F.f.country ? ` ${inC(F.f.country)}` : ""}` : F.f.cap ? `Что можно купить за ${money(F.f.cap)}${F.f.area ? ` ${areaIn(F.f)}` : F.f.region ? "" : F.f.country ? ` ${inC(F.f.country)}` : ""}` : `Объекты в цифрах (${F.n})`),
   fSize: (med, max, title) => `Площадь: у половины ${med} м² и больше. Самый большой объект, ${max} м²: ${title}.`,
   fBeds: (b, unknown) => `Спальни: ${b.map(([k, n]) => `${k === 4 ? "4 и более" : k}: ${objects(n)}`).join("; ")}${unknown ? `; не указано в объявлении: ${unknown}` : ""}.`,
   fType: (a, h) => `Тип: ${[a ? `${a} ${pl(a, "квартира", "квартиры", "квартир")}` : "", h ? `${h} ${pl(h, "дом", "дома", "домов")}` : ""].filter(Boolean).join(" и ")}.`,
@@ -177,7 +210,14 @@ export const ru: Pack = {
     area: "По зоне", combo: "По особенностям и бюджету", ccy: "В фунтах и долларах", near: "Рядом с городом", ranked: "Рейтинги" },
   ccy,
   city,
-  how: (F) => (F.f.kind === "area" && F.f.area === "black-sea-coast" ? "В эту подборку входят объекты в Варненской, Бургасской и Добричской областях, расположенные у моря: не дальше 5 км от берега или с пометкой в объявлении, что это жильё у пляжа." : ""),
+  how: (F, v) => {
+    const f = F.f;
+    if (f.kind === "ccyBand") return `По справочному курсу Европейского центрального банка на ${v.date} ${v.cap} равны ${v.eur} (1${NB}€ = ${v.rate.replace(".", ",")} ${f.ccy === "GBP" ? "фунта стерлингов" : "доллара США"}). Продажа идёт в евро или в валюте страны: суммы в ${f.ccy === "GBP" ? "фунтах" : "долларах"} на этой странице приблизительные и меняются вместе с курсом.`;
+    if (f.kind !== "area") return "";
+    if (f.area === "black-sea-coast") return "В эту подборку входят объекты в Варненской, Бургасской и Добричской областях, расположенные у моря: не дальше 5 км от берега или с пометкой в объявлении, что это жильё у пляжа.";
+    const a = areaBySlug(f.cc || "", f.area || "");
+    return a && v.regions ? `В подборку «${areaL(f)}» входят объекты из ${a.hoods ? "этих районов" : "этих регионов"}: ${v.regions}.${a.sea ? " Учитываются только объекты у моря: не дальше 5 км от берега или с пометкой в объявлении, что это жильё у пляжа." : ""}` : "";
+  },
   l1rank: (w, min, max) => `Цены (${w}): от ${min} до ${max}.`,
   gridTitleRank: (_key, n) => `Объекты (${n}) по порядку`,
   x: {
