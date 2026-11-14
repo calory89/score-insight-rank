@@ -79,6 +79,8 @@ describe("page types", () => {
     expect(classify("/homes/italy/under-80000")).toEqual({ kind: "band", cc: "italy" });
     expect(classify("/homes/italy/by-the-sea").kind).toBe("type");
     expect(classify("/homes/italy/tuscany").kind).toBe("region");
+    expect(classify("/homes/spain/2-bedroom").kind).toBe("type");
+    expect(classify("/homes/italy/tuscany/under-100000").kind).toBe("place");
     expect(classify("/can-i-buy/swiss-in-united-states")).toEqual({ kind: "canbuy", cc: "united-states" });
     expect(classify("/top/bali/some-project").kind).toBe("project");
     expect(classify("/top/how-we-rank").kind).toBe("page");
@@ -120,12 +122,23 @@ describe("the pass over a built site", () => {
     put("legal/terms", html({ title: "Terms of use · RealHunt", path: "/legal/terms" }));
     fs.writeFileSync(path.join(root, "sitemap-homes.xml"), `<urlset><url><loc>https://realhunt.co/deal/it-b</loc><lastmod>2026-10-02</lastmod><image:image><image:loc>https://realhunt.co/finds/it-b.webp</image:loc></image:image></url></urlset>`);
     fs.writeFileSync(path.join(root, "sitemap.xml"), "<sitemapindex></sitemapindex>");
+    // what seo/listings leaves: its redirects and a "moved" stub for an old address
+    fs.writeFileSync(path.join(root, "redirects.json"), JSON.stringify({ "/old/listing": "/homes/italy" }));
+    put("homes/italy/old-band", html({ title: "This page has moved. · RealHunt", path: "/homes/italy", noindex: true, body: `<main class="rh-static" data-rh-moved="/homes/italy"><p>This page has moved.</p></main>` }));
   };
   const homes = all;
   beforeEach(() => { dir = ""; build(); });
   afterEach(() => { fs.rmSync(dir, { recursive: true, force: true }); });
   const run = (state: State | null = null, today = "2026-11-14") => polish(root, { cwd: dir, state, today });
 
+  it("leaves the stubs of moved pages alone", () => {
+    const before = read("homes/italy/old-band");
+    const rep = run();
+    expect(read("homes/italy/old-band")).toBe(before);
+    expect(rep.summary.moved_stubs).toBe(1);
+    expect(fs.readdirSync(root).filter((f) => /^sitemap.*\.xml$/.test(f)).map((f) => fs.readFileSync(path.join(root, f), "utf8")).join("")).not.toContain("old-band");
+    expect(pickTitle("Homes under €80,000 in the Dominican Republic (42, from €12,000) · RealHunt", "en", "band")).toBe("Homes under €80,000 in the Dominican Republic (42)");
+  });
   it("passes its own checks and reports the numbers", () => {
     const rep = run();
     expect(rep.failures).toEqual([]);
@@ -182,9 +195,10 @@ describe("the pass over a built site", () => {
     expect(italy).toContain("A home that was sold");
     expect(rep.healed_links["/deal/sold-long-ago"]).toBe(1);
     const red = JSON.parse(fs.readFileSync(path.join(root, "redirects.json"), "utf8"));
-    expect(red).toContainEqual({ from: "/deal/it-a-again", to: "/deal/it-a", status: 301 });
-    expect(red).toContainEqual({ from: "/country/italy", to: "/homes/italy", status: 301 });
-    expect(red).toContainEqual({ from: "/es/country/italy", to: "/es/homes/italy", status: 301 });
+    expect(red["/deal/it-a-again"]).toBe("/deal/it-a");
+    expect(red["/old/listing"]).toBe("/homes/italy"); // what another step wrote stays
+    expect(red["/country/italy"]).toBe("/homes/italy");
+    expect(red["/es/country/italy"]).toBe("/es/homes/italy");
   });
   it("writes a site map page per group, in both languages, that reaches every indexable page", () => {
     run();
@@ -213,8 +227,8 @@ describe("the pass over a built site", () => {
     expect(xml()).toContain("<loc>https://realhunt.co/legal/terms</loc></url>"); // no date before, no change, still no date
     expect(xml()).not.toContain("<loc>https://realhunt.co/deal/it-c</loc><lastmod>2026-11-20");
     const red = JSON.parse(fs.readFileSync(path.join(root, "redirects.json"), "utf8"));
-    expect(red).toContainEqual({ from: "/deal/it-f", to: "/homes/italy", status: 301 });
-    expect(red).toContainEqual({ from: "/es/deal/it-f", to: "/es/homes/italy", status: 301 });
+    expect(red["/deal/it-f"]).toBe("/homes/italy");
+    expect(red["/es/deal/it-f"]).toBe("/es/homes/italy");
   });
   it("fails on a link to a page that does not exist, on two pages with one title and on hreflang to a noindex page", () => {
     put("about", html({ title: "About · RealHunt", path: "/about", body: `<main class="rh-static"><h1>About</h1><a href="/no-such-page">x</a></main>`, head: alt("/about") }));

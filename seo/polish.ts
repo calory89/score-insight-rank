@@ -89,7 +89,8 @@ export function classify(en: string): { kind: Kind; cc: string } {
     if (!c) return { kind: "country", cc: b };
     if (s.length > 3) return { kind: "place", cc: b };
     if (/^under-\d+$/.test(c)) return { kind: "band", cc: b };
-    return { kind: c in HOME_TYPES ? "type" : "region", cc: b };
+    // a setting, a kind of home or a number of bedrooms (seo/listings/facets.ts); anything else is a region
+    return { kind: c in HOME_TYPES || /^(\d-bedroom|apartments|houses|with-[a-z-]+|near-[a-z-]+)$/.test(c) ? "type" : "region", cc: b };
   }
   if (a === "costs" && b) return { kind: "costs", cc: b };
   if (a === "guide" && b) return { kind: "guide", cc: b };
@@ -155,11 +156,17 @@ export function polish(root: string, opts: PolishOpts = {}): Audit {
 
   const files: string[] = []; walk(root, files);
   const pages = new Map<string, Pg>();
+  // "This page has moved" files that seo/listings writes for old addresses (noindex, canonical and refresh to the new
+  // page): not pages of the site. They are left as they are; a link to one is pointed at the page it moved to.
+  const stubs = new Map<string, string>();
   for (const f of files) {
     const rel = path.relative(root, path.dirname(f)).split(path.sep).join("/");
     const p = rel ? "/" + rel : "/";
+    const raw = fs.readFileSync(f, "utf8");
+    const moved = /<main\b[^>]*\sdata-rh-moved="([^"]+)"/.exec(raw);
+    if (moved) { stubs.set(p, toPath(unesc(moved[1]))); continue; }
     // a second pass over the same folder starts from the page without the block of the first
-    pages.set(p, readPage(p, f, fs.readFileSync(f, "utf8").replace(/<aside class="rh-rel[\s\S]*?<\/aside><script>[\s\S]*?<\/script>/g, "")));
+    pages.set(p, readPage(p, f, raw.replace(/<aside class="rh-rel[\s\S]*?<\/aside><script>[\s\S]*?<\/script>/g, "")));
   }
   const get = (p: string) => pages.get(p);
   const live = (p: string) => { const g = pages.get(p); return !!g && !g.noindex && !g.dupOf; };
@@ -193,6 +200,7 @@ export function polish(root: string, opts: PolishOpts = {}): Audit {
     let r = rootOf(pg.html), touched = false;
     r = r.replace(/<a\b[^>]*?\shref="(\/[^"]*)"[^>]*>([\s\S]*?)<\/a>/g, (m, h: string, inner: string) => {
       const p = toPath(h), t = get(p);
+      if (!t && stubs.has(p) && get(stubs.get(p)!)) { touched = true; return m.replace(`href="${h}"`, `href="${stubs.get(p)}"`); }
       if (t?.dupOf) { touched = true; return m.replace(`href="${h}"`, `href="${t.dupOf}"`); }
       // a home that was sold or withdrawn: its pages go with every data update, the texts that mention it stay
       if (!t && /^\/(es\/)?deal\/[^/]+$/.test(p)) { touched = true; healed[p] = (healed[p] || 0) + 1; return inner; }
@@ -409,11 +417,19 @@ export function polish(root: string, opts: PolishOpts = {}): Audit {
   const sm: Record<string, number> = {};
 
   // ---- 6. redirects for old and removed URLs
-  const redirects = buildRedirects({ pages, live, prev, cwd, slugCountry, rows });
-  state.redirects = redirects;
+  const own = buildRedirects({ pages, live, prev, cwd, slugCountry, rows });
+  state.redirects = own;
+  // dist/redirects.json is one flat object { "/old": "/new" } shared with seo/listings, which writes its entries
+  // first: ours are added, never in place of one that is there. "410" as the value means the address is gone.
+  let redirects: Record<string, string> = {};
+  try { const had = JSON.parse(fs.readFileSync(path.join(root, "redirects.json"), "utf8")); if (had && typeof had === "object" && !Array.isArray(had)) redirects = had; } catch { /* none yet */ }
+  for (const r of own) if (!(r.from in redirects)) redirects[r.from] = r.to ?? "410";
+  // no chains: an address goes straight to where its target went
+  for (const [from, to] of Object.entries(redirects)) { let t = to, n = 0; while (t !== "410" && redirects[t] && redirects[t] !== t && n++ < 5) t = redirects[t]; if (t !== to) redirects[from] = t; }
+  for (const from of Object.keys(redirects)) if (pages.has(from) && !pages.get(from)!.dupOf) delete redirects[from]; // the address is a page
 
   // ---- 8. audit
-  const rep = audit({ pages, live, appRoute, healed, ldNotes, lastmod, redirects, es: (() => { try { return JSON.parse(fs.readFileSync(path.join(root, "es-coverage.json"), "utf8")); } catch { return null; } })() });
+  const rep = audit({ pages, live, appRoute, healed, ldNotes, lastmod, redirects: Object.keys(redirects).length, stubs, es: (() => { try { return JSON.parse(fs.readFileSync(path.join(root, "es-coverage.json"), "utf8")); } catch { return null; } })() });
 
   if (opts.write !== false) {
     for (const pg of pages.values()) { fs.mkdirSync(path.dirname(pg.file), { recursive: true }); fs.writeFileSync(pg.file, pg.html); }

@@ -2,7 +2,7 @@
 // published. `failures` stops the build (and CI): broken internal links, an indexable page without title, description
 // or exactly one h1, two indexable pages with the same title, hreflang that points at a noindex or missing page, an
 // indexable page nothing links to. Everything else is a number to watch.
-import type { Pg, Redirect } from "./polish";
+import type { Pg } from "./polish";
 import { ldOf, rootOf } from "./polish";
 import { TITLE_MAX, DESC_MIN, DESC_MAX } from "./polishMeta";
 
@@ -26,7 +26,7 @@ const median = (xs: number[]) => { const a = xs.slice().sort((p, q) => p - q); r
 // availability on a home; author and dates on an article).
 const NEEDS: Record<string, string[]> = { deal: ["RealEstateListing"], country: ["ItemList"], band: ["ItemList"], type: ["ItemList"], region: ["ItemList"], cheap: ["ItemList"], source: ["ItemList"], topdest: ["ItemList"], home: ["ItemList", "WebSite", "Organization"] };
 
-export function audit(a: { pages: Map<string, Pg>; live: (p: string) => boolean; appRoute: (p: string) => boolean; healed: Record<string, number>; ldNotes: Record<string, number>; lastmod: Map<string, string>; redirects: Redirect[]; es?: any }): Audit {
+export function audit(a: { pages: Map<string, Pg>; live: (p: string) => boolean; appRoute: (p: string) => boolean; healed: Record<string, number>; ldNotes: Record<string, number>; lastmod: Map<string, string>; redirects: number; stubs?: Map<string, string>; es?: any }): Audit {
   const all = [...a.pages.values()];
   const idx = all.filter((p) => a.live(p.path));
   const failures: string[] = [];
@@ -40,7 +40,7 @@ export function audit(a: { pages: Map<string, Pg>; live: (p: string) => boolean;
     for (const l of pg.links) {
       const t = a.pages.get(l);
       if (t) { if (a.live(pg.path) && l !== pg.path) (inl.get(l) || inl.set(l, new Set()).get(l)!).add(pg.path); if (t.dupOf) list("links_to_duplicate", `${pg.path} -> ${l}`); }
-      else if (!NOT_PAGE.test(l) && !a.appRoute(l)) list("broken_links", `${pg.path} -> ${l}`);
+      else if (!NOT_PAGE.test(l) && !a.appRoute(l) && !a.stubs?.has(l)) list("broken_links", `${pg.path} -> ${l}`);
     }
   }
   const inlinks = (p: string) => inl.get(p)?.size || 0;
@@ -117,7 +117,7 @@ export function audit(a: { pages: Map<string, Pg>; live: (p: string) => boolean;
     duplicate_titles: n("duplicate_titles"), duplicate_descriptions: n("duplicate_descriptions"), h1_not_one: n("h1_not_one"),
     broken_links: n("broken_links"), healed_links: Object.keys(a.healed).length, orphans: n("orphans"), inlinks_under_3: n("inlinks_under_3"),
     hreflang_problems: n("hreflang_problems"), pages_with_hreflang: idx.filter((p) => p.alt.en).length, thin_under_150_words: n("thin_under_150_words"),
-    mixed_content: n("mixed_content"), no_lang: n("no_lang"), with_lastmod: a.lastmod.size, redirects: a.redirects.length,
+    mixed_content: n("mixed_content"), no_lang: n("no_lang"), with_lastmod: a.lastmod.size, redirects: a.redirects, moved_stubs: a.stubs?.size || 0,
   };
   for (const k of Object.keys(lists)) if (lists[k].length > 60) lists[k] = [...lists[k].slice(0, 60), `... ${lists[k].length - 60} more`];
   return { summary, failures, groups, noindex_by_polish: byWhy, healed_links: a.healed, json_ld: { notes: a.ldNotes, missing }, lists, spanish: a.es ? { twins: a.es.twins, groups: a.es.groups } : undefined };

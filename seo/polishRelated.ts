@@ -25,7 +25,7 @@ export type Row = { title: string; list?: boolean; site?: boolean; links: Link[]
 
 export const STR = {
   en: {
-    breadcrumb: "Breadcrumb", title: "Keep exploring", homesIn: "Homes in", allHomes: "All homes", regionsOf: "Regions of", buyingIn: "Buying in",
+    breadcrumb: "Breadcrumb", title: "Keep exploring", homesIn: "Homes in", allHomes: "All homes", regionsOf: "Regions of", inRegions: "Inside the regions", buyingIn: "Buying in",
     guide: "How to buy, step by step", costs: "Costs and taxes", calc: "Buying-cost calculator", cheapIn: "Cheap houses in", compare: "Compare countries",
     similar: "Similar homes", otherCountries: "Other countries", sameSearch: "The same search in other countries", moreResearch: "More research",
     moreSources: "Other portals", otherDest: "Other destinations", newBuilds: "New builds", explore: "RealHunt", more: "More",
@@ -35,7 +35,7 @@ export const STR = {
     smIntro: (n: number) => `${n} pages.`, other: "General",
   },
   es: {
-    breadcrumb: "Ruta", title: "Sigue explorando", homesIn: "Casas en", allHomes: "Todas las casas", regionsOf: "Regiones de", buyingIn: "Comprar en",
+    breadcrumb: "Ruta", title: "Sigue explorando", homesIn: "Casas en", allHomes: "Todas las casas", regionsOf: "Regiones de", inRegions: "Dentro de las regiones", buyingIn: "Comprar en",
     guide: "Cómo comprar, paso a paso", costs: "Gastos e impuestos", calc: "Calculadora de gastos de compra", cheapIn: "Casas baratas en", compare: "Comparar países",
     similar: "Casas parecidas", otherCountries: "Otros países", sameSearch: "La misma búsqueda en otros países", moreResearch: "Más artículos",
     moreSources: "Otros portales", otherDest: "Otros destinos", newBuilds: "Obra nueva", explore: "RealHunt", more: "Más",
@@ -148,9 +148,14 @@ export function relatedRows(pg: Pg, c: RelCtx): Row[] {
   const country = (cc: string, full: boolean) => {
     const where = c.inThe(cc, lang);
     add(`${s.homesIn} ${where}`, [...link(at(`/homes/${cc}`), s.allHomes), ...K("band", cc).slice().sort((a, b) => num(a) - num(b)).flatMap((p) => link(p)), ...K("type", cc).flatMap((p) => link(p))]);
-    const regions = [...K("region", cc), ...K("place", cc)];
+    // inside a region: its towns and budgets (pages one level below it)
+    const region = pg.kind === "region" ? pg : pg.kind === "place" ? c.get(pg.path.split("/").slice(0, -1).join("/")) : undefined;
+    if (region && c.live(region.path)) add(region.label, [...link(region, s.allHomes), ...K("place", cc).filter((p) => p.path.startsWith(region.path + "/")).sort((a, b) => num(a) - num(b)).flatMap((p) => link(p))]);
+    const regions = K("region", cc);
     const i = regions.indexOf(pg);
     add(`${s.regionsOf} ${where}`, (i >= 0 ? after(regions, i, 12) : full ? regions.slice(0, 30) : some(regions, 8, pg.path)).flatMap((p) => link(p)));
+    // the country page also reaches the pages inside its regions (towns, a budget in a region), by their full name
+    if (full) add(s.inRegions, K("place", cc).slice(0, 40).flatMap((p) => link(p, p.h1[0] || p.label)));
     add(`${s.buyingIn} ${where}`, buying(cc, full || pg.kind === "guide" || pg.kind === "costs" || pg.kind === "calc" ? 20 : 3));
     add(`${s.cheapIn} ${where}`, some(K("cheap", cc).filter((p) => p.path !== pg.path), full ? 12 : 4, pg.path).flatMap((p) => link(p)));
     add(s.compare, some(pairsOf(cc), full ? 8 : 3, pg.path).flatMap((p) => link(p)));

@@ -56,6 +56,9 @@ export function titleCandidates(title: string, lang: Lang, kind: Kind): string[]
     // "... (2026)" / "(November 2026)": a date in brackets at the end goes before any word does
     const noDate = core.replace(/\s*\((?:[A-Za-zé]+ (?:de )?)?20\d\d(?:-\d\d)?\)$/, "");
     if (noDate !== core && noDate.length >= 20) base.push(noDate);
+    // "Homes under €80,000 in Italy (42, from €12,000)": first the price goes, then the count
+    const cnt = /^(.+?)\s*\((\d+)(?:,\s*[^)]+)?\)$/.exec(core);
+    if (cnt) { if (`${cnt[1]} (${cnt[2]})` !== core) base.push(`${cnt[1]} (${cnt[2]})`); if (cnt[1].length >= 20) base.push(cnt[1]); }
     // "Can a Swiss citizen buy property in Spain? Yes · Rules for Swiss buyers (November 2026)" -> first segment
     const segs = core.split(" · ");
     for (let n = segs.length - 1; n >= 1; n--) { const x = segs.slice(0, n).join(" · "); if (x.length >= 20) base.push(x); }
