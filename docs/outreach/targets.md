@@ -171,3 +171,19 @@ Creating these profiles needs Carlos's own accounts and approval; none was creat
 - Paid link sellers, "write for us" farms and directory blasts: they can hurt more than help.
 - Portals that compete for the same listings (Kyero, Rightmove Overseas, Realtor.com International): they will not link, and asking wastes a contact.
 - Sites that did not answer or returned "not found" on 14 Nov 2026 (two Substack newsletters, one Spanish agency blog, one expat classifieds site).
+
+## 9. Añadido el 14 de noviembre de 2026, segunda ronda (en español, para Carlos)
+
+Esta ronda no repite las filas de arriba: añade la **vía de contacto publicada por cada destinatario** y destinatarios nuevos. Todo está en los archivos por tema, con lo que se comprobó ese día:
+
+| Qué | Archivo |
+|---|---|
+| Medios en inglés con su vía de contacto (The Local, The Connexion, Sur in English, Italy Magazine, Wanted in Rome, Cyprus Mail, The Sofia Globe y otros), pódcast, ferias, listas de herramientas, investigadores, programas contra la despoblación | [prensa.md](prensa.md) |
+| Foros y comunidades con la norma que hay que respetar en cada uno | [comunidades.md](comunidades.md) |
+| Registros profesionales, asociaciones, cámaras y redes de pueblos | [alianzas.md](alianzas.md) |
+
+Correcciones a filas anteriores, vistas el 14 nov 2026:
+
+- Fila 99 (Qwoted): el plan gratis permite 2 respuestas al mes.
+- Fila 67 y 81 a 87 (Reddit): no se pudieron leer las normas de ninguna comunidad; hay que leerlas a mano antes de publicar.
+- Destinatario descartado: A Brother Abroad publica que no acepta artículos invitados ni intercambios.

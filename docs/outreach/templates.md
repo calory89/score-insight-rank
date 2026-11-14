@@ -229,3 +229,9 @@ Quién soy: Carlos de Ory, fundador de RealHunt (realhunt.co), que busca, revisa
 
 Carlos de Ory
 RealHunt · carlos@equinoxinvestmentgroup.com
+
+---
+
+## More drafts (added 14 November 2026)
+
+Templates 7 onwards live in [borradores.md](borradores.md) (press, launches, town halls, podcasts, fairs; labelled B1 to B18, in English, Spanish, Italian, Dutch and Japanese) and in [alianzas.md](alianzas.md) (partners; labelled A1 to A7, in English, Spanish, Italian, French and German). The rules at the top of this file apply to all of them.
