@@ -66,8 +66,12 @@ function iframePage(k: Kit, key: string, name: string, n: number, homes: Home[])
 let tplN = 0;
 // Spanish pages written here, so finishAssets can point their links at the Spanish copy of every page that has one.
 const mineEs: string[] = [];
+/** A Spanish page written by another module of this family (seo/tools/): its links get the same treatment. */
+export const registerEsPage = (rel: string) => { mineEs.push(rel); };
 
+let dataTitles: [string, string][] | null = null;
 export function writeTrust(c: AssetCtx, rows: Home[], sets: Sets) {
+  dataTitles = sets.en.map((d) => [d.slug, d.h1]);
   const trEs = createEsPass().tr;
   const ranked = rows.slice().sort((a, b) => (Number(b.nota) || 0) - (Number(a.nota) || 0));
   const cs = countryStats(rows).sort((a, b) => b.n - a.n);
@@ -349,9 +353,10 @@ export function finishAssets(root: string, today = new Date().toISOString().slic
   if (fs.existsSync(llms)) {
     const txt = fs.readFileSync(llms, "utf8");
     if (!txt.includes("## Data to quote")) {
-      const titles: [string, string][] = [["prices", "Median asking price and price per m² by country"], ["what-your-budget-buys", "What €50,000, €100,000 and €200,000 buy, by country"], ["buying-costs-by-country", "Taxes and fees on top of the price, ranked"], ["where-foreigners-can-buy", "Who can buy where, by nationality"], ["best-scored-regions", "Regions ranked by median score"]];
+      const titles: [string, string][] = dataTitles || [["prices", "Median asking price and price per m² by country"], ["what-your-budget-buys", "What €50,000, €100,000 and €200,000 buy, by country"], ["buying-costs-by-country", "Taxes and fees on top of the price, ranked"], ["where-foreigners-can-buy", "Who can buy where, by nationality"], ["best-scored-regions", "Regions ranked by median score"]];
       const block = `## Data to quote (CC BY 4.0, with a link)\n\n- [All datasets](${SITE}/research)\n` + titles.filter(([s]) => has(`research/${s}/index.html`)).map(([s, n]) => `- [${n}](${SITE}/research/${s}): [Markdown](${SITE}/research/${s}.md), [CSV](${SITE}/research/${s}.csv)`).join("\n")
-        + `\n- [How the score works: method, limits, change log](${SITE}/method) ([Markdown](${SITE}/method.md))\n- [For AI assistants: what to quote and how to attribute](${SITE}/for-ai)\n- [Editorial policy and corrections](${SITE}/editorial-policy)\n- [Press page: facts, numbers, contact](${SITE}/press)\n- [Badges and widgets](${SITE}/embed)\n- Buying guides in Markdown: ${SITE}/guide/<country>.md\n\n`;
+        + `\n- [How the score works: method, limits, change log](${SITE}/method) ([Markdown](${SITE}/method.md))\n- [For AI assistants: what to quote and how to attribute](${SITE}/for-ai)\n- [Editorial policy and corrections](${SITE}/editorial-policy)\n- [Press page: facts, numbers, contact](${SITE}/press)\n- [Badges and widgets](${SITE}/embed)\n- Buying guides in Markdown: ${SITE}/guide/<country>.md\n- [The homes behind the figures, one row each (CSV)](${SITE}/research/homes.csv); [monthly price series (CSV)](${SITE}/research/monthly-series.csv)\n\n`
+        + (has("tools/index.html") ? `## Free calculators (general information, not advice)\n\n- [All tools](${SITE}/tools)\n- [Buying costs by country](${SITE}/buying-costs): ${SITE}/buying-costs/<country>?p=<price>\n` + dirs("tools").map((d) => `- ${SITE}/tools/${d}`).join("\n") + "\n\n" : "");
       fs.writeFileSync(llms, txt.includes("## Countries") ? txt.replace("## Countries", () => block + "## Countries") : txt + "\n" + block);
     }
   }

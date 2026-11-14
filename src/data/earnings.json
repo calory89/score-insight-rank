@@ -1,0 +1,24 @@
+{
+  "_meta": {
+    "source": "Eurostat, Annual net earnings (dataset earn_nt_net)",
+    "url": "https://ec.europa.eu/eurostat/databrowser/view/earn_nt_net/default/table?lang=en",
+    "api": "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data/earn_nt_net?format=JSON&lang=EN&estruct=NET&currency=EUR&ecase=P1_NCH_AW100&time=2025",
+    "measure": "Net earnings in euros of a single person without children earning 100% of the average earning",
+    "year": 2025,
+    "dataset_updated": "2026-11-10",
+    "read": "2026-11-14",
+    "note": "Values copied from the API response read on 2026-11-14. Countries Eurostat does not publish for this year (Norway, Switzerland, United Kingdom, United States, Japan and others) are left out."
+  },
+  "bulgaria": 14449.94,
+  "cyprus": 28339.82,
+  "denmark": 45429.63,
+  "france": 32346.04,
+  "germany": 36534.77,
+  "greece": 21498.27,
+  "italy": 27787.67,
+  "netherlands": 40793.43,
+  "poland": 19086.3,
+  "portugal": 21449.05,
+  "spain": 27040.72,
+  "sweden": 38949.55
+}
