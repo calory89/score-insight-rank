@@ -1,0 +1,98 @@
+{
+ "_note": "French texts of src/data/destinations.json for the listing pages (seo/listings/packkit.ts destFor). Numbers and dates must match the English file; names of taxes and procedures stay in the country's language.",
+ "spain": {
+  "can_foreigners_buy": "Oui, sans restriction à ce jour. Le gouvernement a proposé une taxe de 100 % (ou une interdiction) pour les acheteurs non européens qui ne résident pas en Espagne ; elle n'a pas été adoptée.",
+  "purchase_costs_breakdown": "Logement neuf : IVA (TVA) de 10 % + AJD (droit de timbre) de 0,5-1,5 % + notaire 0,5-1 % + avocat 1-2 % ; logement ancien : l'impôt sur les transmissions ITP, de 6-11 %, remplace l'IVA et l'AJD.",
+  "annual_property_tax": "IBI : 0,4-1,1 % de la valeur cadastrale (selon la commune), auquel s'ajoute un impôt sur un revenu locatif théorique pour les logements non loués.",
+  "holiday_rental_rules": "Il faut la licence touristique de la région et le numéro du registre national unique des locations (obligatoire depuis le 1er juillet 2025) ; dans un immeuble collectif, toute nouvelle location touristique doit être approuvée par 3/5 des copropriétaires (depuis le 3 avril 2025)."
+ },
+ "italy": {
+  "can_foreigners_buy": "Oui pour les citoyens de l'UE ; les acheteurs hors UE doivent bénéficier de la réciprocité entre États (c'est le cas des États-Unis, du Royaume-Uni, du Canada et de l'Australie).",
+  "purchase_costs_breakdown": "Impôt d'enregistrement de 9 % pour une résidence secondaire (dans l'ancien) ou TVA dans le neuf ; notaire 1-2 % + avocat environ 1 % + agence environ 3 %.",
+  "annual_property_tax": "IMU : 0,4-1,06 % pour les résidences secondaires (sur la valeur cadastrale).",
+  "holiday_rental_rules": "Toute location touristique doit porter le code national CIN, affiché dans les annonces et sur le logement ; à partir du troisième logement, la location est considérée comme une activité professionnelle (avec immatriculation à la TVA)."
+ },
+ "sweden": {
+  "can_foreigners_buy": "Oui. La Suède n'impose aucune condition de nationalité ou de résidence pour acheter un logement, mais l'inscription de la propriété exige un numéro d'identité suédois ou un numéro de coordination (samordningsnummer).",
+  "purchase_costs_breakdown": "Droit de timbre sur l'inscription du titre de propriété (lagfart) de 1,5 % du prix ou de la valeur fiscale, selon le montant le plus élevé, plus 825 SEK de frais ; si vous empruntez et qu'il faut de nouvelles cédules hypothécaires (pantbrev), 2 % de leur montant plus 375 SEK de frais ; conseil juridique facultatif ; le vendeur paie en général l'agence, et un appartement en coopérative (bostadsrätt) n'est pas soumis au lagfart.",
+  "annual_property_tax": "Les maisons sont soumises à une redevance foncière communale (kommunal fastighetsavgift) de 10 425 SEK en 2026, ou de 0,75 % de la valeur fiscale si ce montant est inférieur."
+ },
+ "denmark": {
+  "can_foreigners_buy": "Sans domicile au Danemark ni cinq années de résidence passée, il faut une autorisation du Civilstyrelsen (département des affaires civiles). Les citoyens de l'UE et de l'EEE qui vivent au Danemark et y sont enregistrés peuvent acheter une résidence permanente sans autorisation, en signant une déclaration auprès du tribunal chargé du registre foncier. Les maisons de vacances (sommerhuse) exigent une autorisation, accordée seulement aux personnes qui ont des liens particulièrement forts avec le Danemark, par exemple de nombreuses années de vacances dans le pays.",
+  "purchase_costs_breakdown": "Droit d'enregistrement de l'acte (tinglysningsafgift) de 1 850 DKK plus 0,6 % du prix, environ 1 % pour l'avocat de l'acheteur et, en cas d'emprunt, un droit d'enregistrement de l'hypothèque de 1 825 DKK plus 1,25 % du prêt ; le vendeur paie en général l'agence.",
+  "annual_property_tax": "Les propriétaires paient un impôt sur la valeur du logement (ejendomsværdiskat) de 0,51 % sur 80 % de l'évaluation officielle (1,4 % au-delà de 9,2 millions de DKK), plus un impôt foncier communal (grundskyld) dont chaque commune fixe le taux, plafonné à 30 pour mille de la valeur du terrain."
+ },
+ "france": {
+  "can_foreigners_buy": "Oui. Les étrangers peuvent acheter un bien immobilier en France sans restriction notable, et les acheteurs hors UE n'ont pas besoin d'autorisation, même si les démarches peuvent prendre plus de temps.",
+  "purchase_costs_breakdown": "Droits de mutation d'environ 5,8 %, ou d'environ 6,3 % dans les départements qui ont relevé leur taux de 2025 à mars 2028 ; émoluments du notaire selon un barème dégressif de 3,87 % à 0,799 %, plus 20 % de TVA, soit environ 1,3 % pour un bien de 150 000 € ; contribution de sécurité immobilière de 0,10 % ; débours d'environ 800 € à 1 200 € ; les honoraires d'agence sont le plus souvent inclus dans le prix affiché (FAI) et payés par le vendeur, parfois partagés.",
+  "annual_property_tax": "Les propriétaires paient chaque année la taxe foncière, fixée par les collectivités locales ; ceux qui possèdent une résidence secondaire meublée paient aussi la taxe d'habitation, que certaines communes majorent de 5 % à 60 %."
+ },
+ "greece": {
+  "can_foreigners_buy": "Oui. Les acheteurs extérieurs à l'UE et à l'AELE ont besoin d'une autorisation pour acheter dans les zones frontalières désignées (une partie du nord de la Grèce et des îles de l'est de la mer Égée, comme le Dodécanèse et Rhodes). Le gouvernement a annoncé un impôt sur les mutations de 15 % pour les acheteurs de logements hors UE à partir du 1er janvier 2027 ; en septembre 2026, la mesure n'était pas encore définitive.",
+  "purchase_costs_breakdown": "Impôt sur les mutations de 3,09 % du prix ou de la valeur fiscale, selon le montant le plus élevé ; notaire environ 0,8-1 % plus TVA ; frais de registre foncier environ 0,5-0,7 % ; avocat 1-2 % plus TVA ; si la vente passe par une agence, l'acheteur paie en général une commission de 1-3 % plus TVA en supplément.",
+  "annual_property_tax": "Les propriétaires au 1er janvier paient l'impôt foncier unifié (ENFIA), calculé pour chaque bien selon sa situation, sa surface, son âge et la valeur officielle de sa zone, avec un supplément si le patrimoine immobilier total en Grèce dépasse 500 000 €."
+ },
+ "bulgaria": {
+  "can_foreigners_buy": "Oui pour les bâtiments et les appartements, avec des droits proches de ceux des résidents ; d'après Global Property Guide, les étrangers ne peuvent pas détenir de terrain en direct et passent le plus souvent par une société bulgare.",
+  "purchase_costs_breakdown": "Impôt sur les mutations 0,1-3 % (selon la commune ; 2,5 % à Sofia) + notaire 0,1-1,5 % + avocat 0,5-1 % + agence 2,5-3 %.",
+  "annual_property_tax": "0,01-0,45 % de la valeur fiscale du bien, plus une taxe communale d'enlèvement des ordures.",
+  "holiday_rental_rules": "Un hébergement touristique doit être classé ou enregistré auprès de la commune en vertu de la loi sur le tourisme ; la taxe de séjour est de 0,20-3,00 BGN par nuit."
+ },
+ "portugal": {
+  "can_foreigners_buy": "Oui, avec les mêmes droits que les citoyens portugais (une hausse de l'IMT pour les étrangers qui achètent une résidence secondaire a été annoncée en septembre 2025).",
+  "purchase_costs_breakdown": "IMT (impôt sur les mutations) de 0-8 % (progressif) + droit de timbre de 0,8 % + notaire et registre 0,9-1,2 % + avocat 1,25-2 %.",
+  "annual_property_tax": "IMI : 0,3-0,45 % de la valeur fiscale (biens urbains), au taux fixé par la commune.",
+  "holiday_rental_rules": "L'enregistrement en Alojamento Local (AL) est obligatoire ; depuis novembre 2024, les communes peuvent geler les nouvelles licences AL dans des zones de limitation (Lisbonne et Porto le font) ; une copropriété peut s'y opposer avec plus de 50 % des copropriétaires."
+ },
+ "germany": {
+  "can_foreigners_buy": "Oui. L'Allemagne n'impose aucune restriction aux étrangers qui achètent un bien immobilier, mais les acheteurs hors UE doivent en général fournir un apport plus important pour obtenir un prêt.",
+  "purchase_costs_breakdown": "Impôt sur l'acquisition immobilière (Grunderwerbsteuer) de 3,5 % à 6,5 % selon le Land (3,5 % en Bavière, 6,5 % dans le Brandebourg, en Rhénanie-du-Nord-Westphalie, en Sarre et dans le Schleswig-Holstein), plus les frais de notaire et de livre foncier (Notar- und Grundbuchkosten), d'environ 1,5-2 % ; si c'est le vendeur qui a mandaté l'agence, la loi met la moitié de la commission à la charge de l'acheteur, en supplément.",
+  "annual_property_tax": "Les propriétaires paient l'impôt foncier (Grundsteuer), calculé depuis 2025 selon la formule valeur estimée x taux d'imposition x coefficient communal (Hebesatz), que chaque commune fixe."
+ },
+ "poland": {
+  "can_foreigners_buy": "Les citoyens de l'UE, de l'EEE et de la Suisse achètent aux mêmes conditions que les Polonais. Les autres étrangers peuvent acheter un appartement sans autorisation, mais ont en général besoin d'une autorisation du ministère de l'Intérieur (MSWiA) pour acheter une maison ou un terrain.",
+  "purchase_costs_breakdown": "Impôt sur les actes de droit civil (PCC) de 2 % de la valeur, payé par l'acheteur dans les 14 jours qui suivent l'acte ; honoraires du notaire (taksa notarialna) plafonnés à 1 010 PLN plus 0,4 % de la valeur au-delà de 60 000 PLN, plus 23 % de TVA ; frais de justice de 200 PLN pour inscrire la propriété au livre foncier (plus 100 PLN pour l'ouverture d'un nouveau livre) ; avocat facultatif, environ 1 % ; les honoraires d'agence (environ 2-3 %) dépendent du contrat.",
+  "annual_property_tax": "Les propriétaires paient un impôt foncier local (podatek od nieruchomości) fixé par la commune, plafonné en 2026 à 1,25 PLN par m² de surface utile pour les appartements et les maisons."
+ },
+ "netherlands": {
+  "can_foreigners_buy": "Oui. Il n'y a ni condition de nationalité ou de résidence ni surtaxe pour les acheteurs étrangers. Certaines villes, comme La Haye, interdisent de louer sans autorisation les logements bon marché après leur achat (opkoopbescherming).",
+  "purchase_costs_breakdown": "Droit de mutation (overdrachtsbelasting) de 8 % si vous n'habitez pas le logement, par exemple pour un investissement locatif ou une maison de vacances, ou de 2 % s'il devient votre résidence principale ; honoraires du notaire pour l'acte de transfert d'environ 500 EUR ; frais d'inscription au Kadaster ; et frais d'hypothèque si vous empruntez ; le vendeur paie sa propre agence.",
+  "annual_property_tax": "Les propriétaires paient l'impôt foncier communal (onroerendezaakbelasting, OZB) sur la valeur officielle WOZ, à un taux que chaque commune fixe et qui s'exprime en pratique en pour mille ; les locataires de logements ne le paient pas."
+ },
+ "cyprus": {
+  "can_foreigners_buy": "Les citoyens de l'UE achètent sans restriction. Les acheteurs hors UE ont besoin d'une autorisation du Conseil des ministres, demandée auprès de l'administration du district (District Officer), et sont en principe limités à un logement ou à un terrain de 4 014 m² au plus.",
+  "purchase_costs_breakdown": "Droits de mutation du registre foncier de 3 % jusqu'à 85 000 €, de 5 % jusqu'à 170 000 € et de 8 % au-delà, réduits de moitié pour les reventes sans TVA (1,5 %, 2,5 % et 4 %) ; droit de timbre supprimé depuis le 1er janvier 2026 ; avocat environ 1 % plus TVA ; petits frais du registre foncier.",
+  "annual_property_tax": "Il n'existe pas d'impôt foncier national annuel (supprimé en 2017) ; les propriétaires paient des taxes communales d'environ 90 € à 300 € par an, plus l'assainissement et les redevances des collectivités locales."
+ },
+ "switzerland": {
+  "can_foreigners_buy": "En vertu de la Lex Koller, les citoyens de l'UE et de l'AELE qui vivent en Suisse et les titulaires d'un permis C achètent comme les Suisses, et les titulaires hors UE d'un permis B peuvent acheter le logement qu'ils habitent. Les personnes qui vivent à l'étranger ont besoin d'une autorisation cantonale et ne peuvent en général acheter qu'un seul logement de vacances dans une zone touristique, dans la limite de contingents nationaux ; un projet de durcissement était en consultation en 2026.",
+  "purchase_costs_breakdown": "Droits de mutation (Handänderungssteuer) de 0 % à environ 3,3 % selon le canton ; notaire environ 0,1-0,5 % ; émolument du registre foncier, un petit montant fixe ou un pourcentage ; avocat facultatif 1-2 % ; les honoraires d'agence (2-3 %) sont payés par le vendeur.",
+  "annual_property_tax": "Plus de la moitié des cantons prélèvent un impôt foncier annuel (Liegenschaftssteuer), en général de 0,01-0,3 % de la valeur estimée, et les propriétaires paient aussi l'impôt cantonal sur la fortune sur la valeur du bien, déduction faite de l'hypothèque."
+ },
+ "united-states": {
+  "can_foreigners_buy": "Oui. Aucune loi fédérale n'interdit aux étrangers d'acheter un logement, mais une trentaine d'États ont ajouté certaines limites, et le Texas et la Floride restreignent les achats des ressortissants de certains pays comme la Chine.",
+  "purchase_costs_breakdown": "Les frais de clôture (closing costs) varient selon l'État et représentent en général 2-5 % du montant du prêt : recherche et assurance du titre de propriété, frais d'enregistrement, honoraires d'avocat, expertise et frais du prêteur ; depuis août 2024, le vendeur n'est plus tenu de payer l'agent de l'acheteur, qui peut donc rester à la charge de ce dernier si le vendeur ne l'accepte pas ; la loi FIRPTA ne s'applique pas à l'achat mais à la revente par un étranger, l'acheteur retenant alors en général 15 % du prix de vente.",
+  "annual_property_tax": "L'impôt foncier est fixé localement ; en 2024, il représentait en moyenne environ 1,22 % de la valeur dans la plus grande ville de chaque État, de 0,30 % à Honolulu à 3,02 % à Detroit."
+ },
+ "japan": {
+  "can_foreigners_buy": "Oui. Les étrangers peuvent acheter des terrains et des logements en pleine propriété aux mêmes conditions que les Japonais, même avec un visa de tourisme, mais l'achat ne donne droit ni à un visa ni à un titre de séjour.",
+  "purchase_costs_breakdown": "L'acheteur paie des honoraires d'agence plafonnés à 3 % plus 60 000 ¥, plus 10 % de taxe sur la consommation (avec un plafond spécial de 330 000 ¥ au plus, taxe comprise, pour les maisons vacantes bon marché jusqu'à 8 millions de ¥), un droit d'enregistrement de 1,5 % sur le terrain (jusqu'en mars 2029) et de 2 % au taux normal sur le bâtiment, un impôt sur l'acquisition immobilière de 3 % de la valeur estimée, un droit de timbre et les honoraires d'un juriste spécialisé (judicial scrivener), d'environ 100 000 ¥ à 200 000 ¥.",
+  "annual_property_tax": "L'impôt sur les immobilisations est de 1,4 % de la valeur estimée par l'administration, plus une taxe d'urbanisme de 0,3 % au plus dans les zones urbaines ; les petites parcelles résidentielles bénéficient d'une base d'imposition réduite."
+ },
+ "mexico": {
+  "can_foreigners_buy": "Oui, mais dans la zone restreinte (à moins de 50 km de la côte ou de 100 km des frontières, ce qui inclut Tulum et Playa del Carmen), seulement par l'intermédiaire d'un fideicomiso (fiducie bancaire) ou d'une société mexicaine ; ailleurs, la propriété directe est possible.",
+  "purchase_costs_breakdown": "Impôt sur l'acquisition 2-5 % + notaire 0,5-1 % + avocat 1-1,5 % (3,5-7,5 % d'après Global Property Guide), plus 0,5-1,5 % pour la mise en place du fideicomiso et du permis ; TheLatinvestor prévoit 5-8 %.",
+  "annual_property_tax": "Impôt communal (predial), fixé localement sur la valeur cadastrale ; il est en général faible, souvent inférieur aux charges de copropriété.",
+  "holiday_rental_rules": "Quintana Roo : inscription obligatoire au registre RETUR-Q (depuis août 2025, à renouveler chaque année), plus une licence d'exploitation de l'État et un numéro fiscal RFC ; taxe d'hébergement de 6 % ; amendes jusqu'à 100 000 MXN."
+ },
+ "canada": {
+  "can_foreigners_buy": "Le plus souvent non pour l'instant : une interdiction fédérale empêche les non-Canadiens d'acheter un logement dans les villes et les grandes agglomérations jusqu'au 1er janvier 2027, avec des exceptions, par exemple pour les titulaires d'un permis de travail et les conjoints de citoyens ou de résidents permanents. L'interdiction ne couvre pas les zones rurales ni les petites villes ; le gouvernement a indiqué qu'il ne comptait pas simplement la prolonger, mais une mesure de remplacement est à l'étude.",
+  "purchase_costs_breakdown": "L'acheteur paie en général un droit de cession immobilière provincial selon un barème progressif (Ontario : 0,5 % jusqu'à 55 000 $ et 1 % de 55 000 $ à 250 000 $), des frais juridiques d'environ 500 $ à 1 500 $, une assurance titres d'environ 250 $ et une inspection de 300 $ à 1 000 $, tandis que le vendeur paie le plus souvent les agents ; les acheteurs étrangers paient aussi l'impôt ontarien sur la spéculation pour les non-résidents, de 25 %, partout en Ontario, et la taxe supplémentaire de 20 % de la Colombie-Britannique dans le Grand Vancouver et quatre autres régions.",
+  "annual_property_tax": "L'impôt foncier est fixé par chaque ville en proportion de la valeur estimée, d'environ 0,3 % à Vancouver à 2,12 % à Saint John en 2026."
+ },
+ "dominican-republic": {
+  "can_foreigners_buy": "Oui. Les étrangers ont les mêmes droits que les citoyens dominicains pour acheter des terrains et des logements, sans restriction.",
+  "purchase_costs_breakdown": "L'acheteur paie un impôt sur les mutations de 3 % (0 % pour les premiers achats qui remplissent les conditions des incitations touristiques CONFOTUR), des frais juridiques d'environ 1-2 % et des frais de notaire d'environ 0,25-1 %, plus les frais d'enregistrement, tandis que le vendeur paie les honoraires d'agence de 2-3 %.",
+  "annual_property_tax": "L'impôt annuel IPI est de 1 % de la part du patrimoine immobilier total d'une personne en République dominicaine, tel qu'évalué par l'administration fiscale DGII, qui dépasse 10 695 494 RD$ en 2026 ; un seul logement bon marché se situe donc souvent sous ce seuil."
+ }
+}

@@ -73,7 +73,7 @@ export const UI: Partial<Record<NewLang, Ui>> = {
     hub: {
       title: "Недорогая недвижимость за рубежом: подборки по странам, бюджету и расположению",
       h1: "Недорогая недвижимость за рубежом",
-      desc: "Недорогие квартиры и дома в Болгарии, Греции и на Кипре: реальные объявления с фото, ценой, площадью, оценкой и расходами на покупку.",
+      desc: "Недорогие квартиры и дома в Испании, Италии, Болгарии, Греции, на Кипре и в других странах: реальные объявления с фото, ценой, площадью, оценкой и расходами на покупку.",
       lede: (n, c, s) => `Объектов: ${n}, стран: ${c}, подборок: ${s}. Подборки собраны по бюджету, расположению, типу жилья и числу спален. На каждой странице реальные объявления с фото, ценой, площадью и оценкой.`,
       about: (n, min, max) => [
         `RealHunt собирает недорогие дома и квартиры, которые продаются за рубежом; большинство стоит меньше 100 000 €. В русской версии сейчас объектов: ${n}, цены от ${min} до ${max}.`,
@@ -141,6 +141,33 @@ export const UI: Partial<Record<NewLang, Ui>> = {
         ["Czy RealHunt sprzedaje te nieruchomości?", "Nie. RealHunt nie jest biurem nieruchomości i nie pobiera prowizji. Każda oferta prowadzi do oryginalnego ogłoszenia, a kupujący rozmawia bezpośrednio ze sprzedającym albo z miejscowym pośrednikiem."],
         ["Co oznacza ocena?", "Ocena od 70 do 98 porównuje każdą nieruchomość ze wszystkimi pozostałymi w serwisie: cenę, cenę za m², powierzchnię, stan, udogodnienia, bliskość morza lub jeziora, pogodę, lotnisko i koszty zakupu. To nie jest wycena ani ekspertyza techniczna."],
         ["Dlaczego część stron jest po angielsku?", "Strony wyszukiwań są po polsku. Strona każdej oferty, kalkulatory i poradniki są na razie dostępne tylko po angielsku; takie linki mają znak EN."],
+      ],
+    },
+  },
+  fr: {
+    name: "Français", locale: "fr_FR",
+    skip: "Aller au contenu", navLabel: "Navigation principale", navAll: "Toutes les recherches", navCountries: "Pays", langLabel: "Choisir la langue",
+    enHomes: "Un clic sur un bien ouvre sa fiche détaillée. Ces fiches n'existent pour l'instant qu'en anglais.",
+    enTitle: "Cette page est en anglais",
+    footAbout: "RealHunt n'est pas une agence immobilière et ne touche aucune commission. Chaque bien a été vérifié par une personne, reçoit une note de 70 à 98 et renvoie vers son annonce d'origine.",
+    footEnglish: "Les liens marqués EN mènent à des pages qui n'existent pour l'instant qu'en anglais.",
+    footMethod: "Comment la note est calculée", footWho: "Qui sommes-nous", footContact: "Contact", footPrivacy: "Confidentialité", footTerms: "Conditions d'utilisation",
+    hub: {
+      title: "Acheter une maison pas chère à l'étranger : toutes les recherches par pays, prix et situation",
+      h1: "Acheter une maison pas chère à l'étranger",
+      desc: "Maisons et appartements pas chers en Espagne, en Italie, au Portugal, en Grèce, en France et dans d'autres pays : de vraies annonces avec photo, prix, surface, note et frais d'achat.",
+      lede: (n, c, s) => `${n} biens dans ${c} pays, répartis en ${s} recherches : par budget, en bord de mer, dans un village, avec jardin ou piscine, et par pays. Chaque page montre de vraies annonces avec photo, prix, surface et note.`,
+      about: (n, min, max) => [
+        `RealHunt rassemble des maisons et des appartements pas chers à vendre à l'étranger, la plupart à moins de 100 000 €. Le site compte aujourd'hui ${n} biens, de ${min} à ${max}.`,
+        "Une personne examine chaque annonce avant sa publication. Nous écartons les ruines, les terrains nus et les annonces qui n'ont qu'une seule photo. Chaque bien reçoit ensuite une note de 70 à 98, qui compare son prix, son prix au m², sa surface, son état, sa situation et ses frais d'achat avec ceux de tous les autres biens du site.",
+        "La page de chaque pays indique les frais d'achat en pourcentage et les règles applicables aux acheteurs étrangers, avec la date de vérification des données. Il s'agit d'une information générale, qui ne constitue pas un conseil juridique ou fiscal.",
+      ],
+      all: "Dans tous les pays", by: "Par pays", homes: "biens", budgets: "Par budget", features: "Par caractéristique", ranked: "Classements", near: "Près d'une ville", combo: "Par caractéristique et budget", ccy: "En livres et en dollars",
+      faqTitle: "Questions fréquentes",
+      faq: [
+        ["RealHunt vend-il ces biens ?", "Non. RealHunt n'est pas une agence immobilière et ne touche aucune commission. Chaque bien renvoie vers son annonce d'origine : vous traitez directement avec le vendeur ou avec l'agence locale."],
+        ["Que signifie la note ?", "La note va de 70 à 98 et compare chaque bien avec tous les autres biens du site : prix, prix au m², surface, état, équipements, proximité de la mer ou d'un lac, météo, aéroport et frais d'achat. Ce n'est ni une expertise ni une estimation de valeur."],
+        ["Pourquoi certaines pages sont-elles en anglais ?", "Les pages de recherche existent en français. La fiche de chaque bien, les calculateurs et les dossiers pratiques n'existent pour l'instant qu'en anglais ; ces liens portent la mention EN."],
       ],
     },
   },
