@@ -17,6 +17,8 @@
 // line. Spanish visitors get the Spanish title and the price in Spanish format, and the country line stays hidden until the
 // app shows it translated; the English article below the shell is not shown to them at all.
 
+import { midSrcSet, MID_SIZES } from "../src/lib/thumbs";
+
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 /** Same rule as cleanTitle() in src/community/Community.tsx: the app's <h1>. */
@@ -84,9 +86,20 @@ const DARK_JS = `(function(){try{var v=localStorage.getItem("rh_theme"),d=v?v===
 /** Goes in the <head> of every home page: the shell's styles and the dark-mode class. */
 export const DEAL_SHELL_HEAD = `<style>${CSS}</style><script>${DARK_JS}</script>`;
 
-const LOGO = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#FF5A1F"/><path d="M32 12 L53 31 Q55 33 52.5 33 L49 33 L49 50 Q49 53 46 53 L18 53 Q15 53 15 50 L15 33 L11.5 33 Q9 33 11 31 Z" fill="#fff"/><path d="M32 24 L41 34 L35.5 34 L35.5 45 L28.5 45 L28.5 34 L23 34 Z" fill="#FF5A1F"/></svg>`;
+export const LOGO = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="16" fill="#FF5A1F"/><path d="M32 12 L53 31 Q55 33 52.5 33 L49 33 L49 50 Q49 53 46 53 L18 53 Q15 53 15 50 L15 33 L11.5 33 Q9 33 11 31 Z" fill="#fff"/><path d="M32 24 L41 34 L35.5 34 L35.5 45 L28.5 45 L28.5 34 L23 34 Z" fill="#FF5A1F"/></svg>`;
 
 const json = (v: unknown) => JSON.stringify(v).replace(/</g, "\\u003c").replace(/[\u2028\u2029]/g, (c) => "\\u" + c.charCodeAt(0).toString(16));
+
+/** Alt text of the main photo: what the home is, where, and its price, in the language of the page (idea 135).
+ * The photos sit in a frame with a fixed height (.rh-sh-gal), hence data-rh-sized: nothing moves when they arrive. */
+export function shellAlt(row: Record<string, any>, title: string, lang?: "es"): string {
+  const where = String(row.location_name || row.country || "").trim();
+  const price = row.price_eur != null ? (lang === "es" ? shellMoneyEs(row.price_eur).replace("\u00A0", " ") : shellMoney(row.price_eur)) : "";
+  const low = title.toLowerCase();
+  // the place is left out when the title already names it ("... in Rossell, Castellón")
+  const place = where && !where.split(",").map((x) => x.trim().toLowerCase()).filter(Boolean).every((x) => low.includes(x)) ? where : "";
+  return [title, place, price].filter(Boolean).join(", ");
+}
 
 export type ShellInput = {
   /** the snapshot row, as in public/data/rh-static.json (with title_es and friends when there are any) */
@@ -101,18 +114,23 @@ export type ShellInput = {
   crumbs: [string, string][];
   /** "es" for the Spanish copy of the page (/es/deal/<slug>): the Spanish title is written in the HTML */
   lang?: "es";
+  /** offer the 800 px copy of the main photo (src/lib/thumbs.ts MID_PHOTOS); set by tests, otherwise the switch decides */
+  midPhotos?: boolean;
 };
 
 /** The shell and the embedded row. Put it first inside #root, before the article. */
-export function dealShell({ row, photos, color, crumbs, lang, lowRes }: ShellInput): string {
+export function dealShell({ row, photos, color, crumbs, lang, lowRes, midPhotos }: ShellInput): string {
+  const set = midSrcSet(photos[0], midPhotos);
+  // a copy that is not there: the offer is dropped and the browser loads the full photo
+  const offer = set ? ` srcset="${esc(set)}" sizes="${esc(MID_SIZES)}" onerror="this.onerror=null;this.removeAttribute('srcset');this.removeAttribute('sizes')"` : "";
   const title = shellTitle(row);
   const esTitle = title === String(row.title || "").trim() && typeof row.title_es === "string" && row.title_es.trim() ? row.title_es.trim() : "";
   const n = Math.min(photos.length, 5);
   const cat = CATEGORY[row.category] || row.category || "";
-  const eye = lang === "es" ? "" : [...crumbs.map(([l, h]) => `<a${h ? ` href="${esc(h)}"` : ""}>${esc(l)}</a>`), cat ? esc(cat) : ""].filter(Boolean).join(" · ");
+  const eye = lang === "es" ? "" : [...crumbs.map(([l, h]) => (h ? `<a href="${esc(h)}">${esc(l)}</a>` : `<span>${esc(l)}</span>`)), cat ? esc(cat) : ""].filter(Boolean).join(" · ");
   const imgs = photos.slice(0, 5).map((u, i) => i === 0
-    ? `<b${lowRes ? ` style="background:url(&quot;${esc(lowRes)}&quot;) center/cover no-repeat"` : ""}><img src="${esc(u)}" alt="${esc(lang === "es" && esTitle ? esTitle : title)}" fetchpriority="high" decoding="async"></b>`
-    : `<b><img src="${esc(u)}" alt="" loading="lazy" decoding="async"></b>`).join("");
+    ? `<b${lowRes ? ` style="background:url(&quot;${esc(lowRes)}&quot;) center/cover no-repeat"` : ""}><img src="${esc(u)}" alt="${esc(shellAlt(row, lang === "es" && esTitle ? esTitle : title, lang))}" fetchpriority="high" decoding="async" data-rh-sized${offer}></b>`
+    : `<b><img src="${esc(u)}" alt="" loading="lazy" decoding="async" data-rh-sized></b>`).join("");
   // The row for the app, and the Spanish title for Spanish visitors (the title is the only text that needs it).
   const js = `window.__rhHome=${json(row)};(function(){try{if(document.documentElement.getAttribute("data-lang")!=="es")return;var h=document.querySelector(".rh-shell h1");if(!h)return;var t=${json(esTitle)};if(t)h.textContent=t;else h.style.visibility="hidden";var p=document.querySelector(".rh-sh-price");if(p)p.textContent=${json(row.price_eur != null ? shellMoneyEs(row.price_eur) : "")}}catch(e){}})()`;
   return `<div class="rh-shell" data-rh-keep data-rh-shell="${esc(row.slug)}">`

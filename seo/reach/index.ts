@@ -98,6 +98,8 @@ export function addDates(html: string, url: string, lastmod: string, lang: strin
   return html.replace("</head>", () => `<script type="application/ld+json">${JSON.stringify(node)}</script></head>`);
 }
 
+// Indexes written by seo/langs/build.ts for its languages, listed in the English index when they exist.
+const OTHER_LLMS: [string, string][] = [["de", "Deutsch"], ["ru", "Русский"], ["fr", "Français"], ["nl", "Nederlands"], ["pl", "Polski"]];
 const REACH_TITLES: Record<string, string> = { "property-portals": "Property portals by country: a directory with a link to each one", "country-facts": "Key facts by country, in dated sentences that can be quoted", "open-data": "Open data: the files, the licence and how to read them", "data-changelog": "What changed in the data, day by day", "find-homes": "Find homes by country and price: ?country=bulgaria&max=30000" };
 const LLMS_ES: [string, string, string][] = [
   ["/es", "Las mejores casas", "todas las casas, de mejor a peor nota, con filtros"],
@@ -136,7 +138,7 @@ export function writeLlms(root: string, idx: Indexed, rows: Row[], today: string
         + (has("data/realhunt-homes.geojson") ? `- [Every home with coordinates (GeoJSON)](${SITE}/data/realhunt-homes.geojson); [best homes by country (KML)](${SITE}/data/realhunt-best-homes.kml)\n` : "")
         + `- Feeds: ${SITE}/feed.xml (RSS), ${SITE}/feed.atom, ${SITE}/feed.json; research: ${SITE}/blog/rss.xml, ${SITE}/blog/atom.xml, ${SITE}/blog/feed.json\n`
         + `- Licence of text and figures: CC BY 4.0 (${LICENSE}); photos belong to the original listings\n\n`
-        + (has("es/llms.txt") || idx.has(`${SITE}/es`) ? `## Other languages\n\n- [Índice en español](${SITE}/es/llms.txt)\n\n` : "");
+        + `## Other languages\n\n- [Índice en español](${SITE}/es/llms.txt)\n` + OTHER_LLMS.filter(([l]) => has(`${l}/llms.txt`)).map(([l, n]) => `- [${n}](${SITE}/${l}/llms.txt)`).join("\n") + "\n\n";
       fs.writeFileSync(llms, txt.includes("## Countries") ? txt.replace("## Countries", () => block + "## Countries") : txt.replace(/\n*$/, "\n\n") + block);
       out.en = true;
     }
@@ -197,7 +199,7 @@ export function reachPost(root: string, opts: { live?: boolean } = {}) {
     if (!lastmod) continue;
     const f = fileOf(root, url);
     if (!fs.existsSync(f)) continue;
-    const h = fs.readFileSync(f, "utf8"), b = addDates(h, url, lastmod, /^https:\/\/realhunt\.co\/es(\/|$)/.test(url) ? "es" : "en");
+    const h = fs.readFileSync(f, "utf8"), b = addDates(h, url, lastmod, /^https:\/\/realhunt\.co\/(es|de|ru|fr|nl|pl)(\/|$)/.exec(url)?.[1] || "en");
     if (b !== h) { fs.writeFileSync(f, b); dated++; }
   }
   rep.pages_given_a_date = dated;

@@ -1,0 +1,200 @@
+{
+ "public/i18n/es-core.json": {
+  "fake_urgency": 1
+ },
+ "public/i18n/es-extra.json": {
+  "phone_number": 2
+ },
+ "public/i18n/es-listings.json": {
+  "em_dash": 5,
+  "fake_urgency": 2
+ },
+ "seo/tech/audit.ts": {
+  "em_dash": 2
+ },
+ "seo/tech/plugin.ts": {
+  "em_dash": 1
+ },
+ "src/App.css": {
+  "em_dash": 1
+ },
+ "src/community/best.tsx": {
+  "em_dash": 1
+ },
+ "src/community/extension.tsx": {
+  "em_dash": 1
+ },
+ "src/community/extras.tsx": {
+  "em_dash": 1
+ },
+ "src/community/ux-oct.css": {
+  "em_dash": 2
+ },
+ "src/community/v10.tsx": {
+  "em_dash": 10,
+  "fake_urgency": 2
+ },
+ "src/community/v5.tsx": {
+  "em_dash": 3
+ },
+ "src/community/v8.tsx": {
+  "em_dash": 1
+ },
+ "src/components/admin/AdminAnalysesPanel.tsx": {
+  "em_dash": 5
+ },
+ "src/components/admin/AdminAnalyticsTab.tsx": {
+  "em_dash": 1
+ },
+ "src/components/admin/AdminUserDetail.tsx": {
+  "em_dash": 2
+ },
+ "src/components/AdminVisitorLog.tsx": {
+  "em_dash": 1
+ },
+ "src/components/AlternativesSection.tsx": {
+  "em_dash": 1
+ },
+ "src/components/analysis/AnalysisLoadingState.tsx": {
+  "em_dash": 1
+ },
+ "src/components/analysis/AnalysisROISection.tsx": {
+  "em_dash": 1
+ },
+ "src/components/dashboard/BulkAnalyzeModal.tsx": {
+  "em_dash": 2
+ },
+ "src/components/ExampleReportsCarousel.tsx": {
+  "em_dash": 1
+ },
+ "src/components/GlobalRanking.tsx": {
+  "em_dash": 6
+ },
+ "src/components/MethodologyPreview.tsx": {
+  "em_dash": 1
+ },
+ "src/components/PropertyFinder.tsx": {
+  "em_dash": 1
+ },
+ "src/components/rankings/ScoreVisual.tsx": {
+  "em_dash": 1
+ },
+ "src/components/realhunt/AdminExperiments.tsx": {
+  "em_dash": 2
+ },
+ "src/components/realhunt/AdminNetwork.tsx": {
+  "em_dash": 12,
+  "phone_number": 1
+ },
+ "src/components/realhunt/AdminNetworkTools.tsx": {
+  "em_dash": 3
+ },
+ "src/components/realhunt/AdminSubscribers.tsx": {
+  "em_dash": 2
+ },
+ "src/components/realhunt/DealCard.tsx": {
+  "em_dash": 2
+ },
+ "src/components/realhunt/DevGrowth.tsx": {
+  "em_dash": 2
+ },
+ "src/components/realhunt/EmailCapture.tsx": {
+  "em_dash": 1
+ },
+ "src/components/realhunt/LiveStats.tsx": {
+  "em_dash": 1
+ },
+ "src/components/realhunt/NetworkTools.tsx": {
+  "em_dash": 1
+ },
+ "src/components/ShareScoreCard.tsx": {
+  "em_dash": 5
+ },
+ "src/components/Watchlist.tsx": {
+  "em_dash": 1
+ },
+ "src/contexts/SubscriptionContext.tsx": {
+  "em_dash": 1
+ },
+ "src/index.css": {
+  "em_dash": 1
+ },
+ "src/lib/grade.ts": {
+  "em_dash": 2
+ },
+ "src/lib/rh.ts": {
+  "em_dash": 2
+ },
+ "src/pages/AdminActivity.tsx": {
+  "em_dash": 2
+ },
+ "src/pages/AdminExtension.tsx": {
+  "em_dash": 1
+ },
+ "src/pages/Analysis.tsx": {
+  "em_dash": 4
+ },
+ "src/pages/app/Brand.tsx": {
+  "phone_number": 1
+ },
+ "src/pages/auth/Callback.tsx": {
+  "em_dash": 2
+ },
+ "src/pages/BestDealsCountry.tsx": {
+  "em_dash": 1
+ },
+ "src/pages/ClaimPage.tsx": {
+  "em_dash": 1
+ },
+ "src/pages/Compare.tsx": {
+  "em_dash": 8
+ },
+ "src/pages/Contact.tsx": {
+  "em_dash": 1
+ },
+ "src/pages/DevPublic.tsx": {
+  "em_dash": 1
+ },
+ "src/pages/Home.tsx": {
+  "em_dash": 3
+ },
+ "src/pages/IndexNew.tsx": {
+  "em_dash": 2
+ },
+ "src/pages/Leads.tsx": {
+  "em_dash": 2
+ },
+ "src/pages/MarketCity.tsx": {
+  "em_dash": 1
+ },
+ "src/pages/MarketPulse.tsx": {
+  "em_dash": 1
+ },
+ "src/pages/NetworkAdmin.tsx": {
+  "em_dash": 3
+ },
+ "src/pages/NetworkAgreement.tsx": {
+  "em_dash": 1
+ },
+ "src/pages/NetworkApp.tsx": {
+  "em_dash": 8
+ },
+ "src/pages/NetworkExample.tsx": {
+  "em_dash": 1
+ },
+ "src/pages/NetworkInvoice.tsx": {
+  "em_dash": 1
+ },
+ "src/pages/NetworkStart.tsx": {
+  "em_dash": 2
+ },
+ "src/pages/ProjectDetail.tsx": {
+  "em_dash": 1
+ },
+ "src/pages/ReservationContract.tsx": {
+  "em_dash": 1
+ },
+ "src/pages/ShortLinkRedirect.tsx": {
+  "em_dash": 1
+ }
+}

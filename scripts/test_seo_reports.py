@@ -35,7 +35,7 @@ class Report(unittest.TestCase):
         self.assertNotIn("/blog/x", t)
         for section in ("## 3.", "## 4.", "## 5.", "## 7.", "## 8.", "## 9.", "## 10.", "## 11."):
             body = t.split(section)[1].split("\n## ")[0]; self.assertIn("sin datos", body, section)
-        self.assertIn("Clics de los últimos 7 días: sin datos", t); self.assertNotIn("—", t)
+        self.assertIn("Clics de los últimos 7 días: sin datos", t); self.assertNotIn("\u2014", t)
 
     def test_with_exports(self):
         days = "".join(f"2026-11-{d:02d},{2 if d < 8 else 1},{50 if d < 8 else 40},2%,12\n" for d in range(1, 15))

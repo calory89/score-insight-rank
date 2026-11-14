@@ -42,7 +42,7 @@ describe("country facts", () => {
     const en = sentences(kit("en"), facts[0], "2026-11-15"), es = sentences(kit("es"), facts[1], "2026-11-15");
     expect(en[0]).toBe("On 15 November 2026, RealHunt lists 12 homes for sale in Spain, each one checked by a person.");
     expect(en[1]).toContain("In Spain, the median asking price of those 12 homes is €");
-    expect(en[2]).toContain("7.5–14%"); expect(en.join(" ")).not.toContain("—");
+    expect(en[2]).toContain("7.5–14%"); expect(en.join(" ")).not.toContain("\u2014");
     expect(es[0]).toContain("en la República Dominicana"); expect(es.join(" ")).toContain("muestra es pequeña");
     expect(englishLeft(es.join(" ")).english).toBe(0);
   });
@@ -162,7 +162,7 @@ describe("measurement helpers", () => {
     const cases: [string, string][] = [["/", "front"], ["/es", "front"], ["/deal/x", "home"], ["/es/deal/x", "home"], ["/homes/spain", "country"], ["/homes/spain/under-50000", "listing"], ["/homes", "listing"], ["/guide/spain", "guide"], ["/guide/questions/x", "knowledge"],
       ["/costs/spain", "costs"], ["/can-i-buy/us-in-spain", "can-i-buy"], ["/tools/x", "tools"], ["/buying-costs/spain?p=1", "tools"], ["/research/prices", "research"], ["/blog/x/", "blog"], ["/top/bali", "new-builds"], ["/method", "trust"], ["/me", "app"]];
     for (const [p, f] of cases) expect(familyOf(p), p).toBe(f);
-    expect(langOf("/es/deal/x")).toBe("es"); expect(langOf("/essay")).toBe("en");
+    expect(langOf("/es/deal/x")).toBe("es"); expect(langOf("/essay")).toBe("en"); expect(langOf("/de/homes/spain")).toBe("de"); expect(familyOf("/ru/homes/bulgaria")).toBe("country"); expect(familyOf("/de")).toBe("front");
   });
   it("names where a visit came from without keeping the address", () => {
     expect(classifySource("https://chatgpt.com/c/123", "")).toEqual({ kind: "ai", source: "chatgpt" });

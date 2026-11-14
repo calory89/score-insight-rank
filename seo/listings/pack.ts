@@ -4,7 +4,7 @@
 import type { Facts, Ref, Noun } from "./facts";
 import type { Home } from "./facets";
 
-export type Lang = "en" | "es" | "de" | "ru";
+export type Lang = "en" | "es" | "de" | "ru" | "fr" | "nl" | "pl";
 export type Beds = [number, number][];
 export type Named = { name: string; n: number };
 export type Form = "many" | "one" | "cheap" | "cheapest";

@@ -2,8 +2,10 @@
 import families from "../../seo/reach/families.json";
 
 const RULES: [string, RegExp][] = (families.families as string[][]).map(([name, re]) => [name, new RegExp(re)]);
-export const stripEs = (path: string) => (path === "/es" ? "/" : path.startsWith("/es/") ? path.slice(3) : path) || "/";
-export const langOf = (path: string) => (path === "/es" || path.startsWith("/es/") ? "es" : "en");
+// Language folders of the site: Spanish (seo/es.ts) and the listing pages of seo/langs.
+const LANG = /^\/(es|de|ru|fr|nl|pl)(?=\/|$)/;
+export const stripEs = (path: string) => path.replace(LANG, "") || "/";
+export const langOf = (path: string) => LANG.exec(path)?.[1] || "en";
 /** The family of a page (front, home, country, listing, guide...): the unit every report is grouped by. */
 export function familyOf(path: string): string {
   const p = stripEs(String(path || "/").replace(/[?#].*$/, "").replace(/\/+$/, "") || "/");

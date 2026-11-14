@@ -72,12 +72,13 @@ Para saber qué robots de IA entran y qué direcciones dan error 404.
 
 ## 7. Perfiles y fichas (decisiones tuyas)
 
-- Usa siempre el mismo texto y los mismos datos de empresa: están en docs/seo/perfiles.md. Cópialos tal cual en Crunchbase, LinkedIn, X y Product Hunt.
+- Usa siempre el mismo texto y los mismos datos de empresa: la descripción de una línea y la larga están en docs/brand/hoja-de-marca.md y la lista de perfiles en docs/brand/perfiles.md. Cópialos tal cual en Crunchbase, LinkedIn, X y Product Hunt. La dirección postal es la de la página /contact.
 - LinkedIn de empresa: créala y pasa la dirección; se añade al pie y a los datos de organización (`sameAs` en index.html).
 - Ficha de empresa en Google, Apple Business Connect y Bing Places: solo con la dirección real de Equinox y si aceptas que sea pública. Nunca una dirección inventada.
 - Trustpilot: reclama el perfil. Solo opiniones de usuarios reales.
 - Chrome Web Store (ficha de RealHunt Score): revisa que el título diga qué hace, que haya cinco capturas y que el enlace del sitio sea https://realhunt.co/extension.
-- realhunt.ca: aparece en las búsquedas de marca. Mira quién lo usa (whois y la propia web) y si hay riesgo de confusión. No se pudo abrir desde aquí.
+- realhunt.ca: aparece en las búsquedas de marca. La web bloquea las lecturas automáticas; ábrela a mano y mira quién la usa. Lo que ya se sabe de otros usos del nombre está en docs/brand/colision-de-nombre.md.
+- Cuenta de X: los datos de organización de la web (`sameAs` en index.html) apuntaban a twitter.com/RealHuntApp, que no existe; ahora apuntan a x.com/realhuntco, la cuenta que docs/brand/perfiles.md da como propia. Confirma que es la tuya. El enlace del pie antiguo (src/components/Footer.tsx) sigue pendiente, como explica docs/brand/colision-de-nombre.md.
 - Feedly y Flipboard: en Feedly cualquiera puede seguir https://realhunt.co/blog/rss.xml sin alta. Flipboard pide cuenta para crear la revista.
 - Mapa público: en https://www.google.com/mymaps crea un mapa, pulsa Importar y sube el archivo https://realhunt.co/data/realhunt-best-homes.kml (las diez casas con mejor nota de cada país, cada punto con su enlace). Hazlo público y pasa la dirección para enlazarlo desde la web.
 - GPT de RealHunt y conectores de asistentes: la descripción técnica ya está en https://realhunt.co/openapi.json; el alta en cada tienda pide tu cuenta.

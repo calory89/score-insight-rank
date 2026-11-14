@@ -2,6 +2,7 @@ import "./lib/static-db";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
+import "./lib/perf.css";
 import { initLang, startLang } from "./lib/lang";
 import { installEsUrls, dropStaleAlternates } from "./lib/esPath";
 
