@@ -42,7 +42,11 @@ export function listingPlan(rows: Home[]) {
 }
 export type ListingPlan = ReturnType<typeof listingPlan>;
 /** The homes as they are in the snapshot (English texts and their Spanish side by side), whatever run this is. */
-export const listingRows = (): Home[] => (read("public/data/rh-static.json", { rows: [] }).rows || []).filter((r: Home) => r?.slug);
+// 15-nov-2026: a home whose original advert is no longer online (same rule as isGone() in src/community/n9/status.ts:
+// at least one "sold" report and more of them than "still available" reports) keeps its own page with a notice,
+// but is not offered on listing pages, their counts or their lowest prices.
+const advertGone = (r: any): boolean => { const sold = Number(r?.sold_reports) || 0; return sold >= 1 && sold > (Number(r?.available_reports) || 0); };
+export const listingRows = (): Home[] => (read("public/data/rh-static.json", { rows: [] }).rows || []).filter((r: Home) => r?.slug && !advertGone(r));
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 type World = { ctx: Ctx; site: Site; colors: Record<string, string> };

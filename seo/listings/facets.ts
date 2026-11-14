@@ -270,5 +270,6 @@ export function nearestLive(path: string, live: Set<string>, redirects: Record<s
   }
   const seg = path.split("/").filter(Boolean);
   while (seg.length > 1) { seg.pop(); const p = "/" + seg.join("/"); if (live.has(p)) return p; }
-  return path.startsWith("/cheap-houses") ? "/cheap-houses" : "/";
+  // a country that lost all its homes goes to the hub of all listings, which exists in every language (15-nov-2026)
+  return path.startsWith("/cheap-houses") || path.startsWith("/homes/") ? "/cheap-houses" : "/";
 }

@@ -79,7 +79,8 @@ describe("which pages a language gets", () => {
   });
   it("German, French and Russian cover every country whose homes and buying rules are translated", () => {
     const cc = (lang: string) => new Set(langs.find((l) => l.lang === lang)!.pages.map((p) => p.f.cc).filter(Boolean));
-    for (const lang of ["de", "fr", "ru"]) for (const c of ["spain", "italy", "sweden", "denmark", "france", "greece", "bulgaria", "cyprus", "portugal", "united-states", "japan"]) expect(cc(lang).has(c), `${lang} ${c}`).toBe(true);
+    // a country needs 3 homes still on sale; Cyprus comes and goes with its adverts (15-nov-2026)
+    for (const lang of ["de", "fr", "ru"]) for (const c of ["spain", "italy", "sweden", "denmark", "france", "greece", "bulgaria", "portugal", "united-states", "japan"]) expect(cc(lang).has(c), `${lang} ${c}`).toBe(true);
     for (const lang of ["de", "fr", "ru"]) expect(langs.find((l) => l.lang === lang)!.dropped.filter((d) => /title|place/.test(d.why)), lang).toEqual([]);
     // no buying rules for the United Kingdom in any of them: no pages there
     for (const lang of ["de", "fr", "ru"]) expect(cc(lang).has("united-kingdom"), lang).toBe(false);
