@@ -50,3 +50,9 @@ In the same two weeks, with Carlos's own accounts: source profiles on Qwoted, Fe
 - Referrals in analytics to /research/*, /can-i-buy/* and /embed.
 - Requests to the badge and card images from other sites (server logs: /badge/score/*.svg and /embed/*.svg with an outside referrer).
 - Indexed pages in Search Console: the count should start to rise a few weeks after the first editorial links.
+
+## Added 14 November 2026
+
+- Written goal: 30 outside domains linking by 12 February 2027 (see [registro.md](registro.md), where each action and each new link is logged).
+- The full checklist of ideas 591 to 690 and 941 to 970, with the state of each and the file to open, is in [README.md](README.md).
+- Link exchanges are not offered to anyone, newsletters included (idea 644 is replaced by offering data with nothing asked in return).
