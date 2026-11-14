@@ -28,6 +28,7 @@ import { homeArticleEs } from "../src/community/homeArticleEs";
 import { type EsPass, type PageRec, type Twin, createEsPass, writeEsTwins, coverageSummary } from "./es";
 import { writeAssets, finishAssets } from "./assets";
 import { listingPlan, listingRows, listingPages, finishListings } from "./listings/build";
+import { writeKnowledge, finishKnowledge } from "./knowledge/build";
 
 const SITE = "https://realhunt.co";
 // Country names for the Spanish copies (/es/...). A country not listed keeps its English name.
@@ -650,6 +651,8 @@ function build(root: string, es?: EsPass) {
 
   // ---------- Pages built to be quoted and linked: data hub, press, method document, embeds, for AI (seo/assets.ts) ----------
   if (!es) try { writeAssets({ root, page, rows, dest, guides, cb, today, image: DEF }); } catch (e) { console.warn("[rh-prerender-pages] linkable pages failed", e); }
+  // ---------- Glossaries, guides by subject and questions with sources (seo/knowledge) ----------
+  if (!es) try { console.log(`[rh-prerender-pages] knowledge pages: ${writeKnowledge({ root, page, rows, dest, guides, cb, today, image: DEF })}`); } catch (e) { console.warn("[rh-prerender-pages] knowledge pages failed", e); }
 
   // ---------- HTML sitemap (/sitemap) and llms.txt, from the pages generated above ----------
   const label = (u: string) => decodeURIComponent(u.replace(SITE, "") || "/");
@@ -681,6 +684,7 @@ function build(root: string, es?: EsPass) {
     console.log(`[rh-prerender-pages] Spanish: ${twins.length} twins written by seo/es.ts + ${rep.byHand?.pages || 0} written by hand above (${rep.byHand?.failed.length || 0} of those with English left) + ${rep.thin || 0} noindex copies; ${rep.failed.length} pages not fully Spanish, left out. Twins by group: ` + Object.entries(sum.groups).map(([g, v]) => `${g} ${v.twins}/${v.pages}`).join(", "));
   } catch (e) { console.warn("[rh-prerender-pages] Spanish pages skipped:", (e as Error).message); twins = []; }
   try { console.log("[rh-prerender-pages] linkable pages:", JSON.stringify(finishAssets(root, today))); } catch (e) { console.warn("[rh-prerender-pages] linkable pages (finish) failed", e); }
+  try { console.log("[rh-prerender-pages] knowledge:", JSON.stringify(finishKnowledge(root))); } catch (e) { console.warn("[rh-prerender-pages] knowledge (finish) failed", e); }
   for (const t of twins) altOf.set(t.en, t.es);
   // Older listing addresses that no longer have a page of their own, and dist/redirects.json (seo/listings/build.ts)
   try { const m = finishListings(root, plan, (r) => renderHtml(html, r as PageRec), (u) => altOf.has(u)); console.log(`[rh-prerender-pages] listings: ${plan.live.size} pages, ${m.redirects} redirects, ${m.moved} moved-page files`); } catch (e) { console.warn("[rh-prerender-pages] listing redirects skipped:", (e as Error).message); }

@@ -229,6 +229,7 @@ const AppRoutes = () => (
       <Route path="/swipe" element={<Community />} />
       <Route path="/compare-homes" element={<CompareHomes />} />
       <Route path="/guide/:country" element={<Community />} />
+      <Route path="/guide/:section/*" element={<Community />} />
       <Route path="/guide" element={<Community />} />
       <Route path="/countries" element={<Community />} />
       <Route path="/countries/:pair" element={<Community />} />

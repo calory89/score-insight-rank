@@ -33,6 +33,7 @@ import { InboxPage, CompareBuilds, CostsIndex, CostsPage, NewBuildReport, Agents
 import { DetailAside } from "./aside";
 import { StaticPage } from "./staticpage";
 import { isAssetPath } from "./assetRoutes";
+import { isKnowledgePath } from "./knowledgeRoutes";
 import { RelatedBlock } from "./related";
 import { InlineAlert, HomeFaq, MortgageCalc, AlertConfirmPage, HomeArticle } from "./oct24";
 import { regionOf, slugify } from "./regions";
@@ -1994,7 +1995,7 @@ export default function Community() {
       <TopMethodPage />
     ) : path === "/about" || path === "/about/" ? (
       <AboutPage />
-    ) : path === "/new" || path === "/research/prices" || path === "/sitemap" || path.startsWith("/sitemap/") || path === "/what-100k-buys" || path === "/price-drops" || path === "/sources" || path.startsWith("/sources/") || isAssetPath(path) ? (
+    ) : path === "/new" || path === "/research/prices" || path === "/sitemap" || path.startsWith("/sitemap/") || path === "/what-100k-buys" || path === "/price-drops" || path === "/sources" || path.startsWith("/sources/") || isAssetPath(path) || isKnowledgePath(path) ? (
       <StaticPage />
     ) : path === "/top/mine" ? (
       <TopMinePage />
