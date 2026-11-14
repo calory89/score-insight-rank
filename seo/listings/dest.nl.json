@@ -1,0 +1,98 @@
+{
+ "_note": "Dutch texts of src/data/destinations.json for the listing pages (seo/listings/packkit.ts destFor). Numbers and dates must match the English file; names of taxes and procedures stay in the country's language.",
+ "spain": {
+  "can_foreigners_buy": "Ja, op dit moment zonder beperkingen. De regering heeft een belasting van 100% (of een verbod) voorgesteld voor kopers van buiten de EU die niet in Spanje wonen; dat voorstel is niet aangenomen.",
+  "purchase_costs_breakdown": "Nieuwbouw: 10% IVA (btw) + 0,5-1,5% AJD (zegelrecht) + notaris 0,5-1% + advocaat 1-2%; bestaande bouw: in plaats van IVA en AJD de overdrachtsbelasting ITP van 6-11%.",
+  "annual_property_tax": "IBI: 0,4-1,1% van de kadastrale waarde (verschilt per gemeente), plus inkomstenbelasting over een fictieve huurwaarde als de woning niet verhuurd is.",
+  "holiday_rental_rules": "Nodig zijn de toeristische vergunning van de regio en het nummer van het landelijke register voor kortetermijnverhuur (verplicht sinds 1 juli 2025); voor nieuwe vakantieverhuur in appartementengebouwen is de instemming van 3/5 van de eigenaren nodig (sinds 3 april 2025)."
+ },
+ "italy": {
+  "can_foreigners_buy": "Ja voor EU-burgers; voor kopers van buiten de EU geldt de voorwaarde van wederkerigheid (onder meer de VS, het Verenigd Koninkrijk, Canada en Australië voldoen daaraan).",
+  "purchase_costs_breakdown": "Registratiebelasting van 9% op een tweede woning (bestaande bouw), of btw bij nieuwbouw; notaris 1-2% + advocaat circa 1% + makelaar circa 3% (volgens Global Property Guide 10-18% voor aankoop en verkoop samen).",
+  "annual_property_tax": "IMU: 0,4-1,06% voor tweede woningen (over de kadastrale waarde).",
+  "holiday_rental_rules": "Voor elke vakantieverhuur is een landelijke CIN-code nodig, die in de advertentie en bij de woning moet staan; vanaf de derde woning geldt de verhuur als bedrijf (btw-registratie)."
+ },
+ "sweden": {
+  "can_foreigners_buy": "Ja. Voor het kopen van een woning in Zweden gelden geen eisen aan nationaliteit of woonplaats, maar om het eigendom te laten inschrijven hebt u een Zweeds persoonsnummer of een coördinatienummer (samordningsnummer) nodig.",
+  "purchase_costs_breakdown": "Zegelrecht op de eigendomsinschrijving (lagfart) van 1,5% van de koopprijs of van de fiscale waarde, als die hoger is, plus een vast bedrag van 825 SEK; als u leent en nieuwe hypotheekbrieven (pantbrev) nodig hebt, 2% van hun bedrag plus 375 SEK; eventueel juridisch advies; de makelaar wordt gewoonlijk door de verkoper betaald, en bij een coöperatief appartement (bostadsrätt) is er geen lagfart.",
+  "annual_property_tax": "Voor huizen geldt een gemeentelijke vastgoedheffing (kommunal fastighetsavgift) van 10.425 SEK in 2026, of 0,75% van de fiscale waarde als dat lager is."
+ },
+ "denmark": {
+  "can_foreigners_buy": "Zonder woonplaats in Denemarken of vijf jaar eerder verblijf daar hebt u toestemming nodig van de dienst Civilstyrelsen. Burgers van de EU en de EER die in Denemarken wonen en er zijn ingeschreven, kunnen zonder toestemming een vaste woning kopen als zij een verklaring afleggen bij de Deense registratierechtbank (Tinglysningsretten). Voor vakantiehuizen (sommerhuse) is toestemming nodig, en die krijgt alleen wie een bijzonder sterke band met Denemarken heeft, bijvoorbeeld door er vele jaren vakantie te hebben gehouden.",
+  "purchase_costs_breakdown": "Inschrijvingsrecht op de akte (tinglysningsafgift) van 1.850 DKK plus 0,6% van de koopprijs, circa 1% voor een advocaat van de koper en, als u leent, een inschrijvingsrecht op de hypotheek van 1.825 DKK plus 1,25% van de lening; de makelaar wordt gewoonlijk door de verkoper betaald.",
+  "annual_property_tax": "Eigenaren betalen een belasting op de woningwaarde (ejendomsværdiskat) van 0,51% over 80% van de officiële waarde (1,4% boven 9,2 miljoen DKK) en de gemeentelijke grondbelasting (grundskyld), waarvan elke gemeente het tarief bepaalt, met een maximum van 30 promille van de grondwaarde."
+ },
+ "france": {
+  "can_foreigners_buy": "Ja. Buitenlanders kunnen in Frankrijk zonder grote beperkingen vastgoed kopen, en kopers van buiten de EU hebben geen vergunning nodig, al kan de afhandeling langer duren.",
+  "purchase_costs_breakdown": "Overdrachtsbelasting (droits de mutation) van circa 5,8%, of circa 6,3% in departementen die hun tarief voor 2025 tot en met maart 2028 hebben verhoogd; notarishonorarium (émoluments) volgens een glijdende schaal van 3,87% tot 0,799% plus 20% btw, circa 1,3% bij een woning van € 150.000; bijdrage voor de zekerheid van vastgoed (contribution de sécurité immobilière) 0,10%; verschotten (débours) van circa € 800 tot € 1.200; de makelaarscourtage zit meestal in de vraagprijs (FAI) en wordt door de verkoper betaald, soms gedeeld.",
+  "annual_property_tax": "Eigenaren betalen jaarlijks een onroerendgoedbelasting (taxe foncière) die door de lokale overheden wordt vastgesteld. Wie een gemeubileerde tweede woning bezit, betaalt ook woonbelasting (taxe d'habitation), die sommige gemeenten met een toeslag van 5% tot 60% verhogen."
+ },
+ "greece": {
+  "can_foreigners_buy": "Ja. Kopers van buiten de EU en de EVA hebben een vergunning nodig om te kopen in aangewezen grensgebieden (delen van Noord-Griekenland en eilanden in het oosten van de Egeïsche Zee, zoals de Dodekanesos en Rhodos). De regering heeft per 1 januari 2027 een overdrachtsbelasting van 15% aangekondigd voor kopers van woningen van buiten de EU; in september 2026 was dat nog niet definitief.",
+  "purchase_costs_breakdown": "Overdrachtsbelasting van 3,09% van de koopprijs of van de fiscale waarde, als die hoger is; notaris circa 0,8-1% plus btw; kadasterkosten circa 0,5-0,7%; advocaat 1-2% plus btw; als er een makelaar is ingeschakeld, betaalt de koper daarbovenop meestal een courtage van 1-3% plus btw.",
+  "annual_property_tax": "Wie op 1 januari eigenaar is, betaalt de uniforme vastgoedbelasting (ENFIA), die per woning wordt berekend uit ligging, oppervlakte, ouderdom en de officiële zonewaarde, met een toeslag als het totale vastgoed in Griekenland meer waard is dan € 500.000."
+ },
+ "bulgaria": {
+  "can_foreigners_buy": "Ja, gebouwen en appartementen, met vergelijkbare rechten als Bulgaren; volgens Global Property Guide kunnen buitenlanders grond niet rechtstreeks in eigendom hebben, zodat een Bulgaarse vennootschap de gebruikelijke weg is.",
+  "purchase_costs_breakdown": "Overdrachtsbelasting 0,1-3% (gemeentelijk; Sofia 2,5%) + notaris 0,1-1,5% + advocaat 0,5-1% + makelaar 2,5-3%.",
+  "annual_property_tax": "0,01-0,45% van de fiscale waarde van de woning, plus een gemeentelijke afvalheffing.",
+  "holiday_rental_rules": "Toeristische accommodatie moet volgens de toerismewet bij de gemeente zijn gecategoriseerd of geregistreerd; toeristenbelasting van 0,20-3,00 BGN per nacht."
+ },
+ "portugal": {
+  "can_foreigners_buy": "Ja, met dezelfde rechten als Portugese burgers (in september 2025 is een verhoging van de IMT aangekondigd voor buitenlandse kopers van een tweede woning).",
+  "purchase_costs_breakdown": "Overdrachtsbelasting IMT 0-8% (progressief) + zegelrecht 0,8% + notaris en register 0,9-1,2% + advocaat 1,25-2%.",
+  "annual_property_tax": "IMI: 0,3-0,45% van de fiscale waarde (stedelijk gebied), vastgesteld door de gemeente.",
+  "holiday_rental_rules": "Registratie als Alojamento Local (AL) is verplicht; sinds november 2024 kunnen gemeenten nieuwe AL-vergunningen bevriezen in beperkingszones (Lissabon en Porto doen dat); verenigingen van eigenaren kunnen bezwaar maken met meer dan 50% van de eigenaren."
+ },
+ "germany": {
+  "can_foreigners_buy": "Ja. Voor buitenlanders gelden geen beperkingen bij het kopen van vastgoed in Duitsland, al moeten kopers van buiten de EU voor een lening meestal meer eigen geld inbrengen.",
+  "purchase_costs_breakdown": "Overdrachtsbelasting (Grunderwerbsteuer) van 3,5% tot 6,5%, afhankelijk van de deelstaat (3,5% in Beieren, 6,5% in Brandenburg, Noordrijn-Westfalen, Saarland en Sleeswijk-Holstein), plus kosten voor notaris en kadaster (Notar- und Grundbuchkosten) van circa 1,5-2%; als de verkoper de makelaar heeft ingeschakeld, betaalt de koper volgens de wet de helft van de courtage, en die komt erbij.",
+  "annual_property_tax": "Eigenaren betalen grondbelasting (Grundsteuer), die sinds 2025 wordt berekend als getaxeerde waarde x een belastingtarief x een gemeentelijke vermenigvuldigingsfactor (Hebesatz) die elke gemeente zelf bepaalt."
+ },
+ "poland": {
+  "can_foreigners_buy": "Burgers van de EU, de EER en Zwitserland kopen onder dezelfde voorwaarden als Polen. Andere buitenlanders kunnen zonder vergunning een appartement kopen, maar hebben voor een huis of grond meestal een vergunning van het ministerie van Binnenlandse Zaken (MSWiA) nodig.",
+  "purchase_costs_breakdown": "Belasting op civielrechtelijke handelingen (PCC) van 2% van de waarde, door de koper te betalen binnen 14 dagen na de akte; notarishonorarium (taksa notarialna) van maximaal 1.010 PLN plus 0,4% van de waarde boven 60.000 PLN, plus 23% btw; griffierecht van 200 PLN voor de inschrijving van het eigendom in het kadaster (plus 100 PLN voor een nieuw register); eventueel een advocaat, circa 1%; de makelaarscourtage (circa 2-3%) hangt af van de overeenkomst.",
+  "annual_property_tax": "Eigenaren betalen een lokale onroerendgoedbelasting (podatek od nieruchomości) die door de gemeente wordt vastgesteld, in 2026 met een maximum van 1,25 PLN per m² gebruiksoppervlakte voor appartementen en huizen."
+ },
+ "netherlands": {
+  "can_foreigners_buy": "Ja. Er gelden geen eisen aan nationaliteit of woonplaats en er is geen toeslag voor buitenlandse kopers. Sommige steden, zoals Den Haag, verbieden om goedkopere woningen na aankoop zonder vergunning te verhuren (opkoopbescherming).",
+  "purchase_costs_breakdown": "Overdrachtsbelasting van 8% als u niet zelf in de woning gaat wonen, zoals bij een verhuurwoning of vakantiewoning, of 2% als het uw hoofdverblijf wordt; notariskosten voor de leveringsakte van circa € 500; inschrijvingskosten van het Kadaster; en hypotheekkosten als u leent; de verkoper betaalt zijn eigen makelaar.",
+  "annual_property_tax": "Eigenaren betalen onroerendezaakbelasting (OZB) over de officiële WOZ-waarde, tegen een tarief dat elke gemeente zelf bepaalt en dat in de praktijk een promillage is; huurders van woningen betalen deze belasting niet."
+ },
+ "cyprus": {
+  "can_foreigners_buy": "EU-burgers kopen zonder beperkingen. Kopers van buiten de EU hebben toestemming van de ministerraad nodig, die via de districtsambtenaar wordt aangevraagd, en mogen gewoonlijk niet meer dan één woning of een perceel van maximaal 4.014 m² kopen.",
+  "purchase_costs_breakdown": "Overdrachtsrechten van het kadaster van 3% tot € 85.000, 5% tot € 170.000 en 8% daarboven, gehalveerd bij bestaande bouw zonder btw (1,5%, 2,5% en 4%); het zegelrecht is per 1 januari 2026 afgeschaft; advocaat circa 1% plus btw; kleine kadasterkosten.",
+  "annual_property_tax": "Er is geen jaarlijkse landelijke vastgoedbelasting (afgeschaft in 2017); eigenaren betalen gemeentelijke heffingen van circa € 90 tot € 300 per jaar, plus rioolheffing en lokale lasten."
+ },
+ "switzerland": {
+  "can_foreigners_buy": "Volgens de wet Lex Koller kopen burgers van de EU en de EVA die in Zwitserland wonen en houders van een C-vergunning zoals Zwitsers, en houders van een B-vergunning van buiten de EU kunnen een woning kopen waarin zij zelf wonen. Wie in het buitenland woont, heeft een kantonale vergunning nodig en kan meestal alleen één vakantiewoning in een toeristisch gebied kopen, binnen landelijke quota; in 2026 lag een voorstel tot aanscherping ter consultatie voor.",
+  "purchase_costs_breakdown": "Overdrachtsbelasting (Handänderungssteuer, droits de mutation) van 0% tot circa 3,3%, afhankelijk van het kanton; notaris circa 0,1-0,5%; kadasterrecht, een klein vast bedrag of percentage; eventueel een advocaat, 1-2%; de makelaarscourtage (2-3%) wordt door de verkoper betaald.",
+  "annual_property_tax": "Meer dan de helft van de kantons heft jaarlijks een vastgoedbelasting (Liegenschaftssteuer), meestal 0,01-0,3% van de getaxeerde waarde, en eigenaren betalen ook kantonale vermogensbelasting over de waarde van de woning min de hypotheek."
+ },
+ "united-states": {
+  "can_foreigners_buy": "Ja. Er is geen federaal verbod voor buitenlanders om woningen te kopen, maar ongeveer 30 staten hebben beperkingen ingevoerd, en Texas en Florida beperken kopers uit bepaalde landen, zoals China.",
+  "purchase_costs_breakdown": "De afsluitkosten (closing costs) verschillen per staat en bedragen meestal 2-5% van het geleende bedrag: onderzoek naar de eigendomstitel en titelverzekering, registratiekosten, advocaatkosten, taxatie en kosten van de geldverstrekker; sinds augustus 2024 hoeft de verkoper de makelaar van de koper niet meer te betalen, zodat de koper die kosten kan dragen, tenzij de verkoper ermee instemt; FIRPTA geldt niet bij aankoop, maar wel wanneer een buitenlander later verkoopt: de koper houdt dan in de regel 15% van de verkoopprijs in.",
+  "annual_property_tax": "De onroerendgoedbelasting wordt lokaal vastgesteld en bedroeg in 2024 in de grootste stad van elke staat gemiddeld circa 1,22% van de waarde, van 0,30% in Honolulu tot 3,02% in Detroit."
+ },
+ "japan": {
+  "can_foreigners_buy": "Ja. Buitenlanders kunnen grond en woningen in volle eigendom kopen onder dezelfde voorwaarden als Japanse burgers, zelfs met een toeristenvisum, maar een aankoop geeft geen recht op een visum of verblijfsvergunning.",
+  "purchase_costs_breakdown": "De koper betaalt een makelaarscourtage van maximaal 3% plus 60.000 yen plus 10% verbruiksbelasting (met een bijzonder maximum van 330.000 yen inclusief belasting voor goedkope leegstaande woningen tot 8 miljoen yen), registratiebelasting van 1,5% op de grond (tot maart 2029) en standaard 2% op het gebouw, verkrijgingsbelasting van 3% van de getaxeerde waarde, zegelrecht en het honorarium van een gerechtelijk schrijver (shiho shoshi) van circa 100.000 tot 200.000 yen.",
+  "annual_property_tax": "De belasting op vaste activa bedraagt 1,4% van de door de overheid getaxeerde waarde, plus een stadsplanningsbelasting van maximaal 0,3% in stedelijke gebieden; voor kleine woonpercelen geldt een lagere heffingsgrondslag."
+ },
+ "mexico": {
+  "can_foreigners_buy": "Ja, maar in de beperkte zone (binnen 50 km van de kust of 100 km van de grenzen, waar ook Tulum en Playa del Carmen onder vallen) alleen via een fideicomiso bij een bank of via een Mexicaanse vennootschap; elders is rechtstreeks eigendom mogelijk.",
+  "purchase_costs_breakdown": "Verkrijgingsbelasting 2-5% + notaris 0,5-1% + advocaat 1-1,5% (volgens Global Property Guide 3,5-7,5%), plus 0,5-1,5% voor het opzetten van de fideicomiso en de vergunning; TheLatinvestor rekent met 5-8%.",
+  "annual_property_tax": "Gemeentelijke predial, lokaal vastgesteld over de kadastrale waarde; meestal laag, vaak minder dan de bijdrage aan de vereniging van eigenaren.",
+  "holiday_rental_rules": "Quintana Roo: verplichte registratie in RETUR-Q (sinds augustus 2025, jaarlijks te verlengen) plus een exploitatievergunning van de staat en een fiscaal nummer (RFC); 6% verblijfsbelasting; boetes tot 100.000 MXN."
+ },
+ "canada": {
+  "can_foreigners_buy": "Voorlopig meestal niet: een federaal verbod belet niet-Canadezen tot 1 januari 2027 om woningen te kopen in steden en grotere plaatsen, met uitzonderingen voor onder meer houders van een werkvergunning en echtgenoten van Canadese burgers of permanente ingezetenen. Het verbod geldt niet voor het platteland en kleine plaatsen. De regering heeft gezegd het niet zonder meer te willen verlengen, maar er wordt een vervangende regeling onderzocht.",
+  "purchase_costs_breakdown": "Kopers betalen meestal een provinciale overdrachtsbelasting volgens een glijdende schaal (Ontario: 0,5% tot $ 55.000 en 1% van $ 55.000 tot $ 250.000), juridische kosten van circa $ 500 tot $ 1.500, een titelverzekering van circa $ 250 en een bouwkundige keuring van $ 300 tot $ 1.000, terwijl de verkoper meestal de makelaars betaalt; buitenlandse kopers betalen daarnaast in heel Ontario de speculatiebelasting voor niet-ingezetenen van 25% en in Metro Vancouver en vier andere regio's de aanvullende belasting van British Columbia van 20%.",
+  "annual_property_tax": "De onroerendgoedbelasting wordt door elke stad vastgesteld als percentage van de getaxeerde waarde, in 2026 van circa 0,3% in Vancouver tot 2,12% in Saint John."
+ },
+ "dominican-republic": {
+  "can_foreigners_buy": "Ja. Buitenlanders hebben dezelfde rechten als Dominicaanse burgers om grond en woningen te kopen, zonder beperkingen.",
+  "purchase_costs_breakdown": "De koper betaalt een overdrachtsbelasting van 3% (0% voor eerste aankopen die in aanmerking komen voor de toeristische stimuleringsregeling CONFOTUR), juridische kosten van circa 1-2% en notariskosten van circa 0,25-1%, plus registratiekosten, terwijl de verkoper de makelaarscourtage van 2-3% betaalt.",
+  "annual_property_tax": "De jaarlijkse belasting IPI bedraagt 1% van het deel van iemands totale vastgoedwaarde in de Dominicaanse Republiek, zoals vastgesteld door de belastingdienst DGII, dat in 2026 boven RD$ 10.695.494 ligt; één goedkope woning blijft dus vaak onder de drempel."
+ }
+}

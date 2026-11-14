@@ -85,7 +85,7 @@ function hubPage(L: LangPlan, has: (p: string) => boolean, href: (p: string) => 
   const country = (c: Facet) => {
     const kids = pages.filter((p) => p.cc === c.cc && p !== c && order.includes(p.kind));
     kids.sort((x, y) => order.indexOf(x.kind) - order.indexOf(y.kind) || (x.cap || 0) - (y.cap || 0) || (x.beds || 0) - (y.beds || 0) || y.homes.length - x.homes.length);
-    return `<h3><a href="${esc(href(c.path))}">${esc(P.country(c.country!))}</a> · ${c.homes.length} ${esc(t.homes)}</h3><p>${kids.map((p) => a(p)).join(" ")}</p>`;
+    return `<h3><a href="${esc(href(c.path))}">${esc(P.country(c.country!))}</a> · ${c.homes.length} ${esc(typeof t.homes === "function" ? t.homes(c.homes.length) : t.homes)}</h3><p>${kids.map((p) => a(p)).join(" ")}</p>`;
   };
   const slugs = new Set(pages.flatMap((p) => p.homes.map((h) => String(h.slug))));
   const prices = rows.filter((r) => slugs.has(String(r.slug))).map((r) => Number(r.price_eur)).filter((x) => x > 0);

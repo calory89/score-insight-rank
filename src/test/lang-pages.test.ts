@@ -90,7 +90,7 @@ describe("which pages a language gets", () => {
   });
   it("every language with a pack has its interface words and nothing else is published", () => {
     for (const l of NEW_LANGS) expect(!!PACKS[l]).toBe(!!UI[l] && !!CONFIG[l]);
-    expect(langs.map((l) => l.lang)).toEqual(["de", "ru"]);
+    expect(langs.map((l) => l.lang)).toEqual(NEW_LANGS.filter((l) => PACKS[l]));
   });
 });
 

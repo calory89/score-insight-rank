@@ -1,0 +1,98 @@
+{
+ "_note": "Polish texts of src/data/destinations.json for the listing pages (seo/listings/packkit.ts destFor). Numbers and dates must match the English file; names of taxes and procedures stay in the country's language.",
+ "spain": {
+  "can_foreigners_buy": "Tak, obecnie bez ograniczeń. Rząd zaproponował podatek w wysokości 100% (albo zakaz) dla kupujących spoza UE, którzy nie mieszkają w Hiszpanii; propozycja nie została uchwalona.",
+  "purchase_costs_breakdown": "Rynek pierwotny: 10% IVA (VAT) + 0,5-1,5% AJD (opłata skarbowa) + notariusz 0,5-1% + prawnik 1-2%; rynek wtórny: zamiast IVA i AJD podatek od przeniesienia własności ITP w wysokości 6-11%.",
+  "annual_property_tax": "IBI: 0,4-1,1% wartości katastralnej (zależnie od gminy), a do tego podatek dochodowy od umownego dochodu z nieruchomości, która nie jest wynajmowana.",
+  "holiday_rental_rules": "Potrzebna jest licencja turystyczna regionu oraz numer krajowego rejestru najmu krótkoterminowego (obowiązkowy od 1 lipca 2025 r.); nowy najem turystyczny w budynkach wielorodzinnych wymaga zgody 3/5 właścicieli (od 3 kwietnia 2025 r.)."
+ },
+ "italy": {
+  "can_foreigners_buy": "Tak w przypadku obywateli UE; kupujących spoza UE obowiązuje zasada wzajemności (spełniają ją między innymi USA, Wielka Brytania, Kanada i Australia).",
+  "purchase_costs_breakdown": "Podatek rejestracyjny 9% od drugiego domu (rynek wtórny) albo VAT przy nowym budownictwie; notariusz 1-2% + prawnik około 1% + pośrednik około 3% (według Global Property Guide 10-18% łącznie za kupno i sprzedaż).",
+  "annual_property_tax": "IMU: 0,4-1,06% w przypadku drugich domów (od wartości katastralnej).",
+  "holiday_rental_rules": "Każdy najem turystyczny wymaga krajowego kodu CIN, podanego w ogłoszeniu i na nieruchomości; od trzeciej nieruchomości najem jest traktowany jak działalność gospodarcza (rejestracja VAT)."
+ },
+ "sweden": {
+  "can_foreigners_buy": "Tak. Przy zakupie domu w Szwecji nie ma wymogów dotyczących obywatelstwa ani miejsca zamieszkania, ale do wpisu własności potrzebny jest szwedzki numer osobisty albo numer koordynacyjny (samordningsnummer).",
+  "purchase_costs_breakdown": "Opłata skarbowa od wpisu własności (lagfart) w wysokości 1,5% ceny albo wartości podatkowej, jeśli jest wyższa, plus opłata 825 SEK; przy kredycie, jeśli potrzebne są nowe listy zastawne (pantbrev), 2% ich kwoty plus opłata 375 SEK; opcjonalnie porada prawna; pośrednika zwykle opłaca sprzedający, a przy mieszkaniu spółdzielczym (bostadsrätt) nie ma lagfart.",
+  "annual_property_tax": "Od domów pobierana jest gminna opłata od nieruchomości (kommunal fastighetsavgift): 10 425 SEK w 2026 r. albo 0,75% wartości podatkowej, jeśli to mniej."
+ },
+ "denmark": {
+  "can_foreigners_buy": "Bez miejsca zamieszkania w Danii albo 5 lat wcześniejszego pobytu potrzebne jest zezwolenie urzędu Civilstyrelsen. Obywatele UE i EOG, którzy mieszkają w Danii i są tam zameldowani, mogą kupić dom do stałego zamieszkania bez zezwolenia, składając oświadczenie w sądzie wieczystoksięgowym (Tinglysningsretten). Domy letniskowe (sommerhuse) wymagają zezwolenia, które otrzymują tylko osoby szczególnie silnie związane z Danią, na przykład przez wiele lat spędzanych tam wakacji.",
+  "purchase_costs_breakdown": "Opłata za wpis aktu (tinglysningsafgift): 1850 DKK plus 0,6% ceny, około 1% dla prawnika kupującego, a przy kredycie opłata za wpis hipoteki: 1825 DKK plus 1,25% kwoty kredytu; pośrednika zwykle opłaca sprzedający.",
+  "annual_property_tax": "Właściciele płacą podatek od wartości nieruchomości (ejendomsværdiskat) w wysokości 0,51% od 80% urzędowej wyceny (1,4% powyżej 9,2 mln DKK) oraz gminny podatek gruntowy (grundskyld) według stawki ustalanej przez każdą gminę, nie wyższej niż 30 promili wartości gruntu."
+ },
+ "france": {
+  "can_foreigners_buy": "Tak. Cudzoziemcy mogą kupować nieruchomości we Francji bez większych ograniczeń, a kupujący spoza UE nie potrzebują zezwolenia, choć formalności mogą trwać dłużej.",
+  "purchase_costs_breakdown": "Podatki od przeniesienia własności (droits de mutation) około 5,8% albo około 6,3% w departamentach, które podniosły stawkę na okres od 2025 r. do marca 2028 r.; taksa notarialna (émoluments) według skali malejącej od 3,87% do 0,799% plus 20% VAT, około 1,3% przy domu za 150 000 €; opłata na rzecz bezpieczeństwa obrotu nieruchomościami (contribution de sécurité immobilière) 0,10%; wydatki notariusza (débours) około 800 € do 1200 €; prowizja pośrednika jest zwykle wliczona w cenę z ogłoszenia (FAI) i płaci ją sprzedający, czasem dzielona jest między strony.",
+  "annual_property_tax": "Właściciele płacą roczny podatek od nieruchomości (taxe foncière) ustalany przez władze lokalne, a właściciele umeblowanego drugiego domu także podatek mieszkaniowy (taxe d'habitation), który niektóre gminy podwyższają o dopłatę od 5% do 60%."
+ },
+ "greece": {
+  "can_foreigners_buy": "Tak. Kupujący spoza UE i EFTA potrzebują zezwolenia na zakup na wyznaczonych obszarach przygranicznych (części północnej Grecji i wyspy wschodniej części Morza Egejskiego, takie jak Dodekanez i Rodos). Rząd zapowiedział od 1 stycznia 2027 r. podatek od przeniesienia własności w wysokości 15% dla kupujących domy spoza UE; we wrześniu 2026 r. nie było to jeszcze ostateczne.",
+  "purchase_costs_breakdown": "Podatek od przeniesienia własności 3,09% ceny albo wartości podatkowej, jeśli jest wyższa; notariusz około 0,8-1% plus VAT; opłaty za wpis do rejestru gruntów około 0,5-0,7%; prawnik 1-2% plus VAT; przy udziale pośrednika kupujący zwykle płaci dodatkowo prowizję 1-3% plus VAT.",
+  "annual_property_tax": "Kto jest właścicielem 1 stycznia, płaci jednolity podatek od nieruchomości (ENFIA), liczony dla każdej nieruchomości na podstawie położenia, powierzchni, wieku i urzędowej wartości strefy, z dopłatą, gdy łączna wartość nieruchomości w Grecji przekracza 500 000 €."
+ },
+ "bulgaria": {
+  "can_foreigners_buy": "Tak, budynki i mieszkania, na prawach zbliżonych do obywateli Bułgarii; według Global Property Guide cudzoziemcy nie mogą bezpośrednio posiadać gruntu, dlatego zwykle korzysta się z bułgarskiej spółki.",
+  "purchase_costs_breakdown": "Podatek od przeniesienia własności 0,1-3% (gminny; Sofia 2,5%) + notariusz 0,1-1,5% + prawnik 0,5-1% + pośrednik 2,5-3%.",
+  "annual_property_tax": "0,01-0,45% wartości podatkowej nieruchomości plus gminna opłata za wywóz śmieci.",
+  "holiday_rental_rules": "Obiekt noclegowy musi zostać skategoryzowany albo zarejestrowany w gminie zgodnie z ustawą o turystyce; podatek turystyczny 0,20-3,00 BGN za noc."
+ },
+ "portugal": {
+  "can_foreigners_buy": "Tak, na tych samych prawach co obywatele Portugalii (we wrześniu 2025 r. zapowiedziano podwyżkę IMT dla zagranicznych nabywców drugiego domu).",
+  "purchase_costs_breakdown": "Podatek od przeniesienia własności IMT 0-8% (progresywny) + opłata skarbowa 0,8% + notariusz i rejestr 0,9-1,2% + prawnik 1,25-2%.",
+  "annual_property_tax": "IMI: 0,3-0,45% wartości podatkowej (nieruchomości miejskie), stawkę ustala gmina.",
+  "holiday_rental_rules": "Rejestracja jako Alojamento Local (AL) jest obowiązkowa; od listopada 2024 r. gminy mogą wstrzymywać nowe licencje AL w strefach ograniczeń (korzystają z tego Lizbona i Porto); wspólnoty mieszkaniowe mogą zgłosić sprzeciw głosami ponad 50% właścicieli."
+ },
+ "germany": {
+  "can_foreigners_buy": "Tak. Nie ma ograniczeń w kupowaniu nieruchomości w Niemczech przez cudzoziemców, choć kupujący spoza UE zwykle potrzebują większego wkładu własnego, żeby dostać kredyt.",
+  "purchase_costs_breakdown": "Podatek od nabycia nieruchomości (Grunderwerbsteuer) od 3,5% do 6,5% zależnie od kraju związkowego (3,5% w Bawarii, 6,5% w Brandenburgii, Nadrenii Północnej-Westfalii, Kraju Saary i Szlezwiku-Holsztynie) oraz koszty notariusza i księgi wieczystej (Notar- und Grundbuchkosten) około 1,5-2%; jeśli pośrednika zatrudnił sprzedający, kupujący z mocy prawa płaci połowę prowizji, co jest dodatkowym kosztem.",
+  "annual_property_tax": "Właściciele płacą podatek gruntowy (Grundsteuer), liczony od 2025 r. jako wartość z wyceny x stawka podatku x mnożnik gminny (Hebesatz), który ustala każda gmina."
+ },
+ "poland": {
+  "can_foreigners_buy": "Obywatele UE, EOG i Szwajcarii kupują na tych samych zasadach co Polacy. Pozostali cudzoziemcy mogą kupić mieszkanie bez zezwolenia, ale na zakup domu lub gruntu zwykle potrzebują zezwolenia Ministerstwa Spraw Wewnętrznych i Administracji (MSWiA).",
+  "purchase_costs_breakdown": "Podatek od czynności cywilnoprawnych (PCC) 2% wartości, płacony przez kupującego w ciągu 14 dni od aktu; taksa notarialna do 1010 PLN plus 0,4% wartości powyżej 60 000 PLN, plus 23% VAT; opłata sądowa 200 PLN za wpis własności do księgi wieczystej (plus 100 PLN za założenie nowej księgi); opcjonalnie prawnik, około 1%; prowizja pośrednika (około 2-3%) zależy od umowy.",
+  "annual_property_tax": "Właściciele płacą lokalny podatek od nieruchomości ustalany przez gminę, w 2026 r. nie wyższy niż 1,25 PLN za m² powierzchni użytkowej mieszkań i domów."
+ },
+ "netherlands": {
+  "can_foreigners_buy": "Tak. Nie ma wymogów dotyczących obywatelstwa ani miejsca zamieszkania i nie ma dopłaty dla zagranicznych kupujących. Niektóre miasta, na przykład Haga, zabraniają wynajmowania tańszych mieszkań po zakupie bez zezwolenia (opkoopbescherming).",
+  "purchase_costs_breakdown": "Podatek od przeniesienia własności (overdrachtsbelasting) 8%, jeśli kupujący nie zamieszka w nieruchomości, na przykład przy zakupie na wynajem albo domu wakacyjnego, albo 2%, jeśli będzie to jego główne miejsce zamieszkania; opłata notarialna za akt przeniesienia własności około 500 EUR; opłaty rejestracyjne urzędu Kadaster; koszty hipoteki przy kredycie; sprzedający opłaca własnego pośrednika.",
+  "annual_property_tax": "Właściciele płacą gminny podatek od nieruchomości (onroerendezaakbelasting, OZB) od urzędowej wartości WOZ, według stawki ustalanej przez każdą gminę, w praktyce wyrażonej w promilach; najemcy mieszkań go nie płacą."
+ },
+ "cyprus": {
+  "can_foreigners_buy": "Obywatele UE kupują bez ograniczeń. Kupujący spoza UE potrzebują zgody Rady Ministrów, o którą występuje się za pośrednictwem urzędnika dystryktu, i zwykle mogą kupić tylko jeden dom albo działkę do 4014 m².",
+  "purchase_costs_breakdown": "Opłaty urzędu ksiąg gruntowych za przeniesienie własności: 3% do 85 000 €, 5% do 170 000 € i 8% powyżej, obniżone o połowę przy rynku wtórnym bez VAT (1,5%, 2,5% i 4%); opłata skarbowa zniesiona od 1 stycznia 2026 r.; prawnik około 1% plus VAT; drobne opłaty urzędu ksiąg gruntowych.",
+  "annual_property_tax": "Nie ma rocznego krajowego podatku od nieruchomości (zniesiony w 2017 r.); właściciele płacą opłaty gminne około 90 € do 300 € rocznie oraz opłaty za kanalizację i na rzecz władz lokalnych."
+ },
+ "switzerland": {
+  "can_foreigners_buy": "Zgodnie z ustawą Lex Koller obywatele UE i EFTA mieszkający w Szwajcarii oraz posiadacze zezwolenia C kupują tak jak Szwajcarzy, a posiadacze zezwolenia B spoza UE mogą kupić dom, w którym sami mieszkają. Osoby mieszkające za granicą potrzebują zezwolenia kantonu i zwykle mogą kupić tylko jeden dom wakacyjny w miejscowości turystycznej, w ramach krajowych limitów; w 2026 r. trwały konsultacje w sprawie zaostrzenia przepisów.",
+  "purchase_costs_breakdown": "Podatek od przeniesienia własności (Handänderungssteuer, droits de mutation) od 0% do około 3,3% zależnie od kantonu; notariusz około 0,1-0,5%; opłata za wpis do księgi wieczystej, niewielka stała kwota albo procent; opcjonalnie prawnik 1-2%; prowizję pośrednika (2-3%) płaci sprzedający.",
+  "annual_property_tax": "Ponad połowa kantonów pobiera roczny podatek od nieruchomości (Liegenschaftssteuer), zwykle 0,01-0,3% wartości z wyceny, a właściciele płacą też kantonalny podatek majątkowy od wartości nieruchomości pomniejszonej o hipotekę."
+ },
+ "united-states": {
+  "can_foreigners_buy": "Tak. Nie ma federalnego zakazu kupowania domów przez cudzoziemców, ale około 30 stanów wprowadziło pewne ograniczenia, a Teksas i Floryda ograniczają zakupy przez obywateli niektórych państw, na przykład Chin.",
+  "purchase_costs_breakdown": "Koszty zamknięcia transakcji (closing costs) zależą od stanu i zwykle wynoszą 2-5% kwoty kredytu: badanie tytułu własności i ubezpieczenie tytułu, opłaty za wpis, honorarium prawnika, wycena i opłaty kredytodawcy; od sierpnia 2024 r. sprzedający nie musi już płacić pośrednikowi kupującego, więc może go opłacić kupujący, chyba że sprzedający się na to zgodzi; FIRPTA nie dotyczy zakupu, ale dotyczy późniejszej sprzedaży przez cudzoziemca: kupujący co do zasady potrąca wtedy 15% ceny sprzedaży.",
+  "annual_property_tax": "Podatek od nieruchomości ustalany jest lokalnie; w 2024 r. w największym mieście każdego stanu wynosił średnio około 1,22% wartości, od 0,30% w Honolulu do 3,02% w Detroit."
+ },
+ "japan": {
+  "can_foreigners_buy": "Tak. Cudzoziemcy mogą kupować grunty i domy na własność na tych samych zasadach co obywatele Japonii, nawet na wizie turystycznej, ale zakup nie daje wizy ani prawa pobytu.",
+  "purchase_costs_breakdown": "Kupujący płaci prowizję pośrednika do 3% plus 60 000 jenów plus 10% podatku konsumpcyjnego (ze specjalnym limitem do 330 000 jenów z podatkiem dla tanich pustostanów do 8 mln jenów), podatek rejestracyjny 1,5% od gruntu (do marca 2029 r.) i standardowo 2% od budynku, podatek od nabycia nieruchomości 3% wartości z wyceny, opłatę skarbową oraz honorarium skryby sądowego (shiho shoshi) około 100 000 do 200 000 jenów.",
+  "annual_property_tax": "Podatek od środków trwałych wynosi 1,4% wartości wycenionej przez władze, a na obszarach miejskich dochodzi podatek urbanistyczny do 0,3%; małe działki mieszkaniowe mają niższą podstawę opodatkowania."
+ },
+ "mexico": {
+  "can_foreigners_buy": "Tak, ale w strefie ograniczonej (do 50 km od wybrzeża albo 100 km od granic, co obejmuje Tulum i Playa del Carmen) tylko przez bankowy fundusz powierniczy fideicomiso albo meksykańską spółkę; poza nią możliwa jest własność bezpośrednia.",
+  "purchase_costs_breakdown": "Podatek od nabycia 2-5% + notariusz 0,5-1% + prawnik 1-1,5% (według Global Property Guide 3,5-7,5%), plus 0,5-1,5% za ustanowienie fideicomiso i zezwolenie; TheLatinvestor zakłada 5-8%.",
+  "annual_property_tax": "Gminny podatek predial, ustalany lokalnie od wartości katastralnej; zwykle niski, często niższy niż opłaty na rzecz wspólnoty.",
+  "holiday_rental_rules": "Quintana Roo: obowiązkowa rejestracja w RETUR-Q (od sierpnia 2025 r., odnawiana co roku) oraz stanowa licencja na prowadzenie działalności i numer podatkowy RFC; 6% podatku od noclegów; grzywny do 100 000 MXN."
+ },
+ "canada": {
+  "can_foreigners_buy": "Na razie przeważnie nie: zakaz federalny do 1 stycznia 2027 r. nie pozwala osobom niebędącym Kanadyjczykami kupować domów w miastach i większych miejscowościach, z wyjątkami między innymi dla posiadaczy pozwolenia na pracę oraz małżonków obywateli lub stałych rezydentów. Zakaz nie obejmuje terenów wiejskich i małych miejscowości. Rząd zapowiedział, że nie zamierza go po prostu przedłużać, ale trwają prace nad rozwiązaniem, które go zastąpi.",
+  "purchase_costs_breakdown": "Kupujący zwykle płacą prowincjonalny podatek od przeniesienia własności według skali (Ontario: 0,5% do 55 000 $ i 1% od 55 000 $ do 250 000 $), koszty prawne około 500 $ do 1500 $, ubezpieczenie tytułu około 250 $ i przegląd techniczny 300 $ do 1000 $, a pośredników zwykle opłaca sprzedający; zagraniczni kupujący płacą ponadto w całym Ontario podatek od spekulacji dla nierezydentów w wysokości 25%, a w Metro Vancouver i czterech innych regionach dodatkowy podatek Kolumbii Brytyjskiej w wysokości 20%.",
+  "annual_property_tax": "Podatek od nieruchomości każde miasto ustala jako odsetek wartości z wyceny, w 2026 r. od około 0,3% w Vancouver do 2,12% w Saint John."
+ },
+ "dominican-republic": {
+  "can_foreigners_buy": "Tak. Cudzoziemcy mają takie same prawa do kupowania gruntów i domów jak obywatele Dominikany, bez ograniczeń.",
+  "purchase_costs_breakdown": "Kupujący płaci podatek od przeniesienia własności 3% (0% przy pierwszych zakupach objętych zachętami turystycznymi CONFOTUR), koszty prawne około 1-2% i opłaty notarialne około 0,25-1%, plus koszty rejestracji, a prowizję pośrednika 2-3% płaci sprzedający.",
+  "annual_property_tax": "Roczny podatek IPI wynosi 1% tej części łącznej wartości nieruchomości danej osoby w Dominikanie, wycenionej przez urząd skarbowy DGII, która w 2026 r. przekracza 10 695 494 RD$, więc jeden tani dom często mieści się poniżej progu."
+ }
+}

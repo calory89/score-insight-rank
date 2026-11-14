@@ -21,7 +21,9 @@ export type Ui = {
     lede(homes: number, countries: number, searches: number): string;
     /** What the site is and how a home gets its score, in two or three sentences, with this build's numbers. */
     about(homes: number, min: string, max: string): string[];
-    all: string; by: string; homes: string; budgets: string; features: string; ranked: string; near: string; combo: string; ccy: string;
+    all: string; by: string;
+    /** After the number of homes of a country; a function where the word changes with the number (Polish: 1 oferta, 3 oferty, 5 ofert). */
+    homes: string | ((n: number) => string); budgets: string; features: string; ranked: string; near: string; combo: string; ccy: string;
     faqTitle: string; faq: [string, string][];
   };
 };
@@ -85,6 +87,60 @@ export const UI: Partial<Record<NewLang, Ui>> = {
         ["Даёт ли покупка недвижимости вид на жительство?", "Сама по себе покупка жилья не даёт права на проживание. Правила въезда и проживания зависят от страны и от вашего гражданства, и RealHunt не оформляет визы и вид на жительство. Уточняйте правила в консульстве страны."],
         ["Что означает оценка?", "Оценка от 70 до 98 сравнивает объект со всеми остальными на сайте: цена, цена за м², площадь, состояние, удобства, близость к морю или озеру, погода, аэропорт и расходы на покупку. Это не экспертиза и не оценка рыночной стоимости."],
         ["Почему часть страниц на английском?", "Подборки переведены на русский язык. Страница каждого объекта, калькуляторы и руководства пока есть только на английском; такие ссылки отмечены знаком EN."],
+      ],
+    },
+  },
+  nl: {
+    name: "Nederlands", locale: "nl_NL",
+    skip: "Naar de inhoud", navLabel: "Hoofdnavigatie", navAll: "Alle zoekopdrachten", navCountries: "Landen", langLabel: "Taal kiezen",
+    enHomes: "Een klik op een woning opent de detailpagina. Die pagina's zijn er voorlopig alleen in het Engels.",
+    enTitle: "Deze pagina is in het Engels",
+    footAbout: "RealHunt is geen makelaar en rekent geen courtage. Elke woning is door een mens gecontroleerd, krijgt een score van 70 tot 98 en verwijst naar de oorspronkelijke advertentie.",
+    footEnglish: "Links met het teken EN gaan naar pagina's die er voorlopig alleen in het Engels zijn.",
+    footMethod: "Zo komt de score tot stand", footWho: "Wie wij zijn", footContact: "Contact", footPrivacy: "Privacy", footTerms: "Gebruiksvoorwaarden",
+    hub: {
+      title: "Goedkope huizen in het buitenland kopen: alle zoekopdrachten op land, prijs en ligging",
+      h1: "Goedkope huizen in het buitenland kopen",
+      desc: "Goedkope huizen en appartementen in Spanje, Italië, Zweden, Frankrijk, Denemarken en andere landen: echte advertenties met foto, prijs, oppervlakte, score en aankoopkosten.",
+      lede: (n, c, s) => `${n} woningen in ${c} landen, verdeeld over ${s} zoekopdrachten: op budget, aan zee, in een dorp, met tuin of zwembad en per land. Elke pagina toont echte advertenties met foto, prijs, oppervlakte en score.`,
+      about: (n, min, max) => [
+        `RealHunt verzamelt goedkope huizen en appartementen die in het buitenland te koop staan, de meeste onder € 100.000. Vandaag zijn het ${n} woningen, van ${min} tot ${max}.`,
+        "Een mens bekijkt elke advertentie voordat die verschijnt. Ruïnes, losse bouwgrond en advertenties met maar één foto nemen wij niet op. Daarna krijgt elke woning een score van 70 tot 98, die prijs, prijs per m², oppervlakte, staat, ligging en aankoopkosten vergelijkt met alle andere woningen op de website.",
+        "Elke landenpagina noemt de aankoopkosten in procenten en de regels voor buitenlandse kopers, met de datum van de gegevens. Dat is algemene informatie, geen juridisch of fiscaal advies.",
+      ],
+      all: "In alle landen", by: "Per land", homes: "woningen", budgets: "Op budget", features: "Op kenmerk", ranked: "Ranglijsten", near: "In de buurt van een stad", combo: "Op kenmerk en budget", ccy: "In pond en dollar",
+      faqTitle: "Veelgestelde vragen",
+      faq: [
+        ["Verkoopt RealHunt deze woningen?", "Nee. RealHunt is geen makelaar en rekent geen courtage. Elke woning verwijst naar de oorspronkelijke advertentie; u hebt rechtstreeks contact met de verkoper of de makelaar ter plaatse."],
+        ["Wat betekent de score?", "De score loopt van 70 tot 98 en vergelijkt elke woning met alle andere op de website: prijs, prijs per m², oppervlakte, staat, voorzieningen, afstand tot zee of meer, weer, luchthaven en aankoopkosten. Het is geen taxatie en geen bouwkundige keuring."],
+        ["Waarom zijn sommige pagina's in het Engels?", "De zoekpagina's zijn er in het Nederlands. De detailpagina van elke woning, de rekenhulpen en de gidsen zijn er voorlopig alleen in het Engels; zulke links dragen het teken EN."],
+      ],
+    },
+  },
+  pl: {
+    name: "Polski", locale: "pl_PL",
+    skip: "Przejdź do treści", navLabel: "Menu główne", navAll: "Wszystkie wyszukiwania", navCountries: "Kraje", langLabel: "Wybierz język",
+    enHomes: "Kliknięcie w ofertę otwiera jej stronę. Te strony są na razie dostępne tylko po angielsku.",
+    enTitle: "Ta strona jest po angielsku",
+    footAbout: "RealHunt nie jest biurem nieruchomości i nie pobiera prowizji. Każdą ofertę sprawdził człowiek, każda dostaje ocenę od 70 do 98 i prowadzi do oryginalnego ogłoszenia.",
+    footEnglish: "Linki ze znakiem EN prowadzą do stron, które są na razie dostępne tylko po angielsku.",
+    footMethod: "Jak powstaje ocena", footWho: "Kim jesteśmy", footContact: "Kontakt", footPrivacy: "Prywatność", footTerms: "Regulamin",
+    hub: {
+      title: "Tanie domy za granicą: wszystkie wyszukiwania według kraju, ceny i położenia",
+      h1: "Tanie domy za granicą",
+      desc: "Tanie domy i mieszkania w Hiszpanii, we Włoszech, w Bułgarii, Szwecji, Grecji i innych krajach: prawdziwe ogłoszenia ze zdjęciem, ceną, powierzchnią, oceną i kosztami zakupu.",
+      lede: (n, c, s) => `Liczba ofert: ${n}, liczba krajów: ${c}, liczba wyszukiwań: ${s}. Wyszukiwania są ułożone według budżetu, położenia (nad morzem, na wsi), cech (ogród, basen) i kraju. Każda strona pokazuje prawdziwe ogłoszenia ze zdjęciem, ceną, powierzchnią i oceną.`,
+      about: (n, min, max) => [
+        `RealHunt zbiera tanie domy i mieszkania wystawione na sprzedaż za granicą, w większości poniżej 100 000 €. Liczba ofert dziś: ${n}, w cenach od ${min} do ${max}.`,
+        "Każde ogłoszenie przed publikacją ogląda człowiek. Nie przyjmujemy ruin, samych działek ani ogłoszeń z jednym zdjęciem. Potem każda nieruchomość dostaje ocenę od 70 do 98, która porównuje cenę, cenę za m², powierzchnię, stan, położenie i koszty zakupu ze wszystkimi pozostałymi nieruchomościami w serwisie.",
+        "Strona każdego kraju podaje koszty zakupu w procentach i zasady dla zagranicznych kupujących, razem z datą danych. To informacje ogólne, a nie porada prawna ani podatkowa. Ceny podajemy w euro.",
+      ],
+      all: "We wszystkich krajach", by: "Według kraju", homes: (n) => { const a = n % 100, b = a % 10; return n === 1 ? "oferta" : b >= 2 && b <= 4 && !(a >= 12 && a <= 14) ? "oferty" : "ofert"; }, budgets: "Według budżetu", features: "Według cech", ranked: "Rankingi", near: "W pobliżu miasta", combo: "Według cech i budżetu", ccy: "W funtach i dolarach",
+      faqTitle: "Częste pytania",
+      faq: [
+        ["Czy RealHunt sprzedaje te nieruchomości?", "Nie. RealHunt nie jest biurem nieruchomości i nie pobiera prowizji. Każda oferta prowadzi do oryginalnego ogłoszenia, a kupujący rozmawia bezpośrednio ze sprzedającym albo z miejscowym pośrednikiem."],
+        ["Co oznacza ocena?", "Ocena od 70 do 98 porównuje każdą nieruchomość ze wszystkimi pozostałymi w serwisie: cenę, cenę za m², powierzchnię, stan, udogodnienia, bliskość morza lub jeziora, pogodę, lotnisko i koszty zakupu. To nie jest wycena ani ekspertyza techniczna."],
+        ["Dlaczego część stron jest po angielsku?", "Strony wyszukiwań są po polsku. Strona każdej oferty, kalkulatory i poradniki są na razie dostępne tylko po angielsku; takie linki mają znak EN."],
       ],
     },
   },
