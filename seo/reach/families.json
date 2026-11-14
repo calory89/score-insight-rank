@@ -1,0 +1,21 @@
+{
+  "_note": "Page families, first match wins. Paths are tested without the /es prefix. Used by src/measure (events), scripts/seo_report.py and scripts/log_report.py, so a family means the same thing in every report.",
+  "families": [
+    ["front", "^/$"],
+    ["home", "^/deal/"],
+    ["country", "^/homes/[^/]+$"],
+    ["listing", "^/(homes(/|$)|cheap-houses(/|$)|best$|price-drops$|what-100k-buys$|new$)"],
+    ["knowledge", "^/guide/(glossary|buying|questions)(/|$)"],
+    ["guide", "^/guide(/|$)"],
+    ["costs", "^/costs(/|$)"],
+    ["can-i-buy", "^/can-i-buy(/|$)"],
+    ["tools", "^/(tools|buying-costs)(/|$)"],
+    ["research", "^/research(/|$)"],
+    ["blog", "^/blog(/|$)"],
+    ["compare", "^/countries(/|$)"],
+    ["new-builds", "^/(top|new-builds)(/|$)"],
+    ["sources", "^/sources(/|$)"],
+    ["trust", "^/(method|press|about|editorial-policy|for-ai|embed|contact|legal|sitemap)(/|$)"],
+    ["app", "."]
+  ]
+}

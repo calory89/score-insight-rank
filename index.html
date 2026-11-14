@@ -6,6 +6,8 @@
     <link rel="preconnect" href="https://oykcsmextclpdnugixqz.supabase.co" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="alternate" type="application/rss+xml" title="RealHunt: new homes" href="https://realhunt.co/feed.xml" />
+    <link rel="alternate" type="application/atom+xml" title="RealHunt: new homes (Atom)" href="https://realhunt.co/feed.atom" />
+    <link rel="alternate" type="application/feed+json" title="RealHunt: new homes (JSON Feed)" href="https://realhunt.co/feed.json" />
     <link rel="icon" href="/favicon.png" type="image/png" sizes="512x512" />
     <link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32" />
     <meta name="theme-color" content="#FFFFFF" />
@@ -14,6 +16,9 @@
     <meta name="description" content="The best homes in Europe, the US, Canada, Mexico and beyond, each one scored from 70 to 98 and ranked best first. New homes every day." />
     <meta name="author" content="RealHunt" />
     <meta name="robots" content="index, follow" />
+    <!-- 15-nov-2026: large image previews in Google results and Discover. A tag of its own: seo/polish.ts and the worker rewrite the robots tag above. -->
+    <meta name="googlebot" content="max-image-preview:large, max-snippet:-1" />
+    <meta name="bingbot" content="max-image-preview:large, max-snippet:-1" />
     <link rel="canonical" href="https://realhunt.co/" />
 
     <!-- Open Graph -->
@@ -35,7 +40,7 @@
     <meta name="twitter:image" content="https://realhunt.co/og-home.jpg" />
 
     <script type="application/ld+json">
-    {"@context":"https://schema.org","@type":"Organization","name":"RealHunt","url":"https://realhunt.co","logo":"https://realhunt.co/favicon.png","sameAs":["https://twitter.com/RealHuntApp"],"description":"Cheap homes for sale around the world, each checked by a person and scored from 70 to 98.","email":"hello@realhunt.co","parentOrganization":{"@type":"Organization","name":"Equinox Investment Group LLC"}}
+    {"@context":"https://schema.org","@type":"Organization","name":"RealHunt","url":"https://realhunt.co","logo":"https://realhunt.co/favicon.png","description":"Cheap homes for sale around the world, each checked by a person and scored from 70 to 98.","email":"hello@realhunt.co","parentOrganization":{"@type":"Organization","name":"Equinox Investment Group LLC","address":{"@type":"PostalAddress","streetAddress":"30 N Gould St Ste N","addressLocality":"Sheridan","addressRegion":"WY","postalCode":"82801","addressCountry":"US"}}}
     </script>
     <script type="application/ld+json">
     {"@context":"https://schema.org","@type":"WebSite","name":"RealHunt","alternateName":["Real Hunt","realhunt.co"],"url":"https://realhunt.co","potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://realhunt.co/?q={search_term_string}"},"query-input":"required name=search_term_string"}}

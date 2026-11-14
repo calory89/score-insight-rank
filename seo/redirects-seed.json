@@ -8,6 +8,14 @@
     { "from": "/deal/Dc2FknAIzJt", "to": "/homes/sweden", "status": 301 },
     { "from": "/deal/DccwxoxINB2", "to": "/homes/sweden", "status": 301 },
     { "from": "/deal/DbjsJpRGdDa", "to": "/homes/sweden", "status": 301 },
-    { "from": "/deal/us-aventura-18181-804-279k", "to": "/homes/united-states", "status": 301 }
+    { "from": "/deal/us-aventura-18181-804-279k", "to": "/homes/united-states", "status": 301 },
+    { "from": "/portals", "to": "/research/property-portals", "status": 301 },
+    { "from": "/property-portals", "to": "/research/property-portals", "status": 301 },
+    { "from": "/open-data", "to": "/research/open-data", "status": 301 },
+    { "from": "/api", "to": "/research/open-data", "status": 301 },
+    { "from": "/developers/api", "to": "/research/open-data", "status": 301 },
+    { "from": "/find", "to": "/research/find-homes", "status": 301 },
+    { "from": "/country-facts", "to": "/research/country-facts", "status": 301 },
+    { "from": "/changelog", "to": "/research/data-changelog", "status": 301 }
   ]
 }

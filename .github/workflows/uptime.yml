@@ -1,0 +1,22 @@
+name: Uptime check (realhunt.co)
+# Every 30 minutes: is the site up and answering as a crawler expects? A failed run emails the owner of the
+# repository (GitHub's own notification), so nothing else has to be set up. scripts/uptime_check.py
+on:
+  schedule:
+    - cron: "7 */4 * * *"   # every 4 hours: enough to notice an outage, light on Actions minutes
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: uptime
+  cancel-in-progress: true
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/uptime_check.py
+          sparse-checkout-cone-mode: false
+      - run: python3 scripts/uptime_check.py
