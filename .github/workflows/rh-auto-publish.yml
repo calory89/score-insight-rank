@@ -144,3 +144,10 @@ jobs:
       - name: Check every asset the live pages load (realhunt.co and go.realhunt.co)
         if: ${{ !cancelled() }}
         run: python3 scripts/check_live_assets.py
+      # 15-nov-2026: what a search engine gets from the live site (old addresses in one hop, 50 pages read without
+      # scripts as Googlebot, crawlers not challenged, compression, cache). Never blocks: it only reports.
+      - name: Check the live site as a search engine sees it (report only)
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        timeout-minutes: 8
+        run: node seo/tech/liveCheck.mjs

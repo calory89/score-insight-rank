@@ -22,3 +22,10 @@ jobs:
       - run: node --test tests/auth-email.test.mjs tests/community-db.test.mjs tests/buyer-operations-db.test.mjs
       - run: npm run build
       - run: node scripts/check-bundle.mjs
+      # 15-nov-2026 (seo/tech). The build above already stopped on a broken house rule or a blown speed budget
+      # (dist/seo-audit.json: failures); these print what it found so a reviewer sees the warnings too.
+      - name: SEO and speed report of this build
+        if: ${{ !cancelled() }}
+        run: node seo/tech/ciSummary.mjs
+      - name: Thumbnail script self-test
+        run: python3 scripts/make_thumbs.py --selftest

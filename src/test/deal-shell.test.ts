@@ -15,7 +15,7 @@ const photos = row.image_urls.map((u) => MEDIA + u);
 describe("dealShell", () => {
   const html = dealShell({ row, photos, lowRes: MEDIA + "/t/finds/es-test-99k-0.webp", color: "#abcdef", crumbs: [["Spain", "/homes/spain"], ["Málaga", ""]] });
   it("draws the main photo first, at high priority, over its small copy", () => {
-    expect(html).toContain(`<img src="${MEDIA}/finds/es-test-99k-0.webp" alt="Stone house with a garden" fetchpriority="high"`);
+    expect(html).toContain(`<img src="${MEDIA}/finds/es-test-99k-0.webp" alt="Stone house with a garden, Árchez, Málaga, €99,000" fetchpriority="high"`);
     expect(html).toContain(`background:url(&quot;${MEDIA}/t/finds/es-test-99k-0.webp&quot;)`);
     expect(html).toContain('class="rh-sh-gal n2" style="background-color:#abcdef"');
     expect(html.match(/loading="lazy"/g)?.length).toBe(1);
@@ -29,7 +29,7 @@ describe("dealShell", () => {
     expect(shellMoney(447600)).toBe(money(447600));
   });
   it("links the country, and a region only when it has a page", () => {
-    expect(html).toContain('<a href="/homes/spain">Spain</a> · <a>Málaga</a> · Village homes');
+    expect(html).toContain('<a href="/homes/spain">Spain</a> · <span>Málaga</span> · Village homes');
   });
   it("embeds the row for the app without breaking out of the script", () => {
     const evil = dealShell({ row: { ...row, title: "A </script><b>x" }, photos, crumbs: [] });

@@ -1,0 +1,19 @@
+/* Speed rules that apply everywhere (15-nov-2026, ideas 160 and 170 of the organic-traffic list).
+
+   1. Long blocks below the first screen of a listing page (the table of every home, the questions, the links at the
+      end) are laid out and painted when the visitor gets near them, not at load. A page like /homes/spain is 24,000 px
+      tall on a phone; the browser now does the work for the part on screen. "auto" keeps the real height once a block
+      has been seen, so the scroll bar does not jump on the way back up. */
+.rh-static[data-ls] .ls-tw,
+.rh-static[data-ls] .ls-faq,
+.rh-static[data-ls] .ls-foot,
+#root > .rh-rel, .hunt .rh-rel { content-visibility: auto; contain-intrinsic-size: auto 640px; }
+
+/* 2. Cheap phones (2 GB of memory or less, or "data saver" on: the class is set in index.html before first paint):
+      no blur behind bars, no shadows that follow the cards, no shimmer on placeholders, no hover transitions. What
+      the page says and where things are does not change. Spinners keep turning. */
+html.rh-lite .hunt *, html.rh-lite .hunt *::before, html.rh-lite .hunt *::after { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+html.rh-lite .hunt :where(article, li, a, img, figure, .hx-card, .hunt-card, .ls-card) { box-shadow: none !important; transition: none !important; }
+html.rh-lite .rh-sk, html.rh-lite .hx-skel .hx-img, html.rh-lite .hx-skel .hx-text i, html.rh-lite .lv-skel span, html.rh-lite .lv-skel i, html.rh-lite .hunt-skeleton-list { animation: none !important; }
+html.rh-lite .hunt .hv-tabbar, html.rh-lite .hunt .hv-detailbar, html.rh-lite .rh-sticky-filters { background-color: #fff; }
+html.rh-lite .hunt.is-dark .hv-tabbar, html.rh-lite .hunt.is-dark .hv-detailbar, html.rh-lite .hunt.is-dark .rh-sticky-filters { background-color: #0C0D0E; }
