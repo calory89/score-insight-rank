@@ -243,6 +243,7 @@ const AppRoutes = () => (
       <Route path="/help-buying" element={<Community />} />
       <Route path="/homes/:country" element={<Community />} />
       <Route path="/homes/:country/:cap" element={<Community />} />
+      <Route path="/homes/:country/:cap/:sub" element={<Community />} />
       <Route path="/sell" element={<Sell />} />
       <Route path="/c/:handle" element={<Community />} />
       <Route path="/b/:slug" element={<Community />} />

@@ -5,8 +5,8 @@ import { isEs } from "@/lib/lang";
 //    (the homes furthest below their country's median). Free: invite 3 friends who sign up.
 //    Server side: community_insider(), community_is_insider(), trigger community_insider_window_trg.
 //  - Blog (/blog, /blog/:slug): data articles from src/data/blog.json, prerendered by vite.config.ts.
-//  - Search pages (/cheap-houses, /cheap-houses/:slug): src/data/search-pages.json, rebuilt daily by
-//    scripts/search_pages.py, prerendered with their content for search engines.
+//  - Search pages (/cheap-houses, /cheap-houses/:slug) moved to seo/listings on 14-nov-2026 (one generator for
+//    them and /homes/..., shown by src/community/listingRoute.tsx).
 import { ES_BOOT, stripEs } from "@/lib/esPath";
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
@@ -237,85 +237,3 @@ function InsiderCTA() {
   );
 }
 
-// ---------------------------------------------------------------- Search pages
-type SPage = { slug: string; kind: string; country: string | null; price: number | null; label: string | null; h1: string; title: string; desc: string; intro: string[]; faq: [string, string][]; count: number; min: number; median: number; homes: string[]; related: string[] };
-type SData = { updated: string; pages: SPage[]; homes: Record<string, { t: string; p: number; img: string; place: string; c: string; sqm: number | null; bd: number | null }> };
-let searchP: Promise<SData> | null = null;
-const loadSearch = () => (searchP ||= import("@/data/search-pages.json").then((m: any) => (m.default || m) as SData));
-function useSearchData() {
-  const [d, setD] = useState<SData | null>(null);
-  useEffect(() => { loadSearch().then(setD).catch(() => setD({ updated: "", pages: [], homes: {} })); }, []);
-  return d;
-}
-
-export function CheapHousesPage() {
-  const { slug = "" } = useParams();
-  const data = useSearchData();
-  const page = data?.pages.find((p) => p.slug === slug);
-  const titles = useMemo(() => Object.fromEntries((data?.pages || []).map((p) => [p.slug, p.h1])), [data]);
-  const [open, setOpen] = useState<number | null>(0);
-  useEffect(() => { if (page) setMeta(page.title, page.desc); }, [page?.slug]);
-  if (!data) return <div className="hunt-wrap hunt-page"><div className="hunt-skeleton-list" /></div>;
-  if (!page) return <div className="hunt-wrap hunt-page"><h1>No homes for this search yet</h1><Link to="/cheap-houses" className="hunt-link">All searches</Link></div>;
-  return (
-    <div className="hunt-wrap hunt-page hv-sp">
-      <nav className="hv-crumbs"><Link to="/">RealHunt</Link> › <Link to="/cheap-houses">Cheap houses</Link>{page.country && <> › <Link to={`/homes/${page.country.toLowerCase()}`}>{page.country}</Link></>}</nav>
-      <h1>{page.h1}</h1>
-      <div className="hv-sp-facts">
-        <span><strong>{page.count}</strong> homes</span>
-        <span>from <strong>{money(page.min)}</strong></span>
-        <span>median <strong>{money(page.median)}</strong></span>
-        <span>updated daily</span>
-      </div>
-      {page.intro.map((t, i) => <p key={i}>{t}</p>)}
-      <div className="hv-sp-grid">
-        {page.homes.map((s) => { const h = data.homes[s]; if (!h) return null; return (
-          <Link key={s} to={`/deal/${encodeURIComponent(s)}`} className="hv-sp-card">
-            <span className="hv-sp-img"><img src={h.img} alt={h.t} loading="lazy" /><b>{money(h.p)}</b></span>
-            <strong>{h.t}</strong>
-            <small>{flag(h.c)} {h.place}{h.bd ? ` · ${h.bd} bed` : ""}</small>
-          </Link>
-        ); })}
-      </div>
-      <InsiderCTA />
-      <h2>Questions people ask</h2>
-      <div className="hv-faq">
-        {page.faq.map(([q, a], i) => (
-          <div key={q} className={open === i ? "is-open" : ""}>
-            <button onClick={() => setOpen(open === i ? null : i)} aria-expanded={open === i}>{q}<ChevronRight size={16} /></button>
-            {open === i && <p>{a}</p>}
-          </div>
-        ))}
-      </div>
-      {page.related.length > 0 && (<>
-        <h2>Related searches</h2>
-        <div className="hv-chips">{page.related.map((r) => <Link key={r} to={`/cheap-houses/${r}`} onClick={() => window.scrollTo(0, 0)}>{titles[r]}</Link>)}</div>
-      </>)}
-    </div>
-  );
-}
-
-export function CheapHousesIndex() {
-  const data = useSearchData();
-  useEffect(() => { setMeta("Cheap houses for sale by what you want · RealHunt", "Cheap houses by the sea, near a lake, with a sauna, cabins, stone houses and homes under €30,000 or €50,000. Real listings, checked by people."); }, []);
-  const groups: [string, (p: SPage) => boolean][] = [
-    ["Around the world", (p) => !p.country && p.kind === "vibe"],
-    ["By price", (p) => p.kind === "price"],
-    ["By country", (p) => !!p.country && p.kind === "vibe"],
-  ];
-  return (
-    <div className="hunt-wrap hunt-page hv-sp">
-      <span className="hunt-eyebrow">Cheap houses</span>
-      <h1>Find a cheap house by what you want around it.</h1>
-      <p>Every page lists real homes that a person has checked, ranked by score. No ruins, no land, no one-photo listings. Updated every day.</p>
-      {!data ? <div className="hunt-skeleton-list" /> : groups.map(([name, test]) => (
-        <section key={name}>
-          <h2>{name}</h2>
-          <div className="hv-chips is-big">{data.pages.filter(test).map((p) => <Link key={p.slug} to={`/cheap-houses/${p.slug}`}>{p.h1.replace(/^Cheap /, "")} <small>{p.count}</small></Link>)}</div>
-        </section>
-      ))}
-      <h2>Read</h2>
-      <Link to="/blog" className="hunt-link">RealHunt Research: prices by country, buying rules and more →</Link>
-    </div>
-  );
-}

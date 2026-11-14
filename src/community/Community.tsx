@@ -36,7 +36,8 @@ import { StaticPage } from "./staticpage";
 import { RelatedBlock } from "./related";
 import { InlineAlert, HomeFaq, MortgageCalc, AlertConfirmPage, HomeArticle } from "./oct24";
 import { regionOf, slugify } from "./regions";
-import { InsiderPage, InsiderStrip, BlogIndex, BlogPost, CheapHousesPage, CheapHousesIndex } from "./v7";
+import { InsiderPage, InsiderStrip, BlogIndex, BlogPost } from "./v7";
+import { ListingRoute, ListingMissing } from "./listingRoute";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, GUIDES, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { CardCheck, CheckLayer } from "./check";
 import { CompareTray, CompareRoute, PriceWatch, SavedHomes } from "./compareTools";
@@ -2011,10 +2012,8 @@ export default function Community() {
       <BlogIndex />
     ) : path.startsWith("/blog/") ? (
       <BlogPost />
-    ) : path === "/cheap-houses" ? (
-      <CheapHousesIndex />
-    ) : path.startsWith("/cheap-houses/") ? (
-      <CheapHousesPage />
+    ) : path === "/cheap-houses" || path.startsWith("/cheap-houses/") ? (
+      <ListingRoute fallback={<ListingMissing />} />
     ) : path === "/swipe" ? (
       <SwipePage />
     ) : path === "/live-search" ? (
@@ -2048,7 +2047,7 @@ export default function Community() {
     ) : path === "/countries" || path.startsWith("/countries/") ? (
       <CountriesPage />
     ) : path.startsWith("/homes/") ? (
-      <HomesPage />
+      <ListingRoute fallback={<HomesPage />} />
     ) : path.startsWith("/c/") ? (
       <CollectionPage />
     ) : path.startsWith("/hunt/") ? (
