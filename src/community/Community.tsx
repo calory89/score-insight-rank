@@ -33,6 +33,7 @@ import { InboxPage, CompareBuilds, CostsIndex, CostsPage, NewBuildReport, Agents
 import { DetailAside } from "./aside";
 import { StaticPage } from "./staticpage";
 import { isAssetPath } from "./assetRoutes";
+import { isToolPath } from "../tools/paths";
 import { RelatedBlock } from "./related";
 import { InlineAlert, HomeFaq, MortgageCalc, AlertConfirmPage, HomeArticle } from "./oct24";
 import { regionOf, slugify } from "./regions";
@@ -81,7 +82,8 @@ const ExtensionRoute = lazy(() => import("./extension"));
 // Growth pages (/can-i-buy, /buying-costs), loaded only when opened.
 const CanBuyIndex = lazy(() => import("./seo2").then((m) => ({ default: m.CanBuyIndex })));
 const CanBuyPage = lazy(() => import("./seo2").then((m) => ({ default: m.CanBuyPage })));
-const BuyingCostsPage = lazy(() => import("./seo2").then((m) => ({ default: m.BuyingCostsPage })));
+// Free calculators (/tools/..., /buying-costs/...): prerendered pages, the sums are added in the browser (src/tools/).
+const ToolsPage = lazy(() => import("../tools/ToolsPage"));
 import {
   ArrowUp,
   ArrowUpRight,
@@ -192,7 +194,7 @@ function Shell({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Child pages set their own title in effects that run before this one, so they must be listed here or the
     // default title overwrites theirs (country pages, /method and /alerts showed the home title before 24-oct-2026).
-    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare|costs|research|agents|homes\/|method|alerts|can-i-buy|buying-costs|about|top|guide|new|sitemap|what-100k-buys|price-drops|sources|swipe|map|leaderboard|winners|best|weather|saved|legal|hunter\/|b\/|live-search|press|embed|for-ai|editorial-policy)/.test(location.pathname)) return;
+    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare|costs|research|agents|homes\/|method|alerts|can-i-buy|buying-costs|tools|about|top|guide|new|sitemap|what-100k-buys|price-drops|sources|swipe|map|leaderboard|winners|best|weather|saved|legal|hunter\/|b\/|live-search|press|embed|for-ai|editorial-policy)/.test(location.pathname)) return;
     document.title = "RealHunt: The best homes in every country, ranked by score";
   }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
@@ -2040,8 +2042,8 @@ export default function Community() {
       <Suspense fallback={<Loading />}><CanBuyIndex /></Suspense>
     ) : path.startsWith("/can-i-buy/") ? (
       <Suspense fallback={<Loading />}><CanBuyPage /></Suspense>
-    ) : path === "/buying-costs" || path.startsWith("/buying-costs/") ? (
-      <Suspense fallback={<Loading />}><BuyingCostsPage /></Suspense>
+    ) : isToolPath(path) ? (
+      <Suspense fallback={<Loading />}><ToolsPage /></Suspense>
     ) : path === "/countries" || path.startsWith("/countries/") ? (
       <CountriesPage />
     ) : path.startsWith("/homes/") ? (

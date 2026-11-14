@@ -109,3 +109,92 @@ export function scoreFit(rows: Home[]): ScoreFit {
 /** CSV with a header row; every cell quoted when it needs it. */
 export const toCsv = (head: string[], lines: (string | number | null | undefined)[][]) =>
   [head, ...lines].map((l) => l.map((c) => { const s = c == null ? "" : String(c); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; }).join(",")).join("\n") + "\n";
+
+// ------------------------------------------------------------------------------------------------------------
+// Studies added on 15-nov-2026 (seo/assetsStudies.ts). Same rules: computed, dated, small samples marked or left out.
+
+/** A figure about a country is published from this many homes; under MIN_RANK it is marked as a small sample. */
+export const MIN_STUDY = 5;
+type Extra = Home & { airport_km?: number | null; risks?: { flood?: { level?: string | null; source?: string | null } | null } | null };
+
+export type CheapStat = { k: string; name: string; n: number; under: number; share: number; under30: number; cheapest: number; medSqm: number };
+/** Homes at or under `cap` euros, by country (countries with at least MIN_SHOW of them), most homes first. */
+export function cheapStats(rows: Home[], cap = 50000, low = 30000): CheapStat[] {
+  return countryStats(rows).map((c) => {
+    const hs = rows.filter((r) => cKey(r.country) === c.k && r.price_eur > 0 && r.price_eur <= cap);
+    const sized = hs.filter((h) => Number(h.sqm) > 0);
+    return { k: c.k, name: c.name, n: c.n, under: hs.length, share: c.n ? Math.round((hs.length / c.n) * 100) : 0, under30: hs.filter((h) => h.price_eur <= low).length, cheapest: hs.length ? Math.min(...hs.map((h) => h.price_eur)) : 0, medSqm: sized.length >= MIN_SHOW ? median(sized.map((h) => Number(h.sqm))) : 0 };
+  }).filter((c) => c.under >= MIN_SHOW).sort((a, b) => b.under - a.under || a.name.localeCompare(b.name));
+}
+/** Regions with at least MIN_SHOW homes at or under `cap`, most homes first. */
+export function cheapRegions(rows: Home[], cap = 50000): RegionStat[] {
+  return regionStats(rows.filter((r) => r.price_eur > 0 && r.price_eur <= cap), MIN_SHOW).sort((a, b) => b.n - a.n || a.medPrice - b.medPrice || a.name.localeCompare(b.name));
+}
+
+export type FloodStat = { k: string; name: string; n: number; low: number; medium: number; high: number; share: number; official: number };
+/** The site's flood indicator (low, medium, high) by country, for countries with at least MIN_STUDY homes that have
+ * it. `share` = medium or high, in %. `official` = homes whose level comes from an official flood map (FEMA). */
+export function floodStats(rows: Extra[]): FloodStat[] {
+  const by = new Map<string, Extra[]>();
+  for (const r of rows) { const k = cKey(r.country); const lv = r.risks?.flood?.level; if (!k || k === "scandinavia" || !lv) continue; (by.get(k) || by.set(k, []).get(k)!).push(r); }
+  return [...by.entries()].filter(([, hs]) => hs.length >= MIN_STUDY).map(([k, hs]) => {
+    const cnt = (l: string) => hs.filter((h) => h.risks!.flood!.level === l).length;
+    const medium = cnt("medium"), high = cnt("high");
+    return { k, name: String(hs[0].country), n: hs.length, low: cnt("low"), medium, high, share: Math.round(((medium + high) / hs.length) * 100), official: hs.filter((h) => h.risks!.flood!.source && h.risks!.flood!.source !== "rough").length };
+  }).sort((a, b) => b.share - a.share || b.n - a.n || a.name.localeCompare(b.name));
+}
+
+export const AIRPORT_BANDS: { id: string; lo: number; hi: number }[] = [{ id: "0-30", lo: 0, hi: 30 }, { id: "30-60", lo: 30, hi: 60 }, { id: "60-100", lo: 60, hi: 100 }, { id: "100+", lo: 100, hi: Infinity }];
+export type AirportBand = { id: string; lo: number; hi: number; n: number; nSqm: number; medPrice: number; medPpsqm: number; medScore: number };
+/** Price by distance to the nearest airport, in bands of kilometres in a straight line (lower bound included). */
+export function airportStats(rows: Extra[]): AirportBand[] {
+  const hs = rows.filter((r) => r.price_eur > 0 && r.airport_km != null && Number(r.airport_km) >= 0);
+  return AIRPORT_BANDS.map((b) => {
+    const inb = hs.filter((h) => Number(h.airport_km) >= b.lo && Number(h.airport_km) < b.hi);
+    const sized = inb.filter((h) => Number(h.sqm) > 0);
+    return { ...b, n: inb.length, nSqm: sized.length, medPrice: median(inb.map((h) => h.price_eur)), medPpsqm: sized.length >= MIN_STUDY ? Math.round(median(sized.map((h) => h.price_eur / Number(h.sqm)))) : 0, medScore: median(inb.map((h) => Number(h.nota) || 0)) };
+  });
+}
+export type AirportCountry = { k: string; name: string; n: number; medKm: number; within60: number };
+/** Median distance to the nearest airport by country (at least MIN_STUDY homes with a distance), nearest first. */
+export function airportByCountry(rows: Extra[]): AirportCountry[] {
+  const by = new Map<string, Extra[]>();
+  for (const r of rows) { const k = cKey(r.country); if (!k || k === "scandinavia" || r.airport_km == null || !(r.price_eur > 0)) continue; (by.get(k) || by.set(k, []).get(k)!).push(r); }
+  return [...by.entries()].filter(([, hs]) => hs.length >= MIN_STUDY).map(([k, hs]) => ({ k, name: String(hs[0].country), n: hs.length, medKm: median(hs.map((h) => Math.max(1, Math.round(Number(h.airport_km))))), within60: Math.round((hs.filter((h) => Number(h.airport_km) < 60).length / hs.length) * 100) }))
+    .sort((a, b) => a.medKm - b.medKm || a.name.localeCompare(b.name));
+}
+
+export type SalaryStat = { k: string; name: string; n: number; medPrice: number; earnings: number; years: number; small: boolean };
+/** Years of average net earnings (Eurostat, src/data/earnings.json) that the median home on RealHunt costs, for the
+ * countries Eurostat covers and where the site has at least MIN_STUDY homes. Fewest years first. */
+export function salaryStats(rows: Home[], earnings: Record<string, unknown>): SalaryStat[] {
+  return countryStats(rows).filter((c) => c.n >= MIN_STUDY && Number(earnings[c.k]) > 0).map((c) => ({ k: c.k, name: c.name, n: c.n, medPrice: c.medPrice, earnings: Math.round(Number(earnings[c.k])), years: Math.round((c.medPrice / Number(earnings[c.k])) * 10) / 10, small: c.n < MIN_RANK }))
+    .sort((a, b) => a.years - b.years || a.name.localeCompare(b.name));
+}
+
+export type Project = { slug: string; name?: string; locality?: string; price_eur?: number; ptype?: string; blurb?: string };
+export type NewBuildStat = { k: string; n: number; nPp: number; medPrice: number; medPpsqm: number; minPpsqm: number; maxPpsqm: number; cheapest: number };
+/** "about €1,111 per m²" in a project's description (src/data/top-<city>.json) -> 1111; nothing usable -> 0. */
+export const projectPpsqm = (p: Project): number => { const m = /about €([\d,]+) per m²/.exec(String(p.blurb || "")); return m ? Number(m[1].replace(/,/g, "")) : 0; };
+/** New-build rankings: median starting price and median price per m² of the projects of each destination. */
+export function newBuildStats(lists: Record<string, Project[]>): NewBuildStat[] {
+  return Object.entries(lists).map(([k, ps]) => {
+    const priced = ps.filter((p) => Number(p.price_eur) > 0), pp = ps.map(projectPpsqm).filter((x) => x > 0);
+    return { k, n: ps.length, nPp: pp.length, medPrice: median(priced.map((p) => Number(p.price_eur))), medPpsqm: pp.length >= MIN_STUDY ? median(pp) : 0, minPpsqm: pp.length ? Math.min(...pp) : 0, maxPpsqm: pp.length ? Math.max(...pp) : 0, cheapest: priced.length ? Math.min(...priced.map((p) => Number(p.price_eur))) : 0 };
+  }).filter((x) => x.n >= MIN_STUDY).sort((a, b) => (a.medPpsqm || 1e9) - (b.medPpsqm || 1e9) || a.k.localeCompare(b.k));
+}
+
+export type SeriesPoint = { month: string; date: string; homes: number; countries: number; median_price_eur: number; median_eur_per_sqm: number; by_country: Record<string, { homes: number; median_price_eur: number }> };
+/** This month's point of the price series: medians of the homes listed on the day of the build. */
+export function seriesPoint(rows: Home[], today: string): SeriesPoint {
+  const hs = rows.filter((r) => r.price_eur > 0), sized = hs.filter((h) => Number(h.sqm) > 0), cs = countryStats(hs);
+  return { month: today.slice(0, 7), date: today, homes: hs.length, countries: cs.length, median_price_eur: median(hs.map((h) => h.price_eur)), median_eur_per_sqm: Math.round(median(sized.map((h) => h.price_eur / Number(h.sqm)))),
+    by_country: Object.fromEntries(cs.filter((c) => !c.small).sort((a, b) => a.k.localeCompare(b.k)).map((c) => [c.k, { homes: c.n, median_price_eur: c.medPrice }])) };
+}
+/** Earlier points plus this month's (which replaces any point of the same month), oldest first. Bad rows are dropped. */
+export function mergeSeries(point: SeriesPoint, ...earlier: unknown[]): SeriesPoint[] {
+  const by = new Map<string, SeriesPoint>();
+  for (const list of earlier) if (Array.isArray(list)) for (const p of list) if (p && /^\d{4}-\d{2}$/.test(String(p.month)) && Number(p.homes) > 0 && Number(p.median_price_eur) > 0 && p.month < point.month) by.set(p.month, p as SeriesPoint);
+  by.set(point.month, point);
+  return [...by.values()].sort((a, b) => a.month.localeCompare(b.month));
+}
