@@ -50,7 +50,7 @@ export const STR = {
 const EXPLORE: [string, string, string][] = [
   ["/", "Best homes", "Las mejores casas"], ["/new", "New homes", "Casas nuevas"], ["/cheap-houses", "Cheap houses", "Casas baratas"],
   ["/what-100k-buys", "What €100,000 buys", "Qué se compra con 100.000 €"], ["/guide", "Buying guides", "Guías de compra"],
-  ["/costs", "Real costs by country", "Costes reales por país"], ["/buying-costs", "Buying-cost calculator", "Calculadora de gastos de compra"],
+  ["/costs", "Real costs by country", "Costes reales por país"], ["/buying-costs", "Buying-cost calculator", "Calculadora de gastos de compra"], ["/tools", "Free calculators", "Calculadoras gratuitas"],
   ["/can-i-buy", "Can I buy there?", "¿Puedo comprar allí?"], ["/countries", "Compare countries", "Comparar países"],
   ["/blog", "Research", "Artículos y datos"], ["/top", "New builds Top 100", "Top 100 de obra nueva"], ["/method", "How the score works", "Cómo funciona la nota"],
   ["/sitemap", "Site map", "Mapa del sitio"],

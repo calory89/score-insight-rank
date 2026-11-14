@@ -27,6 +27,7 @@ import { type CanBuyData, statusLabel, UPDATED, UPDATED_ES, canBuyPairs, canBuyC
 import { homeArticleEs } from "../src/community/homeArticleEs";
 import { type EsPass, type PageRec, type Twin, createEsPass, writeEsTwins, coverageSummary } from "./es";
 import { writeAssets, finishAssets } from "./assets";
+import { writeTools } from "./tools";
 import { listingPlan, listingRows, listingPages, finishListings } from "./listings/build";
 import { writeKnowledge, finishKnowledge } from "./knowledge/build";
 
@@ -620,29 +621,8 @@ function build(root: string, es?: EsPass) {
       [crumbs(trail), faqLd(faq)], { group: "content", lastmod: "2026-11-07" });
   }
 
-  // ---------- Buying-cost calculator: /buying-costs and /buying-costs/<country> (src/community/seo2.tsx) ----------
-  const calcKeys = costCountries(dest, guides, lg);
-  const calcTrail: [string, string][] = [["RealHunt", SITE + "/"], ["Buying costs", SITE + "/buying-costs"]];
-  const exTable = (d: any) => `<table><thead><tr><th>Price</th><th>Taxes and fees</th><th>Total</th></tr></thead><tbody>${[150000, 300000].map((p) => { const x = costLines(p, d, "EUR", lg)!; return `<tr><td>${esc(fmtMoney(p, "EUR", lg))}</td><td>${esc(x.fees)}</td><td>${esc(x.total)}</td></tr>`; }).join("")}</tbody></table>`;
-  page(`${SITE}/buying-costs`, `Buying costs calculator: taxes and fees in ${calcKeys.length} countries · RealHunt`, `Enter a price and see what you pay on top in taxes and fees when you buy a home in ${calcKeys.length} countries, from Spain and Italy to Japan and Mexico.`, DEF,
-    `<main class="rh-static">${navHtml(calcTrail)}<h1>What does it cost to buy a home abroad?</h1><p>Taxes and fees you pay on top of the price: transfer tax or VAT, notary, land registry and lawyer. Worked example for a €150,000 home:</p>`
-    + `<table><thead><tr><th>Country</th><th>On top of the price</th><th>On €150,000</th></tr></thead><tbody>${calcKeys.map((k) => { const x = costLines(150000, dest[k], "EUR", lg)!; return `<tr><td><a href="/buying-costs/${k}">${esc(nameOf(k, guides, lg))}</a></td><td>${esc(dest[k].purchase_costs_pct)}%</td><td>${esc(x.fees)}</td></tr>`; }).join("")}</tbody></table>`
-    + `<p>General information, not tax or legal advice. <a href="/can-i-buy">Can I buy there?</a> · <a href="/costs">Real costs and rental yields</a></p></main>`,
-    [crumbs(calcTrail)], { group: "content" });
-  for (const k of calcKeys) {
-    const d = dest[k]; const n = nameOf(k, guides, lg); const url = `${SITE}/buying-costs/${k}`;
-    const trail: [string, string][] = [...calcTrail, [n, url]];
-    const e150 = costLines(150000, d, "EUR", lg)!;
-    page(url, `Buying costs calculator for ${the(n)}: taxes and fees on top of the price · RealHunt`, `What you pay on top of the price when you buy a home in ${the(n)}: about ${d.purchase_costs_pct}% in taxes and fees, so ${e150.fees} on a €150,000 home. With a calculator and worked examples.`, DEF,
-      `<main class="rh-static">${navHtml(trail)}<h1>Buying costs in ${esc(the(n))}</h1><p>About ${esc(d.purchase_costs_pct)}% on top of the price in taxes and fees. Use the calculator on this page for your price, or see the worked examples:</p>`
-      + `<h2>Worked examples</h2>${exTable(d)}`
-      + (d.purchase_costs_breakdown ? `<h2>Where the money goes</h2><p>${esc(d.purchase_costs_breakdown)}</p>` : "")
-      + (d.annual_property_tax ? `<h2>Every year after you buy</h2><p>Yearly property tax: ${esc(d.annual_property_tax)}</p>` : "")
-      + (d.rental_income_tax ? `<p>Tax on rental income: ${esc(d.rental_income_tax)}</p>` : "")
-      + `<p>Costs are a share of the price, so they work in any currency. Figures as of ${esc(d.as_of)}. General information, not tax or legal advice.</p>`
-      + `<p>${guides[k] ? `<a href="/guide/${k}">How to buy in ${esc(the(n))}</a> · ` : ""}<a href="/costs/${k}">Costs, taxes and sources</a> · <a href="/buying-costs">Other countries</a></p></main>`,
-      [crumbs(trail)], { group: "content", lastmod: day(String(d.as_of || "")) });
-  }
+  // ---------- Free calculators: /tools/..., /buying-costs and /buying-costs/<country>, in both languages (seo/tools/) ----------
+  try { const n = writeTools({ root, page, rows, today, image: DEF, record: !!es }); if (!es) console.log(`[rh-prerender-pages] tools: ${n.pages} pages, ${n.embeds} iframe pages`); } catch (e) { console.warn("[rh-prerender-pages] tools failed", e); }
 
   page(`${SITE}/research/new-builds`, "State of cheap new builds · RealHunt monthly report", "Every month: how many new-build homes under €100,000 we track, the cheapest countries and median prices. Free to quote with a link.", DEF, undefined, undefined, { group: "content" });
   page(`${SITE}/agents`, "RealHunt Agents · Earn from buyers you bring", "Local agents introduce buyers to new-build developers on RealHunt and earn 30% of RealHunt's fee when they buy.", DEF);

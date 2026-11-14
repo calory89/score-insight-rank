@@ -236,6 +236,8 @@ const AppRoutes = () => (
       <Route path="/can-i-buy" element={<Community />} />
       <Route path="/can-i-buy/:slug" element={<Community />} />
       <Route path="/buying-costs" element={<Community />} />
+      <Route path="/tools" element={<Community />} />
+      <Route path="/tools/:tool" element={<Community />} />
       <Route path="/buying-costs/:country" element={<Community />} />
       <Route path="/leaderboard" element={<Community />} />
       <Route path="/invite" element={<Community />} />
