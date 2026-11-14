@@ -18,6 +18,7 @@ import { COSTS, totalCost, bumpIx } from "@/lib/rh";
 import { categories, money, type Deal } from "./api";
 import { useCommunity } from "./ctx";
 import { t, LANGS, getLang, setLang, type Lang } from "./i18n";
+import { Byline } from "./byline";
 
 export type Row = Deal & {
   lat?: number | null; lng?: number | null; verified_at?: string | null; verified_note?: string | null;
@@ -749,6 +750,7 @@ export function GuidePage() {
       {homes.length > 0 && <><h2>{t("Best homes in")} {g.name}</h2><div className="hunt-minigrid">{homes.map((d) => <MiniCard key={d.id} d={d} />)}</div></>}
       {others.length > 0 && <><h2>{t("Compare")} {g.name}</h2><p className="hunt-chips">{others.map((k) => <Link key={k} to={`/countries/${[key, k].sort().join("-vs-")}`}>{g.name} vs {GUIDES[k].name}</Link>)}</p></>}
       {c?.sources?.length > 0 && <p className="hunt-fine">{t("Sources")}: {c.sources.map((u: string, i: number) => <span key={u}>{i ? " · " : ""}<a href={u} target="_blank" rel="noopener noreferrer nofollow">{u.replace(/^https?:\/\/(www\.)?/, "").split("/")[0]}</a></span>)}. {t("Checked")} {c.as_of}.</p>}
+      <Byline kind="guide" />
     </div>
   );
 }

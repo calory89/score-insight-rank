@@ -26,10 +26,13 @@ export function StaticPage() {
     return () => { live = false; };
   }, [pathname]);
   useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  // Pages with copy buttons and pickers (seo/assets*.ts) bring a small script; HTML set by React does not run it.
+  useEffect(() => { if (html && html.includes("data-rhx-js") && !(window as any).__rhAssets && !document.getElementById("rh-assets-js")) { const s = document.createElement("script"); s.id = "rh-assets-js"; s.src = "/rh-assets.js"; document.head.appendChild(s); } }, [html]);
   if (!html) return <div className="hunt-wrap"><div className="hunt-skeleton-list" /></div>;
   // Internal links inside the static HTML navigate in-app instead of reloading the page.
   return <div className="hunt-wrap hunt-page rh-staticwrap" onClick={(e) => {
     const a = (e.target as HTMLElement).closest("a"); const href = a?.getAttribute("href") || "";
-    if (a && href.startsWith("/") && !a.target && !e.metaKey && !e.ctrlKey) { e.preventDefault(); navigate(ES_BOOT ? stripEs(href) : href); }
+    // files (a CSV, a feed, an image) and downloads are left to the browser
+    if (a && href.startsWith("/") && !a.target && !e.metaKey && !e.ctrlKey && !a.hasAttribute("download") && !/\.[a-z0-9]{2,5}$/i.test(href.split(/[?#]/)[0])) { e.preventDefault(); navigate(ES_BOOT ? stripEs(href) : href); }
   }} dangerouslySetInnerHTML={{ __html: html }} />;
 }
