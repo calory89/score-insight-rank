@@ -3034,3 +3034,9 @@ html.rh-dark, html.rh-dark body { background: #0C0D0E; }
 .hunt-mappage { overflow-x: clip; }
 .hunt-mappage .hunt-filters { min-width: 0; max-width: 100%; overflow-x: auto; scrollbar-width: thin; }
 .hunt-mappage .hunt-chips { min-width: 0; }
+/* 15-nov-2026 (round n9): room kept for two lazy blocks so nothing jumps when they arrive; their styles are in n9/n9.css. */
+.n9-gone-slot { min-height: 150px; }
+.n9-since-slot { min-height: 68px; margin: 0 0 14px; }
+@media (max-width: 520px) { .n9-since-slot { min-height: 112px; } }
+.hunt .hx-new.is-gone { background: #5B5F66; }
+.n9-toc-slot { min-height: 62px; }

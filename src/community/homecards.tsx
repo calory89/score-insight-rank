@@ -11,6 +11,7 @@ import { CardCheck } from "./check";
 import { CompareToggle } from "./compareTools";
 import { Sparkles } from "lucide-react";
 import { FLAG_LABEL } from "../../supabase/functions/realhunt-live-search/flags";
+import { isGone } from "./n9/status";
 import "./aicheck.css";
 
 /** "1.2 km" for "1.2 km from the centre" (live search v4 sends distance_to_centre_km). The number and the words are
@@ -52,7 +53,7 @@ export function HomeCard({ deal, pos, href: ext, origPrice, rent, dist, noRank }
         <span className="hx-img">
           {img ? <img src={thumb(img)} alt={`${title}, ${where(deal)}`} width={480} height={360} loading={pos <= 3 ? "eager" : "lazy"} fetchPriority={pos === 1 ? "high" : "auto"} decoding="async" onError={(e) => onThumbError(e.currentTarget, img)} /> : null}
           {!noRank && <span className="hx-pos">#{pos}</span>}
-          {isNew(deal) && !ai ? <span className="hx-new">{t("New today")}</span> : Number(deal.price_drop) > 0 ? <span className="hx-new is-drop">{t("Price dropped")}</span> : null}
+          {isGone(deal) ? <span className="hx-new is-gone">{t("Advert gone")}</span> : isNew(deal) && !ai ? <span className="hx-new">{t("New today")}</span> : Number(deal.price_drop) > 0 ? <span className="hx-new is-drop">{t("Price dropped")}</span> : null}
           {s && <span className={"hx-score " + gtone(s.n)} title={t("RealHunt score")}>{s.n}</span>}
           <span className="hx-price">
             <b>{money(deal.price_eur)}{rent && <span className="hx-mo"> {t("a month")}</span>}</b>

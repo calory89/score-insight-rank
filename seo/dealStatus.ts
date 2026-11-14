@@ -1,0 +1,33 @@
+// The state of a home in its prerendered page (15-nov-2026), with the same rules as the app (src/community/n9/status.ts):
+//  - when the nightly check stopped finding the original advert, the page stays and says so, with the way on to
+//    similar homes and an alert, and its structured data stops saying "in stock";
+//  - the date of the last check by a person or by the AI check when the data has one, and since when the home is listed.
+// English and Spanish are written here by hand (the Spanish home pages do not go through seo/es-templates.json).
+import { isGone, lastCheck, listedAt, alertHref, dayLabel, type StatusRow } from "../src/community/n9/status";
+
+const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+/** schema.org availability of the offer: SoldOut once the advert is gone. */
+export const dealAvailability = (r: StatusRow) => (isGone(r) ? "https://schema.org/SoldOut" : "https://schema.org/InStock");
+
+export function dealStatusHtml(r: StatusRow, lang: "en" | "es"): string {
+  const es = lang === "es";
+  const out: string[] = [];
+  if (isGone(r)) {
+    const alert = esc((es ? "/es" : "") + alertHref(r));
+    out.push(es
+      ? `<p><strong>El anuncio original ya no está publicado.</strong> Nuestra revisión nocturna no lo encontró dos días distintos, o un visitante avisó de que ya no está: lo más probable es que la casa se haya vendido o retirado. Mantenemos esta página para que puedas comparar el precio y la zona. Más abajo tienes casas parecidas, y puedes <a href="${alert}">recibir un correo cuando entren casas así</a>.</p>`
+      : `<p><strong>The original advert is no longer online.</strong> Our nightly check could not find it on two different days, or a visitor reported it gone: the home has probably been sold or withdrawn. We keep this page so you can compare the price and the area. Similar homes are listed below, and you can <a href="${alert}">get an email when homes like it arrive</a>.</p>`);
+  }
+  const c = lastCheck(r); const since = dayLabel(listedAt(r), lang);
+  const bits: string[] = [];
+  if (c) {
+    const d = esc(dayLabel(c.iso, lang)); const iso = esc(new Date(c.iso).toISOString().slice(0, 10));
+    bits.push(c.by === "person"
+      ? (es ? `Comprobada por una persona el <time datetime="${iso}">${d}</time>: precio y fotos cotejados con el anuncio publicado ese día.` : `Checked by a person on <time datetime="${iso}">${d}</time>: price and photos compared with the live advert that day.`)
+      : (es ? `Comprobada por nuestra IA el <time datetime="${iso}">${d}</time>: leyó el anuncio y miró las fotos.` : `Checked by our AI on <time datetime="${iso}">${d}</time>: it read the advert and looked at the photos.`));
+  }
+  if (since) bits.push(es ? `En RealHunt desde el ${esc(since)}.` : `On RealHunt since ${esc(since)}.`);
+  if (bits.length) out.push(`<p>${bits.join(" ")}</p>`);
+  return out.join("");
+}
