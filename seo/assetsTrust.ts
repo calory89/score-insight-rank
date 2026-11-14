@@ -24,7 +24,7 @@ import type { AssetCtx } from "./assets";
  * response, so an <iframe> of realhunt.co on another site is blocked. The iframe pages under /embed/homes/ are built,
  * but the snippet is only offered on /embed once the worker exempts paths that start with /embed/homes/. Then set
  * this to true. The image embeds (SVG) work today: images are not subject to those headers. */
-export const EMBED_IFRAME_READY = false;
+export const EMBED_IFRAME_READY = true;
 
 /** The method document's version: the date of its last change, and what changed. Add a line when the score changes. */
 export const METHOD_VERSION = "2026-11-14";
