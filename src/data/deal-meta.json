@@ -141,8 +141,8 @@
 },
 {
 "slug": "us-freeport-83k-605154",
-"title": "€83,700 · Blue 1907 cottage with 9-foot ceilings and a new kitchen",
-"desc": "Blue 1907 cottage with 9-foot ceilings and a new kitchen for €83,700. Freeport, Illinois. Scored and ranked on RealHunt: the best homes in every country.",
+"title": "€79,200 · Blue 1907 cottage with 9-foot ceilings and a new kitchen",
+"desc": "Blue 1907 cottage with 9-foot ceilings and a new kitchen for €79,200. Freeport, Illinois. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/us-freeport-83k-605154.jpg?v=2",
 "country": "United States"
 },
@@ -456,8 +456,8 @@
 },
 {
 "slug": "us-dora-84k-329130",
-"title": "€84,500 · Modern rustic Ozarks cabin minutes from the river",
-"desc": "Modern rustic Ozarks cabin minutes from the river for €84,500. Dora, Missouri. Scored and ranked on RealHunt: the best homes in every country.",
+"title": "€86,500 · Modern rustic Ozarks cabin minutes from the river",
+"desc": "Modern rustic Ozarks cabin minutes from the river for €86,500. Dora, Missouri. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/us-dora-84k-329130.jpg?v=2",
 "country": "United States"
 },
@@ -1107,8 +1107,8 @@
 },
 {
 "slug": "us-north-carolina-victorian-170k",
-"title": "€151,000 · The historic Savage House: a white Victorian with a gingerbread porch",
-"desc": "The historic Savage House: a white Victorian with a gingerbread porch for €151,000. Scotland Neck, North Carolina. Scored and ranked on RealHunt: the best homes in every country.",
+"title": "€153,900 · The historic Savage House: a white Victorian with a gingerbread porch",
+"desc": "The historic Savage House: a white Victorian with a gingerbread porch for €153,900. Scotland Neck, North Carolina. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/us-north-carolina-victorian-170k.jpg?v=2",
 "country": "United States"
 },
@@ -1118,13 +1118,6 @@
 "desc": "Renovated town house with a central patio in the centre of La Charité-sur-Loire, Burgundy for €119,500. La Charité-sur-Loire, Burgundy. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/fr-la-charite-sur-loire-town-house-patio-119k.jpg?v=2",
 "country": "France"
-},
-{
-"slug": "us-maryland-cape-cod-autumn-175k",
-"title": "€155,500 · Charming 1952 Cape Cod with fall colours on a 1.1-acre lot",
-"desc": "Charming 1952 Cape Cod with fall colours on a 1.1-acre lot for €155,500. LaVale, Maryland (Allegheny Mountains). Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/us-maryland-cape-cod-autumn-175k.jpg?v=2",
-"country": "United States"
 },
 {
 "slug": "gr-crete-drapanos-pool-158k",
@@ -1141,18 +1134,18 @@
 "country": "Netherlands"
 },
 {
-"slug": "pt-douro-lamego-samodaes-river-view-house-99k",
-"title": "€99,000 · Renovated stone house with Douro valley views in Samodães, Lamego, sold furnished",
-"desc": "Renovated stone house with Douro valley views in Samodães, Lamego, sold furnished for €99,000. Samodães, Lamego, Viseu. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/pt-douro-lamego-samodaes-river-view-house-99k.jpg?v=2",
-"country": "Portugal"
-},
-{
 "slug": "nl-amsterdam-325k-505653",
 "title": "€325,000 · 107 m² corner flat on the 10th floor with views over nature, Amsterdam",
 "desc": "107 m² corner flat on the 10th floor with views over nature, Amsterdam for €325,000. Gouden Rand, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/nl-amsterdam-325k-505653.jpg?v=2",
 "country": "Netherlands"
+},
+{
+"slug": "pt-douro-lamego-samodaes-river-view-house-99k",
+"title": "€99,000 · Renovated stone house with Douro valley views in Samodães, Lamego, sold furnished",
+"desc": "Renovated stone house with Douro valley views in Samodães, Lamego, sold furnished for €99,000. Samodães, Lamego, Viseu. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/pt-douro-lamego-samodaes-river-view-house-99k.jpg?v=2",
+"country": "Portugal"
 },
 {
 "slug": "pl-sosnowiec-61k-790712",
@@ -1169,18 +1162,18 @@
 "country": "Sweden"
 },
 {
-"slug": "uk-macduff-furnished-house-sea-views-110k",
-"title": "€126,500 · Furnished two-bedroom house with Moray Firth sea views in the harbour town of Macduff",
-"desc": "Furnished two-bedroom house with Moray Firth sea views in the harbour town of Macduff for €126,500. Macduff, Aberdeenshire. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/uk-macduff-furnished-house-sea-views-110k.jpg?v=2",
-"country": "United Kingdom"
-},
-{
 "slug": "es-torrevieja-torresol-studio-pool-99k",
 "title": "€99,000 · Studio with communal pool 950 m from La Mata beach, Torrevieja",
 "desc": "Studio with communal pool 950 m from La Mata beach, Torrevieja for €99,000. Torreblanca, Torrevieja, Alicante. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/es-torrevieja-torresol-studio-pool-99k.jpg?v=2",
 "country": "Spain"
+},
+{
+"slug": "uk-macduff-furnished-house-sea-views-110k",
+"title": "€126,500 · Furnished two-bedroom house with Moray Firth sea views in the harbour town of Macduff",
+"desc": "Furnished two-bedroom house with Moray Firth sea views in the harbour town of Macduff for €126,500. Macduff, Aberdeenshire. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/uk-macduff-furnished-house-sea-views-110k.jpg?v=2",
+"country": "United Kingdom"
 },
 {
 "slug": "fr-lodeve-top-floor-loft-terrace-285k",
@@ -1197,18 +1190,18 @@
 "country": "Italy"
 },
 {
-"slug": "fr-bergerac-stone-house-balcony-garden-139k",
-"title": "€139,000 · Fully renovated four-bedroom house with balcony and garden in Bergerac, Dordogne",
-"desc": "Fully renovated four-bedroom house with balcony and garden in Bergerac, Dordogne for €139,000. Bergerac, Dordogne. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/fr-bergerac-stone-house-balcony-garden-139k.jpg?v=2",
-"country": "France"
-},
-{
 "slug": "it-sardinia-luras-stazzo-97k",
 "title": "€97,000 · Renovated granite stazzo with flower boxes in a Sardinian village",
 "desc": "Renovated granite stazzo with flower boxes in a Sardinian village for €97,000. Luras, Gallura, Sardinia. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/it-sardinia-luras-stazzo-97k.jpg?v=2",
 "country": "Italy"
+},
+{
+"slug": "fr-bergerac-stone-house-balcony-garden-139k",
+"title": "€139,000 · Fully renovated four-bedroom house with balcony and garden in Bergerac, Dordogne",
+"desc": "Fully renovated four-bedroom house with balcony and garden in Bergerac, Dordogne for €139,000. Bergerac, Dordogne. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-bergerac-stone-house-balcony-garden-139k.jpg?v=2",
+"country": "France"
 },
 {
 "slug": "gr-gargaliani-garden-sea-158k",
@@ -1219,17 +1212,10 @@
 },
 {
 "slug": "us-maine-old-town-riverfront-185k",
-"title": "€164,400 · Riverfront house on French Island with views of the Penobscot",
-"desc": "Riverfront house on French Island with views of the Penobscot for €164,400. French Island, Old Town, Maine. Scored and ranked on RealHunt: the best homes in every country.",
+"title": "€159,400 · Riverfront house on French Island with views of the Penobscot",
+"desc": "Riverfront house on French Island with views of the Penobscot for €159,400. French Island, Old Town, Maine. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/us-maine-old-town-riverfront-185k.jpg?v=2",
 "country": "United States"
-},
-{
-"slug": "it-lake-iseo-parzanica-beamed-duplex-100k",
-"title": "€100,000 · Beamed stone duplex with a lake-view garden and garage above Lake Iseo, Parzanica",
-"desc": "Beamed stone duplex with a lake-view garden and garage above Lake Iseo, Parzanica for €100,000. Parzanica, Lake Iseo, Lombardy. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/it-lake-iseo-parzanica-beamed-duplex-100k.jpg?v=2",
-"country": "Italy"
 },
 {
 "slug": "gr-rhodes-paradeisi-modern-155k",
@@ -1237,6 +1223,13 @@
 "desc": "Modern, furnished two-bedroom house near the sea on Rhodes for €155,000. Paradeisi, Rhodes. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/gr-rhodes-paradeisi-modern-155k.jpg?v=2",
 "country": "Greece"
+},
+{
+"slug": "it-lake-iseo-parzanica-beamed-duplex-100k",
+"title": "€100,000 · Beamed stone duplex with a lake-view garden and garage above Lake Iseo, Parzanica",
+"desc": "Beamed stone duplex with a lake-view garden and garage above Lake Iseo, Parzanica for €100,000. Parzanica, Lake Iseo, Lombardy. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/it-lake-iseo-parzanica-beamed-duplex-100k.jpg?v=2",
+"country": "Italy"
 },
 {
 "slug": "us-pennsylvania-barn-cabin-155k",
@@ -1253,13 +1246,6 @@
 "country": "United States"
 },
 {
-"slug": "it-abruzzo-secinaro-four-bed-guest-flat-95k",
-"title": "€95,000 · Four-bedroom village house with a guest flat and covered terrace in Secinaro, Abruzzo",
-"desc": "Four-bedroom village house with a guest flat and covered terrace in Secinaro, Abruzzo for €95,000. Secinaro, Abruzzo. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/it-abruzzo-secinaro-four-bed-guest-flat-95k.jpg?v=2",
-"country": "Italy"
-},
-{
 "slug": "us-pennsylvania-lake-cabin-200k",
 "title": "€177,700 · Log cabin at Canadohta Lake with a duck pond out front",
 "desc": "Log cabin at Canadohta Lake with a duck pond out front for €177,700. Canadohta Lake, Union City, Pennsylvania. Scored and ranked on RealHunt: the best homes in every country.",
@@ -1267,9 +1253,16 @@
 "country": "United States"
 },
 {
+"slug": "it-abruzzo-secinaro-four-bed-guest-flat-95k",
+"title": "€95,000 · Four-bedroom village house with a guest flat and covered terrace in Secinaro, Abruzzo",
+"desc": "Four-bedroom village house with a guest flat and covered terrace in Secinaro, Abruzzo for €95,000. Secinaro, Abruzzo. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/it-abruzzo-secinaro-four-bed-guest-flat-95k.jpg?v=2",
+"country": "Italy"
+},
+{
 "slug": "us-adirondacks-farmhouse-10-acres-179k",
-"title": "€159,100 · Adirondack farmhouse on 10.8 acres of autumn forest",
-"desc": "Adirondack farmhouse on 10.8 acres of autumn forest for €159,100. Forestport, Adirondack foothills, New York. Scored and ranked on RealHunt: the best homes in every country.",
+"title": "€163,100 · Adirondack farmhouse on 10.8 acres of autumn forest",
+"desc": "Adirondack farmhouse on 10.8 acres of autumn forest for €163,100. Forestport, Adirondack foothills, New York. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/us-adirondacks-farmhouse-10-acres-179k.jpg?v=2",
 "country": "United States"
 },
@@ -1281,18 +1274,18 @@
 "country": "Italy"
 },
 {
-"slug": "it-sicily-collesano-madonie-four-bed-house-115k",
-"title": "€115,000 · Four-level town house ready to live in at Collesano, in the Madonie hills near Cefalù",
-"desc": "Four-level town house ready to live in at Collesano, in the Madonie hills near Cefalù for €115,000. Collesano, Sicily. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/it-sicily-collesano-madonie-four-bed-house-115k.jpg?v=2",
-"country": "Italy"
-},
-{
 "slug": "us-kentucky-new-log-cabin-175k",
 "title": "€155,500 · Brand-new 2024 log cabin surrounded by farmland in Kentucky",
 "desc": "Brand-new 2024 log cabin surrounded by farmland in Kentucky for €155,500. Elk Horn, Kentucky. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/us-kentucky-new-log-cabin-175k.jpg?v=2",
 "country": "United States"
+},
+{
+"slug": "it-sicily-collesano-madonie-four-bed-house-115k",
+"title": "€115,000 · Four-level town house ready to live in at Collesano, in the Madonie hills near Cefalù",
+"desc": "Four-level town house ready to live in at Collesano, in the Madonie hills near Cefalù for €115,000. Collesano, Sicily. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/it-sicily-collesano-madonie-four-bed-house-115k.jpg?v=2",
+"country": "Italy"
 },
 {
 "slug": "it-tuscany-cutigliano-ski-house-159k",
@@ -1309,13 +1302,6 @@
 "country": "Italy"
 },
 {
-"slug": "it-calabria-torremezzo-three-bed-courtyard-85k",
-"title": "€85,000 · Three-bedroom seaside house with a paved courtyard in Torremezzo di Falconara, Calabria",
-"desc": "Three-bedroom seaside house with a paved courtyard in Torremezzo di Falconara, Calabria for €85,000. Torremezzo, Falconara Albanese, Calabria. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/it-calabria-torremezzo-three-bed-courtyard-85k.jpg?v=2",
-"country": "Italy"
-},
-{
 "slug": "gr-messinia-vasilitsi-sea-view-109k",
 "title": "€109,000 · Three-bedroom village house with a vine-covered terrace and sea views in Messinia",
 "desc": "Three-bedroom village house with a vine-covered terrace and sea views in Messinia for €109,000. Vasilitsi, Messinia. Scored and ranked on RealHunt: the best homes in every country.",
@@ -1323,11 +1309,11 @@
 "country": "Greece"
 },
 {
-"slug": "us-michigan-big-wolf-lake-195k",
-"title": "€173,300 · Lake-country home with a wood stove, deck and pool near Big Wolf Lake",
-"desc": "Lake-country home with a wood stove, deck and pool near Big Wolf Lake for €173,300. Big Wolf Lake, Lewiston, Michigan. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/us-michigan-big-wolf-lake-195k.jpg?v=2",
-"country": "United States"
+"slug": "it-calabria-torremezzo-three-bed-courtyard-85k",
+"title": "€85,000 · Three-bedroom seaside house with a paved courtyard in Torremezzo di Falconara, Calabria",
+"desc": "Three-bedroom seaside house with a paved courtyard in Torremezzo di Falconara, Calabria for €85,000. Torremezzo, Falconara Albanese, Calabria. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/it-calabria-torremezzo-three-bed-courtyard-85k.jpg?v=2",
+"country": "Italy"
 },
 {
 "slug": "it-tuscany-montaione-renovated-140k",
@@ -1335,13 +1321,6 @@
 "desc": "Stylish renovated flat with a fireplace and terrace in Montaione, Tuscany for €140,000. Montaione, Tuscany (between Florence and Pisa). Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/it-tuscany-montaione-renovated-140k.jpg?v=2",
 "country": "Italy"
-},
-{
-"slug": "gr-crete-karydi-renovated-stone-house-175k",
-"title": "€175,000 · Renovated stone village house with courtyards in Karydi, eastern Crete",
-"desc": "Renovated stone village house with courtyards in Karydi, eastern Crete for €175,000. Karydi, Agios Nikolaos, Crete. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/gr-crete-karydi-renovated-stone-house-175k.jpg?v=2",
-"country": "Greece"
 },
 {
 "slug": "it-umbria-citta-della-pieve-orchard-160k",
@@ -1358,18 +1337,18 @@
 "country": "Greece"
 },
 {
+"slug": "gr-crete-karydi-renovated-stone-house-175k",
+"title": "€175,000 · Renovated stone village house with courtyards in Karydi, eastern Crete",
+"desc": "Renovated stone village house with courtyards in Karydi, eastern Crete for €175,000. Karydi, Agios Nikolaos, Crete. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/gr-crete-karydi-renovated-stone-house-175k.jpg?v=2",
+"country": "Greece"
+},
+{
 "slug": "gr-crete-choumeriako-renovated-115k",
 "title": "€115,000 · Whitewashed Cretan village house with a roof terrace and spiral stairs",
 "desc": "Whitewashed Cretan village house with a roof terrace and spiral stairs for €115,000. Choumeriako, near Neapoli, Crete. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/gr-crete-choumeriako-renovated-115k.jpg?v=2",
 "country": "Greece"
-},
-{
-"slug": "uk-whithorn-cottage-wood-burner-garden-105k",
-"title": "€121,000 · Traditional two-bedroom cottage with wood burner and large garden in Whithorn, Galloway",
-"desc": "Traditional two-bedroom cottage with wood burner and large garden in Whithorn, Galloway for €121,000. Whithorn, Dumfries and Galloway. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/uk-whithorn-cottage-wood-burner-garden-105k.jpg?v=2",
-"country": "United Kingdom"
 },
 {
 "slug": "it-sardinia-budoni-sea-view-158k",
@@ -1386,6 +1365,13 @@
 "country": "Italy"
 },
 {
+"slug": "uk-whithorn-cottage-wood-burner-garden-105k",
+"title": "€121,000 · Traditional two-bedroom cottage with wood burner and large garden in Whithorn, Galloway",
+"desc": "Traditional two-bedroom cottage with wood burner and large garden in Whithorn, Galloway for €121,000. Whithorn, Dumfries and Galloway. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/uk-whithorn-cottage-wood-burner-garden-105k.jpg?v=2",
+"country": "United Kingdom"
+},
+{
 "slug": "gr-halkidiki-new-house-160k",
 "title": "€159,990 · Brand-new 2025 cottage with a pergola deck 400 m from the sea in Halkidiki",
 "desc": "Brand-new 2025 cottage with a pergola deck 400 m from the sea in Halkidiki for €159,990. Kallikrateia, Halkidiki. Scored and ranked on RealHunt: the best homes in every country.",
@@ -1393,16 +1379,9 @@
 "country": "Greece"
 },
 {
-"slug": "es-costa-blanca-la-marina-townhouse-160k",
-"title": "€160,000 · Three-bedroom townhouse with two terraces in La Marina, Costa Blanca",
-"desc": "Three-bedroom townhouse with two terraces in La Marina, Costa Blanca for €160,000. La Marina, Elche, Alicante. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/es-costa-blanca-la-marina-townhouse-160k.jpg?v=2",
-"country": "Spain"
-},
-{
 "slug": "us-michigan-a-frame-2-5-acres-160k",
-"title": "€142,200 · Well-kept A-frame on 2.5 acres in Michigan's Upper Peninsula",
-"desc": "Well-kept A-frame on 2.5 acres in Michigan's Upper Peninsula for €142,200. Kenton, Upper Peninsula, Michigan. Scored and ranked on RealHunt: the best homes in every country.",
+"title": "€173,100 · Well-kept A-frame on 2.5 acres in Michigan's Upper Peninsula",
+"desc": "Well-kept A-frame on 2.5 acres in Michigan's Upper Peninsula for €173,100. Kenton, Upper Peninsula, Michigan. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/us-michigan-a-frame-2-5-acres-160k.jpg?v=2",
 "country": "United States"
 },
@@ -1414,18 +1393,18 @@
 "country": "Greece"
 },
 {
+"slug": "es-costa-blanca-la-marina-townhouse-160k",
+"title": "€160,000 · Three-bedroom townhouse with two terraces in La Marina, Costa Blanca",
+"desc": "Three-bedroom townhouse with two terraces in La Marina, Costa Blanca for €160,000. La Marina, Elche, Alicante. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/es-costa-blanca-la-marina-townhouse-160k.jpg?v=2",
+"country": "Spain"
+},
+{
 "slug": "gr-trikeri-sea-terrace-120k",
 "title": "€120,000 · Wooden island-style house with a BBQ terrace hanging over the Pagasetic Gulf",
 "desc": "Wooden island-style house with a BBQ terrace hanging over the Pagasetic Gulf for €120,000. Trikeri, Pelion. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/gr-trikeri-sea-terrace-120k.jpg?v=2",
 "country": "Greece"
-},
-{
-"slug": "us-lancaster-pa-renovated-brick-rowhouse-235k",
-"title": "€213,600 · Fully renovated brick rowhouse with a fenced yard in Lancaster, Pennsylvania",
-"desc": "Fully renovated brick rowhouse with a fenced yard in Lancaster, Pennsylvania for €213,600. Lancaster, Pennsylvania. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/us-lancaster-pa-renovated-brick-rowhouse-235k.jpg?v=2",
-"country": "United States"
 },
 {
 "slug": "es-los-palacios-pool-145k-190022882",
@@ -1442,18 +1421,18 @@
 "country": "Spain"
 },
 {
+"slug": "us-lancaster-pa-renovated-brick-rowhouse-235k",
+"title": "€213,600 · Fully renovated brick rowhouse with a fenced yard in Lancaster, Pennsylvania",
+"desc": "Fully renovated brick rowhouse with a fenced yard in Lancaster, Pennsylvania for €213,600. Lancaster, Pennsylvania. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/us-lancaster-pa-renovated-brick-rowhouse-235k.jpg?v=2",
+"country": "United States"
+},
+{
 "slug": "es-santomera-penthouse-145k-161987047",
 "title": "€145,000 · Remodelled three-bedroom penthouse with a 40 m² private roof terrace in Santomera",
 "desc": "Remodelled three-bedroom penthouse with a 40 m² private roof terrace in Santomera for €145,000. Central Santomera, Murcia (about 15 min from Murcia). Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/es-santomera-penthouse-145k-161987047.jpg?v=2",
 "country": "Spain"
-},
-{
-"slug": "it-puglia-francavilla-fontana-country-home-139k",
-"title": "€139,000 · Renovated one-bedroom country house on 4,000 m² of land near Francavilla Fontana, Puglia",
-"desc": "Renovated one-bedroom country house on 4,000 m² of land near Francavilla Fontana, Puglia for €139,000. Francavilla Fontana, Puglia. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/it-puglia-francavilla-fontana-country-home-139k.jpg?v=2",
-"country": "Italy"
 },
 {
 "slug": "es-hondon-frailes-5bed-150k-188921317",
@@ -1470,18 +1449,18 @@
 "country": "Spain"
 },
 {
+"slug": "it-puglia-francavilla-fontana-country-home-139k",
+"title": "€139,000 · Renovated one-bedroom country house on 4,000 m² of land near Francavilla Fontana, Puglia",
+"desc": "Renovated one-bedroom country house on 4,000 m² of land near Francavilla Fontana, Puglia for €139,000. Francavilla Fontana, Puglia. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/it-puglia-francavilla-fontana-country-home-139k.jpg?v=2",
+"country": "Italy"
+},
+{
 "slug": "es-alzira-renovated-91k-189401106",
 "title": "€91,000 · Fully renovated three-bedroom house with an 80 m² roof terrace in Alzira",
 "desc": "Fully renovated three-bedroom house with an 80 m² roof terrace in Alzira for €91,000. Alquerieta, Alzira, Valencia (about 35 min from Valencia). Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/es-alzira-renovated-91k-189401106.jpg?v=2",
 "country": "Spain"
-},
-{
-"slug": "us-marietta-oh-victorian-oak-woodwork-220k",
-"title": "€200,000 · Victorian house with original oak woodwork opposite a park in Marietta, Ohio",
-"desc": "Victorian house with original oak woodwork opposite a park in Marietta, Ohio for €200,000. Marietta, Ohio. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/us-marietta-oh-victorian-oak-woodwork-220k.jpg?v=2",
-"country": "United States"
 },
 {
 "slug": "es-bigastro-150m2-145k-190315743",
@@ -1498,18 +1477,18 @@
 "country": "Spain"
 },
 {
+"slug": "us-marietta-oh-victorian-oak-woodwork-220k",
+"title": "€200,000 · Victorian house with original oak woodwork opposite a park in Marietta, Ohio",
+"desc": "Victorian house with original oak woodwork opposite a park in Marietta, Ohio for €200,000. Marietta, Ohio. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/us-marietta-oh-victorian-oak-woodwork-220k.jpg?v=2",
+"country": "United States"
+},
+{
 "slug": "es-condado-alhama-golf-129k-190939296",
 "title": "€129,000 · Ground-floor home with terraces and a communal pool on the Condado de Alhama golf resort",
 "desc": "Ground-floor home with terraces and a communal pool on the Condado de Alhama golf resort for €129,000. Condado de Alhama, Alhama de Murcia (about 35 min from Murcia and Cartagena). Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/es-condado-alhama-golf-129k-190939296.jpg?v=2",
 "country": "Spain"
-},
-{
-"slug": "cy-mazotos-2-bed-pool-130k-477874",
-"title": "€130,000 · Furnished two-bedroom flat with title deeds and a shared pool in Mazotos, Larnaca",
-"desc": "Furnished two-bedroom flat with title deeds and a shared pool in Mazotos, Larnaca for €130,000. Mazotos, Larnaca. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/cy-mazotos-2-bed-pool-130k-477874.jpg?v=2",
-"country": "Cyprus"
 },
 {
 "slug": "es-san-isidro-move-in-145k-190990586",
@@ -1526,18 +1505,18 @@
 "country": "Spain"
 },
 {
+"slug": "cy-mazotos-2-bed-pool-130k-477874",
+"title": "€130,000 · Furnished two-bedroom flat with title deeds and a shared pool in Mazotos, Larnaca",
+"desc": "Furnished two-bedroom flat with title deeds and a shared pool in Mazotos, Larnaca for €130,000. Mazotos, Larnaca. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/cy-mazotos-2-bed-pool-130k-477874.jpg?v=2",
+"country": "Cyprus"
+},
+{
 "slug": "es-velliza-stone-house-138k-189374812",
 "title": "€138,000 · Fully renovated stone house with beams and a fireplace near Valladolid",
 "desc": "Fully renovated stone house with beams and a fireplace near Valladolid for €138,000. Velliza, Valladolid (about 25 min from Valladolid). Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/es-velliza-stone-house-138k-189374812.jpg?v=2",
 "country": "Spain"
-},
-{
-"slug": "fr-frayssinet-lot-stone-village-house-125k",
-"title": "€125,000 · 19th-century stone village house with wisteria courtyard and terrace in Frayssinet, Lot",
-"desc": "19th-century stone village house with wisteria courtyard and terrace in Frayssinet, Lot for €125,000. Frayssinet, Lot. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/fr-frayssinet-lot-stone-village-house-125k.jpg?v=2",
-"country": "France"
 },
 {
 "slug": "es-colomera-renovated-119k-190020127",
@@ -1554,18 +1533,18 @@
 "country": "Sweden"
 },
 {
+"slug": "fr-frayssinet-lot-stone-village-house-125k",
+"title": "€125,000 · 19th-century stone village house with wisteria courtyard and terrace in Frayssinet, Lot",
+"desc": "19th-century stone village house with wisteria courtyard and terrace in Frayssinet, Lot for €125,000. Frayssinet, Lot. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/fr-frayssinet-lot-stone-village-house-125k.jpg?v=2",
+"country": "France"
+},
+{
 "slug": "se-skivarp-62k-1795989",
 "title": "€62,300 · Three-bedroom brick townhouse with a garden near the south coast in Skivarp",
 "desc": "Three-bedroom brick townhouse with a garden near the south coast in Skivarp for €62,300. Skivarp, Skurup, Skåne (about 60 min from Copenhagen). Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/se-skivarp-62k-1795989.jpg?v=2",
 "country": "Sweden"
-},
-{
-"slug": "pt-minho-bravaes-restored-stone-house-156k",
-"title": "€156,000 · Fully restored granite house with a private garden in Bravães, Ponte da Barca",
-"desc": "Fully restored granite house with a private garden in Bravães, Ponte da Barca for €156,000. Bravães, Ponte da Barca, Viana do Castelo. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/pt-minho-bravaes-restored-stone-house-156k.jpg?v=2",
-"country": "Portugal"
 },
 {
 "slug": "se-eslov-98k-1701202",
@@ -1582,18 +1561,18 @@
 "country": "Denmark"
 },
 {
+"slug": "pt-minho-bravaes-restored-stone-house-156k",
+"title": "€156,000 · Fully restored granite house with a private garden in Bravães, Ponte da Barca",
+"desc": "Fully restored granite house with a private garden in Bravães, Ponte da Barca for €156,000. Bravães, Ponte da Barca, Viana do Castelo. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/pt-minho-bravaes-restored-stone-house-156k.jpg?v=2",
+"country": "Portugal"
+},
+{
 "slug": "se-landskrona-98k-1673127",
 "title": "€98,100 · Bright 1929 flat with three bedrooms near the centre of Landskrona",
 "desc": "Bright 1929 flat with three bedrooms near the centre of Landskrona for €98,100. Landskrona, Skåne (about 50 min from Copenhagen). Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/se-landskrona-98k-1673127.jpg?v=2",
 "country": "Sweden"
-},
-{
-"slug": "it-liguria-cipressa-sea-view-flat-aregai-170k",
-"title": "€170,000 · Sea-view flat with two balconies near the Aregai marina in Cipressa, Liguria",
-"desc": "Sea-view flat with two balconies near the Aregai marina in Cipressa, Liguria for €170,000. Cipressa, Imperia, Liguria. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/it-liguria-cipressa-sea-view-flat-aregai-170k.jpg?v=2",
-"country": "Italy"
 },
 {
 "slug": "se-malmo-rosengard-67k-1678590",
@@ -1610,18 +1589,18 @@
 "country": "Denmark"
 },
 {
+"slug": "it-liguria-cipressa-sea-view-flat-aregai-170k",
+"title": "€170,000 · Sea-view flat with two balconies near the Aregai marina in Cipressa, Liguria",
+"desc": "Sea-view flat with two balconies near the Aregai marina in Cipressa, Liguria for €170,000. Cipressa, Imperia, Liguria. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/it-liguria-cipressa-sea-view-flat-aregai-170k.jpg?v=2",
+"country": "Italy"
+},
+{
 "slug": "gr-crete-viannos-76k-20595936",
 "title": "€76,000 · Renovated stone house with a Libyan Sea view in Agios Vasileios, Crete",
 "desc": "Renovated stone house with a Libyan Sea view in Agios Vasileios, Crete for €76,000. Agios Vasileios, Viannos, Crete (Greece). Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/gr-crete-viannos-76k-20595936.jpg?v=2",
 "country": "Greece"
-},
-{
-"slug": "se-arbra-red-wooden-house-conservatory-795k-sek",
-"title": "€72,000 · Red wooden three-bedroom house with conservatory and greenhouse in Arbrå, Hälsingland",
-"desc": "Red wooden three-bedroom house with conservatory and greenhouse in Arbrå, Hälsingland for €72,000. Arbrå, Gävleborg. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/se-arbra-red-wooden-house-conservatory-795k-sek.jpg?v=2",
-"country": "Sweden"
 },
 {
 "slug": "gr-samos-agia-triada-68k-20601330",
@@ -1638,18 +1617,18 @@
 "country": "Greece"
 },
 {
+"slug": "se-arbra-red-wooden-house-conservatory-795k-sek",
+"title": "€72,000 · Red wooden three-bedroom house with conservatory and greenhouse in Arbrå, Hälsingland",
+"desc": "Red wooden three-bedroom house with conservatory and greenhouse in Arbrå, Hälsingland for €72,000. Arbrå, Gävleborg. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/se-arbra-red-wooden-house-conservatory-795k-sek.jpg?v=2",
+"country": "Sweden"
+},
+{
 "slug": "gr-samos-marathokampos-80k-19741965",
 "title": "€80,000 · Renovated stone house with a sea view in Marathokampos, Samos",
 "desc": "Renovated stone house with a sea view in Marathokampos, Samos for €80,000. Marathokampos, Samos (Greece). Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/gr-samos-marathokampos-80k-19741965.jpg?v=2",
 "country": "Greece"
-},
-{
-"slug": "uy-colonia-del-sacramento-three-bed-house-near-rambla-205k",
-"title": "€186,300 · Three-bedroom house with a barbecue patio near the rambla in Colonia del Sacramento",
-"desc": "Three-bedroom house with a barbecue patio near the rambla in Colonia del Sacramento for €186,300. Colonia del Sacramento, Colonia. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/uy-colonia-del-sacramento-three-bed-house-near-rambla-205k.jpg?v=2",
-"country": "Uruguay"
 },
 {
 "slug": "es-rossell-55k-187471380",
@@ -1666,18 +1645,18 @@
 "country": "Bulgaria"
 },
 {
+"slug": "uy-colonia-del-sacramento-three-bed-house-near-rambla-205k",
+"title": "€186,300 · Three-bedroom house with a barbecue patio near the rambla in Colonia del Sacramento",
+"desc": "Three-bedroom house with a barbecue patio near the rambla in Colonia del Sacramento for €186,300. Colonia del Sacramento, Colonia. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/uy-colonia-del-sacramento-three-bed-house-near-rambla-205k.jpg?v=2",
+"country": "Uruguay"
+},
+{
 "slug": "bg-kavarna-hills-69k-1606144",
 "title": "€69,000 · Two-bedroom flat with two sea-panorama terraces in Kavarna Hills",
 "desc": "Two-bedroom flat with two sea-panorama terraces in Kavarna Hills for €69,000. Kavarna Hills, Kavarna (Black Sea). Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/bg-kavarna-hills-69k-1606144.jpg?v=2",
 "country": "Bulgaria"
-},
-{
-"slug": "ca-saint-andrews-nb-four-bed-house-5-acres-300k",
-"title": "€190,700 · Four-bedroom house on about five acres in St. Andrews by-the-Sea, New Brunswick",
-"desc": "Four-bedroom house on about five acres in St. Andrews by-the-Sea, New Brunswick for €190,700. Saint Andrews, New Brunswick. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/ca-saint-andrews-nb-four-bed-house-5-acres-300k.jpg?v=2",
-"country": "Canada"
 },
 {
 "slug": "bg-kavarna-70k-1672825",
@@ -1694,18 +1673,18 @@
 "country": "Spain"
 },
 {
+"slug": "ca-saint-andrews-nb-four-bed-house-5-acres-300k",
+"title": "€190,700 · Four-bedroom house on about five acres in St. Andrews by-the-Sea, New Brunswick",
+"desc": "Four-bedroom house on about five acres in St. Andrews by-the-Sea, New Brunswick for €190,700. Saint Andrews, New Brunswick. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/ca-saint-andrews-nb-four-bed-house-5-acres-300k.jpg?v=2",
+"country": "Canada"
+},
+{
 "slug": "es-ponteceso-corme-68k-189908571",
 "title": "€68,500 · Bright top-floor flat with a sea-view balcony in Corme Porto, Costa da Morte",
 "desc": "Bright top-floor flat with a sea-view balcony in Corme Porto, Costa da Morte for €68,500. Corme Porto, Ponteceso (A Coruña). Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/es-ponteceso-corme-68k-189908571.jpg?v=2",
 "country": "Spain"
-},
-{
-"slug": "mx-puerto-vallarta-three-bed-house-pool-condo-3-25m",
-"title": "€160,200 · Three-bedroom house in a gated complex with a pool in Puerto Vallarta, Jalisco",
-"desc": "Three-bedroom house in a gated complex with a pool in Puerto Vallarta, Jalisco for €160,200. Puerto Vallarta, Jalisco. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/mx-puerto-vallarta-three-bed-house-pool-condo-3-25m.jpg?v=2",
-"country": "Mexico"
 },
 {
 "slug": "es-carino-65k-186545953",
@@ -1722,18 +1701,18 @@
 "country": "Bulgaria"
 },
 {
+"slug": "mx-puerto-vallarta-three-bed-house-pool-condo-3-25m",
+"title": "€160,200 · Three-bedroom house in a gated complex with a pool in Puerto Vallarta, Jalisco",
+"desc": "Three-bedroom house in a gated complex with a pool in Puerto Vallarta, Jalisco for €160,200. Puerto Vallarta, Jalisco. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/mx-puerto-vallarta-three-bed-house-pool-condo-3-25m.jpg?v=2",
+"country": "Mexico"
+},
+{
 "slug": "fr-decazeville-49k-900846",
 "title": "€49,980 · Renovated three-level house with an energy rating C in Decazeville, Aveyron",
 "desc": "Renovated three-level house with an energy rating C in Decazeville, Aveyron for €49,980. Decazeville, Aveyron. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/fr-decazeville-49k-900846.jpg?v=2",
 "country": "France"
-},
-{
-"slug": "it-rosignano-marittimo-sea-view-village-flat-125k",
-"title": "€125,000 · Renovated village home with sea views below the castle in Rosignano Marittimo, Tuscany",
-"desc": "Renovated village home with sea views below the castle in Rosignano Marittimo, Tuscany for €125,000. Rosignano Marittimo, Tuscany. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/it-rosignano-marittimo-sea-view-village-flat-125k.jpg?v=2",
-"country": "Italy"
 },
 {
 "slug": "fr-bussiere-poitevine-39k-088775",
@@ -1750,18 +1729,18 @@
 "country": "France"
 },
 {
+"slug": "it-rosignano-marittimo-sea-view-village-flat-125k",
+"title": "€125,000 · Renovated village home with sea views below the castle in Rosignano Marittimo, Tuscany",
+"desc": "Renovated village home with sea views below the castle in Rosignano Marittimo, Tuscany for €125,000. Rosignano Marittimo, Tuscany. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/it-rosignano-marittimo-sea-view-village-flat-125k.jpg?v=2",
+"country": "Italy"
+},
+{
 "slug": "pt-mogadouro-48k-19109522",
 "title": "€48,000 · Freshly painted three-bedroom village house near the Sabor lakes",
 "desc": "Freshly painted three-bedroom village house near the Sabor lakes for €48,000. Brunhoso, Mogadouro. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/pt-mogadouro-48k-19109522.jpg?v=2",
 "country": "Portugal"
-},
-{
-"slug": "se-vansbro-1920s-villa-geothermal-850k-sek",
-"title": "€77,000 · 1920s villa with geothermal heating and a private garden in central Vansbro, Dalarna",
-"desc": "1920s villa with geothermal heating and a private garden in central Vansbro, Dalarna for €77,000. Vansbro, Dalarna. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/se-vansbro-1920s-villa-geothermal-850k-sek.jpg?v=2",
-"country": "Sweden"
 },
 {
 "slug": "fr-marseille-54k-r-4563",
@@ -1778,18 +1757,18 @@
 "country": "Netherlands"
 },
 {
+"slug": "se-vansbro-1920s-villa-geothermal-850k-sek",
+"title": "€77,000 · 1920s villa with geothermal heating and a private garden in central Vansbro, Dalarna",
+"desc": "1920s villa with geothermal heating and a private garden in central Vansbro, Dalarna for €77,000. Vansbro, Dalarna. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/se-vansbro-1920s-villa-geothermal-850k-sek.jpg?v=2",
+"country": "Sweden"
+},
+{
 "slug": "nl-amsterdam-310k-984361",
 "title": "€310,000 · Bright three-room flat with two balconies in Venserpolder",
 "desc": "Bright three-room flat with two balconies in Venserpolder for €310,000. Venserpolder, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/nl-amsterdam-310k-984361.jpg?v=2",
 "country": "Netherlands"
-},
-{
-"slug": "gr-laconia-gytheio-renovated-country-house-85k",
-"title": "€85,000 · Renovated single-storey country house among olive groves near Gytheio",
-"desc": "Renovated single-storey country house among olive groves near Gytheio for €85,000. Near Gytheio, Laconia. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/gr-laconia-gytheio-renovated-country-house-85k.jpg?v=2",
-"country": "Greece"
 },
 {
 "slug": "nl-amsterdam-330k-529886",
@@ -1806,18 +1785,18 @@
 "country": "France"
 },
 {
+"slug": "gr-laconia-gytheio-renovated-country-house-85k",
+"title": "€85,000 · Renovated single-storey country house among olive groves near Gytheio",
+"desc": "Renovated single-storey country house among olive groves near Gytheio for €85,000. Near Gytheio, Laconia. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/gr-laconia-gytheio-renovated-country-house-85k.jpg?v=2",
+"country": "Greece"
+},
+{
 "slug": "fr-saint-etienne-60k-772580",
 "title": "€60,000 · Recently renovated through flat with a heat pump in Saint-Étienne",
 "desc": "Recently renovated through flat with a heat pump in Saint-Étienne for €60,000. Saint-Roch, Saint-Étienne. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/fr-saint-etienne-60k-772580.jpg?v=2",
 "country": "France"
-},
-{
-"slug": "pl-szklarska-poreba-garden-flat-91k-543867",
-"title": "€90,600 · Ground-floor flat with garden, terrace and garage in Szklarska Poręba, Karkonosze",
-"desc": "Ground-floor flat with garden, terrace and garage in Szklarska Poręba, Karkonosze for €90,600. Szklarska Poręba, Lower Silesia. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/pl-szklarska-poreba-garden-flat-91k-543867.jpg?v=2",
-"country": "Poland"
 },
 {
 "slug": "fr-perpignan-57k-t-9872",
@@ -1834,18 +1813,18 @@
 "country": "France"
 },
 {
+"slug": "pl-szklarska-poreba-garden-flat-91k-543867",
+"title": "€90,600 · Ground-floor flat with garden, terrace and garage in Szklarska Poręba, Karkonosze",
+"desc": "Ground-floor flat with garden, terrace and garage in Szklarska Poręba, Karkonosze for €90,600. Szklarska Poręba, Lower Silesia. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/pl-szklarska-poreba-garden-flat-91k-543867.jpg?v=2",
+"country": "Poland"
+},
+{
 "slug": "nl-amsterdam-330k-474793",
 "title": "€330,000 · Three-room flat with a modern kitchen and two balconies in Reigersbos",
 "desc": "Three-room flat with a modern kitchen and two balconies in Reigersbos for €330,000. Reigersbos, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/nl-amsterdam-330k-474793.jpg?v=2",
 "country": "Netherlands"
-},
-{
-"slug": "th-chiang-mai-2-bed-pool-condo-77k-5379536",
-"title": "€76,700 · Renovated two-bedroom condo with pool and gym near Chiang Mai Night Bazaar",
-"desc": "Renovated two-bedroom condo with pool and gym near Chiang Mai Night Bazaar for €76,700. Chang Khlan, Chiang Mai. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/th-chiang-mai-2-bed-pool-condo-77k-5379536.jpg?v=2",
-"country": "Thailand"
 },
 {
 "slug": "fr-roubaix-57k-230014",
@@ -1862,18 +1841,18 @@
 "country": "Netherlands"
 },
 {
+"slug": "th-chiang-mai-2-bed-pool-condo-77k-5379536",
+"title": "€76,700 · Renovated two-bedroom condo with pool and gym near Chiang Mai Night Bazaar",
+"desc": "Renovated two-bedroom condo with pool and gym near Chiang Mai Night Bazaar for €76,700. Chang Khlan, Chiang Mai. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/th-chiang-mai-2-bed-pool-condo-77k-5379536.jpg?v=2",
+"country": "Thailand"
+},
+{
 "slug": "fr-toulouse-60k-120948",
 "title": "€59,500 · Renovated studio with a balcony by the Bagatelle metro, Toulouse",
 "desc": "Renovated studio with a balcony by the Bagatelle metro, Toulouse for €59,500. Bagatelle, Toulouse. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/fr-toulouse-60k-120948.jpg?v=2",
 "country": "France"
-},
-{
-"slug": "bg-sveti-vlas-sea-view-89k-92034",
-"title": "€89,000 · Sea-view one-bedroom flat with pool and no maintenance fee in Sveti Vlas",
-"desc": "Sea-view one-bedroom flat with pool and no maintenance fee in Sveti Vlas for €89,000. Sveti Vlas, Burgas. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/bg-sveti-vlas-sea-view-89k-92034.jpg?v=2",
-"country": "Bulgaria"
 },
 {
 "slug": "nl-amsterdam-305k-988747",
@@ -1890,18 +1869,18 @@
 "country": "Netherlands"
 },
 {
+"slug": "bg-sveti-vlas-sea-view-89k-92034",
+"title": "€89,000 · Sea-view one-bedroom flat with pool and no maintenance fee in Sveti Vlas",
+"desc": "Sea-view one-bedroom flat with pool and no maintenance fee in Sveti Vlas for €89,000. Sveti Vlas, Burgas. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/bg-sveti-vlas-sea-view-89k-92034.jpg?v=2",
+"country": "Bulgaria"
+},
+{
 "slug": "fr-perpignan-60k-990769",
 "title": "€60,000 · Town house with a mezzanine in historic Saint-Mathieu, Perpignan",
 "desc": "Town house with a mezzanine in historic Saint-Mathieu, Perpignan for €60,000. Saint-Matthieu, Perpignan. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/fr-perpignan-60k-990769.jpg?v=2",
 "country": "France"
-},
-{
-"slug": "es-asturias-quiros-ricabo-mountain-house-180k",
-"title": "€180,000 · Furnished five-bedroom mountain house with Ubiñas views in Quirós, Asturias",
-"desc": "Furnished five-bedroom mountain house with Ubiñas views in Quirós, Asturias for €180,000. Ricabo, Quirós, Asturias. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/es-asturias-quiros-ricabo-mountain-house-180k.jpg?v=2",
-"country": "Spain"
 },
 {
 "slug": "nl-amsterdam-315k-980579",
@@ -1918,18 +1897,18 @@
 "country": "France"
 },
 {
+"slug": "es-asturias-quiros-ricabo-mountain-house-180k",
+"title": "€180,000 · Furnished five-bedroom mountain house with Ubiñas views in Quirós, Asturias",
+"desc": "Furnished five-bedroom mountain house with Ubiñas views in Quirós, Asturias for €180,000. Ricabo, Quirós, Asturias. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/es-asturias-quiros-ricabo-mountain-house-180k.jpg?v=2",
+"country": "Spain"
+},
+{
 "slug": "nl-amsterdam-335k-535568",
 "title": "€335,000 · 79 m² flat with an 11 m² balcony and open views in Amsterdam-Noord",
 "desc": "79 m² flat with an 11 m² balcony and open views in Amsterdam-Noord for €335,000. Molenwijk, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/nl-amsterdam-335k-535568.jpg?v=2",
 "country": "Netherlands"
-},
-{
-"slug": "it-sardinia-soddi-lake-omodeo-view-house-150k",
-"title": "€150,000 · Bright three-floor house with terraces facing Lake Omodeo in Soddì, Sardinia",
-"desc": "Bright three-floor house with terraces facing Lake Omodeo in Soddì, Sardinia for €150,000. Soddì, Oristano, Sardinia. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/it-sardinia-soddi-lake-omodeo-view-house-150k.jpg?v=2",
-"country": "Italy"
 },
 {
 "slug": "nl-amsterdam-325k-562301",
@@ -1946,18 +1925,18 @@
 "country": "France"
 },
 {
+"slug": "it-sardinia-soddi-lake-omodeo-view-house-150k",
+"title": "€150,000 · Bright three-floor house with terraces facing Lake Omodeo in Soddì, Sardinia",
+"desc": "Bright three-floor house with terraces facing Lake Omodeo in Soddì, Sardinia for €150,000. Soddì, Oristano, Sardinia. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/it-sardinia-soddi-lake-omodeo-view-house-150k.jpg?v=2",
+"country": "Italy"
+},
+{
 "slug": "nl-amsterdam-299k-968188",
 "title": "€299,000 · Three-room flat with a 14 m² south terrace next to Reigersbos metro",
 "desc": "Three-room flat with a 14 m² south terrace next to Reigersbos metro for €299,000. Reigersbos, Amsterdam. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/nl-amsterdam-299k-968188.jpg?v=2",
 "country": "Netherlands"
-},
-{
-"slug": "jp-shima-2018-house-large-plot-85k-596606",
-"title": "€84,500 · House built in 2018 on a 1,181 m² plot near the sea in Shima, Mie",
-"desc": "House built in 2018 on a 1,181 m² plot near the sea in Shima, Mie for €84,500. Ago-cho Tategami, Shima, Mie. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/jp-shima-2018-house-large-plot-85k-596606.jpg?v=2",
-"country": "Japan"
 },
 {
 "slug": "nl-amsterdam-325k-565328",
@@ -1974,18 +1953,18 @@
 "country": "France"
 },
 {
+"slug": "jp-shima-2018-house-large-plot-85k-596606",
+"title": "€84,500 · House built in 2018 on a 1,181 m² plot near the sea in Shima, Mie",
+"desc": "House built in 2018 on a 1,181 m² plot near the sea in Shima, Mie for €84,500. Ago-cho Tategami, Shima, Mie. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/jp-shima-2018-house-large-plot-85k-596606.jpg?v=2",
+"country": "Japan"
+},
+{
 "slug": "fr-saint-etienne-56k-284554",
 "title": "€55,500 · Furnished loft-style studio with a new bathroom in the hyper-centre, Saint-Étienne",
 "desc": "Furnished loft-style studio with a new bathroom in the hyper-centre, Saint-Étienne for €55,500. Centre-ville, Saint-Étienne. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/fr-saint-etienne-56k-284554.jpg?v=2",
 "country": "France"
-},
-{
-"slug": "us-geneva-ny-finger-lakes-colonial-240k",
-"title": "€218,100 · Well-kept three-bedroom colonial with a metal roof in Geneva, Finger Lakes",
-"desc": "Well-kept three-bedroom colonial with a metal roof in Geneva, Finger Lakes for €218,100. Geneva, New York. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/us-geneva-ny-finger-lakes-colonial-240k.jpg?v=2",
-"country": "United States"
 },
 {
 "slug": "fr-dijon-57k-969671",
@@ -2002,18 +1981,18 @@
 "country": "Netherlands"
 },
 {
+"slug": "us-geneva-ny-finger-lakes-colonial-240k",
+"title": "€218,100 · Well-kept three-bedroom colonial with a metal roof in Geneva, Finger Lakes",
+"desc": "Well-kept three-bedroom colonial with a metal roof in Geneva, Finger Lakes for €218,100. Geneva, New York. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/us-geneva-ny-finger-lakes-colonial-240k.jpg?v=2",
+"country": "United States"
+},
+{
 "slug": "fr-mulhouse-60k-377472",
 "title": "€60,000 · Three-room flat with a balcony, cellar and parking in Mulhouse",
 "desc": "Three-room flat with a balcony, cellar and parking in Mulhouse for €60,000. Mulhouse. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/fr-mulhouse-60k-377472.jpg?v=2",
 "country": "France"
-},
-{
-"slug": "gr-chios-volissos-1881-stone-house-175k",
-"title": "€175,000 · Restored 1881 stone mansion with castle views in Volissos, Chios",
-"desc": "Restored 1881 stone mansion with castle views in Volissos, Chios for €175,000. Volissos, Chios. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/gr-chios-volissos-1881-stone-house-175k.jpg?v=2",
-"country": "Greece"
 },
 {
 "slug": "nl-amsterdam-340k-564864",
@@ -2030,18 +2009,18 @@
 "country": "Netherlands"
 },
 {
+"slug": "gr-chios-volissos-1881-stone-house-175k",
+"title": "€175,000 · Restored 1881 stone mansion with castle views in Volissos, Chios",
+"desc": "Restored 1881 stone mansion with castle views in Volissos, Chios for €175,000. Volissos, Chios. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/gr-chios-volissos-1881-stone-house-175k.jpg?v=2",
+"country": "Greece"
+},
+{
 "slug": "fr-saint-etienne-54k-729815",
 "title": "€54,000 · Modern two-room flat with an open kitchen near the universities, Saint-Étienne",
 "desc": "Modern two-room flat with an open kitchen near the universities, Saint-Étienne for €54,000. Tardy, Saint-Étienne. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/fr-saint-etienne-54k-729815.jpg?v=2",
 "country": "France"
-},
-{
-"slug": "pt-alentejo-alcaria-ruiva-renovated-cottage-95k",
-"title": "€95,000 · Renovated two-bedroom whitewashed cottage in Alcaria Ruiva, near Mértola, Alentejo",
-"desc": "Renovated two-bedroom whitewashed cottage in Alcaria Ruiva, near Mértola, Alentejo for €95,000. Alcaria Ruiva, Mértola, Beja. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/pt-alentejo-alcaria-ruiva-renovated-cottage-95k.jpg?v=2",
-"country": "Portugal"
 },
 {
 "slug": "nl-amsterdam-330k-999230",
@@ -2058,18 +2037,18 @@
 "country": "France"
 },
 {
+"slug": "pt-alentejo-alcaria-ruiva-renovated-cottage-95k",
+"title": "€95,000 · Renovated two-bedroom whitewashed cottage in Alcaria Ruiva, near Mértola, Alentejo",
+"desc": "Renovated two-bedroom whitewashed cottage in Alcaria Ruiva, near Mértola, Alentejo for €95,000. Alcaria Ruiva, Mértola, Beja. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/pt-alentejo-alcaria-ruiva-renovated-cottage-95k.jpg?v=2",
+"country": "Portugal"
+},
+{
 "slug": "de-wuppertal-50k-248035",
 "title": "€50,000 · Furnished studio on a quiet street in Wuppertal-Langerfeld",
 "desc": "Furnished studio on a quiet street in Wuppertal-Langerfeld for €50,000. Langerfeld, Wuppertal. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/de-wuppertal-50k-248035.jpg?v=2",
 "country": "Germany"
-},
-{
-"slug": "it-umbria-cascia-stone-house-valley-view-130k",
-"title": "€130,000 · Detached stone house with garden and valley views near Cascia, Umbria",
-"desc": "Detached stone house with garden and valley views near Cascia, Umbria for €130,000. Colforcella, Cascia, Umbria. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/it-umbria-cascia-stone-house-valley-view-130k.jpg?v=2",
-"country": "Italy"
 },
 {
 "slug": "de-chemnitz-45k-168857",
@@ -2086,18 +2065,18 @@
 "country": "Germany"
 },
 {
+"slug": "it-umbria-cascia-stone-house-valley-view-130k",
+"title": "€130,000 · Detached stone house with garden and valley views near Cascia, Umbria",
+"desc": "Detached stone house with garden and valley views near Cascia, Umbria for €130,000. Colforcella, Cascia, Umbria. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/it-umbria-cascia-stone-house-valley-view-130k.jpg?v=2",
+"country": "Italy"
+},
+{
 "slug": "de-magdeburg-60k-478460",
 "title": "€60,000 · Designer-renovated furnished studio in Magdeburg, no commission",
 "desc": "Designer-renovated furnished studio in Magdeburg, no commission for €60,000. Sudenburg, Magdeburg. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/de-magdeburg-60k-478460.jpg?v=2",
 "country": "Germany"
-},
-{
-"slug": "es-almunecar-los-pinos-sea-view-pool-flat-149k",
-"title": "€149,000 · One-bedroom flat with a sunny terrace, shared pool and sea views in Almuñécar",
-"desc": "One-bedroom flat with a sunny terrace, shared pool and sea views in Almuñécar for €149,000. Almuñécar, Granada. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/es-almunecar-los-pinos-sea-view-pool-flat-149k.jpg?v=2",
-"country": "Spain"
 },
 {
 "slug": "de-chemnitz-45k-234628",
@@ -2114,18 +2093,18 @@
 "country": "Germany"
 },
 {
+"slug": "es-almunecar-los-pinos-sea-view-pool-flat-149k",
+"title": "€149,000 · One-bedroom flat with a sunny terrace, shared pool and sea views in Almuñécar",
+"desc": "One-bedroom flat with a sunny terrace, shared pool and sea views in Almuñécar for €149,000. Almuñécar, Granada. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/es-almunecar-los-pinos-sea-view-pool-flat-149k.jpg?v=2",
+"country": "Spain"
+},
+{
 "slug": "de-bremen-60k-206993",
 "title": "€60,000 · Studio with a balcony over the trees in Bremen-Kattenesch, vacant",
 "desc": "Studio with a balcony over the trees in Bremen-Kattenesch, vacant for €60,000. Kattenesch, Bremen. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/de-bremen-60k-206993.jpg?v=2",
 "country": "Germany"
-},
-{
-"slug": "gr-karpathos-othos-four-bed-sea-view-170k",
-"title": "€170,000 · Four-bedroom village house with a sea-view roof terrace in Othos, Karpathos",
-"desc": "Four-bedroom village house with a sea-view roof terrace in Othos, Karpathos for €170,000. Othos, Karpathos. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/gr-karpathos-othos-four-bed-sea-view-170k.jpg?v=2",
-"country": "Greece"
 },
 {
 "slug": "de-chemnitz-50k-665910",
@@ -2142,18 +2121,18 @@
 "country": "Germany"
 },
 {
+"slug": "gr-karpathos-othos-four-bed-sea-view-170k",
+"title": "€170,000 · Four-bedroom village house with a sea-view roof terrace in Othos, Karpathos",
+"desc": "Four-bedroom village house with a sea-view roof terrace in Othos, Karpathos for €170,000. Othos, Karpathos. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/gr-karpathos-othos-four-bed-sea-view-170k.jpg?v=2",
+"country": "Greece"
+},
+{
 "slug": "de-krefeld-50k-993543",
 "title": "€50,000 · Renovated studio with a big balcony and lift in Krefeld",
 "desc": "Renovated studio with a big balcony and lift in Krefeld for €50,000. Inrath, Krefeld. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/de-krefeld-50k-993543.jpg?v=2",
 "country": "Germany"
-},
-{
-"slug": "jp-awaji-misawa-house-54k-788413",
-"title": "€54,300 · Misawa-built family house with a partial sea view on Awaji Island, Hyogo",
-"desc": "Misawa-built family house with a partial sea view on Awaji Island, Hyogo for €54,300. Fukakusa, Awaji, Hyogo. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/jp-awaji-misawa-house-54k-788413.jpg?v=2",
-"country": "Japan"
 },
 {
 "slug": "de-chemnitz-55k-650355",
@@ -2170,18 +2149,18 @@
 "country": "Germany"
 },
 {
+"slug": "jp-awaji-misawa-house-54k-788413",
+"title": "€54,300 · Misawa-built family house with a partial sea view on Awaji Island, Hyogo",
+"desc": "Misawa-built family house with a partial sea view on Awaji Island, Hyogo for €54,300. Fukakusa, Awaji, Hyogo. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/jp-awaji-misawa-house-54k-788413.jpg?v=2",
+"country": "Japan"
+},
+{
 "slug": "de-chemnitz-40k-587336",
 "title": "Empty, ready-to-move-in studio for €40,000 in Chemnitz, no commission",
 "desc": "Empty, ready-to-move-in studio for €40,000 in Chemnitz, no commission. Sonnenberg, Chemnitz. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/de-chemnitz-40k-587336.jpg?v=2",
 "country": "Germany"
-},
-{
-"slug": "gr-ano-volos-pelion-stone-house-gulf-view-167k",
-"title": "€167,000 · Stone-built three-bedroom house with gulf views in Ano Volos, at the foot of Pelion",
-"desc": "Stone-built three-bedroom house with gulf views in Ano Volos, at the foot of Pelion for €167,000. Ano Volos, Magnesia. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/gr-ano-volos-pelion-stone-house-gulf-view-167k.jpg?v=2",
-"country": "Greece"
 },
 {
 "slug": "de-chemnitz-55k-462680",
@@ -2198,18 +2177,18 @@
 "country": "Germany"
 },
 {
+"slug": "gr-ano-volos-pelion-stone-house-gulf-view-167k",
+"title": "€167,000 · Stone-built three-bedroom house with gulf views in Ano Volos, at the foot of Pelion",
+"desc": "Stone-built three-bedroom house with gulf views in Ano Volos, at the foot of Pelion for €167,000. Ano Volos, Magnesia. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/gr-ano-volos-pelion-stone-house-gulf-view-167k.jpg?v=2",
+"country": "Greece"
+},
+{
 "slug": "de-quierschied-55k-581809",
 "title": "€55,000 · Three-room 71 m² flat with new floors, 10 km from Saarbrücken",
 "desc": "Three-room 71 m² flat with new floors, 10 km from Saarbrücken for €55,000. Fischbach, Quierschied. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/de-quierschied-55k-581809.jpg?v=2",
 "country": "Germany"
-},
-{
-"slug": "dk-hoeng-saeby-move-in-ready-villa-1195k-dkk",
-"title": "€160,000 · Move-in ready villa with modern kitchen, big terrace and open field views near Høng",
-"desc": "Move-in ready villa with modern kitchen, big terrace and open field views near Høng for €160,000. Sæby near Høng, West Zealand. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/dk-hoeng-saeby-move-in-ready-villa-1195k-dkk.jpg?v=2",
-"country": "Denmark"
 },
 {
 "slug": "de-chemnitz-55k-893563",
@@ -2226,18 +2205,18 @@
 "country": "Germany"
 },
 {
+"slug": "dk-hoeng-saeby-move-in-ready-villa-1195k-dkk",
+"title": "€160,000 · Move-in ready villa with modern kitchen, big terrace and open field views near Høng",
+"desc": "Move-in ready villa with modern kitchen, big terrace and open field views near Høng for €160,000. Sæby near Høng, West Zealand. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/dk-hoeng-saeby-move-in-ready-villa-1195k-dkk.jpg?v=2",
+"country": "Denmark"
+},
+{
 "slug": "de-gelsenkirchen-60k-424740",
 "title": "€60,000 · Modernised studio with a new kitchen near Gelsenkirchen centre",
 "desc": "Modernised studio with a new kitchen near Gelsenkirchen centre for €60,000. Altstadt, Gelsenkirchen. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/de-gelsenkirchen-60k-424740.jpg?v=2",
 "country": "Germany"
-},
-{
-"slug": "gr-crete-elounda-one-bed-private-yard-125k",
-"title": "€125,000 · Furnished one-bedroom ground-floor flat with a private yard in Elounda, Crete",
-"desc": "Furnished one-bedroom ground-floor flat with a private yard in Elounda, Crete for €125,000. Elounda, Crete. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/gr-crete-elounda-one-bed-private-yard-125k.jpg?v=2",
-"country": "Greece"
 },
 {
 "slug": "de-chemnitz-50k-826803",
@@ -2252,6 +2231,13 @@
 "desc": "Just-renovated three bedrooms plus living room near Manufaktura in Łódź for €76,084. Polesie, Łódź. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/pl-lodz-76k-708515.jpg?v=2",
 "country": "Poland"
+},
+{
+"slug": "gr-crete-elounda-one-bed-private-yard-125k",
+"title": "€125,000 · Furnished one-bedroom ground-floor flat with a private yard in Elounda, Crete",
+"desc": "Furnished one-bedroom ground-floor flat with a private yard in Elounda, Crete for €125,000. Elounda, Crete. Scored and ranked on RealHunt: the best homes in every country.",
+"image": "https://realhunt.co/og/deal/gr-crete-elounda-one-bed-private-yard-125k.jpg?v=2",
+"country": "Greece"
 },
 {
 "slug": "pl-jedrzejow-54k-977114",
@@ -2493,16 +2479,9 @@
 },
 {
 "slug": "us-ashland-89k-672054",
-"title": "€89,000 · Gambrel-roof farmhouse with metal roof and heat pump in Maine",
-"desc": "Gambrel-roof farmhouse with metal roof and heat pump in Maine for €89,000. Ashland, Maine. Scored and ranked on RealHunt: the best homes in every country.",
+"title": "€72,800 · Gambrel-roof farmhouse with metal roof and heat pump in Maine",
+"desc": "Gambrel-roof farmhouse with metal roof and heat pump in Maine for €72,800. Ashland, Maine. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/us-ashland-89k-672054.jpg?v=2",
-"country": "United States"
-},
-{
-"slug": "us-kane-80k-699794",
-"title": "€80,100 · Bright refreshed 3-bed with new kitchen next to the national forest",
-"desc": "Bright refreshed 3-bed with new kitchen next to the national forest for €80,100. Kane, Pennsylvania. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/us-kane-80k-699794.jpg?v=2",
 "country": "United States"
 },
 {
@@ -2619,8 +2598,8 @@
 },
 {
 "slug": "us-madawaska-79k-677888",
-"title": "€79,300 · Garden house with arbor and garage on the Canadian border",
-"desc": "Garden house with arbor and garage on the Canadian border for €79,300. Madawaska, Maine. Scored and ranked on RealHunt: the best homes in every country.",
+"title": "€77,300 · Garden house with arbor and garage on the Canadian border",
+"desc": "Garden house with arbor and garage on the Canadian border for €77,300. Madawaska, Maine. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/us-madawaska-79k-677888.jpg?v=2",
 "country": "United States"
 },
@@ -3962,13 +3941,6 @@
 "country": "Sweden"
 },
 {
-"slug": "DdM-Ye2jLIm",
-"title": "€59,000 · Chalet-style home with mountain views",
-"desc": "Chalet-style home with mountain views for €59,000. Martiniana Po, Piedmont, Italy. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/DdM-Ye2jLIm.jpg?v=2",
-"country": "Italy"
-},
-{
 "slug": "Dc-ogTBIKeI",
 "title": "€46,000 · 3-bed stone house in the heart of a village",
 "desc": "3-bed stone house in the heart of a village for €46,000. Le Lonzac, Nouvelle-Aquitaine, France. Scored and ranked on RealHunt: the best homes in every country.",
@@ -4009,13 +3981,6 @@
 "desc": "Hand-hewn 1941 log house in the heart of Telemark for €65,431. Bøgrend, Telemark, Norway. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/DaYkWXMiFX4.jpg?v=2",
 "country": "Norway"
-},
-{
-"slug": "DcsW6VPIMJO",
-"title": "€45,000 · Two-apartment 1950s house with geothermal heating",
-"desc": "Two-apartment 1950s house with geothermal heating for €45,000. Bruzaholm, Eksjö, Jönköping, Sweden. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/DcsW6VPIMJO.jpg?v=2",
-"country": "Sweden"
 },
 {
 "slug": "DcNI1r5oM57",
@@ -4264,15 +4229,15 @@
 },
 {
 "slug": "DdLhHoAESiS",
-"title": "€90,000 · Three-bedroom hilltop home with two fireplaces and a panoramic mountain terrace",
-"desc": "Three-bedroom hilltop home with two fireplaces and a panoramic mountain terrace for €90,000. Tuscany, Italy. Scored and ranked on RealHunt: the best homes in every country.",
+"title": "€85,000 · Three-bedroom hilltop home with two fireplaces and a panoramic mountain terrace",
+"desc": "Three-bedroom hilltop home with two fireplaces and a panoramic mountain terrace for €85,000. Bajardo, Liguria. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/DdLhHoAESiS.jpg?v=2",
 "country": "Italy"
 },
 {
 "slug": "marion-87150",
-"title": "€87,150 · Move-in ready 2-bed house in Marion, Indiana",
-"desc": "Move-in ready 2-bed house in Marion, Indiana for €87,150. Marion, Indiana. Scored and ranked on RealHunt: the best homes in every country.",
+"title": "€118,300 · Move-in ready 2-bed house in Marion, Indiana",
+"desc": "Move-in ready 2-bed house in Marion, Indiana for €118,300. Marion, Indiana. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/marion-87150.jpg?v=2",
 "country": "United States"
 },
@@ -4306,8 +4271,8 @@
 },
 {
 "slug": "little-river-92471",
-"title": "€92,471 · Renovated 0-bed condo in Little River, South Carolina",
-"desc": "Renovated 0-bed condo in Little River, South Carolina for €92,471. Little River, South Carolina. Scored and ranked on RealHunt: the best homes in every country.",
+"title": "€88,800 · Renovated 0-bed condo in Little River, South Carolina",
+"desc": "Renovated 0-bed condo in Little River, South Carolina for €88,800. Little River, South Carolina. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/little-river-92471.jpg?v=2",
 "country": "United States"
 },
@@ -4333,13 +4298,6 @@
 "country": "United States"
 },
 {
-"slug": "east-palestine-82788",
-"title": "€82,788 · Move-in ready 2-bed house in East Palestine, Ohio",
-"desc": "Move-in ready 2-bed house in East Palestine, Ohio for €82,788. East Palestine, Ohio. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/east-palestine-82788.jpg?v=2",
-"country": "United States"
-},
-{
 "slug": "mazatlan-98621",
 "title": "€98,621 · 2-bed apartment in Mazatlán, Sinaloa",
 "desc": "2-bed apartment in Mazatlán, Sinaloa for €98,621. Mazatlán, Sinaloa. Scored and ranked on RealHunt: the best homes in every country.",
@@ -4359,13 +4317,6 @@
 "desc": "3-bed apartment near the beach in Mazatlán, Sinaloa for €80,920. Mazatlán, Sinaloa. Scored and ranked on RealHunt: the best homes in every country.",
 "image": "https://realhunt.co/og/deal/mazatlan-80920.jpg?v=2",
 "country": "Mexico"
-},
-{
-"slug": "oswego-95961",
-"title": "€95,961 · Updated 2-bed house in Oswego, New York",
-"desc": "Updated 2-bed house in Oswego, New York for €95,961. Oswego, New York. Scored and ranked on RealHunt: the best homes in every country.",
-"image": "https://realhunt.co/og/deal/oswego-95961.jpg?v=2",
-"country": "United States"
 },
 {
 "slug": "cleveland-68917",
