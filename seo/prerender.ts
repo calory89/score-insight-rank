@@ -457,9 +457,30 @@ function build(root: string, es?: EsPass) {
 
   // ---------- New builds: Top 100 by destination ----------
   const TOPS: [string, string, number][] = [["bali", "Bali", 502], ["phuket", "Phuket", 468], ["tulum", "Tulum", 425], ["batumi", "Batumi", 563], ["samui", "Koh Samui", 89]];
-  page(`${SITE}/top`, "Top 100 new builds by destination: Bali, Phuket, Tulum, Batumi, Koh Samui · RealHunt", "The best new-build projects in Bali, Phuket, Tulum, Batumi and Koh Samui, ranked by price, area and build stage, then by buyers.", `${SITE}/top/bali/og.jpg`,
-    `<main class="rh-static"><h1>Top 100 new builds by destination</h1><p>New-build projects for investors and future residents, ranked separately from the resale homes on RealHunt.</p><ul>${TOPS.map(([k, n]) => `<li><a href="/top/${k}">Top new builds in ${n}</a></li>`).join("")}</ul><p><a href="/top/how-we-rank">How we rank</a></p></main>`,
-    [crumbs([["RealHunt", SITE + "/"], ["Top 100 rankings", SITE + "/top"]])], { group: "top" });
+  {
+    const med = (a: number[]) => { const s = a.slice().sort((x, y) => x - y); return s.length ? (s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2) : 0; };
+    const eur = (v: number) => "€" + Math.round(v).toLocaleString("en");
+    const rows = TOPS.map(([k, n, checked]) => {
+      const list: any[] = readJson(`src/data/top-${k}.json`, []);
+      const prices = list.map((t) => Number(t.price_eur)).filter((v) => v > 0);
+      const areas: Record<string, number> = {};
+      for (const t of list) { const a = String(t.locality || "").split(",").pop()!.trim(); if (a) areas[a] = (areas[a] || 0) + 1; }
+      const topAreas = Object.entries(areas).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([a]) => a);
+      const villas = list.filter((t) => /villa|house|town/i.test(String(t.ptype || ""))).length;
+      return { k, n, checked, list, from: prices.length ? Math.min(...prices) : 0, median: med(prices), topAreas, villas };
+    }).filter((r) => r.list.length);
+    const total = rows.reduce((s, r) => s + r.checked, 0);
+    const cheapest = rows.slice().sort((a, b) => a.median - b.median)[0];
+    const body = `<main class="rh-static"><h1>Top 100 new property developments by destination</h1>`
+      + `<p>We checked ${total.toLocaleString("en")} new-build projects in ${rows.length} destinations and ranked the best of each on price, price per m², location, build stage and developer, then on what buyers vote, save and ask about. Nobody pays to be listed or to rank higher. ${cheapest ? `Of the five, ${esc(cheapest.n)} has the lowest median starting price today (${eur(cheapest.median)}).` : ""}</p>`
+      + `<h2>The rankings at a glance</h2><table><thead><tr><th>Destination</th><th>Projects checked</th><th>Ranked</th><th>From</th><th>Median start price</th><th>Villas or houses</th><th>Main areas</th></tr></thead><tbody>`
+      + rows.map((r) => `<tr><td><a href="/top/${r.k}">${esc(r.n)}</a></td><td>${r.checked}</td><td>${r.list.length}</td><td>${eur(r.from)}</td><td>${eur(r.median)}</td><td>${r.villas}</td><td>${esc(r.topAreas.join(", "))}</td></tr>`).join("")
+      + `</tbody></table>`
+      + rows.map((r) => `<h2>New developments in ${esc(r.n)}</h2><p>${r.list.length} ranked projects from ${eur(r.from)}, median start price ${eur(r.median)}, mostly in ${esc(r.topAreas.join(", "))}. The three highest ranked today:</p><ol>${r.list.slice(0, 3).map((t) => `<li><a href="/top/${r.k}/${esc(t.slug)}">${esc(t.name)}</a>, ${esc(t.locality)}, from ${eur(Number(t.price_eur))} (${esc(t.developer)})</li>`).join("")}</ol><p><a href="/top/${r.k}">See the full ${esc(r.n)} ranking</a></p>`).join("")
+      + `<h2>Before you buy off-plan</h2><p>Prices are starting prices published by each developer and can change. Check the developer's track record, who holds the land title, the payment schedule and what happens if delivery is late, and read the local rules for foreign buyers. See <a href="/top/how-we-rank">how we rank</a> and our <a href="/guide">buying guides</a>.</p></main>`;
+    page(`${SITE}/top`, "Top 100 new builds by destination: Bali, Phuket, Tulum, Batumi, Koh Samui · RealHunt", `New property developments ranked in ${rows.map((r) => r.n).join(", ")}: ${total.toLocaleString("en")} projects checked, starting prices, main areas and the best of each.`, `${SITE}/top/bali/og.jpg`,
+      body, [crumbs([["RealHunt", SITE + "/"], ["Top 100 rankings", SITE + "/top"]])], { group: "top" });
+  }
   page(`${SITE}/top/how-we-rank`, "How we rank the Top 100 · RealHunt", "The exact formula behind the RealHunt Top 100 rankings, our sources and review dates, and how we make money. Nobody pays to be listed or to rank higher.", `${SITE}/top/bali/og.jpg`,
     `<main class="rh-static"><h1>How we rank</h1><p>Nobody pays to be listed or to rank higher.</p><p>Every project gets 10 scores from 0 to 100: price, value per m², location, beach, facilities, delivery, developer, space, visitor interest and listing detail. The grade is the plain average of the 10, and the ranking orders projects by it. Votes, saves and questions raise visitor interest. A verified developer gets 100 in listing detail.</p><p>Buyers pay nothing. Developers pay nothing to be listed, verify or rank. RealHunt earns 5% from the developer only if a buyer it introduced buys.</p><p>Resale homes use a different score: <a href="/method">how the home score works</a>.</p></main>`,
     [crumbs([["RealHunt", SITE + "/"], ["Top 100 rankings", SITE + "/top"], ["How we rank", SITE + "/top/how-we-rank"]])], { group: "top" });
@@ -468,8 +489,8 @@ function build(root: string, es?: EsPass) {
     if (!list.length) continue;
     const tUrl = `${SITE}/top/${k}`;
     const TN = list.length < 100 ? `Top ${list.length}` : "Top 100";
-    page(tUrl, `${TN} new builds in ${n}, ranked by buyers · RealHunt`, `The ${list.length} best new-build villas and apartments in ${n}, from ${checked} projects checked. Ranked by price, area and build stage, then by what buyers vote, save and ask about.`, `${tUrl}/og.jpg`,
-      `<main class="rh-static"><h1>${TN} new builds in ${esc(n)}</h1><p>Ranked by demand: base score from price, price per m², area and build stage, then buyer votes, saves and questions.</p><ol>${list.map((t) => `<li><a href="/top/${k}/${esc(t.slug)}">${esc(t.name)}</a>, ${esc(t.locality)}, from €${Number(t.price_eur).toLocaleString("en")} (${esc(t.developer)})</li>`).join("")}</ol></main>`,
+    page(tUrl, `${TN} new property developments in ${n} · RealHunt`, `The ${list.length} best new villa and apartment developments in ${n}, from ${checked} projects checked. Ranked by price, area and build stage, then by what buyers vote, save and ask about.`, `${tUrl}/og.jpg`,
+      `<main class="rh-static"><h1>${TN} new property developments in ${esc(n)}</h1><p>Ranked by demand: base score from price, price per m², area and build stage, then buyer votes, saves and questions.</p><ol>${list.map((t) => `<li><a href="/top/${k}/${esc(t.slug)}">${esc(t.name)}</a>, ${esc(t.locality)}, from €${Number(t.price_eur).toLocaleString("en")} (${esc(t.developer)})</li>`).join("")}</ol></main>`,
       [crumbs([["RealHunt", SITE + "/"], ["Top 100 rankings", SITE + "/top"], [`${n} ${TN}`, tUrl]]),
        { "@context": "https://schema.org", "@type": "ItemList", name: `${TN} new builds in ${n}`, numberOfItems: list.length, itemListElement: list.map((t, i) => ({ "@type": "ListItem", position: i + 1, url: `${tUrl}/${t.slug}`, name: t.name })) }],
       { group: "top" });
