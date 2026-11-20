@@ -28,7 +28,7 @@ const COUNTRY: Record<string, [string, string]> = {
   Sweden: ["Szwecja", "w Szwecji"], Japan: ["Japonia", "w Japonii"], Poland: ["Polska", "w Polsce"], Germany: ["Niemcy", "w Niemczech"], Netherlands: ["Holandia", "w Holandii"],
   Greece: ["Grecja", "w Grecji"], Portugal: ["Portugalia", "w Portugalii"], Switzerland: ["Szwajcaria", "w Szwajcarii"], Mexico: ["Meksyk", "w Meksyku"], Canada: ["Kanada", "w Kanadzie"],
   Bulgaria: ["Bułgaria", "w Bułgarii"], "Dominican Republic": ["Dominikana", "na Dominikanie"], Cyprus: ["Cypr", "na Cyprze"], "United Kingdom": ["Wielka Brytania", "w Wielkiej Brytanii"],
-  Scandinavia: ["Skandynawia", "w Skandynawii"], Norway: ["Norwegia", "w Norwegii"],
+  Scandinavia: ["Skandynawia", "w Skandynawii"], Norway: ["Norwegia", "w Norwegii"], Ireland: ["Irlandia", "w Irlandii"], Colombia: ["Kolumbia", "w Kolumbii"], Uruguay: ["Urugwaj", "w Urugwaju"], Hungary: ["Węgry", "na Węgrzech"], "Czech Republic": ["Czechy", "w Czechach"], Slovenia: ["Słowenia", "w Słowenii"],
 };
 const country = (c: string) => COUNTRY[c]?.[0] || c;
 const inC = (c: string) => COUNTRY[c]?.[1] || `w kraju ${c}`;
@@ -37,7 +37,7 @@ const IN_BY_NAME: Record<string, string> = Object.fromEntries(Object.values(COUN
 export const PLACES: PlaceWords = {
   map: {
     Abruzzo: "Abruzja", Apulia: "Apulia", Calabria: "Kalabria", "Lake Como": "jezioro Como", Lazio: "Lacjum", Lombardy: "Lombardia", Marche: "Marche", Piedmont: "Piemont", Sardinia: "Sardynia", Sicily: "Sycylia", Tuscany: "Toskania", Umbria: "Umbria",
-    "Northern Ireland": "Irlandia Północna", "County Down": "hrabstwo Down", "County Fermanagh": "hrabstwo Fermanagh", "County Leitrim": "hrabstwo Leitrim", "County Durham": "hrabstwo Durham", "Central Jutland": "Jutlandia Środkowa", "East Jutland": "Jutlandia Wschodnia", "North Jutland": "Jutlandia Północna", "West Jutland": "Jutlandia Zachodnia", "South Jutland": "Jutlandia Południowa", Funen: "Fionia", "West Zealand": "Zelandia Zachodnia",
+    "Northern Ireland": "Irlandia Północna", "County Down": "hrabstwo Down", "County Fermanagh": "hrabstwo Fermanagh", "County Mayo": "hrabstwo Mayo", "County Galway": "hrabstwo Galway", "County Waterford": "hrabstwo Waterford", "West Mani": "zachodnie Mani", "Lake Balaton": "Balaton", "Karlovy Vary region": "kraj karlowarski", "County Leitrim": "hrabstwo Leitrim", "County Durham": "hrabstwo Durham", "Central Jutland": "Jutlandia Środkowa", "East Jutland": "Jutlandia Wschodnia", "North Jutland": "Jutlandia Północna", "West Jutland": "Jutlandia Zachodnia", "South Jutland": "Jutlandia Południowa", Funen: "Fionia", "West Zealand": "Zelandia Zachodnia",
     "Black Sea": "Morze Czarne", "Allegheny Mountains": "góry Allegheny", "Lake Superior region": "okolice Jeziora Górnego", "North Carolina": "Karolina Północna", "South Carolina": "Karolina Południowa", "West Virginia": "Wirginia Zachodnia",
     "Central Sweden": "środkowa Szwecja", "Northern Sweden": "północna Szwecja", Crete: "Kreta", "North Evia": "północna Eubea", Evia: "Eubea", Rhodes: "Rodos", Corfu: "Korfu", Sporades: "Sporady", Halkidiki: "Chalkidiki", Messinia: "Mesenia", Peloponnese: "Peloponez",
     "Greater Poland": "Wielkopolska", "Kuyavia-Pomerania": "Kujawsko-Pomorskie", "Lower Silesia": "Dolny Śląsk", Lubusz: "Lubuskie", Masovia: "Mazowsze", Podlaskie: "Podlaskie", Pomerania: "Pomorze", Silesia: "Śląsk", Subcarpathia: "Podkarpacie",

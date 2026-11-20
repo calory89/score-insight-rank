@@ -19,7 +19,7 @@ const COUNTRY: Record<string, [string, string]> = {
   Bulgaria: ["Болгария", "в Болгарии"], Cyprus: ["Кипр", "на Кипре"], Greece: ["Греция", "в Греции"], Spain: ["Испания", "в Испании"], Italy: ["Италия", "в Италии"], Portugal: ["Португалия", "в Португалии"],
   France: ["Франция", "во Франции"], Germany: ["Германия", "в Германии"], Poland: ["Польша", "в Польше"], Sweden: ["Швеция", "в Швеции"], Denmark: ["Дания", "в Дании"], Netherlands: ["Нидерланды", "в Нидерландах"],
   Switzerland: ["Швейцария", "в Швейцарии"], "United States": ["США", "в США"], Japan: ["Япония", "в Японии"], Mexico: ["Мексика", "в Мексике"], Canada: ["Канада", "в Канаде"],
-  "Dominican Republic": ["Доминиканская Республика", "в Доминиканской Республике"], "United Kingdom": ["Великобритания", "в Великобритании"], Norway: ["Норвегия", "в Норвегии"], Scandinavia: ["Скандинавия", "в Скандинавии"],
+  "Dominican Republic": ["Доминиканская Республика", "в Доминиканской Республике"], "United Kingdom": ["Великобритания", "в Великобритании"], Norway: ["Норвегия", "в Норвегии"], Ireland: ["Ирландия", "в Ирландии"], Colombia: ["Колумбия", "в Колумбии"], Uruguay: ["Уругвай", "в Уругвае"], Hungary: ["Венгрия", "в Венгрии"], "Czech Republic": ["Чехия", "в Чехии"], Slovenia: ["Словения", "в Словении"], Scandinavia: ["Скандинавия", "в Скандинавии"],
 };
 const country = (c: string) => COUNTRY[c]?.[0] || c;
 const inC = (c: string) => COUNTRY[c]?.[1] || `в стране ${c}`;
@@ -32,7 +32,7 @@ export const PLACES: PlaceWords = {
     Famagusta: "Фамагуста", Paphos: "Пафос", Protaras: "Протарас", "Coral Bay": "Корал-Бэй",
     // Regions of the other countries (15-nov-2026). Small towns keep the spelling of their country.
     Abruzzo: "Абруццо", Apulia: "Апулия", Calabria: "Калабрия", "Lake Como": "озеро Комо", Como: "Комо", Lazio: "Лацио", Lombardy: "Ломбардия", Marche: "Марке", Piedmont: "Пьемонт", Sardinia: "Сардиния", Sicily: "Сицилия", Tuscany: "Тоскана", Umbria: "Умбрия",
-    "Northern Ireland": "Северная Ирландия", "County Down": "графство Даун", "County Fermanagh": "графство Фермана", "County Leitrim": "графство Литрим", "County Durham": "графство Дарем", Northumberland: "Нортумберленд",
+    "Northern Ireland": "Северная Ирландия", "County Down": "графство Даун", "County Fermanagh": "графство Фермана", "County Mayo": "графство Мейо", "County Galway": "графство Голуэй", "County Waterford": "графство Уотерфорд", "West Mani": "Западная Мани", "Lake Balaton": "озеро Балатон", "Karlovy Vary region": "Карловарский край", "County Leitrim": "графство Литрим", "County Durham": "графство Дарем", Northumberland: "Нортумберленд",
     Aude: "Од", Aveyron: "Аверон", Charente: "Шаранта", "Corrèze": "Коррез", Creuse: "Крёз", Dijon: "Дижон", Dordogne: "Дордонь", Grenoble: "Гренобль", "Haute-Garonne": "Верхняя Гаронна", "Haute-Marne": "Верхняя Марна", "Haute-Vienne": "Верхняя Вьенна",
     "Le Havre": "Гавр", "Le Mans": "Ле-Ман", "Loir-et-Cher": "Луар и Шер", Marseille: "Марсель", Mulhouse: "Мюлуз", Nord: "Нор", "Nouvelle-Aquitaine": "Новая Аквитания", Occitanie: "Окситания", Orne: "Орн", Perpignan: "Перпиньян",
     "Puy-de-Dôme": "Пюи-де-Дом", Roubaix: "Рубе", "Saint-Étienne": "Сент-Этьен", Toulouse: "Тулуза", Vienne: "Вьенна", Yonne: "Йонна",

@@ -99,5 +99,19 @@
   "can_foreigners_buy": "Ja. Im gesamten Vereinigten Königreich gibt es keine Beschränkungen nach Staatsangehörigkeit und kein Visum ist nötig, aber der Kauf gibt kein Recht, dort zu leben.",
   "purchase_costs_breakdown": "In England und Nordirland beträgt die Grunderwerbsteuer (Stamp Duty Land Tax, SDLT) 0% bis 125.000 £ und 2% von 125.001 bis 250.000 £, dazu 2% Zuschlag für Käufer ohne Wohnsitz im Vereinigten Königreich und weitere 5%, wenn Sie bereits irgendwo eine Wohnung besitzen; wer ohne Wohnsitz dort kauft und schon eine andere Wohnung hat, zahlt also 7% bis 125.000 £ und 9% bis 250.000 £. Anwalt (conveyancer) etwa 0,6 bis 1%, meist mindestens rund 2.100 £ inklusive Mehrwertsteuer; Grundbuchgebühr (Land Registry) 20 bis 230 £; Auskünfte (searches) extra; den Makler zahlt der Verkäufer.",
   "annual_property_tax": "Eigentümer oder Bewohner zahlen der Gemeinde die Council Tax (in Nordirland die Domestic Rates); viele Gemeinden in England erheben seit April 2025 für Zweitwohnungen einen Aufschlag von bis zu 100%."
+ },
+ "ireland": {
+  "can_foreigners_buy": "Ja. Für Ausländer gibt es beim Kauf von Wohnungen und Häusern in Irland keine Beschränkungen; ein Eigenheim gibt aber kein Recht, dort zu wohnen.",
+  "purchase_costs_breakdown": "Stempelsteuer (stamp duty) von 1 % des Preises bis 1 Mio. € (2 % von 1 bis 1,5 Mio. € und 6 % darüber), Anwaltshonorar (solicitor) von etwa 1-1,5 % zuzüglich 23 % Mehrwertsteuer und Registergebühren von 425 € bis 800 €; der Verkäufer bezahlt den Makler, dessen Provision meist im Angebotspreis enthalten ist.",
+  "annual_property_tax": "Kommunale Grundsteuer (Local Property Tax, LPT): ab 2026 zahlt ein Haus mit einem Wert bis 240.000 € einen Grundbetrag von 95 € im Jahr, eines mit 240.001 € bis 315.000 € zahlt 235 €; jede Gemeinde kann den Grundbetrag um bis zu 15 % erhöhen oder senken, und die meisten haben ihn für 2026 um 15 % erhöht."
+ },
+ "colombia": {
+  "can_foreigners_buy": "Ja. Ein Haus, das ein Ausländer kauft, gilt als ausländische Investition; sie braucht keine vorherige Genehmigung und wird wie die Investition von Einwohnern behandelt. Kommt das Geld über den Devisenmarkt ins Land, gilt die Devisenerklärung als ihre Registrierung bei der Banco de la República.",
+  "purchase_costs_breakdown": "Notargebühren von 3 Promille des Preises (2026), üblicherweise zwischen Käufer und Verkäufer geteilt; Registergebühren von 9,11 bis 13,33 Promille je nach Preis, zuzüglich 2 %, bezahlt von dem, der die Eintragung beantragt, meist der Käufer; und die Registersteuer (impuesto de registro), deren Satz jedes Departamento festlegt.",
+  "annual_property_tax": "Grundsteuer (impuesto predial unificado): jede Gemeinde legt den Satz zwischen 5 und 16 Promille des Katasterwerts (avalúo catastral) fest."
+ },
+ "uruguay": {
+  "can_foreigners_buy": "Ja. Ausländische Käufer dürfen in Uruguay jede Art von Immobilie kaufen und haben dieselben Eigentumsrechte wie Staatsbürger.",
+  "purchase_costs_breakdown": "Übertragungssteuer (ITP) von 2 % für den Käufer und 2 % für den Verkäufer, auf den Katasterwert (valor real) der Dirección Nacional de Catastro; Notarhonorar von etwa 3 % und eine Maklerprovision von etwa 3 %."
  }
 }

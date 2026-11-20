@@ -99,5 +99,19 @@
   "can_foreigners_buy": "Oui. Il n'existe aucune restriction liée à la nationalité pour acheter un logement au Royaume-Uni et aucun visa n'est nécessaire, mais l'achat ne donne pas le droit d'y vivre.",
   "purchase_costs_breakdown": "En Angleterre et en Irlande du Nord, le droit de mutation (Stamp Duty Land Tax, SDLT) est de 0 % jusqu'à 125 000 £ et de 2 % de 125 001 à 250 000 £, plus une surtaxe de 2 % pour les non-résidents et 5 % de plus si vous possédez déjà un logement ailleurs : un non-résident qui possède un autre logement paie donc 7 % jusqu'à 125 000 £ et 9 % jusqu'à 250 000 £. Avocat (conveyancer) environ 0,6 à 1 %, avec un minimum habituel d'environ 2 100 £ TVA comprise ; frais du registre foncier (Land Registry) de 20 à 230 £ ; recherches (searches) en sus ; l'agent immobilier est payé par le vendeur.",
   "annual_property_tax": "Les propriétaires ou occupants paient la Council Tax à la commune (en Irlande du Nord, les Domestic Rates) ; depuis avril 2025, de nombreuses communes d'Angleterre majorent jusqu'à 100 % celle des résidences secondaires."
+ },
+ "ireland": {
+  "can_foreigners_buy": "Oui. Les étrangers peuvent acheter un logement en Irlande sans restriction, mais être propriétaire ne donne pas le droit d'y vivre.",
+  "purchase_costs_breakdown": "Droit de timbre (stamp duty) de 1 % du prix jusqu'à 1 million d'euros (2 % de 1 à 1,5 million d'euros et 6 % au-delà), honoraires du solicitor d'environ 1-1,5 % plus 23 % de TVA, et frais d'enregistrement de 425 € à 800 € ; le vendeur paie l'agent immobilier, dont les honoraires sont en général compris dans le prix demandé.",
+  "annual_property_tax": "Taxe foncière locale (Local Property Tax, LPT) : à partir de 2026, un logement évalué jusqu'à 240 000 € paie un montant de base de 95 € par an et un logement de 240 001 € à 315 000 € paie 235 € ; chaque conseil local peut relever ou baisser le montant de base de 15 % au plus, et la plupart l'ont relevé de 15 % pour 2026."
+ },
+ "colombia": {
+  "can_foreigners_buy": "Oui. Un logement acheté par un étranger compte comme un investissement étranger, qui n'exige aucune autorisation préalable et est traité comme l'investissement des résidents. Quand l'argent arrive par le marché des changes, la déclaration de change vaut enregistrement auprès de la Banco de la República.",
+  "purchase_costs_breakdown": "Frais de notaire de 3 pour mille du prix (2026), partagés d'habitude entre l'acheteur et le vendeur ; droits d'enregistrement de 9,11 à 13,33 pour mille selon le prix, plus 2 %, à la charge de celui qui demande l'inscription, en général l'acheteur ; et l'impôt d'enregistrement (impuesto de registro), dont chaque département fixe le taux.",
+  "annual_property_tax": "Impôt foncier (impuesto predial unificado) : chaque commune fixe le taux entre 5 et 16 pour mille de la valeur cadastrale (avalúo catastral)."
+ },
+ "uruguay": {
+  "can_foreigners_buy": "Oui. Les acheteurs étrangers peuvent acheter tout type de bien en Uruguay et ont les mêmes droits de propriété que les citoyens.",
+  "purchase_costs_breakdown": "Impôt sur les mutations (ITP) de 2 % pour l'acheteur et 2 % pour le vendeur, sur la valeur cadastrale (valor real) fixée par la Dirección Nacional de Catastro ; frais de notaire d'environ 3 % ; et honoraires d'agence d'environ 3 %."
  }
 }
