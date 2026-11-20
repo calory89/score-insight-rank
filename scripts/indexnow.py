@@ -7,7 +7,12 @@ the homes. A page is sent when its <lastmod> is at most DAYS days old; pages wit
 Sitemaps are read from dist/ when a build is there, else from the live site. If neither can be read, the old list
 (homes of src/data/deal-meta.json and the country pages) is sent, as before.
 
-Usage: python3 scripts/indexnow.py [--days 3] [--all] [--dry-run] [--dist dist]
+20-nov-2026: the build also leaves .rh-indexnow.json (seo/reach/index.ts indexNowChanges): the pages that are new,
+changed (their text changed) or removed against the build that was live when it ran, homes first. When that file is
+from today, those pages go first, so a new or changed home is sent the same day it is published, and a removed one
+too (IndexNow takes removed addresses as well).
+
+Usage: python3 scripts/indexnow.py [--days 3] [--all] [--dry-run] [--dist dist] [--changes .rh-indexnow.json]
 Key file: public/dc4a9477773c2eb3d504053f5db16785.txt. Google does not use IndexNow; it reads the sitemaps."""
 import argparse, datetime, json, os, re, sys, urllib.request
 
@@ -60,12 +65,31 @@ def pick(entries, days, today, everything=False):
     return out
 
 
+def read_changes(path, today):
+    """New, changed and removed URLs written by the build today, homes first; [] when the file is old or missing."""
+    try:
+        d = json.load(open(path, encoding="utf8"))
+    except Exception:
+        return []
+    if d.get("built") != today.isoformat() or not d.get("compared"):
+        return []
+    return [u for k in ("removed", "added", "changed") for u in d.get(k) or [] if isinstance(u, str) and u.startswith(SITE)]
+
+
+def merge(first, rest):
+    seen, out = set(), []
+    for u in list(first) + list(rest):
+        if u not in seen: seen.add(u); out.append(u)
+    return out
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--days", type=int, default=3)
     ap.add_argument("--all", action="store_true", help="send every page of the sitemaps")
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--dist", default=os.path.join(ROOT, "dist"))
+    ap.add_argument("--changes", default=os.path.join(ROOT, ".rh-indexnow.json"))
     a = ap.parse_args(argv)
     source, entries = "dist", read_local(a.dist)
     if not entries:
@@ -76,6 +100,10 @@ def main(argv=None):
         source = "legacy"
         try: urls = legacy()
         except Exception as e: print("indexnow: nothing to send:", e); return 0
+    changes = read_changes(a.changes, datetime.datetime.now(datetime.timezone.utc).date())
+    if changes:
+        print(f"indexnow: {len(changes)} new, changed or removed pages from this build first")
+        urls = merge(changes, urls)
     langs = {}
     for u in urls:
         m = re.match(r"https://realhunt\.co/([a-z]{2})(/|$)", u); k = m.group(1) if m and m.group(1) in ("es", "de", "ru", "fr", "nl", "pl") else "en"; langs[k] = langs.get(k, 0) + 1

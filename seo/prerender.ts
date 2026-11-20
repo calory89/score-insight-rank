@@ -24,6 +24,7 @@ import { writeLlmsFull } from "./llmsFull";
 import { thumb } from "../src/lib/thumbs";
 import { dealShell, DEAL_SHELL_HEAD } from "./dealShell";
 import { dealStatusHtml, dealAvailability } from "./dealStatus";
+import { glossaryLine, scoreLine, sourceNotes } from "./dealNotes";
 import { type CanBuyData, statusLabel, UPDATED, UPDATED_ES, canBuyPairs, canBuyCountries, canBuySlug, ruleFor, residencyFor, canBuyFaq, canBuyMeta, fill, costLines, costCountries, nameOf, fmtMoney } from "../src/community/seo2data";
 import { homeArticleEs } from "../src/community/homeArticleEs";
 import { type EsPass, type PageRec, type Twin, createEsPass, writeEsTwins, coverageSummary } from "./es";
@@ -194,10 +195,11 @@ function build(root: string, es?: EsPass) {
       body = shell + `<main class="rh-static"><article>${navHtml(trail)}`
         + `<p><strong>${esc(eur(r.price_eur))}</strong> · ${esc(r.location_name || cName)}${r.sqm ? ` · ${esc(r.sqm)} m²` : ""}${r.bedrooms ? ` · ${esc(r.bedrooms)} bedrooms` : ""}${r.sqm && r.price_eur ? ` · ${esc(eur(r.price_eur / r.sqm))}/m²` : ""}</p>`
         + dealStatusHtml(r, "en")
-        + (r.nota != null ? `<h2>RealHunt score: ${esc(r.nota)} / 98</h2><p>Every home on RealHunt passed a hand check first, so the grade starts at 70. The rest compares this home with every other home on the site. <a href="/method">How the score works</a>.</p><ul>${dims.map(([k, l, help]) => `<li>${esc(l)}: <strong>${esc(r.dims[k])}</strong>/100 · ${esc(help)}</li>`).join("")}</ul>` : "")
+        + (r.nota != null ? `<h2>RealHunt score: ${esc(r.nota)} / 98</h2><p data-rh-scoreline><strong>${esc(scoreLine(r))}</strong></p><p>Every home on RealHunt passed a hand check first, so the grade starts at 70. The rest compares this home with every other home on the site. <a href="/method">How the score works</a>.</p><ul>${dims.map(([k, l, help]) => `<li>${esc(l)}: <strong>${esc(r.dims[k])}</strong>/100 · ${esc(help)}</li>`).join("")}</ul>` : "")
         + (r.why_great ? `<h2>Why it made the list</h2><p>${esc(r.why_great)}</p>` : "")
         + art.sections.map((x) => `<h2>${esc(x.h)}</h2>${x.p.map((t) => `<p>${esc(t)}</p>`).join("")}`).join("")
         + (guidesForArticle[cc] ? `<p><a href="/guide/${esc(cc)}">How to buy a home in ${esc(the(cName))}, step by step</a>${destForArticle[cc] ? ` · <a href="/costs/${esc(cc)}">Costs and taxes in ${esc(the(cName))}</a>` : ""}</p>` : "")
+        + glossaryLine(cc)
         + (amen.length ? `<h2>Features</h2><p>${esc(amen.join(", "))}</p>` : "")
         + (nearList ? `<h2>What is nearby</h2><ul>${nearList}</ul>` : "")
         + (art.faq.length ? `<h2>Questions about this home</h2>${art.faq.map(([q, a]) => `<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join("")}` : "")
@@ -239,10 +241,11 @@ function build(root: string, es?: EsPass) {
         + `<main class="rh-static" lang="es"><article><nav aria-label="Ruta"><a href="/es">RealHunt</a> › ${esc(r.title_es)}</nav>`
         + `<p><strong>${esc(euro(r.price_eur))}</strong> · ${esc(r.location_name || cName)}${r.sqm ? ` · ${esc(r.sqm)} m²` : ""}${r.bedrooms ? ` · ${esc(r.bedrooms)} dormitorios` : ""}${r.sqm && r.price_eur ? ` · ${esc(euro(r.price_eur / r.sqm))}/m²` : ""}</p>`
         + dealStatusHtml(r, "es")
-        + (r.nota != null ? `<h2>Nota RealHunt: ${esc(r.nota)} / 98</h2><p>Todas las casas de RealHunt pasan antes una revisión hecha por una persona, por eso la nota empieza en 70. El resto compara esta casa con todas las demás de la web.</p>` : "")
+        + (r.nota != null ? `<h2>Nota RealHunt: ${esc(r.nota)} / 98</h2><p data-rh-scoreline><strong>${esc(scoreLine(r, "es"))}</strong></p><p>Todas las casas de RealHunt pasan antes una revisión hecha por una persona, por eso la nota empieza en 70. El resto compara esta casa con todas las demás de la web.</p>` : "")
         + (r.why_great_es ? `<h2>Por qué está en la lista</h2><p>${esc(r.why_great_es)}</p>` : "")
         + (r.why_cheap_es ? `<h2>Por qué es tan barata</h2><p>${esc(r.why_cheap_es)}</p>` : "")
         + (r.source_domain ? `<p>Anunciada en ${esc(r.source_domain)}. RealHunt no es una inmobiliaria y no vende esta casa: el anuncio original te pone en contacto con el vendedor.</p>` : "")
+        + glossaryLine(cc, "es")
         + (simEs.length ? `<h2>Más casas parecidas</h2><ul>${simEs.map((x) => `<li><a href="/es/deal/${esc(x.slug)}"><strong>${esc(euro(x.price_eur))}</strong> · ${esc(x.title_es)}</a> · ${esc(x.location_name || x.country)}</li>`).join("")}</ul>` : "")
         + `<p><a href="/es">Las mejores casas</a> · <a href="/deal/${esc(d.slug)}">English</a></p></article></main>`;
       page(esUrl, `${euro(r.price_eur)} · ${r.title_es} · RealHunt`, descEs, d.image || DEF, bodyEs,
@@ -355,7 +358,7 @@ function build(root: string, es?: EsPass) {
       const su = `${SITE}/sources/${sSlug(dom)}`; const st: [string, string][] = [...trail, [dom, su]];
       const sd = `${l.length} homes from ${dom} that passed the RealHunt check, scored from 70 to 98 and ranked best first, from ${eur(Math.min(...l.map((h) => h.price_eur)))}.`;
       page(su, `Best homes from ${dom} (${l.length}) · RealHunt`, sd, homeImg(l[0]),
-        `<main class="rh-static" data-rh-keep data-rh-static>${navHtml(st)}<h1>Best homes from ${esc(dom)}</h1><p>${esc(sd)} Each one opens its original listing on ${esc(dom)}.</p><ol>${l.slice(0, 100).map(homeLi).join("")}</ol><p><a href="/sources">All sources</a></p></main>`,
+        `<main class="rh-static" data-rh-keep data-rh-static>${navHtml(st)}<h1>Best homes from ${esc(dom)}</h1><p>${esc(sd)} Each one opens its original listing on ${esc(dom)}.</p><ol>${l.slice(0, 100).map(homeLi).join("")}</ol>${sourceNotes(dom, l)}<p><a href="/sources">All sources</a></p></main>`,
         [crumbs(st), { "@context": "https://schema.org", "@type": "ItemList", name: `Best homes from ${dom}`, numberOfItems: l.length,
           itemListElement: l.slice(0, 50).map((h, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/deal/${h.slug}`, name: h.title })) }],
         { lastmod: maxDay(l.map(homeDay)), group: "content" });
@@ -443,7 +446,7 @@ function build(root: string, es?: EsPass) {
     page(url, `${p.title} · RealHunt`, p.desc, abs(p.image),
       `<main class="rh-static"><article><nav><a href="/">RealHunt</a> › <a href="/blog">Research</a></nav><h1>${esc(p.title)}</h1><p>${esc(p.desc)}</p><p>${esc(p.author)} · <time datetime="${esc(p.date)}">${esc(p.date)}</time></p>${p.html}</article><h2>More</h2><ul>${posts.filter((x) => x.slug !== p.slug).map(card).join("")}</ul></main>`,
       [{ "@context": "https://schema.org", "@type": "Article", headline: p.title, description: p.desc, image: [abs(p.image)], datePublished: p.date, dateModified: p.updated || p.date, mainEntityOfPage: url,
-         author: { "@type": "Organization", name: p.author, url: SITE + "/blog" }, publisher: { "@type": "Organization", name: "RealHunt", logo: { "@type": "ImageObject", url: SITE + "/apple-touch-icon.png" } } },
+         author: { "@type": "Organization", name: p.author, url: SITE + "/blog" }, publisher: { "@type": "Organization", "@id": SITE + "/#organization", name: "RealHunt", logo: { "@type": "ImageObject", url: SITE + "/favicon.png", width: 512, height: 512 } } },
        crumbs([["RealHunt", SITE + "/"], ["Research", SITE + "/blog"], [p.title, url]])],
       { lastmod: day(p.updated || p.date), group: "content", head: blogRss });
   }
@@ -484,7 +487,7 @@ function build(root: string, es?: EsPass) {
   page(`${SITE}/about`, "About RealHunt: who we are and how we work", "Who runs RealHunt, the company behind it, how we make money and what you should know about our founder before you trust us.", DEF,
     `<main class="rh-static"><h1>Who we are</h1><p>RealHunt is run by Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, United States. Founder: Carlos de Ory Gordillo. Contact: <!--email_off-->hello@realhunt.co<!--/email_off-->.</p><h2>How RealHunt makes money</h2><p>Buyers pay nothing. Resale homes are not for sale through RealHunt: we link to the original listing. On new builds, RealHunt earns a fee from the developer only if a buyer it introduced buys. Nobody pays to be listed or to rank higher, and sponsored cards are marked as sponsored.</p><p><a href="/method">How the score works</a> · <a href="/contact">Contact</a></p></main>`,
     [crumbs([["RealHunt", SITE + "/"], ["About", SITE + "/about"]]),
-     { "@context": "https://schema.org", "@type": "Organization", name: "RealHunt", url: SITE + "/", logo: SITE + "/apple-touch-icon.png", email: "hello@realhunt.co",
+     { "@context": "https://schema.org", "@type": "Organization", "@id": SITE + "/#organization", name: "RealHunt", url: SITE + "/", logo: SITE + "/favicon.png", email: "hello@realhunt.co",
        parentOrganization: { "@type": "Organization", name: "Equinox Investment Group LLC", address: { "@type": "PostalAddress", streetAddress: "30 N Gould St Ste N", addressLocality: "Sheridan", addressRegion: "WY", postalCode: "82801", addressCountry: "US" } } }]);
   // 30-oct-2026: the Eco Beach City card is shared too; give its page its own title and picture.
   page(`${SITE}/ecobeachcity`, "€36,500 furnished cabin and plot · Sumba, Indonesia · RealHunt", "A furnished cabin on your own plot in Eco Beach City, a new beachfront eco village in Sumba, one hour from Bali. Cabin, plot and furniture for €36,500, payable in instalments.", `${SITE}/images/ebc/ebc-card.jpg`);

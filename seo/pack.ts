@@ -7,6 +7,7 @@
 //   PACK_MODE "move": the single files are left out of dist, so the deploy no longer grows with every new home.
 import fs from "fs";
 import path from "path";
+import { reportPack } from "./tech/packReport";
 
 export const PACK_MODE: "copy" | "move" = "move"; // 20 Nov 2026: all 1,366 pages compared equal live
 export const PACK_DIR = "_pk/v1";
@@ -63,6 +64,7 @@ export function packPages() {
       if (!fs.existsSync(path.join(root, "index.html"))) return;
       const r = writePack(root);
       console.log(`[rh-pack-pages] ${r.pages} home pages in ${r.shards} bundles (${PACK_MODE})`);
+      try { const c = reportPack(root); console.log(`[rh-pack-pages] report: ${c.in_bundles.en + c.in_bundles.es} in bundles, ${c.single_files.en + c.single_files.es} single files, ${c.in_sitemaps_not_served.length} in the sitemaps without a page`); } catch (e) { console.warn("[rh-pack-pages] report skipped:", (e as Error).message); }
     },
   };
 }
