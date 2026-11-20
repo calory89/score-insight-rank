@@ -116,10 +116,10 @@ export function TopListPage() {
   const load = () => rpc("top_list", { p_dest: dest }).then((r) => setRows(r || [])).catch(() => setRows([]));
   useEffect(() => {
     if (!D) return;
-    setMeta(`${TL(dest)} new builds in ${D.name}, ranked by buyers · RealHunt`, `The ${D.n || 100} best new-build villas and apartments in ${D.name}, from ${D.checked} projects checked. Ranked by price, area and build stage, then by what buyers vote, save and ask about.`, `https://realhunt.co/top/${dest}`, `https://realhunt.co/top/${dest}/og.jpg`);
+    setMeta(`${TL(dest)} new property developments in ${D.name} · RealHunt`, `The ${D.n || 100} best new villa and apartment developments in ${D.name}, from ${D.checked} projects checked. Ranked by price, area and build stage, then by what buyers vote, save and ask about.`, `https://realhunt.co/top/${dest}`, `https://realhunt.co/top/${dest}/og.jpg`);
     load(); ev("top_list_view");
   }, [dest, user?.id]);
-  useEffect(() => { if (D && rows) document.title = `${TL(dest)} new builds in ${D.name}, ranked by buyers · RealHunt`; }, [rows]);
+  useEffect(() => { if (D && rows) document.title = `${TL(dest)} new property developments in ${D.name} · RealHunt`; }, [rows]);
   const list = useMemo(() => {
     let r = (rows || []).filter((x) => (area === "All" || areaOf(dest, x.locality) === area) && (kind === "All" || (kind === "Under €100k" ? x.price_eur <= 100000 : x.ptype === kind))
       && (!maxP || (x.price_eur || 9e9) <= Number(maxP)) && (!sea || (x.sea_km ?? 99) <= Number(sea))
