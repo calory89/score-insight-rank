@@ -272,6 +272,11 @@ const AppRoutes = () => (
       <Route path="/embed" element={<Community />} />
       <Route path="/for-ai" element={<Community />} />
       <Route path="/editorial-policy" element={<Community />} />
+      <Route path="/how-we-check-homes" element={<Community />} />
+      <Route path="/what-we-reject" element={<Community />} />
+      <Route path="/what-we-never-do" element={<Community />} />
+      <Route path="/how-we-make-money" element={<Community />} />
+      <Route path="/corrections" element={<Community />} />
       <Route path="/sitemap" element={<Community />} />
       <Route path="/sitemap/:group" element={<Community />} />
       <Route path="/what-100k-buys" element={<Community />} />

@@ -27,3 +27,4 @@ supabase/.temp/
 # Python bytecode
 __pycache__/
 *.pyc
+.rh-indexnow.json

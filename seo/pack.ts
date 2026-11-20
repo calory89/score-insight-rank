@@ -11,6 +11,7 @@
 import fs from "fs";
 import path from "path";
 import { dealMarkdown } from "./dealMd";
+import { reportPack } from "./tech/packReport";
 
 export const PACK_MODE: "copy" | "move" = "move"; // 20 Nov 2026: all 1,366 pages compared equal live
 export const PACK_DIR = "_pk/v1";
@@ -75,6 +76,7 @@ export function packPages() {
       const r = writePack(root);
       console.log(`[rh-pack-pages] ${r.pages} home pages (and their .md) in ${r.shards} bundles (${PACK_MODE}); largest page ${r.maxKb} KB`);
       if (r.over.length) console.warn(`[rh-pack-pages] ${r.over.length} home page(s) over ${PAGE_WARN_KB} KB: ${r.over.slice(0, 10).join(", ")}`);
+      try { const c = reportPack(root); console.log(`[rh-pack-pages] report: ${c.in_bundles.en + c.in_bundles.es} in bundles, ${c.single_files.en + c.single_files.es} single files, ${c.in_sitemaps_not_served.length} in the sitemaps without a page`); } catch (e) { console.warn("[rh-pack-pages] report skipped:", (e as Error).message); }
     },
   };
 }
