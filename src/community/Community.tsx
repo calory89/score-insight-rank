@@ -40,7 +40,7 @@ import { InlineAlert, HomeFaq, MortgageCalc, AlertConfirmPage, HomeArticle } fro
 import { regionOf, slugify } from "./regions";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost } from "./v7";
 import { ListingRoute, ListingMissing } from "./listingRoute";
-import { isGone } from "./n9/status";
+import { isGone, isUnconfirmed } from "./n9/status";
 import { returningSince } from "./n9/visit";
 import { SaveNudgeMount } from "./n9/mount";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, GUIDES, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
@@ -90,6 +90,7 @@ const CanBuyPage = lazy(() => import("./seo2").then((m) => ({ default: m.CanBuyP
 const ToolsPage = lazy(() => import("../tools/ToolsPage"));
 // 15-nov-2026 (round n9): home status, "what we checked", feedback, returning visitors. All lazy, see src/community/n9.
 const GoneNotice = lazy(() => import("./n9/HomeStatus").then((m) => ({ default: m.GoneNotice })));
+const UnconfirmedNotice = lazy(() => import("./n9/HomeStatus").then((m) => ({ default: m.UnconfirmedNotice })));
 const CheckedBlock = lazy(() => import("./n9/HomeStatus").then((m) => ({ default: m.CheckedBlock })));
 const Helpful = lazy(() => import("./n9/Helpful"));
 const SinceVisit = lazy(() => import("./n9/SinceVisit"));
@@ -1029,6 +1030,7 @@ function Detail() {
           <VerifiedLine deal={d as Row} />
           <AiCheckNote d={d as any} />
           {isGone(d as any) && <div className="n9-gone-slot"><Suspense fallback={null}><GoneNotice deal={d as any} /></Suspense></div>}
+          {isUnconfirmed(d as any) && <div className="n9-gone-slot"><Suspense fallback={null}><UnconfirmedNotice deal={d as any} /></Suspense></div>}
           {(d as any).developer && <DevBlock deal={d as Row} />}
           <p className="hv-detail-where">{FLAG_[d.country] || "📍"} {d.location_name}</p>
           <p>

@@ -94,5 +94,10 @@
   "can_foreigners_buy": "Ja. Buitenlanders hebben dezelfde rechten als Dominicaanse burgers om grond en woningen te kopen, zonder beperkingen.",
   "purchase_costs_breakdown": "De koper betaalt een overdrachtsbelasting van 3% (0% voor eerste aankopen die in aanmerking komen voor de toeristische stimuleringsregeling CONFOTUR), juridische kosten van circa 1-2% en notariskosten van circa 0,25-1%, plus registratiekosten, terwijl de verkoper de makelaarscourtage van 2-3% betaalt.",
   "annual_property_tax": "De jaarlijkse belasting IPI bedraagt 1% van het deel van iemands totale vastgoedwaarde in de Dominicaanse Republiek, zoals vastgesteld door de belastingdienst DGII, dat in 2026 boven RD$ 10.695.494 ligt; één goedkope woning blijft dus vaak onder de drempel."
+ },
+ "united-kingdom": {
+  "can_foreigners_buy": "Ja. Nergens in het Verenigd Koninkrijk gelden beperkingen naar nationaliteit en u hebt geen visum nodig, maar een koop geeft geen recht om er te wonen.",
+  "purchase_costs_breakdown": "In Engeland en Noord-Ierland is de overdrachtsbelasting (Stamp Duty Land Tax, SDLT) 0% tot £ 125.000 en 2% van £ 125.001 tot £ 250.000, plus een toeslag van 2% voor wie niet in het Verenigd Koninkrijk woont en nog eens 5% als u al ergens een woning bezit; een niet-ingezetene met een andere woning betaalt dus 7% tot £ 125.000 en 9% tot £ 250.000. Advocaat (conveyancer) circa 0,6 tot 1%, meestal minimaal zo'n £ 2.100 inclusief btw; kosten van het kadaster (Land Registry) £ 20 tot £ 230; onderzoeken (searches) apart; de makelaar wordt door de verkoper betaald.",
+  "annual_property_tax": "Eigenaren of bewoners betalen een gemeentelijke woonheffing aan de gemeente (in Noord-Ierland een eigen variant daarvan); veel gemeenten in Engeland rekenen sinds april 2025 voor tweede woningen een toeslag tot 100%."
  }
 }

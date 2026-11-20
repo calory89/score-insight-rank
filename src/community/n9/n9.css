@@ -103,3 +103,7 @@
 .n9-toc li a { display: flex; align-items: center; min-height: 44px; font-size: 15px; color: var(--c-accent-ink, #B8370A); }
 .hunt.is-dark .n9-toc { border-color: #292B2E; }
 .hunt.is-dark .n9-toc li a { color: #FF9A6B; }
+.n9-unconf { background: #F3F6FA; border-color: #C9D6E6; color: #1F2A37; }
+.n9-unconf .n9-gone-h svg { color: #4A6B8A; }
+.hunt.is-dark .n9-unconf { background: #1B2430; border-color: #33465C; color: #E3EAF2; }
+.hunt.is-dark .n9-unconf .n9-gone-h svg { color: #8FB3D9; }

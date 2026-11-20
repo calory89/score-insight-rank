@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import { BadgeCheck, Bell, Camera, CalendarDays, MapPin, Printer, Sparkles, Tag, TriangleAlert, UserCheck } from "lucide-react";
 import { money } from "../api";
 import { t, getLang } from "../i18n";
-import { isGone, lastCheck, listedAt, listedDays, alertHref, streetViewHref, dayLabel, type StatusRow } from "./status";
+import { isGone, isUnconfirmed, lastCheck, listedAt, listedDays, alertHref, streetViewHref, dayLabel, type StatusRow } from "./status";
 import "./n9.css";
 
 const ev = (name: string) => { try { (window as any).clarity?.("event", name); } catch { /* blocked */ } };
@@ -26,6 +26,18 @@ export function GoneNotice({ deal }: { deal: StatusRow }) {
         <a className="hunt-secondary" href="#similar-homes" onClick={(e) => { const el = document.querySelector(".hunt-similar"); if (el) { e.preventDefault(); el.scrollIntoView({ behavior: "smooth", block: "start" }); } ev("gone_similar"); }}>{t("See similar homes")}</a>
         {deal.country && <Link className="hunt-link" to={`/homes/${cc(deal.country)}`}>{t(`All homes in ${deal.country}`)}</Link>}
       </div>
+    </aside>
+  );
+}
+
+export function UnconfirmedNotice({ deal }: { deal: StatusRow }) {
+  if (!isUnconfirmed(deal)) return null;
+  const lang = getLang() === "es" ? "es" : "en";
+  const ok = deal.src_ok_at ? dayLabel(deal.src_ok_at, lang) : "";
+  return (
+    <aside className="n9-gone n9-unconf" role="note">
+      <p className="n9-gone-h"><TriangleAlert size={18} aria-hidden="true" /><span>{t("We could not confirm this home is still for sale")}</span></p>
+      <p>{ok ? t(`The portal that lists it does not let our nightly check read the advert. It was last confirmed online on ${ok}.`) : t("The portal that lists it does not let our nightly check read the advert, so we have not been able to confirm it is still on the market.")}{" "}{t("Ask the agent before you plan a visit.")}</p>
     </aside>
   );
 }

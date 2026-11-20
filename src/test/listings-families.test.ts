@@ -127,9 +127,9 @@ describe("which pages the new families get", () => {
     expect(withDrops(2).pages.some((p) => p.path === "/cheap-houses/price-drops-in-bulgaria")).toBe(false);
     expect(withDrops(3).pages.find((p) => p.path === "/cheap-houses/price-drops-in-bulgaria")?.homes.length).toBe(3);
     // a region the same way: no list of regions to keep by hand
-    const burgas = (n: number) => buildFacets([...rows, ...Array.from({ length: n }, (_, i) => home({ slug: `bg-${i}`, country: "Bulgaria", location_name: `Town ${i}, Burgas`, title: "Home", price_eur: [59000, 66500, 71000][i] }))]); // prices among the existing ones, so no budget lists just these
-    expect(burgas(2).pages.some((p) => p.path === "/homes/bulgaria/burgas")).toBe(false);
-    expect(burgas(3).pages.find((p) => p.path === "/homes/bulgaria/burgas")?.kind).toBe("region");
+    const burgas = (n: number) => buildFacets([...rows, ...Array.from({ length: n }, (_, i) => home({ slug: `bg-${i}`, country: "Bulgaria", location_name: `Town ${i}, Vidin`, title: "Home", price_eur: [59000, 66500, 71000][i] }))]); // a region with no homes yet; prices among the existing ones, so no budget lists just these
+    expect(burgas(2).pages.some((p) => p.path === "/homes/bulgaria/vidin")).toBe(false);
+    expect(burgas(3).pages.find((p) => p.path === "/homes/bulgaria/vidin")?.kind).toBe("region");
     // a budget under €10,000 (the studios of the Bulgarian coast) is a page the day three homes cost that little
     const dearer = [0, 1].map((i) => home({ slug: `st2-${i}`, country: "Bulgaria", location_name: `Sunny Beach, Burgas`, title: "Studio", price_eur: 24000 + i * 900 })); // so "under 30,000" is not the same list
     const studios = (n: number) => buildFacets([...rows, ...dearer, ...Array.from({ length: n }, (_, i) => home({ slug: `st-${i}`, country: "Bulgaria", location_name: `Sunny Beach ${i}, Burgas`, title: "Studio", price_eur: 7000 + i * 900 }))]);

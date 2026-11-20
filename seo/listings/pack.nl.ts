@@ -23,10 +23,10 @@ const country = (c: string) => COUNTRY[c]?.[0] || c;
 const inC = (c: string) => COUNTRY[c]?.[1] || `in ${c}`;
 const IN_BY_NAME: Record<string, string> = Object.fromEntries(Object.values(COUNTRY));
 
-const PLACES: PlaceWords = {
+export const PLACES: PlaceWords = {
   map: {
     Abruzzo: "Abruzzen", Apulia: "Apulië", Calabria: "Calabrië", "Lake Como": "Comomeer", Lazio: "Lazio", Lombardy: "Lombardije", Marche: "Marche", Piedmont: "Piëmont", Sardinia: "Sardinië", Sicily: "Sicilië", Tuscany: "Toscane", Umbria: "Umbrië",
-    "County Durham": "County Durham", "Central Jutland": "Midden-Jutland", "East Jutland": "Oost-Jutland", "North Jutland": "Noord-Jutland", "West Jutland": "West-Jutland", "South Jutland": "Zuid-Jutland", Funen: "Funen", "West Zealand": "West-Seeland",
+    "Northern Ireland": "Noord-Ierland", "County Down": "graafschap Down", "County Fermanagh": "graafschap Fermanagh", "County Leitrim": "graafschap Leitrim", "County Durham": "County Durham", "Central Jutland": "Midden-Jutland", "East Jutland": "Oost-Jutland", "North Jutland": "Noord-Jutland", "West Jutland": "West-Jutland", "South Jutland": "Zuid-Jutland", Funen: "Funen", "West Zealand": "West-Seeland",
     "Black Sea": "Zwarte Zee", "Allegheny Mountains": "Allegheny Mountains", "Lake Superior region": "omgeving van het Bovenmeer", "North Carolina": "North Carolina", "South Carolina": "South Carolina", "West Virginia": "West Virginia",
     "Central Sweden": "Midden-Zweden", "Northern Sweden": "Noord-Zweden", Crete: "Kreta", "North Evia": "Noord-Evia", Evia: "Evia", Rhodes: "Rhodos", Corfu: "Corfu", Sporades: "Sporaden", Halkidiki: "Chalkidiki", Messinia: "Messenië", Peloponnese: "Peloponnesos", Pelion: "Pilion",
     "Greater Poland": "Groot-Polen", "Kuyavia-Pomerania": "Koejavië-Pommeren", "Lower Silesia": "Neder-Silezië", Lubusz: "Lubusz", Masovia: "Mazovië", Podlaskie: "Podlachië", Pomerania: "Pommeren", Silesia: "Silezië", Subcarpathia: "Subkarpaten",

@@ -3,7 +3,7 @@
 //    similar homes and an alert, and its structured data stops saying "in stock";
 //  - the date of the last check by a person or by the AI check when the data has one, and since when the home is listed.
 // English and Spanish are written here by hand (the Spanish home pages do not go through seo/es-templates.json).
-import { isGone, lastCheck, listedAt, alertHref, dayLabel, type StatusRow } from "../src/community/n9/status";
+import { isGone, isUnconfirmed, lastCheck, listedAt, alertHref, dayLabel, type StatusRow } from "../src/community/n9/status";
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
@@ -18,6 +18,12 @@ export function dealStatusHtml(r: StatusRow, lang: "en" | "es"): string {
     out.push(es
       ? `<p><strong>El anuncio original ya no está publicado.</strong> Nuestra revisión nocturna no lo encontró dos días distintos, o un visitante avisó de que ya no está: lo más probable es que la casa se haya vendido o retirado. Mantenemos esta página para que puedas comparar el precio y la zona. Más abajo tienes casas parecidas, y puedes <a href="${alert}">recibir un correo cuando entren casas así</a>.</p>`
       : `<p><strong>The original advert is no longer online.</strong> Our nightly check could not find it on two different days, or a visitor reported it gone: the home has probably been sold or withdrawn. We keep this page so you can compare the price and the area. Similar homes are listed below, and you can <a href="${alert}">get an email when homes like it arrive</a>.</p>`);
+  }
+  if (isUnconfirmed(r)) {
+    const ok = r.src_ok_at ? esc(dayLabel(r.src_ok_at, lang)) : "";
+    out.push(es
+      ? `<p><strong>No hemos podido confirmar que siga a la venta.</strong> El portal donde se anuncia no deja que nuestra revisión nocturna lea el anuncio${ok ? `; la última vez que lo vimos publicado fue el ${ok}` : ""}. Pregunta a la agencia antes de organizar una visita.</p>`
+      : `<p><strong>We could not confirm this home is still for sale.</strong> The portal that lists it does not let our nightly check read the advert${ok ? `; it was last confirmed online on ${ok}` : ""}. Ask the agent before you plan a visit.</p>`);
   }
   const c = lastCheck(r); const since = dayLabel(listedAt(r), lang);
   const bits: string[] = [];

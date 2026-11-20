@@ -94,5 +94,10 @@
   "can_foreigners_buy": "Ja. Ausländer haben beim Kauf von Grundstücken und Häusern dieselben Rechte wie dominikanische Staatsbürger, ohne Einschränkungen.",
   "purchase_costs_breakdown": "Der Käufer zahlt 3 % Übertragungssteuer (0 % bei begünstigten Erstkäufen nach den Tourismusanreizen CONFOTUR), Anwaltskosten von rund 1-2 % und Notarkosten von rund 0,25-1 %, dazu die Eintragung; die Maklergebühr von 2-3 % bezahlt der Verkäufer.",
   "annual_property_tax": "Die jährliche Steuer IPI beträgt 1 % auf den Teil des gesamten dominikanischen Immobilienvermögens einer Person, der nach der Bewertung der Steuerbehörde DGII 2026 über 10.695.494 RD$ liegt; eine einzelne günstige Immobilie bleibt daher oft unter der Schwelle."
+ },
+ "united-kingdom": {
+  "can_foreigners_buy": "Ja. Im gesamten Vereinigten Königreich gibt es keine Beschränkungen nach Staatsangehörigkeit und kein Visum ist nötig, aber der Kauf gibt kein Recht, dort zu leben.",
+  "purchase_costs_breakdown": "In England und Nordirland beträgt die Grunderwerbsteuer (Stamp Duty Land Tax, SDLT) 0% bis 125.000 £ und 2% von 125.001 bis 250.000 £, dazu 2% Zuschlag für Käufer ohne Wohnsitz im Vereinigten Königreich und weitere 5%, wenn Sie bereits irgendwo eine Wohnung besitzen; wer ohne Wohnsitz dort kauft und schon eine andere Wohnung hat, zahlt also 7% bis 125.000 £ und 9% bis 250.000 £. Anwalt (conveyancer) etwa 0,6 bis 1%, meist mindestens rund 2.100 £ inklusive Mehrwertsteuer; Grundbuchgebühr (Land Registry) 20 bis 230 £; Auskünfte (searches) extra; den Makler zahlt der Verkäufer.",
+  "annual_property_tax": "Eigentümer oder Bewohner zahlen der Gemeinde die council tax (in Nordirland die domestic rates); viele Gemeinden in England erheben seit April 2025 für Zweitwohnungen einen Aufschlag von bis zu 100%."
  }
 }

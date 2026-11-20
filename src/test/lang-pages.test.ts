@@ -60,7 +60,8 @@ describe("the gate against English", () => {
     const en = JSON.parse(fs.readFileSync("src/data/destinations.json", "utf8"));
     const d = destFor(en, "ru");
     expect(d.bulgaria.can_foreigners_buy).toMatch(/[а-я]/);
-    expect(d["united-kingdom"]?.can_foreigners_buy).toBeUndefined();   // not translated: left out, never shown in English
+    const untranslated = Object.keys(en).find((k) => k !== "_note" && !(k in destTexts("ru")));
+    if (untranslated) expect(d[untranslated]?.can_foreigners_buy).toBeUndefined();   // not translated: left out, never shown in English
     expect(destFor(en, "fr").spain.can_foreigners_buy).toMatch(/^Oui/);
     expect(d.spain.purchase_costs_pct).toBe(en.spain.purchase_costs_pct);
     const pcts = (x: string) => (String(x).match(/\d+[.,]\d+(?=\s?%)/g) || []).map((n) => n.replace(",", ".")).sort();
@@ -82,8 +83,6 @@ describe("which pages a language gets", () => {
     // a country needs 3 homes still on sale; Cyprus comes and goes with its adverts (15-nov-2026)
     for (const lang of ["de", "fr", "ru"]) for (const c of ["spain", "italy", "sweden", "denmark", "france", "greece", "bulgaria", "portugal", "united-states", "japan"]) expect(cc(lang).has(c), `${lang} ${c}`).toBe(true);
     for (const lang of ["de", "fr", "ru"]) expect(langs.find((l) => l.lang === lang)!.dropped.filter((d) => /title|place/.test(d.why)), lang).toEqual([]);
-    // no buying rules for the United Kingdom in any of them: no pages there
-    for (const lang of ["de", "fr", "ru"]) expect(cc(lang).has("united-kingdom"), lang).toBe(false);
     // Russian keeps to the families its pack words
     expect(langs.find((l) => l.lang === "ru")!.pages.every((p) => CONFIG.ru!.kinds.includes(p.f.kind))).toBe(true);
   });

@@ -2376,7 +2376,7 @@
 "t": "Huis in cottagestijl met nieuwe keuken vlak bij de haven in Pictou, Nova Scotia"
 },
 "ca-saint-andrews-nb-four-bed-house-5-acres-300k": {
-"en": "Four-bedroom house on about five acres in St. Andrews by-the-Sea, New Brunswick",
+"en": "Four-bedroom house on about five acres in Saint Andrews, New Brunswick",
 "t": "Huis met vier slaapkamers op ongeveer twee hectare in Saint Andrews, New Brunswick"
 },
 "cy-mazotos-2-bed-pool-130k-477874": {
@@ -2562,5 +2562,205 @@
 "es-fuerteventura-costa-antigua-duplex-pool-180k": {
 "en": "Two-bedroom duplex with private garden and shared pool in Costa de Antigua",
 "t": "Maisonnette met twee slaapkamers, eigen tuin en gedeeld zwembad in Costa de Antigua"
+},
+"be-marche-en-famenne-renovated-112m2-flat-energy-a-250k": {
+"en": "Renovated 112 m² town-centre flat with energy rating A in Marche-en-Famenne",
+"t": "Gerenoveerd appartement van 112 m² met energielabel A in het centrum van Marche-en-Famenne"
+},
+"ca-hillsburn-ns-cottage-house-bay-of-fundy-views-195k": {
+"en": "Freshly painted three-bedroom house with ocean views in Hillsburn, Nova Scotia",
+"t": "Pas geschilderd huis met drie slaapkamers en zeezicht in Hillsburn, Nova Scotia"
+},
+"ca-liverpool-ns-updated-character-house-workshop-220k": {
+"en": "Updated character house with a wood stove and workshop in Liverpool, Nova Scotia",
+"t": "Gemoderniseerd karakteristiek huis met houtkachel en werkplaats in Liverpool, Nova Scotia"
+},
+"ca-pictou-ns-1888-house-harbour-views-koi-pond-250k": {
+"en": "Character 1888 house with harbour views and a koi pond garden in Pictou, Nova Scotia",
+"t": "Huis uit 1888 met uitzicht op de haven en tuin met koivijver in Pictou, Nova Scotia"
+},
+"co-santa-marta-remodelled-house-pool-rodadero-590m": {
+"en": "Fully remodelled three-bedroom house in a gated complex with pool, Santa Marta",
+"t": "Volledig vernieuwd huis met drie slaapkamers in een afgesloten complex met zwembad, Santa Marta"
+},
+"cy-paralimni-renovated-townhouse-title-deeds-187k": {
+"en": "Fully renovated two-bedroom townhouse with title deeds in Paralimni, Famagusta",
+"t": "Volledig gerenoveerde rijwoning met twee slaapkamers en eigendomsakte in Paralimni"
+},
+"de-wassersleben-flensburg-fjord-beach-flat-terrace-199k": {
+"en": "Garden-level flat with a south terrace steps from the beach on the Flensburg Fjord",
+"t": "Tuinappartement met zuidterras op een paar stappen van het strand aan de Flensburger Förde"
+},
+"es-benijofar-renovated-village-house-private-pool-195k": {
+"en": "Renovated village house with its own pool in Benijófar, Costa Blanca",
+"t": "Gerenoveerde dorpswoning met eigen zwembad in Benijófar, Costa Blanca"
+},
+"es-catalonia-roquetes-renovated-townhouse-no-fees-120k": {
+"en": "Fully renovated townhouse with no community fees in Roquetes, near Tortosa",
+"t": "Volledig gerenoveerde stadswoning zonder servicekosten in Roquetes bij Tortosa"
+},
+"es-tenerife-cabo-blanco-top-floor-flat-roof-terrace-196k": {
+"en": "Top-floor two-bedroom flat with private roof terrace in Cabo Blanco, Tenerife",
+"t": "Appartement met twee slaapkamers op de bovenste verdieping met eigen dakterras in Cabo Blanco, Tenerife"
+},
+"es-tenerife-mesa-del-mar-penthouse-ocean-teide-view-186k": {
+"en": "Renovated top-floor flat facing the ocean and Teide in Mesa del Mar, Tenerife",
+"t": "Gerenoveerd appartement op de bovenste verdieping met zicht op zee en de Teide in Mesa del Mar, Tenerife"
+},
+"fr-burgundy-champvert-canal-stone-house-188k": {
+"en": "Renovated stone house on the Canal du Nivernais in Champvert, Burgundy",
+"t": "Gerenoveerd stenen huis aan het Canal du Nivernais in Champvert, Bourgondië"
+},
+"fr-masseube-gers-renovated-townhouse-70k": {
+"en": "Renovated townhouse with new kitchen and air conditioning in Masseube, Gers",
+"t": "Gerenoveerde stadswoning met nieuwe keuken en airconditioning in Masseube, Gers"
+},
+"fr-normandy-vendeuvre-stone-house-river-garden-205k": {
+"en": "Stone house with a private riverbank and outbuildings in Vendeuvre, Normandy",
+"t": "Stenen huis met eigen rivieroever en bijgebouwen in Vendeuvre, Normandië"
+},
+"fr-plouezoch-stone-house-conservatory-near-terenez-178k": {
+"en": "Breton stone house with a conservatory near the Térénez beaches in Plouezoc'h",
+"t": "Bretons stenen huis met serre vlak bij de stranden van Térénez in Plouezoc'h"
+},
+"fr-provence-riez-renovated-village-house-dpe-b-159k": {
+"en": "Renovated village house with energy rating B in the centre of Riez, Verdon",
+"t": "Gerenoveerde dorpswoning met energielabel B in het centrum van Riez, Verdon"
+},
+"fr-provence-saint-martin-de-castillon-village-house-210k": {
+"en": "Renovated Luberon village house with vaulted cellar in Saint-Martin-de-Castillon",
+"t": "Gerenoveerde dorpswoning in de Luberon met gewelfde kelder in Saint-Martin-de-Castillon"
+},
+"fr-yvrac-et-malleyrand-1700s-stone-house-180m2-189k": {
+"en": "Move-in ready 1700s stone village house of 180 m² near La Rochefoucauld, Charente",
+"t": "Instapklare stenen dorpswoning uit de 18e eeuw van 180 m² bij La Rochefoucauld, Charente"
+},
+"gr-crete-koutsounari-stone-house-libyan-sea-view-195k": {
+"en": "Two-storey stone house facing the Libyan Sea in Koutsounari, south Crete",
+"t": "Stenen huis van twee verdiepingen met zicht op de Libische Zee in Koutsounari, Zuid-Kreta"
+},
+"gr-crete-kritsa-restored-stone-house-roof-terrace-199k": {
+"en": "Restored three-bed stone house with roof terrace in Kritsa village, Crete",
+"t": "Gerestaureerd stenen huis met drie slaapkamers en dakterras in het dorp Kritsa, Kreta"
+},
+"gr-halkidiki-nea-fokea-two-bed-flat-sea-view-170k": {
+"en": "Furnished two-bedroom flat with sea views in Nea Fokea, Kassandra, Halkidiki",
+"t": "Gemeubileerd appartement met twee slaapkamers en zeezicht in Nea Fokea, Kassandra, Chalkidiki"
+},
+"gr-peloponnese-gytheio-stone-house-sea-view-terrace-195k": {
+"en": "Restored stone courtyard house with a sea-view roof terrace in Gytheio",
+"t": "Gerestaureerd stenen huis met binnenplaats en dakterras met zeezicht in Gythio"
+},
+"ie-leitrim-village-marina-view-apartment-berth-230k": {
+"en": "Three-bed marina-view apartment with roof terrace and boat berth in Leitrim Village",
+"t": "Appartement met drie slaapkamers, uitzicht op de jachthaven, dakterras en ligplaats in Leitrim Village"
+},
+"it-lazio-arpino-renovated-country-house-olive-grove-180k": {
+"en": "Renovated country house with panoramic porch and olive grove near Arpino, Lazio",
+"t": "Gerenoveerd landhuis met panoramaveranda en olijfgaard bij Arpino, Lazio"
+},
+"it-liguria-castellaro-renovated-sea-view-flat-no-fees-197k": {
+"en": "Newly renovated two-bed flat with sea-view terrace in Castellaro, Liguria",
+"t": "Pas gerenoveerd appartement met twee slaapkamers en terras met zeezicht in Castellaro, Ligurië"
+},
+"it-marche-san-lorenzo-in-campo-house-garden-garage-120k": {
+"en": "Detached house with a 350 m2 garden and garage in San Lorenzo in Campo, Marche",
+"t": "Vrijstaand huis met tuin van 350 m² en garage in San Lorenzo in Campo, Marche"
+},
+"it-piedmont-acqui-terme-country-house-garden-180k": {
+"en": "Renovated country house with garden and vineyard views near Acqui Terme",
+"t": "Gerenoveerd landhuis met tuin en uitzicht op de wijngaarden bij Acqui Terme"
+},
+"it-piedmont-acqui-terme-vaulted-period-flat-140k": {
+"en": "Renovated period flat with vaulted ceilings in central Acqui Terme, Piedmont",
+"t": "Gerenoveerd herenhuisappartement met gewelfde plafonds in het centrum van Acqui Terme, Piëmont"
+},
+"it-piedmont-castellino-tanaro-renovated-hill-house-115k": {
+"en": "Renovated hillside house with big terraces near Castellino Tanaro, Piedmont",
+"t": "Gerenoveerd huis op een heuvel met grote terrassen bij Castellino Tanaro, Piëmont"
+},
+"it-sardinia-iglesias-three-ensuite-town-house-155k": {
+"en": "Detached town house with three en-suite bedrooms in old Iglesias, Sardinia",
+"t": "Vrijstaande stadswoning met drie slaapkamers met eigen badkamer in het oude Iglesias, Sardinië"
+},
+"it-umbria-gubbio-stone-farmhouse-3-hectares-148k": {
+"en": "Stone farmhouse with four bedrooms and 3 hectares of land near Gubbio, Umbria",
+"t": "Stenen boerderij met vier slaapkamers en 3 hectare grond bij Gubbio, Umbrië"
+},
+"it-umbria-spoleto-la-torretta-restored-hamlet-house-155k": {
+"en": "Restored medieval hamlet home with two en-suite bedrooms near Spoleto, Umbria",
+"t": "Gerestaureerd huis in een middeleeuws gehucht met twee slaapkamers met eigen badkamer bij Spoleto"
+},
+"jp-miura-misaki-four-bed-house-2004-80k": {
+"en": "Four-bedroom house from 2004 in Misaki on the Miura peninsula, Kanagawa",
+"t": "Huis met vier slaapkamers uit 2004 in Misaki op het schiereiland Miura, Kanagawa"
+},
+"jp-nasushiobara-refreshed-2009-house-105k": {
+"en": "Refreshed three-bedroom house from 2009 with parking for two in Nasushiobara, Tochigi",
+"t": "Opgefrist huis met drie slaapkamers uit 2009 met twee parkeerplaatsen in Nasushiobara, Tochigi"
+},
+"jp-onomichi-mukaishima-2014-house-108k": {
+"en": "Bright four-bedroom house from 2014 on Mukaishima island, Onomichi, Hiroshima",
+"t": "Licht huis met vier slaapkamers uit 2014 op het eiland Mukaishima, Onomichi, Hiroshima"
+},
+"me-zupci-single-storey-home-mountain-view-175k": {
+"en": "Single-storey 138 m² home with garden below the mountains in Zupci, near Bar",
+"t": "Gelijkvloerse woning van 138 m² met tuin aan de voet van de bergen in Zupci bij Bar"
+},
+"mx-merida-centro-colonial-house-pool-barrio-santiago-4-45m": {
+"en": "Colonial house with a pool and garden in Barrio de Santiago, Mérida centre",
+"t": "Koloniaal huis met zwembad en tuin in de Barrio de Santiago in het centrum van Mérida"
+},
+"mx-queretaro-el-marques-three-bed-house-pool-tennis-3-1m": {
+"en": "Three-bedroom house in a gated estate with pool and tennis in El Marqués, Querétaro",
+"t": "Huis met drie slaapkamers in een bewaakt domein met zwembad en tennis in El Marqués, Querétaro"
+},
+"pt-azores-pico-silveira-renovated-cottage-big-plot-179k": {
+"en": "Renovated furnished cottage on 860 m2 of land in Lajes do Pico, Azores",
+"t": "Gerenoveerd gemeubileerd huisje op 860 m² grond in Lajes do Pico, Azoren"
+},
+"se-fransta-romback-red-wooden-villa-valley-view-750k-sek": {
+"en": "Renovated red wooden villa with wide valley views near Fränsta, Västernorrland",
+"t": "Gerenoveerde rode houten villa met weids uitzicht over het dal bij Fränsta, Västernorrland"
+},
+"th-hua-hin-seacraze-two-bed-pool-view-condo-140k": {
+"en": "Two-bedroom 85 m² pool-view condo from 2012 near Khao Takiab beach, Hua Hin",
+"t": "Appartement met twee slaapkamers van 85 m² met zicht op het zwembad uit 2012 bij het strand van Khao Takiab, Hua Hin"
+},
+"uk-greyabbey-renovated-end-terrace-garage-170k": {
+"en": "Renovated two-bedroom end terrace with garage in historic Greyabbey, Northern Ireland",
+"t": "Gerenoveerde hoekwoning met twee slaapkamers en garage in het historische Greyabbey, Noord-Ierland"
+},
+"uk-lack-fermanagh-refurbished-townhouse-double-garage-172k": {
+"en": "Refurbished period townhouse with a double garage in Lack village, County Fermanagh",
+"t": "Gemoderniseerde oude stadswoning met dubbele garage in het dorp Lack, County Fermanagh"
+},
+"us-bedford-va-move-in-ready-house-walk-to-downtown-250k": {
+"en": "Move-in ready three-bedroom house a short walk from downtown Bedford, Virginia",
+"t": "Instapklaar huis met drie slaapkamers op loopafstand van het centrum van Bedford, Virginia"
+},
+"us-duluth-mn-renewed-1899-house-double-garage-255k": {
+"en": "Well-kept 1899 house with a new double garage near Chester Park in Duluth",
+"t": "Goed onderhouden huis uit 1899 met nieuwe dubbele garage bij Chester Park in Duluth"
+},
+"us-la-crosse-wi-1886-house-fenced-garden-big-garage-215k": {
+"en": "Updated 1886 house with a fenced garden and an oversized garage in La Crosse, Wisconsin",
+"t": "Gemoderniseerd huis uit 1886 met omheinde tuin en grote garage in La Crosse, Wisconsin"
+},
+"us-la-crosse-wi-updated-four-bed-house-235k": {
+"en": "Updated four-bedroom house with a new kitchen in La Crosse, Wisconsin",
+"t": "Gemoderniseerd huis met vier slaapkamers en nieuwe keuken in La Crosse, Wisconsin"
+},
+"us-lynchburg-va-renovated-victorian-carriage-house-245k": {
+"en": "Renovated 1889 Victorian with a deep front porch in Lynchburg, Virginia",
+"t": "Gerenoveerd Victoriaans huis uit 1889 met diepe veranda in Lynchburg, Virginia"
+},
+"us-manitowoc-wi-1927-brick-house-pergola-garden-250k": {
+"en": "1927 brick house with a three-season room and pergola garden in Manitowoc, Wisconsin",
+"t": "Bakstenen huis uit 1927 met driesezoenenkamer en tuin met pergola in Manitowoc, Wisconsin"
+},
+"us-red-wing-mn-house-big-fenced-yard-near-mississippi-230k": {
+"en": "Three-bedroom house with a big fenced yard near the Mississippi in Red Wing",
+"t": "Huis met drie slaapkamers en grote omheinde tuin bij de Mississippi in Red Wing"
 }
 }

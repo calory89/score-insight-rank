@@ -94,5 +94,10 @@
   "can_foreigners_buy": "Tak. Cudzoziemcy mają takie same prawa do kupowania gruntów i domów jak obywatele Dominikany, bez ograniczeń.",
   "purchase_costs_breakdown": "Kupujący płaci podatek od przeniesienia własności 3% (0% przy pierwszych zakupach objętych zachętami turystycznymi CONFOTUR), koszty prawne około 1-2% i opłaty notarialne około 0,25-1%, plus koszty rejestracji, a prowizję pośrednika 2-3% płaci sprzedający.",
   "annual_property_tax": "Roczny podatek IPI wynosi 1% tej części łącznej wartości nieruchomości danej osoby w Dominikanie, wycenionej przez urząd skarbowy DGII, która w 2026 r. przekracza 10 695 494 RD$, więc jeden tani dom często mieści się poniżej progu."
+ },
+ "united-kingdom": {
+  "can_foreigners_buy": "Tak. W całym Zjednoczonym Królestwie nie ma ograniczeń ze względu na obywatelstwo i wiza nie jest potrzebna, ale zakup nie daje prawa do zamieszkania.",
+  "purchase_costs_breakdown": "W Anglii i Irlandii Północnej podatek od zakupu (Stamp Duty Land Tax, SDLT) wynosi 0% do 125 000 £ i 2% od 125 001 do 250 000 £, plus 2% dopłaty dla osób niemieszkających w Zjednoczonym Królestwie i kolejne 5%, jeśli masz już gdzieś mieszkanie; nierezydent, który ma inną nieruchomość, płaci więc 7% do 125 000 £ i 9% do 250 000 £. Prawnik (conveyancer) około 0,6 do 1%, zwykle co najmniej około 2100 £ z VAT; opłata w rejestrze gruntów (Land Registry) od 20 do 230 £; wyszukiwania (searches) osobno; pośrednika opłaca sprzedający.",
+  "annual_property_tax": "Właściciele lub mieszkańcy płacą gminie lokalny podatek od nieruchomości (w Irlandii Północnej obowiązuje jego odrębna wersja); od kwietnia 2025 wiele gmin w Anglii pobiera za drugie domy dopłatę do 100%."
  }
 }

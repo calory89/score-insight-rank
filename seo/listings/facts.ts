@@ -1,3 +1,4 @@
+import { isUnconfirmed } from "../../src/community/n9/status";
 // The numbers behind one listing page (14-nov-2026). Everything a page says comes from here, so the four language
 // packs (seo/listings/pack.*.ts) only decide how to say it, never what is true.
 import { costRange, buyingCosts } from "../../src/community/seo2data";
@@ -65,7 +66,9 @@ export const ref = (h: Home): Ref => ({ slug: String(h.slug), home: h, price: h.
 const DIM_KEYS = ["price", "value", "space", "condition", "extras", "water", "weather", "access", "costs"];
 
 export type Ctx = { all: Home[]; byCountry: Map<string, Home[]>; pages: Facet[]; dest: Record<string, any>; updated: string; fx?: Fx };
-const byScore = (a: Home, b: Home) => (b.nota ?? 0) - (a.nota ?? 0) || (a.rank ?? 1e9) - (b.rank ?? 1e9) || String(a.slug).localeCompare(String(b.slug));
+// 20-nov-2026: homes whose advert the nightly check could not confirm for 30 days go after the others (status.ts isUnconfirmed).
+const unconf = (h: Home) => (isUnconfirmed(h as any) ? 1 : 0);
+const byScore = (a: Home, b: Home) => unconf(a) - unconf(b) || (b.nota ?? 0) - (a.nota ?? 0) || (a.rank ?? 1e9) - (b.rank ?? 1e9) || String(a.slug).localeCompare(String(b.slug));
 const count = (xs: string[]) => { const m = new Map<string, number>(); for (const x of xs) if (x) m.set(x, (m.get(x) || 0) + 1); return [...m.entries()].map(([name, n]) => ({ name, n })).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name)); };
 const BAND_KINDS = ["band", "regionBand", "gband"];
 /** The three prices the country pages work the buying costs out for. */
