@@ -158,7 +158,10 @@ describe("checks over the built pages", () => {
       pg("/guide/italy", `<main><p>${words(60)} General information, not legal advice.</p></main>`, { kind: "guide", cc: "italy" }),
       pg("/thin", `<main><p>${words(8)}</p></main>`),
     ]);
-    expect(t.failures).toEqual([]);
+    // the bare home page of this fixture lacks the basics every home page must have (ideas 71 and 72): those stop the build
+    expect(t.failures.filter((f) => !/^home (page missing basics|linked from under 3 pages)/.test(f))).toEqual([]);
+    expect(t.lists.home_page_missing_basics).toEqual(["/deal/a: description, one h1, own canonical"]);
+    expect(t.lists.home_linked_from_under_3_pages).toEqual(["/deal/a (1)"]);
     expect(t.lists.fake_urgency?.[0]).toContain("/deal/a");
     expect(t.lists.no_text_without_javascript).toEqual(["/thin (8 words)"]);
     expect(t.lists.guide_without_listings_or_homes?.[0]).toContain("/guide/italy");

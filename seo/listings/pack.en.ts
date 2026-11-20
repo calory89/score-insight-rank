@@ -119,7 +119,7 @@ export const en: Pack = {
   kpi: { homes: "Homes", from: "From", median: "Median price", ppsqm: "Median per m²", size: "Median size", score: "Top score" },
   gridTitle: (n, shown) => (n === shown ? `The ${n} homes, best score first` : `The ${shown} best of ${n}, by score`),
   gridMore: (shown, n) => `Showing the ${shown} best-scored of ${n} homes. The table and the narrower searches below cover the rest.`,
-  card: { isNew: "New", drop: (p) => `Price cut ${p}%`, score: "Score", beds: (n) => `${n} bed`, noPhoto: "Photos on the listing" },
+  card: { isNew: "New", drop: (p) => `Price cut ${p}%`, score: "Score", beds: (n) => `${n} bed`, noPhoto: "Photos on the listing", days: (n) => (n === 0 ? "Added today" : n === 1 ? "1 day on RealHunt" : `${n} days on RealHunt`) },
   tableTitle: (n, shown) => (n === shown ? `Compare the ${n} homes, cheapest first` : `Compare the ${shown} cheapest of ${n}`),
   th: { home: "Home", place: "Place", price: "Price", size: "Size", ppsqm: "Per m²", beds: "Beds", score: "Score", added: "Added" },
   factsTitle: (F) => (F.f.kind === "ccyBand" ? `What ${ccy(F.f.cap!, F.f.ccy!)} buys${F.f.country ? ` in ${the(F.f.country)}` : ""}` : F.f.cap && F.f.kind !== "combo" ? `What ${money(F.f.cap)} buys${F.f.area ? ` ${areaOf(F.f)?.inEn || ""}` : F.f.region ? ` in ${place(F.f.region)}` : F.f.country ? ` in ${the(F.f.country)}` : ""}` : `The ${F.n} homes in numbers`),

@@ -7,8 +7,10 @@ import { isGone, isUnconfirmed, lastCheck, listedAt, alertHref, dayLabel, type S
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-/** schema.org availability of the offer: SoldOut once the advert is gone. */
-export const dealAvailability = (r: StatusRow) => (isGone(r) ? "https://schema.org/SoldOut" : "https://schema.org/InStock");
+/** schema.org availability of the offer: SoldOut once the advert is gone. When nobody could confirm the advert for 30
+ * days (isUnconfirmed) the availability is unknown, and schema.org has no value for "unknown": the property is left
+ * out (idea 24) instead of claiming "in stock". "" means: leave it out. */
+export const dealAvailability = (r: StatusRow) => (isGone(r) ? "https://schema.org/SoldOut" : isUnconfirmed(r) ? "" : "https://schema.org/InStock");
 
 export function dealStatusHtml(r: StatusRow, lang: "en" | "es"): string {
   const es = lang === "es";
@@ -32,6 +34,12 @@ export function dealStatusHtml(r: StatusRow, lang: "en" | "es"): string {
     bits.push(c.by === "person"
       ? (es ? `Comprobada por una persona el <time datetime="${iso}">${d}</time>: precio y fotos cotejados con el anuncio publicado ese día.` : `Checked by a person on <time datetime="${iso}">${d}</time>: price and photos compared with the live advert that day.`)
       : (es ? `Comprobada por nuestra IA el <time datetime="${iso}">${d}</time>: leyó el anuncio y miró las fotos.` : `Checked by our AI on <time datetime="${iso}">${d}</time>: it read the advert and looked at the photos.`));
+  }
+  // idea 94: a dated check on every home that has one. Without a check by a person or the AI, the last night our
+  // check found the original advert online (src_ok_at); a home that is unconfirmed or gone already says it above.
+  if (!c && r.src_ok_at && !isGone(r) && !isUnconfirmed(r)) {
+    const d = esc(dayLabel(r.src_ok_at, lang)); const iso = esc(new Date(r.src_ok_at).toISOString().slice(0, 10));
+    if (d) bits.push(es ? `Comprobada el <time datetime="${iso}">${d}</time>: nuestra revisión nocturna encontró el anuncio original publicado.` : `Checked on <time datetime="${iso}">${d}</time>: our nightly check found the original advert online.`);
   }
   if (since) bits.push(es ? `En RealHunt desde el ${esc(since)}.` : `On RealHunt since ${esc(since)}.`);
   if (bits.length) out.push(`<p>${bits.join(" ")}</p>`);

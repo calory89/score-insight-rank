@@ -78,7 +78,7 @@ export type Pack = {
   // ---- the homes
   gridTitle(n: number, shown: number): string;
   gridMore(shown: number, n: number): string;
-  card: { isNew: string; drop(pct: number): string; score: string; beds(n: number): string; noPhoto: string };
+  card: { isNew: string; drop(pct: number): string; score: string; beds(n: number): string; noPhoto: string; /** "12 days on RealHunt" (idea 22) */ days(n: number): string };
   tableTitle(n: number, shown: number): string;
   th: { home: string; place: string; price: string; size: string; ppsqm: string; beds: string; score: string; added: string };
   // ---- facts

@@ -50,11 +50,13 @@ const CSS = [
   `.rh-sh-brand svg{display:block;flex:none;width:30px;height:30px}`,
   `.rh-sh-wrap{max-width:calc(1176px + 2*var(--rh-sg));margin:0 auto;padding:0 var(--rh-sg)}`,
   `.rh-sh-back{display:none}`,
-  `.rh-sh-gal{position:relative;overflow:hidden;width:100vw;margin-left:calc(50% - 50vw);height:min(75vw,52vh);max-height:460px}`,
+  `.rh-sh-gal{position:relative;overflow:hidden;margin:0;width:100vw;margin-left:calc(50% - 50vw);height:min(75vw,52vh);max-height:460px}`,
   // each photo sits in a <b> as it sits in a <button> in the app, so tall photos are cropped the same way
   `.rh-sh-gal>b{display:none}.rh-sh-gal img{display:block;width:100%;height:100%;object-fit:cover}`,
   `@media (max-width:700px){.rh-sh-gal>b:first-child{display:block;height:100%}}`,
   `.rh-sh-count{position:absolute;right:14px;bottom:14px;background:rgba(0,0,0,.55);color:#fff;font-size:12.5px;font-weight:650;padding:4px 10px;border-radius:99px}`,
+  // the caption of the main photo (idea 21): where and the price, over the photo like the photo count, so nothing moves
+  `.rh-sh-cap{position:absolute;left:14px;bottom:14px;max-width:calc(100% - 110px);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;background:rgba(0,0,0,.55);color:#fff;font-size:12.5px;font-weight:650;line-height:1.5;padding:4px 10px;border-radius:99px}`,
   `.rh-sh-text{max-width:780px;margin-top:16px;padding-top:4px}`,
   `.rh-sh-eye{display:flex;align-items:center;gap:6px;min-height:32px;font-size:13.5px;font-weight:600;line-height:1.35;color:#62666E}`,
   `.rh-sh-eye a{display:inline-flex;align-items:center;min-height:32px;color:#B8370A;text-decoration:none}`,
@@ -114,12 +116,14 @@ export type ShellInput = {
   crumbs: [string, string][];
   /** "es" for the Spanish copy of the page (/es/deal/<slug>): the Spanish title is written in the HTML */
   lang?: "es";
+  /** caption of the main photo: place and price, in the language of the page */
+  caption?: string;
   /** offer the 800 px copy of the main photo (src/lib/thumbs.ts MID_PHOTOS); set by tests, otherwise the switch decides */
   midPhotos?: boolean;
 };
 
 /** The shell and the embedded row. Put it first inside #root, before the article. */
-export function dealShell({ row, photos, color, crumbs, lang, lowRes, midPhotos }: ShellInput): string {
+export function dealShell({ row, photos, color, crumbs, lang, lowRes, midPhotos, caption }: ShellInput): string {
   const set = midSrcSet(photos[0], midPhotos);
   // a copy that is not there: the offer is dropped and the browser loads the full photo
   const offer = set ? ` srcset="${esc(set)}" sizes="${esc(MID_SIZES)}" onerror="this.onerror=null;this.removeAttribute('srcset');this.removeAttribute('sizes')"` : "";
@@ -136,7 +140,7 @@ export function dealShell({ row, photos, color, crumbs, lang, lowRes, midPhotos 
   return `<div class="rh-shell" data-rh-keep data-rh-shell="${esc(row.slug)}">`
     + `<div class="rh-sh-head"><a class="rh-sh-brand" href="/">${LOGO}RealHunt</a></div>`
     + `<div class="rh-sh-wrap"><div class="rh-sh-back"></div>`
-    + (n ? `<div class="rh-sh-gal n${n}" style="background-color:${esc(color || "#DFE0E2")}">${imgs}${photos.length > 1 ? `<span class="rh-sh-count">1 / ${photos.length}</span>` : ""}</div>` : "")
+    + (n ? `<figure class="rh-sh-gal n${n}" style="background-color:${esc(color || "#DFE0E2")}">${imgs}${photos.length > 1 ? `<span class="rh-sh-count">1 / ${photos.length}</span>` : ""}${caption ? `<figcaption class="rh-sh-cap">${esc(caption)}</figcaption>` : ""}</figure>` : "")
     + `<div class="rh-sh-text"><div class="rh-sh-eye">${eye}</div><h1>${esc(lang === "es" && esTitle ? esTitle : title)}</h1>`
     + (row.price_eur != null ? `<div class="rh-sh-price">${esc(lang === "es" ? shellMoneyEs(row.price_eur) : shellMoney(row.price_eur))}</div>` : "")
     + `</div></div></div><script>${js}</script>`;

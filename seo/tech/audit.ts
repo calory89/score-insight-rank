@@ -136,6 +136,19 @@ export function techAudit(a: TechInput): TechAudit {
     }
     if (pg.kind === "blog" && pg.en.startsWith("/blog/") && !n(new RegExp(`^${pre(pg)}/(homes|cheap-houses|new|price-drops|top)(/|$)`))) list("post_without_link_to_a_listing", pg.path);
   }
+  // ---- every home page, in both languages (20-nov-2026, ideas 71, 72 and 76): title, description, one h1, its own
+  // canonical, the main photo with its alt text and its preload, and at least 3 indexable pages that link to it.
+  const inl = new Map<string, number>();
+  for (const pg of idx) for (const l of pg.links) if (l !== pg.path) inl.set(l, (inl.get(l) || 0) + 1);
+  const rowOf = new Map<string, any>(a.rows.map((r) => [String(r.slug), r]));
+  for (const pg of idx) {
+    if (pg.kind !== "deal") continue;
+    const miss = homeBasics(pg.html, pg.path, (rowOf.get(pg.en.slice(6))?.image_urls || []).length > 0);
+    if (miss.length) list("home_page_missing_basics", `${pg.path}: ${miss.join(", ")}`, "fail");
+    const n = inl.get(pg.path) || 0;
+    if (n < 3) list("home_linked_from_under_3_pages", `${pg.path} (${n})`, "fail");
+  }
+
   // ---- a Spanish page follows its English page out of the index, and back
   for (const pg of all) if (pg.lang === "es") { const en = a.pages.get(pg.en); if (en && en.noindex && a.live(pg.path)) list("spanish_indexable_english_noindex", pg.path, "fail"); }
 
@@ -157,6 +170,21 @@ export function techAudit(a: TechInput): TechAudit {
   for (const k of Object.keys(lists)) summary[k] = lists[k].length;
   for (const k of Object.keys(lists)) if (lists[k].length > 40) lists[k] = [...lists[k].slice(0, 40), `... ${lists[k].length - 40} more`];
   return { summary, failures, lists, depth, noindex, external: { scripts: [...scripts].sort(), frames: [...frames].sort(), link_hosts: linkHosts.size } };
+}
+
+/** What a published home page lacks of the basics: title, description, exactly one h1, a canonical that is its own
+ * address, and (when the home has photos) the main photo with alt text and its preload in the head. */
+export function homeBasics(html: string, path: string, hasPhoto: boolean): string[] {
+  const miss: string[] = [];
+  if (!/<title>[^<]+<\/title>/.test(html)) miss.push("title");
+  if (!/<meta name="description" content="[^"]+"/.test(html)) miss.push("description");
+  if ([...rootOf(html).matchAll(/<h1\b/g)].length !== 1) miss.push("one h1");
+  if ((/<link rel="canonical" href="([^"]*)"/.exec(html)?.[1] || "") !== "https://realhunt.co" + path) miss.push("own canonical");
+  if (hasPhoto) {
+    if (!/<img src="[^"]+" alt="[^"]+" fetchpriority="high"/.test(rootOf(html))) miss.push("main photo with alt text");
+    if (!/<link rel="preload" as="image" href="[^"]+"/.test(html.slice(0, html.indexOf("</head>")))) miss.push("photo preload");
+  }
+  return miss;
 }
 
 // ------------------------------------------------------------------------------------------ fixes before the checks

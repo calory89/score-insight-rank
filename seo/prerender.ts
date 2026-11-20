@@ -26,7 +26,11 @@ import { dealShell, DEAL_SHELL_HEAD } from "./dealShell";
 import { dealStatusHtml, dealAvailability } from "./dealStatus";
 import { type CanBuyData, statusLabel, UPDATED, UPDATED_ES, canBuyPairs, canBuyCountries, canBuySlug, ruleFor, residencyFor, canBuyFaq, canBuyMeta, fill, costLines, costCountries, nameOf, fmtMoney } from "../src/community/seo2data";
 import { homeArticleEs } from "../src/community/homeArticleEs";
-import { type EsPass, type PageRec, type Twin, createEsPass, writeEsTwins, coverageSummary } from "./es";
+import { homeLead, homeTitle as shortTitle, homeKind } from "../src/community/homeLead";
+import { isGone } from "../src/community/n9/status";
+import { localizeRows, theEs } from "../src/community/seo2data";
+import { esPlace } from "../src/lib/lang";
+import { type EsPass, type PageRec, type Twin, createEsPass, writeEsTwins, coverageSummary, placesEs } from "./es";
 import { writeAssets, finishAssets } from "./assets";
 import { writeTools } from "./tools";
 import { listingPlan, listingRows, listingPages, finishListings } from "./listings/build";
@@ -161,6 +165,18 @@ function build(root: string, es?: EsPass) {
   const guidesForArticle: Record<string, any> = readJson("src/data/guides.json", {});
   const cardColors: Record<string, string> = readJson("src/data/card-colors.json", {});
   const lowRes = (r: any) => { const u = toMedia(String(r?.image_urls?.[0] || "")); const t = u ? thumb(u) : ""; return t && t !== u ? t : ""; };
+  // 20-nov-2026 (ideas 13, 14, 25): the Spanish home page carries the Spanish article, with the Spanish buying rules.
+  const destEsForArticle: Record<string, any> = es ? destForArticle : localizeRows(destForArticle, (() => { try { return JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "src/data/destinations-es.json"), "utf8")); } catch { return {}; } })());
+  // 20-nov-2026 (ideas 15, 23, 25): short titles, what and where first, then the price. A home whose advert is gone says
+  // so first. Two homes that would get the same short title keep their descriptive title instead.
+  const pageTitle = (r: any, lang: "en" | "es") => (isGone(r) ? (lang === "es" ? "Vendida o retirada: " : "Sold or withdrawn: ") : "") + shortTitle(r, lang, isGone(r) ? 40 : 60);
+  const titleCount = new Map<string, number>();
+  for (const d of deals) { const r = bySlug.get(d.slug); if (!r) continue; for (const lg2 of ["en", "es"] as const) { const t = lg2 + ":" + pageTitle(r, lg2); titleCount.set(t, (titleCount.get(t) || 0) + 1); } }
+  const titleOf = (r: any, lang: "en" | "es", fallback: string) => { const t = pageTitle(r, lang); return (titleCount.get(lang + ":" + t) || 0) > 1 ? (isGone(r) ? (lang === "es" ? "Vendida o retirada: " : "Sold or withdrawn: ") : "") + fallback : t; };
+  // ideas 17 and 18: homes of the same country at the nearest asking price
+  const nearPrice = (r: any, list: any[], n: number, skip: Set<string>) => list.filter((x) => x.slug !== r.slug && !skip.has(x.slug) && x.price_eur > 0)
+    .sort((a, b) => Math.abs(Math.log(a.price_eur / r.price_eur)) - Math.abs(Math.log(b.price_eur / r.price_eur)) || String(a.slug).localeCompare(String(b.slug))).slice(0, n);
+  const mdHead = (u: string, lang: "en" | "es" = "en") => `<link rel="alternate" type="text/markdown" title="${lang === "es" ? "Texto limpio" : "Clean text"}" href="${esc(u)}.md" />`;
   for (const d of deals) {
     if (!d?.slug || !/^[A-Za-z0-9_-]+$/.test(d.slug)) continue;
     const r = bySlug.get(d.slug);
@@ -180,19 +196,22 @@ function build(root: string, es?: EsPass) {
       const near = r.nearby || {};
       const nearList = [["sea", "Sea"], ["lake", "Lake"], ["shop", "Shop"], ["train", "Train"], ["airport", "Airport"], ["hospital", "Hospital"]]
         .filter(([k]) => near[k]?.km != null).map(([k, l]) => `<li>${esc(l)}: ${esc(near[k].name || "")} · ${esc(near[k].km)} km</li>`).join("");
-      const art = (es ? homeArticleEs : homeArticle)(r, { countryHomes: byCountry.get(cc) || [r], regionHomes: rp?.homes, regionName: rp?.name, dest: destForArticle[cc] || null, hasGuide: !!guidesForArticle[cc] });
+      const art = (es ? homeArticleEs : homeArticle)(r, { countryHomes: byCountry.get(cc) || [r], regionHomes: rp?.homes, regionName: rp?.name, dest: destForArticle[cc] || null, hasGuide: !!guidesForArticle[cc], areaInLead: true });
       const sameRegion = rp ? rp.homes.filter((x) => x.slug !== r.slug).slice(0, 6) : [];
       const similar = (sameRegion.length >= 3 ? sameRegion : ranked.filter((x) => x.slug !== r.slug && x.country === r.country).slice(0, 6));
       const band = plan.bandFor(cc, r.price_eur);
+      const lead = homeLead(r, { countryHomes: byCountry.get(cc) || [r], regionHomes: rp?.homes, regionName: rp?.name }, es ? "es" : "en");
+      const samePrice = nearPrice(r, byCountry.get(cc) || [], 6, new Set(similar.map((x) => x.slug)));
       // 10-nov-2026 speed: the top of the home page (header, main photo, title, price) is drawn by the HTML where the
       // app will draw it, and the row is embedded so the app shows the home without waiting for the snapshot.
       const rg = regionOf(r);
       const shell = dealShell({
         row: r, lowRes: lowRes(r), photos: (r.image_urls || []).filter(Boolean).map((u: string) => toMedia(String(u))), color: cardColors[r.slug],
+        caption: `${r.location_name || cName}, ${eur(r.price_eur)}`,
         crumbs: [[r.country || "", cc ? `/homes/${cc}` : ""], ...(rg ? [[rg, rp ? `/homes/${rp.cc}/${rp.slug}` : ""] as [string, string]] : [])].filter(([l]) => l) as [string, string][],
       });
       body = shell + `<main class="rh-static"><article>${navHtml(trail)}`
-        + `<p><strong>${esc(eur(r.price_eur))}</strong> · ${esc(r.location_name || cName)}${r.sqm ? ` · ${esc(r.sqm)} m²` : ""}${r.bedrooms ? ` · ${esc(r.bedrooms)} bedrooms` : ""}${r.sqm && r.price_eur ? ` · ${esc(eur(r.price_eur / r.sqm))}/m²` : ""}</p>`
+        + lead.map((t, i) => `<p class="rh-lead"${i ? "" : ' id="answer"'}>${esc(t)}</p>`).join("")
         + dealStatusHtml(r, "en")
         + (r.nota != null ? `<h2>RealHunt score: ${esc(r.nota)} / 98</h2><p>Every home on RealHunt passed a hand check first, so the grade starts at 70. The rest compares this home with every other home on the site. <a href="/method">How the score works</a>.</p><ul>${dims.map(([k, l, help]) => `<li>${esc(l)}: <strong>${esc(r.dims[k])}</strong>/100 · ${esc(help)}</li>`).join("")}</ul>` : "")
         + (r.why_great ? `<h2>Why it made the list</h2><p>${esc(r.why_great)}</p>` : "")
@@ -203,16 +222,17 @@ function build(root: string, es?: EsPass) {
         + (art.faq.length ? `<h2>Questions about this home</h2>${art.faq.map(([q, a]) => `<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join("")}` : "")
         + (r.source_domain ? `<p>Listed on ${esc(r.source_domain)}. RealHunt is not an estate agent and does not sell this home; sign in to open the original listing and contact the seller.</p>` : "")
         + (similar.length ? `<h2>More homes in ${esc(sameRegion.length >= 3 && rp ? rp.name : cName)}</h2><ul>${similar.map(homeLi).join("")}</ul>` : "")
-        + (cc && !REGIONS.has(cc) ? `<p><a href="/homes/${esc(cc)}">All homes in ${esc(cName)}</a>${band ? ` · <a href="${esc(band.path)}">Homes under ${esc(eur(band.cap))} in ${esc(cName)}</a>` : ""} · <a href="/costs">What it costs to buy abroad</a></p>` : "")
+        + (samePrice.length ? `<h2>Homes in ${esc(the(cName))} at a similar price</h2><ul>${samePrice.map(homeLi).join("")}</ul>` : "")
+        + (cc && !REGIONS.has(cc) ? `<p><a href="/homes/${esc(cc)}">All homes in ${esc(cName)}</a>${rp ? ` · <a href="/homes/${esc(rp.cc)}/${esc(rp.slug)}">All homes in ${esc(rp.name)}</a>` : ""}${band ? ` · <a href="${esc(band.path)}">Homes under ${esc(eur(band.cap))} in ${esc(cName)}</a>` : ""} · <a href="/costs">What it costs to buy abroad</a></p>` : "")
         + `</article></main>`;
       const images = (r.image_urls || []).slice(0, 6).map((u: string) => abs(u));
       if (art.faq.length) ld.push({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: art.faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) });
       ld.push({
         "@context": "https://schema.org", "@type": "RealEstateListing", url, name: r.title, description: r.why_great || d.desc,
         image: images, datePosted: day(r.publish_at || r.approved_at) || undefined,
-        offers: { "@type": "Offer", price: r.price_eur, priceCurrency: "EUR", availability: dealAvailability(r), url },
+        offers: { "@type": "Offer", price: r.price_eur, priceCurrency: "EUR", ...(dealAvailability(r) ? { availability: dealAvailability(r) } : {}), url },
         about: {
-          "@type": "SingleFamilyResidence", name: r.title,
+          "@type": homeKind(r).ld, name: r.title, accommodationCategory: homeKind(r).en,
           address: { "@type": "PostalAddress", addressLocality: r.location_name || undefined, addressRegion: rg || undefined, addressCountry: cName || undefined },
           ...(r.lat != null && r.lng != null ? { geo: { "@type": "GeoCoordinates", latitude: r.lat, longitude: r.lng } } : {}),
           ...(r.sqm ? { floorSize: { "@type": "QuantitativeValue", value: r.sqm, unitCode: "MTK" } } : {}),
@@ -224,7 +244,9 @@ function build(root: string, es?: EsPass) {
     // 9-nov-2026 speed: the main photo starts downloading with the HTML, not after the app and the data (LCP).
     // 10-nov-2026: its small card copy when there is one (painted first, the full photo sharpens over it), else the photo.
     const hero = r?.image_urls?.[0] ? lowRes(r) || toMedia(String(r.image_urls[0])) : "";
-    page(url, `${d.title} · RealHunt`, d.desc, d.image || DEF, body, ld, { lastmod: homeDay(r), group: "homes", head: (hero ? `<link rel="preload" as="image" href="${esc(hero)}" fetchpriority="high" />` : "") + (r ? DEAL_SHELL_HEAD : "") || undefined,
+    const enTitle = r ? titleOf(r, es ? "es" : "en", d.title) : d.title;
+    const enDesc = r && isGone(r) ? (es ? "El anuncio original ya no está publicado. " : "The original advert is no longer online. ") + d.desc : d.desc;
+    page(url, `${enTitle} · RealHunt`, enDesc, d.image || DEF, body, ld, { lastmod: homeDay(r), group: "homes", head: (hero ? `<link rel="preload" as="image" href="${esc(hero)}" fetchpriority="high" />` : "") + (r ? DEAL_SHELL_HEAD + mdHead(url) : "") || undefined,
       // 10-nov-2026: the home's photos in the sitemap (Google Images), up to 5 per home
       images: (r?.image_urls || []).slice(0, 5).map((u: string) => abs(String(u))),
       alt: r?.title_es ? { en: url, es: `${SITE}/es/deal/${d.slug}` } : undefined });
@@ -233,22 +255,47 @@ function build(root: string, es?: EsPass) {
       const esUrl = `${SITE}/es/deal/${d.slug}`;
       const euro = (n: number) => Math.round(n).toLocaleString("es-ES") + " €";
       const simEs = (rp && rp.homes.length > 3 ? rp.homes : byCountry.get(cc) || []).filter((x) => x.slug !== r.slug && x.title_es).slice(0, 6);
-      const descEs = String(r.why_great_es || r.title_es).replace(/\s+/g, " ").slice(0, 155);
+      const priceEs = nearPrice(r, (byCountry.get(cc) || []).filter((x) => x.title_es), 6, new Set(simEs.map((x) => x.slug)));
+      const placeEsOf = (x: any) => placesEs(String(x.location_name || x.country || "").split(", ").map((y) => esPlace(y.trim())).join(", "));
+      // texts outside the page body (title, description, structured data) do not go through the body's place
+      // dictionary in seo/es.ts, so the same dictionary is applied here: "near X", "(about 25 min from X)", regions
+      const deepEs = (o: any): any => (typeof o === "string" ? (/^https?:\/\//.test(o) ? o : placesEs(o)) : Array.isArray(o) ? o.map(deepEs) : o && typeof o === "object" ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, k.startsWith("@") ? v : deepEs(v)])) : o);
+      // ideas 16 and 25: the Spanish description is written for this page (what, price, where), and seo/polish.ts adds
+      // the score and the size, as on the English page. Before, it was the first 155 characters of the long text.
+      const whereEs = ((p: string) => (p.includes(esC(cName)) ? p : `${p}, ${esC(cName)}`))(placeEsOf(r));
+      const descEs = (isGone(r) ? "El anuncio original ya no está publicado. " : "") + `${r.title_es} por ${euro(r.price_eur)}. ${whereEs[0].toUpperCase() + whereEs.slice(1)}.`;
+      const ctxA = { countryHomes: byCountry.get(cc) || [r], regionHomes: rp?.homes, regionName: rp?.name };
+      const leadEs = homeLead(r, ctxA, "es");
+      const artEs = homeArticleEs(r, { ...ctxA, dest: destEsForArticle[cc] || null, hasGuide: !!guidesForArticle[cc], areaInLead: true });
+      const liEs = (x: any) => `<li><a href="/es/deal/${esc(x.slug)}"><strong>${esc(euro(x.price_eur))}</strong> · ${esc(x.title_es)}</a> · ${esc(placeEsOf(x))}${x.nota != null ? ` · nota ${esc(x.nota)}` : ""}${x.sqm ? ` · ${esc(x.sqm)} m²` : ""}</li>`;
       // same first paint as the English page (seo/dealShell.ts), with the Spanish title in the HTML
-      const bodyEs = dealShell({ row: r, lang: "es", lowRes: lowRes(r), photos: (r.image_urls || []).filter(Boolean).map((u: string) => toMedia(String(u))), color: cardColors[r.slug], crumbs: [] })
+      const bodyEs = dealShell({ row: r, lang: "es", lowRes: lowRes(r), photos: (r.image_urls || []).filter(Boolean).map((u: string) => toMedia(String(u))), color: cardColors[r.slug], crumbs: [], caption: `${placeEsOf(r)}, ${euro(r.price_eur)}` })
         + `<main class="rh-static" lang="es"><article><nav aria-label="Ruta"><a href="/es">RealHunt</a> › ${esc(r.title_es)}</nav>`
-        + `<p><strong>${esc(euro(r.price_eur))}</strong> · ${esc(r.location_name || cName)}${r.sqm ? ` · ${esc(r.sqm)} m²` : ""}${r.bedrooms ? ` · ${esc(r.bedrooms)} dormitorios` : ""}${r.sqm && r.price_eur ? ` · ${esc(euro(r.price_eur / r.sqm))}/m²` : ""}</p>`
+        + leadEs.map((t, i) => `<p class="rh-lead"${i ? "" : ' id="answer"'}>${esc(t)}</p>`).join("")
         + dealStatusHtml(r, "es")
         + (r.nota != null ? `<h2>Nota RealHunt: ${esc(r.nota)} / 98</h2><p>Todas las casas de RealHunt pasan antes una revisión hecha por una persona, por eso la nota empieza en 70. El resto compara esta casa con todas las demás de la web.</p>` : "")
         + (r.why_great_es ? `<h2>Por qué está en la lista</h2><p>${esc(r.why_great_es)}</p>` : "")
         + (r.why_cheap_es ? `<h2>Por qué es tan barata</h2><p>${esc(r.why_cheap_es)}</p>` : "")
+        + artEs.sections.map((x) => `<h2>${esc(x.h)}</h2>${x.p.map((t) => `<p>${esc(t)}</p>`).join("")}`).join("")
+        + (artEs.faq.length ? `<h2>Preguntas sobre esta casa</h2>${artEs.faq.map(([q, a]) => `<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join("")}` : "")
         + (r.source_domain ? `<p>Anunciada en ${esc(r.source_domain)}. RealHunt no es una inmobiliaria y no vende esta casa: el anuncio original te pone en contacto con el vendedor.</p>` : "")
-        + (simEs.length ? `<h2>Más casas parecidas</h2><ul>${simEs.map((x) => `<li><a href="/es/deal/${esc(x.slug)}"><strong>${esc(euro(x.price_eur))}</strong> · ${esc(x.title_es)}</a> · ${esc(x.location_name || x.country)}</li>`).join("")}</ul>` : "")
+        + (simEs.length ? `<h2>Más casas parecidas</h2><ul>${simEs.map(liEs).join("")}</ul>` : "")
+        + (priceEs.length ? `<h2>Casas en ${esc(theEs(esC(cName)))} por un precio parecido</h2><ul>${priceEs.map(liEs).join("")}</ul>` : "")
         + `<p><a href="/es">Las mejores casas</a> · <a href="/deal/${esc(d.slug)}">English</a></p></article></main>`;
-      page(esUrl, `${euro(r.price_eur)} · ${r.title_es} · RealHunt`, descEs, d.image || DEF, bodyEs,
-        [{ "@context": "https://schema.org", "@type": "RealEstateListing", url: esUrl, name: r.title_es, description: r.why_great_es || descEs, inLanguage: "es", image: (r.image_urls || []).slice(0, 5).map((u: string) => abs(String(u))),
-          offers: { "@type": "Offer", price: r.price_eur, priceCurrency: "EUR", availability: dealAvailability(r), url: esUrl } }],
-        { lastmod: homeDay(r), group: "es", lang: "es", alt: { en: url, es: esUrl }, head: (hero ? `<link rel="preload" as="image" href="${esc(hero)}" fetchpriority="high" />` : "") + DEAL_SHELL_HEAD });
+      const kind = homeKind(r);
+      const ldEs: object[] = [{ "@context": "https://schema.org", "@type": "RealEstateListing", url: esUrl, name: r.title_es, description: r.why_great_es || descEs, inLanguage: "es", image: (r.image_urls || []).slice(0, 5).map((u: string) => abs(String(u))),
+        datePosted: day(r.publish_at || r.approved_at) || undefined,
+        offers: { "@type": "Offer", price: r.price_eur, priceCurrency: "EUR", ...(dealAvailability(r) ? { availability: dealAvailability(r) } : {}), url: esUrl },
+        about: {
+          "@type": kind.ld, name: r.title_es, accommodationCategory: kind.es,
+          address: { "@type": "PostalAddress", addressLocality: r.location_name ? placeEsOf(r) : undefined, addressRegion: rp?.name ? esPlace(rp.name) : undefined, addressCountry: esC(cName) || undefined },
+          ...(r.lat != null && r.lng != null ? { geo: { "@type": "GeoCoordinates", latitude: r.lat, longitude: r.lng } } : {}),
+          ...(r.sqm ? { floorSize: { "@type": "QuantitativeValue", value: r.sqm, unitCode: "MTK" } } : {}),
+          ...(r.bedrooms ? { numberOfBedrooms: r.bedrooms } : {}),
+        } }];
+      if (artEs.faq.length) ldEs.push({ "@context": "https://schema.org", "@type": "FAQPage", inLanguage: "es", mainEntity: artEs.faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) });
+      page(esUrl, `${placesEs(titleOf(r, "es", `${euro(r.price_eur)} · ${r.title_es}`))} · RealHunt`, placesEs(descEs), d.image || DEF, bodyEs, ldEs.map(deepEs),
+        { lastmod: homeDay(r), group: "es", lang: "es", alt: { en: url, es: esUrl }, head: (hero ? `<link rel="preload" as="image" href="${esc(hero)}" fetchpriority="high" />` : "") + DEAL_SHELL_HEAD + mdHead(esUrl, "es") });
     }
   }
 

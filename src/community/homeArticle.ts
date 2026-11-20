@@ -10,6 +10,8 @@ export type ArticleCtx = {
   regionName?: string;
   dest?: Row | null;              // destinations.json entry for the country
   hasGuide?: boolean;
+  /** the page already says how the price compares with the region (src/community/homeLead.ts): not said twice */
+  areaInLead?: boolean;
 };
 export type Article = { sections: { h: string; p: string[] }[]; faq: [string, string][] };
 
@@ -18,7 +20,7 @@ const median = (xs: number[]) => { const a = xs.filter((x) => x > 0).sort((p, q)
 const ppsqm = (r: Row) => (r.sqm > 0 && r.price_eur > 0 ? r.price_eur / r.sqm : 0);
 const range = (s?: string | null): [number, number] | null => { const m = String(s || "").match(/([\d.]+)\s*[-–]\s*([\d.]+)/) || String(s || "").match(/([\d.]+)/); return m ? [Number(m[1]), Number(m[2] || m[1])] : null; };
 const the = (n: string) => (/^(United |Netherlands$|Dominican Republic$|Czech Republic$|Philippines$)/.test(n) ? "the " + n : n);
-const town = (r: Row) => String(r.location_name || r.country || "").split(",")[0].trim();
+const town = (r: Row) => String(r.location_name || r.country || "").split(",")[0].trim().replace(/^near /, "");
 
 export function homeArticle(r: Row, ctx: ArticleCtx): Article {
   const country = String(r.country || "");
@@ -36,7 +38,7 @@ export function homeArticle(r: Row, ctx: ArticleCtx): Article {
     const diff = Math.round(((own - cMed) / cMed) * 100);
     const pricier = ctx.countryHomes.filter((x) => ppsqm(x) > own).length;
     priceP.push(`At about ${eur(own)} per m², this home is ${Math.abs(diff) < 3 ? "in line with" : `${Math.abs(diff)}% ${diff < 0 ? "below" : "above"}`} the median for ${inC} on RealHunt (${eur(cMed)} per m², across ${cN} homes checked by a person). ${pricier} of those homes cost more per m².`);
-    const rMed = ctx.regionHomes && ctx.regionHomes.length >= 3 ? median(ctx.regionHomes.map(ppsqm)) : 0;
+    const rMed = !ctx.areaInLead && ctx.regionHomes && ctx.regionHomes.length >= 3 ? median(ctx.regionHomes.map(ppsqm)) : 0;
     if (rMed && ctx.regionName) {
       const rd = Math.round(((own - rMed) / rMed) * 100);
       priceP.push(`In ${ctx.regionName} the median is ${eur(rMed)} per m², so this home is ${Math.abs(rd) < 3 ? "about the same as" : `${Math.abs(rd)}% ${rd < 0 ? "cheaper than" : "dearer than"}`} homes nearby on RealHunt.`);
@@ -76,6 +78,12 @@ export function homeArticle(r: Row, ctx: ArticleCtx): Article {
     faq.push(["Is there a community fee (HOA)?", hoa ? `Yes: ${fmtC(hoa)} a month${r.costs_note ? `. ${r.costs_note}` : "."}` : r.hoa_unknown ? "The listing does not say. Ask the agent for the monthly fee and any pending special assessment." : "No community fee is listed."]);
   }
 
+  // 2c. Yearly costs as a question of its own (idea 14): the country's yearly tax rule, and this home's fee and tax.
+  const yearly: string[] = [];
+  if (hoa) yearly.push(`a community fee (HOA) of ${fmtC(hoa)} a month`);
+  if (tax) yearly.push(`a property tax of ${fmtC(tax)} a year`);
+  if (yearly.length || ctx.dest?.annual_property_tax) faq.push(["What does this home cost every year?", [yearly.length ? `The listing gives ${yearly.join(" and ")}.` : "", ctx.dest?.annual_property_tax ? `In ${inC}: ${ctx.dest.annual_property_tax}` : ""].filter(Boolean).join(" ") + " Insurance and utilities come on top."]);
+
   // 3. Where it is.
   const near = r.nearby || {};
   const bits: string[] = [];
@@ -87,7 +95,9 @@ export function homeArticle(r: Row, ctx: ArticleCtx): Article {
   if (km("shop") != null) bits.push(`the nearest shop is ${km("shop")! < 1 ? "within a kilometre" : `about ${Math.round(km("shop")!)} km away`}`);
   if (km("train") != null) bits.push(`the nearest train station is about ${Math.round(km("train")!)} km away${name("train")}`);
   if (km("hospital") != null) bits.push(`the nearest hospital is about ${Math.round(km("hospital")!)} km away`);
-  const locP = [`The home is in ${r.location_name || place}${ctx.regionName && !String(r.location_name || "").includes(ctx.regionName) ? `, ${ctx.regionName}` : ""}, ${country}.`];
+  // "near Saint-Vaury, Creuse": the home is near it, not in it; the country is not said twice (20-nov-2026)
+  const locName = String(r.location_name || place);
+  const locP = [`The home is ${/^near /.test(locName) ? "" : "in "}${locName}${ctx.regionName && !locName.includes(ctx.regionName) ? `, ${ctx.regionName}` : ""}${locName.endsWith(country) ? "" : `, ${country}`}.`];
   if (bits.length) locP.push(bits.map((b, i) => (i ? b : b[0].toUpperCase() + b.slice(1))).join("; ") + ". Distances are in a straight line.");
   sections.push({ h: `Where it is: ${place}`, p: locP });
   if (km("airport") != null) faq.push([`How far is the nearest airport from this home?`, `About ${Math.round(km("airport")!)} km in a straight line${near.airport?.name ? `: ${near.airport.name}` : ""}.`]);
