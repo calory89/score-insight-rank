@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isGone, lastCheck, listedDays, alertHref, streetViewHref, dayLabel, listedAt } from "./status";
+import { isGone, isUnconfirmed, lastCheck, listedDays, alertHref, streetViewHref, dayLabel, listedAt } from "./status";
 import { nextVisit, newSince, VISIT_GAP } from "./visit";
 import { listingSlugs, cellValue, sortOrder, shareLinks } from "./listing";
 import { shouldNudge } from "./SaveNudge";
@@ -91,5 +91,22 @@ describe("save nudge", () => {
     expect(shouldNudge({ user: false, saves: 3, answered: false })).toBe(true);
     expect(shouldNudge({ user: true, saves: 5, answered: false })).toBe(false);
     expect(shouldNudge({ user: false, saves: 5, answered: true })).toBe(false);
+  });
+});
+
+describe("isUnconfirmed (20-nov-2026)", () => {
+  const now = Date.parse("2026-11-20T12:00:00Z");
+  const old = "2026-10-01T00:00:00Z";
+  it("marks homes the check could not read for 30 days", () => {
+    expect(isUnconfirmed({ src_last: "blocked", src_ok_at: null, approved_at: old }, now)).toBe(true);
+    expect(isUnconfirmed({ src_last: "error", src_ok_at: "2026-10-10T00:00:00Z", approved_at: old }, now)).toBe(true);
+    expect(isUnconfirmed({ src_last: null, src_ok_at: null, approved_at: old }, now)).toBe(true);
+  });
+  it("leaves confirmed, gone, new and old-snapshot homes alone", () => {
+    expect(isUnconfirmed({ src_last: "blocked", src_ok_at: "2026-11-10T00:00:00Z", approved_at: old }, now)).toBe(false);
+    expect(isUnconfirmed({ src_last: "ok", src_ok_at: "2026-11-19T00:00:00Z", approved_at: old }, now)).toBe(false);
+    expect(isUnconfirmed({ src_last: "gone", sold_reports: 2, available_reports: 0, approved_at: old }, now)).toBe(false);
+    expect(isUnconfirmed({ src_last: null, src_ok_at: null, approved_at: "2026-11-18T00:00:00Z" }, now)).toBe(false);
+    expect(isUnconfirmed({ approved_at: old }, now)).toBe(false);
   });
 });

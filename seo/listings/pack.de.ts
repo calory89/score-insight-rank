@@ -22,10 +22,10 @@ const country = (c: string) => COUNTRY[c]?.[0] || c;
 const inC = (c: string) => COUNTRY[c]?.[1] || `in ${c}`;
 const IN_BY_NAME: Record<string, string> = Object.fromEntries(Object.values(COUNTRY));
 
-const PLACES: PlaceWords = {
+export const PLACES: PlaceWords = {
   map: {
     Abruzzo: "Abruzzen", Apulia: "Apulien", Calabria: "Kalabrien", "Lake Como": "Comer See", Lazio: "Latium", Lombardy: "Lombardei", Marche: "Marken", Piedmont: "Piemont", Sardinia: "Sardinien", Sicily: "Sizilien", Tuscany: "Toskana", Umbria: "Umbrien",
-    "County Durham": "County Durham", "Central Jutland": "Mitteljütland", "East Jutland": "Ostjütland", "North Jutland": "Nordjütland", "West Jutland": "Westjütland", "South Jutland": "Südjütland", Funen: "Fünen", "West Zealand": "Westseeland",
+    "Northern Ireland": "Nordirland", "County Down": "County Down", "County Fermanagh": "County Fermanagh", "County Leitrim": "County Leitrim", "County Durham": "County Durham", "Central Jutland": "Mitteljütland", "East Jutland": "Ostjütland", "North Jutland": "Nordjütland", "West Jutland": "Westjütland", "South Jutland": "Südjütland", Funen: "Fünen", "West Zealand": "Westseeland",
     "Black Sea": "Schwarzes Meer", "Allegheny Mountains": "Allegheny Mountains", "Lake Superior region": "Region am Oberen See", "North Carolina": "North Carolina", "South Carolina": "South Carolina", "West Virginia": "West Virginia",
     "Central Sweden": "Mittelschweden", "Northern Sweden": "Nordschweden", Crete: "Kreta", "North Evia": "Nord-Euböa", Evia: "Euböa", Rhodes: "Rhodos", Corfu: "Korfu", Sporades: "Sporaden", Halkidiki: "Chalkidiki", Messinia: "Messenien", Peloponnese: "Peloponnes",
     "Greater Poland": "Großpolen", "Kuyavia-Pomerania": "Kujawien-Pommern", "Lower Silesia": "Niederschlesien", Lubusz: "Lebus", Masovia: "Masowien", Podlaskie: "Podlachien", Pomerania: "Pommern", Silesia: "Schlesien", Subcarpathia: "Karpatenvorland",

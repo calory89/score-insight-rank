@@ -12,7 +12,7 @@ export type StatusRow = {
   slug?: string; price_eur?: number | null; country?: string | null; location_name?: string | null;
   publish_at?: string | null; approved_at?: string | null; verified_at?: string | null; verified_note?: string | null;
   ai_checked?: boolean | null; ai_checked_at?: string | null; sold_reports?: number | null; available_reports?: number | null;
-  source_domain?: string | null; lat?: number | null; lng?: number | null; image_urls?: string[] | null; price_drop?: number | null;
+  source_domain?: string | null; src_ok_at?: string | null; src_last?: string | null; lat?: number | null; lng?: number | null; image_urls?: string[] | null; price_drop?: number | null;
 };
 
 export const isGone = (r: StatusRow | null | undefined): boolean => {
@@ -21,6 +21,23 @@ export const isGone = (r: StatusRow | null | undefined): boolean => {
 };
 
 const ms = (iso?: string | null) => { const n = iso ? Date.parse(iso) : NaN; return Number.isFinite(n) ? n : null; };
+
+// "Unconfirmed" (20-nov-2026): the snapshot carries when the nightly check last found the original advert online
+// (src_ok_at) and the result of its last attempt (src_last: ok, gone, blocked, error). Some portals block the check
+// and some homes come from social posts, so for those nobody can confirm the home is still for sale. Such a home
+// stays on the site with a plain notice and goes after the others in lists. Not marked: homes whose advert is gone
+// (they have their own notice), homes confirmed in the last 30 days, homes on RealHunt for under 4 days (not yet
+// checked), and snapshots without the field (older data: nothing is claimed).
+export const UNCONFIRMED_DAYS = 30;
+export function isUnconfirmed(r: StatusRow | null | undefined, now: number = Date.now()): boolean {
+  if (!r || isGone(r) || !("src_last" in r || "src_ok_at" in r)) return false;
+  const ok = ms(r.src_ok_at);
+  if (ok != null && now - ok < UNCONFIRMED_DAYS * 86400000) return false;
+  if (r.src_last === "ok") return false;
+  const t = ms(r.publish_at) ?? ms(r.approved_at);
+  if (t != null && now - t < 4 * 86400000) return false;
+  return true;
+}
 
 /** The last dated check of this home: by a person (verified_at) or by the AI check (ai_checked_at), whichever is later. */
 export function lastCheck(r: StatusRow): { iso: string; by: "person" | "ai" } | null {

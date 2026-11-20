@@ -25,14 +25,14 @@ const country = (c: string) => COUNTRY[c]?.[0] || c;
 const inC = (c: string) => COUNTRY[c]?.[1] || `в стране ${c}`;
 const IN_BY_NAME: Record<string, string> = Object.fromEntries(Object.values(COUNTRY));
 
-const PLACES: PlaceWords = {
+export const PLACES: PlaceWords = {
   map: {
     Varna: "Варна", Kavarna: "Каварна", Pomorie: "Поморие", Byala: "Бяла", Burgas: "Бургас", "Black Sea": "Чёрное море", "Sunny Beach": "Солнечный берег", Nessebar: "Несебр", "Sveti Vlas": "Святой Влас",
     Crete: "Крит", Halkidiki: "Халкидики", Lesbos: "Лесбос", Messinia: "Мессения", "North Evia": "Северная Эвбея", Evia: "Эвбея", Pelion: "Пелион", Rhodes: "Родос", Samos: "Самос", Skopelos: "Скопелос", Sporades: "Спорады", Corfu: "Корфу", Peloponnese: "Пелопоннес",
     Famagusta: "Фамагуста", Paphos: "Пафос", Protaras: "Протарас", "Coral Bay": "Корал-Бэй",
     // Regions of the other countries (15-nov-2026). Small towns keep the spelling of their country.
     Abruzzo: "Абруццо", Apulia: "Апулия", Calabria: "Калабрия", "Lake Como": "озеро Комо", Como: "Комо", Lazio: "Лацио", Lombardy: "Ломбардия", Marche: "Марке", Piedmont: "Пьемонт", Sardinia: "Сардиния", Sicily: "Сицилия", Tuscany: "Тоскана", Umbria: "Умбрия",
-    "County Durham": "графство Дарем", Northumberland: "Нортумберленд",
+    "Northern Ireland": "Северная Ирландия", "County Down": "графство Даун", "County Fermanagh": "графство Фермана", "County Leitrim": "графство Литрим", "County Durham": "графство Дарем", Northumberland: "Нортумберленд",
     Aude: "Од", Aveyron: "Аверон", Charente: "Шаранта", "Corrèze": "Коррез", Creuse: "Крёз", Dijon: "Дижон", Dordogne: "Дордонь", Grenoble: "Гренобль", "Haute-Garonne": "Верхняя Гаронна", "Haute-Marne": "Верхняя Марна", "Haute-Vienne": "Верхняя Вьенна",
     "Le Havre": "Гавр", "Le Mans": "Ле-Ман", "Loir-et-Cher": "Луар и Шер", Marseille: "Марсель", Mulhouse: "Мюлуз", Nord: "Нор", "Nouvelle-Aquitaine": "Новая Аквитания", Occitanie: "Окситания", Orne: "Орн", Perpignan: "Перпиньян",
     "Puy-de-Dôme": "Пюи-де-Дом", Roubaix: "Рубе", "Saint-Étienne": "Сент-Этьен", Toulouse: "Тулуза", Vienne: "Вьенна", Yonne: "Йонна",

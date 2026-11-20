@@ -48,6 +48,16 @@ def translate_missing():
 translate_missing()
 
 meta, rows = pages("all")
+# 20-nov-2026 (Carlos chose "aviso visible"): when each home's original advert was last confirmed online by the nightly
+# check (realhunt.community_source_checks). Homes on portals that block the check get a visible notice on their page and
+# go after the others in lists (src/community/n9/status.ts isUnconfirmed). If the call fails, nothing is marked.
+try:
+    _chk = {c["slug"]: c for c in rpc("community_source_checks", {}) if c.get("slug")}
+    for _r in rows:
+        _c = _chk.get(_r.get("slug"))
+        if _c: _r["src_ok_at"] = _c.get("ok_at"); _r["src_last"] = _c.get("last")
+except Exception as _e:
+    print("source checks skipped:", _e)
 # The live database does not count views any more (the static site skips tracking), so its counters and the
 # buyer-interest sub-score would sink to zero and move every grade. Keep, for homes already in the previous
 # snapshot, the higher counters and, if the price did not change, the previous grade and sub-scores. New

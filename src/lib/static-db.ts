@@ -45,6 +45,13 @@ const visible = (r: Row) => !r.publish_at || pub(r) <= now();
 const num = (v: any, d = 0) => { const n = Number(v); return Number.isFinite(n) ? n : d; };
 /** Same rule as isGone() in src/community/n9/status.ts: more "advert gone" reports than "still available" ones. */
 const advertGone = (e: Row) => num(e.sold_reports) >= 1 && num(e.sold_reports) > num(e.available_reports);
+/** Same rule as isUnconfirmed() in src/community/n9/status.ts (20-nov-2026): advert not confirmed online for 30 days. */
+const advertUnconfirmed = (e: Row) => {
+  if (advertGone(e) || !("src_last" in e || "src_ok_at" in e) || e.src_last === "ok") return false;
+  const ok = Date.parse(e.src_ok_at || ""); if (Number.isFinite(ok) && now() - ok < 30 * 86400000) return false;
+  const t = Date.parse(e.publish_at || e.approved_at || ""); if (Number.isFinite(t) && now() - t < 4 * 86400000) return false;
+  return true;
+};
 const has = (s: any, w: string) => String(s ?? "").toLowerCase().includes(w.toLowerCase());
 
 function feed(snap: Snap, p: Row = {}) {
@@ -95,7 +102,7 @@ function feed(snap: Snap, p: Row = {}) {
   // 15-nov-2026: homes whose original advert is gone (nightly check or visitor reports, src/community/n9/status.ts)
   // stay on the site but go after every home that can still be bought, in any order. Explicit lists (saved homes,
   // comparisons: `ids`) keep their own order.
-  const gone = (e: Row) => (!ids && advertGone(e) ? 1 : 0);
+  const gone = (e: Row) => (ids ? 0 : advertGone(e) ? 2 : advertUnconfirmed(e) ? 1 : 0);
   const cmp = (a: Row, b: Row) => {
     let d = gone(a) - gone(b);
     if (d) return d;

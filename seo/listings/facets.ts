@@ -1,3 +1,4 @@
+import { isUnconfirmed } from "../../src/community/n9/status";
 // Which listing pages exist (14-nov-2026). Pure functions over the homes snapshot, shared by the prerender
 // (seo/listings/build.ts), the URL memory (seo/listings/record.ts) and the tests.
 //
@@ -94,7 +95,9 @@ export const jaccard = (a: Set<string>, b: Set<string>) => {
   const union = a.size + b.size - inter;
   return union ? inter / union : 0;
 };
-const byScore = (a: Home, b: Home) => (b.nota ?? 0) - (a.nota ?? 0) || (a.rank ?? 1e9) - (b.rank ?? 1e9) || String(a.slug).localeCompare(String(b.slug));
+// 20-nov-2026: homes whose advert the nightly check could not confirm for 30 days go after the others (status.ts isUnconfirmed).
+const unconf = (h: Home) => (isUnconfirmed(h as any) ? 1 : 0);
+const byScore = (a: Home, b: Home) => unconf(a) - unconf(b) || (b.nota ?? 0) - (a.nota ?? 0) || (a.rank ?? 1e9) - (b.rank ?? 1e9) || String(a.slug).localeCompare(String(b.slug));
 
 export type Plan = { pages: Facet[]; redirects: Record<string, string> };
 export type Opts = { fx?: Fx; today?: string };
