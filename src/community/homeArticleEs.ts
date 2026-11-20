@@ -13,7 +13,7 @@ const pct = (s: string) => String(s).replace(/(\d)\.(\d)/g, "$1,$2");
 const median = (xs: number[]) => { const a = xs.filter((x) => x > 0).sort((p, q) => p - q); return a.length ? a[Math.floor(a.length / 2)] : 0; };
 const ppsqm = (r: Row) => (r.sqm > 0 && r.price_eur > 0 ? r.price_eur / r.sqm : 0);
 const range = (s?: string | null): [number, number] | null => { const m = String(s || "").match(/([\d.]+)\s*[-–]\s*([\d.]+)/) || String(s || "").match(/([\d.]+)/); return m ? [Number(m[1]), Number(m[2] || m[1])] : null; };
-const town = (r: Row) => String(r.location_name || r.country || "").split(",")[0].trim();
+const town = (r: Row) => String(r.location_name || r.country || "").split(",")[0].trim().replace(/^near /, "");
 /** "Spain, Málaga" style location with the Spanish names of the country and regions the site knows. */
 const placeEs = (s: string) => String(s).split(", ").map((x) => esPlace(x.trim())).join(", ");
 
@@ -35,7 +35,7 @@ export function homeArticleEs(r: Row, ctx: ArticleCtx): Article {
     const pricier = ctx.countryHomes.filter((x) => ppsqm(x) > own).length;
     const vs = Math.abs(diff) < 3 ? "en línea con" : `un ${Math.abs(diff)}% ${diff < 0 ? "por debajo de" : "por encima de"}`;
     priceP.push(`A unos ${eur(own)} por m², esta casa está ${vs} la mediana de ${inC} en RealHunt (${eur(cMed)} por m², entre ${cN} casas revisadas por una persona). ${pricier} de esas casas cuestan más por m².`);
-    const rMed = ctx.regionHomes && ctx.regionHomes.length >= 3 ? median(ctx.regionHomes.map(ppsqm)) : 0;
+    const rMed = !ctx.areaInLead && ctx.regionHomes && ctx.regionHomes.length >= 3 ? median(ctx.regionHomes.map(ppsqm)) : 0;
     if (rMed && region) {
       const rd = Math.round(((own - rMed) / rMed) * 100);
       const cmp = Math.abs(rd) < 3 ? "cuesta más o menos lo mismo que" : `es un ${Math.abs(rd)}% ${rd < 0 ? "más barata que" : "más cara que"}`;
@@ -81,6 +81,12 @@ export function homeArticleEs(r: Row, ctx: ArticleCtx): Article {
     faq.push(["¿Hay cuota de comunidad (HOA)?", hoa ? `Sí: ${fmtC(hoa)} al mes.` : r.hoa_unknown ? "El anuncio no lo dice. Pide al agente la cuota mensual y si hay alguna derrama pendiente." : "El anuncio no indica cuota de comunidad."]);
   }
 
+  // 2c. Gastos de cada año como pregunta propia (idea 14).
+  const yearly: string[] = [];
+  if (hoa) yearly.push(`una cuota de comunidad (HOA) de ${fmtC(hoa)} al mes`);
+  if (tax) yearly.push(`un impuesto sobre la propiedad de ${fmtC(tax)} al año`);
+  if (yearly.length || ctx.dest?.annual_property_tax) faq.push(["¿Cuánto cuesta esta casa cada año?", [yearly.length ? `El anuncio indica ${yearly.join(" y ")}.` : "", ctx.dest?.annual_property_tax ? `En ${inC}: ${ctx.dest.annual_property_tax}` : ""].filter(Boolean).join(" ") + " El seguro y los suministros van aparte."]);
+
   // 3. Dónde está.
   const near = r.nearby || {};
   const bits: string[] = [];
@@ -93,7 +99,8 @@ export function homeArticleEs(r: Row, ctx: ArticleCtx): Article {
   if (km("train") != null) bits.push(`la estación de tren más cercana está a unos ${Math.round(km("train")!)} km${name("train")}`);
   if (km("hospital") != null) bits.push(`el hospital más cercano está a unos ${Math.round(km("hospital")!)} km`);
   const loc = placeEs(r.location_name || place);
-  const locP = [`La casa está en ${loc}${region && !loc.includes(region) ? `, ${region}` : ""}, ${country}.`];
+  const isNear = /^near /.test(loc);
+  const locP = [`La casa está ${isNear ? "cerca de " : "en "}${isNear ? loc.slice(5) : loc}${region && !loc.includes(region) ? `, ${region}` : ""}${loc.endsWith(country) ? "" : `, ${country}`}.`];
   if (bits.length) locP.push(bits.map((b, i) => (i ? b : b[0].toUpperCase() + b.slice(1))).join("; ") + ". Las distancias son en línea recta.");
   sections.push({ h: `Dónde está: ${place}`, p: locP });
   if (km("airport") != null) faq.push(["¿A qué distancia está el aeropuerto más cercano?", `A unos ${Math.round(km("airport")!)} km en línea recta${near.airport?.name ? `: ${near.airport.name}` : ""}.`]);

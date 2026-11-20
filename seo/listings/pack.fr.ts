@@ -289,7 +289,7 @@ const words: Pack = {
   kpi: { homes: "Biens", from: "À partir de", median: "Prix médian", ppsqm: "Médiane au m²", size: "Surface médiane", score: "Meilleure note" },
   gridTitle: (n, shown) => (n === shown ? `Les ${n} biens, la meilleure note en premier` : `Les ${shown} mieux notés sur ${n}`),
   gridMore: (shown, n) => `Vous voyez ici les ${shown} biens les mieux notés sur ${n}. Les autres figurent dans le tableau et dans les recherches plus précises ci-dessous.`,
-  card: { isNew: "Nouveau", drop: (p) => `Baisse de ${p} %`, score: "Note", beds: (n) => `${n} ch.`, noPhoto: "Photos dans l'annonce" },
+  card: { isNew: "Nouveau", drop: (p) => `Baisse de ${p} %`, score: "Note", beds: (n) => `${n} ch.`, noPhoto: "Photos dans l'annonce", days: (n) => (n === 0 ? "Ajoutée aujourd’hui" : n === 1 ? "1 jour sur RealHunt" : `${n} jours sur RealHunt`) },
   tableTitle: (n, shown) => (n === shown ? `Comparatif des ${n} biens, du moins cher au plus cher` : `Comparatif des ${shown} biens les moins chers sur ${n}`),
   th: { home: "Bien", place: "Lieu", price: "Prix", size: "Surface", ppsqm: "Prix au m²", beds: "Chambres", score: "Note", added: "Ajouté le" },
   factsTitle: (F) => (F.f.kind === "ccyBand" ? `Ce que l'on trouve pour ${ccy(F.f.cap!, F.f.ccy!)}${F.f.country ? ` ${inC(F.f.country)}` : ""}` : F.f.cap && F.f.kind !== "combo" ? `Ce que l'on trouve pour ${money(F.f.cap)}${F.f.area ? ` ${areaIn(F.f)}` : F.f.region ? ` ${inR(place(F.f.region) || F.f.region)}` : F.f.country ? ` ${inC(F.f.country)}` : ""}` : `Les ${F.n} biens en chiffres`),

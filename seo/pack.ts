@@ -5,14 +5,20 @@
 // falling back to the single file. The pages are byte for byte the ones of the single files.
 //   PACK_MODE "copy": the single files stay too (parallel test).
 //   PACK_MODE "move": the single files are left out of dist, so the deploy no longer grows with every new home.
+//   20 Nov 2026: each page also gets its clean-text version (seo/dealMd.ts) under the key "<path>.md" in the bundle that
+//   packShard("<path>.md") names; the worker serves those keys as text/markdown. No file is added to dist.
+//   The size of every page is measured: a page over PAGE_WARN_KB is named in the build log and in dist/build.json.
 import fs from "fs";
 import path from "path";
+import { dealMarkdown } from "./dealMd";
 
 export const PACK_MODE: "copy" | "move" = "move"; // 20 Nov 2026: all 1,366 pages compared equal live
 export const PACK_DIR = "_pk/v1";
 export const SHARDS = 256;
 /** dist folders whose <slug>/index.html pages go into the bundles */
 export const PACK_ROOTS = ["deal", "es/deal"];
+/** A home page heavier than this is named in the build log (idea 77). The biggest were about 40 KB on 20 Nov 2026. */
+export const PAGE_WARN_KB = 120;
 
 /** FNV-1a 32 bit, the same function as packShard() in the worker */
 export function packShard(key: string, shards = SHARDS): number {
@@ -21,34 +27,39 @@ export function packShard(key: string, shards = SHARDS): number {
   return h % shards;
 }
 
-export interface Packed { shards: Map<number, Record<string, string>>; files: string[] }
+export interface Packed { shards: Map<number, Record<string, string>>; files: string[]; sizes: [string, number][] }
 
 /** Reads the pages under PACK_ROOTS of a dist folder. Keys are the public paths without the trailing slash. */
 export function collect(root: string): Packed {
-  const shards = new Map<number, Record<string, string>>(), files: string[] = [];
+  const shards = new Map<number, Record<string, string>>(), files: string[] = [], sizes: [string, number][] = [];
+  const put = (key: string, v: string) => { const n = packShard(key); if (!shards.has(n)) shards.set(n, {}); shards.get(n)![key] = v; };
   for (const r of PACK_ROOTS) {
     const dir = path.join(root, r);
     if (!fs.existsSync(dir)) continue;
     for (const slug of fs.readdirSync(dir).sort()) {
       const f = path.join(dir, slug, "index.html");
       if (!/^[\w.~-]+$/.test(slug) || !fs.existsSync(f)) continue;
-      const key = "/" + r + "/" + slug, n = packShard(key);
-      if (!shards.has(n)) shards.set(n, {});
-      shards.get(n)![key] = fs.readFileSync(f, "utf8");
+      const key = "/" + r + "/" + slug, html = fs.readFileSync(f, "utf8");
+      put(key, html);
+      put(key + ".md", dealMarkdown(html, key));
+      sizes.push([key, Buffer.byteLength(html)]);
       files.push(f);
     }
   }
-  return { shards, files };
+  return { shards, files, sizes };
 }
 
-export function writePack(root: string, mode = PACK_MODE): { pages: number; shards: number } {
-  const { shards, files } = collect(root);
+export function writePack(root: string, mode = PACK_MODE): { pages: number; shards: number; maxKb: number; over: string[] } {
+  const { shards, files, sizes } = collect(root);
   const out = path.join(root, PACK_DIR);
   fs.rmSync(out, { recursive: true, force: true });
   fs.mkdirSync(out, { recursive: true });
   for (const [n, map] of shards) fs.writeFileSync(path.join(out, n + ".json"), JSON.stringify(map));
   if (mode === "move") for (const f of files) { fs.rmSync(f); try { fs.rmdirSync(path.dirname(f)); } catch { /* other files left */ } }
-  return { pages: files.length, shards: shards.size };
+  const over = sizes.filter(([, b]) => b > PAGE_WARN_KB * 1024).map(([k, b]) => `${k} (${Math.round(b / 1024)} KB)`);
+  const maxKb = Math.round(Math.max(0, ...sizes.map(([, b]) => b)) / 1024);
+  try { const bf = path.join(root, "build.json"); const b = JSON.parse(fs.readFileSync(bf, "utf8")); b.home_pages = { pages: files.length, max_kb: maxKb, over_kb: PAGE_WARN_KB, over: over.slice(0, 50) }; fs.writeFileSync(bf, JSON.stringify(b) + "\n"); } catch { /* no build.json */ }
+  return { pages: files.length, shards: shards.size, maxKb, over };
 }
 
 /** Vite plugin, after every step that writes or reads the home pages and before the file budget. */
@@ -62,7 +73,8 @@ export function packPages() {
       const root = path.resolve(process.cwd(), outDir);
       if (!fs.existsSync(path.join(root, "index.html"))) return;
       const r = writePack(root);
-      console.log(`[rh-pack-pages] ${r.pages} home pages in ${r.shards} bundles (${PACK_MODE})`);
+      console.log(`[rh-pack-pages] ${r.pages} home pages (and their .md) in ${r.shards} bundles (${PACK_MODE}); largest page ${r.maxKb} KB`);
+      if (r.over.length) console.warn(`[rh-pack-pages] ${r.over.length} home page(s) over ${PAGE_WARN_KB} KB: ${r.over.slice(0, 10).join(", ")}`);
     },
   };
 }

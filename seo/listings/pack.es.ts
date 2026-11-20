@@ -139,7 +139,7 @@ export const es: Pack = {
   kpi: { homes: "Viviendas", from: "Desde", median: "Precio mediano", ppsqm: "Mediana por m²", size: "Tamaño mediano", score: "Mejor nota" },
   gridTitle: (n, shown) => (n === shown ? `Las ${n} viviendas, de mejor a peor nota` : `Las ${shown} mejores de ${n}, por nota`),
   gridMore: (shown, n) => `Se muestran las ${shown} con mejor nota de ${n} viviendas. La tabla y las búsquedas más concretas de abajo recogen el resto.`,
-  card: { isNew: "Nueva", drop: (p) => `Rebajada un ${p}${NB}%`, score: "Nota", beds: (n) => `${n} dorm.`, noPhoto: "Fotos en el anuncio" },
+  card: { isNew: "Nueva", drop: (p) => `Rebajada un ${p}${NB}%`, score: "Nota", beds: (n) => `${n} dorm.`, noPhoto: "Fotos en el anuncio", days: (n) => (n === 0 ? "Añadida hoy" : n === 1 ? "1 día en RealHunt" : `${n} días en RealHunt`) },
   tableTitle: (n, shown) => (n === shown ? `Compara las ${n} viviendas, de más barata a más cara` : `Compara las ${shown} más baratas de ${n}`),
   th: { home: "Vivienda", place: "Lugar", price: "Precio", size: "Tamaño", ppsqm: "Por m²", beds: "Dorm.", score: "Nota", added: "Añadida" },
   factsTitle: (F) => (F.f.kind === "ccyBand" ? `Qué se compra con ${ccy(F.f.cap!, F.f.ccy!)}${F.f.country ? ` ${inC(F.f.country)}` : ""}` : F.f.cap && F.f.kind !== "combo" ? `Qué se compra con ${money(F.f.cap)}${F.f.area ? ` ${areaOf(F.f)?.inEs || ""}` : F.f.region ? ` en ${place(F.f.region)}` : F.f.country ? ` ${inC(F.f.country)}` : ""}` : `Las ${F.n} viviendas en cifras`),

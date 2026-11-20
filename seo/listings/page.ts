@@ -281,7 +281,9 @@ export function renderBody(T: Text, P: Pack, o: RenderOpts): string {
   const placeOf = (h: Home) => { const t = P.place(ref(h).town, undefined, "card") || ref(h).town; const rg = regionName(h); const r = rg ? P.place(rg, undefined, "card") || rg : ""; return r && r !== t ? `${t}, ${r}` : t; };
   // the rounded amount in pounds or dollars next to the euro price, on the pages whose budget is in that currency
   const approx = (h: Home) => (T.fx ? ` <small class="ls-fx">≈ ${esc(P.ccy(Math.round((h.price_eur * T.fx.rate) / 100) * 100, T.fx.ccy))}</small>` : "");
-  const meta = (h: Home) => [h.sqm > 0 ? `${h.sqm} m²` : "", ref(h).beds > 0 ? P.card.beds(ref(h).beds) : "", h.sqm > 0 ? P.perSqm(Math.round(h.price_eur / h.sqm)) : ""].filter(Boolean).join(" · ");
+  // idea 22: how long the home has been on RealHunt, counted to the day of the data, as on the home page
+  const daysOn = (h: Home) => { const d = ref(h).day; const n = d ? Math.floor((Date.parse(o.updated) - Date.parse(d)) / 86400000) : NaN; return Number.isFinite(n) && n >= 0 ? P.card.days(n) : ""; };
+  const meta = (h: Home) => [h.sqm > 0 ? `${h.sqm} m²` : "", ref(h).beds > 0 ? P.card.beds(ref(h).beds) : "", h.sqm > 0 ? P.perSqm(Math.round(h.price_eur / h.sqm)) : "", daysOn(h)].filter(Boolean).join(" · ");
   const card = (h: Home, i: number) => {
     const full = h.image_urls?.[0] ? toMedia(String(h.image_urls[0])) : ""; const small = full ? thumb(full) : "";
     const title = P.homeTitle(h) || ""; const why = firstSentence(P.homeWhy(h));

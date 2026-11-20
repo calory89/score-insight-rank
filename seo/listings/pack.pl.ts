@@ -272,7 +272,7 @@ const pack: Pack = {
   kpi: { homes: "Oferty", from: "Od", median: "Mediana ceny", ppsqm: "Mediana za m²", size: "Mediana powierzchni", score: "Najwyższa ocena" },
   gridTitle: (n, shown) => (n === shown ? `Wszystkie oferty (${n}), od najwyższej oceny` : `${shown} ${pl(shown, "najlepsza", "najlepsze", "najlepszych")} z ${n}, według oceny`),
   gridMore: (shown, n) => `Widać tu ${shown} ${pl(shown, "ofertę", "oferty", "ofert")} z najwyższą oceną spośród ${n}. Pozostałe są w tabeli i w węższych wyszukiwaniach poniżej.`,
-  card: { isNew: "Nowość", drop: (p) => `Cena niższa o ${p}%`, score: "Ocena", beds: (n) => `${n} syp.`, noPhoto: "Zdjęcia w ogłoszeniu" },
+  card: { isNew: "Nowość", drop: (p) => `Cena niższa o ${p}%`, score: "Ocena", beds: (n) => `${n} syp.`, noPhoto: "Zdjęcia w ogłoszeniu", days: (n) => (n === 0 ? "Dodano dziś" : n === 1 ? "1 dzień w RealHunt" : `${n} dni w RealHunt`) },
   tableTitle: (n, shown) => (n === shown ? `Porównanie wszystkich ofert (${n}), od najtańszej` : `Porównanie: ${shown} ${pl(shown, "najtańsza", "najtańsze", "najtańszych")} z ${n}`),
   th: { home: "Nieruchomość", place: "Miejsce", price: "Cena", size: "Powierzchnia", ppsqm: "Za m²", beds: "Sypialnie", score: "Ocena", added: "Dodano" },
   factsTitle: (F) => (F.f.kind === "ccyBand" ? `Co można kupić za ${ccy(F.f.cap!, F.f.ccy!)}${F.f.country ? ` ${inC(F.f.country)}` : ""}`

@@ -380,7 +380,8 @@ export function polish(root: string, opts: PolishOpts = {}): Audit {
         if (!fix.datePosted && r && /^\d{4}-\d{2}-\d{2}/.test(String(r.publish_at || r.approved_at || ""))) { fix.datePosted = String(r.publish_at || r.approved_at).slice(0, 10); note("RealEstateListing: datePosted added"); }
         if (pg.lang === "es" && !fix.inLanguage) fix.inLanguage = "es";
         if (!fix.mainEntityOfPage) fix.mainEntityOfPage = abs(pg.path);
-        if (!fix.offers?.price || !fix.offers?.priceCurrency || !fix.offers?.availability) note("RealEstateListing: offer without price, currency or availability");
+        if (!fix.offers?.price || !fix.offers?.priceCurrency) note("RealEstateListing: offer without price or currency");
+        else if (!fix.offers?.availability) note("RealEstateListing: availability left out (advert not confirmed)");
         if (!fix.image || (Array.isArray(fix.image) && !fix.image.length)) note("RealEstateListing: no image");
         return fix;
       }
