@@ -87,3 +87,13 @@ describe("home page basics (ideas 21, 71, 76)", () => {
     expect(homeBasics(page(head.replace("/deal/x", "/deal/y"), shell + "<h1>two</h1>"), "/deal/x", true)).toEqual(["one h1", "own canonical"]);
   });
 });
+
+describe("homeKind picks the kind named first (20 Nov 2026)", () => {
+  it("house with a guest studio is a house; townhouse flat is a flat; studio flat is a studio", async () => {
+    const { homeKind } = await import("../community/homeLead");
+    expect(homeKind({ title: "Renovated house with sauna, plunge pool and guest studio 800 m from Lake Balaton" }).en).toBe("house");
+    expect(homeKind({ title: "Spacious 89 m² townhouse flat with wood floors in Wałbrzych" }).en).toBe("flat");
+    expect(homeKind({ title: "New 2025 detached house on a 1,500 m² flat plot" }).en).toBe("house");
+    expect(homeKind({ title: "Bright studio flat near the beach" }).en).toBe("studio");
+  });
+});

@@ -27,9 +27,13 @@ const KINDS: [RegExp, HomeKind][] = [
   [/\b(house|home)\b/i, { en: "house", es: "casa", ld: "SingleFamilyResidence" }],
 ];
 export function homeKind(r: Row): HomeKind {
+  // The kind named first wins: "House with sauna and a guest studio" is a house, not a studio (fix of 20 Nov 2026).
   const t = String(r.title || "");
-  for (const [re, k] of KINDS) if (re.test(t)) return k;
-  return { en: "home", es: "casa", ld: "SingleFamilyResidence" };
+  let best: HomeKind | null = null, at = Infinity;
+  for (const [re, k] of KINDS) { const m = re.exec(t); if (m && m.index < at) { at = m.index; best = k; } }
+  // ...except "townhouse flat", "house apartment": the word after it names the home.
+  if (best && best.ld !== "Apartment" && /^\S+\s+(flat|apartment|condo)\b/i.test(t.slice(at))) return KINDS[3][1];
+  return best || { en: "home", es: "casa", ld: "SingleFamilyResidence" };
 }
 
 const median = (xs: number[]) => { const a = xs.filter((x) => x > 0).sort((p, q) => p - q); return a.length ? a[Math.floor(a.length / 2)] : 0; };
