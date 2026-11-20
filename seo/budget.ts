@@ -1,12 +1,13 @@
-// Build-time guard (10-nov-2026): realhunt.co is a Cloudflare Pages project and Pages has a hard limit of files per
-// deployment. The publish job (.github/workflows/rh-auto-publish.yml) copies everything in dist/ except images and
-// videos (photos live only in the publish repo, about 7,000 of them) next to the ~9,900 files already there. The
-// Spanish pages added about 1,300 HTML files in one day, so the build now stops, loudly, before the total can get
-// near the limit instead of failing later in the deploy.
+// Build-time guard. History: on 10 Nov 2026 this was set to 9,000 because the account was then on the Cloudflare
+// Pages free plan (20,000 files per deployment; the publish stopped at 19,355 on 24 Oct) and about 9,900 files were
+// already there. The account is now on the paid plan: 100,000 files per deployment (Cloudflare docs, "Pages limits"),
+// and the publish job (.github/workflows/rh-auto-publish.yml) stops at 95,000 files on the whole deploy branch, which
+// held about 36,400 on 20 Nov 2026. Home pages are no longer one file each (seo/pack.ts). 40,000 non-image files
+// from this build still leaves the branch far below 95,000. Check the real numbers before changing it again.
 import fs from "fs";
 import path from "path";
 
-export const MAX_PUBLISHED_FILES = 9000;
+export const MAX_PUBLISHED_FILES = 40000;
 const NOT_PUBLISHED = /\.(webp|jpe?g|png|gif|mp4)$/i; // same list as the publish job
 
 /** Files of a build that the publish job copies to the site (everything but images and videos). */
