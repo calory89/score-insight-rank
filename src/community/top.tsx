@@ -31,6 +31,8 @@ export const TOP_DESTS: Record<string, { name: string; country: string; checked:
   batumi: { name: "Batumi", country: "Georgia", checked: 563, date: "30 September 2026", reg: "company ID (identification code)", permit: "the construction permit", fx: "Prices converted from US dollars at about 1.13 USD per euro." },
 };
 export const TOP_ORDER = ["bali", "phuket", "tulum", "batumi", "samui"];
+// Off-plan market file on Kolaboro (sister site) for each destination: permits, handover dates and their sources (one link per list page; same map in seo/prerender.ts)
+export const KOLABORO_MARKET: Record<string, [string, string]> = { bali: ["https://kolaboro.com/m/bali/", "Bali"], phuket: ["https://kolaboro.com/m/phuket/", "Phuket"], samui: ["https://kolaboro.com/m/koh-samui/", "Koh Samui"], tulum: ["https://kolaboro.com/m/riviera-maya/", "Riviera Maya (Tulum included)"], batumi: ["https://kolaboro.com/m/georgia/", "Georgia (Batumi included)"] };
 export const TL = (k?: string) => `Top ${(k && TOP_DESTS[k]?.n) || 100}`;
 const AREAS_BY: Record<string, [string, RegExp][]> = {
   phuket: [["Bang Tao & Laguna", /bang tao|laguna|cherng talay|layan/i], ["Surin & Kamala", /surin|kamala/i], ["Patong, Kata & Karon", /patong|kata|karon|kalim/i], ["Rawai & Nai Harn", /rawai|nai ?harn|naiharn|chalong|panwa/i], ["North (Nai Yang, Mai Khao)", /nai yang|mai khao|nai thon|thalang/i], ["Town & east", /town|kathu|koh kaew|yamu|ao po/i]],
@@ -179,6 +181,7 @@ export function TopListPage() {
           </li>
         ))}</ol>
       )}
+      {KOLABORO_MARKET[dest] && <p className="hunt-fine">{"Before you pay a deposit, check what the developer publishes. Permits, handover dates and the sources behind them for off-plan projects in this area are in "}<a className="hunt-link" href={KOLABORO_MARKET[dest][0]}>{`the ${KOLABORO_MARKET[dest][1]} market file on Kolaboro`}</a>.</p>}
       <div className="tp-dev-cta">
         <Building2 size={20} />
         <div><strong>Developer in {D.name}? Is one of these your business?</strong><p>Verify it for free: you get the Verified badge, 100 in listing detail and the buyers' questions straight to you. Open your project and press "Verify it". Not in the list? List it free and it enters the ranking.</p></div>
