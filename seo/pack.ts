@@ -8,7 +8,7 @@
 import fs from "fs";
 import path from "path";
 
-export const PACK_MODE: "copy" | "move" = "copy";
+export const PACK_MODE: "copy" | "move" = "move"; // 20 Nov 2026: all 1,366 pages compared equal live
 export const PACK_DIR = "_pk/v1";
 export const SHARDS = 256;
 /** dist folders whose <slug>/index.html pages go into the bundles */
