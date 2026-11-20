@@ -2318,6 +2318,9 @@ html.rh-dark, html.rh-dark body { background: #0C0D0E; }
 .hv-nearby .hunt-fine { display: flex; align-items: center; gap: 5px; margin-top: 8px !important; }
 .hv-nearby ul { list-style: none; padding: 0; margin: 12px 0 4px; display: grid; gap: 2px; }
 .hv-nearby li { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-bottom: 1px solid #E8E9EB; font-size: 14.5px; }
+/* 20-nov-2026: long airport names ("Lynchburg Regional Airport - Preston Glenn Field") wrap instead of widening the page */
+.hv-nearby ul > li { min-width: 0; }
+.hv-nearby li > b { flex: none; white-space: nowrap; }
 .hv-nearby li svg { color: var(--hv-accent); flex: none; }
 .hv-nearby li span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
