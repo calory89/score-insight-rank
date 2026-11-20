@@ -53,6 +53,9 @@ const KEYED: Record<string, (b: string, one: boolean) => string> = {
   "with-business-premises": (b) => `${b} with business premises`,
   "with-fibre-internet": (b) => `${b} with fibre internet`,
   "with-tourist-licence": (b) => `${b} with a tourist rental licence`,
+  "new-this-week": (b) => `${b} added in the last 7 days`,
+  "over-80-sqm": (b) => `${b} over 80 m²`,
+  "over-120-sqm": (b) => `${b} over 120 m²`,
 };
 const SYM: Record<string, string> = { GBP: "£", USD: "$", EUR: "€" };
 const ccy = (n: number, c: string) => (SYM[c] || `${c} `) + Math.round(n).toLocaleString("en");
@@ -64,7 +67,7 @@ const LABEL: Record<string, string> = { "by-the-sea": "By the sea", "village-hou
   "turnkey": "Move-in ready", "to-renovate": "To renovate", "with-sea-view": "Sea view", "near-the-beach": "500 m from the sea", "with-land": "With land", "with-fireplace": "With a fireplace", "with-garage": "With a garage",
   "on-an-island": "On an island", "in-the-mountains": "In the mountains", "with-olive-trees-or-vines": "Olive trees or vines", "near-an-airport": "Near an airport", "under-500-per-sqm": "Under €500/m²", "over-100-sqm-under-50000": "Over 100 m² under €50,000",
   "score-90-plus": "Score 90+", "editors-picks": "Hand-picked", "new-this-month": "New this month", "price-drops": "Price cuts", "single-storey": "Single-storey", "with-period-features": "Period features", "good-weather": "Good weather",
-  "quiet-location": "Quiet location", "low-community-fee": "Low community fee", "cave-houses": "Cave houses", trulli: "Trulli", "unusual-buildings": "Unusual buildings", "with-business-premises": "Business premises", "with-fibre-internet": "Fibre internet", "with-tourist-licence": "Tourist licence",
+  "quiet-location": "Quiet location", "low-community-fee": "Low community fee", "cave-houses": "Cave houses", trulli: "Trulli", "unusual-buildings": "Unusual buildings", "with-business-premises": "Business premises", "with-fibre-internet": "Fibre internet", "new-this-week": "New this week", "over-80-sqm": "Over 80 m²", "over-120-sqm": "Over 120 m²", "best-rated": "Top 10 by score", "with-tourist-licence": "Tourist licence",
   cheapest: "The cheapest", "most-space-for-the-money": "Most space for the money" };
 
 function what(F: Facts, form: Form = "many"): string {
@@ -75,6 +78,7 @@ function what(F: Facts, form: Form = "many"): string {
   const under = f.cap ? ` under ${f.kind === "ccyBand" ? ccy(f.cap, f.ccy!) : money(f.cap)}` : "";
   if (f.ranked) {
     if (f.key === "cheapest") return one ? `cheapest ${NOUN[F.noun][1]} for sale${inC}` : `${F.n} cheapest ${NOUN[F.noun][0]} for sale${inC}`;
+    if (f.key === "best-rated") return one ? `best-rated ${NOUN[F.noun][1]} for sale${inC}` : `${F.n} best-rated ${NOUN[F.noun][0]} for sale${inC}`;
     return one ? `${NOUN[F.noun][1]} with the most space for the money${inC}` : `${F.n} ${NOUN[F.noun][0]} with the most space for the money${inC}`;
   }
   switch (f.kind) {
@@ -86,6 +90,7 @@ function what(F: Facts, form: Form = "many"): string {
     case "regionBand": return f.area ? `${adj}${b} for sale ${areaOf(f)?.inEn || ""}${under}` : `${adj}${b} for sale in ${place(f.region!)}, ${f.country}${under}`;
     case "setting": case "feature": case "gfeature": return `${adj}${KEYED[f.key!](b, one)}${inC}`;
     case "beds": return f.beds === 4 ? `${adj}${b} with 4 or more bedrooms for sale${inC}` : `${adj}${f.beds}-bedroom ${b} for sale${inC}`;
+    case "ccyBand": if (f.region) return `${adj}${b} for sale in ${place(f.region)}, ${f.country}${under}`; return `${adj}${b} for sale${inC}${under}`;
     default: return `${adj}${b} for sale${inC}${under}`;
   }
 }
@@ -105,7 +110,7 @@ export const en: Pack = {
   h1: (F) => (F.f.ranked ? `The ${what(F)}${F.f.country ? "" : " on RealHunt"}`
     : upper(what(F, (F.f.cap && F.f.cap <= 100000) || (["gfeature", "feature", "area", "near"].includes(F.f.kind) && F.median <= 100000) ? "cheap" : "many"))),
   title: (h1, n, min) => `${h1} (${n}, from ${min})`,
-  desc: (F, w) => `${F.f.ranked ? `The ${w}` : `${F.n} ${w}`}, from ${money(F.min)} to ${money(F.max)}. Median ${money(F.median)}. Photos, sizes, scores, buying costs and what to watch out for.`,
+  desc: (F, w) => `${F.f.ranked ? `The ${w}` : `${F.n} ${w}`}, from ${money(F.min)} (${/^near /.test(F.cheapest.town) ? F.cheapest.town : `in ${F.cheapest.town}`}) to ${money(F.max)}. Median ${money(F.median)}${F.scoreAvg ? `, average score ${F.scoreAvg} of 98` : ""}. Photos, sizes, buying costs and what to watch out for.`,
   crumbRoot: "RealHunt", crumbCheap: "Cheap houses",
   crumbCountry: (c) => `Homes in ${c}`,
   label: (f) => (f.kind === "combo" ? `${LABEL[f.key!] || f.key} under ${money(f.cap!)}` : f.kind === "ccyBand" ? `Under ${ccy(f.cap!, f.ccy!)}` : f.kind === "area" ? areaOf(f)?.en || String(f.area) : f.kind === "near" ? `Near ${cityOf(f)}`
@@ -117,12 +122,13 @@ export const en: Pack = {
   l3all: (med, pp, max, parent) => `The median price is ${med}${pp ? ` (${pp})` : ""}. That is every one of ${parent}: none is priced above ${max}.`,
   parent: (kind, n, name, countries) => (kind === "site" ? `the ${n} homes on RealHunt in ${countries} countries` : kind === "country" ? `the ${n} homes we list ${name}` : `the ${n} homes we list in ${name}`),
   kpi: { homes: "Homes", from: "From", median: "Median price", ppsqm: "Median per m²", size: "Median size", score: "Top score" },
+  n20: { costs: "Buying costs", foreign: "Foreign buyers", free: "Can buy freely", limits: "Some limits", asOf: "Data of", regionsTitle: (inC) => `Median price by region ${inC}`, region: "Region", neighbours: "Neighbouring countries", siteMap: (inC) => `Site map: every page and home ${inC}` },
   gridTitle: (n, shown) => (n === shown ? `The ${n} homes, best score first` : `The ${shown} best of ${n}, by score`),
   gridMore: (shown, n) => `Showing the ${shown} best-scored of ${n} homes. The table and the narrower searches below cover the rest.`,
   card: { isNew: "New", drop: (p) => `Price cut ${p}%`, score: "Score", beds: (n) => `${n} bed`, noPhoto: "Photos on the listing" },
   tableTitle: (n, shown) => (n === shown ? `Compare the ${n} homes, cheapest first` : `Compare the ${shown} cheapest of ${n}`),
   th: { home: "Home", place: "Place", price: "Price", size: "Size", ppsqm: "Per m²", beds: "Beds", score: "Score", added: "Added" },
-  factsTitle: (F) => (F.f.kind === "ccyBand" ? `What ${ccy(F.f.cap!, F.f.ccy!)} buys${F.f.country ? ` in ${the(F.f.country)}` : ""}` : F.f.cap && F.f.kind !== "combo" ? `What ${money(F.f.cap)} buys${F.f.area ? ` ${areaOf(F.f)?.inEn || ""}` : F.f.region ? ` in ${place(F.f.region)}` : F.f.country ? ` in ${the(F.f.country)}` : ""}` : `The ${F.n} homes in numbers`),
+  factsTitle: (F) => (F.f.kind === "ccyBand" ? `What ${ccy(F.f.cap!, F.f.ccy!)} buys${F.f.region ? ` in ${place(F.f.region)}` : F.f.country ? ` in ${the(F.f.country)}` : ""}` : F.f.cap && F.f.kind !== "combo" ? `What ${money(F.f.cap)} buys${F.f.area ? ` ${areaOf(F.f)?.inEn || ""}` : F.f.region ? ` in ${place(F.f.region)}` : F.f.country ? ` in ${the(F.f.country)}` : ""}` : `The ${F.n} homes in numbers`),
   fSize: (med, max, title) => `Size: half of them have ${med} m² or more. The largest has ${max} m²: ${title}.`,
   fBeds: (b, unknown) => `Bedrooms: ${b.map(([k, n], i) => `${n} with ${k === 4 ? "4 or more" : k}${i === 0 ? ` ${k === 1 ? "bedroom" : "bedrooms"}` : ""}`).join(", ")}${unknown ? `; ${unknown} ${s(unknown, "listing does", "listings do")} not say` : ""}.`,
   fType: (a, h) => `Type: ${[a ? `${a} ${s(a, "apartment")}` : "", h ? `${h} ${s(h, "house")}` : ""].filter(Boolean).join(" and ")}.`,
@@ -187,6 +193,7 @@ export const en: Pack = {
   city: (slug) => cityBySlug(slug)?.[1] || slug,
   how: (F, v) => {
     const f = F.f;
+    if (f.ranked && f.key === "best-rated") return `These are the ${F.n} highest RealHunt scores among ${v.parent}, best first. Each card says in one line why the home is on RealHunt. The list changes when a home is added, sold or scored again.`;
     if (f.ranked) return f.key === "cheapest"
       ? `These are the ${F.n} lowest asking prices among ${v.parent}, cheapest first. The list changes whenever a home is added, sold or repriced.`
       : `These are the ${F.n} lowest prices per m² among the ${v.total} homes with a floor area in the listing, out of ${v.parent}. A low price per m² often means a large house in a place few people are looking at.`;
@@ -222,11 +229,14 @@ export const en: Pack = {
       "with-business-premises": "On this list: homes whose title names a shop, a bar, a restaurant, a guest business or other commercial premises sold with the home. Whether the business can be reopened depends on local licences: ask the town hall.",
       "with-fibre-internet": "On this list: homes whose listing states fibre or high-speed internet. We do not test connections: ask the seller for a recent speed test.",
       "with-tourist-licence": "On this list: homes whose listing states a tourist rental licence. A licence can lapse when the home is sold: ask the town hall before you rely on it.",
+      "new-this-week": "On this list: homes added to RealHunt in the last 7 days. The list is rebuilt every day.",
+      "over-80-sqm": "On this list: homes whose listing states more than 80 m² of floor area. A listing with no floor area cannot be on it.",
+      "over-120-sqm": "On this list: homes whose listing states more than 120 m² of floor area. A listing with no floor area cannot be on it.",
     };
     return (f.kind === "feature" || f.kind === "gfeature") && f.key ? HOW[f.key] || "" : "";
   },
   l1rank: (w, min, max) => `The ${w} that RealHunt lists today cost from ${min} to ${max}.`,
-  gridTitleRank: (key, n) => (key === "cheapest" ? `The ${n} homes, cheapest first` : `The ${n} homes, lowest price per m² first`),
+  gridTitleRank: (key, n) => (key === "best-rated" ? `The ${n} homes, best score first` : key === "cheapest" ? `The ${n} homes, cheapest first` : `The ${n} homes, lowest price per m² first`),
   x: {
     amen: (l) => `Extras named in the listings: ${l.map(([k, n]) => `${n} with a ${k}`).join(", ")}.`,
     airport: (med, title, km, name, l) => `Airports: the median distance is ${med} km. The closest home is ${title}, ${km < 1 ? "under 1" : km} km from ${name}. Nearest airports: ${list(l)}.`,
@@ -240,7 +250,7 @@ export const en: Pack = {
     elev: (n, med, title, v) => `Altitude, known for ${n} of these homes: a median of ${med.toLocaleString("en")} m. The highest, at ${v.toLocaleString("en")} m: ${title}.`,
     islands: (l) => `Islands: ${list(l)}.`,
     dist: (city, med, title, km, far) => `Distance to ${city} in a straight line: from ${km < 1 ? "under 1" : km} km (${title}) to ${far} km, with a median of ${med} km.`,
-    rank: (key, n, title, v, of) => (key === "cheapest" ? `The cut-off today is ${v}: ${title} is number ${n} of ${of}.` : `The cut-off today is ${v}: ${title} is number ${n} of the ${of} homes with a floor area.`),
+    rank: (key, n, title, v, of) => (key === "best-rated" ? `The cut-off today is a score of ${v}: ${title} is number ${n} of ${of}.` : key === "cheapest" ? `The cut-off today is ${v}: ${title} is number ${n} of ${of}.` : `The cut-off today is ${v}: ${title} is number ${n} of the ${of} homes with a floor area.`),
     vs: (other, med, n, oMed, on, pct) => `Against ${other}: the median here is ${med} across ${n} homes, ${pct}% below the ${oMed} median of the ${on} homes we list there.`,
   },
   noteSource: "Source", noteAsOf: (asOf) => `Checked ${asOf}. General information, not legal or tax advice.`,

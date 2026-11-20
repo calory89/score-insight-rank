@@ -33,6 +33,9 @@ export const STR = {
     smAll: (name: string, n: number) => `${name}: all ${n} pages`, smGroupTitle: (name: string) => `${name}: site map`,
     smGroupDesc: (name: string, n: number) => `The ${n} pages of RealHunt under "${name}", by country where that helps. Part of the site map, rebuilt every time the site is updated.`,
     smIntro: (n: number) => `${n} pages.`, other: "General",
+    smByCountry: "By country", smCountryTitle: (inThe: string) => `Every page and home in ${inThe}`,
+    smCountryDesc: (inThe: string, homes: number, pages: number) => `The ${homes} homes we list in ${inThe} and the ${pages} other pages about the country on RealHunt: lists by price and region, guides and costs. Part of the site map, rebuilt every time the site is updated.`,
+    smCountryLink: (inThe: string, n: number) => `${inThe} (${n} pages)`,
   },
   es: {
     breadcrumb: "Ruta", title: "Sigue explorando", homesIn: "Casas en", allHomes: "Todas las casas", regionsOf: "Regiones de", inRegions: "Dentro de las regiones", buyingIn: "Comprar en",
@@ -43,6 +46,9 @@ export const STR = {
     smAll: (name: string, n: number) => `${name}: las ${n} páginas`, smGroupTitle: (name: string) => `${name}: mapa del sitio`,
     smGroupDesc: (name: string, n: number) => `Las ${n} páginas de RealHunt de «${name}», por país cuando ayuda. Forma parte del mapa del sitio y se rehace cada vez que se actualiza la web.`,
     smIntro: (n: number) => `${n} páginas.`, other: "General",
+    smByCountry: "Por país", smCountryTitle: (inThe: string) => `Todas las páginas y casas en ${inThe}`,
+    smCountryDesc: (inThe: string, homes: number, pages: number) => `Las ${homes} casas que tenemos en ${inThe} y las otras ${pages} páginas de RealHunt sobre el país: listas por precio y región, guías y gastos. Forma parte del mapa del sitio y se rehace cada vez que se actualiza la web.`,
+    smCountryLink: (inThe: string, n: number) => `${inThe} (${n} páginas)`,
   },
 } as const;
 
@@ -242,13 +248,28 @@ export function sitemapPages(c: RelCtx): SitemapPage[] {
     const sorted = (l: Pg[]) => l.slice().sort((a, b) => a.en.split("/").length - b.en.split("/").length || text(a).localeCompare(text(b), lang));
     const groups = GROUPS.filter((g) => by.has(g.key));
     const attrs = `class="rh-static" data-rh-keep data-rh-static${lang === "es" ? ' lang="es"' : ""}`;
+    // 20-nov-2026 (idea 26): one page per country with an indexable country page, with every page and home of it
+    const all = [...by.values()].flat();
+    const ccs = [...new Set(all.filter((pg) => pg.kind === "country" && pg.cc && pg.en === `/homes/${pg.cc}`).map((pg) => pg.cc))]
+      .filter((cc) => !GROUPS.some((g) => g.key === cc)).sort((a, b) => c.nameOf(a, lang).localeCompare(c.nameOf(b, lang), lang));
+    const ofCc = new Map(ccs.map((cc) => [cc, all.filter((pg) => pg.cc === cc)]));
     out.push({
       path: `${pre}/sitemap`, lang, title: `${s.siteMap} · RealHunt`, desc: s.smDesc, label: s.siteMap,
       body: `<main ${attrs}><h1>${esc(s.siteMap)}</h1><p>${esc(s.smDesc)}</p>`
         + groups.map((g) => g.key === "main"
           ? `<h2>${esc(name(g))}</h2><ul>${sorted(by.get(g.key)!).map(li).join("")}</ul>`
-          : `<h2>${esc(name(g))}</h2><p><a href="${pre}/sitemap/${g.key}">${esc(s.smAll(name(g), by.get(g.key)!.length))}</a></p>`).join("") + `</main>`,
+          : `<h2>${esc(name(g))}</h2><p><a href="${pre}/sitemap/${g.key}">${esc(s.smAll(name(g), by.get(g.key)!.length))}</a></p>`).join("")
+        + (ccs.length ? `<h2>${esc(s.smByCountry)}</h2><ul>${ccs.map((cc) => `<li><a href="${pre}/sitemap/${cc}">${esc(s.smCountryLink(c.nameOf(cc, lang), ofCc.get(cc)!.length))}</a></li>`).join("")}</ul>` : "") + `</main>`,
     });
+    for (const cc of ccs) {
+      const list = ofCc.get(cc)!;
+      const homes = list.filter((pg) => pg.kind === "deal").length;
+      const inner = groups.filter((g) => g.key !== "main").map((g) => { const l = list.filter((pg) => groupOf(pg) === g.key); return l.length ? `<h2>${esc(name(g))}</h2><ul>${sorted(l).map(li).join("")}</ul>` : ""; }).join("");
+      out.push({
+        path: `${pre}/sitemap/${cc}`, lang, title: `${s.smCountryTitle(c.inThe(cc, lang))} · RealHunt`, desc: s.smCountryDesc(c.inThe(cc, lang), homes, list.length - homes), label: c.nameOf(cc, lang),
+        body: `<main ${attrs}><h1>${esc(s.smCountryTitle(c.inThe(cc, lang)))}</h1><p>${esc(s.smIntro(list.length))}</p>${inner}<h2>${esc(s.siteMap)}</h2><p><a href="${pre}/sitemap">${esc(s.siteMap)}</a> · <a href="${pre}/sitemap/${groups.some((g) => g.key === "homes") ? "homes" : "countries"}">${esc(name(GROUPS.find((g) => g.key === (groups.some((x) => x.key === "homes") ? "homes" : "countries"))!))}</a></p></main>`,
+      });
+    }
     const others = (key: string) => `<p>${[`<a href="${pre}/sitemap">${esc(s.siteMap)}</a>`, ...groups.filter((g) => g.key !== "main" && g.key !== key).map((g) => `<a href="${pre}/sitemap/${g.key}">${esc(name(g))}</a>`)].join(" · ")}</p>`;
     for (const g of groups) {
       if (g.key === "main") continue;

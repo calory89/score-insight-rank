@@ -40,3 +40,11 @@ export async function refreshFx(root = process.cwd()): Promise<string> {
     return `updated to ${got.date}`;
   } catch (e) { return `kept (${(e as Error).message})`; }
 }
+
+const MONTHS_ES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+/** A euro price in US dollars at the dated ECB rate, rounded to 100, with the day of the rate in Spanish; null without a rate. */
+export function usdApprox(eur: number, fx: Fx): { usd: number; day: string } | null {
+  const rate = fx.rates.USD; const d = fx.date;
+  if (!(rate > 0) || !(eur > 0) || !/^\d{4}-\d{2}-\d{2}$/.test(d)) return null;
+  return { usd: Math.round((eur * rate) / 100) * 100, day: `${Number(d.slice(8, 10))} de ${MONTHS_ES[Number(d.slice(5, 7)) - 1]} de ${d.slice(0, 4)}` };
+}

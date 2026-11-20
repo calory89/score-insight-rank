@@ -37,6 +37,12 @@ export const PRIMARY_BANDS = [30000, 50000, 80000, 100000, 150000, 200000, 30000
 export const MINOR_BANDS = [10000, 15000, 20000, 40000, 60000]; // older addresses: kept only when they list something the others do not
 export const GLOBAL_BANDS = [20000, 30000, 50000, 75000, 100000]; // 20000 (15-nov-2026): "casas por 20.000 euros", "maison 20 000 euros", the round figure people type
 export const DUP = 0.9;
+/** 20-nov-2026: towns and budgets inside a region from 3 homes, like the families that existed first (were MIN_NEW). */
+export const MIN_TOWN = MIN, MIN_REGION_BAND = MIN;
+/** Regions whose budgets also exist in the currency of the country: /homes/united-states/florida/under-100000-dollars. */
+export const REGION_CCY: Record<string, "USD" | "GBP"> = { "united-states": "USD", "united-kingdom": "GBP" };
+/** Round sums a buyer there types: a region of Florida is searched in hundreds of thousands of dollars. */
+export const REGION_CCY_CAPS: Record<"USD" | "GBP", number[]> = { USD: [100000, 200000, 300000, 400000], GBP: [100000, 200000] };
 
 export type Home = Record<string, any>;
 export type Kind = "country" | "band" | "region" | "setting" | "ptype" | "beds" | "feature" | "town" | "regionBand" | "gband" | "gfeature"
@@ -135,12 +141,14 @@ export function buildFacets(all: Home[], opts: Opts = {}): Plan {
       addCross(f: Facet, min: number): Facet | null { return this.add(f, min, undefined, true); },
     };
   };
-  const ranked = (list: Home[], order: (a: Home, b: Home) => number) => list.slice().sort(order).slice(0, RANK_N);
+  const ranked = (list: Home[], order: (a: Home, b: Home) => number, n = RANK_N) => list.slice().sort(order).slice(0, n);
   const combos: { S: ReturnType<typeof scope>; f: Facet; order: number }[] = [];
 
   const byCountry = new Map<string, Home[]>();
   for (const r of rows) { const cc = countrySlug(r.country); if (cc) (byCountry.get(cc) || byCountry.set(cc, []).get(cc)!).push(r); }
 
+  // countries by number of homes, for the traits that only run in the biggest (Trait.top)
+  const bigness = [...byCountry.entries()].filter(([cc]) => !NOT_COUNTRY.has(cc)).sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0])).map(([cc]) => cc);
   for (const [cc, homes] of byCountry) {
     const country = String(homes[0].country);
     const hub = `/homes/${cc}`;
@@ -186,9 +194,17 @@ export function buildFacets(all: Home[], opts: Opts = {}): Plan {
       const towns = new Map<string, { name: string; homes: Home[] }>();
       for (const h of rf.homes) { const name = townOf(h); const ts = slugify(name); if (!ts || ts === s || reserved(ts)) continue; (towns.get(ts) || towns.set(ts, { name, homes: [] }).get(ts)!).homes.push(h); }
       for (const [ts, g] of [...towns.entries()].sort((a, b) => b[1].homes.length - a[1].homes.length || a[0].localeCompare(b[0])))
-        S.add({ path: `${rf.path}/${ts}`, kind: "town", cc, country, region: rf.region, regionSlug: s, town: g.name, homes: g.homes, parent: rf.path }, MIN_NEW);
-      if (rf.homes.length >= MIN_NEW * 2) for (const p of PRIMARY_BANDS)
-        S.add({ path: `${rf.path}/under-${p}`, kind: "regionBand", cc, country, region: rf.region, regionSlug: s, cap: p, homes: rf.homes.filter((h) => h.price_eur <= p), parent: rf.path }, MIN_NEW);
+        S.add({ path: `${rf.path}/${ts}`, kind: "town", cc, country, region: rf.region, regionSlug: s, town: g.name, homes: g.homes, parent: rf.path }, MIN_TOWN);
+      // 20-nov-2026: a budget inside every region with a page, from 3 homes (was: regions of 10 or more, 5 homes a budget).
+      // The near-copy rule still drops a budget that lists (nearly) the same homes as the region or a smaller budget.
+      if (rf.homes.length > MIN) for (const p of PRIMARY_BANDS)
+        S.add({ path: `${rf.path}/under-${p}`, kind: "regionBand", cc, country, region: rf.region, regionSlug: s, cap: p, homes: rf.homes.filter((h) => h.price_eur <= p), parent: rf.path }, MIN_REGION_BAND);
+      // budgets in dollars or pounds inside the regions of the United States and the United Kingdom
+      for (const [ccy, word] of CCY_BANDS) { const rate = fx.rates[ccy]; if (!(rate > 0) || REGION_CCY[cc] !== ccy) continue;
+        for (const cap of REGION_CCY_CAPS[ccy]) { const capEur = cap / rate;
+          S.add({ path: `${rf.path}/under-${cap}-${word}`, kind: "ccyBand", cc, country, region: rf.region, regionSlug: s, cap, ccy, capEur, rate, homes: rf.homes.filter((h) => h.price_eur <= capEur), parent: rf.path }, MIN);
+        }
+      }
     }
 
     // ---- 15-nov-2026: traits, ranked lists, named areas, budgets in pounds and dollars, trait + budget
@@ -201,8 +217,9 @@ export function buildFacets(all: Home[], opts: Opts = {}): Plan {
         S.add({ path: `${path}/under-${p}`, kind: "regionBand", cc, country, area: a.slug, cap: p, homes: af.homes.filter((h) => h.price_eur <= p), parent: path }, MIN_NEW);
     }
     for (const t of TRAITS) {
+      if (t.top && bigness.indexOf(cc) >= t.top) continue;
       const list = homes.filter((h) => t.test(h, { today }));
-      S.add({ path: `/cheap-houses/${t.key}-in-${cc}`, kind: "feature", cc, country, key: t.key, homes: t.rank ? ranked(list, t.rank) : list, parent: hub, ...(t.rank ? { ranked: true } : {}) }, t.min ?? MIN);
+      S.add({ path: `/cheap-houses/${t.key}-in-${cc}`, kind: "feature", cc, country, key: t.key, homes: t.rank ? ranked(list, t.rank, t.n) : list, parent: hub, ...(t.rank ? { ranked: true } : {}) }, t.min ?? MIN);
     }
     for (const [ccy, word, caps] of CCY_BANDS) { const rate = fx.rates[ccy]; if (!(rate > 0)) continue;
       for (const cap of caps) { const capEur = cap / rate;
@@ -230,7 +247,7 @@ export function buildFacets(all: Home[], opts: Opts = {}): Plan {
     G.add({ path: `/cheap-houses/${key}`, kind: "gfeature", key, homes: rows.filter(test), parent: "/cheap-houses" }, MIN);
   for (const t of TRAITS) if (t.global !== false) {
     const list = rows.filter((h) => t.test(h, { today }));
-    G.addCross({ path: `/cheap-houses/${t.key}`, kind: "gfeature", key: t.key, homes: t.rank ? ranked(list, t.rank) : list, parent: "/cheap-houses", ...(t.rank ? { ranked: true } : {}) }, t.min ?? MIN);
+    G.addCross({ path: `/cheap-houses/${t.key}`, kind: "gfeature", key: t.key, homes: t.rank ? ranked(list, t.rank, t.n) : list, parent: "/cheap-houses", ...(t.rank ? { ranked: true } : {}) }, t.min ?? MIN);
   }
   for (const [ccy, word, caps] of CCY_BANDS) { const rate = fx.rates[ccy]; if (!(rate > 0)) continue;
     for (const cap of caps) { const capEur = cap / rate;
@@ -247,8 +264,10 @@ export function buildFacets(all: Home[], opts: Opts = {}): Plan {
   });
   let kept = 0;
   for (const c of combos.sort((a, b) => b.f.homes.length - a.f.homes.length || Number(!a.f.cc) - Number(!b.f.cc) || a.order - b.order || a.f.path.localeCompare(b.f.path))) {
-    if (kept >= COMBO_MAX) break;
-    if (c.S.add(c.f, MIN, undefined, true) === c.f) kept++;
+    // sea view under a budget, per country, is never cut by the cap (idea 39): the near-copy rule still applies
+    const free = c.f.key === "with-sea-view" && !!c.f.cc;
+    if (kept >= COMBO_MAX && !free) continue;
+    if (c.S.add(c.f, MIN, undefined, true) === c.f && !free) kept++;
   }
 
   // A redirect never points at another redirect or at itself.

@@ -122,6 +122,17 @@ const AREA: Record<string, [string, string]> = {
   "southern-italy": ["Italie du Sud", "en Italie du Sud"], "abruzzo-and-marche": ["Abruzzes et Marches", "dans les Abruzzes et les Marches"], lunigiana: ["Lunigiana", "en Lunigiana"], "lake-maggiore": ["Lac Majeur", "autour du lac Majeur"], "lake-garda": ["Lac de Garde", "autour du lac de Garde"],
   limousin: ["Limousin", "dans le Limousin"], hokkaido: ["Hokkaido", "à Hokkaido"], tohoku: ["Tohoku", "dans le Tohoku"], kanto: ["Kanto", "dans le Kanto"], chubu: ["Chubu", "dans le Chubu"], kansai: ["Kansai", "dans le Kansai"], chugoku: ["Chugoku", "dans le Chugoku"],
   shikoku: ["Shikoku", "à Shikoku"], kyushu: ["Kyushu", "à Kyushu"], norrland: ["Norrland", "dans le Norrland"], jutland: ["Jutland", "dans le Jutland"], "lolland-falster": ["Lolland et Falster", "sur les îles de Lolland et de Falster"],
+  "andalusia": ["Andalousie", "en Andalousie"],
+  "valencian-community": ["Communauté valencienne", "dans la Communauté valencienne"],
+  "catalonia": ["Catalogne", "en Catalogne"],
+  "galicia": ["Galice", "en Galice"],
+  "castile-and-leon": ["Castille-et-León", "en Castille-et-León"],
+  "aragon": ["Aragon", "en Aragon"],
+  "castilla-la-mancha": ["Castille-La Manche", "en Castille-La Manche"],
+  "basque-country": ["Pays basque", "au Pays basque"],
+  "boca-raton": ["Boca Raton", "à Boca Raton"],
+  "hollywood": ["Hollywood (Floride)", "à Hollywood (Floride)"],
+  "doral": ["Doral", "à Doral"],
   "amsterdam-zuidoost": ["Amsterdam-Zuidoost", "à Amsterdam-Zuidoost"], "eastern-germany": ["Saxe, Saxe-Anhalt et Thuringe", "en Saxe, en Saxe-Anhalt et en Thuringe"], masuria: ["Mazurie", "en Mazurie"],
   peloponnese: ["Péloponnèse", "dans le Péloponnèse"], "black-sea-coast": ["Côte de la mer Noire", "sur la côte de la mer Noire"], "atlantic-canada": ["Canada atlantique", "dans les provinces atlantiques du Canada"],
 };
@@ -188,6 +199,9 @@ const KEYED: Record<string, (b: string, form: Form) => string> = {
   "with-business-premises": (b) => `${b} avec local commercial`,
   "with-fibre-internet": (b) => `${b} avec la fibre optique`,
   "with-tourist-licence": (b) => `${b} avec licence de location touristique`,
+  "new-this-week": adj("ajouté", "ajoutée", " depuis 7 jours"),
+  "over-80-sqm": (b) => `${b} de plus de 80 m²`,
+  "over-120-sqm": (b) => `${b} de plus de 120 m²`,
 };
 // Where a home is goes after "à vendre": "maisons à vendre en bord de mer en Espagne".
 const AFTER: Record<string, string> = { "by-the-sea": " en bord de mer", "in-town": " en ville", "near-a-lake": " près d'un lac", "on-an-island": " sur une île", "in-the-mountains": " à la montagne", "near-the-beach": " à 500 m de la mer au plus",
@@ -200,7 +214,7 @@ const LABEL: Record<string, string> = { "by-the-sea": "En bord de mer", "village
   turnkey: "Prêt à emménager", "to-renovate": "À rénover", "with-sea-view": "Vue sur la mer", "near-the-beach": "À 500 m de la mer", "with-land": "Avec terrain", "with-fireplace": "Avec cheminée", "with-garage": "Avec garage",
   "on-an-island": "Sur une île", "in-the-mountains": "À la montagne", "with-olive-trees-or-vines": "Oliviers ou vignes", "near-an-airport": "Près d'un aéroport", "under-500-per-sqm": `Moins de 500${NB}€/m²`, "over-100-sqm-under-50000": `Plus de 100 m² à moins de 50${NB}000${NB}€`,
   "score-90-plus": "Note de 90 ou plus", "editors-picks": "Sélection de la rédaction", "new-this-month": "Nouveautés du mois", "price-drops": "Prix en baisse", "single-storey": "De plain-pied", "with-period-features": "Éléments d'époque", "good-weather": "Beau temps",
-  "quiet-location": "Au calme", "low-community-fee": "Faibles charges", "cave-houses": "Maisons troglodytes", trulli: "Trulli", "unusual-buildings": "Bâtiments insolites", "with-business-premises": "Avec local commercial", "with-fibre-internet": "Fibre optique", "with-tourist-licence": "Location touristique autorisée",
+  "quiet-location": "Au calme", "low-community-fee": "Faibles charges", "cave-houses": "Maisons troglodytes", trulli: "Trulli", "unusual-buildings": "Bâtiments insolites", "with-business-premises": "Avec local commercial", "with-fibre-internet": "Fibre optique", "best-rated": "Top 10 par note", "new-this-week": "Nouveautés de la semaine", "over-80-sqm": "Plus de 80 m²", "over-120-sqm": "Plus de 120 m²", "with-tourist-licence": "Location touristique autorisée",
   cheapest: "Les moins chers", "most-space-for-the-money": "Le plus de surface pour le prix" };
 
 function what(F: Facts, form: Form = "many"): string {
@@ -258,6 +272,9 @@ const HOW: Record<string, string> = {
   "with-business-premises": "Sur cette liste : les biens dont le titre mentionne un commerce, un bar, un restaurant, un hébergement ou d'autres locaux professionnels vendus avec le bien. La réouverture de l'activité dépend des autorisations de la commune : renseignez-vous à la mairie.",
   "with-fibre-internet": "Sur cette liste : les biens dont l'annonce mentionne la fibre optique ou une connexion rapide. Nous ne testons pas les connexions : demandez au vendeur un test de débit récent.",
   "with-tourist-licence": "Sur cette liste : les biens dont l'annonce mentionne une licence de location touristique. La licence peut s'éteindre avec la vente : renseignez-vous à la mairie avant d'y compter.",
+  "new-this-week": "Sur cette liste : les biens ajoutés à RealHunt au cours des 7 derniers jours. La liste est refaite chaque jour.",
+  "over-80-sqm": "Sur cette liste : les biens dont l'annonce indique plus de 80 m² habitables. Une annonce sans surface ne peut pas y figurer.",
+  "over-120-sqm": "Sur cette liste : les biens dont l'annonce indique plus de 120 m² habitables. Une annonce sans surface ne peut pas y figurer.",
 };
 
 const words: Pack = {
@@ -287,6 +304,7 @@ const words: Pack = {
   l3all: (med, pp, max, parent) => `Le prix médian est de ${med}${pp ? ` (${pp})` : ""}. Cette page les réunit tous : parmi ${parent}, aucun ne dépasse ${max}.`,
   parent: (kind, n, name, countries) => (kind === "site" ? `les ${n} biens que RealHunt recense dans ${countries} pays` : kind === "country" ? `les ${n} biens que nous recensons ${name}` : `les ${n} biens que nous recensons ${inR(name)}`),
   kpi: { homes: "Biens", from: "À partir de", median: "Prix médian", ppsqm: "Médiane au m²", size: "Surface médiane", score: "Meilleure note" },
+  n20: { costs: "Frais d'achat", foreign: "Acheteurs étrangers", free: "Achat libre", limits: "Avec restrictions", asOf: "Données du", regionsTitle: (inC) => `Prix médian par région ${inC}`, region: "Région", neighbours: "Pays voisins", siteMap: () => "" },
   gridTitle: (n, shown) => (n === shown ? `Les ${n} biens, la meilleure note en premier` : `Les ${shown} mieux notés sur ${n}`),
   gridMore: (shown, n) => `Vous voyez ici les ${shown} biens les mieux notés sur ${n}. Les autres figurent dans le tableau et dans les recherches plus précises ci-dessous.`,
   card: { isNew: "Nouveau", drop: (p) => `Baisse de ${p} %`, score: "Note", beds: (n) => `${n} ch.`, noPhoto: "Photos dans l'annonce" },

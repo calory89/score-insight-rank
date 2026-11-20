@@ -17,7 +17,8 @@ describe("which listing pages exist", () => {
   it("every page has its minimum of homes", () => {
     for (const p of plan.pages) {
       if (p.thin) { expect(p.kind).toBe("country"); continue; }
-      const isNew = ["ptype", "beds", "town", "regionBand"].includes(p.kind) || p.key === "with-pool" && p.kind === "feature";
+      // towns and budgets inside a region: from 3 homes since 20-nov-2026
+      const isNew = ["ptype", "beds"].includes(p.kind) || p.key === "with-pool" && p.kind === "feature";
       expect(p.homes.length, p.path).toBeGreaterThanOrEqual(isNew ? MIN_NEW : MIN);
     }
   });

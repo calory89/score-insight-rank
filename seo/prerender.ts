@@ -30,6 +30,7 @@ import { type EsPass, type PageRec, type Twin, createEsPass, writeEsTwins, cover
 import { writeAssets, finishAssets } from "./assets";
 import { writeTools } from "./tools";
 import { listingPlan, listingRows, listingPages, finishListings } from "./listings/build";
+import { loadFx, usdApprox } from "./listings/fx";
 import { writeKnowledge, finishKnowledge } from "./knowledge/build";
 import { writeReach, finishReach } from "./reach";
 
@@ -160,6 +161,7 @@ function build(root: string, es?: EsPass) {
   const destForArticle: Record<string, any> = readJson("src/data/destinations.json", {});
   const guidesForArticle: Record<string, any> = readJson("src/data/guides.json", {});
   const cardColors: Record<string, string> = readJson("src/data/card-colors.json", {});
+  const fxDeal = loadFx();
   const lowRes = (r: any) => { const u = toMedia(String(r?.image_urls?.[0] || "")); const t = u ? thumb(u) : ""; return t && t !== u ? t : ""; };
   for (const d of deals) {
     if (!d?.slug || !/^[A-Za-z0-9_-]+$/.test(d.slug)) continue;
@@ -231,13 +233,15 @@ function build(root: string, es?: EsPass) {
     // The same home in Spanish (title and texts already translated in the data; the article has its own Spanish writer).
     if (r?.title_es) {
       const esUrl = `${SITE}/es/deal/${d.slug}`;
+      // the price in dollars next to the euros, for buyers in the Americas (idea 68): ECB rate of the day, rounded to 100
+      const usdEs = (eurAmount: number) => { const t = usdApprox(eurAmount, fxDeal); return t ? ` <small class="rh-usd">(unos ${esc(t.usd.toLocaleString("es-ES"))} dólares al cambio del BCE del ${esc(t.day)})</small>` : ""; };
       const euro = (n: number) => Math.round(n).toLocaleString("es-ES") + " €";
       const simEs = (rp && rp.homes.length > 3 ? rp.homes : byCountry.get(cc) || []).filter((x) => x.slug !== r.slug && x.title_es).slice(0, 6);
       const descEs = String(r.why_great_es || r.title_es).replace(/\s+/g, " ").slice(0, 155);
       // same first paint as the English page (seo/dealShell.ts), with the Spanish title in the HTML
       const bodyEs = dealShell({ row: r, lang: "es", lowRes: lowRes(r), photos: (r.image_urls || []).filter(Boolean).map((u: string) => toMedia(String(u))), color: cardColors[r.slug], crumbs: [] })
         + `<main class="rh-static" lang="es"><article><nav aria-label="Ruta"><a href="/es">RealHunt</a> › ${esc(r.title_es)}</nav>`
-        + `<p><strong>${esc(euro(r.price_eur))}</strong> · ${esc(r.location_name || cName)}${r.sqm ? ` · ${esc(r.sqm)} m²` : ""}${r.bedrooms ? ` · ${esc(r.bedrooms)} dormitorios` : ""}${r.sqm && r.price_eur ? ` · ${esc(euro(r.price_eur / r.sqm))}/m²` : ""}</p>`
+        + `<p><strong>${esc(euro(r.price_eur))}</strong>${usdEs(r.price_eur)} · ${esc(r.location_name || cName)}${r.sqm ? ` · ${esc(r.sqm)} m²` : ""}${r.bedrooms ? ` · ${esc(r.bedrooms)} dormitorios` : ""}${r.sqm && r.price_eur ? ` · ${esc(euro(r.price_eur / r.sqm))}/m²` : ""}</p>`
         + dealStatusHtml(r, "es")
         + (r.nota != null ? `<h2>Nota RealHunt: ${esc(r.nota)} / 98</h2><p>Todas las casas de RealHunt pasan antes una revisión hecha por una persona, por eso la nota empieza en 70. El resto compara esta casa con todas las demás de la web.</p>` : "")
         + (r.why_great_es ? `<h2>Por qué está en la lista</h2><p>${esc(r.why_great_es)}</p>` : "")

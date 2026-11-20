@@ -110,6 +110,21 @@ export const AREAS: Area[] = [
   A("lolland-falster", "denmark", "Lolland and Falster", "Lolland y Falster", "on Lolland and Falster", "en Lolland y Falster", { regions: ["Lolland", "Falster"] }),
   // Netherlands: the Zuidoost district of Amsterdam, by the neighbourhoods the listings name
   A("amsterdam-zuidoost", "netherlands", "Amsterdam-Zuidoost", "Ámsterdam Sudeste", "in Amsterdam-Zuidoost", "en Ámsterdam Sudeste", { text: /\b(Zuidoost|Reigersbos|Gein|Venserpolder|Nellestein|Ganzenhoef|Bijlmer\w*|Holendrecht|Gaasperdam|Kraaiennest|Bullewijk|Driemond)\b/i, hoods: true }),
+  // Spain: the autonomous communities that group several provinces (20-nov-2026, idea 66). One-province communities
+  // (Murcia, Madrid, Asturias, Cantabria) already have their region page; the Canaries are above.
+  A("andalusia", "spain", "Andalusia", "Andalucía", "in Andalusia", "en Andalucía", { regions: ["Almería", "Cádiz", "Córdoba", "Granada", "Huelva", "Jaén", "Málaga", "Sevilla", "Andalusia", "Andalucía"] }),
+  A("valencian-community", "spain", "Valencian Community", "Comunidad Valenciana", "in the Valencian Community", "en la Comunidad Valenciana", { regions: ["Alicante", "Valencia", "Castellón", "Comunidad Valenciana"] }),
+  A("catalonia", "spain", "Catalonia", "Cataluña", "in Catalonia", "en Cataluña", { regions: ["Barcelona", "Tarragona", "Girona", "Lleida", "Catalonia", "Cataluña"] }),
+  A("galicia", "spain", "Galicia", "Galicia", "in Galicia", "en Galicia", { regions: ["A Coruña", "Lugo", "Ourense", "Pontevedra", "Galicia"] }),
+  A("castile-and-leon", "spain", "Castile and León", "Castilla y León", "in Castile and León", "en Castilla y León", { regions: ["Ávila", "Burgos", "León", "Palencia", "Salamanca", "Segovia", "Soria", "Valladolid", "Zamora", "Castilla y León"] }),
+  A("aragon", "spain", "Aragon", "Aragón", "in Aragon", "en Aragón", { regions: ["Huesca", "Teruel", "Zaragoza", "Aragón", "Aragon"] }),
+  A("castilla-la-mancha", "spain", "Castilla-La Mancha", "Castilla-La Mancha", "in Castilla-La Mancha", "en Castilla-La Mancha", { regions: ["Albacete", "Ciudad Real", "Cuenca", "Guadalajara", "Toledo", "Castilla-La Mancha"] }),
+  A("basque-country", "spain", "Basque Country", "País Vasco", "in the Basque Country", "en el País Vasco", { regions: ["Gipuzkoa", "Bizkaia", "Álava", "Basque Country", "País Vasco"] }),
+  // United States: the towns of South Florida people search by name (idea 31), by the place the listing gives.
+  // Aventura is not here: its homes give it as their town, so it has a town page (/homes/united-states/florida/aventura).
+  A("boca-raton", "united-states", "Boca Raton", "Boca Raton", "in Boca Raton", "en Boca Raton", { text: /\bBoca Raton\b/, hoods: true }),
+  A("hollywood", "united-states", "Hollywood, Florida", "Hollywood (Florida)", "in Hollywood, Florida", "en Hollywood (Florida)", { text: /\bHollywood\b.*\bFlorida\b/, hoods: true }),
+  A("doral", "united-states", "Doral", "Doral", "in Doral", "en Doral", { text: /\bDoral\b/, hoods: true }),
   // Germany, Poland, Greece, Bulgaria, Canada
   A("eastern-germany", "germany", "Saxony, Saxony-Anhalt and Thuringia", "Sajonia, Sajonia-Anhalt y Turingia", "in Saxony, Saxony-Anhalt and Thuringia", "en Sajonia, Sajonia-Anhalt y Turingia", { regions: ["Saxony", "Saxony-Anhalt", "Thuringia", "Chemnitz", "Görlitz", "Gera", "Magdeburg", "Leipzig", "Dresden", "Zwickau", "Plauen", "Halle", "Erfurt", "Dessau"] }),
   A("masuria", "poland", "Masuria", "Masuria", "in Masuria", "en Masuria", { regions: ["Warmia-Masuria", "Masuria", "Mazury"] }),
@@ -148,3 +163,17 @@ export function km(lat1: number, lng1: number, lat2: number, lng2: number): numb
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 export const kmTo = (h: Home, lat: number, lng: number): number | null => (typeof h.lat === "number" && typeof h.lng === "number" ? km(h.lat, h.lng, lat, lng) : null);
+
+// ------------------------------------------------------------------------------------------------ neighbours
+/** Countries that share a land border (and Cyprus with Greece, the UK with Ireland across the sea that most buyers
+ * cross by ferry or a short flight). Country pages link to the neighbours that have a page (20-nov-2026, idea 35). */
+export const NEIGHBOURS: Record<string, string[]> = {
+  spain: ["portugal", "france", "andorra"], portugal: ["spain"], france: ["spain", "italy", "switzerland", "germany", "belgium", "luxembourg", "andorra"],
+  italy: ["france", "switzerland", "austria", "slovenia"], switzerland: ["france", "italy", "germany", "austria"], austria: ["germany", "switzerland", "italy", "slovenia", "hungary", "slovakia", "czechia"],
+  germany: ["netherlands", "belgium", "france", "switzerland", "austria", "czechia", "poland", "denmark", "luxembourg"], netherlands: ["germany", "belgium"], belgium: ["netherlands", "germany", "france", "luxembourg"],
+  denmark: ["germany", "sweden"], sweden: ["norway", "finland", "denmark"], norway: ["sweden", "finland"], poland: ["germany", "czechia", "slovakia", "lithuania"],
+  greece: ["bulgaria", "albania", "north-macedonia", "turkey", "cyprus"], bulgaria: ["greece", "romania", "serbia", "north-macedonia", "turkey"], cyprus: ["greece", "northern-cyprus"],
+  montenegro: ["croatia", "albania", "serbia", "bosnia-and-herzegovina"], albania: ["greece", "montenegro", "north-macedonia"], croatia: ["slovenia", "hungary", "montenegro"],
+  "united-kingdom": ["ireland", "france"], ireland: ["united-kingdom"], "united-states": ["canada", "mexico"], canada: ["united-states"], mexico: ["united-states"],
+  colombia: ["panama", "ecuador", "peru", "brazil"], uruguay: ["argentina", "brazil"], thailand: ["malaysia", "cambodia", "laos"],
+};
