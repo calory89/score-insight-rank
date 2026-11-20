@@ -50,6 +50,17 @@ const AREA: Record<string, [string, string]> = {
   "southern-italy": ["Zuid-Italië", "in Zuid-Italië"], "abruzzo-and-marche": ["Abruzzen en Marche", "in de Abruzzen en Marche"], lunigiana: ["Lunigiana", "in de Lunigiana"], "lake-maggiore": ["Lago Maggiore", "aan het Lago Maggiore"], "lake-garda": ["Gardameer", "aan het Gardameer"],
   limousin: ["Limousin", "in de Limousin"], hokkaido: ["Hokkaido", "op Hokkaido"], tohoku: ["Tohoku", "in Tohoku"], kanto: ["Kanto", "in Kanto"], chubu: ["Chubu", "in Chubu"], kansai: ["Kansai", "in Kansai"], chugoku: ["Chugoku", "in Chugoku"],
   shikoku: ["Shikoku", "op Shikoku"], kyushu: ["Kyushu", "op Kyushu"], norrland: ["Norrland", "in Norrland"], jutland: ["Jutland", "in Jutland"], "lolland-falster": ["Lolland en Falster", "op Lolland en Falster"],
+  "andalusia": ["Andalusië", "in Andalusië"],
+  "valencian-community": ["Valenciaanse Gemeenschap", "in de Valenciaanse Gemeenschap"],
+  "catalonia": ["Catalonië", "in Catalonië"],
+  "galicia": ["Galicië", "in Galicië"],
+  "castile-and-leon": ["Castilië en León", "in Castilië en León"],
+  "aragon": ["Aragón", "in Aragón"],
+  "castilla-la-mancha": ["Castilië-La Mancha", "in Castilië-La Mancha"],
+  "basque-country": ["Baskenland", "in Baskenland"],
+  "boca-raton": ["Boca Raton", "in Boca Raton"],
+  "hollywood": ["Hollywood (Florida)", "in Hollywood (Florida)"],
+  "doral": ["Doral", "in Doral"],
   "amsterdam-zuidoost": ["Amsterdam-Zuidoost", "in Amsterdam-Zuidoost"], "eastern-germany": ["Saksen, Saksen-Anhalt en Thüringen", "in Saksen, Saksen-Anhalt en Thüringen"], masuria: ["Mazurië", "in Mazurië"],
   peloponnese: ["Peloponnesos", "op de Peloponnesos"], "black-sea-coast": ["Zwarte Zeekust", "aan de Zwarte Zeekust"], "atlantic-canada": ["Atlantisch Canada", "in de Atlantische provincies van Canada"],
 };
@@ -122,6 +133,9 @@ const KEYED: Record<string, (b: string, form: Form) => string> = {
   "with-business-premises": (b) => `${b} met bedrijfsruimte`,
   "with-fibre-internet": (b) => `${b} met glasvezel`,
   "with-tourist-licence": (b) => `${b} met een vergunning voor vakantieverhuur`,
+  "new-this-week": adj("in de afgelopen 7 dagen toegevoegd", "in de afgelopen 7 dagen toegevoegde"),
+  "over-80-sqm": (b) => `${b} van meer dan 80 m²`,
+  "over-120-sqm": (b) => `${b} van meer dan 120 m²`,
 };
 const ccy = (n: number, c: string) => `${num(n)} ${c === "GBP" ? "pond" : c === "USD" ? "dollar" : "euro"}`;
 const cityOf = (f: { city?: string }) => city(f.city || "");
@@ -130,7 +144,7 @@ const LABEL: Record<string, string> = { "by-the-sea": "Aan zee", "village-houses
   turnkey: "Instapklaar", "to-renovate": "Om op te knappen", "with-sea-view": "Zeezicht", "near-the-beach": "500 m van de zee", "with-land": "Met grond", "with-fireplace": "Met open haard", "with-garage": "Met garage",
   "on-an-island": "Op een eiland", "in-the-mountains": "In de bergen", "with-olive-trees-or-vines": "Olijfbomen of wijnranken", "near-an-airport": "Dicht bij een luchthaven", "under-500-per-sqm": `Onder ${money(500)}/m²`, "over-100-sqm-under-50000": `Meer dan 100 m² onder ${money(50000)}`,
   "score-90-plus": "Score 90 of hoger", "editors-picks": "Keuze van de redactie", "new-this-month": "Nieuw deze maand", "price-drops": "In prijs verlaagd", "single-storey": "Gelijkvloers", "with-period-features": "Historische details", "good-weather": "Mooi weer",
-  "quiet-location": "Rustige ligging", "low-community-fee": "Lage servicekosten", "cave-houses": "Grotwoningen", trulli: "Trulli", "unusual-buildings": "Bijzondere gebouwen", "with-business-premises": "Met bedrijfsruimte", "with-fibre-internet": "Glasvezel", "with-tourist-licence": "Vakantieverhuur toegestaan",
+  "quiet-location": "Rustige ligging", "low-community-fee": "Lage servicekosten", "cave-houses": "Grotwoningen", trulli: "Trulli", "unusual-buildings": "Bijzondere gebouwen", "with-business-premises": "Met bedrijfsruimte", "with-fibre-internet": "Glasvezel", "best-rated": "Top 10 op score", "new-this-week": "Nieuw deze week", "over-80-sqm": "Meer dan 80 m²", "over-120-sqm": "Meer dan 120 m²", "with-tourist-licence": "Vakantieverhuur toegestaan",
   cheapest: "De goedkoopste", "most-space-for-the-money": "De meeste ruimte voor uw geld" };
 
 function what(F: Facts, form: Form = "many"): string {
@@ -188,6 +202,9 @@ const HOW: Record<string, string> = {
   "with-business-premises": "Op deze lijst staan woningen waarvan de titel een winkel, een bar, een restaurant, een logiesbedrijf of andere bedrijfsruimte noemt die wordt meeverkocht. Of het bedrijf weer open mag, hangt af van de vergunningen van de gemeente: vraag het na op het gemeentehuis.",
   "with-fibre-internet": "Op deze lijst staan woningen waarvan de advertentie glasvezel of snel internet noemt. Wij testen de aansluitingen niet: vraag de verkoper om een recente snelheidstest.",
   "with-tourist-licence": "Op deze lijst staan woningen waarvan de advertentie een vergunning voor vakantieverhuur noemt. De vergunning kan bij verkoop vervallen: vraag het na op het gemeentehuis voordat u erop rekent.",
+  "new-this-week": "Op deze lijst staan woningen die in de afgelopen 7 dagen aan RealHunt zijn toegevoegd. De lijst wordt elke dag opnieuw gemaakt.",
+  "over-80-sqm": "Op deze lijst staan woningen waarvan de advertentie meer dan 80 m² woonoppervlak noemt. Een advertentie zonder oppervlakte kan er niet op staan.",
+  "over-120-sqm": "Op deze lijst staan woningen waarvan de advertentie meer dan 120 m² woonoppervlak noemt. Een advertentie zonder oppervlakte kan er niet op staan.",
 };
 
 export const nl: Pack = {
@@ -217,6 +234,7 @@ export const nl: Pack = {
   l3all: (med, pp, max, parent) => `De mediaanprijs is ${med}${pp ? ` (${pp})` : ""}. Op deze pagina staan ze allemaal: van ${parent} kost er geen meer dan ${max}.`,
   parent: (kind, n, name, countries) => (kind === "site" ? `de ${n} woningen die RealHunt in ${countries} landen heeft` : kind === "country" ? `de ${n} woningen die wij ${name} hebben` : `de ${n} woningen die wij ${inR(name)} hebben`),
   kpi: { homes: "Woningen", from: "Vanaf", median: "Mediaanprijs", ppsqm: "Mediaan per m²", size: "Mediane oppervlakte", score: "Hoogste score" },
+  n20: { costs: "Aankoopkosten", foreign: "Buitenlandse kopers", free: "Vrij kopen", limits: "Met beperkingen", asOf: "Stand van", regionsTitle: (inC) => `Mediaanprijs per regio ${inC}`, region: "Regio", neighbours: "Buurlanden", siteMap: () => "" },
   gridTitle: (n, shown) => (n === shown ? `Alle ${n} woningen, hoogste score eerst` : `De ${shown} beste van ${n}, op score`),
   gridMore: (shown, n) => `U ziet de ${shown} woningen met de hoogste score van de ${n}. De overige staan in de tabel en in de nauwkeurigere zoekopdrachten verderop.`,
   card: { isNew: "Nieuw", drop: (p) => `${p}% verlaagd`, score: "Score", beds: (n) => `${n} slpk.`, noPhoto: "Foto's in de advertentie", days: (n) => (n === 0 ? "Vandaag toegevoegd" : n === 1 ? "1 dag op RealHunt" : `${n} dagen op RealHunt`) },

@@ -27,6 +27,7 @@ import { techAudit, techHeal } from "./tech/audit";
 import { hreflangTags, sitemapAlternates } from "./tech/locales";
 import { withSiteHead } from "./tech/siteHead";
 import { writeReport } from "./tech/report";
+import { isUnconfirmed } from "../src/community/n9/status";
 
 export const SITE = "https://realhunt.co";
 /** A page type listed in NOINDEX_RULES is still indexed when its own text (in the HTML) has at least this many words. */
@@ -83,6 +84,15 @@ const ldTag = (o: unknown) => `<script type="application/ld+json">${JSON.stringi
 export const mapLd = (h: string, fn: (o: any) => any) => h.replace(LD, (m, j: string) => { let o: any; try { o = JSON.parse(j); } catch { return m; } const r = fn(o); return r === null ? "" : r === o ? m : ldTag(r); });
 const addHead = (h: string, tags: string) => h.replace("</head>", () => tags + "</head>");
 const ALT = /<link rel="alternate" hreflang="([^"]+)" href="([^"]+)"\s*\/?>/g;
+
+/** What a home page says about the home itself (price, status, title, texts, size, score, first photo), hashed. The
+ * "f:" prefix tells these hashes from the page-text hashes of older builds (20-nov-2026, idea 79). */
+export function dealHash(r: any): string {
+  if (!r) return "";
+  const gone = (Number(r.sold_reports) || 0) >= 1 && (Number(r.sold_reports) || 0) > (Number(r.available_reports) || 0);
+  const facts = [r.price_eur, r.price_drop || 0, r.title, r.title_es, r.why_great, r.why_great_es, r.why_cheap, r.why_cheap_es, r.sqm, r.bedrooms, r.nota, r.location_name, (r.image_urls || [])[0], gone, isUnconfirmed(r)];
+  return "f:" + crypto.createHash("sha1").update(JSON.stringify(facts)).digest("hex").slice(0, 10);
+}
 const setTitle = (h: string, t: string) => h.replace(/<title>[^<]*<\/title>/, () => `<title>${esc(t)}</title>`);
 const setDesc = (h: string, d: string) => h.replace(/<meta name="description" content="[^"]*"\s*\/?>/, () => `<meta name="description" content="${esc(d)}" />`);
 const setRobots = (h: string, noindex: boolean) => h.replace(/<meta name="robots" content="[^"]*"\s*\/?>/, () => `<meta name="robots" content="${noindex ? "noindex, follow" : "index, follow"}" />`);
@@ -422,14 +432,21 @@ export function polish(root: string, opts: PolishOpts = {}): Audit {
   for (const pg of pages.values()) {
     if (!live(pg.path)) continue;
     const was = prev?.pages[pg.path]; const data = old.get(pg.path)?.lastmod || "";
-    const d = was ? (was[0] === pg.hash ? was[1] || data : today) : data;
+    // a home page changes when the home does (price, status, title, text, size), not when the list of similar homes
+    // under it does (20-nov-2026, idea 79). The first build with these hashes keeps the dates it had.
+    const own = pg.kind === "deal" ? dealHash(bySlug.get(pg.en.slice(6))) : "";
+    const hash = own || pg.hash;
+    const d = was ? (was[0] === hash || (own && !was[0].startsWith("f:")) ? was[1] || data : today) : data;
     if (d) lastmod.set(pg.path, d);
     const target = pg.kind === "deal" && pg.cc ? `/homes/${pg.cc}` : undefined;
-    state.pages[pg.path] = target ? [pg.hash, d, target] : [pg.hash, d];
+    state.pages[pg.path] = target ? [hash, d, target] : [hash, d];
   }
   const maps = new Map<string, Pg[]>();
-  for (const pg of pages.values()) if (live(pg.path) && pg.canon === pg.path) { const g = (pg.lang === "es" ? "es-" : "") + groupOf(pg); (maps.get(g) || maps.set(g, []).get(g)!).push(pg); }
-  const names = [...GROUPS.map((g) => g.key), ...GROUPS.map((g) => "es-" + g.key)].filter((g) => maps.has(g));
+  // the homes in one sitemap per country (idea 36): Search Console then shows which country is not being indexed
+  const smGroup = (pg: Pg) => { const g = groupOf(pg); return g === "homes" && pg.kind === "deal" && pg.cc ? `homes-${pg.cc}` : g; };
+  for (const pg of pages.values()) if (live(pg.path) && pg.canon === pg.path) { const g = (pg.lang === "es" ? "es-" : "") + smGroup(pg); (maps.get(g) || maps.set(g, []).get(g)!).push(pg); }
+  const homeMaps = [...maps.keys()].filter((g) => /^homes-/.test(g)).sort();
+  const names = [...GROUPS.flatMap((g) => (g.key === "homes" ? ["homes", ...homeMaps] : [g.key])), ...GROUPS.flatMap((g) => (g.key === "homes" ? ["es-homes", ...homeMaps.map((x) => "es-" + x)] : ["es-" + g.key]))].filter((g) => maps.has(g));
   const sm: Record<string, number> = {};
 
   // ---- 6. redirects for old and removed URLs
@@ -492,10 +509,15 @@ export function polish(root: string, opts: PolishOpts = {}): Audit {
     const enLive = [...pages.values()].filter((p) => p.lang === "en" && live(p.path));
     const first3 = ["bulgaria", "italy", "france"];
     const capOf = (p: Pg) => Number(/under-(\d+)$/.exec(p.en)?.[1] || 0);
+    // 20-nov-2026 (idea 80): 30 pages. After the three countries with impressions and the other countries, the
+    // page of all searches, the budgets for every country and the regions with most homes (by the homes they link to).
+    const homesOn = (p: Pg) => [...p.links].filter((l) => /^\/deal\//.test(l)).length;
     const toIndex = [...new Set([
       ...first3.flatMap((c) => [...enLive.filter((p) => p.kind === "band" && p.cc === c).sort((x, y) => capOf(x) - capOf(y)).slice(0, 3), ...enLive.filter((p) => p.kind === "country" && p.cc === c)]),
       ...enLive.filter((p) => p.kind === "country" && !first3.includes(p.cc)).sort((x, y) => (perCc.get(y.cc) || 0) - (perCc.get(x.cc) || 0)),
-    ].map((p) => p.path))].slice(0, 20);
+      ...enLive.filter((p) => p.path === "/cheap-houses" || /^\/cheap-houses\/under-\d+$/.test(p.path)).sort((x, y) => capOf(x) - capOf(y)),
+      ...enLive.filter((p) => p.kind === "region").sort((x, y) => homesOn(y) - homesOn(x) || x.path.localeCompare(y.path)),
+    ].map((p) => p.path))].slice(0, 30);
     writeReport(root, rep, { today, rows: rows.length, toIndex });
     try { const bf = path.join(root, "build.json"); const b = JSON.parse(fs.readFileSync(bf, "utf8")); b.indexable_pages = rep.summary.indexable; fs.writeFileSync(bf, JSON.stringify(b) + "\n"); } catch { /* no build.json */ }
   }

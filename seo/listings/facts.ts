@@ -31,6 +31,8 @@ export type Facts = {
     flood: number; noise: number; old: number; sold: number; approx: number; weak: [string, number] | null; strong: [string, number] | null;
   };
   scoreMin: number; scoreMax: number;
+  /** Mean RealHunt score of the homes that have one, rounded (0 when none has). */
+  scoreAvg: number;
   /** Numbers that only some families have (15-nov-2026): each is there only when the homes of the page carry it. */
   x: Extra;
   sources: [string, number][];
@@ -124,7 +126,7 @@ function extras(f: Facet, hs: Home[], parentHomes: Home[], ctx: Ctx): Extra {
     const l = c ? with_((h) => kmTo(h, c[3], c[4])).sort((a, b) => a[1] - b[1]) : [];
     if (l.length >= 3) x.dist = { med: Math.round(median(l.map((p) => p[1] || 0.1))), near: ref(l[0][0]), km: Math.round(l[0][1]), far: Math.round(l[l.length - 1][1]) };
   }
-  if (f.ranked && hs.length) { const last = hs[hs.length - 1]; x.rank = { last: ref(last), v: f.key === "cheapest" ? last.price_eur : Math.round(ppsqmHome(last)), of: f.key === "cheapest" ? parentHomes.length : parentHomes.filter((h) => ppsqmHome(h) > 0).length }; }
+  if (f.ranked && hs.length) { const last = hs[hs.length - 1]; x.rank = { last: ref(last), v: f.key === "cheapest" ? last.price_eur : f.key === "best-rated" ? Number(last.nota) || 0 : Math.round(ppsqmHome(last)), of: f.key === "cheapest" || f.key === "best-rated" ? parentHomes.length : parentHomes.filter((h) => ppsqmHome(h) > 0).length }; }
   if (f.kind === "ccyBand" && f.ccy && f.rate) x.fx = { ccy: f.ccy, cap: f.cap!, capEur: Math.floor((f.capEur || 0) / 100) * 100, rate: f.rate, date: ctx.fx?.date || "" };
   if (f.kind === "area") {
     const a = areaBySlug(f.cc || "", f.area || "");
@@ -154,8 +156,9 @@ export function factsFor(f: Facet, ctx: Ctx): Facts {
   const countryHomes = f.cc ? ctx.byCountry.get(f.cc) || hs : ctx.all;
   const regionPage = f.regionSlug ? ctx.pages.find((p) => p.kind === "region" && p.cc === f.cc && p.regionSlug === f.regionSlug)
     : f.area && f.kind === "regionBand" ? ctx.pages.find((p) => p.kind === "area" && p.cc === f.cc && p.area === f.area) : undefined;
-  const parentHomes = f.kind === "country" || !f.cc ? ctx.all : (f.kind === "town" || f.kind === "regionBand") && regionPage ? regionPage.homes : countryHomes;
-  const parentKind = f.kind === "country" || !f.cc ? "site" as const : (f.kind === "town" || f.kind === "regionBand") && regionPage ? "region" as const : "country" as const;
+  const inRegion = f.kind === "town" || f.kind === "regionBand" || (f.kind === "ccyBand" && !!f.regionSlug);
+  const parentHomes = f.kind === "country" || !f.cc ? ctx.all : inRegion && regionPage ? regionPage.homes : countryHomes;
+  const parentKind = f.kind === "country" || !f.cc ? "site" as const : inRegion && regionPage ? "region" as const : "country" as const;
   const dated = hs.map((h) => [h, homeDay(h)] as const).filter(([, d]) => d).sort((a, b) => String(b[1]).localeCompare(String(a[1])));
 
   // regions (by homes), with their median, for pages that span a country
@@ -238,6 +241,7 @@ export function factsFor(f: Facet, ctx: Ctx): Facts {
       weak: dims.length >= 4 ? dims[0] : null, strong: dims.length >= 4 ? dims[dims.length - 1] : null,
     },
     scoreMin: notas.length ? Math.min(...notas) : 0, scoreMax: notas.length ? Math.max(...notas) : 0,
+    scoreAvg: notas.length ? Math.round(notas.reduce((a, b) => a + b, 0) / notas.length) : 0,
     x: extras(f, hs, parentHomes, ctx),
     sources: [...src.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 5),
     updated: ctx.updated,

@@ -75,6 +75,8 @@ export type Pack = {
   l3all(med: string, ppsqm: string, max: string, parent: string): string;
   parent(kind: "site" | "country" | "region", n: number, name: string, countries: number): string;
   kpi: { homes: string; from: string; median: string; ppsqm: string; size: string; score: string };
+  /** 20-nov-2026: the key-data rows of a country page, the table of regions, neighbouring countries, the site map of a country ("" where the language has none). */
+  n20: { costs: string; foreign: string; free: string; limits: string; asOf: string; regionsTitle(inC: string): string; region: string; neighbours: string; siteMap(inC: string): string };
   // ---- the homes
   gridTitle(n: number, shown: number): string;
   gridMore(shown: number, n: number): string;

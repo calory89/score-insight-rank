@@ -67,7 +67,8 @@ function world(plan: ListingPlan, rows: Home[], lang: Lang): World {
   const names: Record<string, string> = { bali: "Bali", lombok: "Lombok", albania: "Albania", mexico: "Mexico", spain: "Spain", montenegro: "Montenegro", georgia: "Georgia", "northern-cyprus": "Northern Cyprus", vietnam: "Vietnam", italy: "Italy", portugal: "Portugal", bulgaria: "Bulgaria" };
   return {
     ctx: { all: rowsByScore(rows), byCountry, pages: plan.pages, dest, updated, fx: loadFx() },
-    site: { pages: plan.pages, live: plan.live, hasGuide: (cc) => !!guides[cc], hasCalc: (cc) => calc.has(cc), hasCosts: (cc) => !!dest[cc] && !!(names[cc] || guides[cc]?.name), restricted, notes: isNewLang(lang) ? () => [] : notesFor },
+    site: { pages: plan.pages, live: plan.live, hasGuide: (cc) => !!guides[cc], hasCalc: (cc) => calc.has(cc), hasCosts: (cc) => !!dest[cc] && !!(names[cc] || guides[cc]?.name), restricted, notes: isNewLang(lang) ? () => [] : notesFor,
+      buyRule: (cc) => (rules[cc] && ["eu", "uk", "na", "other"].some((g) => rules[cc]?.[g]?.s) ? (restricted(cc) ? "limits" : "free") : null) },
     colors: read("src/data/card-colors.json"),
   };
 }
