@@ -4,6 +4,7 @@ import path from "path";
 import fs from "fs";
 import { prerenderPages } from "./seo/prerender";
 import { fileBudget } from "./seo/budget";
+import { packPages } from "./seo/pack";
 import { polishPages } from "./seo/polish";
 import { techChecks } from "./seo/tech/plugin";
 import { langPages } from "./seo/langs/build";
@@ -92,7 +93,7 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  plugins: [react(), preloadPublicRoute(), prerenderPages(), polishPages(), langPages(), reachAfter(), splitSpanishTexts(), techChecks(), fileBudget()].filter(Boolean),
+  plugins: [react(), preloadPublicRoute(), prerenderPages(), polishPages(), langPages(), reachAfter(), splitSpanishTexts(), techChecks(), packPages(), fileBudget()].filter(Boolean),
   resolve: {
     dedupe: ["react", "react-dom"],
     alias: {
