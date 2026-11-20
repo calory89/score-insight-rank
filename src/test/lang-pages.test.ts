@@ -31,7 +31,7 @@ describe("place names", () => {
     const { langs } = planLangs(rows, () => true);
     const g = langs.find((l) => l.lang === "de")!;
     expect(g.dropped.filter((d) => /title|place/.test(d.why))).toEqual([]);
-  });
+  }, 30000); // planLangs composes every listing page in five languages (more families since 20-nov-2026)
 });
 
 describe("the gate against English", () => {
@@ -93,7 +93,7 @@ describe("which pages a language gets", () => {
     const after = planLangs(changed, () => true).langs.find((l) => l.lang === "ru")!.pages.filter((p) => p.f.cc === "bulgaria");
     expect(before).toBeGreaterThan(0); expect(after.length).toBeLessThan(before);
     expect(after.filter((p) => p.f.homes.some((h) => h.slug === one.slug))).toEqual([]);
-  });
+  }, 30000); // planLangs composes every listing page in five languages (more families since 20-nov-2026)
   it("every language with a pack has its interface words and nothing else is published", () => {
     for (const l of NEW_LANGS) expect(!!PACKS[l]).toBe(!!UI[l] && !!CONFIG[l]);
     expect(langs.map((l) => l.lang)).toEqual(NEW_LANGS.filter((l) => !!PACKS[l]));

@@ -75,6 +75,9 @@ const KEYED: Record<string, (b: string, form: Form) => string> = {
   "with-business-premises": (b) => `${b} con local comercial`,
   "with-fibre-internet": (b) => `${b} con fibra óptica`,
   "with-tourist-licence": (b) => `${b} con licencia de alquiler turístico`,
+  "new-this-week": (b, f) => `${b} ${agree(b, f, "añadid")} en los últimos 7 días`,
+  "over-80-sqm": (b) => `${b} de más de 80 m²`,
+  "over-120-sqm": (b) => `${b} de más de 120 m²`,
 };
 const ccy = (n: number, c: string) => `${num(n)} ${c === "GBP" ? "libras" : c === "USD" ? "dólares" : "euros"}`;
 const areaOf = (f: { cc?: string; area?: string }) => areaBySlug(f.cc || "", f.area || "");
@@ -84,7 +87,7 @@ const LABEL: Record<string, string> = { "by-the-sea": "Junto al mar", "village-h
   "turnkey": "Para entrar a vivir", "to-renovate": "Para reformar", "with-sea-view": "Vistas al mar", "near-the-beach": "A 500 m del mar", "with-land": "Con terreno", "with-fireplace": "Con chimenea", "with-garage": "Con garaje",
   "on-an-island": "En una isla", "in-the-mountains": "De montaña", "with-olive-trees-or-vines": "Olivos o viñas", "near-an-airport": "Cerca de un aeropuerto", "under-500-per-sqm": `Menos de 500${NB}€/m²`, "over-100-sqm-under-50000": `Más de 100 m² por menos de 50.000${NB}€`,
   "score-90-plus": "Nota 90 o más", "editors-picks": "Elegidas a mano", "new-this-month": "Nuevas este mes", "price-drops": "Rebajadas", "single-storey": "De una planta", "with-period-features": "Elementos de época", "good-weather": "Buen tiempo",
-  "quiet-location": "Zona tranquila", "low-community-fee": "Comunidad baja", "cave-houses": "Casas cueva", trulli: "Trulli", "unusual-buildings": "Edificios singulares", "with-business-premises": "Con local comercial", "with-fibre-internet": "Fibra óptica", "with-tourist-licence": "Licencia turística",
+  "quiet-location": "Zona tranquila", "low-community-fee": "Comunidad baja", "cave-houses": "Casas cueva", trulli: "Trulli", "unusual-buildings": "Edificios singulares", "with-business-premises": "Con local comercial", "with-fibre-internet": "Fibra óptica", "new-this-week": "Nuevas esta semana", "over-80-sqm": "Más de 80 m²", "over-120-sqm": "Más de 120 m²", "best-rated": "Las 10 con mejor nota", "with-tourist-licence": "Licencia turística",
   cheapest: "Las más baratas", "most-space-for-the-money": "Más metros por euro" };
 
 function what(F: Facts, form: Form = "many"): string {
@@ -95,6 +98,7 @@ function what(F: Facts, form: Form = "many"): string {
   if (f.ranked) {
     const pl = NOUN[F.noun][0], sg = NOUN[F.noun][1];
     if (f.key === "cheapest") return one(form) ? `${NOUN[F.noun][3]} en venta${where}` : `${F.n} ${pl} más ${fem(pl) ? "baratas" : "baratos"} en venta${where}`;
+    if (f.key === "best-rated") return one(form) ? `${sg} con mejor nota en venta${where}` : `${F.n} ${pl} con mejor nota en venta${where}`;
     return one(form) ? `${sg} con más metros por euro en venta${where}` : `${F.n} ${pl} con más metros por euro en venta${where}`;
   }
   switch (f.kind) {
@@ -106,6 +110,7 @@ function what(F: Facts, form: Form = "many"): string {
     case "regionBand": return f.area ? `${b} en venta ${areaOf(f)?.inEs || ""}${under}` : `${b} en venta en ${place(f.region!)} (${esPlace(f.country!)})${under}`;
     case "setting": case "feature": case "gfeature": return `${KEYED[f.key!](b, form)} en venta${where}`;
     case "beds": return `${b} de ${f.beds === 4 ? "4 o más dormitorios" : `${f.beds} ${s(f.beds!, "dormitorio", "dormitorios")}`} en venta${where}`;
+    case "ccyBand": if (f.region) return `${b} en venta en ${place(f.region)} (${esPlace(f.country!)})${under}`; return `${b} en venta${where}${under}`;
     default: return `${b} en venta${where}${under}`;
   }
 }
@@ -125,7 +130,7 @@ export const es: Pack = {
   h1: (F) => (F.f.ranked ? `${fem(what(F)) ? "Las" : "Los"} ${what(F)}${F.f.country ? "" : " en RealHunt"}`
     : upper(what(F, (F.f.cap && F.f.cap <= 100000) || (["gfeature", "feature", "area", "near"].includes(F.f.kind) && F.median <= 100000) ? "cheap" : "many"))),
   title: (h1, n, min) => `${h1} (${n}, desde ${min})`,
-  desc: (F, w) => `${F.f.ranked ? `${fem(w) ? "Las" : "Los"} ${w}` : `${F.n} ${w}`}, de ${money(F.min)} a ${money(F.max)}. Precio mediano: ${money(F.median)}. Fotos, tamaños, notas, gastos de compra y en qué fijarse.`,
+  desc: (F, w) => `${F.f.ranked ? `${fem(w) ? "Las" : "Los"} ${w}` : `${F.n} ${w}`}, de ${money(F.min)} (${/^near /.test(F.cheapest.town) ? place(F.cheapest.town, undefined, "card") : `en ${place(F.cheapest.town, undefined, "card")}`}) a ${money(F.max)}. Precio mediano: ${money(F.median)}${F.scoreAvg ? `; nota media, ${F.scoreAvg} de 98` : ""}. Fotos, tamaños, gastos de compra y en qué fijarse.`,
   crumbRoot: "RealHunt", crumbCheap: "Casas baratas",
   crumbCountry: (c) => `Casas en ${theEs(c)}`,
   label: (f) => (f.kind === "combo" ? `${LABEL[f.key!] || f.key}, menos de ${money(f.cap!)}` : f.kind === "ccyBand" ? `Menos de ${ccy(f.cap!, f.ccy!)}` : f.kind === "area" ? areaOf(f)?.es || String(f.area) : f.kind === "near" ? `Cerca de ${cityOf(f)}`
@@ -137,12 +142,13 @@ export const es: Pack = {
   l3all: (med, pp, max, parent) => `El precio mediano es de ${med}${pp ? ` (${pp})` : ""}. Son todas ${parent}: ninguna supera los ${max}.`,
   parent: (kind, n, name, countries) => (kind === "site" ? `las ${n} viviendas de RealHunt en ${countries} países` : kind === "country" ? `las ${n} viviendas que tenemos ${name}` : `las ${n} viviendas que tenemos en ${name}`),
   kpi: { homes: "Viviendas", from: "Desde", median: "Precio mediano", ppsqm: "Mediana por m²", size: "Tamaño mediano", score: "Mejor nota" },
+  n20: { costs: "Gastos de compra", foreign: "Compradores extranjeros", free: "Compra libre", limits: "Con límites", asOf: "Datos del", regionsTitle: (inC) => `Precio mediano por región ${inC}`, region: "Región", neighbours: "Países vecinos", siteMap: (inC) => `Mapa del sitio: todas las páginas y casas ${inC}` },
   gridTitle: (n, shown) => (n === shown ? `Las ${n} viviendas, de mejor a peor nota` : `Las ${shown} mejores de ${n}, por nota`),
   gridMore: (shown, n) => `Se muestran las ${shown} con mejor nota de ${n} viviendas. La tabla y las búsquedas más concretas de abajo recogen el resto.`,
   card: { isNew: "Nueva", drop: (p) => `Rebajada un ${p}${NB}%`, score: "Nota", beds: (n) => `${n} dorm.`, noPhoto: "Fotos en el anuncio", days: (n) => (n === 0 ? "Añadida hoy" : n === 1 ? "1 día en RealHunt" : `${n} días en RealHunt`) },
   tableTitle: (n, shown) => (n === shown ? `Compara las ${n} viviendas, de más barata a más cara` : `Compara las ${shown} más baratas de ${n}`),
   th: { home: "Vivienda", place: "Lugar", price: "Precio", size: "Tamaño", ppsqm: "Por m²", beds: "Dorm.", score: "Nota", added: "Añadida" },
-  factsTitle: (F) => (F.f.kind === "ccyBand" ? `Qué se compra con ${ccy(F.f.cap!, F.f.ccy!)}${F.f.country ? ` ${inC(F.f.country)}` : ""}` : F.f.cap && F.f.kind !== "combo" ? `Qué se compra con ${money(F.f.cap)}${F.f.area ? ` ${areaOf(F.f)?.inEs || ""}` : F.f.region ? ` en ${place(F.f.region)}` : F.f.country ? ` ${inC(F.f.country)}` : ""}` : `Las ${F.n} viviendas en cifras`),
+  factsTitle: (F) => (F.f.kind === "ccyBand" ? `Qué se compra con ${ccy(F.f.cap!, F.f.ccy!)}${F.f.region ? ` en ${place(F.f.region)}` : F.f.country ? ` ${inC(F.f.country)}` : ""}` : F.f.cap && F.f.kind !== "combo" ? `Qué se compra con ${money(F.f.cap)}${F.f.area ? ` ${areaOf(F.f)?.inEs || ""}` : F.f.region ? ` en ${place(F.f.region)}` : F.f.country ? ` ${inC(F.f.country)}` : ""}` : `Las ${F.n} viviendas en cifras`),
   fSize: (med, max, title) => `Tamaño: la mitad tiene ${med} m² o más. La más grande tiene ${max} m²: ${title}.`,
   fBeds: (b, unknown) => `Dormitorios: ${b.map(([k, n], i) => `${n} con ${k === 4 ? "4 o más" : k}${i === 0 ? ` ${k === 1 ? "dormitorio" : "dormitorios"}` : ""}`).join(", ")}${unknown ? `; ${unknown} ${s(unknown, "anuncio no lo indica", "anuncios no lo indican")}` : ""}.`,
   fType: (a, h) => `Tipo: ${[a ? `${a} ${s(a, "piso", "pisos")}` : "", h ? `${h} ${s(h, "casa", "casas")}` : ""].filter(Boolean).join(" y ")}.`,
@@ -207,6 +213,7 @@ export const es: Pack = {
   city: (slug) => cityBySlug(slug)?.[2] || slug,
   how: (F, v) => {
     const f = F.f;
+    if (f.ranked && f.key === "best-rated") return `Son las ${F.n} notas más altas de RealHunt entre ${v.parent}, de mayor a menor. Cada tarjeta dice en una línea por qué la vivienda está en RealHunt. La lista cambia cuando se añade, se vende o se vuelve a puntuar una vivienda.`;
     if (f.ranked) return f.key === "cheapest"
       ? `Son los ${F.n} precios de venta más bajos entre ${v.parent}, de menor a mayor. La lista cambia cada vez que se añade, se vende o se rebaja una vivienda.`
       : `Son los ${F.n} precios por m² más bajos entre las ${v.total} viviendas cuyo anuncio indica la superficie, de ${v.parent}. Un precio por m² bajo suele corresponder a una casa grande en un lugar donde busca poca gente.`;
@@ -242,11 +249,14 @@ export const es: Pack = {
       "with-business-premises": "En esta lista: viviendas cuyo título nombra una tienda, un bar, un restaurante, un alojamiento u otro local comercial que se vende con la vivienda. Que el negocio se pueda reabrir depende de las licencias municipales: pregunta en el ayuntamiento.",
       "with-fibre-internet": "En esta lista: viviendas cuyo anuncio indica fibra óptica o internet de alta velocidad. No probamos las conexiones: pide al vendedor una prueba de velocidad reciente.",
       "with-tourist-licence": "En esta lista: viviendas cuyo anuncio indica una licencia de alquiler turístico. La licencia puede caducar con la venta: pregunta en el ayuntamiento antes de contar con ella.",
+      "new-this-week": "En esta lista: viviendas añadidas a RealHunt en los últimos 7 días. La lista se rehace cada día.",
+      "over-80-sqm": "En esta lista: viviendas cuyo anuncio indica más de 80 m² construidos. Un anuncio sin superficie no puede estar en ella.",
+      "over-120-sqm": "En esta lista: viviendas cuyo anuncio indica más de 120 m² construidos. Un anuncio sin superficie no puede estar en ella.",
     };
     return (f.kind === "feature" || f.kind === "gfeature") && f.key ? HOW[f.key] || "" : "";
   },
   l1rank: (w, min, max) => `${fem(w) ? "Las" : "Los"} ${w} que RealHunt tiene hoy cuestan de ${min} a ${max}.`,
-  gridTitleRank: (key, n) => (key === "cheapest" ? `Las ${n} viviendas, de más barata a más cara` : `Las ${n} viviendas, de menor a mayor precio por m²`),
+  gridTitleRank: (key, n) => (key === "best-rated" ? `Las ${n} viviendas, de mayor a menor nota` : key === "cheapest" ? `Las ${n} viviendas, de más barata a más cara` : `Las ${n} viviendas, de menor a mayor precio por m²`),
   x: {
     amen: (l) => `Extras que mencionan los anuncios: ${l.map(([k, n]) => `${n} con ${AMEN[k] || k}`).join(", ")}.`,
     airport: (med, title, km, _name, _l, code, codes) => `Aeropuertos: la distancia mediana es de ${med} km. La vivienda más cercana es ${title}, a ${km < 1 ? "menos de 1" : km} km del aeropuerto${code ? ` ${code}` : ""}.${codes.some((c) => c.name) ? ` Aeropuertos más cercanos, por su código: ${list(codes.filter((c) => c.name))}.` : ""}`,
@@ -260,7 +270,7 @@ export const es: Pack = {
     elev: (n, med, title, v) => `Altitud, conocida en ${n} de estas viviendas: una mediana de ${num(med)} m. La más alta, a ${num(v)} m: ${title}.`,
     islands: (l) => `Islas: ${list(l)}.`,
     dist: (city, med, title, km, far) => `Distancia a ${city} en línea recta: de ${km < 1 ? "menos de 1" : km} km (${title}) a ${far} km, con una mediana de ${med} km.`,
-    rank: (key, n, title, v, of) => (key === "cheapest" ? `El corte de hoy está en ${v}: ${title} es la número ${n} de ${of}.` : `El corte de hoy está en ${v}: ${title} es la número ${n} de las ${of} viviendas con superficie indicada.`),
+    rank: (key, n, title, v, of) => (key === "best-rated" ? `El corte de hoy está en una nota de ${v}: ${title} es la número ${n} de ${of}.` : key === "cheapest" ? `El corte de hoy está en ${v}: ${title} es la número ${n} de ${of}.` : `El corte de hoy está en ${v}: ${title} es la número ${n} de las ${of} viviendas con superficie indicada.`),
     vs: (other, med, n, oMed, on, pct) => `Frente a ${other}: la mediana aquí es de ${med} entre ${n} viviendas, un ${pct}${NB}% por debajo de la mediana de ${oMed} de las ${on} viviendas que tenemos allí.`,
   },
   noteSource: "Fuente", noteAsOf: (asOf) => `Revisado en ${asOf}. Información general, no asesoramiento legal ni fiscal.`,

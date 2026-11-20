@@ -23,7 +23,9 @@ import type { Pack } from "../listings/pack";
 import { englishIn, hasDest, titleIn, NEW_LANGS, type NewLang } from "../listings/packkit";
 import { renderDoc, markEnglish, SITE, type Alt } from "./shell";
 import { UI, LANG_NAME, OTHER, type Ui } from "./strings";
-import { PACKS, CONFIG, MAX_TOTAL } from "./config";
+import { PACKS, CONFIG, MAX_TOTAL, EN_ES_ONLY } from "./config";
+import { en } from "../listings/pack.en";
+import { es } from "../listings/pack.es";
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const unesc = (s: string) => s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&");
@@ -48,6 +50,8 @@ export function planLangs(rows: Record<string, any>[], enLive: (p: string) => bo
     const dropped: Dropped[] = []; const ok: { f: Facet; T: Text }[] = [];
     for (const f of plan.pages) {
       if (f.thin || !cfg.kinds.includes(f.kind)) continue;
+      // English and Spanish only for now: budgets in dollars or pounds inside a region, and the families in EN_ES_ONLY
+      if ((f.kind === "ccyBand" && f.regionSlug) || (f.key && EN_ES_ONLY.has(f.key))) continue;
       const T = texts.get(f.path);
       if (!T) { dropped.push({ path: f.path, why: "a home without a title in this language, or a place without a vetted name" }); continue; }
       if (f.cc && !hasDest(lang, f.cc)) { dropped.push({ path: f.path, why: `buying rules of ${f.cc} not translated` }); continue; }
@@ -63,7 +67,7 @@ export function planLangs(rows: Record<string, any>[], enLive: (p: string) => bo
 }
 
 /** The page as this language can show it: links only to pages that exist in the language. */
-function localize(T: Text, has: (p: string) => boolean): Text {
+export function localize(T: Text, has: (p: string) => boolean): Text {
   const keep = (l: Link) => has(l[1]) || !/^\/(homes|cheap-houses)(\/|$)/.test(l[1]);
   return {
     ...T,
@@ -71,6 +75,7 @@ function localize(T: Text, has: (p: string) => boolean): Text {
     more: T.more.map(([label, links]): [string, Link[]] => [label, links.filter(keep)]).filter(([, links]) => links.length > 0),
     footLinks: T.footLinks.filter(keep),
     costTable: T.costTable.map((c) => (c.path && !has(c.path) ? { ...c, path: "" } : c)),
+    regionTable: T.regionTable.map((r): Text["regionTable"][number] => (r[1] && !has(r[1]) ? [r[0], "", r[2], r[3]] : r)),
     crumbs: T.crumbs.filter(([, p], i) => i === 0 || i === T.crumbs.length - 1 || has(p)),
   };
 }
@@ -106,6 +111,8 @@ export type LangReport = {
   total: number; max_total: number;
   langs: Record<string, { pages: number; by_kind: Record<string, number>; by_country: Record<string, number>; homes_with_title: number; homes: number; not_published: number; not_published_sample: Dropped[]; sitemap: string }>;
   hreflang: { english_pages_linked: number; spanish_pages_linked: number };
+  /** English and Spanish home pages that link to the listing of their country in the other languages. */
+  home_pages_linked?: number;
   failures: string[];
 };
 
@@ -153,7 +160,9 @@ export function writeLangs(root: string, rows: Record<string, any>[] = listingRo
       const h = hubPage(L, (p) => set.has(p), href, css, rows);
       const hits = englishIn(lang, visible(h.main) + "\n" + h.title + "\n" + h.desc);
       if (hits.length) failures.push(`${lang}: English left on the page of all searches: ${[...new Set(hits)].slice(0, 8).join(", ")}`);
-      list.unshift({ f: null, path: `/${lang}`, enPath: HUB, title: h.title, desc: h.desc, image: `${SITE}/og-home.jpg`, main: markEnglish(h.main, lang, ui.enTitle), ld: h.ld, lastmod: null });
+      // the page of all searches changes whenever one of its pages does: its date is the newest of theirs
+      const newest = list.map((o) => o.lastmod || "").sort().pop() || null;
+      list.unshift({ f: null, path: `/${lang}`, enPath: HUB, title: h.title, desc: h.desc, image: `${SITE}/og-home.jpg`, main: markEnglish(h.main, lang, ui.enTitle), ld: h.ld, lastmod: newest });
     }
     outs.set(lang, list);
   }
@@ -210,6 +219,9 @@ export function writeLangs(root: string, rows: Record<string, any>[] = listingRo
     if (es && patch(es[2], "es", alts, vs)) esLinked++;
   }
 
+  // ---- the home pages (English and Spanish): links to the listing of their country in the other languages (idea 63)
+  const dealLinks = linkDeals(root, rows, (enPath) => versions.get(enPath) || {});
+
   // ---- sitemaps: one per language, and the alternates of the English and Spanish entries
   const xlinks = (alts: Alt[]) => alts.map((a) => `<xhtml:link rel="alternate" hreflang="${esc(a.lang)}" href="${esc(a.href)}"/>`).join("");
   const byUrl = new Map<string, string>();
@@ -255,7 +267,7 @@ export function writeLangs(root: string, rows: Record<string, any>[] = listingRo
     for (const m of o.main.matchAll(/<a\b[^>]*?\shref="(\/[^"#?]*)/g)) { const p = m[1]; if (/^\/(alerts)?$/.test(p)) continue; if (!fs.existsSync(file(root, p))) failures.push(`${o.path}: link to ${p}, which is not a page`); }
   }
 
-  const rep: LangReport = { total, max_total: MAX_TOTAL, langs: {}, hreflang: { english_pages_linked: enLinked, spanish_pages_linked: esLinked }, failures: [...new Set(failures)].slice(0, 200) };
+  const rep: LangReport = { total, max_total: MAX_TOTAL, langs: {}, hreflang: { english_pages_linked: enLinked, spanish_pages_linked: esLinked }, home_pages_linked: dealLinks, failures: [...new Set(failures)].slice(0, 200) };
   for (const L of langs) {
     const list = outs.get(L.lang) || [];
     const by = (k: (f: Facet) => string) => { const o: Record<string, number> = {}; for (const x of list) if (x.f) o[k(x.f)] = (o[k(x.f)] || 0) + 1; return o; };
@@ -284,4 +296,29 @@ export function langPages() {
       }
     },
   };
+}
+
+/** The label of the line on a home page, in the language of the page: "Homes in Bulgaria in other languages". */
+export const dealLangLabel = (lang: "en" | "es", country: string) => (lang === "es" ? `${es.crumbCountry(es.country(country))} en otros idiomas` : `${en.crumbCountry(en.country(country))} in other languages`);
+
+/** Adds one line to every English and Spanish home page whose country has a listing page in another language: the
+ * language names, each linking to that listing (/de/homes/bulgaria...). Returns how many pages got it. */
+export function linkDeals(root: string, rows: Record<string, any>[], versionsOf: (enPath: string) => Record<string, string>): number {
+  let n = 0;
+  for (const r of rows) {
+    const cc = String(r.country || "").toLowerCase().trim().replace(/\s+/g, "-"); if (!cc) continue;
+    const v = versionsOf(`/homes/${cc}`);
+    const links = NEW_LANGS.filter((l) => v[l]).map((l) => `<a href="${esc(v[l])}" hreflang="${l}" lang="${l}" target="_self">${esc(LANG_NAME[l])}</a>`);
+    if (!links.length) continue;
+    for (const lang of ["en", "es"] as const) {
+      const f = file(root, `${lang === "es" ? "/es" : ""}/deal/${r.slug}`); if (!fs.existsSync(f)) continue;
+      let h = fs.readFileSync(f, "utf8");
+      h = h.replace(/<p class="ls-langs-deal"[\s\S]*?<\/p>/g, "");
+      const at = h.indexOf('<main class="rh-static"'); const end = at >= 0 ? h.indexOf("</main>", at) : -1; if (end < 0) continue;
+      const close = h.lastIndexOf("</article>", end); const pos = close > at ? close : end;
+      h = h.slice(0, pos) + `<p class="ls-langs-deal">${esc(dealLangLabel(lang, String(r.country)))}: ${links.join(" · ")}</p>` + h.slice(pos);
+      fs.writeFileSync(f, h); n++;
+    }
+  }
+  return n;
 }

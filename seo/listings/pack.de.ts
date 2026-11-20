@@ -49,6 +49,17 @@ const AREA: Record<string, [string, string]> = {
   "southern-italy": ["Süditalien", "in Süditalien"], "abruzzo-and-marche": ["Abruzzen und Marken", "in den Abruzzen und den Marken"], lunigiana: ["Lunigiana", "in der Lunigiana"], "lake-maggiore": ["Lago Maggiore", "am Lago Maggiore"], "lake-garda": ["Gardasee", "am Gardasee"],
   limousin: ["Limousin", "im Limousin"], hokkaido: ["Hokkaido", "auf Hokkaido"], tohoku: ["Tohoku", "in Tohoku"], kanto: ["Kanto", "in Kanto"], chubu: ["Chubu", "in Chubu"], kansai: ["Kansai", "in Kansai"], chugoku: ["Chugoku", "in Chugoku"],
   shikoku: ["Shikoku", "auf Shikoku"], kyushu: ["Kyushu", "auf Kyushu"], norrland: ["Norrland", "in Norrland"], jutland: ["Jütland", "in Jütland"], "lolland-falster": ["Lolland und Falster", "auf Lolland und Falster"],
+  "andalusia": ["Andalusien", "in Andalusien"],
+  "valencian-community": ["Valencianische Gemeinschaft", "in der Valencianischen Gemeinschaft"],
+  "catalonia": ["Katalonien", "in Katalonien"],
+  "galicia": ["Galicien", "in Galicien"],
+  "castile-and-leon": ["Kastilien und León", "in Kastilien und León"],
+  "aragon": ["Aragonien", "in Aragonien"],
+  "castilla-la-mancha": ["Kastilien-La Mancha", "in Kastilien-La Mancha"],
+  "basque-country": ["Baskenland", "im Baskenland"],
+  "boca-raton": ["Boca Raton", "in Boca Raton"],
+  "hollywood": ["Hollywood (Florida)", "in Hollywood (Florida)"],
+  "doral": ["Doral", "in Doral"],
   "amsterdam-zuidoost": ["Amsterdam-Zuidoost", "in Amsterdam-Zuidoost"], "eastern-germany": ["Sachsen, Sachsen-Anhalt und Thüringen", "in Sachsen, Sachsen-Anhalt und Thüringen"], masuria: ["Masuren", "in Masuren"],
   peloponnese: ["Peloponnes", "auf dem Peloponnes"], "black-sea-coast": ["Schwarzmeerküste", "an der Schwarzmeerküste"], "atlantic-canada": ["Atlantisches Kanada", "in den atlantischen Provinzen Kanadas"],
 };
@@ -118,6 +129,9 @@ const KEYED: Record<string, (b: string, form: Form) => string> = {
   "with-business-premises": (b) => `${b} mit Gewerberäumen`,
   "with-fibre-internet": (b) => `${b} mit Glasfaseranschluss`,
   "with-tourist-licence": (b) => `${b} mit Lizenz zur Ferienvermietung`,
+  "new-this-week": adj("in den letzten 7 Tagen hinzugekommen"),
+  "over-80-sqm": (b) => `${b} mit über 80 m²`,
+  "over-120-sqm": (b) => `${b} mit über 120 m²`,
 };
 const ccy = (n: number, c: string) => `${num(n)} ${c === "GBP" ? "Pfund" : c === "USD" ? "US-Dollar" : "Euro"}`;
 const cityOf = (f: { city?: string }) => city(f.city || "");
@@ -126,7 +140,7 @@ const LABEL: Record<string, string> = { "by-the-sea": "Am Meer", "village-houses
   turnkey: "Bezugsfertig", "to-renovate": "Zum Renovieren", "with-sea-view": "Meerblick", "near-the-beach": "500 m zum Meer", "with-land": "Mit Grundstück", "with-fireplace": "Mit Kamin", "with-garage": "Mit Garage",
   "on-an-island": "Auf einer Insel", "in-the-mountains": "In den Bergen", "with-olive-trees-or-vines": "Oliven oder Reben", "near-an-airport": "Nahe einem Flughafen", "under-500-per-sqm": `Unter 500${NB}€/m²`, "over-100-sqm-under-50000": `Über 100 m² unter 50.000${NB}€`,
   "score-90-plus": "Note 90 oder mehr", "editors-picks": "Auswahl der Redaktion", "new-this-month": "Neu in diesem Monat", "price-drops": "Preis gesenkt", "single-storey": "Auf einer Ebene", "with-period-features": "Historische Elemente", "good-weather": "Gutes Wetter",
-  "quiet-location": "Ruhige Lage", "low-community-fee": "Niedriges Hausgeld", "cave-houses": "Höhlenhäuser", trulli: "Trulli", "unusual-buildings": "Besondere Gebäude", "with-business-premises": "Mit Gewerberäumen", "with-fibre-internet": "Glasfaser", "with-tourist-licence": "Ferienvermietung erlaubt",
+  "quiet-location": "Ruhige Lage", "low-community-fee": "Niedriges Hausgeld", "cave-houses": "Höhlenhäuser", trulli: "Trulli", "unusual-buildings": "Besondere Gebäude", "with-business-premises": "Mit Gewerberäumen", "with-fibre-internet": "Glasfaser", "best-rated": "Top 10 nach Note", "new-this-week": "Neu in dieser Woche", "over-80-sqm": "Über 80 m²", "over-120-sqm": "Über 120 m²", "with-tourist-licence": "Ferienvermietung erlaubt",
   cheapest: "Die günstigsten", "most-space-for-the-money": "Am meisten Fläche fürs Geld" };
 
 function what(F: Facts, form: Form = "many"): string {
@@ -184,6 +198,9 @@ const HOW: Record<string, string> = {
   "with-business-premises": "Auf dieser Liste: Immobilien, deren Titel einen Laden, eine Bar, ein Restaurant, eine Unterkunft oder andere Gewerberäume nennt, die mitverkauft werden. Ob der Betrieb wieder öffnen darf, hängt von den Genehmigungen der Gemeinde ab: Fragen Sie im Rathaus nach.",
   "with-fibre-internet": "Auf dieser Liste: Immobilien, deren Anzeige Glasfaser oder schnelles Internet nennt. Wir testen die Anschlüsse nicht: Bitten Sie den Verkäufer um einen aktuellen Geschwindigkeitstest.",
   "with-tourist-licence": "Auf dieser Liste: Immobilien, deren Anzeige eine Lizenz zur Ferienvermietung nennt. Die Lizenz kann mit dem Verkauf erlöschen: Fragen Sie im Rathaus nach, bevor Sie damit rechnen.",
+  "new-this-week": "Auf dieser Liste: Immobilien, die in den letzten 7 Tagen zu RealHunt hinzugekommen sind. Die Liste wird jeden Tag neu erstellt.",
+  "over-80-sqm": "Auf dieser Liste: Immobilien, deren Anzeige mehr als 80 m² Wohnfläche nennt. Eine Anzeige ohne Flächenangabe kann nicht darauf stehen.",
+  "over-120-sqm": "Auf dieser Liste: Immobilien, deren Anzeige mehr als 120 m² Wohnfläche nennt. Eine Anzeige ohne Flächenangabe kann nicht darauf stehen.",
 };
 
 export const de: Pack = {
@@ -213,6 +230,7 @@ export const de: Pack = {
   l3all: (med, pp, max, parent) => `Der Medianpreis liegt bei ${med}${pp ? ` (${pp})` : ""}. Auf dieser Seite stehen alle: Unter ${parent}, kostet keine mehr als ${max}.`,
   parent: (kind, n, name, countries) => (kind === "site" ? `den ${n} Immobilien, die RealHunt in ${countries} Ländern führt` : kind === "country" ? `den ${n} Immobilien, die wir ${name} führen` : `den ${n} Immobilien, die wir ${inR(name)} führen`),
   kpi: { homes: "Immobilien", from: "Ab", median: "Medianpreis", ppsqm: "Median pro m²", size: "Mittlere Größe", score: "Beste Note" },
+  n20: { costs: "Kaufnebenkosten", foreign: "Käufer aus dem Ausland", free: "Freier Kauf", limits: "Mit Auflagen", asOf: "Stand", regionsTitle: (inC) => `Medianpreis nach Region ${inC}`, region: "Region", neighbours: "Nachbarländer", siteMap: () => "" },
   gridTitle: (n, shown) => (n === shown ? `Alle ${n} Immobilien, beste Note zuerst` : `Die ${shown} besten von ${n}, nach Note`),
   gridMore: (shown, n) => `Zu sehen sind die ${shown} mit der besten Note von ${n} Immobilien. Die übrigen stehen in der Tabelle und in den genaueren Suchen weiter unten.`,
   card: { isNew: "Neu", drop: (p) => `${p}${NB}% reduziert`, score: "Note", beds: (n) => `${n} Schlafz.`, noPhoto: "Fotos in der Anzeige", days: (n) => (n === 0 ? "Heute neu" : n === 1 ? "1 Tag auf RealHunt" : `${n} Tage auf RealHunt`) },

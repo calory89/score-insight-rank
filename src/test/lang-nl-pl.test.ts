@@ -158,10 +158,12 @@ describe("which pages Dutch and Polish get", () => {
       for (const c of ["spain", "italy", "sweden", "denmark", "france", "greece", "bulgaria", "poland", "germany", "portugal"]) expect(cc.has(c), `${lang} ${c}`).toBe(true);
     }
   });
-  it("together they add at most 1,050 files to the deployment (pages, the page of all searches, llms.txt and the sitemap of each)", () => {
+  it("together they add at most 1,250 files to the deployment (pages, the page of all searches, llms.txt and the sitemap of each)", () => {
     const files = ["nl", "pl"].reduce((a, l) => a + Math.min(of(l).pages.length, CONFIG[l as "nl" | "pl"]!.max) + 3, 0);
-    expect(files).toBeLessThanOrEqual(1050);
-    expect((CONFIG.nl!.max + 3) + (CONFIG.pl!.max + 3)).toBeLessThanOrEqual(1050);
+    // 20-nov-2026: 1,050 before; raised so the families of 20 November do not push older Dutch and Polish pages out
+    // (the file guard of seo/budget.ts still counts every file of the deployment)
+    expect(files).toBeLessThanOrEqual(1250);
+    expect((CONFIG.nl!.max + 3) + (CONFIG.pl!.max + 3)).toBeLessThanOrEqual(1250);
   });
   it("no title of a page repeats inside a language", () => {
     for (const lang of ["nl", "pl"]) { const t = of(lang).pages.map((p) => p.T.title); expect(new Set(t).size, lang).toBe(t.length); }

@@ -137,7 +137,7 @@ describe("which pages the new families get", () => {
     expect(studios(2).pages.some((p) => p.path === "/homes/bulgaria/under-10000")).toBe(false);
     expect(studios(3).pages.find((p) => p.path === "/homes/bulgaria/under-10000")?.cap).toBe(10000);
     // text traits and areas the same way
-    const trulli = buildFacets([...rows, ...[0, 1, 2].map((i) => home({ slug: `tr-${i}`, title: `Restored trullo with a garden ${i}`, price_eur: 60000 + i }))]);
+    const trulli = buildFacets([...rows, ...[0, 1, 2].map((i) => home({ slug: `tr-${i}`, title: `Restored trullo with a garden ${i}`, location_name: `Lecce ${i}, Apulia, Italy`, price_eur: 60000 + i }))]);
     expect(byPath.has("/cheap-houses/trulli-in-italy")).toBe(false);
     expect(trulli.pages.find((p) => p.path === "/cheap-houses/trulli-in-italy")?.homes.length).toBe(3);
     const garda = buildFacets([...rows, ...[0, 1, 2].map((i) => home({ slug: `g-${i}`, location_name: `Salò ${i}, Lake Garda, Italy`, price_eur: 90000 + i }))]);
@@ -185,7 +185,8 @@ describe("which pages the new families get", () => {
   });
   it("trait + budget: only the listed pairs, at most COMBO_MAX, each inside its trait", () => {
     const combos = plan.pages.filter((p) => p.kind === "combo");
-    expect(combos.length).toBeGreaterThan(10); expect(combos.length).toBeLessThanOrEqual(COMBO_MAX);
+    // 20-nov-2026: sea view under a budget in one country is not counted against the cap (idea 39)
+    expect(combos.length).toBeGreaterThan(10); expect(combos.filter((p) => !(p.key === "with-sea-view" && p.cc)).length).toBeLessThanOrEqual(COMBO_MAX);
     for (const p of combos) {
       expect(COMBOS.some(([k, c]) => k === p.key && c === p.cap), p.path).toBe(true);
       for (const h of p.homes) expect(h.price_eur).toBeLessThanOrEqual(p.cap!);

@@ -66,7 +66,7 @@ export const feeOf = (r: Home): { amount: number; ccy: string } | null => {
 export const dayOfHome = (r: Home) => [r?.verified_at, r?.approved_at, r?.publish_at].map((s) => (s && /^\d{4}-\d{2}-\d{2}/.test(s) ? String(s).slice(0, 10) : null)).filter(Boolean).sort().pop() || null;
 
 // ---------------------------------------------------------------- the traits
-export const PLOT_MIN = 1000, BEACH_M = 500, AIRPORT_KM = 30, PPSQM_MAX = 500, SCORE_MIN = 90, FEE_MAX = 250, BIG_SQM = 100, BIG_CAP = 50000, GOOD_DAYS = 150, NEW_DAYS = 30, RANK_N = 20;
+export const PLOT_MIN = 1000, BEACH_M = 500, AIRPORT_KM = 30, PPSQM_MAX = 500, SCORE_MIN = 90, FEE_MAX = 250, BIG_SQM = 100, BIG_CAP = 50000, GOOD_DAYS = 150, NEW_DAYS = 30, NEW_WEEK = 7, RANK_N = 20;
 
 const NEEDS_WORK = /\b(needs? (?:some |a |full |complete |total |light |cosmetic )?(?:renovat\w+|refurbish\w+|restor\w+|modernis\w+|moderniz\w+|updating|work|tlc)|to renovate|to restore|to be renovated|for renovation|renovation project|restoration project|fixer[- ]upper|unfinished|shell condition)\b/i;
 const READY = /\b(move[- ]in[- ]ready|ready to move in(?:to)?|ready to live in|turn[- ]?key|fully renovated|completely renovated|totally renovated|newly renovated|recently renovated|just[- ]renovated|renovated in (?:19|20)\d\d|fully remodelled|fully refurbished)\b/i;
@@ -91,6 +91,10 @@ export type Trait = {
   global?: boolean;
   /** Ranked lists keep only the first RANK_N homes of this order. */
   rank?: (a: Home, b: Home) => number;
+  /** Ranked lists: how many homes (default RANK_N). */
+  n?: number;
+  /** Only in the countries with most homes (the N first): a weekly list of a country with two new homes a month is empty most weeks. */
+  top?: number;
 };
 const days = (a: string, b: string) => Math.round((Date.parse(b) - Date.parse(a)) / 86400000);
 const quiet = (r: Home) => { const n = r.risks?.noise; return !!n && n.level === "low" && n.roads_checked === true && n.rail_m == null && n.motorway_m == null; };
@@ -113,6 +117,8 @@ export const TRAITS: Trait[] = [
   { key: "score-90-plus", test: (r) => Number(r.nota) >= SCORE_MIN },
   { key: "editors-picks", test: (r) => r.is_editorial_pick === true },
   { key: "new-this-month", test: (r, c) => { const d = dayOfHome(r); return !!d && days(d, c.today) <= NEW_DAYS && days(d, c.today) >= 0; } },
+  // 20-nov-2026: the week, in the countries with most homes (idea 32)
+  { key: "new-this-week", test: (r, c) => { const d = dayOfHome(r); return !!d && days(d, c.today) <= NEW_WEEK && days(d, c.today) >= 0; }, top: 12 },
   { key: "price-drops", test: (r) => dropPct(r) >= 1 },
   { key: "single-storey", test: (r) => ONE_FLOOR.test(body(r)) },
   { key: "with-period-features", test: (r) => PERIOD.test(body(r)) },
@@ -125,9 +131,14 @@ export const TRAITS: Trait[] = [
   { key: "with-business-premises", test: (r) => BUSINESS.test(title(r)) },
   { key: "with-fibre-internet", test: (r) => FIBRE.test(body(r)) },
   { key: "with-tourist-licence", test: (r) => TOURIST.test(body(r)) },
+  // 20-nov-2026: floor area stated in the listing (idea 38; bathrooms are not in the data yet)
+  { key: "over-80-sqm", test: (r) => Number(r.sqm) > 80 },
+  { key: "over-120-sqm", test: (r) => Number(r.sqm) > 120 },
   // ranked lists: the first RANK_N of an order
   { key: "cheapest", test: () => true, rank: (a, b) => a.price_eur - b.price_eur || String(a.slug).localeCompare(String(b.slug)) },
   { key: "most-space-for-the-money", test: (r) => ppsqm(r) > 0, rank: (a, b) => ppsqm(a) - ppsqm(b) || String(a.slug).localeCompare(String(b.slug)) },
+  // 20-nov-2026: the ten best scores of a country, each card with the reason it scores (idea 33). English and Spanish only (seo/langs/config.ts).
+  { key: "best-rated", test: (r) => Number(r.nota) > 0, n: 10, rank: (a, b) => (Number(b.nota) || 0) - (Number(a.nota) || 0) || (a.rank ?? 1e9) - (b.rank ?? 1e9) || String(a.slug).localeCompare(String(b.slug)) },
 ];
 export const TRAIT_KEYS = new Set(TRAITS.map((t) => t.key));
 export const isRanked = (key?: string) => !!key && TRAITS.some((t) => t.key === key && t.rank);
@@ -135,7 +146,7 @@ export const isRanked = (key?: string) => !!key && TRAITS.some((t) => t.key === 
 /** Trait + budget (+ country): only these pairs, and only the COMBO_MAX with most homes. */
 export const COMBOS: [key: string, cap: number, global?: true][] = [
   ["with-pool", 100000, true], ["with-sea-view", 100000, true], ["with-sea-view", 50000, true], ["apartments", 20000, true], ["apartments", 10000, true],
-  ["by-the-sea", 50000], ["by-the-sea", 100000], ["with-pool", 100000], ["with-sea-view", 100000], ["with-sea-view", 50000], ["stone-houses", 50000], ["stone-houses", 100000],
+  ["by-the-sea", 50000], ["by-the-sea", 100000], ["with-pool", 100000], ["with-sea-view", 100000], ["with-sea-view", 50000], ["with-sea-view", 150000], ["with-sea-view", 200000], ["stone-houses", 50000], ["stone-houses", 100000],
   ["village-houses", 30000], ["village-houses", 50000], ["apartments", 50000], ["apartments", 100000], ["houses", 50000], ["houses", 100000],
   ["with-garden", 50000], ["with-garden", 100000], ["turnkey", 50000], ["turnkey", 100000], ["village-houses", 15000], ["apartments", 20000], ["apartments", 10000],
 ];
