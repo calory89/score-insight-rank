@@ -129,7 +129,11 @@ export function frame(k: Kit, o: { crumbs: [string, string][]; eyebrow: string; 
   return `<main class="rh-static rhx" data-rh-keep data-rh-static data-rhx-js${k.es ? ' lang="es"' : ""}>${crumbNav(k, o.crumbs)}${CSS}<p class="rhx-eyebrow">${esc(o.eyebrow)}</p><h1>${esc(o.h1)}</h1>${o.body}<script src="/rh-assets.js" defer></script></main>`;
 }
 
-export const ORG = { "@type": "Organization", name: "RealHunt", url: SITE + "/", logo: SITE + "/apple-touch-icon.png" };
+/** The organisation behind the site. The same @id, name, address and logo as the node in index.html (on every page)
+ * and on /contact, so search engines see one RealHunt (20-nov-2026, idea 96): logo = /favicon.png, 512 px, the icon of
+ * the web manifest. */
+export const ORG_ID = SITE + "/#organization";
+export const ORG = { "@type": "Organization", "@id": ORG_ID, name: "RealHunt", url: SITE + "/", logo: SITE + "/favicon.png" };
 export const FOUNDER = { "@type": "Person", name: "Carlos de Ory Gordillo", jobTitle: "Founder", url: SITE + "/about", worksFor: { "@type": "Organization", name: "Equinox Investment Group LLC" } };
 
 /** Markdown table from header and plain-text rows. */

@@ -19,6 +19,8 @@ import { spawnSync } from "child_process";
 import { regionOf } from "../src/community/regions";
 import { LICENSE, ORG, PRESS_EMAIL, SITE, bars, citeBlock, crumbLd, esc, frame, kit, mdTable, table, type Kit, type Lang, type PageFn } from "./assetsKit";
 import { writeTrust } from "./assetsTrust";
+import { writeTrustMore } from "./trustMore";
+import { studiesSet2 } from "./assetsStudies2";
 
 export type AssetCtx = { root: string; page: PageFn; rows: Home[]; dest: Record<string, any>; guides: Record<string, any>; cb: CanBuyData; today: string; image: string };
 export type Dataset = { slug: string; title: string; h1: string; desc: string; card: string; answer: string[]; fig: string; body: string; limits: string[]; csv: { head: string[]; rows: (string | number)[][] }; md: string; vars: string[] };
@@ -220,7 +222,8 @@ export function writeAssets(c: AssetCtx) {
         md: mdTable(head, rg.map((r) => [r.name, k.country(r.country), r.n, r.medScore, r.top, k.eur(r.medPrice), r.medPpsqm ? k.eur(r.medPpsqm) : na])) };
     })();
 
-    const sets = [prices, budget, costs, rules, regions, ...moreStudies({ k, c, rows, sample, cLink, na, weakKey, selection, asking, medianNote })];
+    const sk = { k, c, rows, sample, cLink, na, weakKey, selection, asking, medianNote };
+    const sets = [prices, budget, costs, rules, regions, ...moreStudies(sk), ...studiesSet2(sk)];
     perLang[lang] = sets;
     const hubCrumb: [string, string] = [t("Data", "Datos"), "/research"];
 
@@ -267,5 +270,6 @@ export function writeAssets(c: AssetCtx) {
     resources: [...perLang.en.map((d) => ({ name: d.slug, title: d.h1, path: `${SITE}/research/${d.slug}.csv`, format: "csv", mediatype: "text/csv", encoding: "utf-8", description: d.desc, schema: { fields: d.csv.head.map((h) => ({ name: h })) }, sources: [{ title: "RealHunt", path: `${SITE}/research/${d.slug}` }] })),
       { name: "homes", title: "The homes behind the figures, one row each", path: `${SITE}/research/homes.csv`, format: "csv", mediatype: "text/csv", encoding: "utf-8" }, { name: "monthly-series", title: "Monthly price series since November 2026", path: `${SITE}/research/monthly-series.csv`, format: "csv", mediatype: "text/csv", encoding: "utf-8" }] }, null, 1) + "\n");
   writeTrust(c, rows, perLang);
+  try { console.log("[rh-prerender-pages] trust pages:", JSON.stringify(writeTrustMore(c, rows))); } catch (e) { console.warn("[rh-prerender-pages] trust pages failed", e); }
 }
 export { finishAssets } from "./assetsTrust";

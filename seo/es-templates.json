@@ -188,5 +188,21 @@
  "Buying costs calculator for {0}: taxes and fees on top of the price": "Calculadora de gastos de compra para {0}: impuestos y tasas además del precio",
  "What you pay on top of the price when you buy a home in {0}: about {1}% in taxes and fees, so {2} on a €150,000 home. With a calculator and worked examples.": "Lo que pagas además del precio al comprar una casa en {0}: alrededor de un {1}% en impuestos y tasas, es decir, {2} en una casa de 150.000 €. Con calculadora y ejemplos.",
  "About {0}% on top of the price in taxes and fees. Use the calculator on this page for your price, or see the worked examples:": "Alrededor de un {0}% además del precio en impuestos y tasas. Usa la calculadora de esta página con tu precio o mira los ejemplos:",
- "Costs are a share of the price, so they work in any currency. Figures as of {0}. General information, not tax or legal advice.": "Los gastos son un porcentaje del precio, así que valen en cualquier moneda. Cifras a fecha de {0}. Información general, no asesoramiento fiscal ni legal."
+ "Costs are a share of the price, so they work in any currency. Figures as of {0}. General information, not tax or legal advice.": "Los gastos son un porcentaje del precio, así que valen en cualquier moneda. Cifras a fecha de {0}. Información general, no asesoramiento fiscal ni legal.",
+ "How to read {0} adverts": "Cómo leer los anuncios de {0}",
+ "Prices on RealHunt are the asking price of the advert, converted to euros when the advert is in another currency.": "Los precios de RealHunt son el precio de salida del anuncio, pasado a euros cuando el anuncio está en otra moneda.",
+ "Taxes and fees come on top: see the": "Los impuestos y los gastos van aparte: mira los",
+ "{0} of these {1} adverts give the size and {2} the number of bedrooms.": "{0} de estos {1} anuncios indican la superficie y {2}, el número de dormitorios.",
+ "Sizes are the ones the advert states; how floor area is measured differs from country to country.": "Las superficies son las que indica el anuncio; la forma de medirlas cambia de un país a otro.",
+ "{0} often stops our nightly check: the last reading of {1} of these {2} adverts was blocked or unanswered, so a person checks them by hand and some carry a notice that we could not confirm them.": "{0} suele frenar nuestra revisión nocturna: la última lectura de {1} de estos {2} anuncios quedó bloqueada o sin respuesta, así que una persona los revisa a mano y algunos llevan un aviso de que no pudimos confirmarlos.",
+ "Ask the agent if the home is still for sale before you plan a visit.": "Pregunta a la agencia si la casa sigue a la venta antes de organizar una visita.",
+ "Our nightly check reads {0} adverts: the last reading of {1} of these {2} adverts found them online.": "Nuestra revisión nocturna lee los anuncios de {0}: la última lectura de {1} de estos {2} anuncios los encontró publicados.",
+ "Our nightly check reads {0} adverts: the last reading of {1} of these {2} adverts found them online, and {3} found the advert removed.": "Nuestra revisión nocturna lee los anuncios de {0}: la última lectura de {1} de estos {2} anuncios los encontró publicados, y {3} encontró el anuncio retirado.",
+ "How we check": "Cómo lo comprobamos",
+ "Words you will meet in listings from {0}": "Palabras que verás en los anuncios de {0}",
+ "The glossary for {0}, explained": "El glosario de {0}, explicado",
+ "Words you will meet in listings from Mexico and the United States": "Palabras que verás en los anuncios de México y Estados Unidos",
+ "The glossary for Mexico and the United States, explained": "El glosario de México y Estados Unidos, explicado",
+ "Words you will meet in listings from the Netherlands": "Palabras que verás en los anuncios de los Países Bajos",
+ "The glossary for the Netherlands, explained": "El glosario de los Países Bajos, explicado"
 }

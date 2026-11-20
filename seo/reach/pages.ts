@@ -10,6 +10,24 @@ import { MIN_RANK, toCsv } from "../assetsStats";
 import { METHOD_VERSION, registerEsPage } from "../assetsTrust";
 import { added, keyFacts, sentences, write, type Fact, type Row } from "./data";
 import { PORTALS_DATE, countryEs, portalCount, portalNameEs, type PortalCountry } from "./portals";
+import { removedLog, type RemovedEvent } from "./removed";
+
+/** The data log's list of homes that left the site or whose advert went offline, last 60 days, day by day (idea 49). */
+export function removedBlock(k: Kit, events: RemovedEvent[], onSite: Set<string>, today = new Date().toISOString().slice(0, 10)): string {
+  const { t, es } = k;
+  const since = new Date(Date.parse(today + "T00:00:00Z") - 60 * 864e5).toISOString().slice(0, 10);
+  const recent = events.filter((e) => e.kind !== "price" && e.date >= since);
+  const days = [...new Set(recent.map((e) => e.date))].sort().reverse();
+  const name = (e: RemovedEvent) => String(es ? e.title_es || e.location_name || e.slug : e.title || e.slug).replace(/\s+/g, " ").trim();
+  const one = (e: RemovedEvent) => (onSite.has(e.slug) ? `<a href="/deal/${esc(e.slug)}">${esc(name(e))}</a>` : esc(name(e)));
+  const kind = (x: string, n: number) => x === "gone" ? t(`${n} no longer for sale (advert offline)`, `${n} ya no están a la venta (anuncio retirado)`) : x === "removed" ? t(`${n} taken off the site`, `${n} retiradas de la web`) : t(`${n} back`, `${n} de vuelta`);
+  const li = (d: string) => { const es2 = recent.filter((e) => e.date === d); const kinds = ["gone", "removed", "back"].filter((x) => es2.some((e) => e.kind === x));
+    return `<li><time datetime="${d}">${esc(k.date(d))}</time> ${esc(kinds.map((x) => kind(x, es2.filter((e) => e.kind === x).length)).join(", "))}: ${es2.slice(0, 6).map(one).join(", ")}${es2.length > 6 ? ` ${esc(t(`and ${es2.length - 6} more`, `y ${es2.length - 6} más`))}` : ""}.</li>`; };
+  return `<h2>${esc(t("Homes taken off or no longer for sale, day by day", "Casas retiradas o que ya no están a la venta, día a día"))}</h2>`
+    + (days.length ? `<p>${esc(t("The last 60 days, newest first. A home whose advert went offline keeps its page with a notice.", "Los últimos 60 días, del más reciente al más antiguo. Una casa cuyo anuncio dejó de estar publicado conserva su página con un aviso."))}</p><ul class="rhr-log">${days.map(li).join("")}</ul>`
+      : `<p>${esc(t("No home left the site in the last 60 days.", "Ninguna casa salió de la web en los últimos 60 días."))}</p>`)
+    + `<p><a href="/research/removed-homes">${esc(t("Every home taken off the site, month by month", "Todas las casas retiradas de la web, mes a mes"))}</a></p>`;
+}
 
 export type ReachCtx = { root: string; page: PageFn; rows: Row[]; facts: Record<Lang, Fact[]>; portals: PortalCountry[]; today: string; image: string; has: (p: string) => boolean };
 export const REACH_PAGES = ["property-portals", "country-facts", "open-data", "data-changelog", "find-homes"];
@@ -187,6 +205,8 @@ export function writeReachPages(c: ReachCtx): number {
         ["/research/homes.csv", "CSV", t("Every home, one row each, to recompute any figure.", "Todas las casas, una por fila, para recalcular cualquier cifra.")],
         ["/research/monthly-series.csv", "CSV", t("One reading per month since November 2026: homes, countries and medians.", "Una lectura al mes desde noviembre de 2026: casas, países y medianas.")],
         ["/research/property-portals.csv", "CSV", t("The directory of property portals by country.", "El directorio de portales inmobiliarios por país.")],
+        ["/data/homes.jsonl", "JSON Lines", t("Every home on the site, one JSON object per line: address, price, size, price per m², bedrooms, score and a one-line summary of it, the day it went up and its state (listed, unconfirmed or advert offline). The first line says what the file is.", "Todas las casas de la web, un objeto JSON por línea: dirección, precio, superficie, precio por m², dormitorios, nota y su resumen en una frase, el día en que entró y su estado (publicada, sin confirmar o anuncio retirado). La primera línea dice qué es el archivo.")],
+        ["/research/removed-homes.json · .csv", "JSON, CSV", t("The log of homes taken off the site or whose advert went offline, and of price changes, with dates.", "El registro de casas retiradas de la web o cuyo anuncio dejó de estar publicado, y de los cambios de precio, con fechas.")],
         ["/data/realhunt-homes.geojson", "GeoJSON", t("Every home with coordinates, for a map.", "Todas las casas con coordenadas, para un mapa.")],
         ["/data/realhunt-best-homes.kml", "KML", t("The ten best-scored homes of each country; opens in Google Earth and imports into Google My Maps.", "Las diez casas con mejor nota de cada país; se abre en Google Earth y se importa en Google My Maps.")],
         ["/openapi.json", "OpenAPI 3.1", t("What each file is, its fields and its address, in the format assistants and developer tools read.", "Qué es cada archivo, sus campos y su dirección, en el formato que leen los asistentes y las herramientas de desarrollo.")],
@@ -222,7 +242,9 @@ export function writeReachPages(c: ReachCtx): number {
         t(`One file per country with its key facts and every home, plus CSV, Markdown, PDF, a map file and an OpenAPI description. No account, no key, free to quote.`, `Un archivo por país con sus datos clave y todas sus casas, además de CSV, Markdown, PDF, un archivo de mapa y su descripción OpenAPI. Sin cuenta ni clave, libre de citar.`),
         { h1, eyebrow: t("Open data", "Datos abiertos"), body, head: `<link rel="service-desc" type="application/vnd.oai.openapi+json" href="${SITE}/openapi.json" /><link rel="license" href="${LICENSE}" />`,
           ld: [{ "@context": "https://schema.org", "@type": "DataCatalog", name: h1, description: answer, url: k.url("/research/open-data"), inLanguage: lang, dateModified: c.today, license: LICENSE, creator: ORG, publisher: ORG,
-            dataset: facts.map((f) => ({ "@type": "Dataset", name: t(`Cheap homes in ${k.inThe(f.name)}: key facts and every home on RealHunt`, `Casas baratas en ${k.inThe(cn(k, f.name))}: datos clave y todas las casas de RealHunt`), description: sentences(k, f, c.today).slice(0, 2).join(" "), url: k.url(`/homes/${f.k}`), license: LICENSE, creator: ORG, dateModified: c.today, distribution: [{ "@type": "DataDownload", encodingFormat: "application/json", contentUrl: `${SITE}/data/countries/${f.k}.json` }] })) }] });
+            dataset: [{ "@type": "Dataset", name: t("Every home on RealHunt, one per line", "Todas las casas de RealHunt, una por línea"), description: t(`${c.rows.length} homes for sale checked by a person, with asking price in euros, place, size, score and state. Updated with every build.`, `${c.rows.length} casas en venta revisadas por una persona, con precio de salida en euros, lugar, superficie, nota y estado. Se actualiza en cada publicación.`), url: k.url("/research/open-data"), license: LICENSE, creator: ORG, dateModified: c.today, isAccessibleForFree: true,
+              distribution: [{ "@type": "DataDownload", encodingFormat: "application/jsonl", contentUrl: `${SITE}/data/homes.jsonl` }, { "@type": "DataDownload", encodingFormat: "text/csv", contentUrl: `${SITE}/research/homes.csv` }] },
+              ...facts.map((f) => ({ "@type": "Dataset", name: t(`Cheap homes in ${k.inThe(f.name)}: key facts and every home on RealHunt`, `Casas baratas en ${k.inThe(cn(k, f.name))}: datos clave y todas las casas de RealHunt`), description: sentences(k, f, c.today).slice(0, 2).join(" "), url: k.url(`/homes/${f.k}`), license: LICENSE, creator: ORG, dateModified: c.today, distribution: [{ "@type": "DataDownload", encodingFormat: "application/json", contentUrl: `${SITE}/data/countries/${f.k}.json` }, { "@type": "DataDownload", encodingFormat: "text/markdown", contentUrl: `${SITE}/data/countries/${f.k}${es ? ".es" : ""}.md` }] }))] }] });
     }
 
     // ================================================================== 4. what changed in the data
@@ -248,9 +270,10 @@ export function writeReachPages(c: ReachCtx): number {
         + `<h2>${esc(t("Month by month", "Mes a mes"))}</h2>` + table([{ h: t("Month", "Mes") }, { h: t("Homes added", "Casas añadidas"), cls: "n" }, { h: t("Countries", "Países"), cls: "n" }, { h: t("Median asking price", "Precio de salida mediano"), cls: "n" }],
           months.map((m) => { const hs = days.filter((d) => d.startsWith(m)).flatMap((d) => byDay.get(d)!); const ps = hs.map((r) => r.price_eur).sort((a, b) => a - b); return [esc(monthName(m)), k.num(hs.length), String(countriesOf(hs).length), k.eur(ps[Math.floor(ps.length / 2)])]; }), t("Month by month", "Mes a mes"))
         + `<p>${t(`The price series, one reading per month of all the homes, is in <a href="/research/prices#series">prices by country</a>.`, `La serie de precios, con una lectura al mes de todas las casas, está en <a href="/research/prices#series">precios por país</a>.`)}</p>`
+        + removedBlock(k, removedLog(c.rows as any, c.today), new Set(c.rows.map((r) => r.slug)), c.today)
         + `<h2>${esc(t("Dated changes to the method, the lists and the files", "Cambios con fecha en el método, las listas y los archivos"))}</h2><ul class="rhr-log">${fixed.map(([d, x]) => `<li><time datetime="${d}">${esc(k.date(d))}</time> ${x}</li>`).join("")}</ul>`
         + `<h2>${esc(t("What this page does not show", "Lo que esta página no recoge"))}</h2><ul>${[
-          t("Homes that were sold or withdrawn leave the site and are not counted in the days above, so an old day shows only the homes that are still listed.", "Las casas vendidas o retiradas salen de la web y no cuentan en los días de arriba, así que un día antiguo solo muestra las casas que siguen publicadas."),
+          t(`Homes that left the site are not counted in the days above, so an old day shows only the homes that are still listed. They are in the <a href="/research/removed-homes">log of homes taken off the site</a>, and price changes in the <a href="/corrections">corrections</a>.`, `Las casas que salieron de la web no cuentan en los días de arriba, así que un día antiguo solo muestra las casas que siguen publicadas. Están en el <a href="/research/removed-homes">registro de casas retiradas de la web</a>, y los cambios de precio, en las <a href="/corrections">correcciones</a>.`),
           t(`Corrections to a published figure are recorded in the <a href="/editorial-policy">editorial policy and corrections</a> page.`, `Las correcciones de una cifra ya publicada se anotan en la página de <a href="/editorial-policy">política editorial y correcciones</a>.`),
           t(`The newest homes one by one are in <a href="/new">new homes</a> and in the feeds (<a href="/feed.xml">RSS</a>, <a href="/feed.atom">Atom</a>, <a href="/feed.json">JSON</a>).`, `Las casas más nuevas, una a una, están en <a href="/new">casas nuevas</a> y en los canales (<a href="/feed.xml">RSS</a>, <a href="/feed.atom">Atom</a>, <a href="/feed.json">JSON</a>).`),
         ].map((x) => `<li>${x}</li>`).join("")}</ul>` + license;
