@@ -196,5 +196,19 @@
   "annual_property_tax": "El impuesto anual IPI es del 1% de la parte del valor total de los inmuebles de una persona en la República Dominicana, según la tasación de la DGII (la administración tributaria), que supere 10.695.494 RD$ en 2026, así que una sola vivienda barata a menudo queda por debajo del umbral.",
   "rental_income_tax": "El alquiler pagado en el extranjero a un no residente suele tener una retención del 27%.",
   "can_foreigners_buy": "Sí. Los extranjeros tienen los mismos derechos que los ciudadanos dominicanos para comprar tierra y viviendas, sin restricciones."
+ },
+ "ireland": {
+  "can_foreigners_buy": "Sí. No hay restricciones para que los extranjeros compren viviendas en Irlanda, y ser propietario no da derecho a vivir allí.",
+  "purchase_costs_breakdown": "Impuesto de timbre (stamp duty) del 1% del precio hasta 1 millón de € (2% de 1 a 1,5 millones de € y 6% por encima), honorarios del abogado (solicitor) de alrededor del 1-1,5% más un 23% de IVA, y tasas de registro de 425 € a 800 €; el vendedor paga al agente inmobiliario, cuya comisión suele estar incluida en el precio.",
+  "annual_property_tax": "Impuesto local sobre la propiedad (Local Property Tax, LPT): desde 2026 una vivienda valorada en hasta 240.000 € paga una cuota básica de 95 € al año y una de 240.001 € a 315.000 € paga 235 €; cada ayuntamiento puede subir o bajar la cuota básica hasta un 15%, y la mayoría la subió un 15% para 2026."
+ },
+ "colombia": {
+  "can_foreigners_buy": "Sí. Una vivienda comprada por un extranjero cuenta como inversión extranjera, que no necesita autorización previa y recibe el mismo trato que la inversión de los residentes. Cuando el dinero entra por el mercado cambiario, la declaración de cambio sirve como su registro ante el Banco de la República.",
+  "purchase_costs_breakdown": "Derechos notariales del 3 por mil del precio (2026), que por costumbre se reparten entre comprador y vendedor; derechos de registro del 9,11 al 13,33 por mil según el precio, más un 2%, a cargo de quien pide el registro, normalmente el comprador; y el impuesto de registro, cuya tarifa fija cada departamento.",
+  "annual_property_tax": "Impuesto predial unificado: cada municipio fija la tarifa entre el 5 y el 16 por mil del avalúo catastral."
+ },
+ "uruguay": {
+  "can_foreigners_buy": "Sí. No hay límites a los tipos de inmuebles que pueden comprar los extranjeros en Uruguay, y tienen los mismos derechos de propiedad que los ciudadanos.",
+  "purchase_costs_breakdown": "Impuesto a las Transmisiones Patrimoniales (ITP) del 2% para el comprador y del 2% para el vendedor, sobre el valor real fijado por la Dirección Nacional de Catastro; honorarios del escribano de alrededor del 3%; y una comisión de la inmobiliaria de alrededor del 3%."
  }
 }

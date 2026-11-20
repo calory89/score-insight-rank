@@ -99,5 +99,19 @@
   "can_foreigners_buy": "Ja. Nergens in het Verenigd Koninkrijk gelden beperkingen naar nationaliteit en u hebt geen visum nodig, maar een koop geeft geen recht om er te wonen.",
   "purchase_costs_breakdown": "In Engeland en Noord-Ierland is de overdrachtsbelasting (Stamp Duty Land Tax, SDLT) 0% tot £ 125.000 en 2% van £ 125.001 tot £ 250.000, plus een toeslag van 2% voor wie niet in het Verenigd Koninkrijk woont en nog eens 5% als u al ergens een woning bezit; een niet-ingezetene met een andere woning betaalt dus 7% tot £ 125.000 en 9% tot £ 250.000. Advocaat (conveyancer) circa 0,6 tot 1%, meestal minimaal zo'n £ 2.100 inclusief btw; kosten van het kadaster (Land Registry) £ 20 tot £ 230; onderzoeken (searches) apart; de makelaar wordt door de verkoper betaald.",
   "annual_property_tax": "Eigenaren of bewoners betalen een gemeentelijke woonheffing aan de gemeente (in Noord-Ierland een eigen variant daarvan); veel gemeenten in Engeland rekenen sinds april 2025 voor tweede woningen een toeslag tot 100%."
+ },
+ "ireland": {
+  "can_foreigners_buy": "Ja. Buitenlanders mogen in Ierland zonder beperkingen een woning kopen, maar eigenaar zijn geeft geen recht om er te wonen.",
+  "purchase_costs_breakdown": "Zegelrecht (stamp duty) van 1% van de prijs tot € 1 miljoen (2% van € 1 tot 1,5 miljoen en 6% daarboven), honorarium van de advocaat (solicitor) van ongeveer 1-1,5% plus 23% btw, en inschrijvingskosten van € 425 tot € 800; de verkoper betaalt de makelaar, wiens courtage meestal in de vraagprijs zit.",
+  "annual_property_tax": "Lokale onroerendgoedbelasting (Local Property Tax, LPT): vanaf 2026 betaalt een woning met een waarde tot € 240.000 een basisbedrag van € 95 per jaar en een woning van € 240.001 tot € 315.000 betaalt € 235; elke gemeente kan het basisbedrag met ten hoogste 15% verhogen of verlagen, en de meeste verhoogden het voor 2026 met 15%."
+ },
+ "colombia": {
+  "can_foreigners_buy": "Ja. Een woning die een buitenlander koopt, telt als buitenlandse investering; die heeft geen voorafgaande toestemming nodig en wordt behandeld als investering door inwoners. Komt het geld binnen via de valutamarkt, dan geldt de valutaverklaring als registratie bij de Banco de la República.",
+  "purchase_costs_breakdown": "Notariskosten van 3 promille van de prijs (2026), gewoonlijk verdeeld tussen koper en verkoper; inschrijvingskosten van 9,11 tot 13,33 promille afhankelijk van de prijs, plus 2%, te betalen door wie de inschrijving aanvraagt, meestal de koper; en de registratiebelasting (impuesto de registro), waarvan elk departement het tarief vaststelt.",
+  "annual_property_tax": "Onroerendgoedbelasting (impuesto predial unificado): elke gemeente stelt het tarief vast tussen 5 en 16 promille van de kadastrale waarde (avalúo catastral)."
+ },
+ "uruguay": {
+  "can_foreigners_buy": "Ja. Buitenlandse kopers mogen in Uruguay elk soort vastgoed kopen en hebben dezelfde eigendomsrechten als burgers.",
+  "purchase_costs_breakdown": "Overdrachtsbelasting (ITP) van 2% voor de koper en 2% voor de verkoper, over de kadastrale waarde (valor real) van de Dirección Nacional de Catastro; notariskosten van ongeveer 3%; en een makelaarscourtage van ongeveer 3%."
  }
 }

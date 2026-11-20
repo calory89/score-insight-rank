@@ -99,5 +99,19 @@
   "can_foreigners_buy": "Tak. W całym Zjednoczonym Królestwie nie ma ograniczeń ze względu na obywatelstwo i wiza nie jest potrzebna, ale zakup nie daje prawa do zamieszkania.",
   "purchase_costs_breakdown": "W Anglii i Irlandii Północnej podatek od zakupu (Stamp Duty Land Tax, SDLT) wynosi 0% do 125 000 £ i 2% od 125 001 do 250 000 £, plus 2% dopłaty dla osób niemieszkających w Zjednoczonym Królestwie i kolejne 5%, jeśli masz już gdzieś mieszkanie; nierezydent, który ma inną nieruchomość, płaci więc 7% do 125 000 £ i 9% do 250 000 £. Prawnik (conveyancer) około 0,6 do 1%, zwykle co najmniej około 2100 £ z VAT; opłata w rejestrze gruntów (Land Registry) od 20 do 230 £; wyszukiwania (searches) osobno; pośrednika opłaca sprzedający.",
   "annual_property_tax": "Właściciele lub mieszkańcy płacą gminie lokalny podatek od nieruchomości (w Irlandii Północnej obowiązuje jego odrębna wersja); od kwietnia 2025 wiele gmin w Anglii pobiera za drugie domy dopłatę do 100%."
+ },
+ "ireland": {
+  "can_foreigners_buy": "Tak. Cudzoziemcy mogą kupować domy i mieszkania w Irlandii bez ograniczeń, ale własność nie daje prawa do zamieszkania.",
+  "purchase_costs_breakdown": "Opłata skarbowa (stamp duty) 1% ceny do 1 mln € (2% od 1 do 1,5 mln € i 6% powyżej), honorarium prawnika (solicitor) około 1-1,5% plus 23% VAT oraz opłaty rejestrowe od 425 € do 800 €; sprzedający płaci pośrednikowi, którego prowizja zwykle jest wliczona w cenę ofertową.",
+  "annual_property_tax": "Lokalny podatek od nieruchomości (Local Property Tax, LPT): od 2026 roku dom wyceniony do 240 000 € płaci podstawowe 95 € rocznie, a wyceniony od 240 001 € do 315 000 € płaci 235 €; każda rada lokalna może podnieść lub obniżyć stawkę podstawową najwyżej o 15%, a większość podniosła ją na 2026 rok o 15%."
+ },
+ "colombia": {
+  "can_foreigners_buy": "Tak. Dom kupiony przez cudzoziemca jest inwestycją zagraniczną, która nie wymaga wcześniejszego zezwolenia i jest traktowana tak samo jak inwestycja rezydentów. Gdy pieniądze wpływają przez rynek walutowy, deklaracja walutowa służy jako jej rejestracja w Banco de la República.",
+  "purchase_costs_breakdown": "Opłaty notarialne 3 promile ceny (2026), zwyczajowo dzielone między kupującego i sprzedającego; opłaty rejestrowe od 9,11 do 13,33 promila zależnie od ceny, plus 2%, płaci je ten, kto wnosi o wpis, zwykle kupujący; oraz podatek rejestrowy (impuesto de registro), którego stawkę ustala każdy departament.",
+  "annual_property_tax": "Podatek od nieruchomości (impuesto predial unificado): każda gmina ustala stawkę od 5 do 16 promili wartości katastralnej (avalúo catastral)."
+ },
+ "uruguay": {
+  "can_foreigners_buy": "Tak. Zagraniczni kupujący mogą nabyć w Urugwaju każdy rodzaj nieruchomości i mają te same prawa własności co obywatele.",
+  "purchase_costs_breakdown": "Podatek od przeniesienia własności (ITP) 2% dla kupującego i 2% dla sprzedającego, od wartości katastralnej (valor real) ustalonej przez Dirección Nacional de Catastro; honorarium notariusza około 3%; oraz prowizja pośrednika około 3%."
  }
 }

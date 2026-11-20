@@ -18,7 +18,7 @@ const COUNTRY: Record<string, [string, string]> = {
   Sweden: ["Suède", "en Suède"], Japan: ["Japon", "au Japon"], Poland: ["Pologne", "en Pologne"], Germany: ["Allemagne", "en Allemagne"], Netherlands: ["Pays-Bas", "aux Pays-Bas"],
   Greece: ["Grèce", "en Grèce"], Portugal: ["Portugal", "au Portugal"], Switzerland: ["Suisse", "en Suisse"], Mexico: ["Mexique", "au Mexique"], Canada: ["Canada", "au Canada"],
   Bulgaria: ["Bulgarie", "en Bulgarie"], "Dominican Republic": ["République dominicaine", "en République dominicaine"], Cyprus: ["Chypre", "à Chypre"], "United Kingdom": ["Royaume-Uni", "au Royaume-Uni"],
-  Scandinavia: ["Scandinavie", "en Scandinavie"], Norway: ["Norvège", "en Norvège"],
+  Scandinavia: ["Scandinavie", "en Scandinavie"], Norway: ["Norvège", "en Norvège"], Ireland: ["Irlande", "en Irlande"], Colombia: ["Colombie", "en Colombie"], Uruguay: ["Uruguay", "en Uruguay"], Hungary: ["Hongrie", "en Hongrie"], "Czech Republic": ["Tchéquie", "en Tchéquie"], Slovenia: ["Slovénie", "en Slovénie"],
 };
 const country = (c: string) => COUNTRY[c]?.[0] || c;
 const inC = (c: string) => COUNTRY[c]?.[1] || `dans ce pays (${c})`;
@@ -31,7 +31,7 @@ const R: Record<string, [string, string]> = {
   Lazio: ["Latium", "dans le Latium"], Lombardy: ["Lombardie", "en Lombardie"], Marche: ["Marches", "dans les Marches"], Piedmont: ["Piémont", "dans le Piémont"], Sardinia: ["Sardaigne", "en Sardaigne"],
   Sicily: ["Sicile", "en Sicile"], Tuscany: ["Toscane", "en Toscane"], Umbria: ["Ombrie", "en Ombrie"],
   // United Kingdom
-  "Northern Ireland": ["Irlande du Nord", "en Irlande du Nord"], "County Down": ["comté de Down", "dans le comté de Down"], "County Fermanagh": ["comté de Fermanagh", "dans le comté de Fermanagh"], "County Leitrim": ["comté de Leitrim", "dans le comté de Leitrim"], "County Durham": ["comté de Durham", "dans le comté de Durham"], Northumberland: ["Northumberland", "dans le Northumberland"],
+  "Northern Ireland": ["Irlande du Nord", "en Irlande du Nord"], "County Down": ["comté de Down", "dans le comté de Down"], "County Fermanagh": ["comté de Fermanagh", "dans le comté de Fermanagh"], "County Mayo": ["comté de Mayo", "dans le comté de Mayo"], "County Galway": ["comté de Galway", "dans le comté de Galway"], "County Waterford": ["comté de Waterford", "dans le comté de Waterford"], "West Mani": ["Magne occidental", "dans le Magne occidental"], "Lake Balaton": ["lac Balaton", "au bord du lac Balaton"], "Karlovy Vary region": ["région de Karlovy Vary", "dans la région de Karlovy Vary"], "County Leitrim": ["comté de Leitrim", "dans le comté de Leitrim"], "County Durham": ["comté de Durham", "dans le comté de Durham"], Northumberland: ["Northumberland", "dans le Northumberland"],
   // France
   Aude: ["Aude", "dans l'Aude"], Aveyron: ["Aveyron", "dans l'Aveyron"], Charente: ["Charente", "en Charente"], "Corrèze": ["Corrèze", "en Corrèze"], Creuse: ["Creuse", "dans la Creuse"], Dordogne: ["Dordogne", "en Dordogne"],
   "Haute-Garonne": ["Haute-Garonne", "en Haute-Garonne"], "Haute-Marne": ["Haute-Marne", "en Haute-Marne"], "Haute-Vienne": ["Haute-Vienne", "en Haute-Vienne"], "Le Havre": ["Le Havre", "au Havre"], "Le Mans": ["Le Mans", "au Mans"],

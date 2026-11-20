@@ -550,5 +550,56 @@
       "https://www.rsm.global/dominicanrepublic/en/news/dominican-republic-tax-reform-law-30-26"
     ],
     "as_of": 2026
+  },
+  "ireland": {
+    "can_foreigners_buy": "Yes. There are no restrictions on foreigners buying homes in Ireland, and owning a home does not give a right to live there.",
+    "purchase_costs_pct": "2.5-3.5",
+    "purchase_costs_breakdown": "Stamp duty of 1% of the price up to €1 million (2% from €1 million to €1.5 million and 6% above), solicitor's fees of about 1-1.5% plus 23% VAT, and registration fees of €425 to €800; the seller pays the estate agent, whose fee is usually built into the asking price.",
+    "annual_property_tax": "Local Property Tax (LPT): from 2026 a home valued up to €240,000 pays a basic €95 a year and one valued €240,001 to €315,000 pays €235; each council can raise or lower the basic rate by up to 15%, and most raised it by 15% for 2026.",
+    "rental_income_tax": null,
+    "holiday_rental_gross_yield_pct": null,
+    "holiday_rental_yield_note": null,
+    "long_term_gross_yield_pct": null,
+    "holiday_rental_rules": null,
+    "sources": [
+      "https://revenue.ie/en/tax-professionals/ebrief/2025/no-0042025.aspx",
+      "https://www.revenue.ie/en/property/local-property-tax/valuing-your-property/valuation-bands-rates.aspx",
+      "https://www.globalpropertyguide.com/Europe/Ireland/buying-guide"
+    ],
+    "as_of": 2026
+  },
+  "colombia": {
+    "can_foreigners_buy": "Yes. A home bought by a foreigner counts as foreign investment, which needs no prior authorization and is treated the same as investment by residents. When the money comes in through the foreign exchange market, the exchange declaration serves as its registration with the Banco de la República.",
+    "purchase_costs_pct": null,
+    "purchase_costs_breakdown": "Notary fees of 3 per thousand of the price (2026), customarily split between buyer and seller; registry fees of 9.11 to 13.33 per thousand depending on the price, plus 2%, paid by whoever asks for the registration, usually the buyer; and the registration tax (impuesto de registro), whose rate each department sets.",
+    "annual_property_tax": "Impuesto predial unificado: each municipality sets the rate between 5 and 16 per thousand of the cadastral value (avalúo catastral).",
+    "rental_income_tax": null,
+    "holiday_rental_gross_yield_pct": null,
+    "holiday_rental_yield_note": null,
+    "long_term_gross_yield_pct": null,
+    "holiday_rental_rules": null,
+    "sources": [
+      "https://normograma.dian.gov.co/dian/compilacion/docs/decreto_0119_2017.htm",
+      "https://www.banrep.gov.co/es/politica-monetaria-cambiaria/regulacion-operaciones-cambiarias/inversion-extranjera-colombia-colombiana-exterior",
+      "https://www.gerencie.com/tarifas-notariales-y-registrales-en-colombia.html",
+      "https://normas.cra.gov.co/gestor/docs/ley_0044_1990.htm"
+    ],
+    "as_of": 2026
+  },
+  "uruguay": {
+    "can_foreigners_buy": "Yes. There are no limits on the types of property foreign buyers can purchase in Uruguay, and they have the same property rights as citizens.",
+    "purchase_costs_pct": "5-8",
+    "purchase_costs_breakdown": "Transfer tax (ITP) of 2% for the buyer and 2% for the seller, on the cadastral value (valor real) set by the Dirección Nacional de Catastro; notary fees of about 3%; and an agent's fee of about 3%.",
+    "annual_property_tax": null,
+    "rental_income_tax": null,
+    "holiday_rental_gross_yield_pct": null,
+    "holiday_rental_yield_note": null,
+    "long_term_gross_yield_pct": null,
+    "holiday_rental_rules": null,
+    "sources": [
+      "https://www.gub.uy/direccion-general-impositiva/comunicacion/publicaciones/impuesto-trasmisiones-patrimoniales-itp",
+      "https://www.globalpropertyguide.com/Latin-America/Uruguay/Buying-Guide"
+    ],
+    "as_of": 2026
   }
 }
