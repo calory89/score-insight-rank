@@ -91,3 +91,11 @@
 .hunt .hunt-chips small { opacity: .85; }
 .hunt:not(.is-dark) .hunt-chips :is(button, a):not([aria-pressed="true"]):not(.is-on):not([aria-current]) small { opacity: 1; color: #5E626A; }
 .hunt:not(.is-dark) a.hunt-link { color: var(--c-accent-ink, #B8370A); }
+/* the "Price" label in the desktop filter bar was #62666E at 65% opacity (2.8:1) */
+.hunt .rh-price-label { opacity: 1; }
+
+/* 19: what is nearby (sea, lake, shop, train, airport) as a legible grid: two columns from tablet width, and a long
+   distance ("83 km · about 108 km and 90 min by car (approx.)") wraps instead of pushing the page wider than the phone */
+.hunt .hv-nearby li > b { flex: 0 1 auto; white-space: normal; text-align: right; max-width: 62%; overflow-wrap: anywhere; }
+.hunt .hv-nearby li span { white-space: normal; }
+@media (min-width: 701px) { .hunt .hv-nearby ul { grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; } }
