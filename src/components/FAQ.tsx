@@ -114,7 +114,7 @@ const FAQ = () => {
         >
           <p className="text-sm text-muted-foreground">
             Still have questions?{" "}
-            <a href="mailto:hello@realhunt.com" className="text-primary hover:underline font-medium">
+            <a href="mailto:carlos@equinoxinvestmentgroup.comm" className="text-primary hover:underline font-medium">
               Contact us
             </a>
           </p>

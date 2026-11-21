@@ -72,7 +72,7 @@ describe("is the page Spanish?", () => {
     expect(englishLeft("Casas en Spain").hits).toEqual(["Spain"]); // an English country name is English
   });
   it("does not take names, web addresses or kept foreign terms for English", () => {
-    for (const s of ["Anunciada en gate-away.com.", "A unos 12 km: Region of Murcia International Airport.", "Montecatini in Val di Cecina, Toscana", "Little River, Carolina del Sur", "Los gastos de cierre (closing costs) varían según el estado.", "Tiny house de madera con dos altillos", "El anuncio la describe como reformada.", "Escríbenos a hello@realhunt.co"]) expect(englishLeft(s).english, s).toBe(0);
+    for (const s of ["Anunciada en gate-away.com.", "A unos 12 km: Region of Murcia International Airport.", "Montecatini in Val di Cecina, Toscana", "Little River, Carolina del Sur", "Los gastos de cierre (closing costs) varían según el estado.", "Tiny house de madera con dos altillos", "El anuncio la describe como reformada.", "Escríbenos a carlos@equinoxinvestmentgroup.com"]) expect(englishLeft(s).english, s).toBe(0);
   });
   it("publishes only pages with no English left", () => {
     expect(passes({ words: 500, english: 0, hits: [] })).toBe(true);

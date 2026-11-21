@@ -244,7 +244,7 @@ export function NewBuildReport() {
         <button className="hunt-secondary" onClick={csv}><Download size={15} /> Download the data (CSV)</button>
         <h2>How we count</h2>
         <p>Projects are new-build homes (apartments, villas, townhouses; no land) whose developer publishes a starting price at or under €100,000, found on the developers' own websites and listings, plus projects listed on RealHunt by their developers. Prices are converted to euros at the time we record them. Countries with fewer than three projects are left out. Updated {d.updated}.</p>
-        <p className="hunt-fine">Press: free to quote or chart with a link to realhunt.co/research/new-builds. Questions: hello@realhunt.co.</p>
+        <p className="hunt-fine">Press: free to quote or chart with a link to realhunt.co/research/new-builds. Questions: carlos@equinoxinvestmentgroup.com.</p>
         <p><Link to="/costs" className="hunt-link">Real buying costs and rental yields by country →</Link></p>
       </>}
     </div>

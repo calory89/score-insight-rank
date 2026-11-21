@@ -1082,7 +1082,7 @@ function Detail() {
           </button>
           <p className="hunt-fine">
             Agent or owner of this home?{" "}
-            <a href={`mailto:hello@realhunt.co?subject=${encodeURIComponent("Feature my listing: " + d.slug)}`}>Feature it or correct the details</a>
+            <a href={`mailto:carlos@equinoxinvestmentgroup.com?subject=${encodeURIComponent("Feature my listing: " + d.slug)}`}>Feature it or correct the details</a>
           </p>
         </section>
         <DetailAside deal={d as Row} listing={listing} />

@@ -481,7 +481,7 @@ function build(root: string, es?: EsPass) {
   page(`${SITE}/help-buying`, "Help buying a home abroad · RealHunt", "Local lawyers, translators, surveys and tax numbers for buying a house in another country.", DEF);
   page(`${SITE}/insider`, "RealHunt Insider · The secret Top 5 of the week", "Invite 3 friends and unlock the secret weekly Top 5: the homes furthest below their country's typical price. Free.", DEF);
   page(`${SITE}/contact`, "Contact RealHunt", "Write to the RealHunt team about a home, a listing, a partnership or press.", DEF,
-    `<main class="rh-static"><h1>Contact RealHunt</h1><p>Email: <!--email_off-->hello@realhunt.co<!--/email_off--></p><p>RealHunt is run by Equinox Investment Group LLC. <a href="/about">About us</a>.</p></main>`);
+    `<main class="rh-static"><h1>Contact RealHunt</h1><p>Email: <!--email_off-->carlos@equinoxinvestmentgroup.com<!--/email_off--></p><p>RealHunt is run by Equinox Investment Group LLC. <a href="/about">About us</a>.</p></main>`);
   for (const [k, n] of [["privacy", "Privacy policy"], ["terms", "Terms of use"], ["cookies", "Cookie policy"], ["takedown", "Listing and photo takedown requests"]] as const)
     page(`${SITE}/legal/${k}`, `${n} · RealHunt`, `${n} for RealHunt (realhunt.co), run by Equinox Investment Group LLC.`, DEF, undefined, [crumbs([["RealHunt", SITE + "/"], [n, `${SITE}/legal/${k}`]])]);
 
@@ -559,9 +559,9 @@ function build(root: string, es?: EsPass) {
     }
   }
   page(`${SITE}/about`, "About RealHunt: who we are and how we work", "Who runs RealHunt, the company behind it, how we make money and what you should know about our founder before you trust us.", DEF,
-    `<main class="rh-static"><h1>Who we are</h1><p>RealHunt is run by Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, United States. Founder: Carlos de Ory Gordillo. Contact: <!--email_off-->hello@realhunt.co<!--/email_off-->.</p><h2>How RealHunt makes money</h2><p>Buyers pay nothing. Resale homes are not for sale through RealHunt: we link to the original listing. On new builds, RealHunt earns a fee from the developer only if a buyer it introduced buys. Nobody pays to be listed or to rank higher, and sponsored cards are marked as sponsored.</p><p><a href="/method">How the score works</a> · <a href="/contact">Contact</a></p></main>`,
+    `<main class="rh-static"><h1>Who we are</h1><p>RealHunt is run by Equinox Investment Group LLC, 30 N Gould St Ste N, Sheridan, WY 82801, United States. Founder: Carlos de Ory Gordillo. Contact: <!--email_off-->carlos@equinoxinvestmentgroup.com<!--/email_off-->.</p><h2>How RealHunt makes money</h2><p>Buyers pay nothing. Resale homes are not for sale through RealHunt: we link to the original listing. On new builds, RealHunt earns a fee from the developer only if a buyer it introduced buys. Nobody pays to be listed or to rank higher, and sponsored cards are marked as sponsored.</p><p><a href="/method">How the score works</a> · <a href="/contact">Contact</a></p></main>`,
     [crumbs([["RealHunt", SITE + "/"], ["About", SITE + "/about"]]),
-     { "@context": "https://schema.org", "@type": "Organization", "@id": SITE + "/#organization", name: "RealHunt", url: SITE + "/", logo: SITE + "/favicon.png", email: "hello@realhunt.co",
+     { "@context": "https://schema.org", "@type": "Organization", "@id": SITE + "/#organization", name: "RealHunt", url: SITE + "/", logo: SITE + "/favicon.png", email: "carlos@equinoxinvestmentgroup.com",
        parentOrganization: { "@type": "Organization", name: "Equinox Investment Group LLC", address: { "@type": "PostalAddress", streetAddress: "30 N Gould St Ste N", addressLocality: "Sheridan", addressRegion: "WY", postalCode: "82801", addressCountry: "US" } } }]);
   // 30-oct-2026: the Eco Beach City card is shared too; give its page its own title and picture.
   page(`${SITE}/ecobeachcity`, "€36,500 furnished cabin and plot · Sumba, Indonesia · RealHunt", "A furnished cabin on your own plot in Eco Beach City, a new beachfront eco village in Sumba, one hour from Bali. Cabin, plot and furniture for €36,500, payable in instalments.", `${SITE}/images/ebc/ebc-card.jpg`);

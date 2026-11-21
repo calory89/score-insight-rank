@@ -113,7 +113,7 @@ export const COSTS: Record<string, { pct: number; fixed: number; note: string }>
   Indonesia: { pct: 0, fixed: 0, note: "Leasehold in an eco village. Land and connections are itemised on the page." },
 };
 export const totalCost = (price: number, country: string | null | undefined) => { const c = COSTS[country || ""]; return c ? Math.round(price * (1 + c.pct / 100) + c.fixed) : null; };
-export const COMPANY = { name: "Equinox Investment Group LLC", address: "30 N Gould St Ste N, Sheridan, WY 82801, United States", email: "hello@realhunt.co" };
+export const COMPANY = { name: "Equinox Investment Group LLC", address: "30 N Gould St Ste N, Sheridan, WY 82801, United States", email: "carlos@equinoxinvestmentgroup.com" };
 export const consent = () => { try { return localStorage.getItem("rh_consent"); } catch { return null; } };
 
 // Shared "join the list" write, used by every email-capture surface (bottom bar, 30s popup, grid card,

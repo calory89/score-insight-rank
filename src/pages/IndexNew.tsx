@@ -700,7 +700,7 @@ const IndexNew = () => {
               Questions, answered.
             </h2>
             <p className="mt-4 text-ink-muted text-[15px] leading-relaxed">
-              Still curious? Email <a href="mailto:hello@realhunt.co" className="rh-btn-tertiary">hello@realhunt.co</a>, a human replies.
+              Still curious? Email <a href="mailto:carlos@equinoxinvestmentgroup.com" className="rh-btn-tertiary">carlos@equinoxinvestmentgroup.com</a>, a human replies.
             </p>
           </div>
           <div className="md:col-span-8 hairline-t">
