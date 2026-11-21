@@ -38,3 +38,46 @@ d2("isThumb after the media fallback", () => {
     e2(isThumb2("https://realhunt.co/finds/x.webp")).toBe(false);
   });
 });
+
+import { learnThumbs, resetThumbs, hasMid, midSrcSet, cardSrcSet, thumb as thumb3 } from "@/lib/thumbs";
+import { dealShell } from "../../seo/dealShell";
+import { afterEach, describe as d3, expect as e3, it as i3 } from "vitest";
+d3("only copies the snapshot names are asked for (21 Nov 2026)", () => {
+  afterEach(() => resetThumbs());
+  const rows = [
+    { slug: "a", image_urls: ["/finds/a-0.webp", "/finds/a-1.webp"], th: 1, tm: 1 },
+    { slug: "b", image_urls: ["/finds/b-0.webp"], th: 0, tm: 0 },
+  ];
+  i3("asks for every copy before a marked snapshot is seen (as before)", () => {
+    learnThumbs({ rows: rows.map(({ th, tm, ...r }) => r) });
+    e3(thumb3("/finds/b-0.webp")).toBe(`${MEDIA}/t/finds/b-0.webp`);
+    e3(midSrcSet("/finds/a-0.webp")).toBeUndefined();
+  });
+  i3("after a marked snapshot, a home without copies shows its own photo", () => {
+    learnThumbs({ thumbs: 1, rows });
+    e3(thumb3("/finds/a-1.webp")).toBe(`${MEDIA}/t/finds/a-1.webp`);
+    e3(thumb3("/finds/b-0.webp")).toBe("/finds/b-0.webp");
+    e3(thumb3("/finds/new-home-0.webp")).toBe("/finds/new-home-0.webp");
+    e3(thumb3("/finds/lake-como-peglio-85000-0.webp")).toBe(`${MEDIA}/t/finds/lake-como-peglio-85000-0.webp`); // written in the code
+    e3(hasMid("/finds/a-0.webp")).toBe(true);
+    e3(hasMid("/finds/b-0.webp")).toBe(false);
+    e3(midSrcSet(MEDIA + "/finds/a-0.webp")).toBe(`${MEDIA}/t/m/finds/a-0.webp 800w, ${MEDIA}/finds/a-0.webp 1600w`);
+    e3(cardSrcSet("/finds/a-0.webp")).toBe(`${MEDIA}/t/finds/a-0.webp 480w, ${MEDIA}/t/m/finds/a-0.webp 800w`);
+    e3(cardSrcSet("/finds/b-0.webp")).toBeUndefined();
+  });
+  i3("learns from the row embedded in a home page", () => {
+    learnThumbs(null, [{ image_urls: ["/finds/c-0.webp"], th: 0, tm: 1 }]);
+    e3(thumb3("/finds/c-0.webp")).toBe("/finds/c-0.webp");
+    e3(hasMid("/finds/c-0.webp")).toBe(true);
+  });
+  i3("the home page shell offers the copy it knows and the next photo when the main one fails", () => {
+    learnThumbs({ thumbs: 1, rows });
+    const photos = rows[0].image_urls.map((u) => MEDIA + u);
+    const html = dealShell({ row: { ...rows[0], title: "House", price_eur: 1 }, photos, crumbs: [] });
+    e3(html).toContain(`srcset="${MEDIA}/t/m/finds/a-0.webp 800w`);
+    e3(html).toContain(`data-next="${MEDIA}/finds/a-1.webp"`);
+    const b = dealShell({ row: { ...rows[1], title: "House", price_eur: 1 }, photos: [MEDIA + "/finds/b-0.webp"], crumbs: [] });
+    e3(b).not.toContain("srcset");
+    e3(b).not.toContain("onerror");
+  });
+});

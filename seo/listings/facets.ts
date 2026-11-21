@@ -69,7 +69,20 @@ const text = (r: Home) => `${r.title || ""} ${r.why_great || ""} ${r.location_na
 const amen = (r: Home, a: string) => Array.isArray(r.amen) && r.amen.includes(a);
 /** By the sea: the measured distance to the shore when we have it (5 km or less), else the category a person gave it. */
 export const bySea = (r: Home) => (typeof r.nearby?.sea_km === "number" ? r.nearby.sea_km <= 5 : r.category === "beach");
-export const townOf = (r: Home) => String(r.location_name || "").split(",")[0].replace(/\([^)]*\)/g, "").trim();
+// 21-nov-2026 (idea 83 of the second list): in the United States the advert often names the neighbourhood first
+// ("Las Vistas at Doral, Doral, Miami-Dade County, Florida"), so Doral, Hollywood or Boca Raton never reached the three
+// homes a town page needs. When a county is named, the town is the part just before it; "Downtown Hollywood" is
+// Hollywood.
+export const townOf = (r: Home) => {
+  const parts = String(r.location_name || "").split(",").map((x) => x.replace(/\([^)]*\)/g, "").trim()).filter(Boolean);
+  let t = parts[0] || "";
+  if (r.country === "United States") {
+    const c = parts.findIndex((x) => /\bCounty$/.test(x));
+    if (c > 0) t = parts[c - 1];
+    t = t.replace(/^Downtown\s+/, "");
+  }
+  return t;
+};
 
 /** Settings live under /homes/<country>/<key>; features under /cheap-houses/<key>-in-<country>. Both also have a
  * page for all countries at /cheap-houses/<key> (except in-town). */

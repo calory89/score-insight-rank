@@ -1,7 +1,7 @@
 // One listing page: which sentences it gets (from the facts) and its HTML and structured data (14-nov-2026).
 // The language pack only words things; this file is the same for every language, so the English page, its Spanish
 // twin and the German and Russian versions always say the same facts about the same homes in the same order.
-import { thumb } from "../../src/lib/thumbs";
+import { thumb, cardSrcSet, CARD_SIZES } from "../../src/lib/thumbs";
 import { toMedia } from "../../src/lib/media";
 import { type Facet, type Home, eurCap } from "./facets";
 import { regionName, NEIGHBOURS } from "./places";
@@ -305,11 +305,14 @@ export function renderBody(T: Text, P: Pack, o: RenderOpts): string {
   const daysOn = (h: Home) => { const d = ref(h).day; const n = d ? Math.floor((Date.parse(o.updated) - Date.parse(d)) / 86400000) : NaN; return Number.isFinite(n) && n >= 0 ? P.card.days(n) : ""; };
   const meta = (h: Home) => [h.sqm > 0 ? `${h.sqm} m²` : "", ref(h).beds > 0 ? P.card.beds(ref(h).beds) : "", h.sqm > 0 ? P.perSqm(Math.round(h.price_eur / h.sqm)) : "", daysOn(h)].filter(Boolean).join(" · ");
   const card = (h: Home, i: number) => {
-    const full = h.image_urls?.[0] ? toMedia(String(h.image_urls[0])) : ""; const small = full ? thumb(full) : "";
+    const full = h.image_urls?.[0] ? toMedia(String(h.image_urls[0])) : ""; const small = full ? thumb(full) : ""; const set = full ? cardSrcSet(full) : undefined;
     const title = P.homeTitle(h) || ""; const why = firstSentence(P.homeWhy(h));
     const drop = Number(h.price_drop) > 0 && h.price_eur > 0 ? Math.round((Number(h.price_drop) / (h.price_eur + Number(h.price_drop))) * 100) : 0;
     const img = full
-      ? `<img src="${esc(small)}" alt="${esc(`${title}, ${placeOf(h)}`)}" width="480" height="360" ${i < 3 ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async"${small !== full ? ` onerror="this.onerror=null;this.src='${esc(full)}'"` : ""} />`
+      // ideas 57 and 64 of the second list (21 Nov 2026): two sizes when the snapshot says both copies exist (the 480 px one
+      // on a phone, the 800 px one on a dense wide screen); only the first card is asked for first, the next two load
+      // at once, the rest when scrolled to
+      ? `<img src="${esc(small)}"${set ? ` srcset="${esc(set)}" sizes="${esc(CARD_SIZES)}"` : ""} alt="${esc(`${title}, ${placeOf(h)}`)}" width="480" height="360" ${i === 0 ? 'fetchpriority="high"' : i < 3 ? "" : 'loading="lazy"'} decoding="async"${small !== full ? ` onerror="this.onerror=null;this.removeAttribute('srcset');this.src='${esc(full)}'"` : ""} />`
       : `<span class="ls-noph">${esc(P.card.noPhoto)}</span>`;
     return `<li><a class="ls-card" href="${href(`/deal/${h.slug}`)}"><span class="ls-ph"${o.colors?.[h.slug] ? ` style="background:${esc(o.colors[h.slug])}"` : ""}>${img}`
       + (h.nota != null ? `<b class="ls-score">${esc(P.card.score)} ${esc(h.nota)}</b>` : "")
