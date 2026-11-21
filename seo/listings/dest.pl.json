@@ -113,5 +113,15 @@
  "uruguay": {
   "can_foreigners_buy": "Tak. Zagraniczni kupujący mogą nabyć w Urugwaju każdy rodzaj nieruchomości i mają te same prawa własności co obywatele.",
   "purchase_costs_breakdown": "Podatek od przeniesienia własności (ITP) 2% dla kupującego i 2% dla sprzedającego, od wartości katastralnej (valor real) ustalonej przez Dirección Nacional de Catastro; honorarium notariusza około 3%; oraz prowizja pośrednika około 3%."
+ },
+ "czech-republic": {
+  "can_foreigners_buy": "Tak. Cudzoziemcy mogą kupować w Czechach mieszkania, domy i grunty na tych samych warunkach co Czesi: ograniczenia dotyczące nieruchomości mieszkalnych skończyły się 1 maja 2009 r., a dotyczące gruntów rolnych i lasów 1 maja 2011 r.",
+  "purchase_costs_breakdown": "Nie ma już podatku od nabycia nieruchomości: zniesiono go dla zakupów wpisanych do katastru od grudnia 2019 r. Kataster (katastr nemovitostí) pobiera opłatę administracyjną 2 000 CZK za każdy wniosek o wpis sprzedaży (návrh na vklad); notariusza lub prawnika, który przygotowuje umowę, opłaca się osobno.",
+  "annual_property_tax": "Właściciele płacą co roku podatek od gruntów i budynków (daň z nemovitých věcí); od 2024 r. stawki wzrosły średnio 1,8 raza, a każda gmina może pomnożyć podatek przez lokalny współczynnik od 0,5 do 5. Deklarację składa się do 31 stycznia, a podatek płaci do 31 maja."
+ },
+ "slovenia": {
+  "can_foreigners_buy": "Tak dla obywateli państw UE, EOG i OECD (np. Stanów Zjednoczonych, Wielkiej Brytanii i Kanady), którzy kupują jak Słoweńcy. Obywatele państw kandydujących do UE (Macedonia Północna, Serbia, Czarnogóra, Albania, Ukraina, Mołdawia, Bośnia i Hercegowina oraz Gruzja) potrzebują najpierw decyzji potwierdzającej wzajemność, a obywatele innych państw, np. Chin i Rosji, nie mogą kupować, mogą jedynie dziedziczyć, jeśli istnieje wzajemność.",
+  "purchase_costs_breakdown": "Podatek od obrotu nieruchomościami (davek na promet nepremičnin) 2%, płacony przez sprzedającego, chyba że umowa sprzedaży stanowi, że płaci go kupujący.",
+  "annual_property_tax": "Bezpośredni użytkownik nieruchomości, zwykle właściciel, płaci roczną opłatę za korzystanie z gruntu budowlanego (nadomestilo za uporabo stavbnega zemljišča, NUSZ), ustalaną uchwałą każdej gminy i naliczaną raz w roku przez administrację skarbową (FURS); właściciele domów wakacyjnych płacą też podatek od majątku (davek od premoženja)."
  }
 }

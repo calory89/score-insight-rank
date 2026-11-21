@@ -113,5 +113,15 @@
  "uruguay": {
   "can_foreigners_buy": "Ja. Buitenlandse kopers mogen in Uruguay elk soort vastgoed kopen en hebben dezelfde eigendomsrechten als burgers.",
   "purchase_costs_breakdown": "Overdrachtsbelasting (ITP) van 2% voor de koper en 2% voor de verkoper, over de kadastrale waarde (valor real) van de Dirección Nacional de Catastro; notariskosten van ongeveer 3%; en een makelaarscourtage van ongeveer 3%."
+ },
+ "czech-republic": {
+  "can_foreigners_buy": "Ja. Buitenlanders kunnen in Tsjechië woningen en grond kopen op dezelfde voorwaarden als Tsjechen: de beperkingen voor woningen eindigden op 1 mei 2009 en die voor landbouwgrond en bos op 1 mei 2011.",
+  "purchase_costs_breakdown": "Er is geen overdrachtsbelasting meer: die is afgeschaft voor aankopen die vanaf december 2019 in het kadaster zijn ingeschreven. Het kadaster (katastr nemovitostí) rekent administratiekosten van 2.000 CZK voor elke aanvraag om de koop in te schrijven (návrh na vklad); de notaris of advocaat die het contract opstelt, betaalt u apart.",
+  "annual_property_tax": "Eigenaren betalen elk jaar belasting op grond en gebouwen (daň z nemovitých věcí); sinds 2024 zijn de tarieven gemiddeld met 1,8 vermenigvuldigd, en elke gemeente kan de belasting vermenigvuldigen met een lokale coëfficiënt tussen 0,5 en 5. De aangifte moet uiterlijk 31 januari binnen zijn en de belasting uiterlijk 31 mei betaald."
+ },
+ "slovenia": {
+  "can_foreigners_buy": "Ja voor burgers van landen van de EU, de EER en de OESO (zoals de Verenigde Staten, het Verenigd Koninkrijk en Canada), die kopen zoals Slovenen. Burgers van kandidaat-lidstaten van de EU (Noord-Macedonië, Servië, Montenegro, Albanië, Oekraïne, Moldavië, Bosnië en Herzegovina en Georgië) hebben eerst een besluit nodig dat de wederkerigheid bevestigt, en burgers van andere landen, zoals China en Rusland, kunnen niet kopen, alleen erven als er wederkerigheid is.",
+  "purchase_costs_breakdown": "Overdrachtsbelasting (davek na promet nepremičnin) van 2%, betaald door de verkoper, tenzij het koopcontract bepaalt dat de koper die betaalt.",
+  "annual_property_tax": "De directe gebruiker van de woning, meestal de eigenaar, betaalt een jaarlijkse vergoeding voor het gebruik van bouwgrond (nadomestilo za uporabo stavbnega zemljišča, NUSZ), vastgesteld in een verordening van elke gemeente en eenmaal per jaar aangeslagen door de belastingdienst (FURS); eigenaren van vakantiehuizen betalen daarnaast vermogensbelasting (davek od premoženja)."
  }
 }
