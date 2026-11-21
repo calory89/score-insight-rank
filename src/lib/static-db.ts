@@ -53,6 +53,9 @@ const advertUnconfirmed = (e: Row) => {
   return true;
 };
 const has = (s: any, w: string) => String(s ?? "").toLowerCase().includes(w.toLowerCase());
+/** Same rules as matchCosts / confirmedRecently in src/community/n10/logic.ts (21-nov-2026, list2 30 and 32). */
+const costsMatch = (e: Row, mode: string) => mode === "known" ? num(e.hoa_monthly) > 0 || num(e.tax_annual) > 0 : mode === "nofee" ? !(num(e.hoa_monthly) > 0) && !e.hoa_unknown : true;
+const confirmed30 = (e: Row) => { if (advertGone(e) || e.src_last === "gone") return false; const ok = Date.parse(e.src_ok_at || ""); return Number.isFinite(ok) && now() - ok < 30 * 86400000; };
 
 function feed(snap: Snap, p: Row = {}) {
   const scope = p.scope || "week";
@@ -66,6 +69,8 @@ function feed(snap: Snap, p: Row = {}) {
   const dropped = !!p.price_drop;
   const ids: string[] | null = Array.isArray(p.ids) ? p.ids : null;
   const minScore = p.min_score ? num(p.min_score) : null;
+  const costs = p.costs === "known" || p.costs === "nofee" ? String(p.costs) : "";
+  const fresh = !!p.fresh;
   const need: string[] = Array.isArray(p.need) ? p.need : [];
   const dmin: Row = p.dim_min && typeof p.dim_min === "object" ? p.dim_min : {};
   const terms: string[] = Array.isArray(p.terms) ? p.terms : [];
@@ -84,6 +89,8 @@ function feed(snap: Snap, p: Row = {}) {
     (!dropped || num(e.price_drop) > 0) &&
     (!ids || ids.includes(e.id)) &&
     (minScore == null || num(e.nota) >= minScore) &&
+    (!costs || costsMatch(e, costs)) &&
+    (!fresh || confirmed30(e)) &&
     need.every((t) => Array.isArray(e.amen) && e.amen.includes(t)) &&
     Object.entries(dmin).every(([k, v]) => num(e.dims?.[k]) >= num(v)) &&
     terms.every((t) => has([e.title, e.location_name, e.why_great].join(" "), t)) &&
@@ -149,6 +156,10 @@ function quickCounts(snap: Snap, p: Row = {}) {
     if (f.dim_min) { const m: Row = { ...dm }; for (const [k2, v2] of Object.entries(f.dim_min)) m[k2] = Math.max(num(dm[k2]), num(v2)); pp.dim_min = m; }
     out[k] = feed(snap, pp).total;
   }
+  // 21-nov-2026: running-cost and "confirmed in the last 30 days" options of the filter panel
+  out.costs_known = feed(snap, { ...base, costs: "known" }).total;
+  out.costs_nofee = feed(snap, { ...base, costs: "nofee" }).total;
+  out.fresh = feed(snap, { ...base, fresh: true }).total;
   return out;
 }
 
@@ -318,7 +329,11 @@ function dbDetail(fn: string, args: Row, opts?: any): Promise<any> {
         return ok({ deal, comments: [] });
       }).catch(() => origRpc(fn, args, opts)));
     }
-    if (action === "winners") return chain(getJson("/data/winners.json").then(ok).catch(() => origRpc(fn, args, opts)));
+    // 21-nov-2026 (list2 51): "Report a problem" works without an account. A guest's report goes to the same review
+    // inbox as offline reports (kind "api:report", with the page it came from); a signed-in report still goes to the
+    // database (Open reports in /hunt/admin).
+    if (action === "report" && !signedIn()) return chain(apiFallback("report", { ...(args?.p_payload || {}), guest: true }));
+        if (action === "winners") return chain(getJson("/data/winners.json").then(ok).catch(() => origRpc(fn, args, opts)));
     if (action === "session" && !signedIn()) {
       return chain(ok({ token: readToken() || "static-guest", admin: false, pending_submissions: null, hunter: null, votes: offVotes(), saved: offSaved() }));
     }

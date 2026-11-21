@@ -1,3 +1,5 @@
+import { byCar } from "./n10/logic";
+import { isEs } from "@/lib/lang";
 import {feed} from "./extras";
 import { thumb, midSrcSet, MID_SIZES } from "@/lib/thumbs";
 import {PropertyImage} from "./BuyerTools";
@@ -248,7 +250,9 @@ export function Nearby({ deal }: { deal: Deal }) {
     if (n.shop) items.push([<ShoppingBasket size={18} />, `Shop · ${n.shop.name}`, `${n.shop.km < 1 ? "under 1" : Math.round(n.shop.km)} km`]);
     if (n.train) items.push([<TrainFront size={18} />, `Train · ${n.train.name}`, `${Math.round(n.train.km)} km`]);
   }
-  if (n.airport) items.push([<Plane size={18} />, `${n.airport.code} · ${n.airport.name.replace(/\s*\([A-Z]{3}\)$/, "").replace(/ (International )?Airport$/i, "")}`, `${regionOnly ? "~" : ""}${n.airport.km} km`]);
+  // 21-nov-2026 (list2 36): a rough drive next to the straight line, always marked as an estimate (./n10/logic byCar)
+  const car = n.airport ? byCar(n.airport.km) : null;
+  if (n.airport) items.push([<Plane size={18} />, `${n.airport.code} · ${n.airport.name.replace(/\s*\([A-Z]{3}\)$/, "").replace(/ (International )?Airport$/i, "")}`, `${regionOnly ? "~" : ""}${n.airport.km} km${car ? (isEs() ? ` · unos ${car.km} km y ${car.min} min en coche (aprox.)` : ` · about ${car.km} km, ${car.min} min by car (approx.)`) : ""}`]);
   return (
     <section className="hv-nearby">
       <h2>Where it is</h2>
@@ -258,7 +262,7 @@ export function Nearby({ deal }: { deal: Deal }) {
       </Suspense>
       <p className="hunt-fine"><MapPin size={13} /> {deal.location_name}{regionOnly ? " · the seller only gives the region" : " · approximate area, not the exact house"} · <Link to={`/map?country=${encodeURIComponent(deal.country)}&focus=${encodeURIComponent(deal.slug)}`}>{t("Open the big map")}</Link></p>
       {items.length > 0 && <ul>{items.map(([i, a, b]) => <li key={a}>{i}<span>{a}</span><b>{b}</b></li>)}</ul>}
-      <p className="hunt-fine">Distances are straight lines, measured from the town.</p>
+      <p className="hunt-fine">{car ? t("Distances are straight lines, measured from the town. The drive to the airport is an estimate: roads about a third longer, at about 70 km/h.") : t("Distances are straight lines, measured from the town.")}</p>
     </section>
   );
 }

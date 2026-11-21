@@ -5,7 +5,9 @@ import { Link } from "react-router-dom";
 import { money } from "./api";
 import { useScore } from "./scores";
 import { getLang, t } from "./i18n";
-import { SaveHeart } from "./v4";
+import { SaveHeart, prefetchDetail, preloadImages } from "./v4";
+import { useCommunity } from "./ctx";
+import { GroupBadge } from "./n10/inline";
 import { thumb, onThumbError } from "@/lib/thumbs";
 import { CardCheck } from "./check";
 import { CompareToggle } from "./compareTools";
@@ -37,6 +39,7 @@ const where = (d: any) => (d.location_name && d.country && !String(d.location_na
  */
 export function HomeCard({ deal, pos, href: ext, origPrice, rent, dist, noRank }: { deal: any; pos: number; href?: string; origPrice?: string; rent?: boolean; dist?: number | null; noRank?: boolean }) {
   const s = useScore(deal);
+  const { call } = useCommunity() || {};
   const href = ext || `/deal/${encodeURIComponent(deal.slug)}?tab=all`;
   const img = deal.image_urls?.[0];
   const title = String(deal.title || "").replace(/\s+/g, " ").trim();
@@ -47,8 +50,10 @@ export function HomeCard({ deal, pos, href: ext, origPrice, rent, dist, noRank }
   const label = `${pos}. ${title}, ${money(deal.price_eur)}${origPrice ? ` (${origPrice})` : ""}${rent ? " " + t("a month") : ""}${s ? `, ${t("RealHunt score")} ${s.n}` : ""}${ai ? `, ${t("AI-checked, not yet by a person")}` : ""}`;
   const Tag: any = ext ? "a" : Link;
   const linkProps = ext ? { href: ext, target: "_blank", rel: "noopener nofollow" } : { to: href };
+  // 21-nov-2026 (list2 63): the home's record and first photo are fetched when a finger or the mouse rests on the card
+  const warm = ext ? undefined : () => { prefetchDetail(deal.slug, call); preloadImages((deal.image_urls || []).slice(0, 1)); };
   return (
-    <div className="hx-wrap">
+    <div className="hx-wrap" onMouseEnter={warm} onTouchStart={warm} onFocus={warm}>
       <Tag {...linkProps} className={"hx-card" + (pos <= 3 && !noRank ? " is-podium" : "")} aria-label={label}>
         <span className="hx-img">
           {img ? <img src={thumb(img)} alt={`${title}, ${where(deal)}`} width={480} height={360} loading={pos <= 3 ? "eager" : "lazy"} fetchPriority={pos === 1 ? "high" : "auto"} decoding="async" onError={(e) => onThumbError(e.currentTarget, img)} /> : null}
@@ -63,6 +68,7 @@ export function HomeCard({ deal, pos, href: ext, origPrice, rent, dist, noRank }
         <span className="hx-text">
           <strong>{title}</strong>
           <small>{where(deal)}</small>
+          <GroupBadge d={deal} compact />
           {dist != null && dist >= 0 && <small className="hx-dist"><span>{kmFromCentre(dist)}</span> <span>{t("from the centre")}</span></small>}
           <CardCheck d={deal} />
           {pick && <small className="hx-pick">{pick}</small>}
