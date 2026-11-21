@@ -8,7 +8,7 @@ import { getLang, t } from "./i18n";
 import { SaveHeart, prefetchDetail, preloadImages } from "./v4";
 import { useCommunity } from "./ctx";
 import { GroupBadge } from "./n10/inline";
-import { thumb, onThumbError } from "@/lib/thumbs";
+import { thumb, onThumbError, cardSrcSet, CARD_SIZES } from "@/lib/thumbs";
 import { CardCheck } from "./check";
 import { CompareToggle } from "./compareTools";
 import { Sparkles } from "lucide-react";
@@ -56,7 +56,7 @@ export function HomeCard({ deal, pos, href: ext, origPrice, rent, dist, noRank }
     <div className="hx-wrap" onMouseEnter={warm} onTouchStart={warm} onFocus={warm}>
       <Tag {...linkProps} className={"hx-card" + (pos <= 3 && !noRank ? " is-podium" : "")} aria-label={label}>
         <span className="hx-img">
-          {img ? <img src={thumb(img)} alt={`${title}, ${where(deal)}`} width={480} height={360} loading={pos <= 3 ? "eager" : "lazy"} fetchPriority={pos === 1 ? "high" : "auto"} decoding="async" onError={(e) => onThumbError(e.currentTarget, img)} /> : null}
+          {img ? <img src={thumb(img)} srcSet={cardSrcSet(img)} sizes={cardSrcSet(img) ? CARD_SIZES : undefined} alt={`${title}, ${where(deal)}`} width={480} height={360} loading={pos <= 3 ? "eager" : "lazy"} fetchPriority={pos === 1 ? "high" : "auto"} decoding="async" onError={(e) => onThumbError(e.currentTarget, img)} /> : null}
           {!noRank && <span className="hx-pos">#{pos}</span>}
           {isGone(deal) ? <span className="hx-new is-gone">{t("Advert gone")}</span> : isNew(deal) && !ai ? <span className="hx-new">{t("New today")}</span> : Number(deal.price_drop) > 0 ? <span className="hx-new is-drop">{t("Price dropped")}</span> : null}
           {s && <span className={"hx-score " + gtone(s.n)} title={t("RealHunt score")}>{s.n}</span>}

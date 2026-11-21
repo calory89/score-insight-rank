@@ -50,6 +50,8 @@ export const PLACES: PlaceWords = {
   area: (n) => `${n} i okolice`,
 };
 const place = (n: string, _cc?: string, where?: "card") => placeIn(PLACES, n, where);
+// idea 84 of the second list (21 Nov 2026): the description names where the cheapest home is, as the English and Spanish ones do
+const cheapIn = (F: { cheapest: { town: string } }) => { const t = F.cheapest?.town ? place(F.cheapest.town, undefined, "card") : ""; return t ? ` (${t})` : ""; };
 /** A region after its preposition, by its Polish name: only the names somebody checked. */
 const IN_R: Record<string, string> = {
   Toskania: "w Toskanii", Kalabria: "w Kalabrii", Lacjum: "w Lacjum", Sycylia: "na Sycylii", "jezioro Como": "nad jeziorem Como", Sardynia: "na Sardynii", Apulia: "w Apulii", Umbria: "w Umbrii", Lombardia: "w Lombardii", Abruzja: "w Abruzji", Piemont: "w Piemoncie",
@@ -269,7 +271,7 @@ const pack: Pack = {
   h1: (F) => (F.f.ranked ? `${upper(phrase(F, 2))}${F.f.country ? "" : " na RealHunt"}`
     : upper(phrase(F, (F.f.cap && F.f.cap <= 100000) || (["gfeature", "feature", "area", "near"].includes(F.f.kind) && F.median <= 100000) ? 3 : 2))),
   title: (h1, n, min) => (isList(h1) ? `${h1}, ceny od ${min}` : `${h1}: ${oferty(n)} od ${min}`),
-  desc: (F) => `${upper(counted(F))}, w cenach od ${money(F.min)} do ${money(F.max)}. Mediana ceny: ${money(F.median)}. Zdjęcia, powierzchnie, oceny, koszty zakupu i na co zwrócić uwagę.`,
+  desc: (F) => `${upper(counted(F))}, w cenach od ${money(F.min)}${cheapIn(F)} do ${money(F.max)}. Mediana ceny: ${money(F.median)}${F.scoreAvg ? `, średnia ocena ${F.scoreAvg} na 98` : ""}. Zdjęcia, powierzchnie, oceny, koszty zakupu i na co zwrócić uwagę.`,
   crumbRoot: "RealHunt", crumbCheap: "Tanie domy",
   crumbCountry: (c) => `Domy ${IN_BY_NAME[c] || `w kraju ${c}`}`,
   label: (f) => (f.kind === "combo" ? `${LABEL[f.key!] || f.key}, do ${money(f.cap!)}` : f.kind === "ccyBand" ? `Do ${ccy(f.cap!, f.ccy!)}` : f.kind === "area" ? areaL(f) : f.kind === "near" ? `Okolice ${cityGen(f.city || "")}`

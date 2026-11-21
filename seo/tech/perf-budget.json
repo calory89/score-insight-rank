@@ -16,5 +16,28 @@
     "route_js_kb": 460,
     "requests_in_html": 40,
     "high_priority_images": 3
+  },
+  "live_note": "Limits for seo/tech/browserCheck.mjs after every publication: kilobytes really transferred (Brotli, photos included) and requests on a first visit with an empty cache, phone screen, no service worker. Measured 21-nov-2026 (home 1567 KB / 58, deal 1956 / 59, country 1288 / 46, band 1204 / 43, map 1235 / 55); the limits leave about a quarter of room.",
+  "live": {
+    "home": {
+      "kb": 2000,
+      "requests": 75
+    },
+    "deal": {
+      "kb": 2500,
+      "requests": 75
+    },
+    "country": {
+      "kb": 1650,
+      "requests": 60
+    },
+    "band": {
+      "kb": 1550,
+      "requests": 56
+    },
+    "map": {
+      "kb": 1600,
+      "requests": 70
+    }
   }
 }

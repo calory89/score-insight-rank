@@ -21,7 +21,7 @@ import { regionOf, slugify, HOME_TYPES } from "../src/community/regions";
 import { homeArticle } from "../src/community/homeArticle";
 import { toMedia } from "../src/lib/media";
 import { writeLlmsFull } from "./llmsFull";
-import { thumb } from "../src/lib/thumbs";
+import { thumb, learnThumbs } from "../src/lib/thumbs";
 import { dealShell, DEAL_SHELL_HEAD } from "./dealShell";
 import { dealStatusHtml, dealAvailability } from "./dealStatus";
 import { glossaryLine, scoreLine, sourceNotes } from "./dealNotes";
@@ -134,6 +134,9 @@ function build(root: string, es?: EsPass) {
   // ---------- Homes ----------
   const deals: any[] = readJson("src/data/deal-meta.json", []);
   const snap: any = readJson("public/data/rh-static.json", { rows: [] });
+  // the HTML only names photo copies the snapshot says exist (src/lib/thumbs.ts); the listing and study pages built
+  // later in this process use the same list
+  learnThumbs(snap);
   const rows: any[] = (snap.rows || []).filter((r: any) => r?.slug);
   const bySlug = new Map<string, any>(rows.map((r) => [r.slug, r]));
   const metaBySlug = new Map<string, any>(deals.map((d) => [d.slug, d]));

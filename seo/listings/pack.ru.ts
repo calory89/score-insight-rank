@@ -61,6 +61,8 @@ export const PLACES: PlaceWords = {
   area: (n) => `${n} и окрестности`,
 };
 const place = (n: string, _cc?: string, where?: "card") => placeIn(PLACES, n, where);
+// idea 84 of the second list (21 Nov 2026): the description names where the cheapest home is, as the English and Spanish ones do
+const cheapIn = (F: { cheapest: { town: string } }) => { const t = F.cheapest?.town ? place(F.cheapest.town, undefined, "card") : ""; return t ? ` (${t})` : ""; };
 const AREA: Record<string, [string, string]> = { "black-sea-coast": ["Черноморское побережье", "на черноморском побережье"], peloponnese: ["Пелопоннес", "на Пелопоннесе"],
   "costa-del-sol": ["Коста-дель-Соль", "на побережье Коста-дель-Соль"], "costa-blanca": ["Коста-Бланка", "на побережье Коста-Бланка"], "costa-calida": ["Коста-Калида", "на побережье Коста-Калида"], "costa-de-almeria": ["Коста-де-Альмерия", "на побережье Коста-де-Альмерия"],
   "canary-islands": ["Канарские острова", "на Канарских островах"], "balearic-islands": ["Балеарские острова", "на Балеарских островах"], "green-spain": ["Зелёная Испания", "на севере Испании («Зелёная Испания»)"], algarve: ["Алгарве", "в Алгарве"],
@@ -141,7 +143,7 @@ export const ru: Pack = {
   what,
   h1: (F) => upper(phrase(F, (F.f.cap && F.f.cap <= 100000) || F.median <= 100000 ? 3 : 2)),
   title: (h1, n, min) => `${h1}: ${n} ${pl(n, "предложение", "предложения", "предложений")} от ${min}`,
-  desc: (F, w) => `Число ${w}: ${F.n}, цены от ${money(F.min)} до ${money(F.max)}. Медианная цена: ${money(F.median)}. Фото, площадь, оценки, расходы на покупку и на что обратить внимание.`,
+  desc: (F, w) => `Число ${w}: ${F.n}, цены от ${money(F.min)}${cheapIn(F)} до ${money(F.max)}. Медианная цена: ${money(F.median)}${F.scoreAvg ? `, средняя оценка ${F.scoreAvg} из 98` : ""}. Фото, площадь, оценки, расходы на покупку и на что обратить внимание.`,
   crumbRoot: "RealHunt", crumbCheap: "Недорогие дома",
   crumbCountry: (c) => `Недвижимость ${IN_BY_NAME[c] || c}`,
   label: (f) => (f.kind === "area" ? areaL(f) : f.kind === "near" ? `Рядом: ${city(f.city || "")}` : f.kind === "ccyBand" ? `До ${ccy(f.cap!, f.ccy!)}`

@@ -126,7 +126,11 @@ export type ShellInput = {
 export function dealShell({ row, photos, color, crumbs, lang, lowRes, midPhotos, caption }: ShellInput): string {
   const set = midSrcSet(photos[0], midPhotos);
   // a copy that is not there: the offer is dropped and the browser loads the full photo
-  const offer = set ? ` srcset="${esc(set)}" sizes="${esc(MID_SIZES)}" onerror="this.onerror=null;this.removeAttribute('srcset');this.removeAttribute('sizes')"` : "";
+  // idea 87 (21 Nov 2026): a main photo that does not answer is replaced by the next photo of the home, as the app does
+  // (PropertyImage's fallback), so the top of the page is never an empty box
+  const next = photos.find((u, i) => i > 0 && u && u !== photos[0]) || "";
+  const onerr = `${set ? "if(this.getAttribute('srcset')){this.removeAttribute('srcset');this.removeAttribute('sizes');return}" : ""}${next ? "var n=this.getAttribute('data-next');if(n){this.removeAttribute('data-next');this.src=n;return}" : ""}this.onerror=null`;
+  const offer = (set ? ` srcset="${esc(set)}" sizes="${esc(MID_SIZES)}"` : "") + (next ? ` data-next="${esc(next)}"` : "") + (set || next ? ` onerror="${onerr}"` : "");
   const title = shellTitle(row);
   const esTitle = title === String(row.title || "").trim() && typeof row.title_es === "string" && row.title_es.trim() ? row.title_es.trim() : "";
   const n = Math.min(photos.length, 5);

@@ -38,6 +38,8 @@ export const PLACES: PlaceWords = {
   area: (n) => `regio ${n}`,
 };
 const place = (n: string, _cc?: string, where?: "card") => placeIn(PLACES, n, where);
+// idea 84 of the second list (21 Nov 2026): the description names where the cheapest home is, as the English and Spanish ones do
+const cheapIn = (F: { cheapest: { town: string } }) => { const t = F.cheapest?.town ? place(F.cheapest.town, undefined, "card") : ""; return t ? ` (${t})` : ""; };
 /** "in Toscane", "op Sicilië", "aan het Comomeer", "in de regio Como": a Dutch place name after its preposition. */
 const IN_R: Record<string, string> = { Abruzzen: "in de Abruzzen", Comomeer: "aan het Comomeer", Peloponnesos: "op de Peloponnesos", Pilion: "op de Pilion", Sporaden: "op de Sporaden", "omgeving van het Bovenmeer": "in de omgeving van het Bovenmeer" };
 const ISLANDS = new Set(["Sardinië", "Sicilië", "Kreta", "Rhodos", "Lesbos", "Samos", "Funen", "Falster", "Lolland", "Mors", "Tenerife", "Gran Canaria", "Fuerteventura", "La Palma", "Noord-Evia", "Evia", "Newfoundland", "Corfu", "Mallorca", "Menorca", "Ibiza", "Lanzarote", "Chalkidiki", "Skopelos (Sporaden)", "Strynø", "Prince Edward Island", "French Island"]);
@@ -222,7 +224,7 @@ export const nl: Pack = {
   h1: (F) => (F.f.ranked ? `De ${what(F)}${F.f.country ? "" : " op RealHunt"}`
     : upper(what(F, (F.f.cap && F.f.cap <= 100000) || (["gfeature", "feature", "area", "near"].includes(F.f.kind) && F.median <= 100000) ? "cheap" : "many"))),
   title: (h1, n, min) => (/^De \d/.test(h1) ? `${h1} (vanaf ${min})` : `${h1} (${n}, vanaf ${min})`),
-  desc: (F, w) => `${F.f.ranked ? `De ${w}` : `${F.n} ${w}`}, van ${money(F.min)} tot ${money(F.max)}. Mediaanprijs: ${money(F.median)}. Foto's, oppervlaktes, scores, aankoopkosten en waar u op moet letten.`,
+  desc: (F, w) => `${F.f.ranked ? `De ${w}` : `${F.n} ${w}`}, van ${money(F.min)}${cheapIn(F)} tot ${money(F.max)}. Mediaanprijs: ${money(F.median)}${F.scoreAvg ? `, gemiddelde score ${F.scoreAvg} van 98` : ""}. Foto's, oppervlaktes, scores, aankoopkosten en waar u op moet letten.`,
   crumbRoot: "RealHunt", crumbCheap: "Goedkope huizen",
   crumbCountry: (c) => `Huizen ${IN_BY_NAME[c] || `in ${c}`}`,
   label: (f) => (f.kind === "combo" ? `${LABEL[f.key!] || f.key}, onder ${money(f.cap!)}` : f.kind === "ccyBand" ? `Onder ${ccy(f.cap!, f.ccy!)}` : f.kind === "area" ? areaL(f) : f.kind === "near" ? `Bij ${cityOf(f)}`

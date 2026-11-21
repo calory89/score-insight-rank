@@ -76,11 +76,35 @@ wr = {r["id"]: r["rank"] for r in week}
 nb = dict(ThreadPoolExecutor(6).map(lambda r: (r["slug"], rpc("community_nearby", {"p_slug": r["slug"]})), rows))
 for r in rows:
     r["wrank"] = wr.get(r["id"], r["rank"]); r["nearby"] = nb.get(r["slug"])
+# 21-nov-2026: which photo copies exist on realhunt-media (scripts/make_thumbs.py writes t/index.txt at every publish).
+# Each row gets th (all its 480 px card copies exist) and tm (its main photo has the 800 px copy); the app asks only for
+# copies a row is marked with (src/lib/thumbs.ts learnThumbs), so a home newer than its copies shows its own photo
+# instead of a 404. If the list cannot be read, a home keeps yesterday's marks when its photos did not change.
+thumbs_mark = False
+try:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import make_thumbs
+    _req = urllib.request.Request(make_thumbs.MEDIA + "/t/index.txt", headers={"User-Agent": "realhunt-static/1.0", "Cache-Control": "no-cache"})
+    _have = set(urllib.request.urlopen(_req, timeout=60).read().decode().split())
+    if len(_have) < 100: raise RuntimeError(f"only {len(_have)} lines")
+    make_thumbs.mark_rows(rows, _have)
+    thumbs_mark = True
+    print("photo copies:", sum(r["th"] for r in rows), "homes with card copies,", sum(r["tm"] for r in rows), "with the mid-size main photo, of", len(rows))
+except Exception as _e:
+    print("photo copy list skipped:", _e)
+    if _prev and any("th" in p for p in _prev.values()):
+        for r in rows:
+            p = _prev.get(r["slug"])
+            same = p is not None and p.get("image_urls") == r.get("image_urls")
+            r["th"], r["tm"] = (p.get("th", 0), p.get("tm", 0)) if same else (0, 0)
+        thumbs_mark = True
 live = (rpc("rh_live_stats", {}) or [{"live": 0, "today": 0}])[0]
 flags = {"referral_bonus": True, "ai_suggestions": True, "price_alerts": False, "weekly_digest": False, "onboarding_tour": False}
 meta.pop("total", None)
 os.makedirs(os.path.join(OUT, "top"), exist_ok=True)
-json.dump({"v": 1, "generated": datetime.datetime.now(datetime.timezone.utc).isoformat(), "meta": meta, "live": live, "flags": flags, "rows": rows},
+_snap = {"v": 1, "generated": datetime.datetime.now(datetime.timezone.utc).isoformat(), "meta": meta, "live": live, "flags": flags, "rows": rows}
+if thumbs_mark: _snap["thumbs"] = 1
+json.dump(_snap,
           open(os.path.join(OUT, "rh-static.json"), "w", encoding="utf8"), separators=(",", ":"), ensure_ascii=False)
 # the lighter copies visitors download (see scripts/split_es.py)
 try:

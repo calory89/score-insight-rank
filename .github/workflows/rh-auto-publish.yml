@@ -96,6 +96,11 @@ jobs:
       # 480 px WebP copies of the home photos for the cards (src/lib/thumbs.ts), written to _s/realhunt.co/t/ so
       # realhunt-media serves them. Add-only (existing thumbnails and photos are never touched); only new photos get
       # one, so after the first run this takes seconds. If it fails the publish goes on: cards fall back to the photo.
+      # 21-nov-2026: every home of the snapshot gets its copies BEFORE this commit (the 800 px copy of the main photo
+      # too, for every home), and t/index.txt lists every copy that exists. The daily snapshot (scripts/build_static.py)
+      # marks each home with what the list holds and the app asks only for those, so a home newer than its copies
+      # never asks for a missing one. The step is red (and the publish goes on) when a published home is left without
+      # its copy; the output names it.
       - name: Card thumbnails (add-only)
         continue-on-error: true
         timeout-minutes: 15
@@ -151,3 +156,14 @@ jobs:
         continue-on-error: true
         timeout-minutes: 8
         run: node seo/tech/liveCheck.mjs
+      # 21-nov-2026 (ideas 5, 65, 81 and 87 of the second list): 30 pages in headless Chrome, one after the other like a
+      # visitor (fails on our own console errors, 404s on our hosts, photos that do not load, a home page without its
+      # main photo), the weight of the five page types against seo/tech/perf-budget.json "live", and 20 home pages
+      # served from the bundles with their title and canonical. Chrome is the one on the runner; only playwright-core
+      # is installed for it (not saved in package.json).
+      - name: Check the live site in a browser (console errors, 404s, photos, weight, bundled home pages)
+        if: ${{ !cancelled() }}
+        timeout-minutes: 15
+        run: |
+          npm i --no-save --no-audit --no-fund --legacy-peer-deps playwright-core@1.63.0 > /dev/null
+          RH_CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)" node seo/tech/browserCheck.mjs
