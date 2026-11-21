@@ -12,8 +12,9 @@ import { usePreference } from "./buyer-state";
 import { isEs } from "@/lib/lang";
 import { PICK_CCY, listingCurrency } from "./n10/logic";
 import { dayLabel } from "./n9/status";
-import { priceSummary, vsMedian, MONTHLY_LABEL } from "./priceLogic";
+import { priceSummary, vsMedian, MONTHLY_LABEL, costsNotStated, NOT_STATED_LABEL } from "./priceLogic";
 import type { CheckRow } from "./checkLogic";
+import { perSqm, livingSqm } from "./sqmLogic";
 
 // 21-nov-2026 (list2 35): one tap between euro, dollar and pound, remembered on this device (rh.ccy). Without a
 // choice the visitor's own currency is shown as before.
@@ -48,21 +49,21 @@ export function PriceHead({ d, hidePer = false, after }: { d: CheckRow & { sqm?:
   const src = listingCurrency(d.country);
   const es = isEs();
   // hidePer: the key facts row under the price already shows €/m² (./keyfacts.tsx)
-  const per = !hidePer && d.price_eur && d.sqm ? Math.round(d.price_eur / d.sqm) : null;
-  const vs = vsMedian(d.price_eur, d.sqm, median, area || d.country);
+  // idea 74: only for a living area (./sqmLogic), never a plot
+  const per = !hidePer && perSqm(d as any) > 0 ? Math.round(perSqm(d as any)) : null;
+  const vs = vsMedian(d.price_eur, livingSqm(d as any), median, area || d.country);
   if (d.price_eur == null) return null;
   return (
     <div className="rh-ph">
       <div className="hunt-price" aria-label={`${t("Asking price")} ${money(d.price_eur)}`}>{money(d.price_eur)}</div>
       {/* the key facts row sits right under the price, above the lines that arrive later (currency, rent), so it never moves */}
       {after}
-      {(s.total != null || s.monthly != null || s.feeUnknown) && (
-        <dl className="rh-ph-lines">
+      {/* idea 75: the monthly line is always there; without a stated fee or tax it says so instead of being blank */}
+      <dl className="rh-ph-lines">
           {s.total != null && <div><dt>{t("Total with buying costs")}</dt><dd>≈ {money(s.total)}</dd></div>}
           {s.monthly != null && s.monthlyWhat && <div><dt>{t("Monthly costs")}</dt><dd>≈ {money(s.monthly)} <small>{s.monthlyLocal ? `${fmt(s.monthlyLocal.amount, s.monthlyLocal.currency)} · ` : ""}{t(MONTHLY_LABEL[s.monthlyWhat])}</small></dd></div>}
-          {s.monthly == null && s.feeUnknown && <div><dt>{t("Monthly costs")}</dt><dd className="is-unknown">{t("Community fee not stated")}</dd></div>}
-        </dl>
-      )}
+          {s.monthly == null && <div><dt>{t("Monthly costs")}</dt><dd className="is-unknown">{t(NOT_STATED_LABEL[costsNotStated(d as any) || "both"])}</dd></div>}
+      </dl>
       <RentLine price={d.price_eur} big />
       {(per || local) && (
         <p className="rh-ph-quiet">

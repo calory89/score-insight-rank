@@ -14,6 +14,15 @@ KEY = os.environ.get("RH_ANON_KEY") or open(os.path.join(ROOT, "scripts", "anon.
 SITE = "https://realhunt.co"
 FONT = os.path.join(ROOT, "scripts", "fonts")
 W, H = 1200, 630
+# 21-nov-2026 (list 2 idea 23): the design version of the cards. When it goes up, the next daily run redraws every
+# existing card once (the old ones lack the score badge) and writes it to public/og/deal/.version; after that only new
+# homes get a card, as before. The share URLs carry ?v=<version>, so WhatsApp, X and Facebook fetch the new image.
+CARD_VERSION = 3
+VERSION_FILE = os.path.join(ROOT, "public", "og", "deal", ".version")
+
+def cards_outdated():
+    try: return int(open(VERSION_FILE).read().strip() or 0) < CARD_VERSION
+    except (OSError, ValueError): return True
 
 def rpc(fn, args):
     req = urllib.request.Request(f"{SUPA}/rest/v1/rpc/{fn}", data=json.dumps(args).encode(),
@@ -143,18 +152,22 @@ def main():
     rows = [r for r in all_rows() if r.get("image_urls") and r.get("price_eur")]
     outdir = os.path.join(ROOT, "public", "og", "deal"); os.makedirs(outdir, exist_ok=True)
     if "--default" in sys.argv or not os.path.exists(os.path.join(ROOT, "public", "og-home.jpg")): default_card(rows)
-    made = 0
+    made, failed = 0, 0
+    redraw = "--force" in sys.argv or cards_outdated()
+    if redraw: print(f"share cards: redrawing all {len(rows)} cards once (design version {CARD_VERSION})")
     for d in rows:
         dest = os.path.join(outdir, f"{d['slug']}.jpg")
-        if os.path.exists(dest) and "--force" not in sys.argv: continue
+        if os.path.exists(dest) and not redraw: continue
         try: card(d, dest); made += 1
-        except Exception as e: print("card failed", d["slug"], e)
+        except Exception as e: print("card failed", d["slug"], e); failed += 1
+    # the redraw counts as done unless most cards failed (a network outage), so it is not repeated every day
+    if redraw and made and failed < made: open(VERSION_FILE, "w").write(f"{CARD_VERSION}\n")
     meta = []
     for d in rows:
         t = nice_title(d); p = money(d["price_eur"]); loc = d.get("location_name") or d.get("country") or ""
         title = f"{p} · {t}" if p not in t else t
         desc = f"{t}{'' if p in t else ' for ' + p}. {loc}. Scored and ranked on RealHunt: the best homes in every country."
-        img = f"{SITE}/og/deal/{d['slug']}.jpg?v=2" if os.path.exists(os.path.join(outdir, f"{d['slug']}.jpg")) else (SITE + d["image_urls"][0] if d["image_urls"][0].startswith("/") else d["image_urls"][0])
+        img = f"{SITE}/og/deal/{d['slug']}.jpg?v={CARD_VERSION}" if os.path.exists(os.path.join(outdir, f"{d['slug']}.jpg")) else (SITE + d["image_urls"][0] if d["image_urls"][0].startswith("/") else d["image_urls"][0])
         meta.append({"slug": d["slug"], "title": title, "desc": desc, "image": img, "country": d.get("country")})
     os.makedirs(os.path.join(ROOT, "src", "data"), exist_ok=True)
     json.dump(meta, open(os.path.join(ROOT, "src", "data", "deal-meta.json"), "w"), ensure_ascii=False, indent=0)

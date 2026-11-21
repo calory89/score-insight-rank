@@ -1,6 +1,6 @@
 // Map of every ranked home (/map). Same filters as the feed, plus ?focus=<slug> to open one home.
 // Loaded on demand so Leaflet never weighs on the home page.
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useRef, useState, type KeyboardEvent as RKeyboardEvent } from "react";
 import { useEffect } from "react";
 import { Filters, type FeedParams } from "./extras";
 import { t } from "./i18n";
@@ -25,17 +25,20 @@ export default function MapView() {
   // map started below the fold. Now they fold behind one button, so the map is the first thing you see.
   const active = [f.country, f.category, f.max_price, (f as any).min_price, f.min_sqm, (f as any).min_beds, (f as any).price_drop, (f as any).min_score, ((f as any).need || []).length].filter(Boolean).length;
   const [showF, setShowF] = useState(() => typeof window === "undefined" || window.innerWidth > 700 || active > 0);
+  // 21-nov-2026 (list 2 idea 59, keyboard audit): Escape inside the filters folds them and puts focus back on the button.
+  const fBtn = useRef<HTMLButtonElement>(null);
+  const escFilters = (e: RKeyboardEvent) => { if (e.key !== "Escape" || e.defaultPrevented) return; e.preventDefault(); setShowF(false); requestAnimationFrame(() => fBtn.current?.focus()); };
   // Country counts for the chips come from the feed itself.
   useEffect(() => { import("./extras").then(({ feed }) => feed({ scope: "all", limit: 1 }).then((d: any) => setCounts(d.countries_count || {})).catch(() => {})); }, []);
   return (
     <div className="hunt-wrap hunt-mappage">
       <div className="hunt-maphead">
         <h1>{t("Map")}</h1>
-        <button type="button" className={"hunt-mapfilters" + (showF ? " is-on" : "")} aria-expanded={showF} onClick={() => setShowF(!showF)}>
+        <button ref={fBtn} type="button" className={"hunt-mapfilters" + (showF ? " is-on" : "")} aria-expanded={showF} aria-controls="hm-filters" onClick={() => setShowF(!showF)}>
           <SlidersHorizontal size={15} /> {showF ? t("Hide filters") : t("Filters")}{active ? <b>{active}</b> : null}
         </button>
       </div>
-      {showF && <Filters countries={counts} value={f} onChange={(v) => setF({ ...v, scope: "all" })} />}
+      <div id="hm-filters" onKeyDown={escFilters}>{showF && <Filters countries={counts} value={f} onChange={(v) => setF({ ...v, scope: "all" })} />}</div>
       <label className="hm-risk-toggle">
         <input type="checkbox" checked={quiet} onChange={(e) => toggleQuiet(e.target.checked)} />
         <span className="hm-risk-sw" aria-hidden="true" />

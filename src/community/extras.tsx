@@ -380,6 +380,7 @@ export function Filters({ countries, value: applied, onChange, expanded = false 
   const active = !!(value.country || value.category || value.max_price || value.min_price || value.min_beds || value.price_drop || value.min_sqm || (value.sort && value.sort !== "score"));
   const extra = [value.category, value.max_price, value.min_price, value.min_beds, value.price_drop, value.min_sqm, value.sort && value.sort !== "score" ? value.sort : "", value.costs, value.fresh].filter(Boolean).length;
   const [open, setOpen] = useState(() => expanded || extra > 0);
+  const moreBtn = useRef<HTMLButtonElement>(null);
   // 14-oct-2026 (Carlos): only show a quick filter when at least one home matches it, given the other filters.
   const [qc, setQc] = useState<Record<string, number> | null>(null);
   // 15-oct-2026 fix (Carlos: "clicking a filter shows nothing"): the counts now include the quick filters that are
@@ -397,7 +398,11 @@ export function Filters({ countries, value: applied, onChange, expanded = false 
     return () => { live = false; };
   }, [qkey]);
   return (
-    <div className={"hunt-filters" + (open ? " is-open" : "")}>
+    <div className={"hunt-filters" + (open ? " is-open" : "")} onKeyDown={(e) => {
+      // 21-nov-2026 (list 2 idea 59): Escape in the extra filters folds them and returns focus to "More filters"
+      if (e.key !== "Escape" || expanded || !open || !(e.target as HTMLElement).closest?.(".hunt-filter-row")) return;
+      e.preventDefault(); setOpen(false); requestAnimationFrame(() => moreBtn.current?.focus());
+    }}>
       <div className="hunt-chips" role="group" aria-label="Country">
         <button aria-pressed={!value.country} onClick={() => setDraft({ ...value, country: "" })}>{t("All countries")}</button>
         {list.map(([c, n]) => { const sel = (value.country || "").split(",").filter(Boolean); const on = sel.includes(c); return <button key={c} aria-pressed={on} onClick={() => setDraft({ ...value, country: (on ? sel.filter((x) => x !== c) : [...sel, c]).join(",") })}>{c === "Scandinavia" ? t("Scandinavia · region") : c} <small>{n}</small></button>; })}
@@ -426,7 +431,7 @@ export function Filters({ countries, value: applied, onChange, expanded = false 
         })}
       </div>
       <div className="rh-active-filters">{([ ["category",applied.category], ["min_price",applied.min_price&&!priceChipOn?`${t("from")} ${money(applied.min_price)}`:null], ["max_price",applied.max_price&&!priceChipOn?`${t("up to")} ${money(applied.max_price)}`:null], ["min_beds",applied.min_beds?`${applied.min_beds}+ ${t("bedrooms")}`:null], ["min_sqm",applied.min_sqm?`${applied.min_sqm} m²+`:null], ["price_drop",applied.price_drop?t("Price dropped"):null] ] as const).filter(([,v])=>v).map(([k,v])=><button key={k} aria-label={`${t("Remove")} ${v}`} onClick={()=>onChange({...applied,[k]:null})}>{v} ×</button>)}</div>
-      <button type="button" className="hunt-link hunt-filter-toggle" aria-expanded={open} onClick={() => setOpen((o) => !o)}>{open ? t("Hide filters") : t("More filters")}{extra > 0 ? ` (${extra})` : ""}</button>
+      <button ref={moreBtn} type="button" className="hunt-link hunt-filter-toggle" aria-expanded={open} onClick={() => setOpen((o) => !o)}>{open ? t("Hide filters") : t("More filters")}{extra > 0 ? ` (${extra})` : ""}</button>
       {open && <div className="hunt-filter-row">
         <label><span>{t("Min price")}</span>
           <select value={value.min_price || ""} onChange={(e) => setDraft({ ...value, min_price: e.target.value ? Number(e.target.value) : null })}>

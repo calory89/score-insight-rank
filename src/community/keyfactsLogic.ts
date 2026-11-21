@@ -1,15 +1,20 @@
 // The row of key facts under the price on a home page (21-nov-2026, list 2 idea 11). Pure, tested in
 // src/test/keyfacts.test.ts. Only numbers the listing gives: a tile is left out when its number is missing.
-export type KeyFact = { k: "sqm" | "per" | "beds" | "score"; label: string; value: string };
+// 21-nov-2026 (list 2 ideas 74 and 85): €/m² only for a living area (./sqmLogic), bathrooms only when the advert gives them.
+import { perSqm } from "./sqmLogic";
+export type KeyFact = { k: "sqm" | "per" | "beds" | "baths" | "score"; label: string; value: string };
 
 const eur = (n: number) => new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
 
-export function keyFacts(d: { price_eur?: number | null; sqm?: number | null; bedrooms?: number | null }, score?: number | null): KeyFact[] {
+export function keyFacts(d: { price_eur?: number | null; sqm?: number | null; bedrooms?: number | null; bathrooms?: number | null; title?: string | null; why_great?: string | null; why_cheap?: string | null }, score?: number | null): KeyFact[] {
   const out: KeyFact[] = [];
   const sqm = d.sqm != null && d.sqm > 0 ? Math.round(d.sqm) : null;
   if (sqm) out.push({ k: "sqm", label: "Size", value: `${sqm} m²` });
-  if (sqm && d.price_eur && d.price_eur > 0) out.push({ k: "per", label: "Price per m²", value: eur(Math.round(d.price_eur / sqm)) });
+  const per = perSqm(d);
+  if (per > 0) out.push({ k: "per", label: "Price per m²", value: eur(Math.round(per)) });
   if (d.bedrooms != null && d.bedrooms >= 0) out.push({ k: "beds", label: "Bedrooms", value: String(d.bedrooms) });
+  const baths = Number(d.bathrooms);
+  if (d.bathrooms != null && Number.isInteger(baths) && baths > 0) out.push({ k: "baths", label: "Bathrooms", value: String(baths) });
   if (score != null && score > 0) out.push({ k: "score", label: "Score", value: String(Math.round(score)) });
   return out;
 }

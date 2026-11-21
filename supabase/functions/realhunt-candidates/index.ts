@@ -53,12 +53,15 @@ function extract(html: string, url: string) {
   const text = html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
   const sqm = num(find("floorSize")) || num(text.match(/(\d{2,4}(?:[.,]\d+)?)\s?(?:m²|m2|sqm|sq\.? ?m)\b/i)?.[1]);
   const beds = num(find("numberOfBedrooms") ?? find("numberOfRooms")) || num(text.match(/(\d{1,2})\s?(?:bed(?:room)?s?|dormitorios?|camere|chambres?|quartos?|υπνοδωμάτια)/i)?.[1]);
+  // 21-nov-2026 (list 2 idea 85): bathrooms when the advert gives them (structured data first, then the text)
+  const baths = num(find("numberOfBathroomsTotal") ?? find("numberOfFullBathrooms")) || num(text.match(/(\d{1,2})\s?(?:bath(?:room)?s?|baños?|bagni|salles? de bains?|casas? de banho)\b/i)?.[1]);
   return {
     source_url: url,
     title: dec(find("name") || meta(html, "og:title") || html.match(/<title[^>]*>([^<]+)/i)?.[1] || "").trim().slice(0, 200),
     price: num(off?.price ?? find("price")) || num(meta(html, "product:price:amount")),
     currency: off?.priceCurrency || find("priceCurrency") || meta(html, "product:price:currency") || null,
     sqm: sqm ? Math.round(sqm) : null, bedrooms: beds ? Math.round(beds) : null,
+    bathrooms: baths && baths <= 30 ? Math.round(baths) : null,
     locality: typeof addr === "object" && addr ? [addr.addressLocality, addr.addressRegion, addr.addressCountry?.name || addr.addressCountry].filter(Boolean).join(", ") : (typeof addr === "string" ? addr : null),
     lat: num(geo?.latitude), lng: num(geo?.longitude),
     description: dec(find("description") || meta(html, "og:description") || "").slice(0, 3000),
@@ -112,7 +115,9 @@ Deno.serve(async (req) => {
     const row = {
       slug: d.slug, title: d.title, source_url: d.source_url, source_key: key, source_domain: new URL(d.source_url).hostname.replace(/^www\./, ""),
       image_urls: urls, price_eur: d.price_eur, currency: "EUR", country: d.country, location_name: d.location_name, sqm: d.sqm ?? null,
-      bedrooms: d.bedrooms ?? null, category: d.category, why_great: d.why_great, hunter_handle: d.hunter_handle || new URL(d.source_url).hostname.replace(/^www\./, "").split(".")[0],
+      bedrooms: d.bedrooms ?? null, category: d.category,
+      // migration 20261121150100_bathrooms.sql: kept only when it is a whole number the advert gave
+      bathrooms: Number.isInteger(Number(d.bathrooms)) && Number(d.bathrooms) > 0 && Number(d.bathrooms) <= 30 ? Number(d.bathrooms) : null, why_great: d.why_great, hunter_handle: d.hunter_handle || new URL(d.source_url).hostname.replace(/^www\./, "").split(".")[0],
       status: "pending", lat: d.lat ?? null, lng: d.lng ?? null, seed_votes: 0,
     };
     const { data, error } = await db.from("community_deals").insert(row).select("id,slug,status").single();

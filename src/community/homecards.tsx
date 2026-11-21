@@ -14,6 +14,7 @@ import { CompareToggle } from "./compareTools";
 import { Sparkles } from "lucide-react";
 import { FLAG_LABEL } from "../../supabase/functions/realhunt-live-search/flags";
 import { isGone } from "./n9/status";
+import { costsNotStated, NOT_STATED_LABEL } from "./priceLogic";
 import "./aicheck.css";
 
 /** "1.2 km" for "1.2 km from the centre" (live search v4 sends distance_to_centre_km). The number and the words are
@@ -69,6 +70,8 @@ export function HomeCard({ deal, pos, href: ext, origPrice, rent, dist, noRank }
           <strong>{title}</strong>
           <small>{where(deal)}</small>
           <GroupBadge d={deal} compact />
+          {/* 21-nov-2026 (list 2 idea 75): a fee or yearly tax the advert does not give is "not stated", never a silent zero */}
+          {!rent && costsNotStated(deal) && <small className="hx-costs">{t(NOT_STATED_LABEL[costsNotStated(deal)!])}</small>}
           {dist != null && dist >= 0 && <small className="hx-dist"><span>{kmFromCentre(dist)}</span> <span>{t("from the centre")}</span></small>}
           <CardCheck d={deal} />
           {pick && <small className="hx-pick">{pick}</small>}

@@ -3,10 +3,13 @@
 //    cleaned by seo/polish.ts). The committed public/data file is not touched.
 //  - the speed budget (seo/tech/perfBudget.ts), added to dist/seo-audit.json under tech.perf. Over budget stops the
 //    build; RH_SEO_SOFT=1 only reports, like the other checks.
+//  - homes that look published twice (seo/tech/dupes.ts, idea 73 of list 2): listed; an exact duplicate advert URL stops
+//    the build.
 import fs from "fs";
 import path from "path";
 import { noEmDash } from "./audit";
 import { perfBudget } from "./perfBudget";
+import { findDupes } from "./dupes";
 
 export function techChecks() {
   let outDir = "dist";
@@ -25,12 +28,20 @@ export function techChecks() {
         if (raw.includes("—")) { fs.writeFileSync(file, noEmDash(raw)); cleaned++; }
       }
       const perf = perfBudget(root);
+      let dupes: ReturnType<typeof findDupes> = { groups: [], failures: [] };
+      // the committed snapshot: the full rows (the copy in dist/ may be split or trimmed)
+      try { dupes = findDupes(JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "public/data/rh-static.json"), "utf8")).rows || []); } catch { /* no snapshot in this build */ }
+      if (dupes.groups.length) console.log(`[rh-tech-checks] homes that may be the same home twice:\n` + dupes.groups.map((g) => `  - ${g.why}: ${g.slugs.join(", ")}`).join("\n"));
       const auditFile = path.join(root, "seo-audit.json");
       if (fs.existsSync(auditFile)) {
-        try { const a = JSON.parse(fs.readFileSync(auditFile, "utf8")); (a.tech ||= {}).perf = { goal: perf.goal, pages: perf.pages }; for (const f of perf.failures) (a.failures ||= []).push("speed budget: " + f); fs.writeFileSync(auditFile, JSON.stringify(a, null, 1) + "\n"); } catch { /* the audit keeps what it had */ }
+        try { const a = JSON.parse(fs.readFileSync(auditFile, "utf8")); (a.tech ||= {}).perf = { goal: perf.goal, pages: perf.pages }; a.tech.dupes = dupes.groups; for (const f of dupes.failures) (a.failures ||= []).push("duplicate home: " + f); for (const f of perf.failures) (a.failures ||= []).push("speed budget: " + f); fs.writeFileSync(auditFile, JSON.stringify(a, null, 1) + "\n"); } catch { /* the audit keeps what it had */ }
       }
       const line = Object.entries(perf.pages).map(([k, p]) => `${k} ${p.html_kb}+${p.blocking_css_kb}+${p.route_js_kb} KB, ${p.requests_in_html} files`).join("; ");
       console.log(`[rh-tech-checks] speed budget (HTML + blocking CSS + scripts, gzip): ${line}${cleaned ? `; em dashes removed from ${cleaned} data file(s)` : ""}`);
+      if (dupes.failures.length) {
+        const msg = `[rh-tech-checks] a home is published twice:\n` + dupes.failures.map((f) => "  - " + f).join("\n");
+        if (process.env.RH_SEO_SOFT === "1") console.warn(msg); else throw new Error(msg);
+      }
       if (perf.failures.length) {
         const msg = `[rh-tech-checks] over the speed budget (seo/tech/perf-budget.json):\n` + perf.failures.map((f) => "  - " + f).join("\n");
         if (process.env.RH_SEO_SOFT === "1") console.warn(msg); else throw new Error(msg);

@@ -5,6 +5,7 @@
 // "ready to move in"). Nothing is guessed from the kind of home, the country or the photos, and a home whose text
 // is silent is simply not on that list. src/test/listings-traits.test.ts holds the cases.
 import { islandOf } from "./places";
+import { perSqm } from "../../src/community/sqmLogic";
 
 export type Home = Record<string, any>;
 const title = (r: Home) => String(r.title || "");
@@ -51,7 +52,8 @@ export function plotOf(r: Home): number {
   for (const m of t.matchAll(/(\d[\d,]*(?:\.\d+)?)[- ]?acres?\b/gi)) best = Math.max(best, num(m[1]) * 4047);
   return Math.round(best);
 }
-export const ppsqm = (r: Home) => (r.sqm > 0 && r.price_eur > 0 ? r.price_eur / r.sqm : 0);
+/** Price per m² of living area only (idea 74, src/community/sqmLogic.ts): 0 when the size looks like a plot. */
+export const ppsqm = (r: Home) => perSqm(r);
 /** Metres to the sea when it was measured. */
 export const seaM = (r: Home): number | null => (typeof r.nearby?.sea_km === "number" ? Math.round(r.nearby.sea_km * 1000) : null);
 export const airportKm = (r: Home): number | null => (typeof r.nearby?.airport?.km === "number" ? r.nearby.airport.km : null);

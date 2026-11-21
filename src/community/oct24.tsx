@@ -7,6 +7,7 @@ import { Bell, Calculator } from "lucide-react";
 import { money } from "./api";
 import { AlertForm } from "./extras";
 import { t } from "./i18n";
+import { perSqm } from "./sqmLogic";
 import { homeArticle } from "./homeArticle";
 import { homeArticleEs } from "./homeArticleEs";
 import { localizeRows } from "./seo2data";
@@ -70,7 +71,7 @@ let medians: Promise<Record<string, number>> | null = null;
 export function countryMedians() {
   return (medians ||= snapshotRaw().then(mediaDeep).then((s: any) => {
     const by: Record<string, number[]> = {};
-    for (const r of (s.rows || []) as any[]) if (r.sqm > 0 && r.price_eur > 0) (by[r.country] ||= []).push(r.price_eur / r.sqm);
+    for (const r of (s.rows || []) as any[]) if (perSqm(r) > 0) (by[r.country] ||= []).push(perSqm(r));
     const out: Record<string, number> = {};
     for (const [c, xs] of Object.entries(by)) if (xs.length >= 5) { xs.sort((a, b) => a - b); out[c] = xs[Math.floor(xs.length / 2)]; }
     return out;
@@ -88,8 +89,8 @@ export function areaMedians() {
   return (areaMeds ||= snapshotRaw().then(mediaDeep).then((s: any) => {
     const by: Record<string, number[]> = {};
     for (const r of (s.rows || []) as any[]) {
-      if (!(r.sqm > 0 && r.price_eur > 0)) continue;
-      for (const part of areaParts(r)) (by[r.country + "|" + part] ||= []).push(r.price_eur / r.sqm);
+      if (!(perSqm(r) > 0)) continue;
+      for (const part of areaParts(r)) (by[r.country + "|" + part] ||= []).push(perSqm(r));
     }
     const out: Record<string, number> = {};
     for (const [c, xs] of Object.entries(by)) if (xs.length >= 3) { xs.sort((a, b) => a - b); out[c] = xs[Math.floor(xs.length / 2)]; }

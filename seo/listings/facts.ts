@@ -62,7 +62,7 @@ export const dayOf = (s?: string | null) => (s && /^\d{4}-\d{2}-\d{2}/.test(s) ?
 export const homeDay = (r: Home) => [r?.verified_at, r?.approved_at, r?.publish_at].map(dayOf).filter(Boolean).sort().pop() || null;
 /** Same median as the rest of the site (seo/prerender.ts, /research/prices), so two pages never disagree. */
 export const median = (xs: number[]) => { const a = xs.filter((x) => x > 0).sort((p, q) => p - q); return a.length ? a[Math.floor(a.length / 2)] : 0; };
-const ppsqmOf = (hs: Home[]) => { const v = hs.filter((h) => h.sqm > 0).map((h) => h.price_eur / h.sqm); return v.length >= 3 ? Math.round(median(v)) : 0; };
+const ppsqmOf = (hs: Home[]) => { const v = hs.map(ppsqmHome).filter((x) => x > 0); return v.length >= 3 ? Math.round(median(v)) : 0; };
 const daysBetween = (a: string, b: string) => Math.round((Date.parse(b) - Date.parse(a)) / 86400000);
 export const ref = (h: Home): Ref => ({ slug: String(h.slug), home: h, price: h.price_eur, sqm: Number(h.sqm) || 0, beds: bedsOf(h), nota: Number(h.nota) || 0, town: townOf(h) || String(h.country || ""), day: homeDay(h) });
 const DIM_KEYS = ["price", "value", "space", "condition", "extras", "water", "weather", "access", "costs"];

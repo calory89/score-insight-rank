@@ -372,3 +372,8 @@ html.hm-lock, html.hm-lock body { overflow: hidden; }
   .rh-price { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   .rh-price button, .rh-price-label { flex: 0 0 auto; }
 }
+/* 21-nov-2026 (list 2 idea 59, keyboard audit): a pin or group reached with Tab shows a ring on the visible label (the
+   Leaflet wrapper itself is 0x0, so its own outline could not be seen) */
+.hm-pin-wrap:focus { outline: none; }
+.hm-pin-wrap:focus-visible .hm-pin, .hm-pin-wrap:focus-visible .hm-cl { outline: 3px solid #D4420C; outline-offset: 3px; }
+.hunt.is-dark .hm-pin-wrap:focus-visible .hm-pin, .hunt.is-dark .hm-pin-wrap:focus-visible .hm-cl { outline-color: #FF8A5B; }
