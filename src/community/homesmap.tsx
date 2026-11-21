@@ -110,8 +110,22 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
     (m as any)._hmLayers = { street, sat };
     layer.current = L.layerGroup().addTo(m);
     map.current = m;
+    // 21-nov-2026 (list 2 idea 59, keyboard audit): a card opened with Enter on a pin takes the focus (before, Tab went on
+    // to the next pin and the card's link could not be reached), Escape closes it and puts the focus back on its pin,
+    // and a group that zooms in when pressed hands the focus to the map instead of losing it.
+    const kbPop = { on: false };
+    const popFocus = () => {
+      const a = (m as any)._popup?.getElement?.()?.querySelector("a[href]") as HTMLElement | null;
+      const lost = !document.activeElement || document.activeElement === document.body || !document.activeElement.isConnected;
+      if (kbPop.on && a && a.isConnected && (lost || el.current?.contains(document.activeElement))) a.focus({ preventScroll: true });
+    };
+    // the flight to the pin redraws the pins and the card, which drops the focus: give it back to the card
+    m.on("moveend zoomend", () => { if (kbPop.on && m.hasLayer((m as any)._popup)) setTimeout(popFocus, 0); });
     m.on("popupopen", (e: any) => {
       openSlug.current = (e.popup?._source as any)?._slug || null;
+      if (kbPop.on) setTimeout(popFocus, 0);
+      // fitting the card redraws its content (Leaflet popup.update), which drops the focus too
+      if (!e.popup._hmKb) { e.popup._hmKb = true; e.popup.on("contentupdate", () => { if (kbPop.on) setTimeout(popFocus, 0); }); }
       const img = e.popup.getElement()?.querySelector("img") as HTMLImageElement | null;
       if (img && !img.complete) img.addEventListener("load", () => setTimeout(fitPopup, 0), { once: true });
       setTimeout(fitPopup, 0);
@@ -122,9 +136,21 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
       if (a) { e.preventDefault(); setFull(false); navigate(`/deal/${a.dataset.slug}`); }
     };
     el.current.addEventListener("click", click);
+    const onKey = (e: KeyboardEvent) => {
+      const tgt = e.target as HTMLElement;
+      if ((e.key === "Enter" || e.key === " ") && tgt.classList?.contains("leaflet-marker-icon")) kbPop.on = true;
+      if (e.key === "Escape" && m.hasLayer((m as any)._popup)) {
+        const src = ((m as any)._popup?._source as L.Marker | undefined)?.getElement?.();
+        e.stopPropagation(); kbPop.on = false; m.closePopup();
+        (src && src.isConnected ? src : el.current)?.focus({ preventScroll: true });
+      }
+    };
+    const onPointer = () => { kbPop.on = false; };
+    el.current.addEventListener("keydown", onKey);
+    el.current.addEventListener("pointerdown", onPointer);
     const ro = new ResizeObserver(() => { const n = el.current; if (n && n.isConnected && n.offsetWidth) m.invalidateSize({ animate: false }); });
     ro.observe(el.current);
-    return () => { ro.disconnect(); el.current?.removeEventListener("click", click); try { m.off(); (m as any)._stop?.(); (m as any)._panAnim?.off?.(); } catch {} m.remove(); map.current = null; };
+    return () => { ro.disconnect(); el.current?.removeEventListener("click", click); el.current?.removeEventListener("keydown", onKey); el.current?.removeEventListener("pointerdown", onPointer); try { m.off(); (m as any)._stop?.(); (m as any)._panAnim?.off?.(); } catch {} m.remove(); map.current = null; };
   }, []);
 
   // Wheel zoom inside a page only after the visitor clicks the map, so the page still scrolls.
@@ -209,7 +235,9 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
     };
     const draw = () => {
       const open = openSlug.current;
+      const hadFocus = !!el.current && el.current.contains(document.activeElement) && (document.activeElement as HTMLElement).classList.contains("leaflet-marker-icon");
       g.clearLayers(); focusedMk = null;
+      if (hadFocus && !el.current!.contains(document.activeElement)) el.current!.focus({ preventScroll: true });
       const cell = 66, cells = new Map<string, Row[]>(), deep = m.getZoom() >= 13;
       for (const d of list) {
         if (focus && d.slug === focus) { g.addLayer(pinFor(d)); continue; }
@@ -257,7 +285,10 @@ export default function HomesMap({ params, rows, focus, around, embedded = false
         const icon = L.divIcon({ className: "hm-pin-wrap", html: `<span class="hm-cl" style="--pc:${priceColor(from).bg};--pf:${priceColor(from).fg}"><b>${grp.length}</b><small>${esc(t("from"))} ${esc(short(from))}</small></span>`, iconSize: [0, 0] });
         const gp = groups.find((x) => x.rows === grp);
         const c = L.marker(gp ? m.layerPointToLatLng(L.point(gp.x, gp.y)) : b.getCenter(), { icon, title: `${grp.length} homes` });
-        c.on("click", () => { const z = m.getBoundsZoom(b, false, L.point(60, 60)); if (z > m.getZoom()) m.flyToBounds(b, { padding: [60, 60], maxZoom: 15, duration: 0.6 }); else m.flyTo(b.getCenter(), Math.min(m.getZoom() + 3, 16), { duration: 0.6 }); });
+        const zoomIn = () => { const z = m.getBoundsZoom(b, false, L.point(60, 60)); if (z > m.getZoom()) m.flyToBounds(b, { padding: [60, 60], maxZoom: 15, duration: 0.6 }); else m.flyTo(b.getCenter(), Math.min(m.getZoom() + 3, 16), { duration: 0.6 }); };
+        c.on("click", zoomIn);
+        // idea 59: Leaflet only reacts to Enter on markers with a card; a group that zooms in needs its own
+        c.on("keypress", (e: any) => { const k = e.originalEvent?.key; if (k === "Enter" || k === " ") { e.originalEvent.preventDefault(); zoomIn(); } });
         g.addLayer(c);
       });
       if (reopened) { keepOpen.current = true; (reopened as L.Marker).openPopup(); keepOpen.current = false; fitPopup(); }

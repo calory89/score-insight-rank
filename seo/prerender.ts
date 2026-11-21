@@ -244,6 +244,7 @@ function build(root: string, es?: EsPass) {
           ...(r.lat != null && r.lng != null ? { geo: { "@type": "GeoCoordinates", latitude: r.lat, longitude: r.lng } } : {}),
           ...(r.sqm ? { floorSize: { "@type": "QuantitativeValue", value: r.sqm, unitCode: "MTK" } } : {}),
           ...(r.bedrooms ? { numberOfBedrooms: r.bedrooms } : {}),
+          ...(Number(r.bathrooms) > 0 ? { numberOfBathroomsTotal: Number(r.bathrooms) } : {}), // idea 85: only when the advert gives it
           ...(amen.length ? { amenityFeature: amen.map((a) => ({ "@type": "LocationFeatureSpecification", name: a, value: true })) } : {}),
         },
       });
@@ -303,6 +304,7 @@ function build(root: string, es?: EsPass) {
           ...(r.lat != null && r.lng != null ? { geo: { "@type": "GeoCoordinates", latitude: r.lat, longitude: r.lng } } : {}),
           ...(r.sqm ? { floorSize: { "@type": "QuantitativeValue", value: r.sqm, unitCode: "MTK" } } : {}),
           ...(r.bedrooms ? { numberOfBedrooms: r.bedrooms } : {}),
+          ...(Number(r.bathrooms) > 0 ? { numberOfBathroomsTotal: Number(r.bathrooms) } : {}), // idea 85: only when the advert gives it
         } }];
       if (artEs.faq.length) ldEs.push({ "@context": "https://schema.org", "@type": "FAQPage", inLanguage: "es", mainEntity: artEs.faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) });
       page(esUrl, `${placesEs(titleOf(r, "es", `${euro(r.price_eur)} · ${r.title_es}`))} · RealHunt`, placesEs(descEs), d.image || DEF, bodyEs, ldEs.map(deepEs),

@@ -3,6 +3,7 @@
 // src/data/destinations.json, so every page says something specific and it stays true after each update.
 // Used by seo/prerender.ts (HTML + FAQPage JSON-LD) and by the app's home page (HomeArticle), so both match.
 
+import { perSqm } from "./sqmLogic";
 type Row = Record<string, any>;
 export type ArticleCtx = {
   countryHomes: Row[];            // published homes in the same country (this one included)
@@ -17,7 +18,7 @@ export type Article = { sections: { h: string; p: string[] }[]; faq: [string, st
 
 const eur = (n: number) => "€" + Math.round(n).toLocaleString("en");
 const median = (xs: number[]) => { const a = xs.filter((x) => x > 0).sort((p, q) => p - q); return a.length ? a[Math.floor(a.length / 2)] : 0; };
-const ppsqm = (r: Row) => (r.sqm > 0 && r.price_eur > 0 ? r.price_eur / r.sqm : 0);
+const ppsqm = (r: Row) => perSqm(r); // only a living area (idea 74, ./sqmLogic)
 const range = (s?: string | null): [number, number] | null => { const m = String(s || "").match(/([\d.]+)\s*[-–]\s*([\d.]+)/) || String(s || "").match(/([\d.]+)/); return m ? [Number(m[1]), Number(m[2] || m[1])] : null; };
 const the = (n: string) => (/^(United |Netherlands$|Dominican Republic$|Czech Republic$|Philippines$)/.test(n) ? "the " + n : n);
 const town = (r: Row) => String(r.location_name || r.country || "").split(",")[0].trim().replace(/^near /, "");
@@ -68,6 +69,7 @@ export function homeArticle(r: Row, ctx: ArticleCtx): Article {
   const cur = r.hoa_currency || "EUR";
   const fmtC = (v: number) => new Intl.NumberFormat("en", { style: "currency", currency: cur, maximumFractionDigits: 0 }).format(v);
   const hoa = Number(r.hoa_monthly) || 0, tax = Number(r.tax_annual) || 0;
+  let notStated: { h: string; p: string[] } | null = null;
   if (hoa || tax || r.hoa_unknown) {
     const p: string[] = [];
     if (hoa) p.push(`The community fee (HOA) is ${fmtC(hoa)} a month${tax ? ` and the property tax ${fmtC(tax)} a year (${fmtC(tax / 12)} a month), so about ${fmtC(hoa + tax / 12)} a month before insurance and utilities` : ""}.`);
@@ -76,13 +78,17 @@ export function homeArticle(r: Row, ctx: ArticleCtx): Article {
     if (r.costs_note) p.push(String(r.costs_note));
     sections.push({ h: "What it costs every month", p });
     faq.push(["Is there a community fee (HOA)?", hoa ? `Yes: ${fmtC(hoa)} a month${r.costs_note ? `. ${r.costs_note}` : "."}` : r.hoa_unknown ? "The listing does not say. Ask the agent for the monthly fee and any pending special assessment." : "No community fee is listed."]);
+  } else {
+    // 21-nov-2026 (list 2 idea 75): said plainly, so a missing figure never reads as nothing to pay
+    // (added after the other sections, so the article still opens on the price and the place)
+    notStated = { h: "What it costs every month", p: ["Not stated: the listing gives neither a community fee nor a yearly property tax. Ask the agent for both before you make an offer."] };
   }
 
   // 2c. Yearly costs as a question of its own (idea 14): the country's yearly tax rule, and this home's fee and tax.
   const yearly: string[] = [];
   if (hoa) yearly.push(`a community fee (HOA) of ${fmtC(hoa)} a month`);
   if (tax) yearly.push(`a property tax of ${fmtC(tax)} a year`);
-  if (yearly.length || ctx.dest?.annual_property_tax) faq.push(["What does this home cost every year?", [yearly.length ? `The listing gives ${yearly.join(" and ")}.` : "", ctx.dest?.annual_property_tax ? `In ${inC}: ${ctx.dest.annual_property_tax}` : ""].filter(Boolean).join(" ") + " Insurance and utilities come on top."]);
+  if (yearly.length || ctx.dest?.annual_property_tax) faq.push(["What does this home cost every year?", [yearly.length ? `The listing gives ${yearly.join(" and ")}.` : "The listing does not state a community fee or a yearly property tax.", ctx.dest?.annual_property_tax ? `In ${inC}: ${ctx.dest.annual_property_tax}` : ""].filter(Boolean).join(" ") + " Insurance and utilities come on top."]);
 
   // 3. Where it is.
   const near = r.nearby || {};
@@ -107,5 +113,6 @@ export function homeArticle(r: Row, ctx: ArticleCtx): Article {
   faq.unshift([`How much does this home in ${place} cost?`, `The asking price is ${eur(r.price_eur)}${r.sqm ? ` for ${r.sqm} m²${own ? ` (about ${eur(own)} per m²)` : ""}` : ""}${r.bedrooms ? ` with ${r.bedrooms} bedroom${r.bedrooms > 1 ? "s" : ""}` : ""}.`]);
   if (ctx.dest?.can_foreigners_buy) faq.push([`Can foreigners buy a home in ${inC}?`, String(ctx.dest.can_foreigners_buy)]);
   faq.push([`Does RealHunt sell this home?`, `No. RealHunt is not an estate agent: it checks and scores homes and links to the original listing${r.source_domain ? ` on ${r.source_domain}` : ""}, so you deal directly with the seller or their agent.`]);
+  if (notStated) sections.push(notStated);
   return { sections, faq };
 }

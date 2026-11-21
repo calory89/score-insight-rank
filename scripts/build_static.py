@@ -71,6 +71,19 @@ for r in rows:
         if isinstance(p.get(k), (int, float)) and (r.get(k) or 0) < p[k]: r[k] = p[k]
     if p.get("price_eur") == r.get("price_eur") and p.get("nota") is not None:
         r["nota"], r["dims"] = p["nota"], p.get("dims", r.get("dims"))
+# 21-nov-2026 (list 2 ideas 70 and 85): the kind of home (property_type) and the bathrooms stored in the database.
+# A stored kind is kept only when it is one the site knows (src/community/homeLead.ts KIND_BY_NAME); without one the
+# build and the app read the kind from the title (homeKind falls back to kindFromTitle). Bathrooms only when a whole
+# number above 0. If the database does not return the columns yet, yesterday's values are kept.
+KINDS = {"studio", "penthouse", "duplex", "flat", "loft", "townhouse", "villa", "bungalow", "farmhouse", "cottage", "chalet", "cabin", "house", "home"}
+for r in rows:
+    p = _prev.get(r["slug"]) or {}
+    k = str(r.get("property_type") if "property_type" in r else p.get("property_type") or "").strip().lower()
+    if k in KINDS: r["property_type"] = k
+    else: r.pop("property_type", None)
+    b = r.get("bathrooms") if "bathrooms" in r else p.get("bathrooms")
+    if isinstance(b, (int, float)) and b > 0 and int(b) == b: r["bathrooms"] = int(b)
+    else: r.pop("bathrooms", None)
 _, week = pages("week")
 wr = {r["id"]: r["rank"] for r in week}
 nb = dict(ThreadPoolExecutor(6).map(lambda r: (r["slug"], rpc("community_nearby", {"p_slug": r["slug"]})), rows))

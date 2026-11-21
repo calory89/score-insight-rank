@@ -51,3 +51,17 @@ export function vsMedian(price: number | null | undefined, sqm: number | null | 
   if (Math.abs(diff) < 3) return null;
   return `${Math.abs(diff)}% ${diff < 0 ? "below" : "above"} the median in ${country}`;
 }
+
+/** 21-nov-2026 (list 2 idea 75): which running costs the advert leaves out, so pages and cards say "not stated"
+ *  instead of a blank that reads as zero. A fee of 0 counts as not stated: adverts never write "0 a month". */
+export type NotStated = "both" | "fee" | "tax" | null;
+export function costsNotStated(d: { hoa_monthly?: number | string | null; tax_annual?: number | string | null }): NotStated {
+  const fee = Number(d.hoa_monthly) > 0, tax = Number(d.tax_annual) > 0;
+  return !fee && !tax ? "both" : !fee ? "fee" : !tax ? "tax" : null;
+}
+/** The words for a card or the price block (English; the Spanish site swaps them through public/i18n/es-extra.json). */
+export const NOT_STATED_LABEL: Record<Exclude<NotStated, null>, string> = {
+  both: "Community fee and yearly tax not stated",
+  fee: "Community fee not stated",
+  tax: "Yearly tax not stated",
+};

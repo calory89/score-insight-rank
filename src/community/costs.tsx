@@ -21,15 +21,16 @@ export function CostBadge({ d }: { d: D }) {
 /** Block on the home page: monthly fee, property tax, total per month, and what the fee includes. */
 export function RunningCosts({ d }: { d: D }) {
   const hoa = n(d.hoa_monthly), tax = n(d.tax_annual);
-  if (!hoa && !tax && !d.hoa_unknown) return null;
+  // 21-nov-2026 (list 2 idea 75): shown for every home. A fee or tax the advert does not give says "Not stated in the
+  // listing" instead of the block disappearing or a "-" that reads as nothing to pay.
   const cur = d.hoa_currency;
   const taxM = tax ? tax / 12 : 0;
   return (
     <section className={"rh-costs" + (d.hoa_unknown ? " is-unknown" : "")} aria-label={t("Monthly running costs")}>
       <h2>{t("What it costs every month")}</h2>
       <dl>
-        <div><dt>{t("Community fee (HOA)")}</dt><dd>{hoa ? <>{fmt(hoa, cur)} / {t("month")}</> : d.hoa_unknown ? t("Not stated in the listing") : "-"}</dd></div>
-        {tax ? <div><dt>{t("Property tax")}</dt><dd>{fmt(taxM, cur)} / {t("month")} <small>({fmt(tax, cur)} / {t("year")})</small></dd></div> : null}
+        <div><dt>{t("Community fee (HOA)")}</dt><dd className={hoa ? undefined : "is-unknown"}>{hoa ? <>{fmt(hoa, cur)} / {t("month")}</> : t("Not stated in the listing")}</dd></div>
+        <div><dt>{t("Property tax")}</dt>{tax ? <dd>{fmt(taxM, cur)} / {t("month")} <small>({fmt(tax, cur)} / {t("year")})</small></dd> : <dd className="is-unknown">{t("Not stated in the advert")}</dd>}</div>
         {hoa || taxM ? <div className="rh-costs-total"><dt>{t("Total before insurance and utilities")}</dt><dd>{d.hoa_unknown && !hoa ? `${fmt(taxM, cur)} + ${t("HOA")}` : fmt((hoa || 0) + taxM, cur)} / {t("month")}</dd></div> : null}
       </dl>
       {d.costs_note && <p>{d.costs_note}</p>}

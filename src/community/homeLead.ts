@@ -6,6 +6,7 @@
 // Used by seo/prerender.ts (both home pages) and seo/dealMd.ts (the .md version reads the finished HTML).
 import { esPlace } from "../lib/lang";
 import { theEs } from "./seo2data";
+import { perSqm } from "./sqmLogic";
 
 type Row = Record<string, any>;
 export type LeadCtx = { countryHomes: Row[]; regionHomes?: Row[]; regionName?: string };
@@ -28,7 +29,17 @@ const KINDS: [RegExp, HomeKind][] = [
   [/\b(house|home)\b/i, { en: "house", es: "casa", ld: "SingleFamilyResidence" }],
 ];
 const FLAT = KINDS.find(([re]) => re.test("flat"))![1];
+const OTHER: HomeKind = { en: "home", es: "casa", ld: "SingleFamilyResidence" };
+/** The kinds by their stored name (realhunt.community_deals.property_type, migration 20261121150000). */
+export const KIND_BY_NAME: Record<string, HomeKind> = Object.fromEntries([...KINDS.map(([, k]) => [k.en, k] as const), ["home", OTHER] as const]);
 export function homeKind(r: Row): HomeKind {
+  // 21-nov-2026 (list 2 idea 70): the kind stored in the database comes first; reading the title is the fallback.
+  const stored = KIND_BY_NAME[String(r.property_type || "").trim().toLowerCase()];
+  if (stored) return stored;
+  return kindFromTitle(r);
+}
+/** The kind read from the English title (what homeKind did before the column existed; also fills the column). */
+export function kindFromTitle(r: Row): HomeKind {
   // The kind named first wins: "House with sauna and a guest studio" is a house, not a studio (fix of 20 Nov 2026).
   const t = String(r.title || "");
   let best: HomeKind | null = null, at = Infinity;
@@ -44,11 +55,11 @@ export function homeKind(r: Row): HomeKind {
   }
   // ...except "townhouse flat", "house apartment": the word after it names the home.
   if (best && best.ld !== "Apartment" && /^\S+\s+(flat|apartment|condo)\b/i.test(t.slice(at))) return FLAT;
-  return best || { en: "home", es: "casa", ld: "SingleFamilyResidence" };
+  return best || OTHER;
 }
 
 const median = (xs: number[]) => { const a = xs.filter((x) => x > 0).sort((p, q) => p - q); return a.length ? a[Math.floor(a.length / 2)] : 0; };
-const ppsqm = (r: Row) => (r.sqm > 0 && r.price_eur > 0 ? r.price_eur / r.sqm : 0);
+const ppsqm = (r: Row) => perSqm(r); // only a living area (idea 74, ./sqmLogic)
 const eurEn = (n: number) => "€" + Math.round(n).toLocaleString("en");
 const eurEs = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " €";
 const theEn = (n: string) => (/^(United |Netherlands$|Dominican Republic$|Czech Republic$|Philippines$)/.test(n) ? "the " + n : n);
