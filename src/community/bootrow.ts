@@ -6,6 +6,7 @@
 import { mediaDeep } from "@/lib/media";
 import { learnTexts } from "@/lib/lang";
 import { stripEs } from "@/lib/esPath";
+import { learnThumbs } from "@/lib/thumbs";
 
 type Row = Record<string, any>;
 
@@ -22,6 +23,8 @@ export function bootRow(raw: unknown, pathname: string, now = Date.now()): Row |
   const pub = Date.parse(r.publish_at || r.approved_at || 0) || 0;
   if (r.publish_at && pub > now) return null;
   const row: Row = { ...mediaDeep(r), has_source: true };
+  // which photo copies exist for this home (th/tm from the snapshot), before the gallery asks for one
+  learnThumbs(null, [row]);
   // the public snapshot answer never carries the listing link for these (static-db "detail"); the full record adds it
   if (!["fotocasa", "immoscout24"].includes(row.hunter_handle || "")) delete row.source_url;
   return row;

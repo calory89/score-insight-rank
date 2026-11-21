@@ -19,6 +19,22 @@ export const URGENCY = /\b(only \d+ (left|remaining)|last (units?|chance|few (un
 export const RETURNS = /\b(guaranteed (returns?|yields?|income|profits?|rent(al income)?|appreciation)|risk[- ]free (investment|return)|will (double|triple|appreciate|rise in value)|sure[- ]fire (profit|investment)|can['’]?t lose|rentabilidad(es)? garantizadas?|rentas? garantizadas?|inversión sin riesgo|se revalorizará|beneficios? asegurados?|ganancias? seguras?|ganancia garantizada)\b/i;
 /** The sentence says the opposite ("no guaranteed returns", "sin rentabilidad garantizada"): not a promise. */
 const NEGATED = /\b(no|not|never|nor|without|isn['’]?t|aren['’]?t|nothing|ni|sin|nunca|ninguna?|tampoco|jamás)\b[^.!?]{0,60}$/i;
+// 21-nov-2026 (idea 92 of the second list): the same two rules in the other languages of the site (seo/langs: de, fr,
+// nl, pl, ru), so a translated title or a new text cannot bring a hurry or a promise back in. Letters of any alphabet
+// count as word letters here (\b does not know Cyrillic).
+const W0 = "(?<![\\p{L}\\p{N}])", W1 = "(?![\\p{L}\\p{N}])";
+export const URGENCY_LANGS = new RegExp(W0 + "(nur noch \\d+ (übrig|frei|verfügbar)|seien sie schnell|greifen sie (schnell )?zu|nicht verpassen|zeitlich begrenzt(es angebot)?|letzte chance|solange der vorrat reicht"
+  + "|plus que \\d+ (disponibles?|restants?)|dépêchez-vous|ne (le |la |les )?manquez pas|offre limitée|durée limitée|dernière chance|derniers lots"
+  + "|nog maar \\d+ (beschikbaar|over)|wees er snel bij|op is op|mis (het|dit) niet|beperkte tijd|laatste kans"
+  + "|został[oay]? tylko \\d+|ostatnie (sztuki|mieszkania|domy)|spiesz się|nie przegap|ograniczon[ay] czasowo|ostatnia szansa"
+  + "|осталось (всего|только) \\d+|спешите|не упустите|ограниченное предложение|последний шанс)" + W1, "iu");
+export const RETURNS_LANGS = new RegExp(W0 + "(garantierte (rendite|mieteinnahmen|miete|mieten|wertsteigerung|erträge)|risikolose (anlage|investition|rendite)|sichere rendite|wertsteigerung garantiert"
+  + "|rendements? garantis?|loyers? garantis?|revenus? garantis?|placement sans risque|plus-value (assurée|garantie)"
+  + "|gegarandeerde? (rendement|huurinkomsten|huur|opbrengst|waardestijging)|risicoloze (belegging|investering)"
+  + "|gwarantowan[aeyi]+ (zwrot|zysk|dochód|czynsz|stop[aęy] zwrotu)|inwestycja bez ryzyka|pewny zysk"
+  + "|гарантированн(ый|ая|ое|ые) (доход|доходность|прибыль|аренда|рост)|безрисков(ая|ые) (инвестиция|вложения)|беспроигрышн(ая|ое|ые))" + W1, "iu");
+const NEGATED_LANGS = new RegExp(W0 + "(kein(e|en)?|nicht|ohne|pas|sans|aucune?|ni|geen|niet|zonder|nooit|nie|bez|żadn[eya]|не|без|нет|ни)" + W1 + "[^.!?]{0,60}$", "iu");
+
 /** More homes than there are (idea 998). `homes` is the real number in the snapshot. */
 export const INFLATED = /\b(thousands|tens of thousands|millions|miles|decenas de miles|millones) (of|de) (checked |scored |ranked )?(homes|houses|properties|listings|casas|viviendas|propiedades|anuncios)( for sale| on realhunt| scored| checked| en venta| en realhunt| con nota| revisad[ao]s)\b/i;
 /** A phone number (idea 981): the contact is the company email. Prices, areas, coordinates and ids are not phones. */
@@ -35,6 +51,8 @@ export function textHits(text: string, o: { homes?: number } = {}): Hit[] {
   if (i >= 0) out.push({ rule: "em_dash", level: "warn", what: around(t, i, 1) });
   if ((m = URGENCY.exec(t))) out.push({ rule: "fake_urgency", level: "warn", what: around(t, m.index, m[0].length) });
   if ((m = RETURNS.exec(t)) && !NEGATED.test(t.slice(Math.max(0, m.index - 80), m.index))) out.push({ rule: "promised_return", level: "warn", what: around(t, m.index, m[0].length) });
+  if (!/fake_urgency/.test(out.map((h) => h.rule).join()) && (m = URGENCY_LANGS.exec(t))) out.push({ rule: "fake_urgency", level: "warn", what: around(t, m.index, m[0].length) });
+  if (!/promised_return/.test(out.map((h) => h.rule).join()) && (m = RETURNS_LANGS.exec(t)) && !NEGATED_LANGS.test(t.slice(Math.max(0, m.index - 80), m.index))) out.push({ rule: "promised_return", level: "warn", what: around(t, m.index, m[0].length) });
   if ((m = INFLATED.exec(t))) {
     const big = /^(tens|millions|decenas|millones)/i.test(m[1]) ? 10000 : 2000;
     if ((o.homes ?? 0) < big) out.push({ rule: "inflated_figure", level: "warn", what: around(t, m.index, m[0].length) });

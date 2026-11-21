@@ -104,6 +104,8 @@ export const PLACES: PlaceWords = {
   area: (n) => `secteur ${de(n)}`,
 };
 const place = (n: string, _cc?: string, where?: "card") => placeIn(PLACES, n, where);
+// idea 84 of the second list (21 Nov 2026): the description names where the cheapest home is, as the English and Spanish ones do
+const cheapIn = (F: { cheapest: { town: string } }) => { const t = F.cheapest?.town ? place(F.cheapest.town, undefined, "card") : ""; return t ? ` (${t})` : ""; };
 /** "en Toscane", "dans les Pouilles", "à Bicorp", "dans les environs de Ringsted": a place after its preposition. */
 function inR(n: string): string {
   if (IN[n]) return IN[n];
@@ -292,7 +294,7 @@ const words: Pack = {
   h1: (F) => (F.f.ranked ? `Les ${what(F)}${F.f.country ? "" : " sur RealHunt"}`
     : upper(what(F, (F.f.cap && F.f.cap <= 100000) || (["gfeature", "feature", "area", "near"].includes(F.f.kind) && F.median <= 100000) ? "cheap" : "many"))),
   title: (h1, n, min) => (/^Les \d/.test(h1) ? `${h1}, dès ${min}` : `${h1} : ${n} annonces dès ${min}`),
-  desc: (F, w) => `${F.f.ranked ? `Les ${w}` : `${F.n} ${w}`}, de ${money(F.min)} à ${money(F.max)}. Prix médian : ${money(F.median)}. Photos, surfaces, notes, frais d'achat et points à vérifier.`,
+  desc: (F, w) => `${F.f.ranked ? `Les ${w}` : `${F.n} ${w}`}, de ${money(F.min)}${cheapIn(F)} à ${money(F.max)}. Prix médian : ${money(F.median)}${F.scoreAvg ? `, note moyenne ${F.scoreAvg} sur 98` : ""}. Photos, surfaces, notes, frais d'achat et points à vérifier.`,
   crumbRoot: "RealHunt", crumbCheap: "Maisons pas chères",
   crumbCountry: (c) => `Maisons ${IN_COUNTRY[c] || IN[c] || `: ${c}`}`,
   label: (f) => (f.kind === "combo" ? `${LABEL[f.key!] || f.key}, moins de ${money(f.cap!)}` : f.kind === "ccyBand" ? `Moins de ${ccy(f.cap!, f.ccy!)}` : f.kind === "area" ? areaL(f) : f.kind === "near" ? `Près ${de(cityOf(f))}`

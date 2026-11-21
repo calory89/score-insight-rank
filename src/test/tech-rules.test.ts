@@ -315,8 +315,9 @@ describe("photos: alt text and the mid-size copy (ideas 135, 152)", () => {
     expect(midSrcSet(photos[0], true)).toBe(`${MEDIA}/t/m/finds/es-test-99k-0.webp 800w, ${photos[0]} 1600w`);
     expect(midSrcSet("https://cdn.example.com/x.jpg", true)).toBeUndefined();
   });
-  it("is off until the copies exist, and falls back to the full photo when one is missing", () => {
-    expect(MID_PHOTOS).toBe(false);
+  it("is offered only when the snapshot says the copy exists, and falls back to the full photo when one is missing", () => {
+    expect(MID_PHOTOS).toBe(true);
+    // nothing learned from a marked snapshot: no copy is offered (src/lib/thumbs.ts learnThumbs)
     expect(dealShell({ row, photos, crumbs: [] })).not.toContain("srcset");
     const on = dealShell({ row, photos, crumbs: [], midPhotos: true });
     expect(on).toContain(`srcset="${MEDIA}/t/m/finds/es-test-99k-0.webp 800w, ${photos[0]} 1600w"`);

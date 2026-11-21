@@ -17,7 +17,8 @@ const KINDS: [RegExp, HomeKind][] = [
   [/\bpenthouse\b/i, { en: "penthouse", es: "ático", ld: "Apartment" }],
   [/\bduplex\b/i, { en: "duplex", es: "dúplex", ld: "Apartment" }],
   [/\b(flat|apartment|condo)\b/i, { en: "flat", es: "piso", ld: "Apartment" }],
-  [/\btown ?house\b/i, { en: "townhouse", es: "casa adosada", ld: "House" }],
+  [/\bloft\b/i, { en: "loft", es: "loft", ld: "Apartment" }],
+  [/\b(town ?house|row ?house|end[ -]terrace)\b/i, { en: "townhouse", es: "casa adosada", ld: "House" }],
   [/\bvilla\b/i, { en: "villa", es: "villa", ld: "SingleFamilyResidence" }],
   [/\bbungalow\b/i, { en: "bungalow", es: "bungaló", ld: "SingleFamilyResidence" }],
   [/\bfarm ?house\b/i, { en: "farmhouse", es: "casa de campo", ld: "SingleFamilyResidence" }],
@@ -26,13 +27,23 @@ const KINDS: [RegExp, HomeKind][] = [
   [/\bcabin\b/i, { en: "cabin", es: "cabaña", ld: "SingleFamilyResidence" }],
   [/\b(house|home)\b/i, { en: "house", es: "casa", ld: "SingleFamilyResidence" }],
 ];
+const FLAT = KINDS.find(([re]) => re.test("flat"))![1];
 export function homeKind(r: Row): HomeKind {
   // The kind named first wins: "House with sauna and a guest studio" is a house, not a studio (fix of 20 Nov 2026).
   const t = String(r.title || "");
   let best: HomeKind | null = null, at = Infinity;
-  for (const [re, k] of KINDS) { const m = re.exec(t); if (m && m.index < at) { at = m.index; best = k; } }
+  // "Cottage-style house", "loft-style studio": a word followed by -style, -like or -sized describes, it does not name
+  // the home (21 Nov 2026, checked on all 713 homes in src/test/home-kind.test.ts).
+  for (const [re, k] of KINDS) {
+    const g = new RegExp(re.source, "gi");
+    for (let m = g.exec(t); m; m = g.exec(t)) {
+      if (/^-(style|like|sized)\b/i.test(t.slice(m.index + m[0].length))) continue;
+      if (m.index < at) { at = m.index; best = k; }
+      break;
+    }
+  }
   // ...except "townhouse flat", "house apartment": the word after it names the home.
-  if (best && best.ld !== "Apartment" && /^\S+\s+(flat|apartment|condo)\b/i.test(t.slice(at))) return KINDS[3][1];
+  if (best && best.ld !== "Apartment" && /^\S+\s+(flat|apartment|condo)\b/i.test(t.slice(at))) return FLAT;
   return best || { en: "home", es: "casa", ld: "SingleFamilyResidence" };
 }
 

@@ -37,6 +37,8 @@ export const PLACES: PlaceWords = {
   area: (n) => `Raum ${n}`,
 };
 const place = (n: string, _cc?: string, where?: "card") => placeIn(PLACES, n, where);
+// idea 84 of the second list (21 Nov 2026): the description names where the cheapest home is, as the English and Spanish ones do
+const cheapIn = (F: { cheapest: { town: string } }) => { const t = F.cheapest?.town ? place(F.cheapest.town, undefined, "card") : ""; return t ? ` (${t})` : ""; };
 /** "in der Toskana", "auf Sizilien", "am Comer See", "im Raum Como": a German place name after its preposition. */
 const IN_R: Record<string, string> = { Toskana: "in der Toskana", Lombardei: "in der Lombardei", Piemont: "im Piemont", Abruzzen: "in den Abruzzen", Marken: "in den Marken", "Comer See": "am Comer See", Wallis: "im Wallis", Pelion: "auf dem Pelion", Peloponnes: "auf dem Peloponnes" };
 const ISLANDS = new Set(["Sardinien", "Sizilien", "Kreta", "Rhodos", "Lesbos", "Samos", "Fünen", "Falster", "Lolland", "Mors", "Teneriffa", "Gran Canaria", "Fuerteventura", "La Palma", "Nord-Euböa", "Euböa", "Neufundland", "Korfu", "Mallorca", "Menorca", "Ibiza", "Lanzarote", "Chalkidiki", "Skopelos (Sporaden)"]);
@@ -218,7 +220,7 @@ export const de: Pack = {
   h1: (F) => (F.f.ranked ? `Die ${what(F)}${F.f.country ? "" : " bei RealHunt"}`
     : upper(what(F, (F.f.cap && F.f.cap <= 100000) || (["gfeature", "feature", "area", "near"].includes(F.f.kind) && F.median <= 100000) ? "cheap" : "many"))),
   title: (h1, n, min) => `${h1} (${n}, ab ${min})`,
-  desc: (F, w) => `${F.f.ranked ? `Die ${w}` : `${F.n} ${w}`}, von ${money(F.min)} bis ${money(F.max)}. Medianpreis: ${money(F.median)}. Fotos, Größen, Noten, Kaufnebenkosten und worauf Sie achten sollten.`,
+  desc: (F, w) => `${F.f.ranked ? `Die ${w}` : `${F.n} ${w}`}, von ${money(F.min)}${cheapIn(F)} bis ${money(F.max)}. Medianpreis: ${money(F.median)}${F.scoreAvg ? `, Durchschnittsnote ${F.scoreAvg} von 98` : ""}. Fotos, Größen, Noten, Kaufnebenkosten und worauf Sie achten sollten.`,
   crumbRoot: "RealHunt", crumbCheap: "Günstige Häuser",
   crumbCountry: (c) => `Häuser ${IN_BY_NAME[c] || `in ${c}`}`,
   label: (f) => (f.kind === "combo" ? `${LABEL[f.key!] || f.key}, unter ${money(f.cap!)}` : f.kind === "ccyBand" ? `Unter ${ccy(f.cap!, f.ccy!)}` : f.kind === "area" ? areaL(f) : f.kind === "near" ? `Nahe ${cityOf(f)}`
