@@ -5,9 +5,17 @@ export const slugify = (s: string) =>
     .replace(/[øØ]/g, "o").replace(/[æÆ]/g, "ae").replace(/ß/g, "ss").replace(/ł/g, "l")
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
+// 22-nov-2026: a few listings put the province and region in one bracket ("Semproniano (Grosseto, Tuscany)"). Split on
+// every comma, those homes had "Tuscany)" as their region and a part "Semproniano (Grosseto". A bracket that holds a
+// comma is read as more parts of the place: "Semproniano, Grosseto, Tuscany". Brackets without a comma stay as they are.
+/** The parts of a home's place, most local first: "Pairola, San Bartolomeo al Mare (Imperia, Liguria)" -> Pairola,
+ * San Bartolomeo al Mare, Imperia, Liguria. Empty parts are left out. */
+export const locationParts = (loc: string | null | undefined): string[] =>
+  String(loc || "").replace(/\s*\(([^()]*,[^()]*)\)/g, ", $1").split(",").map((p) => p.trim()).filter(Boolean);
+
 export function regionOf(row: { location_name?: string | null; country?: string | null }): string {
   const country = String(row.country || "").toLowerCase();
-  const parts = String(row.location_name || "").split(",").map((p) => p.trim()).filter((p) => p && p.toLowerCase() !== country);
+  const parts = locationParts(row.location_name).filter((p) => p.toLowerCase() !== country);
   return parts.length ? parts[parts.length - 1] : "";
 }
 

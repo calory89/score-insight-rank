@@ -54,7 +54,7 @@ const place = (n: string, _cc?: string, where?: "card") => placeIn(PLACES, n, wh
 const cheapIn = (F: { cheapest: { town: string } }) => { const t = F.cheapest?.town ? place(F.cheapest.town, undefined, "card") : ""; return t ? ` (${t})` : ""; };
 /** A region after its preposition, by its Polish name: only the names somebody checked. */
 const IN_R: Record<string, string> = {
-  Toskania: "w Toskanii", Kalabria: "w Kalabrii", Lacjum: "w Lacjum", Sycylia: "na Sycylii", "jezioro Como": "nad jeziorem Como", Sardynia: "na Sardynii", Apulia: "w Apulii", Umbria: "w Umbrii", Lombardia: "w Lombardii", Abruzja: "w Abruzji", Piemont: "w Piemoncie",
+  Toskania: "w Toskanii", Kalabria: "w Kalabrii", Lacjum: "w Lacjum", Sycylia: "na Sycylii", "jezioro Como": "nad jeziorem Como", Sardynia: "na Sardynii", Apulia: "w Apulii", Umbria: "w Umbrii", Liguria: "w Ligurii", Hokkaido: "na Hokkaido", Lombardia: "w Lombardii", Abruzja: "w Abruzji", Piemont: "w Piemoncie",
   "Jutlandia Północna": "w Jutlandii Północnej", "Jutlandia Zachodnia": "w Jutlandii Zachodniej", "Jutlandia Wschodnia": "w Jutlandii Wschodniej", "Jutlandia Środkowa": "w Jutlandii Środkowej", "Jutlandia Południowa": "w Jutlandii Południowej", Fionia: "na Fionii", Falster: "na wyspie Falster", Mors: "na wyspie Mors",
   Podlaskie: "w województwie podlaskim", "Łódź": "w Łodzi", Floryda: "na Florydzie", Pensylwania: "w Pensylwanii", Maine: "w stanie Maine", "Kavarna (Morze Czarne)": "w miejscowości Kavarna (Morze Czarne)",
   Teneryfa: "na Teneryfie", Fuerteventura: "na Fuerteventurze", Asturia: "w Asturii", Kantabria: "w Kantabrii", Madryt: "w regionie Madrytu", Murcja: "w regionie Murcji",

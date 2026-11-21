@@ -29,7 +29,7 @@ const R: Record<string, [string, string]> = {
   // Italy
   Abruzzo: ["Abruzzes", "dans les Abruzzes"], Apulia: ["Pouilles", "dans les Pouilles"], Calabria: ["Calabre", "en Calabre"], "Lake Como": ["lac de Côme", "au bord du lac de Côme"], Como: ["Côme", "à Côme"],
   Lazio: ["Latium", "dans le Latium"], Lombardy: ["Lombardie", "en Lombardie"], Marche: ["Marches", "dans les Marches"], Piedmont: ["Piémont", "dans le Piémont"], Sardinia: ["Sardaigne", "en Sardaigne"],
-  Sicily: ["Sicile", "en Sicile"], Tuscany: ["Toscane", "en Toscane"], Umbria: ["Ombrie", "en Ombrie"],
+  Sicily: ["Sicile", "en Sicile"], Tuscany: ["Toscane", "en Toscane"], Umbria: ["Ombrie", "en Ombrie"], Liguria: ["Ligurie", "en Ligurie"],
   // United Kingdom
   "Northern Ireland": ["Irlande du Nord", "en Irlande du Nord"], "County Down": ["comté de Down", "dans le comté de Down"], "County Fermanagh": ["comté de Fermanagh", "dans le comté de Fermanagh"], "County Mayo": ["comté de Mayo", "dans le comté de Mayo"], "County Galway": ["comté de Galway", "dans le comté de Galway"], "County Waterford": ["comté de Waterford", "dans le comté de Waterford"], "West Mani": ["Magne occidental", "dans le Magne occidental"], "Lake Balaton": ["lac Balaton", "au bord du lac Balaton"], "Karlovy Vary region": ["région de Karlovy Vary", "dans la région de Karlovy Vary"], "Vysočina region": ["région de Vysočina", "dans la région de Vysočina"], "Ústí nad Labem region": ["région d'Ústí nad Labem", "dans la région d'Ústí nad Labem"], "Lower Austria": ["Basse-Autriche", "en Basse-Autriche"], "County Leitrim": ["comté de Leitrim", "dans le comté de Leitrim"], "County Durham": ["comté de Durham", "dans le comté de Durham"], Northumberland: ["Northumberland", "dans le Northumberland"],
   // France
@@ -51,7 +51,7 @@ const R: Record<string, [string, string]> = {
   Falster: ["Falster", "sur l'île de Falster"], Funen: ["Fionie", "en Fionie"], Lolland: ["Lolland", "sur l'île de Lolland"], Mors: ["Mors", "sur l'île de Mors"], Thy: ["Thy", "dans le Thy"],
   "West Zealand": ["ouest du Seeland", "dans l'ouest du Seeland"],
   // Japan: prefectures
-  Fukui: ["Fukui", "dans la préfecture de Fukui"], Gifu: ["Gifu", "dans la préfecture de Gifu"], Gunma: ["Gunma", "dans la préfecture de Gunma"], Hyogo: ["Hyogo", "dans la préfecture de Hyogo"],
+  Hokkaido: ["Hokkaido", "à Hokkaido"], Fukui: ["Fukui", "dans la préfecture de Fukui"], Gifu: ["Gifu", "dans la préfecture de Gifu"], Gunma: ["Gunma", "dans la préfecture de Gunma"], Hyogo: ["Hyogo", "dans la préfecture de Hyogo"],
   Kagawa: ["Kagawa", "dans la préfecture de Kagawa"], Kanagawa: ["Kanagawa", "dans la préfecture de Kanagawa"], Kyoto: ["Kyoto", "dans la préfecture de Kyoto"], Nagano: ["Nagano", "dans la préfecture de Nagano"],
   Niigata: ["Niigata", "dans la préfecture de Niigata"], Oita: ["Oita", "dans la préfecture d'Oita"], Okayama: ["Okayama", "dans la préfecture d'Okayama"], Shiga: ["Shiga", "dans la préfecture de Shiga"],
   Shizuoka: ["Shizuoka", "dans la préfecture de Shizuoka"], Tochigi: ["Tochigi", "dans la préfecture de Tochigi"], Wakayama: ["Wakayama", "dans la préfecture de Wakayama"], Yamanashi: ["Yamanashi", "dans la préfecture de Yamanashi"],

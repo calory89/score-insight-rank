@@ -13,7 +13,7 @@ import { homeArticleEs } from "./homeArticleEs";
 import { localizeRows } from "./seo2data";
 import DESTS_ES from "@/data/destinations-es.json";
 import { isEs } from "@/lib/lang";
-import { regionOf, slugify } from "./regions";
+import { regionOf, slugify, locationParts } from "./regions";
 import DESTS from "@/data/destinations.json";
 
 // Inline sign-up after the first rows of homes: the moment someone has seen enough to want more.
@@ -82,7 +82,7 @@ export function countryMedians() {
 /** The places in a home's location, most local first, without the country: "San Siro, Lake Como, Lombardy" -> all three. */
 export const areaParts = (r: { location_name?: string | null; country?: string | null }) => {
   const c = String(r.country || "").toLowerCase();
-  return [...new Set(String(r.location_name || "").split(",").map((x) => x.trim()).filter((x) => x && x.toLowerCase() !== c))];
+  return [...new Set(locationParts(r.location_name).filter((x) => x.toLowerCase() !== c))];
 };
 let areaMeds: Promise<Record<string, number>> | null = null;
 export function areaMedians() {

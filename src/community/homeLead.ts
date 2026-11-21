@@ -7,6 +7,7 @@
 import { esPlace } from "../lib/lang";
 import { theEs } from "./seo2data";
 import { perSqm } from "./sqmLogic";
+import { locationParts } from "./regions";
 
 type Row = Record<string, any>;
 export type LeadCtx = { countryHomes: Row[]; regionHomes?: Row[]; regionName?: string };
@@ -63,7 +64,7 @@ const ppsqm = (r: Row) => perSqm(r); // only a living area (idea 74, ./sqmLogic)
 const eurEn = (n: number) => "€" + Math.round(n).toLocaleString("en");
 const eurEs = (n: number) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ".") + " €";
 const theEn = (n: string) => (/^(United |Netherlands$|Dominican Republic$|Czech Republic$|Philippines$)/.test(n) ? "the " + n : n);
-const parts = (r: Row) => String(r.location_name || "").split(",").map((x) => x.trim()).filter((x) => x && x.toLowerCase() !== String(r.country || "").toLowerCase());
+const parts = (r: Row) => locationParts(r.location_name).filter((x) => x.toLowerCase() !== String(r.country || "").toLowerCase());
 const placeEs = (s: string) => String(s).split(", ").map((x) => esPlace(x.trim())).join(", ");
 
 /** "in Peglio" / "en Peglio"; a place given as "near Saint-Vaury" is "near Saint-Vaury" / "cerca de Saint-Vaury". */
