@@ -8,7 +8,9 @@
 .rh-static[data-ls] a { color: var(--c-accent-ink, #B8370A); text-underline-offset: 3px; }
 /* .rh-bc is the breadcrumb the site-wide pass (seo/polish.ts) writes in place of ours */
 .rh-static[data-ls] .ls-crumbs, .rh-static[data-ls] .rh-bc { font-size: 13px; color: var(--c-ink-3, #62666E); margin: 0 0 12px; }
-.rh-static[data-ls] .ls-crumbs a, .rh-static[data-ls] .rh-bc a { color: inherit; }
+.rh-static[data-ls] .ls-crumbs a, .rh-static[data-ls] .rh-bc a { color: inherit; display: inline-block; padding: 4px 0; }
+/* 21-nov-2026 (list 2, idea 61): links in the table and the crumbs give a finger at least 24 px */
+.rh-static[data-ls] th a { display: inline-block; padding: 4px 0; }
 .rh-static[data-ls] h1 { font: 800 clamp(27px, 4.6vw, 42px)/1.08 var(--f-display, system-ui, sans-serif); letter-spacing: -.02em; margin: 0 0 8px; text-wrap: balance; color: var(--c-ink, #111214); }
 .rh-static[data-ls] h2 { font: 800 clamp(20px, 2.6vw, 26px)/1.2 var(--f-display, system-ui, sans-serif); letter-spacing: -.01em; margin: 40px 0 14px; text-wrap: balance; color: var(--c-ink, #111214); }
 .rh-static[data-ls] h3 { font: 700 17px/1.35 var(--f-body, system-ui, sans-serif); margin: 20px 0 4px; color: var(--c-ink, #111214); }

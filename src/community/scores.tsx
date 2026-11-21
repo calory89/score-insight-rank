@@ -38,16 +38,21 @@ export function ScoreBadge({ deal }: { deal: any }) {
 
 export function ScoreBars({ deal }: { deal: any }) {
   const s = useScore(deal);
+  const [open, setOpen] = useState<string | null>(null);
   if (!s) return null;
   const list = DIMS.filter(([k]) => s.d[k] != null);
   const sorted = list.filter(([k]) => k !== "photos" && k !== "interest").sort((a, b) => s.d[b[0]] - s.d[a[0]]);
   return (
-    <section className="rh-scores">
+    <section className="rh-scores" id="rh-score" tabIndex={-1}>
       <div className="rh-scores-head"><span className={"hv-score is-big " + gtone(s.n)}>{s.n}</span><div><strong>{t("RealHunt score")}</strong><small>{`${t("Best at")}: ${sorted.slice(0, 2).map(([, l]) => t(l)).join(", ")}`}</small></div></div>
       <div className="rh-dims">
         {list.map(([k, l, h]) => (
-          <div key={k} className={"rh-dim " + tone(s.d[k])} title={t(h)}>
-            <span>{t(l)}</span><i><b style={{ width: `${Math.max(4, s.d[k])}%` }} /></i><em>{s.d[k]}</em>
+          // 21-nov-2026: tap a part to read what it measures, without leaving the page (was a hover-only title)
+          <div key={k} className={"rh-dim " + tone(s.d[k]) + (open === k ? " is-open" : "")}>
+            <button type="button" className="rh-dim-btn" aria-expanded={open === k} aria-controls={"rh-dim-" + k} onClick={() => setOpen(open === k ? null : k)}>
+              <span>{t(l)}</span><i aria-hidden="true"><b style={{ width: `${Math.max(4, s.d[k])}%` }} /></i><em>{s.d[k]}</em>
+            </button>
+            <p id={"rh-dim-" + k} className="rh-dim-help" hidden={open !== k}>{t(h)}</p>
           </div>
         ))}
       </div>

@@ -1,4 +1,5 @@
 import { isEs } from "@/lib/lang";
+import { fmtDay } from "@/lib/dates";
 import { Byline } from "./byline";
 // RealHunt v7 (23-sep-2026): growth pass.
 //  - Insider: the secret weekly Top 5 (7-nov-2026, Carlos: "enseña todas a todos": every home is public as soon
@@ -159,7 +160,7 @@ function useInternalLinks() {
     window.scrollTo(0, 0);
   };
 }
-const fmtDate = (iso: string) => new Date(iso + "T12:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+const fmtDate = (iso: string) => fmtDay(iso, { long: true });
 
 // ---------------------------------------------------------------- Blog
 type Post = { slug: string; title: string; desc: string; date: string; author: string; image: string; tags: string[]; minutes: number; html: string };

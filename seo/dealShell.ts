@@ -58,8 +58,9 @@ const CSS = [
   // the caption of the main photo (idea 21): where and the price, over the photo like the photo count, so nothing moves
   `.rh-sh-cap{position:absolute;left:14px;bottom:14px;max-width:calc(100% - 110px);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;background:rgba(0,0,0,.55);color:#fff;font-size:12.5px;font-weight:650;line-height:1.5;padding:4px 10px;border-radius:99px}`,
   `.rh-sh-text{max-width:780px;margin-top:16px;padding-top:4px}`,
-  `.rh-sh-eye{display:flex;align-items:center;gap:6px;min-height:32px;font-size:13.5px;font-weight:600;line-height:1.35;color:#62666E}`,
-  `.rh-sh-eye a{display:inline-flex;align-items:center;min-height:32px;color:#B8370A;text-decoration:none}`,
+  `.rh-sh-eye{display:flex;align-items:center;gap:6px;min-height:32px;white-space:nowrap;overflow-x:auto;scrollbar-width:none;font-size:13.5px;font-weight:600;line-height:1.35;color:#62666E}`,
+  `.rh-sh-eye::-webkit-scrollbar{display:none}`,
+  `.rh-sh-eye a{display:inline-flex;align-items:center;min-height:32px;flex:none;color:#B8370A;text-decoration:none}`,
   `.rh-shell h1{margin:8px 0 12px;font:800 clamp(26px,3vw,36px)/1.12 "Bricolage Grotesque",Inter,system-ui,sans-serif;letter-spacing:-.03em;text-wrap:balance;color:inherit}`,
   `.rh-sh-price{margin:0 0 8px;font:800 29px/1.5 "Bricolage Grotesque",Inter,system-ui,sans-serif;letter-spacing:-.02em}`,
   `@media (min-width:375px){html{--rh-sg:20px}}`,
@@ -136,9 +137,12 @@ export function dealShell({ row, photos, color, crumbs, lang, lowRes, midPhotos,
   const n = Math.min(photos.length, 5);
   const cat = CATEGORY[row.category] || row.category || "";
   const eye = lang === "es" ? "" : [...crumbs.map(([l, h]) => (h ? `<a href="${esc(h)}">${esc(l)}</a>` : `<span>${esc(l)}</span>`)), cat ? esc(cat) : ""].filter(Boolean).join(" · ");
+  // the other photos are named like the app names them ("<title>, 2"); a Spanish page without a Spanish title leaves them empty
+  const altBase = lang === "es" ? esTitle : title;
+  const altN = (i: number) => (altBase ? esc(`${altBase}, ${i + 1}`) : "");
   const imgs = photos.slice(0, 5).map((u, i) => i === 0
     ? `<b${lowRes ? ` style="background:url(&quot;${esc(lowRes)}&quot;) center/cover no-repeat"` : ""}><img src="${esc(u)}" alt="${esc(shellAlt(row, lang === "es" && esTitle ? esTitle : title, lang))}" fetchpriority="high" decoding="async" data-rh-sized${offer}></b>`
-    : `<b><img src="${esc(u)}" alt="" loading="lazy" decoding="async" data-rh-sized></b>`).join("");
+    : `<b><img src="${esc(u)}" alt="${altN(i)}" loading="lazy" decoding="async" data-rh-sized></b>`).join("");
   // The row for the app, and the Spanish title for Spanish visitors (the title is the only text that needs it).
   const js = `window.__rhHome=${json(row)};(function(){try{if(document.documentElement.getAttribute("data-lang")!=="es")return;var h=document.querySelector(".rh-shell h1");if(!h)return;var t=${json(esTitle)};if(t)h.textContent=t;else h.style.visibility="hidden";var p=document.querySelector(".rh-sh-price");if(p)p.textContent=${json(row.price_eur != null ? shellMoneyEs(row.price_eur) : "")}}catch(e){}})()`;
   return `<div class="rh-shell" data-rh-keep data-rh-shell="${esc(row.slug)}">`

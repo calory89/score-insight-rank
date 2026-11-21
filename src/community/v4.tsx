@@ -1,4 +1,6 @@
 import { isGuestSaved, toggleGuestSave } from "./guestSaves";
+import { fmtDay } from "@/lib/dates";
+import { barPlace } from "./keyfactsLogic";
 import { rememberSavedPrice } from "./savedPrice";
 import {PropertyImage, ComparePick} from "./BuyerTools";
 import {storage, usePreference} from "./buyer-state";
@@ -323,7 +325,7 @@ function Photos({ deal, href, onDouble }: { deal: Row; href: string; onDouble: (
 }
 function Chip({ deal, scope }: { deal: Row; scope: string }) {
   if ((deal.price_drop || 0) > 0) return <span className="hv-chip is-drop"><TrendingDown size={12} /> −{money(deal.price_drop!)}</span>;
-  if (deal.verified_at) return <span className="hv-chip is-ok" title={`Price and availability checked ${new Date(deal.verified_at).toLocaleDateString()}`}><BadgeCheck size={12} /> Checked</span>;
+  if (deal.verified_at) return <span className="hv-chip is-ok" title={`Price and availability checked ${fmtDay(deal.verified_at)}`}><BadgeCheck size={12} /> Checked</span>;
   if (deal.votes_24h >= 3 && (scope === "all" ? deal.life_net : deal.week_net) > 0) return <span className="hv-chip is-hot"><Flame size={12} /> Trending</span>;
   return null;
 }
@@ -418,9 +420,10 @@ export function TabBar() {
 
 // ---------------------------------------------------------------- mobile action bar on a home page
 export function DetailBar({ deal, scope = "all", onChange, listing }: { deal: Row; scope?: string; onChange?: () => void; listing: ReactNode }) {
+  const place = barPlace(deal);
   return (
     <div className="hv-detailbar" role="region" aria-label="Actions for this home">
-      <div className="hv-detailbar-price"><strong>{money(deal.price_eur)}</strong><span>{deal.location_name || deal.country}</span></div>
+      <div className="hv-detailbar-price"><strong>{money(deal.price_eur)}</strong><span>{place}</span></div>
       <SaveHeart deal={deal as any} className="hv-save hv-detailbar-save" />
       <ShareButton deal={deal} scope={scope} />
       {listing}

@@ -77,6 +77,18 @@ def logo(size):
         _LOGO[size] = Image.open(os.path.join(ROOT, "scripts", "logo-mark-128.png")).convert("RGBA").resize((size, size), Image.LANCZOS)
     return _LOGO[size]
 
+def score_badge(dr, nota, fs, fr):
+    try: n = int(round(float(nota)))
+    except (TypeError, ValueError): return
+    if n <= 0: return
+    num, lab = str(n), "score"
+    green = (15, 107, 52) if n >= 90 else (27, 125, 67) if n >= 80 else (61, 126, 63)
+    nw, lw = dr.textlength(num, font=fs), dr.textlength(lab, font=fr)
+    x1 = W - 48; x0 = x1 - (nw + lw + 60)
+    dr.rounded_rectangle((x0, 44, x1, 108), radius=32, fill=green)
+    dr.text((x0 + 24, 55), num, font=fs, fill=(255, 255, 255))
+    dr.text((x0 + 36 + nw, 60), lab, font=fr, fill=(255, 255, 255))
+
 def card(d, dest):
     img = fetch_img(d["image_urls"][0])
     base = cover(img, W, H)
@@ -94,6 +106,8 @@ def card(d, dest):
     dr.rounded_rectangle((48, 44, 296, 108), radius=32, fill=(255, 255, 255))
     base.paste(logo(44), (58, 54), logo(44))
     dr.text((114, 55), "RealHunt", font=fs, fill=(17, 18, 20))
+    # 21-nov-2026 (list 2, idea 23): the RealHunt score, top right, as the home page shows it (green, white text)
+    score_badge(dr, d.get("nota"), fs, fr)
     y = H - 60
     loc = (d.get("location_name") or d.get("country") or "")
     meta = loc + (f"  ·  {d['sqm']} m²" if d.get("sqm") else "")

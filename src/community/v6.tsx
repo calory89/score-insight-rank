@@ -219,12 +219,13 @@ const AMENITIES: [RegExp, string, ReactNode][] = [
   [/mountain|panoramic|valley views|hill/i, "Views", <Mountain size={18} />],
   [/forest|woodland|nature|countryside/i, "Nature", <Trees size={18} />],
 ];
-export function Amenities({ deal }: { deal: Deal }) {
+export function Amenities({ deal, noFacts = false }: { deal: Deal; noFacts?: boolean }) {
   const txt = safeFacts(deal);
   const list = AMENITIES.filter(([re]) => re.test(txt)).slice(0, 8);
   const facts: [string, ReactNode][] = [];
-  if (deal.bedrooms != null) facts.push([`${deal.bedrooms} ${deal.bedrooms === 1 ? "bedroom" : "bedrooms"}`, <BedDouble size={18} />]);
-  if (deal.sqm) facts.push([`${deal.sqm} m²`, <Ruler size={18} />]);
+  // noFacts: the home page shows bedrooms and m² in its key facts row (./keyfacts.tsx), not twice
+  if (deal.bedrooms != null && !noFacts) facts.push([`${deal.bedrooms} ${deal.bedrooms === 1 ? "bedroom" : "bedrooms"}`, <BedDouble size={18} />]);
+  if (deal.sqm && !noFacts) facts.push([`${deal.sqm} m²`, <Ruler size={18} />]);
   if (!list.length && !facts.length) return null;
   return (
     <ul className="hv-amenities" aria-label="What this home has">

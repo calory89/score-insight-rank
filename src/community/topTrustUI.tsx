@@ -1,6 +1,7 @@
 // Trust layer of the Top 100 (30-sep-2026): how we rank, how we make money, what verification checked,
 // the legal checklist per destination, review dates and error reports, public Q&A, price per m² against the area,
 // our own visits, independent lawyers, and the About page.
+import { fmtDay } from "@/lib/dates";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +15,7 @@ import { t } from "./i18n";
 
 const rpc = async (fn: string, args: Record<string, unknown> = {}) => { const { data, error } = await (supabase as any).rpc(fn, args); if (error) throw error; return data; };
 const eur = (n?: number | null) => (n == null ? "–" : "€" + Math.round(n).toLocaleString("en-GB"));
-const day = (d?: string | null) => (d ? new Date(d.length === 10 ? d + "T12:00:00" : d).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) : "");
+const day = (d?: string | null) => (d ? fmtDay(d, { long: true }) : "");
 const host = (u: string) => { try { return new URL(u).hostname.replace(/^www\./, ""); } catch { return u; } };
 export const REPLY_DAYS = 3;
 

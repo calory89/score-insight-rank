@@ -11,6 +11,7 @@ import { SlidersHorizontal, X, ChevronDown } from "lucide-react";
 import { Filters, type FeedParams } from "./extras";
 import { activeChips, clearedFilters } from "./filterChips";
 import { t } from "./i18n";
+import { isEs, esPlace } from "@/lib/lang";
 import "./mobile-ux.css";
 
 const NARROW = "(max-width: 759.98px)";
@@ -112,7 +113,8 @@ const GROUPS: { key: string; title: string; links: L[] }[] = [
   { key: "trust", title: "Trust", links: [["/method", "How the score works", true], ["/how-we-check-homes", "How we check homes"], ["/what-we-reject", "Which homes we reject"], ["/editorial-policy", "Editorial policy", true], ["/corrections", "Corrections"], ["/how-we-make-money", "How we make money"], ["/what-we-never-do", "What we never do"]] },
   { key: "legal", title: "Legal", links: [["/legal/privacy", "Privacy"], ["/legal/terms", "Terms"], ["/sitemap", "Site map"]] },
 ];
-const label = (s: string) => (s.startsWith("Homes in ") ? `${t("Homes in")} ${t(s.slice(9))}` : t(s));
+// 21-nov-2026: written whole in Spanish here ("Casas en Italia"): the split "Homes in" + country stayed English on /es pages
+const label = (s: string) => (s.startsWith("Homes in ") ? (isEs() ? `Casas en ${esPlace(s.slice(9))}` : s) : t(s));
 
 export function FooterLinks({ admin = false }: { admin?: boolean }) {
   const [open, setOpen] = useState<string | null>(null);

@@ -15,7 +15,7 @@ import {userRent} from "./buyer-state";
 // homes, ask-the-seller, daily drop, swipe, leaderboard, invites, public collections, guides, SEO
 // country pages, help buying, alerts (saved only, nothing is emailed until Carlos switches it on),
 // install button, language switch and the admin inbox.
-import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState, type TouchEvent as RTouchEvent } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowUp, X, ChevronLeft, ChevronRight, MapPin, BadgeCheck, TrendingDown, Sparkles, Clock, Share2, Download, Mail, Check, Trophy, Users, Copy, Heart } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -243,8 +243,21 @@ export function Lightbox({ images, start = 0, title, onClose }: { images: string
     return () => { document.removeEventListener("keydown", key); document.body.style.overflow = ""; };
   }, []);
   const go = (n: number) => { const el = ref.current; if (!el) return; el.scrollBy({ left: n * el.clientWidth, behavior: "smooth" }); };
+  // 21-nov-2026: a downward swipe closes the photos, as in phone galleries (sideways swipes still change photo).
+  const drag = useRef<{ x: number; y: number; dy: number; on: boolean } | null>(null);
+  const setPull = (dy: number) => { const el = ref.current; if (!el) return; el.style.transform = dy ? `translateY(${dy}px)` : ""; el.style.opacity = dy ? String(Math.max(0.35, 1 - dy / 400)) : ""; };
+  const touch = {
+    onTouchStart: (e: RTouchEvent) => { if (zoom !== null || e.touches.length !== 1) { drag.current = null; return; } drag.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, dy: 0, on: false }; },
+    onTouchMove: (e: RTouchEvent) => {
+      const d = drag.current; if (!d) return;
+      const dx = e.touches[0].clientX - d.x, dy = e.touches[0].clientY - d.y;
+      if (!d.on) { if (Math.abs(dy) < 12 && Math.abs(dx) < 12) return; if (dy > 0 && dy > Math.abs(dx) * 1.3) d.on = true; else { drag.current = null; return; } }
+      d.dy = Math.max(0, dy); setPull(d.dy);
+    },
+    onTouchEnd: () => { const d = drag.current; drag.current = null; if (!d?.on) return; if (d.dy > 110) onClose(); else setPull(0); },
+  };
   return (
-    <div onKeyDown={e=>{if(e.key!=="Tab")return;const nodes=Array.from(e.currentTarget.querySelectorAll<HTMLElement>("button:not([disabled]), [tabindex=\"0\"]"));const first=nodes[0],last=nodes[nodes.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}} className="hunt-lightbox" role="dialog" aria-modal="true" aria-label={`${title} photos`}>
+    <div {...touch} onKeyDown={e=>{if(e.key!=="Tab")return;const nodes=Array.from(e.currentTarget.querySelectorAll<HTMLElement>("button:not([disabled]), [tabindex=\"0\"]"));const first=nodes[0],last=nodes[nodes.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}} className="hunt-lightbox" role="dialog" aria-modal="true" aria-label={`${title} photos`}>
       <button ref={closeRef} className="hunt-lb-close" aria-label="Close photos" onClick={onClose}><X size={22} /></button>
       <div className={"hunt-lb-track" + (zoom !== null ? " is-zoomed" : "")} ref={ref} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
         {images.map((src, n) => <div key={n} className={"hunt-lb-slide" + (zoom === n ? " is-zoom" : "")}><PropertyImage src={src} fallback={images.find(x=>x!==src)} sizes="100vw" alt={`${title}, photo ${n + 1}`} loading={Math.abs(n - start) < 2 ? "eager" : "lazy"}
