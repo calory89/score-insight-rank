@@ -13,7 +13,7 @@
 //  - every page: the main sections and the site map
 import type { Pg } from "./polish";
 import type { Kind, Lang } from "./polishMeta";
-import { slugify } from "../src/community/regions";
+import { slugify, locationParts } from "../src/community/regions";
 
 export type RelCtx = {
   pages: Map<string, Pg>; get: (p: string) => Pg | undefined; live: (p: string) => boolean;
@@ -121,7 +121,7 @@ function index(c: RelCtx): Index {
   for (const lang of ["en", "es"] as Lang[]) {
     const deals = kind.get(`${lang}:deal`) || [];
     const price = (p: Pg) => Number(c.bySlug.get(p.en.slice(6))?.price_eur) || 0;
-    const key = (p: Pg, level: number) => { const r = c.bySlug.get(p.en.slice(6)); const loc = String(r?.location_name || "").split(",").map((x) => x.trim()).filter((x) => x && x.toLowerCase() !== String(r?.country || "").toLowerCase()); return level === 0 ? `${p.cc}/${loc[loc.length - 1] || ""}` : p.cc; };
+    const key = (p: Pg, level: number) => { const r = c.bySlug.get(p.en.slice(6)); const loc = locationParts(r?.location_name).filter((x) => x.toLowerCase() !== String(r?.country || "").toLowerCase()); return level === 0 ? `${p.cc}/${loc[loc.length - 1] || ""}` : p.cc; };
     let rest = deals; const groups: Pg[][] = [];
     for (const level of [0, 1]) {
       const by = new Map<string, Pg[]>();
@@ -170,7 +170,7 @@ export function relatedRows(pg: Pg, c: RelCtx): Row[] {
   if (pg.kind === "deal") {
     const r = c.bySlug.get(pg.en.slice(6)); const cc = pg.cc;
     if (r && cc) {
-      const loc = String(r.location_name || "").split(",").map((x: string) => x.trim()).filter((x: string) => x && x.toLowerCase() !== String(r.country || "").toLowerCase());
+      const loc = locationParts(r.location_name).filter((x: string) => x.toLowerCase() !== String(r.country || "").toLowerCase());
       const region = loc.length ? K("region", cc).find((p) => p.en.endsWith("/" + slugify(loc[loc.length - 1]))) : undefined;
       const band = K("band", cc).slice().sort((a, b) => num(a) - num(b)).find((p) => num(p) >= Number(r.price_eur));
       const type = K("type", cc).find((p) => TYPE_OF[p.en.split("/")[3]] === r.category);

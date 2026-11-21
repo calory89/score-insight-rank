@@ -104,7 +104,8 @@ describe("how each language writes amounts, dates and places", () => {
     expect(pl.place("Kavarna (Black Sea)")).toBe("Kavarna (Morze Czarne)");
     expect(pl.place("Alhama de Granada")).toBe("Alhama de Granada");
     const tuscany = of("pl").pages.find((p) => p.f.path === "/homes/italy/tuscany");
-    if (tuscany) expect(tuscany.T.h1).toBe("Nieruchomości na sprzedaż w Toskanii (Włochy)");
+    // the noun follows the homes of the day (houses once 60% of them are houses, 22 Nov 2026); the place is what is tested here
+    if (tuscany) expect(tuscany.T.h1).toMatch(/^(Nieruchomości|Domy|Mieszkania) na sprzedaż w Toskanii \(Włochy\)$/);
     const alicante = of("pl").pages.find((p) => p.f.path === "/homes/spain/alicante");
     if (alicante) expect(alicante.T.h1).toContain("w prowincji Alicante (Hiszpania)");
   });
