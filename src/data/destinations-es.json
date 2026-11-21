@@ -210,5 +210,15 @@
  "uruguay": {
   "can_foreigners_buy": "Sí. No hay límites a los tipos de inmuebles que pueden comprar los extranjeros en Uruguay, y tienen los mismos derechos de propiedad que los ciudadanos.",
   "purchase_costs_breakdown": "Impuesto a las Transmisiones Patrimoniales (ITP) del 2% para el comprador y del 2% para el vendedor, sobre el valor real fijado por la Dirección Nacional de Catastro; honorarios del escribano de alrededor del 3%; y una comisión de la inmobiliaria de alrededor del 3%."
+ },
+ "czech-republic": {
+  "can_foreigners_buy": "Sí. Los extranjeros pueden comprar viviendas y terrenos en la República Checa en las mismas condiciones que los checos: los límites para las viviendas terminaron el 1 de mayo de 2009 y los de las tierras agrícolas y los bosques el 1 de mayo de 2011.",
+  "purchase_costs_breakdown": "No hay impuesto sobre la transmisión de inmuebles: se suprimió para las compras inscritas en el catastro desde diciembre de 2019. El catastro (katastr nemovitostí) cobra una tasa administrativa de 2.000 CZK por cada solicitud de inscripción de la venta (návrh na vklad); el notario o abogado que redacta el contrato se paga aparte.",
+  "annual_property_tax": "Los propietarios pagan cada año un impuesto sobre el suelo y los edificios (daň z nemovitých věcí); desde 2024 las tarifas subieron de media a 1,8 veces las anteriores, y cada municipio puede multiplicar el impuesto por un coeficiente local de entre 0,5 y 5. La declaración se presenta hasta el 31 de enero y el impuesto se paga hasta el 31 de mayo."
+ },
+ "slovenia": {
+  "can_foreigners_buy": "Sí para los ciudadanos de países de la UE, del EEE y de la OCDE (como Estados Unidos, el Reino Unido y Canadá), que compran como los eslovenos. Los ciudadanos de los países candidatos a la UE (Macedonia del Norte, Serbia, Montenegro, Albania, Ucrania, Moldavia, Bosnia y Herzegovina y Georgia) necesitan antes una resolución que confirme la reciprocidad, y los de los demás países, como China y Rusia, no pueden comprar, solo heredar cuando hay reciprocidad.",
+  "purchase_costs_breakdown": "Impuesto sobre la transmisión de inmuebles (davek na promet nepremičnin) del 2%, que paga el vendedor salvo que el contrato de compraventa diga que lo paga el comprador.",
+  "annual_property_tax": "Quien usa directamente la vivienda, normalmente el propietario, paga una tasa anual por el uso del suelo urbano (nadomestilo za uporabo stavbnega zemljišča, NUSZ), que fija la ordenanza de cada municipio y que la administración tributaria (FURS) liquida una vez al año; los propietarios de casas de vacaciones pagan además el impuesto sobre el patrimonio (davek od premoženja)."
  }
 }

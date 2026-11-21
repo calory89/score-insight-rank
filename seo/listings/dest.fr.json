@@ -113,5 +113,15 @@
  "uruguay": {
   "can_foreigners_buy": "Oui. Les acheteurs étrangers peuvent acheter tout type de bien en Uruguay et ont les mêmes droits de propriété que les citoyens.",
   "purchase_costs_breakdown": "Impôt sur les mutations (ITP) de 2 % pour l'acheteur et 2 % pour le vendeur, sur la valeur cadastrale (valor real) fixée par la Dirección Nacional de Catastro ; frais de notaire d'environ 3 % ; et honoraires d'agence d'environ 3 %."
+ },
+ "czech-republic": {
+  "can_foreigners_buy": "Oui. Les étrangers peuvent acheter logements et terrains en Tchéquie aux mêmes conditions que les Tchèques : les limites sur les logements ont pris fin le 1er mai 2009 et celles sur les terres agricoles et les forêts le 1er mai 2011.",
+  "purchase_costs_breakdown": "Il n'y a plus de droits de mutation : ils ont été supprimés pour les achats inscrits au cadastre à partir de décembre 2019. Le cadastre (katastr nemovitostí) perçoit des frais administratifs de 2 000 CZK pour chaque demande d'inscription de la vente (návrh na vklad) ; le notaire ou l'avocat qui rédige le contrat est payé en plus.",
+  "annual_property_tax": "Les propriétaires paient chaque année un impôt sur le terrain et les bâtiments (daň z nemovitých věcí) ; depuis 2024 les taux ont été multipliés en moyenne par 1,8, et chaque commune peut multiplier l'impôt par un coefficient local compris entre 0,5 et 5. La déclaration est due avant le 31 janvier et l'impôt avant le 31 mai."
+ },
+ "slovenia": {
+  "can_foreigners_buy": "Oui pour les citoyens des pays de l'UE, de l'EEE et de l'OCDE (comme les États-Unis, le Royaume-Uni et le Canada), qui achètent comme les Slovènes. Les citoyens des pays candidats à l'UE (Macédoine du Nord, Serbie, Monténégro, Albanie, Ukraine, Moldavie, Bosnie-Herzégovine et Géorgie) doivent d'abord obtenir une décision qui confirme la réciprocité, et ceux des autres pays, comme la Chine et la Russie, ne peuvent pas acheter, seulement hériter s'il y a réciprocité.",
+  "purchase_costs_breakdown": "Impôt sur les transactions immobilières (davek na promet nepremičnin) de 2 %, payé par le vendeur sauf si le contrat de vente prévoit que l'acheteur le paie.",
+  "annual_property_tax": "L'utilisateur direct du logement, en général le propriétaire, paie une redevance annuelle pour l'usage du terrain à bâtir (nadomestilo za uporabo stavbnega zemljišča, NUSZ), fixée par un arrêté de chaque commune et calculée une fois par an par l'administration fiscale (FURS) ; les propriétaires de maisons de vacances paient en plus l'impôt sur le patrimoine (davek od premoženja)."
  }
 }

@@ -113,5 +113,15 @@
  "uruguay": {
   "can_foreigners_buy": "Ja. Ausländische Käufer dürfen in Uruguay jede Art von Immobilie kaufen und haben dieselben Eigentumsrechte wie Staatsbürger.",
   "purchase_costs_breakdown": "Übertragungssteuer (ITP) von 2 % für den Käufer und 2 % für den Verkäufer, auf den Katasterwert (valor real) der Dirección Nacional de Catastro; Notarhonorar von etwa 3 % und eine Maklerprovision von etwa 3 %."
+ },
+ "czech-republic": {
+  "can_foreigners_buy": "Ja. Ausländer können in Tschechien Wohnungen, Häuser und Grundstücke zu denselben Bedingungen wie Tschechen kaufen: die Beschränkungen für Wohnimmobilien endeten am 1. Mai 2009, die für landwirtschaftliche Flächen und Wald am 1. Mai 2011.",
+  "purchase_costs_breakdown": "Es gibt keine Grunderwerbsteuer mehr: sie wurde für Käufe abgeschafft, die ab Dezember 2019 im Kataster eingetragen wurden. Das Katasteramt (katastr nemovitostí) erhebt eine Verwaltungsgebühr von 2.000 CZK für jeden Antrag auf Eintragung des Kaufs (návrh na vklad); der Notar oder Anwalt, der den Vertrag aufsetzt, kostet extra.",
+  "annual_property_tax": "Eigentümer zahlen jedes Jahr eine Steuer auf Grundstücke und Gebäude (daň z nemovitých věcí); seit 2024 sind die Sätze im Durchschnitt auf das 1,8-Fache gestiegen, und jede Gemeinde kann die Steuer mit einem örtlichen Koeffizienten zwischen 0,5 und 5 multiplizieren. Die Erklärung ist bis 31. Januar fällig, die Steuer bis 31. Mai."
+ },
+ "slovenia": {
+  "can_foreigners_buy": "Ja für Bürger von Staaten der EU, des EWR und der OECD (etwa der Vereinigten Staaten, des Vereinigten Königreichs und Kanadas), die wie Slowenen kaufen. Bürger der EU-Beitrittskandidaten (Nordmazedonien, Serbien, Montenegro, Albanien, Ukraine, Moldau, Bosnien und Herzegowina und Georgien) brauchen vorher einen Bescheid, der die Gegenseitigkeit bestätigt, und Bürger anderer Staaten, etwa Chinas und Russlands, können nicht kaufen, nur erben, wenn Gegenseitigkeit besteht.",
+  "purchase_costs_breakdown": "Grunderwerbsteuer (davek na promet nepremičnin) von 2 %, die der Verkäufer zahlt, außer der Kaufvertrag legt fest, dass der Käufer sie zahlt.",
+  "annual_property_tax": "Der direkte Nutzer der Wohnung, meist der Eigentümer, zahlt eine jährliche Gebühr für die Nutzung von Bauland (nadomestilo za uporabo stavbnega zemljišča, NUSZ), die jede Gemeinde per Verordnung festlegt und die Steuerverwaltung (FURS) einmal im Jahr festsetzt; Eigentümer von Ferienhäusern zahlen außerdem Vermögensteuer (davek od premoženja)."
  }
 }

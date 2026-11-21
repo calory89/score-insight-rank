@@ -601,5 +601,44 @@
       "https://www.globalpropertyguide.com/Latin-America/Uruguay/Buying-Guide"
     ],
     "as_of": 2026
+  },
+  "czech-republic": {
+    "can_foreigners_buy": "Yes. Foreigners can buy homes and land in the Czech Republic on the same terms as Czechs: the limits on homes ended on 1 May 2009 and those on farmland and forest on 1 May 2011.",
+    "purchase_costs_pct": null,
+    "purchase_costs_breakdown": "There is no real estate transfer tax: it was abolished for purchases registered in the land register from December 2019. The land register (katastr nemovitostí) charges an administrative fee of CZK 2,000 for each application to register the sale (návrh na vklad); the notary or lawyer who draws up the contract is paid on top.",
+    "annual_property_tax": "Owners pay a yearly tax on land and buildings (daň z nemovitých věcí); from 2024 the rates rose to 1.8 times their old level on average, and each municipality can multiply the tax by a local coefficient between 0.5 and 5. The return is due by 31 January and the tax by 31 May.",
+    "rental_income_tax": null,
+    "holiday_rental_gross_yield_pct": null,
+    "holiday_rental_yield_note": null,
+    "long_term_gross_yield_pct": null,
+    "holiday_rental_rules": null,
+    "sources": [
+      "https://mf.gov.cz/cs/ministerstvo/media/materialy-na-jednani-vlady/2010/materialy-na-jednani-vlady-24-11-10-3198",
+      "https://mzv.gov.cz/riyadh/en/trade_and_economy/acquisition_of_real_estate_in_the_czech/index.html",
+      "https://www.e15.cz/magazin/novela-zakona-umoznila-nakup-nemovitosti-cizinci-976918",
+      "https://financnisprava.gov.cz/cs/dane/dane/dan-z-nabyti-nemovitych-veci/informace-stanoviska-a-sdeleni/zruseni-dane-z-nabyti-nemovitych-veci",
+      "https://www.cuzk.gov.cz/Katastr-nemovitosti/Poplatky/Sazby-spravnich-poplatku.aspx",
+      "https://financnisprava.gov.cz/cs/financni-sprava/media-a-verejnost/tiskove-zpravy-gfr/tiskove-zpravy-2023/koho-se-v-lednu-dotknou-zmeny-u-dnv"
+    ],
+    "as_of": 2026
+  },
+  "slovenia": {
+    "can_foreigners_buy": "Yes for citizens of EU, EEA and OECD countries (such as the United States, the United Kingdom and Canada), who buy like Slovenians. Citizens of EU candidate countries (North Macedonia, Serbia, Montenegro, Albania, Ukraine, Moldova, Bosnia and Herzegovina and Georgia) first need a decision confirming reciprocity, and citizens of other countries, such as China and Russia, cannot buy, only inherit where reciprocity exists.",
+    "purchase_costs_pct": null,
+    "purchase_costs_breakdown": "Real estate transfer tax (davek na promet nepremičnin) of 2%, paid by the seller unless the sales contract says the buyer pays it.",
+    "annual_property_tax": "The direct user of the home, usually the owner, pays a yearly fee for the use of building land (nadomestilo za uporabo stavbnega zemljišča, NUSZ), set by each municipality's ordinance and assessed once a year by the tax administration (FURS); owners of holiday homes also pay property tax (davek od premoženja).",
+    "rental_income_tax": null,
+    "holiday_rental_gross_yield_pct": null,
+    "holiday_rental_yield_note": null,
+    "long_term_gross_yield_pct": null,
+    "holiday_rental_rules": null,
+    "sources": [
+      "https://www.gov.si/zbirke/storitve/pridobivanje-lastninske-pravice-tujcev-na-nepremicninah/",
+      "https://www.fu.gov.si/davki_in_druge_dajatve/podrocja/davek_na_promet_nepremicnin",
+      "https://www.fu.gov.si/zivljenjski_dogodki_prebivalci/nakup_in_prodaja_nepremicnine",
+      "https://www.fu.gov.si/poslovni_dogodki_podjetja/nadomestilo_za_uporabo_stavbnega_zemljisca/",
+      "https://www.gov.si/assets/vladne-sluzbe/UKOM/gov-si/kos/Zlozenka-o-obdavcitvi-nepremicnin.pdf"
+    ],
+    "as_of": 2026
   }
 }
