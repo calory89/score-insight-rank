@@ -266,11 +266,11 @@ export function AboutPage() {
         </div>
       ))}</div>
       <h2>The company</h2>
-      <p>RealHunt is run by <b>Equinox Investment Group LLC</b>, 30 N Gould St Ste N, Sheridan, WY 82801, United States. Write to us at <a className="hunt-link" href="mailto:hello@realhunt.co">hello@realhunt.co</a>.</p>
+      <p>RealHunt is run by <b>Equinox Investment Group LLC</b>, 30 N Gould St Ste N, Sheridan, WY 82801, United States. Write to us at <a className="hunt-link" href="mailto:carlos@equinoxinvestmentgroup.com">carlos@equinoxinvestmentgroup.com</a>.</p>
       <MoneyNote />
       <h2>What you will find if you search our founder</h2>
       <p>Carlos de Ory Gordillo also founded Eco Beach City, a property development in Sumba, Indonesia. It is a separate company. If you search his name you will find press coverage about Eco Beach City, including legal complaints from some of its buyers. We would rather you hear it from us than find it on your own.</p>
-      <p>What it means for RealHunt: Eco Beach City is never part of any Top 100 ranking, and when an Eco Beach City home appears in the RealHunt feed, it is our founder's own project. If you have questions about any of this, ask us at <a className="hunt-link" href="mailto:hello@realhunt.co">hello@realhunt.co</a>.</p>
+      <p>What it means for RealHunt: Eco Beach City is never part of any Top 100 ranking, and when an Eco Beach City home appears in the RealHunt feed, it is our founder's own project. If you have questions about any of this, ask us at <a className="hunt-link" href="mailto:carlos@equinoxinvestmentgroup.com">carlos@equinoxinvestmentgroup.com</a>.</p>
       <h2>How we keep the rankings honest</h2>
       <ul className="tp-law">
         <li>The whole formula is public: <Link className="hunt-link" to="/top/how-we-rank">how we rank</Link>.</li>
@@ -278,7 +278,7 @@ export function AboutPage() {
         <li>Every project page shows when we last reviewed it and has a "Report an error" button. We answer within {REPLY_DAYS} working days.</li>
         <li>Each destination has a legal checklist and a list of independent lawyers who have no deal with us.</li>
       </ul>
-      <p><Link className="hunt-primary" to="/top"><ShieldCheck size={15} /> See the Top 100 rankings</Link> <a className="hunt-secondary" href="mailto:hello@realhunt.co"><Mail size={15} /> Write to us</a></p>
+      <p><Link className="hunt-primary" to="/top"><ShieldCheck size={15} /> See the Top 100 rankings</Link> <a className="hunt-secondary" href="mailto:carlos@equinoxinvestmentgroup.com"><Mail size={15} /> Write to us</a></p>
     </div>
   );
 }

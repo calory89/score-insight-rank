@@ -20,7 +20,7 @@ const RHFooter = () => (
         <Link to="/for-agents" className="hover:text-ink transition-colors">For Agents</Link>
         <Link to="/legal/terms" className="hover:text-ink transition-colors">Terms</Link>
         <Link to="/legal/privacy" className="hover:text-ink transition-colors">Privacy</Link>
-        <a href="mailto:hello@realhunt.co" className="hover:text-ink transition-colors">Contact</a>
+        <a href="mailto:carlos@equinoxinvestmentgroup.com" className="hover:text-ink transition-colors">Contact</a>
       </nav>
     </div>
     <div className="border-t border-hairline">

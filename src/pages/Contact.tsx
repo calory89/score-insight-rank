@@ -35,7 +35,7 @@ const Contact = () => {
       const body = encodeURIComponent(
         `From: ${name} <${email}>\n\n${message}\n\nSent via realhunt.co/contact`
       );
-      window.location.href = `mailto:hello@realhunt.co?subject=${subject}&body=${body}`;
+      window.location.href = `mailto:carlos@equinoxinvestmentgroup.com?subject=${subject}&body=${body}`;
     } catch {
       /* ignore — fall through to success state */
     }
@@ -63,7 +63,7 @@ const Contact = () => {
 
           <div className="mt-8 space-y-4">
             <a
-              href="mailto:hello@realhunt.co"
+              href="mailto:carlos@equinoxinvestmentgroup.com"
               className="flex items-center gap-3 rh-card !p-4 hover:border-ink/20 transition-colors"
             >
               <span className="h-9 w-9 rounded-full bg-[#FBF6EA] flex items-center justify-center">
@@ -71,7 +71,7 @@ const Contact = () => {
               </span>
               <span>
                 <span className="block text-[12px] uppercase tracking-wider text-ink-soft">Email</span>
-                <span className="block text-[15px] text-ink">hello@realhunt.co</span>
+                <span className="block text-[15px] text-ink">carlos@equinoxinvestmentgroup.com</span>
               </span>
             </a>
             <div className="flex items-center gap-3 rh-card !p-4">

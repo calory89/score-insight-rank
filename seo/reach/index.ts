@@ -80,9 +80,9 @@ export function finishReach(root: string, rows: Row[], today: string) {
   }
   // /contact: the legal name and postal address of the company, in the text and as structured data (idea 756)
   const addr = `${COMPANY.street}, ${COMPANY.city}, ${COMPANY.region} ${COMPANY.postalCode}, ${COMPANY.countryName}`;
-  const ld = { "@context": "https://schema.org", "@type": "Organization", "@id": ORG["@id"], name: "RealHunt", legalName: COMPANY.legalName, url: SITE + "/", logo: ORG.logo, email: "hello@realhunt.co",
+  const ld = { "@context": "https://schema.org", "@type": "Organization", "@id": ORG["@id"], name: "RealHunt", legalName: COMPANY.legalName, url: SITE + "/", logo: ORG.logo, email: "carlos@equinoxinvestmentgroup.com",
     address: { "@type": "PostalAddress", streetAddress: COMPANY.street, addressLocality: COMPANY.city, addressRegion: COMPANY.region, postalCode: COMPANY.postalCode, addressCountry: COMPANY.country },
-    contactPoint: { "@type": "ContactPoint", contactType: "customer support", email: "hello@realhunt.co", availableLanguage: ["en", "es"] } };
+    contactPoint: { "@type": "ContactPoint", contactType: "customer support", email: "carlos@equinoxinvestmentgroup.com", availableLanguage: ["en", "es"] } };
   if (edit(root, "contact/index.html", (h) => (h.includes("data-reach-addr") ? h : h
     .replace(/(RealHunt is run by Equinox Investment Group LLC\.)/, () => `RealHunt is run by Equinox Investment Group LLC. <span data-reach-addr>Postal address: ${addr}.</span>`)
     .replace("</head>", () => `<script type="application/ld+json">${JSON.stringify(ld)}</script></head>`)))) out.contact++;
