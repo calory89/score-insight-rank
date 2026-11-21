@@ -1,4 +1,5 @@
 import { TaxPanel } from "./taxes";
+import { fmtDay } from "@/lib/dates";
 import { CatalogBack, UnavailableHome, DecisionFacts, QuickHome, ComparePick, EmptyAlternatives, RankingExplanation, MotionControl, RentPreference } from "./BuyerTools";
 import { storage, rememberCatalog, usePreference } from "./buyer-state";
 import {
@@ -31,6 +32,7 @@ import { lazy, Suspense } from "react";
 import { DevBlock, ClaimListing, BuyerPicks, NewBuildsPage, DevLeaderboard } from "./v8";
 import { InboxPage, CompareBuilds, CostsIndex, CostsPage, NewBuildReport, AgentsPage, TranslateBar, InboxLink } from "./v10";
 import { DetailAside } from "./aside";
+import { KeyFacts } from "./keyfacts";
 import { StaticPage } from "./staticpage";
 import { isAssetPath } from "./assetRoutes";
 import { isKnowledgePath } from "./knowledgeRoutes";
@@ -54,7 +56,7 @@ import BestRoute from "./best"; // stays here: its CSS must keep its place in th
 import { ScoreBars, BestPerCountry, RankRow, RankHead, RankSkeleton, ScoreHelp, NearestHomes, NearCity } from "./scores";
 import { HomeCard, HomeCardSkeleton } from "./homecards";
 import { LogoMark } from "@/components/realhunt/Logo";
-import { isEs, searchQuery } from "@/lib/lang";
+import { isEs, esPlace, searchQuery } from "@/lib/lang";
 import { guestSaves, isGuestSaved, toggleGuestSave, clearGuestSaves, type GuestSave } from "./guestSaves";
 import { Card4, CardSkeleton, Freshness, TabBar, DetailBar, HeartVote, ShareButton, SaveHeart, remember, rowCache, takeDetail, prefetchDetail, preloadImages } from "./v4";
 import { bumpIx, FLAG as FLAG_ } from "@/lib/rh";
@@ -143,6 +145,7 @@ import "./oct23.css";
 import "./homecards.css";
 import "./ds.css"; // design system, last so it settles the older layers
 import "./minimal.css"; // 8-nov-2026 minimal pass: lighter buttons, one-row header, quieter cards
+import "./rh2-design.css"; // 21-nov-2026 list 2: key facts, action bar, contrast
 // Imported titles often repeat the price ("€35,000 · Your own home") right under the big price, or
 // say nothing at all ("Property - Japan"). Show something a person would actually write.
 function cleanTitle(d: Pick<Deal, "title" | "location_name" | "country" | "sqm">) {
@@ -321,8 +324,8 @@ function Shell({ children }: { children: ReactNode }) {
         <div className="hunt-main hv-page" key={location.pathname + langV}>{children}</div>
         <SaveNudgeMount signedIn={!!user} />
         <RelatedBlock />
-        <nav className="rh-footer-countries" aria-label="Homes by country">
-          {[["spain","Spain"],["italy","Italy"],["denmark","Denmark"],["sweden","Sweden"],["france","France"],["poland","Poland"],["united-states","United States"],["japan","Japan"],["germany","Germany"],["netherlands","Netherlands"],["greece","Greece"],["switzerland","Switzerland"],["mexico","Mexico"],["canada","Canada"],["bulgaria","Bulgaria"]].map(([k, l]) => <Link key={k} to={`/homes/${k}`}>{t("Homes in")} {t(l)}</Link>)}
+        <nav className="rh-footer-countries" aria-label={isEs() ? "Casas por país" : "Homes by country"}>
+          {[["spain","Spain"],["italy","Italy"],["denmark","Denmark"],["sweden","Sweden"],["france","France"],["poland","Poland"],["united-states","United States"],["japan","Japan"],["germany","Germany"],["netherlands","Netherlands"],["greece","Greece"],["switzerland","Switzerland"],["mexico","Mexico"],["canada","Canada"],["bulgaria","Bulgaria"]].map(([k, l]) => <Link key={k} to={`/homes/${k}`}>{isEs() ? `Casas en ${esPlace(l)}` : `Homes in ${l}`}</Link>)}
         </nav>
         <footer className="hunt-footer">
           <Link to="/" className="hunt-footer-brand"><LogoMark size={26} />RealHunt</Link>
@@ -1033,12 +1036,12 @@ function Detail() {
       <div className="hunt-detail-grid">
         <DetailGallery key={d.id} deal={d} />
         <section>
-          <span className="hunt-eyebrow">
+          <nav className="hunt-eyebrow rh-crumbs" aria-label="Breadcrumb">
             <Link to={`/homes/${encodeURIComponent((d.country || "").toLowerCase().replace(/ /g, "-"))}`}>{d.country}</Link>{regionOf(d) && <> · <Link to={`/homes/${encodeURIComponent((d.country || "").toLowerCase().replace(/ /g, "-"))}/${slugify(regionOf(d))}`}>{regionOf(d)}</Link></>} · {categories.find((c) => c[0] === d.category)?.[1] || d.category}
-          </span>
+          </nav>
           <h1>{cleanTitle(d)}</h1>
           <GroupBadge d={d as any} />
-          <PriceHead d={d as any} />
+          <PriceHead d={d as any} hidePer={!!(d.sqm && d.price_eur)} after={<KeyFacts deal={d} />} />
           <StatusTags deal={d as Row} />
           <VerifiedLine deal={d as Row} />
           <AiCheckNote d={d as any} />
@@ -1051,7 +1054,7 @@ function Detail() {
             {sourceSite(d) ? <a href={`https://www.${sourceSite(d)}/`} target="_blank" rel="noopener noreferrer nofollow">{sourceSite(d)}</a> : <Link to={`/hunter/${d.hunter_handle}`}>@{d.hunter_handle}</Link>}
             {d.is_editorial_pick ? " · ✦ RealHunt Pick" : ""}
           </p>
-          <Amenities deal={d} />
+          <Amenities deal={d} noFacts={d.price_eur != null} />
           {d.why_great && <blockquote>{d.why_great}</blockquote>}
           {!isEs() && <TranslateBar text={[cleanTitle(d), d.why_great].filter(Boolean).join("\n\n")} />}
           <CheckLayer d={d as any} />
@@ -1193,7 +1196,7 @@ function Detail() {
           <article className="hunt-comment" key={c.id}>
             <div>
               <Link to={`/hunter/${c.handle}`}>@{c.handle || "hunter"}</Link>
-              <time>{new Date(c.created_at).toLocaleDateString()}</time>
+              <time dateTime={c.created_at}>{fmtDay(c.created_at)}</time>
             </div>
             <p>{c.body}</p>
             {session?.admin && (

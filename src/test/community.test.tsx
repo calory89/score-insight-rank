@@ -238,6 +238,9 @@ test('detail shows price per m2 and the desktop summary card',async()=>{
   const previous=mocks.rpc.getMockImplementation()!;
   mocks.rpc.mockImplementation((name:string,p:any)=>p?.p_action==='detail'?Promise.resolve({data:{deal:{...deal,sqm:78},comments:[]}}):previous(name,p));
   open('/deal/stone-home');
-  expect((await screen.findAllByText(/€500\/m²/)).length).toBeGreaterThan(0);
+  // 21-nov-2026: €/m² sits in the key facts row under the price (src/community/keyfacts.tsx)
+  const facts=await screen.findByRole('list',{name:'Key facts'});
+  expect(facts).toHaveTextContent('€500');
+  expect(facts).toHaveTextContent('Price per m²');
   expect(screen.getByRole('complementary',{name:'Summary of this home'})).toBeInTheDocument();
 });

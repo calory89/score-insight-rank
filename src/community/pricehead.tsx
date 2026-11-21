@@ -1,7 +1,7 @@
 // The price block at the top of a home page (8-nov-2026, minimal pass). One big asking price, then each other
 // number with its own label, and one quiet line for €/m² and the visitor's currency. Logic in ./priceLogic (tested).
 // Replaces, in this spot: CostBadge (big orange fee line), LocalPrice and PerSqmVsCountry, which printed €/m² twice.
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { money } from "./api";
 import { fmt } from "./costs";
 import { t } from "./i18n";
@@ -25,7 +25,7 @@ function useFx(): [Record<string, number> | null, string | null] {
 const fmtCcy = (v: number, ccy: string) => new Intl.NumberFormat(isEs() ? "es-ES" : navigator.language || "en", { style: "currency", currency: ccy, maximumFractionDigits: 0 }).format(v);
 const CCY_NAME: Record<string, [string, string]> = { USD: ["US dollars", "dólares estadounidenses"], GBP: ["pounds sterling", "libras esterlinas"], CAD: ["Canadian dollars", "dólares canadienses"], MXN: ["Mexican pesos", "pesos mexicanos"], JPY: ["Japanese yen", "yenes japoneses"], SEK: ["Swedish kronor", "coronas suecas"], NOK: ["Norwegian kroner", "coronas noruegas"], DKK: ["Danish kroner", "coronas danesas"], PLN: ["Polish złoty", "esloti polacos"], CZK: ["Czech koruna", "coronas checas"], HUF: ["Hungarian forint", "forintos húngaros"], RON: ["Romanian lei", "lei rumanos"], TRY: ["Turkish lira", "liras turcas"], CHF: ["Swiss francs", "francos suizos"] };
 
-export function PriceHead({ d }: { d: CheckRow & { sqm?: number | null } }) {
+export function PriceHead({ d, hidePer = false, after }: { d: CheckRow & { sqm?: number | null }; hidePer?: boolean; after?: ReactNode }) {
   const s = priceSummary(d);
   const [median, setMedian] = useState<number | null>(null);
   const [area, setArea] = useState<string | null>(null);
@@ -47,12 +47,15 @@ export function PriceHead({ d }: { d: CheckRow & { sqm?: number | null } }) {
   const local = ccy && ccy !== "EUR" && fx?.[ccy] && d.price_eur ? "≈ " + fmtCcy(d.price_eur * fx[ccy], ccy) : "";
   const src = listingCurrency(d.country);
   const es = isEs();
-  const per = d.price_eur && d.sqm ? Math.round(d.price_eur / d.sqm) : null;
+  // hidePer: the key facts row under the price already shows €/m² (./keyfacts.tsx)
+  const per = !hidePer && d.price_eur && d.sqm ? Math.round(d.price_eur / d.sqm) : null;
   const vs = vsMedian(d.price_eur, d.sqm, median, area || d.country);
   if (d.price_eur == null) return null;
   return (
     <div className="rh-ph">
       <div className="hunt-price" aria-label={`${t("Asking price")} ${money(d.price_eur)}`}>{money(d.price_eur)}</div>
+      {/* the key facts row sits right under the price, above the lines that arrive later (currency, rent), so it never moves */}
+      {after}
       {(s.total != null || s.monthly != null || s.feeUnknown) && (
         <dl className="rh-ph-lines">
           {s.total != null && <div><dt>{t("Total with buying costs")}</dt><dd>≈ {money(s.total)}</dd></div>}

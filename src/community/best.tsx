@@ -4,6 +4,7 @@
 //   /ranking/:id          a whole search ranked by a user and shared from the extension
 //   /homes-compare/:id    2 to 4 homes side by side, sent from the extension
 // Data comes from public read-only RPCs (ext_city_top, ext_city_list, ext_ranking_get). No credits, no edge functions.
+import { fmtDay } from "@/lib/dates";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -158,7 +159,7 @@ export function SharedRankingPage({ id, compare }: { id: string; compare?: boole
   return (
     <div className="hunt-wrap bx-page">
       <h1>{d.title || "A whole search, ranked"}</h1>
-      <p className="bx-lead">{d.n} homes{d.city ? ` in ${d.city}` : ""}, ranked by the RealHunt Score on {new Date(d.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}.{d.src ? <> <a href={d.src} target="_blank" rel="noopener nofollow">Original search ↗</a></> : null}</p>
+      <p className="bx-lead">{d.n} homes{d.city ? ` in ${d.city}` : ""}, ranked by the RealHunt Score on {fmtDay(d.created_at)}.{d.src ? <> <a href={d.src} target="_blank" rel="noopener nofollow">Original search ↗</a></> : null}</p>
       <div className="bx-list">{items.map((it, i) => <Row key={it.url + i} it={it} i={i} />)}</div>
       <ExtCta city={d.city || undefined} />
     </div>

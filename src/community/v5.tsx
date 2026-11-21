@@ -2,6 +2,7 @@ import {BoardWorkspace, AccountNotifications} from "./OperationsTools";
 // RealHunt v5 (23-sep-2026): welcome screen, boards, compare two homes, map button, in-app
 // notifications, profile with streaks and badges, swipe between homes, dark mode and page motion.
 // Nothing here sends email or push: notifications live only inside the site.
+import { fmtDay } from "@/lib/dates";
 import { useEffect, useMemo, useRef, useState, type ReactNode, type TouchEvent } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { Bell, X, Plus, Check, Share2, Trash2, Moon, Sun, Map as MapIcon, Scale, Flame, Heart, Bookmark, Trophy, Eye, Send, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
@@ -371,7 +372,7 @@ export function NotifBell() {
             notes.map((n) => (
               <Link key={n.id} to={`/deal/${n.slug}`} onClick={() => setOpen(false)}>
                 {n.img ? <img src={n.img} alt="" /> : <Sparkles size={16} />}
-                <span>{n.text}<small>{new Date(n.at).toLocaleDateString()}</small></span>
+                <span>{n.text}<small>{fmtDay(n.at)}</small></span>
               </Link>
             ))}
         </div>
