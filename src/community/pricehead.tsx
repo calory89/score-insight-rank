@@ -7,24 +7,23 @@ import { fmt } from "./costs";
 import { t } from "./i18n";
 import { RentLine } from "./v6";
 import { countryMedians, areaMedians, areaParts } from "./oct24";
-import { rates, visitorCurrency } from "./extras";
+import { rates, ratesDate, visitorCurrency } from "./extras";
+import { usePreference } from "./buyer-state";
+import { isEs } from "@/lib/lang";
+import { PICK_CCY, listingCurrency } from "./n10/logic";
+import { dayLabel } from "./n9/status";
 import { priceSummary, vsMedian, MONTHLY_LABEL } from "./priceLogic";
 import type { CheckRow } from "./checkLogic";
 
-function useLocalCurrency(eur: number | null | undefined): string {
-  const [txt, setTxt] = useState("");
-  useEffect(() => {
-    const ccy = visitorCurrency();
-    if (!eur || !ccy) return;
-    let on = true;
-    rates().then((r) => {
-      if (!on || !r || !r[ccy]) return;
-      setTxt("≈ " + new Intl.NumberFormat(navigator.language, { style: "currency", currency: ccy, maximumFractionDigits: 0 }).format(eur * r[ccy]));
-    });
-    return () => { on = false; };
-  }, [eur]);
-  return txt;
+// 21-nov-2026 (list2 35): one tap between euro, dollar and pound, remembered on this device (rh.ccy). Without a
+// choice the visitor's own currency is shown as before.
+function useFx(): [Record<string, number> | null, string | null] {
+  const [r, setR] = useState<Record<string, number> | null>(null);
+  useEffect(() => { let on = true; rates().then((x) => { if (on) setR(x || null); }); return () => { on = false; }; }, []);
+  return [r, r ? ratesDate() : null];
 }
+const fmtCcy = (v: number, ccy: string) => new Intl.NumberFormat(isEs() ? "es-ES" : navigator.language || "en", { style: "currency", currency: ccy, maximumFractionDigits: 0 }).format(v);
+const CCY_NAME: Record<string, [string, string]> = { USD: ["US dollars", "dólares estadounidenses"], GBP: ["pounds sterling", "libras esterlinas"], CAD: ["Canadian dollars", "dólares canadienses"], MXN: ["Mexican pesos", "pesos mexicanos"], JPY: ["Japanese yen", "yenes japoneses"], SEK: ["Swedish kronor", "coronas suecas"], NOK: ["Norwegian kroner", "coronas noruegas"], DKK: ["Danish kroner", "coronas danesas"], PLN: ["Polish złoty", "esloti polacos"], CZK: ["Czech koruna", "coronas checas"], HUF: ["Hungarian forint", "forintos húngaros"], RON: ["Romanian lei", "lei rumanos"], TRY: ["Turkish lira", "liras turcas"], CHF: ["Swiss francs", "francos suizos"] };
 
 export function PriceHead({ d }: { d: CheckRow & { sqm?: number | null } }) {
   const s = priceSummary(d);
@@ -41,7 +40,13 @@ export function PriceHead({ d }: { d: CheckRow & { sqm?: number | null } }) {
     });
     return () => { on = false; };
   }, [d.country, parts]);
-  const local = useLocalCurrency(d.price_eur);
+  const [choice, setChoice] = usePreference<string>("rh.ccy", "");
+  const [fx, fxDay] = useFx();
+  const own = visitorCurrency();
+  const ccy = choice === "EUR" ? null : choice && (PICK_CCY as readonly string[]).includes(choice) ? choice : own;
+  const local = ccy && ccy !== "EUR" && fx?.[ccy] && d.price_eur ? "≈ " + fmtCcy(d.price_eur * fx[ccy], ccy) : "";
+  const src = listingCurrency(d.country);
+  const es = isEs();
   const per = d.price_eur && d.sqm ? Math.round(d.price_eur / d.sqm) : null;
   const vs = vsMedian(d.price_eur, d.sqm, median, area || d.country);
   if (d.price_eur == null) return null;
@@ -60,8 +65,16 @@ export function PriceHead({ d }: { d: CheckRow & { sqm?: number | null } }) {
         <p className="rh-ph-quiet">
           {per ? <span>{`${money(per)}/m²`}</span> : null}
           {vs ? <span className={vs.includes("below") ? "is-below" : undefined}>{vs}</span> : null}
-          {local ? <span>{`${local} in your currency`}</span> : null}
+          {local ? <span>{choice && choice !== own ? local : es ? `${local} en tu moneda` : `${local} in your currency`}</span> : null}
         </p>
+      )}
+      <div className="rh-ph-ccy" role="group" aria-label={es ? "Moneda del precio" : "Price currency"}>
+        {PICK_CCY.map((c) => { const on = c === "EUR" ? !ccy : ccy === c; return <button key={c} type="button" aria-pressed={on} onClick={() => setChoice(c)} title={c}>{c === "EUR" ? "€" : c === "USD" ? "$" : "£"}<span className="sr-only">{c}</span></button>; })}
+      </div>
+      {src && fx?.[src] && fxDay && (
+        <p className="rh-ph-fx">{es
+          ? `El anuncio da el precio en ${CCY_NAME[src]?.[1] || src}; aquí se muestra en euros. Al cambio del Banco Central Europeo del ${dayLabel(fxDay, "es")}: ${fmtCcy(d.price_eur * fx[src], src)}.`
+          : `The advert gives the price in ${CCY_NAME[src]?.[0] || src}; it is shown here in euros. At the European Central Bank rate of ${dayLabel(fxDay, "en")}: ${fmtCcy(d.price_eur * fx[src], src)}.`}</p>
       )}
     </div>
   );

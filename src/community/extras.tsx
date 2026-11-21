@@ -4,6 +4,10 @@ import { GLOSSARY_OF } from "./knowledgeRoutes";
 import GUIDES_JSON from "@/data/guides.json";
 import DEST_JSON from "@/data/destinations.json";
 import { CardCheck } from "./check";
+import { allIn } from "./checkLogic";
+import { prefetchDetail, preloadImages } from "./v4";
+import { similarBy, type SimMode } from "./n10/logic";
+import { loadRows } from "./compareTools";
 import {BuyerAlertPreferences} from "./OperationsTools";
 import {PropertyImage, RentPreference} from "./BuyerTools";
 import {userRent} from "./buyer-state";
@@ -31,7 +35,7 @@ const theC = (n: string) => (/^(United |Netherlands$|Dominican Republic$|Czech R
 import { regionOf, slugify, isPriceCap, HOME_TYPES } from "./regions";
 import { thumb, onThumbError } from "@/lib/thumbs";
 import { HomesFilterLink } from "./homesFilterLink";
-export type FeedParams = { scope?: string; country?: string; category?: string; max_price?: number | null; min_price?: number | null; min_beds?: number | null; price_drop?: boolean; min_sqm?: number | null; sort?: string; limit?: number; offset?: number; ids?: string[]; q?: string; terms?: string[]; min_score?: number | null; need?: string[]; dim_min?: Record<string, number> };
+export type FeedParams = { scope?: string; country?: string; category?: string; max_price?: number | null; min_price?: number | null; min_beds?: number | null; price_drop?: boolean; min_sqm?: number | null; sort?: string; limit?: number; offset?: number; ids?: string[]; q?: string; terms?: string[]; min_score?: number | null; need?: string[]; dim_min?: Record<string, number>; costs?: string; fresh?: boolean };
 // Guest pass: someone who opens an Insider's invite link (?ref=code) sees the Insider homes too, for
 // 7 days, so what an Insider shares never shows up blurred. The server checks the code belongs to an
 // Insider (community_can_see_early); this only remembers which code the visitor came with.
@@ -127,17 +131,21 @@ export function visitorCurrency(): string | null {
   return null;
 }
 let ratesPromise: Promise<Record<string, number> | null> | null = null;
+// The European Central Bank reference date of the rates (frankfurter returns it), shown next to converted prices.
+let fxDate: string | null = null;
+export const ratesDate = () => fxDate;
 export function rates() {
   if (ratesPromise) return ratesPromise;
   ratesPromise = (async () => {
     try {
       const c = JSON.parse(localStorage.getItem("rh_fx") || "null");
-      if (c && Date.now() - c.at < 12 * 3600e3) return c.rates;
+      if (c && Date.now() - c.at < 12 * 3600e3 && c.date) { fxDate = c.date; return c.rates; }
     } catch { /* ignore */ }
     try {
       const r = await fetch("https://api.frankfurter.dev/v1/latest?base=EUR");
       const j = await r.json();
-      try { localStorage.setItem("rh_fx", JSON.stringify({ at: Date.now(), rates: j.rates })); } catch { /* ignore */ }
+      fxDate = typeof j.date === "string" ? j.date : null;
+      try { localStorage.setItem("rh_fx", JSON.stringify({ at: Date.now(), rates: j.rates, date: fxDate })); } catch { /* ignore */ }
       return j.rates;
     } catch { return null; }
   })();
@@ -194,7 +202,10 @@ export function CostPanel({ deal }: { deal: Row }) {
   useEffect(() => { try { localStorage.setItem("rh_rent", String(rent)); window.dispatchEvent(new Event("rh-rent")); } catch { /* ignore */ } }, [rent]);
   useEffect(()=>{const on=()=>setRent(userRent()||0);window.addEventListener("rh-rent",on);return()=>window.removeEventListener("rh-rent",on);},[]);
   if (deal.price_eur == null) return null;
-  const allin = totalCost(deal.price_eur, deal.country) || Math.round(deal.price_eur * 1.06);
+  // 21-nov-2026 (list2 26): the "Total cost to buy" calculator above (check.tsx) already shows price, buying costs and
+  // total from destinations.json; this block keeps only what it adds (upkeep, renovation, rent), with the same total.
+  const shared = allIn(deal as any);
+  const allin = shared.totalLow != null ? Math.round(shared.totalLow) : totalCost(deal.price_eur, deal.country) || Math.round(deal.price_eur * 1.06);
   const run = RUNNING[deal.country] || { tax: 300, insurance: 200, utilities: 1200, taxName: "property tax" };
   const yearly = run.tax + run.insurance + run.utilities;
   const reno = deal.category === "renovation" || /to renovate|needs? (some )?(work|renovation|updating)|renovation project|to restore|\bruin|to refurbish|fixer/i.test(deal.title || "");
@@ -203,9 +214,11 @@ export function CostPanel({ deal }: { deal: Row }) {
     <section className="hunt-cost" aria-label={t("What it really costs")}>
       <h3>{t("What it really costs")}</h3>
       <dl>
+        {shared.totalLow == null && <>
         <div><dt>Asking price</dt><dd>{money(deal.price_eur)}</dd></div>
         <div><dt>Estimated purchase costs</dt><dd>{COSTS[deal.country] ? `+${money(allin - deal.price_eur)}` : `≈ +${money(Math.round(deal.price_eur * 0.06))}`}</dd></div>
         <div className="is-total"><dt>Estimated total before renovation</dt><dd>{money(allin)}</dd></div>
+        </>}
         {reno && deal.sqm ? <div><dt>Renovation, typical range</dt><dd>{money(deal.sqm * 400)}–{money(deal.sqm * 900)}</dd></div> : null}
         <div><dt>Keeping it ({run.taxName}, insurance, basic water and power)</dt><dd>≈ {money(Math.round(yearly / 12))}/month</dd></div>
       </dl>
@@ -249,21 +262,40 @@ export function Lightbox({ images, start = 0, title, onClose }: { images: string
 
 // ---------------------------------------------------------------- small cards, similar homes
 export function MiniCard({ d }: { d: Row }) {
+  const { call } = useCommunity() || {};
+  const warm = () => { prefetchDetail(d.slug, call); preloadImages((d.image_urls || []).slice(0, 1)); };
   return (
-    <Link className="hunt-minicard" to={`/deal/${d.slug}`}>
+    <Link className="hunt-minicard" to={`/deal/${d.slug}`} onMouseEnter={warm} onTouchStart={warm} onFocus={warm}>
       <PropertyImage src={thumb(d.image_urls?.[0])} fallback={thumb(d.image_urls?.[0]) !== d.image_urls?.[0] ? d.image_urls?.[0] : d.image_urls?.[1]} alt={niceTitle(d)} loading="lazy" width={480} height={360} />
       <div><strong>{money(d.price_eur)}</strong><CardCheck d={d as any} /><span>{niceTitle(d)}</span><small><MapPin size={11} /> {d.location_name || d.country}</small></div>
     </Link>
   );
 }
-export function SimilarHomes({ slug }: { slug: string }) {
+// 21-nov-2026 (list2 34): quick switches over the similar homes: cheaper, bigger or nearer the sea, in the same
+// country (./n10/logic similarBy). A switch only shows when it has at least one home.
+const SIM_MODES: [SimMode, string][] = [["cheaper", "Cheaper"], ["bigger", "Bigger"], ["sea", "Nearer the sea"]];
+export function SimilarHomes({ slug, deal }: { slug: string; deal?: Row }) {
   const [rows, setRows] = useState<Row[] | null>(null);
-  useEffect(() => { setRows(null); rpc("community_similar", { p_slug: slug, p_limit: 6 }).then(setRows).catch(() => setRows([])); }, [slug]);
-  if (!rows?.length) return null;
+  const [all, setAll] = useState<Row[] | null>(null);
+  const [mode, setMode] = useState<SimMode | "">("");
+  useEffect(() => { setRows(null); setMode(""); rpc("community_similar", { p_slug: slug, p_limit: 6 }).then(setRows).catch(() => setRows([])); }, [slug]);
+  useEffect(() => { if (!deal) return; let on = true; loadRows().then((r) => { if (on) setAll(r as Row[]); }).catch(() => {}); return () => { on = false; }; }, [slug, !!deal]);
+  const alt = useMemo(() => {
+    const out: Partial<Record<SimMode, Row[]>> = {};
+    if (deal && all) for (const [m] of SIM_MODES) out[m] = similarBy(all as any, deal as any, m) as Row[];
+    return out;
+  }, [all, slug]);
+  const shown = mode ? alt[mode] || [] : rows || [];
+  const modes = SIM_MODES.filter(([m]) => (alt[m] || []).length > 0);
+  if (!rows?.length && !modes.length) return null;
   return (
     <section className="hunt-similar">
       <h2>{t("Similar homes")}</h2>
-      <div className="hunt-minigrid">{rows.map((d) => <MiniCard key={d.id} d={d} />)}</div>
+      {modes.length > 0 && <div className="hunt-chips rh-sim-modes" role="group" aria-label={t("Show similar homes that are")}>
+        <button type="button" aria-pressed={!mode} onClick={() => setMode("")}>{t("Most alike")}</button>
+        {modes.map(([m, label]) => <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(mode === m ? "" : m)}>{t(label)}</button>)}
+      </div>}
+      <div className="hunt-minigrid">{shown.map((d) => <MiniCard key={d.id} d={d} />)}</div>
     </section>
   );
 }
@@ -333,7 +365,7 @@ export function Filters({ countries, value: applied, onChange, expanded = false 
   const setDraft = (v: FeedParams) => onChange(v);
   const list = Object.entries(countries || {}).sort((a, b) => b[1] - a[1]);
   const active = !!(value.country || value.category || value.max_price || value.min_price || value.min_beds || value.price_drop || value.min_sqm || (value.sort && value.sort !== "score"));
-  const extra = [value.category, value.max_price, value.min_price, value.min_beds, value.price_drop, value.min_sqm, value.sort && value.sort !== "score" ? value.sort : ""].filter(Boolean).length;
+  const extra = [value.category, value.max_price, value.min_price, value.min_beds, value.price_drop, value.min_sqm, value.sort && value.sort !== "score" ? value.sort : "", value.costs, value.fresh].filter(Boolean).length;
   const [open, setOpen] = useState(() => expanded || extra > 0);
   // 14-oct-2026 (Carlos): only show a quick filter when at least one home matches it, given the other filters.
   const [qc, setQc] = useState<Record<string, number> | null>(null);
@@ -343,7 +375,7 @@ export function Filters({ countries, value: applied, onChange, expanded = false 
   const vv: any = value;
   const priceChipOn = PRICE_CHIPS.some((pc) => (value.min_price || null) === pc.min && (value.max_price || null) === pc.max); // the price row already shows it
   const qp = { country: value.country || "", category: value.category || "", max_price: value.max_price || null, min_price: value.min_price || null, min_beds: value.min_beds || null, price_drop: !!value.price_drop, min_sqm: value.min_sqm || null,
-    q: vv.q || "", terms: vv.terms || [], min_score: value.min_score || null, need: value.need || [], dim_min: value.dim_min || {} };
+    q: vv.q || "", terms: vv.terms || [], min_score: value.min_score || null, need: value.need || [], dim_min: value.dim_min || {}, costs: value.costs || "", fresh: !!value.fresh };
   const qkey = JSON.stringify(qp);
   useEffect(() => {
     let live = true;
@@ -409,6 +441,14 @@ export function Filters({ countries, value: applied, onChange, expanded = false 
             {[40, 60, 80, 100, 150].map((s) => <option key={s} value={s}>{s} m²+</option>)}
           </select></label>
         <label className="hunt-check"><input type="checkbox" checked={!!value.price_drop} onChange={(e) => setDraft({ ...value, price_drop: e.target.checked })} /> <span>{t("Price dropped")}</span></label>
+        {/* 21-nov-2026 (list2 30, 32): running costs the listing states, and adverts the nightly check found online lately */}
+        <label><span>{t("Running costs")}</span>
+          <select value={value.costs || ""} onChange={(e) => setDraft({ ...value, costs: e.target.value })}>
+            <option value="">{t("Any")}</option>
+            {(value.costs === "known" || !qc || (qc.costs_known ?? 3) >= 3) && <option value="known">{t("Fee or property tax stated")}{qc?.costs_known != null ? ` (${qc.costs_known})` : ""}</option>}
+            {(value.costs === "nofee" || !qc || (qc.costs_nofee ?? 3) >= 3) && <option value="nofee">{t("No community fee")}{qc?.costs_nofee != null ? ` (${qc.costs_nofee})` : ""}</option>}
+          </select></label>
+        {(value.fresh || !qc || (qc.fresh ?? 3) >= 3) && <label className="hunt-check"><input type="checkbox" checked={!!value.fresh} onChange={(e) => setDraft({ ...value, fresh: e.target.checked })} /> <span>{t("Advert confirmed online in the last 30 days")}</span></label>}
         <label><span>{t("Sort")}</span>
           <select value={value.sort || "score"} onChange={(e) => setDraft({ ...value, sort: e.target.value })}>
             <option value="score">{t("Best score")}</option><option value="new">{t("Newest")}</option>

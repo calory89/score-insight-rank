@@ -22,6 +22,9 @@ export function activeChips(v: FeedParams, t: T = (s) => s): Chip[] {
   if (v.min_beds) out.push({ key: "beds", label: `${v.min_beds}+ ${t("bedrooms")}`, next: { ...v, min_beds: null } });
   if (v.min_sqm) out.push({ key: "sqm", label: `${v.min_sqm} m²+`, next: { ...v, min_sqm: null } });
   if (v.price_drop) out.push({ key: "drop", label: t("Price dropped"), next: { ...v, price_drop: false } });
+  if (v.costs === "known") out.push({ key: "costs", label: t("Fee or property tax stated"), next: { ...v, costs: "" } });
+  if (v.costs === "nofee") out.push({ key: "costs", label: t("No community fee"), next: { ...v, costs: "" } });
+  if (v.fresh) out.push({ key: "fresh", label: t("Confirmed in the last 30 days"), next: { ...v, fresh: false } });
   for (const q of QUICK) {
     if (q.min && (v.min_score || 0) >= q.min) out.push({ key: "q:" + q.k, label: t(q.label), next: { ...v, min_score: null } });
     if (q.need && (v.need || []).includes(q.need)) out.push({ key: "q:" + q.k, label: t(q.label), next: { ...v, need: (v.need || []).filter((x) => x !== q.need) } });
@@ -40,5 +43,5 @@ export function activeChips(v: FeedParams, t: T = (s) => s): Chip[] {
 
 /** Params with every filter cleared (scope and search text kept). */
 export function clearedFilters(v: FeedParams): FeedParams {
-  return { scope: v.scope, q: v.q, country: "", category: "", max_price: null, min_price: null, min_beds: null, price_drop: false, min_sqm: null, sort: "score", min_score: null, need: [], dim_min: {} };
+  return { scope: v.scope, q: v.q, country: "", category: "", max_price: null, min_price: null, min_beds: null, price_drop: false, min_sqm: null, sort: "score", min_score: null, need: [], dim_min: {}, costs: "", fresh: false };
 }

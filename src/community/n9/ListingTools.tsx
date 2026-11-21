@@ -1,13 +1,15 @@
 // What the app adds to a prerendered listing page once it is on screen (see listing.ts): a share row (WhatsApp,
 // email, copy link), a comparison table that sorts when a column heading is tapped, and the memory that makes
 // "previous / next" and "back to your results" on a home's page follow this listing.
-import { useEffect, useState, type RefObject } from "react";
+import { Suspense, lazy, useEffect, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
-import { Check, Link2, Mail, MessageCircle } from "lucide-react";
+import { Bell, Check, Link2, Mail, MessageCircle } from "lucide-react";
 import { saveOrder } from "../v5";
 import { storage } from "../buyer-state";
 import { isEs } from "@/lib/lang";
-import { cellValue, listingSlugs, shareLinks, sortOrder } from "./listing";
+import { alertOf, cellValue, listingSlugs, shareLinks, sortOrder } from "./listing";
+import { returningSince } from "./visit";
+const SinceVisit = lazy(() => import("./SinceVisit"));
 import Helpful from "./Helpful";
 import "./n9.css";
 
@@ -66,11 +68,32 @@ export default function ListingTools({ host, path, spanish }: { host: RefObject<
     });
     return () => { root.removeEventListener("click", remember, true); offs.forEach((f) => f()); };
   }, [host, path, es]);
+  // 21-nov-2026 (list2 29, 44): the page's own alert link, shown as a button in the share row, and "new since your last
+  // visit" for the country of a country page.
+  const [alert, setAlert] = useState<ReturnType<typeof alertOf>>(null);
+  const [sinceSlot, setSinceSlot] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    const root = host.current;
+    if (!root) return;
+    const a = alertOf([...root.querySelectorAll("a[href]")].map((x) => x.getAttribute("href") || ""));
+    setAlert(a);
+    const h1 = root.querySelector("h1");
+    if (!a?.country || !h1 || !/^(\/es)?\/homes\/[a-z-]+\/?$/.test(path) || returningSince() == null) return;
+    const box = document.createElement("div");
+    box.className = "n9-since-slot";
+    h1.insertAdjacentElement("afterend", box);
+    setSinceSlot(box);
+    return () => { box.remove(); setSinceSlot(null); };
+  }, [host, path]);
   const url = typeof location !== "undefined" ? location.origin + location.pathname : "";
   const title = typeof document !== "undefined" ? document.title.replace(/\s*[·|]\s*RealHunt\s*$/, "") : "";
   const s = shareLinks(title, url);
   if (!slot) return null;
   return createPortal(<>
+    {sinceSlot && alert?.country && createPortal(<Suspense fallback={null}><SinceVisit country={alert.country} /></Suspense>, sinceSlot)}
+    {alert && <p className="n9-lalert"><a className="hunt-primary" href={alert.href} onClick={() => ev("listing_alert_open")}><Bell size={16} aria-hidden="true" /> {es
+      ? `Avísame por correo de casas nuevas como estas${alert.max ? ` hasta ${new Intl.NumberFormat("es-ES").format(alert.max)} €` : ""}`
+      : `Email me new homes${alert.country ? ` in ${alert.country}` : ""}${alert.max ? ` up to €${new Intl.NumberFormat("en").format(alert.max)}` : ""}`}</a></p>}
     <div className="n9-ltools" translate="no">
       <span>{es ? "Compartir esta lista" : "Share this list"}</span>
       <a href={s.whatsapp} target="_blank" rel="noopener noreferrer nofollow" onClick={() => ev("listing_share_wa")}><MessageCircle size={16} aria-hidden="true" /> WhatsApp</a>

@@ -307,7 +307,7 @@ export function parseQuery(input: string, places: Place[] = [], known?: (word: s
 
 // ---------------------------------------------------------------- URL params
 /** The feed keys a search may set. Anything else in the URL (tabs, utm...) is left alone. */
-export const FILTER_KEYS = ["country", "type", "price", "min", "beds", "need", "vibe", "q", "order", "dmin", "score", "sqm", "drop"] as const;
+export const FILTER_KEYS = ["country", "type", "price", "min", "beds", "need", "vibe", "q", "order", "dmin", "score", "sqm", "drop", "costs", "fresh"] as const;
 const list = (v: string | null) => (v || "").split(",").map((x) => x.trim()).filter(Boolean);
 
 /** Applies a parsed search onto the current URL: the new search replaces the old words, and every filter it
@@ -364,6 +364,9 @@ export function describeParams(sp: URLSearchParams): Chip[] {
   const sqm = Number(sp.get("sqm")) || 0;
   if (sqm) chips.push({ id: "sqm", label: `${sqm} m²+`, param: "sqm", value: "" });
   if (sp.get("drop") === "1") chips.push({ id: "drop", label: "price dropped", param: "drop", value: "" });
+  const costs = sp.get("costs");
+  if (costs === "known" || costs === "nofee") chips.push({ id: "costs", label: costs === "known" ? "fee or tax stated" : "no community fee", param: "costs", value: "" });
+  if (sp.get("fresh") === "1") chips.push({ id: "fresh", label: "confirmed in the last 30 days", param: "fresh", value: "" });
   const order = sp.get("order");
   if (order && ORDER_LABEL[order]) chips.push({ id: "order", label: ORDER_LABEL[order], param: "order", value: "" });
   return chips;
@@ -421,6 +424,7 @@ export function paramsToFeed(sp: URLSearchParams, vibeTerms: Record<string, stri
     price_drop: sp.get("drop") === "1", min_sqm: n("sqm"), sort: sp.get("order") || "score", min_score: n("score"), q: sp.get("q") || "",
     need: list(sp.get("need")), terms: list(sp.get("vibe")).map((k) => vibeTerms[k]).filter(Boolean),
     dim_min: Object.fromEntries(list(sp.get("dmin")).map((x) => { const [k, v] = x.split(":"); return [k, Number(v) || 0]; })),
+    costs: sp.get("costs") === "known" || sp.get("costs") === "nofee" ? sp.get("costs")! : "", fresh: sp.get("fresh") === "1",
   };
 }
 

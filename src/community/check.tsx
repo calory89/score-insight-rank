@@ -16,6 +16,7 @@ import {
   GROUPS, agentEmail, allIn, buyRule, countryKey, detectGroup, emailLang, eur, monthEs, questionUi, questions, redFlags, roundNice,
   type CheckRow, type Group, type QId, type RulesEs,
 } from "./checkLogic";
+import { costPlan, parseAmount } from "./n10/logic";
 import "./check.css";
 
 // ------------------------------------------------------------------------------------- visitor group store
@@ -81,24 +82,41 @@ export function CardCheck({ d }: { d: CheckRow }) {
 // --------------------------------------------------------------------------------------------- home page
 const GUIDE_KEYS = GUIDES as unknown as Record<string, unknown>;
 
+// 21-nov-2026 (list2 26): a calculator, not only a table. The asking price is filled in; the visitor can type an
+// offer and every line follows it. Buying costs are the country's usual range; the yearly line uses only the fee
+// and the property tax the listing states (logic: ./n10/logic costPlan, tested).
 function TotalCost({ d }: { d: CheckRow }) {
-  const a = allIn(d);
-  if (a.price == null) return null;
+  const [offerText, setOfferText] = useState("");
+  useEffect(() => setOfferText(""), [d.slug]);
+  const asking = Number(d.price_eur) > 0 ? Number(d.price_eur) : null;
+  const offer = parseAmount(offerText);
+  const p = costPlan(d, offer);
+  if (!p || asking == null) return null;
+  if (p.costsLow == null && p.monthly == null) return null;
   const k = countryKey(d.country);
   const range = (lo: number, hi: number) => (Math.round(lo) === Math.round(hi) ? eur(roundNice(lo)) : `${eur(roundNice(lo))} – ${eur(roundNice(hi))}`);
-  if (a.costsLow == null && a.monthly == null) return null;
+  const diff = offer && offer !== asking ? Math.round(((offer - asking) / asking) * 100) : null;
   return (
     <section className="rh-chk rh-chk-total" aria-labelledby="rh-chk-total-h">
       <h2 id="rh-chk-total-h">{t("Total cost to buy")}</h2>
+      <label className="rh-chk-offer">
+        <span>{t("Price you would pay")}</span>
+        <span className="rh-chk-offer-in"><span aria-hidden="true">€</span><input type="text" inputMode="numeric" autoComplete="off" value={offerText} placeholder={String(asking)}
+          aria-describedby="rh-chk-offer-h" onChange={(e) => setOfferText(e.target.value.replace(/[^\d.,kK]/g, "").slice(0, 12))} /></span>
+        <small id="rh-chk-offer-h">{offer ? <>{t("Asking price")} {eur(asking)}{diff ? ` (${diff > 0 ? "+" : ""}${diff}%)` : ""} · <button type="button" className="hunt-link" onClick={() => setOfferText("")}>{t("Use the asking price")}</button></> : t("The asking price is filled in. Type an offer to see the totals for it.")}</small>
+      </label>
       <dl>
-        <div><dt>{t("Price")}</dt><dd>{eur(a.price)}</dd></div>
-        {a.costsLow != null && a.costsHigh != null && a.pct && <div><dt>{t("Buying costs")} <small>({a.pct[0] === a.pct[1] ? `${dec(a.pct[0])}%` : `${dec(a.pct[0])}–${dec(a.pct[1])}%`})</small></dt><dd>{range(a.costsLow, a.costsHigh)}</dd></div>}
-        {a.totalLow != null && a.totalHigh != null && <div className="rh-chk-sum"><dt>{t("Total to buy")}</dt><dd>{range(a.totalLow, a.totalHigh)}</dd></div>}
-        <div className="rh-chk-month"><dt>{t("Then every month")}</dt><dd>{a.monthly != null && a.monthly > 0 ? <>≈ {eur(Math.round(a.monthly))} <small>{t("fee and property tax")}</small></> : d.hoa_unknown ? t("Fee not stated") : t("Not stated in the listing")}</dd></div>
+        <div><dt>{offer ? t("Your price") : t("Price")}</dt><dd>{eur(p.price)}</dd></div>
+        {p.costsLow != null && p.costsHigh != null && p.pct && <div><dt>{t("Buying costs")} <small>({p.pct[0] === p.pct[1] ? `${dec(p.pct[0])}%` : `${dec(p.pct[0])}–${dec(p.pct[1])}%`} {t("taxes, notary and registry")})</small></dt><dd>{range(p.costsLow, p.costsHigh)}</dd></div>}
+        {p.totalLow != null && p.totalHigh != null && <div className="rh-chk-sum"><dt>{t("Total to buy")}</dt><dd>{range(p.totalLow, p.totalHigh)}</dd></div>}
+        <div className="rh-chk-month"><dt>{t("Then every month")}</dt><dd>{p.monthly != null ? <>≈ {eur(Math.round(p.monthly))} <small>{t("fee and property tax")}</small></> : d.hoa_unknown ? t("Fee not stated") : t("Not stated in the listing")}</dd></div>
+        {p.yearly != null && <div><dt>{t("Every year")}</dt><dd>≈ {eur(Math.round(p.yearly))}</dd></div>}
+        {p.firstYearLow != null && p.firstYearHigh != null && <div className="rh-chk-sum"><dt>{t("First year, all in")}</dt><dd>{range(p.firstYearLow, p.firstYearHigh)}</dd></div>}
       </dl>
       <p className="rh-chk-src">
         {t("Buying costs are the usual range of taxes, notary and legal fees for this country; US dollars converted at 0.896. General information, not advice.")}{" "}
-        {a.costsLow != null && <Link className="hunt-link" to={`/costs/${k}`}>{t("See the breakdown")}</Link>}
+        {p.monthly == null && t("Insurance, water and power are not included.")}{" "}
+        {p.costsLow != null && <Link className="hunt-link" to={`/costs/${k}`}>{t("See the breakdown")}</Link>}
       </p>
     </section>
   );
@@ -171,6 +189,13 @@ async function copyText(s: string): Promise<boolean> {
 }
 const LANG_NAME: Record<string, string> = { en: "English", es: "Spanish", it: "Italian", fr: "French", de: "German", pt: "Portuguese", nl: "Dutch", da: "Danish", sv: "Swedish" };
 
+// 21-nov-2026 (list2 40): the visitor's own email app opens with the email ready; RealHunt sends nothing. No address is
+// filled in: the agent's address is in the advert. Bodies are cut to keep the link under what mail apps accept.
+export function mailtoHref(subject: string, body: string): string {
+  const b = body.length > 1600 ? body.slice(0, 1600).replace(/\s+\S*$/, "") + "\n…" : body;
+  return `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(b)}`;
+}
+
 function AgentQuestions({ d }: { d: CheckRow }) {
   const ids: QId[] = useMemo(() => questions(d), [d.title, d.why_great, d.costs_note, d.hoa_unknown, d.hoa_monthly, d.tax_annual, d.category, d.country]);
   const [state, setState] = useState<"idle" | "ok" | "fail">("idle");
@@ -191,6 +216,7 @@ function AgentQuestions({ d }: { d: CheckRow }) {
         <button type="button" className={"rh-chk-copy" + (state === "ok" ? " is-done" : "")} onClick={copy} aria-live="polite">
           {state === "ok" ? <><Check size={17} aria-hidden="true" /> {t("Copied")}</> : <><Copy size={17} aria-hidden="true" /> {t("Copy email to the agent")}</>}
         </button>
+        <a className="rh-chk-copy rh-chk-open" href={mailtoHref(mail.subject, mail.body)} onClick={() => { try { (window as any).clarity?.("event", "agent_mail_open"); } catch { /* blocked */ } }}><Mail size={17} aria-hidden="true" /> {t("Open in my email app")}</a>
         <span className="rh-chk-mailnote"><Mail size={14} aria-hidden="true" /> {ES ? `Correo educado en ${LANG_ES[lang] || "inglés"} con estas preguntas, en el idioma del anuncio.` : lang === "en" ? t("Polite email in English with these questions.") : <>{t("Polite email in")} {t(LANG_NAME[lang])} {t("with these questions.")}</>}</span>
         {state === "fail" && <span className="rh-chk-fail" role="alert">{t("Could not copy. Open the list and copy it by hand.")}</span>}
       </div>

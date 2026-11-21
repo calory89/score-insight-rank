@@ -49,3 +49,16 @@ export function shareLinks(title: string, url: string): { whatsapp: string; emai
     email: `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(`${title}\n${url}`)}`,
   };
 }
+
+/** 21-nov-2026 (list2 29, 44): the alert link the page itself carries ("/alerts?country=Italy&max=60000", also under
+ * /es/), read into its country and budget. null when the page has none. */
+export function alertOf(hrefs: string[]): { href: string; country: string | null; max: number | null } | null {
+  for (const h of hrefs) {
+    const m = /^(\/es)?\/alerts\?([^#]*)$/.exec(h || "");
+    if (!m) continue;
+    const q = new URLSearchParams(m[2]);
+    const max = Number(q.get("max")) || null;
+    return { href: h, country: q.get("country"), max };
+  }
+  return null;
+}

@@ -43,9 +43,10 @@ import { ListingRoute, ListingMissing } from "./listingRoute";
 import { isGone, isUnconfirmed } from "./n9/status";
 import { returningSince } from "./n9/visit";
 import { SaveNudgeMount } from "./n9/mount";
+import { SourceLine, GroupBadge } from "./n10/inline";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, GUIDES, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { CardCheck, CheckLayer } from "./check";
-import { CompareTray, CompareRoute, PriceWatch, SavedHomes } from "./compareTools";
+import { CompareTray, CompareRoute, PriceWatch, SavedHomes, SharedList } from "./compareTools";
 const slugCountryKey = (c?: string | null) => String(c || "").toLowerCase().trim().replace(/\s+/g, "-");
 import { t } from "./i18n";
 import { FindHomePage, FindHomeCTA } from "./findhome";
@@ -94,6 +95,13 @@ const UnconfirmedNotice = lazy(() => import("./n9/HomeStatus").then((m) => ({ de
 const CheckedBlock = lazy(() => import("./n9/HomeStatus").then((m) => ({ default: m.CheckedBlock })));
 const Helpful = lazy(() => import("./n9/Helpful"));
 const SinceVisit = lazy(() => import("./n9/SinceVisit"));
+// 21-nov-2026 (round n10, list2 33, 37, 45, 48): lazy, see src/community/n10.
+const PriceHistory = lazy(() => import("./n10/HomeExtras").then((m) => ({ default: m.PriceHistory })));
+const Unknowns = lazy(() => import("./n10/HomeExtras").then((m) => ({ default: m.Unknowns })));
+const OfferHint = lazy(() => import("./n10/HomeExtras").then((m) => ({ default: m.OfferHint })));
+const HomeNote = lazy(() => import("./n10/HomeExtras").then((m) => ({ default: m.HomeNote })));
+const AdminTools = lazy(() => import("./n10/AdminTools"));
+const ImportPreview = lazy(() => import("./n10/AdminTools").then((m) => ({ default: m.ImportPreview })));
 import {
   ArrowUp,
   ArrowUpRight,
@@ -697,6 +705,8 @@ function Home() {
   const minPrice = Number(params.get("min")) || null;
   const minBeds = Number(params.get("beds")) || null;
   const priceDrop = params.get("drop") === "1";
+  const costsF = params.get("costs") === "known" || params.get("costs") === "nofee" ? params.get("costs")! : "";
+  const freshF = params.get("fresh") === "1";
   const sort = params.get("order") || "score"; // 7-oct-2026: the feed is a score ranking, no votes
   const minScore = Number(params.get("score")) || null;
   const need = (params.get("need") || "").split(",").filter(Boolean);
@@ -740,7 +750,7 @@ function Home() {
     if (!more) setFeed(null);
     setError("");
     try {
-      const data: any = await feedV3({ scope, country, category, max_price: maxPrice, min_price: minPrice, min_beds: minBeds, price_drop: priceDrop, min_sqm: minSqm, sort, q: searchQuery(q), terms, min_score: minScore, need, dim_min: dimMin, limit: 24, offset: more ? base.rows.length : 0 } as any);
+      const data: any = await feedV3({ scope, country, category, max_price: maxPrice, min_price: minPrice, min_beds: minBeds, price_drop: priceDrop, min_sqm: minSqm, sort, q: searchQuery(q), terms, min_score: minScore, need, dim_min: dimMin, costs: costsF, fresh: freshF, limit: 24, offset: more ? base.rows.length : 0 } as any);
       if (n !== seq.current) return;
       if (!more) freshPending.current = false;
       remember(data.rows);
@@ -818,6 +828,7 @@ function Home() {
     const put = (k: string, val: unknown) => (val ? next.set(k, String(val)) : next.delete(k));
     put("country", v.country); put("type", v.category); put("price", v.max_price); put("sqm", v.min_sqm);
     put("min", v.min_price); put("beds", v.min_beds); put("drop", v.price_drop ? "1" : "");
+    put("costs", v.costs); put("fresh", v.fresh ? "1" : "");
     put("order", v.sort && v.sort !== "score" ? v.sort : "");
     put("score", v.min_score); put("need", (v.need || []).join(",")); put("dmin", Object.entries(v.dim_min || {}).map(([k, n]) => `${k}:${n}`).join(","));
     next.delete("search");
@@ -863,13 +874,14 @@ function Home() {
         {feed?.countries_count && <p className="hx-sub">{(() => { const v = Object.values(feed.countries_count as Record<string, number>); return <>{num(v.reduce((a, b) => a + b, 0))} {t("homes in")} {v.length} {t("countries, each checked by a person and given a score out of 100. We send you to the seller; we never sell.")}</>; })()} <Link to="/method">{t("How the score works")}</Link></p>}
         <FindSearch value={q} inputRef={searchRef} />
       </section>
-      <FeedFilters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_price: minPrice, min_beds: minBeds, price_drop: priceDrop, min_sqm: minSqm, sort, q, min_score: minScore, need, dim_min: dimMin }} onChange={setFilters} total={feed?.total} busy={busy} />
+      <FeedFilters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_price: minPrice, min_beds: minBeds, price_drop: priceDrop, min_sqm: minSqm, sort, q, min_score: minScore, need, dim_min: dimMin, costs: costsF, fresh: freshF }} onChange={setFilters} total={feed?.total} busy={busy} />
       <FindBar />
       {plain && sort === "score" && returningSince() != null && <div className="n9-since-slot"><Suspense fallback={null}><SinceVisit /></Suspense></div>}
-      {!plain || maxPrice || minPrice || minBeds || priceDrop || minSqm || minScore || need.length || sort !== "score" || showMap ? (
+      {!plain && country && !country.includes(",") && !category && !q && !vibeList.length && sort === "score" && returningSince() != null && <div className="n9-since-slot"><Suspense fallback={null}><SinceVisit key={country} country={country} /></Suspense></div>}
+      {!plain || maxPrice || minPrice || minBeds || priceDrop || minSqm || minScore || need.length || costsF || freshF || sort !== "score" || showMap ? (
       <div className="rh-results-bar" ref={resultsRef}>
         <p role="status" aria-live="polite"><strong>{busy && !feed ? t("Updating results…") : feed ? `${num(feed.total)} ${t("homes")}${country ? ` in ${country.split(",").join(", ")}` : ""}` : ""}</strong>
-          {(country || category || maxPrice || minPrice || minBeds || priceDrop || minSqm || q || vibeList.length > 0 || sort !== "score") && <Link to="/" className="hunt-link rh-clear">{t("Clear filters")}</Link>}</p>
+          {(country || category || maxPrice || minPrice || minBeds || priceDrop || minSqm || costsF || freshF || q || vibeList.length > 0 || sort !== "score") && <Link to="/" className="hunt-link rh-clear">{t("Clear filters")}</Link>}</p>
         <div className="rh-results-tools"><button type="button" className="hunt-link rh-maptoggle" aria-expanded={showMap} onClick={() => setMapMode(showMap ? "off" : "on")}>{showMap ? t("Hide map") : t("Show on map")}</button><ScoreHelp/><span className="rh-motion"><MotionControl/></span></div>
       </div>) : <div ref={resultsRef} />}
       {showMap && (
@@ -1025,6 +1037,7 @@ function Detail() {
             <Link to={`/homes/${encodeURIComponent((d.country || "").toLowerCase().replace(/ /g, "-"))}`}>{d.country}</Link>{regionOf(d) && <> · <Link to={`/homes/${encodeURIComponent((d.country || "").toLowerCase().replace(/ /g, "-"))}/${slugify(regionOf(d))}`}>{regionOf(d)}</Link></>} · {categories.find((c) => c[0] === d.category)?.[1] || d.category}
           </span>
           <h1>{cleanTitle(d)}</h1>
+          <GroupBadge d={d as any} />
           <PriceHead d={d as any} />
           <StatusTags deal={d as Row} />
           <VerifiedLine deal={d as Row} />
@@ -1042,13 +1055,17 @@ function Detail() {
           {d.why_great && <blockquote>{d.why_great}</blockquote>}
           {!isEs() && <TranslateBar text={[cleanTitle(d), d.why_great].filter(Boolean).join("\n\n")} />}
           <CheckLayer d={d as any} />
+          <Suspense fallback={null}><Unknowns d={d as any} /></Suspense>
           <HomeArticle d={d} />
           <div className="hunt-detail-actions hv-detail-actions">
             {listing}
             <SaveHeart deal={d} className="hunt-save hv-save-inline" />
             <ShareButton deal={d as Row} scope={scope} label />
           </div>
+          <SourceLine d={d as any} open={!!(d.source_url && /^https?:\/\//i.test(d.source_url))} />
+          <Suspense fallback={null}><HomeNote slug={d.slug} /></Suspense>
           <PriceWatch d={d} />
+          <Suspense fallback={null}><OfferHint d={d as any} /><PriceHistory slug={d.slug} price={d.price_eur} /></Suspense>
           <div className="hv-detail-more">
             <VideoTour deal={d} />
             <BoardButton deal={d} />
@@ -1074,9 +1091,7 @@ function Detail() {
           </p>
           <button
             className="hunt-report"
-            onClick={() => {
-              if (requireUser()) setReport(true);
-            }}
+            onClick={() => setReport(true)}
           >
             <Flag size={14} /> {t("Report a problem")}
           </button>
@@ -1097,11 +1112,12 @@ function Detail() {
             try {
               await call("report", {
                 id: d.id,
+                slug: d.slug,
                 reason: form.get("reason"),
                 detail: form.get("detail"),
               });
               setReport(false);
-              setNotice("Report received. An admin will review it.");
+              setNotice(t("Report received. A person will review it."));
             } catch (e) {
               setNotice((e as Error).message);
             } finally {
@@ -1132,7 +1148,7 @@ function Detail() {
         </form>
       )}
       <HomeNav prev={swipe.prev} next={swipe.next} pos={swipe.pos} />
-      <SimilarHomes slug={d.slug} />
+      <SimilarHomes slug={d.slug} deal={d as Row} />
       <Suspense fallback={null}><Helpful id={"deal/" + d.slug} /></Suspense>
       <section className="hunt-discussion" id="discussion">
         <h2>{t("Comments and questions")}</h2>
@@ -1653,7 +1669,8 @@ function matchesSubmission(deal: any, query: string) {
 }
 function Mine() {
   const { user, session, call, requireUser, setNotice } = useCommunity();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
+  const sharedRaw = pathname.endsWith("saved") ? new URLSearchParams(search).get("homes") : null;
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
   const [refreshing, setRefreshing] = useState(false);
@@ -1669,6 +1686,7 @@ function Mine() {
   const submissions = (data?.deals || []).filter((d:any) => (status === "all" || d.status === status) && matchesSubmission(d, query));
   const [guest, setGuest] = useState<GuestSave[]>(() => guestSaves());
   useEffect(() => { const on = () => setGuest(guestSaves()); window.addEventListener("rh-guest-saves", on); return () => window.removeEventListener("rh-guest-saves", on); }, []);
+  if (sharedRaw) return <div className="hunt-wrap hunt-profile"><h1>{t("Saved homes")}</h1><SharedList raw={sharedRaw} /><p className="hunt-fine"><Link to="/hunt/saved">{t("See your own saved homes")}</Link></p></div>;
   if (!user && pathname.endsWith("saved") && guest.length)
     return (
       <div className="hunt-wrap hunt-profile">
@@ -1830,6 +1848,7 @@ function Admin() {
               {d.why_great && <p>{d.why_great}</p>}
             </div>
           </div>
+          <Suspense fallback={null}><ImportPreview d={d} /></Suspense>
           <details className="hunt-crm-edit"><summary>Edit property details</summary>
           <form
             onSubmit={(e) => {
@@ -1941,6 +1960,7 @@ function Admin() {
           </button>
         </article>
       ))}
+      <Suspense fallback={null}><AdminTools /></Suspense>
       <AiQueue approved={data?.approved || []} busy={busy} act={act} />
       <h2>RealHunt Picks</h2>
       <p>Editorial picks are independent of the community ranking.</p>

@@ -3,7 +3,7 @@
 // gets lifestyle chips and saved searches with "N new since last visit". Logic lives in smartsearch.ts.
 import { useEffect, useId, useMemo, useRef, useState, type RefObject } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { Bell, BookmarkPlus, BookmarkCheck, Check, Globe, MapPin, Search, X, Sparkles } from "lucide-react";
+import { Bell, BookmarkPlus, BookmarkCheck, Check, Globe, Link2, MapPin, Search, X, Sparkles } from "lucide-react";
 import { liveHref } from "./livecta";
 import { feed, feedAll, type Row } from "./extras";
 import { VIBES } from "./v6";
@@ -285,10 +285,25 @@ export function FindBar() {
             ? <button type="button" className="rf-save is-on" aria-pressed="true" onClick={() => setSaved((l) => removeSaved(l, qs))}><BookmarkCheck size={16} aria-hidden="true" /><span>{t("Search saved")}</span></button>
             : <button type="button" className="rf-save" aria-pressed="false" onClick={() => setSaved((l) => addSaved(l, qs, labelFor(params, data?.places || [])))}><BookmarkPlus size={16} aria-hidden="true" /><span>{t("Save this search")}</span></button>}
           <Link className="rf-alert" to={alertsLink(params)}><Bell size={15} aria-hidden="true" /><span>{t("Email alerts")}</span></Link>
+          <ShareSearch qs={qs} />
         </div>
       )}
     </div>
   );
+}
+
+// 21-nov-2026 (list2 39): the search, with its filters, as a link to send. The URL already holds every filter; this
+// copies the clean form of it (canonicalSearch), or opens the phone's share sheet.
+function ShareSearch({ qs }: { qs: string }) {
+  const [done, setDone] = useState(false);
+  useEffect(() => { if (!done) return; const id = setTimeout(() => setDone(false), 2500); return () => clearTimeout(id); }, [done]);
+  const url = `${location.origin}${location.pathname.startsWith("/es") ? "/es/" : "/"}?${qs}`;
+  const go = async () => {
+    try { (window as any).clarity?.("event", "search_share"); } catch { /* blocked */ }
+    try { if ((navigator as any).share && matchMedia("(pointer: coarse)").matches) { await (navigator as any).share({ title: document.title, url }); return; } } catch { return; }
+    try { await navigator.clipboard.writeText(url); setDone(true); } catch { window.prompt(t("Copy this link"), url); }
+  };
+  return <button type="button" className="rf-alert rf-share" onClick={go} aria-live="polite">{done ? <Check size={15} aria-hidden="true" /> : <Link2 size={15} aria-hidden="true" />}<span>{t(done ? "Link copied" : "Share this search")}</span></button>;
 }
 
 // ---------------------------------------------------------------- 4: list on the saved page
