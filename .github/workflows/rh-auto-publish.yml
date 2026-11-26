@@ -128,7 +128,7 @@ jobs:
             # 20,000 files by the account's plan, and its build step adds the shared assets the pages need (about as many
             # as dist/assets). Over the cap every deploy fails and the site keeps serving an old build without warning
             # (15:13-19:00 UTC that day). Stop here instead, with the numbers.
-            rh=$(git ls-tree -r --name-only HEAD -- _s/realhunt.co | wc -l); ra=$(find "$GITHUB_WORKSPACE/dist/assets" -type f | wc -l)
+            rh=$(git ls-tree -r --name-only HEAD -- _s/realhunt.co | wc -l); ra=$(find "$GITHUB_WORKSPACE/dist/assets" -type f | wc -l); [ "$ra" -ge 1300 ] || ra=1300 # the Pages build (_rhbuild/assets.py) copies about 1,267 shared files, more than dist/assets holds
             echo "realhunt-media deploy: $rh files + about $ra shared assets = $((rh + ra)) (limit 20,000, guard 19,600)"
             [ $((rh + ra)) -le 19600 ] || { echo "realhunt-media would go over the 20,000-file limit of Cloudflare Pages: bundle more pages (seo/pack.ts) before publishing"; return 1; }
             for t in "" "_s/"; do

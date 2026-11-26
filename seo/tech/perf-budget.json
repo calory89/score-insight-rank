@@ -13,11 +13,11 @@
     "html_kb": 30,
     "blocking_css_kb": 28,
     "entry_js_kb": 86,
-    "route_js_kb": 465,
+    "route_js_kb": 467,
     "requests_in_html": 40,
     "high_priority_images": 3
   },
-  "route_js_note": "26-nov-2026 (batches 11 and 12): 460 to 465. /map was at 459.7 KB on main; the new search filters, the header section links, the tab bar \"More\" sheet, the footer group and the home page sections add a few KB gzip to the shared route scripts.",
+  "route_js_note": "26-nov-2026: 460 to 465 (batches 11 and 12: search filters, header section links, tab bar More sheet, footer group, home page sections), then 465 to 467 (batch 17: keyboard and screen-reader support, about 0.6 KB). /map measured 465.2 KB after batch 17.",
   "live_note": "Limits for seo/tech/browserCheck.mjs after every publication: kilobytes really transferred (Brotli, photos included) and requests on a first visit with an empty cache, phone screen, no service worker. Measured 21-nov-2026 (home 1567 KB / 58, deal 1956 / 59, country 1288 / 46, band 1204 / 43, map 1235 / 55); the limits leave about a quarter of room.",
   "live": {
     "home": {
