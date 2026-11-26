@@ -1,4 +1,5 @@
 import { QUICK, DIMS } from "./scores";
+import { PTYPES, FEE_STEPS, SEA_STEPS, AIR_STEPS, type ExtraParams } from "./findFilters";
 import { AlertSurveyMount, HelpfulMount, TocMount } from "./n9/mount";
 import { GLOSSARY_OF } from "./knowledgeRoutes";
 import GUIDES_JSON from "@/data/guides.json";
@@ -35,7 +36,7 @@ const theC = (n: string) => (/^(United |Netherlands$|Dominican Republic$|Czech R
 import { regionOf, slugify, isPriceCap, HOME_TYPES } from "./regions";
 import { thumb, onThumbError } from "@/lib/thumbs";
 import { HomesFilterLink } from "./homesFilterLink";
-export type FeedParams = { scope?: string; country?: string; category?: string; max_price?: number | null; min_price?: number | null; min_beds?: number | null; price_drop?: boolean; min_sqm?: number | null; sort?: string; limit?: number; offset?: number; ids?: string[]; q?: string; terms?: string[]; min_score?: number | null; need?: string[]; dim_min?: Record<string, number>; costs?: string; fresh?: boolean };
+export type FeedParams = { scope?: string; country?: string; category?: string; max_price?: number | null; min_price?: number | null; min_beds?: number | null; price_drop?: boolean; min_sqm?: number | null; sort?: string; limit?: number; offset?: number; ids?: string[]; q?: string; terms?: string[]; min_score?: number | null; need?: string[]; dim_min?: Record<string, number>; costs?: string; fresh?: boolean } & ExtraParams;
 // Guest pass: someone who opens an Insider's invite link (?ref=code) sees the Insider homes too, for
 // 7 days, so what an Insider shares never shows up blurred. The server checks the code belongs to an
 // Insider (community_can_see_early); this only remembers which code the visitor came with.
@@ -378,7 +379,7 @@ export function Filters({ countries, value: applied, onChange, expanded = false 
   const setDraft = (v: FeedParams) => onChange(v);
   const list = Object.entries(countries || {}).sort((a, b) => b[1] - a[1]);
   const active = !!(value.country || value.category || value.max_price || value.min_price || value.min_beds || value.price_drop || value.min_sqm || (value.sort && value.sort !== "score"));
-  const extra = [value.category, value.max_price, value.min_price, value.min_beds, value.price_drop, value.min_sqm, value.sort && value.sort !== "score" ? value.sort : "", value.costs, value.fresh].filter(Boolean).length;
+  const extra = [value.category, value.max_price, value.min_price, value.min_beds, value.price_drop, value.min_sqm, value.sort && value.sort !== "score" ? value.sort : "", value.costs, value.fresh, value.fee != null ? "fee" : "", value.sea, value.air, value.quiet, value.ptype].filter(Boolean).length;
   const [open, setOpen] = useState(() => expanded || extra > 0);
   const moreBtn = useRef<HTMLButtonElement>(null);
   // 14-oct-2026 (Carlos): only show a quick filter when at least one home matches it, given the other filters.
@@ -389,7 +390,8 @@ export function Filters({ countries, value: applied, onChange, expanded = false 
   const vv: any = value;
   const priceChipOn = PRICE_CHIPS.some((pc) => (value.min_price || null) === pc.min && (value.max_price || null) === pc.max); // the price row already shows it
   const qp = { country: value.country || "", category: value.category || "", max_price: value.max_price || null, min_price: value.min_price || null, min_beds: value.min_beds || null, price_drop: !!value.price_drop, min_sqm: value.min_sqm || null,
-    q: vv.q || "", terms: vv.terms || [], min_score: value.min_score || null, need: value.need || [], dim_min: value.dim_min || {}, costs: value.costs || "", fresh: !!value.fresh };
+    q: vv.q || "", terms: vv.terms || [], min_score: value.min_score || null, need: value.need || [], dim_min: value.dim_min || {}, costs: value.costs || "", fresh: !!value.fresh,
+    fee: value.fee ?? null, sea: value.sea || null, air: value.air || null, quiet: !!value.quiet, ptype: value.ptype || "" };
   const qkey = JSON.stringify(qp);
   useEffect(() => {
     let live = true;
@@ -467,10 +469,34 @@ export function Filters({ countries, value: applied, onChange, expanded = false 
             {(value.costs === "nofee" || !qc || (qc.costs_nofee ?? 3) >= 3) && <option value="nofee">{t("No community fee")}{qc?.costs_nofee != null ? ` (${qc.costs_nofee})` : ""}</option>}
           </select></label>
         {(value.fresh || !qc || (qc.fresh ?? 3) >= 3) && <label className="hunt-check"><input type="checkbox" checked={!!value.fresh} onChange={(e) => setDraft({ ...value, fresh: e.target.checked })} /> <span>{t("Advert confirmed online in the last 30 days")}</span></label>}
+        {/* 26-nov-2026 (list of 1,000, batch 12: 552-554, 566): fee, distances, quiet and type. An option only
+            shows when it leaves 3+ homes with the other filters (same rule as the quick filters). */}
+        <label><span>{t("Monthly fee")}</span>
+          <select value={value.fee ?? ""} onChange={(e) => setDraft({ ...value, fee: e.target.value === "" ? null : Number(e.target.value) })}>
+            <option value="">{t("Any")}</option>
+            {FEE_STEPS.filter((v) => value.fee === v || !qc || (qc["fee_" + v] ?? 3) >= 3).map((v) => <option key={v} value={v}>{v === 0 ? t("No community fee") : t("Up to €{n}/month").replace("{n}", String(v))}{qc?.["fee_" + v] != null ? ` (${qc["fee_" + v]})` : ""}</option>)}
+          </select></label>
+        <label><span>{t("Sea")}</span>
+          <select value={value.sea || ""} onChange={(e) => setDraft({ ...value, sea: e.target.value ? Number(e.target.value) : null })}>
+            <option value="">{t("Any")}</option>
+            {SEA_STEPS.filter((v) => value.sea === v || !qc || (qc["sea_" + v] ?? 3) >= 3).map((v) => <option key={v} value={v}>{t("Up to {n} km").replace("{n}", String(v))}{qc?.["sea_" + v] != null ? ` (${qc["sea_" + v]})` : ""}</option>)}
+          </select></label>
+        <label><span>{t("Airport")}</span>
+          <select value={value.air || ""} onChange={(e) => setDraft({ ...value, air: e.target.value ? Number(e.target.value) : null })}>
+            <option value="">{t("Any")}</option>
+            {AIR_STEPS.filter((v) => value.air === v || !qc || (qc["air_" + v] ?? 3) >= 3).map((v) => <option key={v} value={v}>{t("Up to {n} km").replace("{n}", String(v))}{qc?.["air_" + v] != null ? ` (${qc["air_" + v]})` : ""}</option>)}
+          </select></label>
+        <label><span>{t("Home type")}</span>
+          <select value={value.ptype || ""} onChange={(e) => setDraft({ ...value, ptype: e.target.value })}>
+            <option value="">{t("Any")}</option>
+            {PTYPES.filter(([k]) => value.ptype === k || !qc || (qc["ptype_" + k] ?? 3) >= 3).map(([k, l]) => <option key={k} value={k}>{t(l)}{qc?.["ptype_" + k] != null ? ` (${qc["ptype_" + k]})` : ""}</option>)}
+          </select></label>
+        {(value.quiet || !qc || (qc.quiet ?? 3) >= 3) && <label className="hunt-check"><input type="checkbox" checked={!!value.quiet} onChange={(e) => setDraft({ ...value, quiet: e.target.checked })} /> <span>{t("No motorway or railway nearby")}</span></label>}
+        <p className="hunt-fine">{t("Distances are in a straight line. Homes where we do not know a value are left out by that filter.")}</p>
         <label><span>{t("Sort")}</span>
           <select value={value.sort || "score"} onChange={(e) => setDraft({ ...value, sort: e.target.value })}>
             <option value="score">{t("Best score")}</option><option value="new">{t("Newest")}</option>
-            <option value="price_asc">{t("Cheapest")}</option><option value="ppsqm">{t("Lowest price per m²")}</option><option value="airport">{t("Nearest airport")}</option><option value="sqm">{t("Biggest")}</option>{DIMS.filter(([k]) => k !== "interest").map(([k, l]) => <option key={k} value={"dim:" + k}>{`${t("Best")}: ${t(l)}`}</option>)}
+            <option value="price_asc">{t("Cheapest")}</option><option value="ppsqm">{t("Lowest price per m²")}</option><option value="airport">{t("Nearest airport")}</option><option value="sqm">{t("Biggest")}</option><option value="drop">{t("Biggest price drop")}</option><option value="sea">{t("Closest to the sea")}</option>{DIMS.filter(([k]) => k !== "interest").map(([k, l]) => <option key={k} value={"dim:" + k}>{`${t("Best")}: ${t(l)}`}</option>)}
           </select></label>
       </div>}
     </div>

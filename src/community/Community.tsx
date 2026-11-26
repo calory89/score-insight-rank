@@ -1,4 +1,5 @@
 import { TaxPanel } from "./taxes";
+import { extraFromUrl, extraToUrl, extraLabels, readExtra } from "./findFilters";
 import { fmtDay } from "@/lib/dates";
 import { CatalogBack, UnavailableHome, DecisionFacts, QuickHome, ComparePick, EmptyAlternatives, RankingExplanation, MotionControl, RentPreference } from "./BuyerTools";
 import { storage, rememberCatalog, usePreference } from "./buyer-state";
@@ -710,6 +711,8 @@ function Home() {
   const priceDrop = params.get("drop") === "1";
   const costsF = params.get("costs") === "known" || params.get("costs") === "nofee" ? params.get("costs")! : "";
   const freshF = params.get("fresh") === "1";
+  const extraF = extraFromUrl(params); // fee, sea, air, quiet, ptype (findFilters.ts, batch 12)
+  const extraOn = extraLabels(extraF).length > 0;
   const sort = params.get("order") || "score"; // 7-oct-2026: the feed is a score ranking, no votes
   const minScore = Number(params.get("score")) || null;
   const need = (params.get("need") || "").split(",").filter(Boolean);
@@ -753,7 +756,7 @@ function Home() {
     if (!more) setFeed(null);
     setError("");
     try {
-      const data: any = await feedV3({ scope, country, category, max_price: maxPrice, min_price: minPrice, min_beds: minBeds, price_drop: priceDrop, min_sqm: minSqm, sort, q: searchQuery(q), terms, min_score: minScore, need, dim_min: dimMin, costs: costsF, fresh: freshF, limit: 24, offset: more ? base.rows.length : 0 } as any);
+      const data: any = await feedV3({ scope, country, category, max_price: maxPrice, min_price: minPrice, min_beds: minBeds, price_drop: priceDrop, min_sqm: minSqm, sort, q: searchQuery(q), terms, min_score: minScore, need, dim_min: dimMin, costs: costsF, fresh: freshF, ...extraF, limit: 24, offset: more ? base.rows.length : 0 } as any);
       if (n !== seq.current) return;
       if (!more) freshPending.current = false;
       remember(data.rows);
@@ -832,6 +835,7 @@ function Home() {
     put("country", v.country); put("type", v.category); put("price", v.max_price); put("sqm", v.min_sqm);
     put("min", v.min_price); put("beds", v.min_beds); put("drop", v.price_drop ? "1" : "");
     put("costs", v.costs); put("fresh", v.fresh ? "1" : "");
+    for (const [k, val] of Object.entries(extraToUrl(readExtra(v)))) put(k, val);
     put("order", v.sort && v.sort !== "score" ? v.sort : "");
     put("score", v.min_score); put("need", (v.need || []).join(",")); put("dmin", Object.entries(v.dim_min || {}).map(([k, n]) => `${k}:${n}`).join(","));
     next.delete("search");
@@ -877,14 +881,14 @@ function Home() {
         {feed?.countries_count && <p className="hx-sub">{(() => { const v = Object.values(feed.countries_count as Record<string, number>); return <>{num(v.reduce((a, b) => a + b, 0))} {t("homes in")} {v.length} {t("countries, each checked by a person and given a score out of 100. We send you to the seller; we never sell.")}</>; })()} <Link to="/method">{t("How the score works")}</Link></p>}
         <FindSearch value={q} inputRef={searchRef} />
       </section>
-      <FeedFilters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_price: minPrice, min_beds: minBeds, price_drop: priceDrop, min_sqm: minSqm, sort, q, min_score: minScore, need, dim_min: dimMin, costs: costsF, fresh: freshF }} onChange={setFilters} total={feed?.total} busy={busy} />
+      <FeedFilters countries={feed?.countries_count || {}} value={{ scope, country, category, max_price: maxPrice, min_price: minPrice, min_beds: minBeds, price_drop: priceDrop, min_sqm: minSqm, sort, q, min_score: minScore, need, dim_min: dimMin, costs: costsF, fresh: freshF, ...extraF }} onChange={setFilters} total={feed?.total} busy={busy} />
       <FindBar />
       {plain && sort === "score" && returningSince() != null && <div className="n9-since-slot"><Suspense fallback={null}><SinceVisit /></Suspense></div>}
       {!plain && country && !country.includes(",") && !category && !q && !vibeList.length && sort === "score" && returningSince() != null && <div className="n9-since-slot"><Suspense fallback={null}><SinceVisit key={country} country={country} /></Suspense></div>}
-      {!plain || maxPrice || minPrice || minBeds || priceDrop || minSqm || minScore || need.length || costsF || freshF || sort !== "score" || showMap ? (
+      {!plain || maxPrice || minPrice || minBeds || priceDrop || minSqm || minScore || need.length || costsF || freshF || extraOn || sort !== "score" || showMap ? (
       <div className="rh-results-bar" ref={resultsRef}>
         <p role="status" aria-live="polite"><strong>{busy && !feed ? t("Updating results…") : feed ? `${num(feed.total)} ${t("homes")}${country ? ` in ${country.split(",").join(", ")}` : ""}` : ""}</strong>
-          {(country || category || maxPrice || minPrice || minBeds || priceDrop || minSqm || costsF || freshF || q || vibeList.length > 0 || sort !== "score") && <Link to="/" className="hunt-link rh-clear">{t("Clear filters")}</Link>}</p>
+          {(country || category || maxPrice || minPrice || minBeds || priceDrop || minSqm || costsF || freshF || extraOn || q || vibeList.length > 0 || sort !== "score") && <Link to="/" className="hunt-link rh-clear">{t("Clear filters")}</Link>}</p>
         <div className="rh-results-tools"><button type="button" className="hunt-link rh-maptoggle" aria-expanded={showMap} onClick={() => setMapMode(showMap ? "off" : "on")}>{showMap ? t("Hide map") : t("Show on map")}</button><ScoreHelp/><span className="rh-motion"><MotionControl/></span></div>
       </div>) : <div ref={resultsRef} />}
       {showMap && (

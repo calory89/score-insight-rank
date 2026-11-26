@@ -307,7 +307,7 @@ export function parseQuery(input: string, places: Place[] = [], known?: (word: s
 
 // ---------------------------------------------------------------- URL params
 /** The feed keys a search may set. Anything else in the URL (tabs, utm...) is left alone. */
-export const FILTER_KEYS = ["country", "type", "price", "min", "beds", "need", "vibe", "q", "order", "dmin", "score", "sqm", "drop", "costs", "fresh"] as const;
+export const FILTER_KEYS = ["country", "type", "price", "min", "beds", "need", "vibe", "q", "order", "dmin", "score", "sqm", "drop", "costs", "fresh", "fee", "sea", "air", "quiet", "ptype"] as const;
 const list = (v: string | null) => (v || "").split(",").map((x) => x.trim()).filter(Boolean);
 
 /** Applies a parsed search onto the current URL: the new search replaces the old words, and every filter it

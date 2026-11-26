@@ -4,11 +4,12 @@ import type { FeedParams } from "./extras";
 import { QUICK } from "./scores";
 import { DIMS } from "./dims";
 import { categories, money } from "./api";
+import { readExtra, extraLabels, fill } from "./findFilters";
 
 export type Chip = { key: string; label: string; next: FeedParams };
 type T = (s: string) => string;
 
-const SORTS: Record<string, string> = { new: "Newest", price_asc: "Cheapest", ppsqm: "Lowest price per m²", airport: "Nearest airport", sqm: "Biggest" };
+const SORTS: Record<string, string> = { new: "Newest", price_asc: "Cheapest", ppsqm: "Lowest price per m²", airport: "Nearest airport", sqm: "Biggest", drop: "Biggest price drop", sea: "Closest to the sea" };
 
 export function activeChips(v: FeedParams, t: T = (s) => s): Chip[] {
   const out: Chip[] = [];
@@ -25,6 +26,8 @@ export function activeChips(v: FeedParams, t: T = (s) => s): Chip[] {
   if (v.costs === "known") out.push({ key: "costs", label: t("Fee or property tax stated"), next: { ...v, costs: "" } });
   if (v.costs === "nofee") out.push({ key: "costs", label: t("No community fee"), next: { ...v, costs: "" } });
   if (v.fresh) out.push({ key: "fresh", label: t("Confirmed in the last 30 days"), next: { ...v, fresh: false } });
+  // 26-nov-2026 (batch 12, idea 564): fee, distance, quiet and type filters as removable chips too
+  for (const x of extraLabels(readExtra(v as any))) out.push({ key: x.key, label: fill(t(x.label), x.vars), next: { ...v, [x.key]: x.key === "quiet" ? false : x.key === "ptype" ? "" : null } as FeedParams });
   for (const q of QUICK) {
     if (q.min && (v.min_score || 0) >= q.min) out.push({ key: "q:" + q.k, label: t(q.label), next: { ...v, min_score: null } });
     if (q.need && (v.need || []).includes(q.need)) out.push({ key: "q:" + q.k, label: t(q.label), next: { ...v, need: (v.need || []).filter((x) => x !== q.need) } });
@@ -43,5 +46,5 @@ export function activeChips(v: FeedParams, t: T = (s) => s): Chip[] {
 
 /** Params with every filter cleared (scope and search text kept). */
 export function clearedFilters(v: FeedParams): FeedParams {
-  return { scope: v.scope, q: v.q, country: "", category: "", max_price: null, min_price: null, min_beds: null, price_drop: false, min_sqm: null, sort: "score", min_score: null, need: [], dim_min: {}, costs: "", fresh: false };
+  return { scope: v.scope, q: v.q, country: "", category: "", max_price: null, min_price: null, min_beds: null, price_drop: false, min_sqm: null, sort: "score", min_score: null, need: [], dim_min: {}, costs: "", fresh: false, fee: null, sea: null, air: null, quiet: false, ptype: "" };
 }

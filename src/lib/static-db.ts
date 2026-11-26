@@ -8,6 +8,7 @@
 // still talk to the database, so the Cloud backend can stay paused and the site keeps working.
 import { snapshotRaw } from "@/lib/snapshotRaw";
 import { mediaDeep } from "./media";
+import { readExtra, extraMatch, extraSort } from "@/community/findFilters"; // list of 1,000, batch 12: fee, sea, airport, quiet, type
 import { wordMatches } from "./synonyms"; // FIND layer: "apartment" also finds flats and condos
 import { supabase } from "@/integrations/supabase/client";
 import { learnTexts, getLang } from "./lang";
@@ -71,6 +72,7 @@ function feed(snap: Snap, p: Row = {}) {
   const minScore = p.min_score ? num(p.min_score) : null;
   const costs = p.costs === "known" || p.costs === "nofee" ? String(p.costs) : "";
   const fresh = !!p.fresh;
+  const extra = readExtra(p);
   const need: string[] = Array.isArray(p.need) ? p.need : [];
   const dmin: Row = p.dim_min && typeof p.dim_min === "object" ? p.dim_min : {};
   const terms: string[] = Array.isArray(p.terms) ? p.terms : [];
@@ -91,6 +93,7 @@ function feed(snap: Snap, p: Row = {}) {
     (minScore == null || num(e.nota) >= minScore) &&
     (!costs || costsMatch(e, costs)) &&
     (!fresh || confirmed30(e)) &&
+    extraMatch(e, extra) &&
     need.every((t) => Array.isArray(e.amen) && e.amen.includes(t)) &&
     Object.entries(dmin).every(([k, v]) => num(e.dims?.[k]) >= num(v)) &&
     terms.every((t) => has([e.title, e.location_name, e.why_great].join(" "), t)) &&
@@ -122,6 +125,8 @@ function feed(snap: Snap, p: Row = {}) {
     else if (sort === "score") d = num(b.nota) - num(a.nota);
     else if (String(sort).startsWith("dim:")) { const k = String(sort).slice(4); d = num(b.dims?.[k], -1) - num(a.dims?.[k], -1); }
     else if (sort === "rank") d = (key.get(a.id) ?? 0) - (key.get(b.id) ?? 0);
+    else d = extraSort(String(sort), a, b) ?? 0;
+    if (!d && (sort === "drop" || sort === "sea")) d = num(b.nota) - num(a.nota);
     return d || rk(a) - rk(b);
   };
   f = f.sort(cmp);
@@ -160,6 +165,12 @@ function quickCounts(snap: Snap, p: Row = {}) {
   out.costs_known = feed(snap, { ...base, costs: "known" }).total;
   out.costs_nofee = feed(snap, { ...base, costs: "nofee" }).total;
   out.fresh = feed(snap, { ...base, fresh: true }).total;
+  // 26-nov-2026 (batch 12): the new filters only offer a value that leaves 3+ homes
+  for (const v of [0, 50, 100, 200, 300]) out["fee_" + v] = feed(snap, { ...base, fee: v }).total;
+  for (const v of [1, 5, 10, 25]) out["sea_" + v] = feed(snap, { ...base, sea: v }).total;
+  for (const v of [30, 60, 100]) out["air_" + v] = feed(snap, { ...base, air: v }).total;
+  out.quiet = feed(snap, { ...base, quiet: true }).total;
+  for (const k of ["house", "flat", "villa", "townhouse", "cottage", "farmhouse", "studio"]) out["ptype_" + k] = feed(snap, { ...base, ptype: k }).total;
   return out;
 }
 
