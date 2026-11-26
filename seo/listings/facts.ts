@@ -37,6 +37,27 @@ export type Facts = {
   x: Extra;
   sources: [string, number][];
   updated: string; // day of the snapshot
+  /** 26-nov-2026 (list 1000, ideas 51 to 100). */
+  t2: T2Facts;
+};
+
+export type T2Facts = {
+  /** The three picks above the text (idea 58): best score, cheapest, lowest price per m²; three different homes or fewer. */
+  top3: { key: "best" | "cheapest" | "space"; ref: Ref }[];
+  /** Three price ranges of the same number of homes and what is typical in each (idea 64); empty under 9 homes. */
+  money3: { lo: number; hi: number; n: number; sqm: number; beds: number }[];
+  /** Region pages: every town with its median, cheapest first (idea 55). */
+  towns: { name: string; n: number; median: number; path: string }[];
+  /** Region pages: the four regions of the country whose homes are closest on average (idea 68). */
+  nearRegions: { path: string; name: string; n: number; km: number }[];
+  /** Bedroom pages: median m² per bedroom over the homes that give both (idea 92); 0 under 3 such homes. */
+  sqmPerBed: number; sqmPerBedN: number;
+  /** Homes whose original advert our check confirmed in the last 30 days (idea 96). */
+  checked30: number;
+  /** Homes of the country taken off the site or marked as no longer for sale in the last 30 days (idea 85). */
+  removed30: number;
+  /** Day of the last change of this list: a home added, checked or repriced (idea 72). */
+  lastChange: string | null;
 };
 
 export type Extra = {
@@ -67,12 +88,16 @@ const daysBetween = (a: string, b: string) => Math.round((Date.parse(b) - Date.p
 export const ref = (h: Home): Ref => ({ slug: String(h.slug), home: h, price: h.price_eur, sqm: Number(h.sqm) || 0, beds: bedsOf(h), nota: Number(h.nota) || 0, town: townOf(h) || String(h.country || ""), day: homeDay(h) });
 const DIM_KEYS = ["price", "value", "space", "condition", "extras", "water", "weather", "access", "costs"];
 
-export type Ctx = { all: Home[]; byCountry: Map<string, Home[]>; pages: Facet[]; dest: Record<string, any>; updated: string; fx?: Fx };
+export type Ctx = { all: Home[]; byCountry: Map<string, Home[]>; pages: Facet[]; dest: Record<string, any>; updated: string; fx?: Fx;
+  /** 26-nov-2026 (idea 52): the count of the whole site, from the same rule as llms.txt and the home page (seo/listings/counts.ts). */
+  site?: { homes: number; countries: number; median: number; ppsqm: number };
+  /** Homes that left the site and price changes (seo/reach/removed-seed.json): date, kind, slug, country. */
+  events?: { date: string; kind: string; slug: string; country?: string | null }[] };
 // 20-nov-2026: homes whose advert the nightly check could not confirm for 30 days go after the others (status.ts isUnconfirmed).
 const unconf = (h: Home) => (isUnconfirmed(h as any) ? 1 : 0);
 const byScore = (a: Home, b: Home) => unconf(a) - unconf(b) || (b.nota ?? 0) - (a.nota ?? 0) || (a.rank ?? 1e9) - (b.rank ?? 1e9) || String(a.slug).localeCompare(String(b.slug));
 const count = (xs: string[]) => { const m = new Map<string, number>(); for (const x of xs) if (x) m.set(x, (m.get(x) || 0) + 1); return [...m.entries()].map(([name, n]) => ({ name, n })).sort((a, b) => b.n - a.n || a.name.localeCompare(b.name)); };
-const BAND_KINDS = ["band", "regionBand", "gband"];
+const BAND_KINDS = ["band", "regionBand", "gband", "bedsBand"];
 /** The three prices the country pages work the buying costs out for. */
 export const COST_EXAMPLES = [40000, 80000, 150000];
 
@@ -183,7 +208,7 @@ export function factsFor(f: Facet, ctx: Ctx): Facts {
   // the budgets on each side (same country, or same region for a budget inside a region)
   let prev: Facts["prev"] = null, next: Facts["next"] = null, step: Facts["step"] = null;
   if (f.cap && BAND_KINDS.includes(f.kind)) {
-    const sib = ctx.pages.filter((p) => p.kind === f.kind && p.cc === f.cc && p.regionSlug === f.regionSlug && p.area === f.area && p.cap).sort((a, b) => a.cap! - b.cap!);
+    const sib = ctx.pages.filter((p) => p.kind === f.kind && p.cc === f.cc && p.regionSlug === f.regionSlug && p.area === f.area && p.beds === f.beds && p.cap).sort((a, b) => a.cap! - b.cap!);
     const i = sib.findIndex((p) => p.path === f.path);
     if (i > 0) prev = { cap: sib[i - 1].cap!, n: sib[i - 1].homes.length, path: sib[i - 1].path };
     if (i >= 0 && i < sib.length - 1) next = { cap: sib[i + 1].cap!, n: sib[i + 1].homes.length, path: sib[i + 1].path };
@@ -221,7 +246,10 @@ export function factsFor(f: Facet, ctx: Ctx): Facts {
     sqmMedian: withSqm.length >= 3 ? Math.round(median(withSqm.map((h) => Number(h.sqm)))) : 0, sqmMax: withSqm.length >= 3 && bigSqm ? ref(bigSqm) : null,
     cheapest: ref(byPrice[0]), best: ref(f.ranked ? hs.slice().sort(byScore)[0] : hs[0]), newest: dated.length ? ref(dated[0][0]) : null,
     new30: dated.filter(([, d]) => daysBetween(d!, ctx.updated) <= 30).length,
-    parent: { kind: parentKind, n: parentHomes.length, median: median(parentHomes.map((h) => h.price_eur)), ppsqm: ppsqmOf(parentHomes), name: parentKind === "region" ? String(f.region) : parentKind === "country" ? String(f.country) : "", countries: new Set(ctx.all.map((h) => countrySlug(h.country))).size },
+    // the whole site is named with the count of llms.txt and the home page (idea 52), and its median is the median of
+    // those same homes, like /research/prices
+    parent: parentKind === "site" && ctx.site ? { kind: parentKind, n: ctx.site.homes, median: ctx.site.median, ppsqm: ctx.site.ppsqm, name: "", countries: ctx.site.countries }
+      : { kind: parentKind, n: parentHomes.length, median: median(parentHomes.map((h) => h.price_eur)), ppsqm: ppsqmOf(parentHomes), name: parentKind === "region" ? String(f.region) : parentKind === "country" ? String(f.country) : "", countries: new Set(ctx.all.map((h) => countrySlug(h.country))).size },
     isAll: hs.length === parentHomes.length,
     beds: [1, 2, 3, 4].map((b) => [b, bedsCount(b)] as [number, number]).filter(([, n]) => n > 0),
     types: { apartment: hs.filter((h) => ptypeOf(h) === "apartment").length, house: hs.filter((h) => ptypeOf(h) === "house").length },
@@ -245,5 +273,77 @@ export function factsFor(f: Facet, ctx: Ctx): Facts {
     x: extras(f, hs, parentHomes, ctx),
     sources: [...src.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 5),
     updated: ctx.updated,
+    t2: t2Facts(f, hs, byPrice, ctx, dated.length ? dated[0][1] : null),
   };
+}
+
+// ------------------------------------------------------------------------------------------------ 26-nov-2026
+const T2_DAYS = 30;
+/** Mean position of the homes of each region page of a country, worked out once per build. */
+const centres = new WeakMap<Facet[], Map<string, { lat: number; lng: number }>>();
+function centreOf(pages: Facet[], path: string) {
+  let m = centres.get(pages);
+  if (!m) {
+    m = new Map();
+    for (const p of pages) if (p.kind === "region" && !p.thin) {
+      const ok = p.homes.filter((h) => Number.isFinite(Number(h.lat)) && Number.isFinite(Number(h.lng)) && h.lat != null && h.lng != null);
+      if (ok.length) m.set(p.path, { lat: ok.reduce((a, h) => a + Number(h.lat), 0) / ok.length, lng: ok.reduce((a, h) => a + Number(h.lng), 0) / ok.length });
+    }
+    centres.set(pages, m);
+  }
+  return m.get(path) || null;
+}
+const km = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+  const R = 6371, r = Math.PI / 180, dLat = (b.lat - a.lat) * r, dLng = (b.lng - a.lng) * r;
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+};
+const mode = (xs: number[]) => { const c = new Map<number, number>(); for (const x of xs) if (x > 0) c.set(x, (c.get(x) || 0) + 1); return [...c.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0]?.[0] || 0; };
+
+export function t2Facts(f: Facet, hs: Home[], byPrice: Home[], ctx: Ctx, newest: string | null): T2Facts {
+  // three picks, three different homes: a list of three homes would only repeat its own cards
+  const top3: T2Facts["top3"] = [];
+  if (hs.length >= 4) {
+    const used = new Set<string>();
+    const pick = (key: T2Facts["top3"][number]["key"], list: Home[]) => { const h = list.find((x) => !used.has(String(x.slug))); if (h) { used.add(String(h.slug)); top3.push({ key, ref: ref(h) }); } };
+    pick("best", hs.slice().sort(byScore));
+    pick("cheapest", byPrice);
+    pick("space", hs.filter((h) => ppsqmHome(h) > 0).sort((a, b) => ppsqmHome(a) - ppsqmHome(b) || String(a.slug).localeCompare(String(b.slug))));
+  }
+  // three ranges with the same number of homes, by asking price
+  const money3: T2Facts["money3"] = [];
+  if (byPrice.length >= 9 && !f.ranked) {
+    const k = byPrice.length;
+    for (let i = 0; i < 3; i++) {
+      const part = byPrice.slice(Math.round((i * k) / 3), Math.round(((i + 1) * k) / 3));
+      const sq = part.filter((h) => h.sqm > 0).map((h) => Number(h.sqm));
+      money3.push({ lo: part[0].price_eur, hi: part[part.length - 1].price_eur, n: part.length, sqm: sq.length >= 2 ? Math.round(median(sq)) : 0, beds: mode(part.map(bedsOf)) });
+    }
+    // ranges whose prices are all the same say nothing
+    if (money3.some((r) => r.lo === r.hi)) money3.length = 0;
+  }
+  let towns: T2Facts["towns"] = [];
+  let nearRegions: T2Facts["nearRegions"] = [];
+  if (f.kind === "region" && f.cc) {
+    const by = new Map<string, Home[]>();
+    for (const h of hs) { const t = townOf(h); if (t) (by.get(t) || by.set(t, []).get(t)!).push(h); }
+    towns = [...by.entries()].map(([name, l]) => ({ name, n: l.length, median: median(l.map((h) => h.price_eur)), path: ctx.pages.find((p) => p.kind === "town" && p.regionSlug === f.regionSlug && p.cc === f.cc && p.town === name && !p.thin)?.path || "" }))
+      .sort((a, b) => a.median - b.median || b.n - a.n || a.name.localeCompare(b.name));
+    // a town with one home has a price, not a median: only towns with two homes or more, and only when two have them
+    towns = towns.filter((t) => t.n >= 2);
+    if (towns.length < 2) towns = [];
+    const me = centreOf(ctx.pages, f.path);
+    if (me) nearRegions = ctx.pages.filter((p) => p.kind === "region" && p.cc === f.cc && p.path !== f.path && !p.thin)
+      .map((p) => { const c = centreOf(ctx.pages, p.path); return c ? { path: p.path, name: String(p.region), n: p.homes.length, km: Math.round(km(me, c)) } : null; })
+      .filter((x): x is T2Facts["nearRegions"][number] => !!x).sort((a, b) => a.km - b.km || a.path.localeCompare(b.path)).slice(0, 4);
+  }
+  const pb = hs.filter((h) => h.sqm > 0 && bedsOf(h) > 0).map((h) => Number(h.sqm) / bedsOf(h));
+  const within = (d: string | null | undefined) => { const x = dayOf(d); if (!x) return false; const n = daysBetween(x, ctx.updated); return n >= 0 && n <= T2_DAYS; };
+  const checked30 = hs.filter((h) => within(h.src_ok_at) || within(h.verified_at)).length;
+  const slugs = new Set(hs.map((h) => String(h.slug)));
+  const ev = ctx.events || [];
+  const removed30 = f.country ? new Set(ev.filter((e) => (e.kind === "gone" || e.kind === "removed") && e.country === f.country && within(e.date)).map((e) => e.slug)).size : 0;
+  const priced = ev.filter((e) => e.kind === "price" && slugs.has(e.slug)).map((e) => e.date).sort().pop() || null;
+  const lastChange = [newest, priced].filter((d): d is string => !!d && d <= ctx.updated).sort().pop() || null;
+  return { top3, money3, towns, nearRegions, sqmPerBed: pb.length >= 3 ? Math.round(median(pb)) : 0, sqmPerBedN: pb.length, checked30, removed30, lastChange };
 }

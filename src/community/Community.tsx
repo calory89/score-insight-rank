@@ -215,7 +215,7 @@ function Shell({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Child pages set their own title in effects that run before this one, so they must be listed here or the
     // default title overwrites theirs (country pages, /method and /alerts showed the home title before 24-oct-2026).
-    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare|costs|research|agents|homes\/|method|alerts|can-i-buy|buying-costs|tools|about|top|guide|new|sitemap|what-100k-buys|price-drops|sources|swipe|map|leaderboard|winners|best|weather|saved|legal|hunter\/|b\/|live-search|press|embed|for-ai|editorial-policy|how-we-check-homes|what-we-reject|what-we-never-do|how-we-make-money|corrections)/.test(location.pathname)) return;
+    if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare|costs|research|agents|homes\/|homes$|method|alerts|can-i-buy|buying-costs|tools|about|top|guide|new|sitemap|what-100k-buys|price-drops|sources|swipe|map|leaderboard|winners|best|weather|saved|legal|hunter\/|b\/|live-search|press|embed|for-ai|editorial-policy|how-we-check-homes|what-we-reject|what-we-never-do|how-we-make-money|corrections)/.test(location.pathname)) return;
     document.title = "RealHunt: The best homes in every country, ranked by score";
   }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
@@ -2087,7 +2087,7 @@ export default function Community() {
       <Suspense fallback={<Loading />}><ToolsPage /></Suspense>
     ) : path === "/countries" || path.startsWith("/countries/") ? (
       <CountriesPage />
-    ) : path.startsWith("/homes/") ? (
+    ) : path === "/homes" || path.startsWith("/homes/") ? (
       <ListingRoute fallback={<HomesPage />} />
     ) : path.startsWith("/c/") ? (
       <CollectionPage />

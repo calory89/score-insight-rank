@@ -85,3 +85,34 @@
 /* Links to the same page in the languages that have no app (seo/langs/build.ts adds them to the English and Spanish pages) */
 .rh-static[data-ls] .ls-langs { margin: 22px 0 0; font-size: 14px; color: var(--c-ink-3, #62666E); display: flex; flex-wrap: wrap; align-items: center; gap: 0 4px; }
 .rh-static[data-ls] .ls-langs a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 10px; }
+/* 26-nov-2026 (list 1000, ideas 51 to 100) */
+.rh-static[data-ls] .ls-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0; }
+.rh-static[data-ls] .ls-skip { display: inline-block; padding: 6px 0; margin-left: 6px; font-weight: 600; }
+/* the card title is an H3 (idea 97): it looks like the line it replaced */
+.rh-static[data-ls] h3.ls-t { font: 600 16px/1.3 var(--f-body, system-ui, sans-serif); margin: 0; color: inherit; letter-spacing: 0; }
+.rh-static[data-ls] .ls-top { margin: 0 0 22px; }
+.rh-static[data-ls] .ls-top3 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.rh-static[data-ls] .ls-pick { background: var(--c-accent, #D4420C); }
+.rh-static[data-ls] .ls-order { font-size: 14px; color: var(--c-ink-2, #3D4047); display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin: -6px 0 16px; max-width: none; }
+.rh-static[data-ls] .ls-seabtn, .rh-static[data-ls] .ls-csv { font: 600 14px/1 var(--f-body, system-ui, sans-serif); min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--c-line, #E4E5E8); background: var(--c-bg, #fff); color: var(--c-ink, #111214); cursor: pointer; }
+.rh-static[data-ls] .ls-seabtn[aria-pressed="true"] { background: var(--c-ink, #111214); color: var(--c-bg, #fff); border-color: transparent; }
+.rh-static[data-ls][data-ls-sea] .ls-grid:not(.ls-top3) li:not([data-sea]) { display: none; }
+.rh-static[data-ls] .ls-b .ls-fee { white-space: normal; }
+.rh-static[data-ls] .ls-pager { display: flex; flex-wrap: wrap; gap: 6px; margin: 22px 0 0; }
+.rh-static[data-ls] .ls-pager a, .rh-static[data-ls] .ls-pager span { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; padding: 0 12px; border-radius: 12px; background: var(--c-fill, #F2F3F5); color: var(--c-ink, #111214); text-decoration: none; font-weight: 600; }
+.rh-static[data-ls] .ls-pager [aria-current] { background: var(--c-ink, #111214); color: var(--c-bg, #fff); }
+.rh-static[data-ls] .ls-chosen { margin-top: 32px; }
+.hunt.is-dark .rh-static[data-ls] .ls-seabtn, .hunt.is-dark .rh-static[data-ls] .ls-csv { background: transparent; color: inherit; }
+@media (max-width: 640px) {
+  /* the three picks scroll sideways, so the first photo is in the first screen and the next one shows at the edge */
+  .rh-static[data-ls] .ls-top3 { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 12px; margin: 0 -16px; padding: 0 16px 4px; scrollbar-width: none; }
+  .rh-static[data-ls] .ls-top3::-webkit-scrollbar { display: none; }
+  .rh-static[data-ls] .ls-top3 li { flex: 0 0 78%; scroll-snap-align: start; }
+  .rh-staticwrap .rh-static[data-ls] .ls-top3 { margin: 0; padding: 0 0 4px; }
+}
+/* the app's alert button at the end of the page (src/community/n9/ListingTools.tsx) wraps instead of widening the page:
+   "Avísame por correo de casas nuevas como estas hasta 300.000 €" was 412 px on a 390 px phone */
+.rh-static[data-ls] .n9-lalert a { white-space: normal; max-width: 100%; height: auto; min-height: 44px; text-align: left; line-height: 1.3; padding-top: 8px; padding-bottom: 8px; }
+/* /homes: one small card per country, two to a row on a phone */
+.rh-static[data-ls] .ls-hub { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px 14px; }
+@media (max-width: 640px) { .rh-static[data-ls] .ls-hub { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 10px; } .rh-static[data-ls] .ls-hub .ls-b small { white-space: normal; } }

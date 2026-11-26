@@ -150,6 +150,51 @@ export type Pack = {
   method: string;
   /** Text of the page that redirects from an older address. */
   moved: string;
+  /** 26-nov-2026 (list 1000, ideas 51 to 100): what only the English and Spanish packs say. A pack without it (German,
+   * French, Dutch, Polish, Russian) simply gets pages without these blocks, never a sentence in another language. */
+  t2?: T2;
+};
+
+export type T2 = {
+  /** "Jump to the homes" link at the top. */
+  skip: string;
+  /** The three picks above the text: best score, cheapest, most space for the money. */
+  topTitle: string; top: { best: string; cheapest: string; space: string };
+  /** One line under the grid title on how the homes are ordered (links only to anchors of the page). */
+  order(table: string): string;
+  /** "What your money buys here": three price ranges. */
+  moneyTitle: string;
+  money3(rows: { lo: string; hi: string; n: number; sqm: number; beds: number }[]): string;
+  /** Region pages: the median price of each town. */
+  townsTitle(region: string): string; town: string;
+  /** Region pages: the closest regions by the mean position of their homes. */
+  nearTitle: string;
+  /** Bedroom pages: median floor area per bedroom. */
+  sqmPerBed(m2: number, n: number): string;
+  /** "12 of 19 homes checked in the last 30 days". */
+  checked(k: number, n: number): string;
+  /** Homes of the country that left the site in the last 30 days (link to /research/removed-homes). */
+  removed(k: number, inC: string): string; removedLink: string;
+  /** Two lines on how the homes get on the list, with a link to /how-we-check-homes. */
+  howChosen: string; howChosenLink: string;
+  /** Card and table: the monthly community fee, or that the listing does not state it. */
+  fee(amount: string): string; feeUnknown: string;
+  /** Table caption with the median price per m² of the list. */
+  ppsqmRef(v: string): string;
+  /** The filter "by the sea" inside the page (no address of its own) and the page that has it. */
+  seaOnly(n: number): string; seaAll: string; seaPage: string;
+  /** Link that downloads the comparison table as CSV. */
+  csv: string;
+  /** Link to the map with the same filter. */
+  map: string;
+  /** Pages 2, 3... of a big country page. */
+  page(n: number, of: number): string; pageH1(h1: string, n: number): string; pageLede(from: number, to: number, n: number): string;
+  pager: string; prev: string; next: string; pageFirst: string;
+  /** The hub of every country (/homes). */
+  hub: { title(n: number, c: number): string; h1: string; lede(n: number, c: number, date: string): string; th: { country: string; homes: string; from: string; median: string; guide: string }; guide: string; crumb: string; desc(n: number, c: number): string };
+  /** Tools of the country under the costs (idea 74). */
+  tools: Record<string, string>;
+  lastChange(date: string): string;
 };
 
 export type { Facts, Ref, Noun, Home };
