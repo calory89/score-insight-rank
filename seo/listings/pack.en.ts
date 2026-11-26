@@ -90,6 +90,7 @@ function what(F: Facts, form: Form = "many"): string {
     case "regionBand": return f.area ? `${adj}${b} for sale ${areaOf(f)?.inEn || ""}${under}` : `${adj}${b} for sale in ${place(f.region!)}, ${f.country}${under}`;
     case "setting": case "feature": case "gfeature": return `${adj}${KEYED[f.key!](b, one)}${inC}`;
     case "beds": return f.beds === 4 ? `${adj}${b} with 4 or more bedrooms for sale${inC}` : `${adj}${f.beds}-bedroom ${b} for sale${inC}`;
+    case "bedsBand": return f.beds === 4 ? `${adj}${b} with 4 or more bedrooms for sale${inC}${under}` : `${adj}${f.beds}-bedroom ${b} for sale${inC}${under}`;
     case "ccyBand": if (f.region) return `${adj}${b} for sale in ${place(f.region)}, ${f.country}${under}`; return `${adj}${b} for sale${inC}${under}`;
     default: return `${adj}${b} for sale${inC}${under}`;
   }
@@ -113,7 +114,7 @@ export const en: Pack = {
   desc: (F, w) => `${F.f.ranked ? `The ${w}` : `${F.n} ${w}`}, from ${money(F.min)} (${/^near /.test(F.cheapest.town) ? F.cheapest.town : `in ${F.cheapest.town}`}) to ${money(F.max)}. Median ${money(F.median)}${F.scoreAvg ? `, average score ${F.scoreAvg} of 98` : ""}. Photos, sizes, buying costs and what to watch out for.`,
   crumbRoot: "RealHunt", crumbCheap: "Cheap houses",
   crumbCountry: (c) => `Homes in ${c}`,
-  label: (f) => (f.kind === "combo" ? `${LABEL[f.key!] || f.key} under ${money(f.cap!)}` : f.kind === "ccyBand" ? `Under ${ccy(f.cap!, f.ccy!)}` : f.kind === "area" ? areaOf(f)?.en || String(f.area) : f.kind === "near" ? `Near ${cityOf(f)}`
+  label: (f) => (f.kind === "bedsBand" ? `${f.beds === 4 ? "4+ bedrooms" : `${f.beds} ${s(f.beds!, "bedroom")}`} under ${money(f.cap!)}` : f.kind === "combo" ? `${LABEL[f.key!] || f.key} under ${money(f.cap!)}` : f.kind === "ccyBand" ? `Under ${ccy(f.cap!, f.ccy!)}` : f.kind === "area" ? areaOf(f)?.en || String(f.area) : f.kind === "near" ? `Near ${cityOf(f)}`
     : f.cap ? `Under ${money(f.cap)}` : f.kind === "region" ? upper(place(String(f.region)).replace(/^the /, "")) : f.kind === "town" ? String(f.town) : f.kind === "beds" ? (f.beds === 4 ? "4+ bedrooms" : `${f.beds} ${s(f.beds!, "bedroom")}`) : f.kind === "country" ? String(f.country) : LABEL[f.key!] || String(f.key)),
   updated: (d, newest) => `Updated ${d}.${newest ? ` Newest home added ${newest}.` : ""}`,
   l1: (n, w, min, max) => (min === max ? `RealHunt lists ${n} ${w} today, all priced at ${min}.` : `RealHunt lists ${n} ${w} today, priced from ${min} to ${max}.`),
@@ -262,4 +263,32 @@ export const en: Pack = {
   filter: "Filter and sort these homes",
   method: "How the score works",
   moved: "This page has moved.",
+  t2: {
+    skip: "Jump to the homes",
+    topTitle: "Three picks from this list", top: { best: "Best score", cheapest: "Cheapest", space: "Most space for the money" },
+    order: (table) => `Sorted by RealHunt score, best first. For the cheapest first, see [[#compare|the table below]]: tap a heading such as ${table} to sort it.`,
+    moneyTitle: "What your money buys here",
+    money3: (r) => `Split into three groups of the same size by asking price: ${r.map((x) => `from ${x.lo} to ${x.hi}, ${x.n} homes${x.sqm ? ` with a median of ${x.sqm} m²` : ""}${x.beds ? `, most often ${x.beds === 4 ? "4 or more bedrooms" : `${x.beds} ${s(x.beds, "bedroom")}`}` : ""}`).join("; ")}.`,
+    townsTitle: (region) => `Median price by town in ${region}`, town: "Town",
+    nearTitle: "Nearby regions",
+    sqmPerBed: (m2, n) => `Space per bedroom: a median of ${m2} m² for each bedroom, across the ${n} ${s(n, "listing")} that give both the floor area and the bedrooms.`,
+    checked: (k, n) => `${k} of these ${n} ${s(n, "home was", "homes were")} checked against the original listing in the last 30 days.`,
+    removed: (k, inC) => `${k} ${s(k, "home", "homes")} ${inC} left RealHunt or ${s(k, "was", "were")} marked as no longer for sale in the last 30 days.`, removedLink: "See the log of homes taken off the site",
+    howChosen: "How we choose these homes: a person reads every listing and checks its price, size, photos and place before it goes up, and the nightly check takes it off when the advert goes.", howChosenLink: "How we check homes",
+    fee: (a) => `Community fee ${a} a month`, feeUnknown: "Community fee not stated",
+    ppsqmRef: (v) => `Median price per m² of this list: ${v}.`,
+    seaOnly: (n) => `Show only the ${n} by the sea`, seaAll: "Show all", seaPage: "All homes by the sea",
+    csv: "Download this table (CSV)",
+    map: "See these homes on the map",
+    page: (n, of) => `page ${n} of ${of}`, pageH1: (h1, n) => `${h1}: page ${n}`, pageLede: (from, to, n) => `Homes ${from} to ${to} of ${n}, best score first. The first page has the prices, costs and questions for the whole country.`,
+    pager: "Pages of this list", prev: "Previous", next: "Next", pageFirst: "First page",
+    hub: {
+      title: (n, c) => `Homes for sale by country: ${n} homes in ${c} countries`, h1: "Homes for sale, country by country",
+      lede: (n, c, d) => `RealHunt lists ${n} homes in ${c} countries, each checked by a person. Pick a country for its homes, prices, buying costs and rules for foreigners. Counts of ${d}.`,
+      th: { country: "Country", homes: "Homes", from: "From", median: "Median price", guide: "Buying guide" }, guide: "Guide", crumb: "Homes by country",
+      desc: (n, c) => `${n} homes for sale in ${c} countries, each checked by a person: the number of homes, the cheapest and the median price in each country, with its buying guide.`,
+    },
+    tools: { "portugal-imt": "Portugal IMT and stamp duty calculator", "france-notary-fees": "French notary fees calculator", "germany-property-transfer-tax": "German property transfer tax calculator", "spain-non-resident-tax": "Spanish non-resident tax calculator", "uk-stamp-duty-non-resident": "UK stamp duty calculator for non-residents", "home-running-costs": "Yearly running costs of a home" },
+    lastChange: (d) => `List last changed ${d}.`,
+  },
 };

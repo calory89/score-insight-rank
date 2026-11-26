@@ -3,7 +3,7 @@
 // twin and the German and Russian versions always say the same facts about the same homes in the same order.
 import { thumb, cardSrcSet, CARD_SIZES } from "../../src/lib/thumbs";
 import { toMedia } from "../../src/lib/media";
-import { type Facet, type Home, eurCap } from "./facets";
+import { type Facet, type Home, eurCap, bySea } from "./facets";
 import { regionName, NEIGHBOURS } from "./places";
 import { type Facts, type Ref, ref } from "./facts";
 import type { Pack, Named } from "./pack";
@@ -11,6 +11,11 @@ import type { Pack, Named } from "./pack";
 export const SITE = "https://realhunt.co";
 export const CARDS = 30;   // homes shown as cards (best score first)
 export const ROWS = 60;    // homes in the comparison table (cheapest first)
+/** 26-nov-2026 (idea 98): lists of BIG homes or more carry half the table in the HTML (the rest is on the narrower
+ * pages and, for a country, on its numbered pages). */
+export const BIG = 100, ROWS_BIG = 30;
+/** Country pages with more homes than this get numbered pages, /homes/<country>/page/2... (idea 66). */
+export const PAGED = ROWS;
 const NEW_DAYS = 14;
 
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -41,6 +46,19 @@ export type Text = {
   notes: Note[];
   /** Country pages: the median price of every region, in a table (20-nov-2026). Empty when a region has no name in this language. */
   regionsTitle: string; regionTable: [name: string, path: string, n: number, median: string][];
+  /** 26-nov-2026 (list 1000, ideas 51 to 100): only with a pack that has the words (English, Spanish). */
+  t2: T2Text | null;
+};
+export type T2Text = {
+  top: [label: string, home: Home][]; order: string; money: string;
+  townsTitle: string; towns: [name: string, path: string, n: number, median: string][];
+  near: Link[]; checked: string; removed: string; howChosen: string; ppsqmRef: string;
+  sea: { n: number; page: string } | null; map: string; csvName: string;
+  /** slug -> town page, for the place column of the table (idea 87) */
+  townLink: Record<string, string>;
+  /** country pages with numbered pages */
+  pager: { of: number; base: string } | null;
+  total: number;
 };
 export type Note = { id: string; h: string; p: string[]; sources: [string, string][]; asOf: string };
 
@@ -133,6 +151,7 @@ export function compose(F: Facts, P: Pack, site: Site): Text | null {
   if (x.amen.length >= 2) facts.push(P.x.amen(x.amen));
   if (F.scoreMax) facts.push(P.fScore(F.scoreMin, F.scoreMax, home(F.best)));
   if (F.newest?.day) facts.push(P.fNew(F.new30, home(F.newest), P.date(F.newest.day)));
+  if (P.t2 && f.kind === "beds" && F.t2.sqmPerBed) facts.push(P.t2.sqmPerBed(F.t2.sqmPerBed, F.t2.sqmPerBedN));
 
   // ---- costs
   const first = f.kind === "country" && !f.thin && F.dest?.can_foreigners_buy && site.restricted?.(f.cc!) ? String(F.dest.can_foreigners_buy) : "";
@@ -150,6 +169,8 @@ export function compose(F: Facts, P: Pack, site: Site): Text | null {
     if (site.hasCosts(f.cc)) costLinks.push([P.cLinks.detail, `/costs/${f.cc}`]);
     if (site.hasGuide(f.cc)) costLinks.push([P.cLinks.guide, `/guide/${f.cc}`]);
     costLinks.push([P.cLinks.nat, "/can-i-buy"]);
+    // idea 74: the calculator made for this country, and what a home costs to keep
+    if (P.t2) { const tool = COUNTRY_TOOL[f.cc]; if (tool && P.t2.tools[tool]) costLinks.push([P.t2.tools[tool], `/tools/${tool}`]); if (P.t2.tools["home-running-costs"]) costLinks.push([P.t2.tools["home-running-costs"], "/tools/home-running-costs"]); }
     costNote = P.cNote(String(d.as_of || ""));
   }
   const costTable = !f.cc ? F.countries.filter((c) => c.pct).slice(0, 10) : [];
@@ -183,7 +204,7 @@ export function compose(F: Facts, P: Pack, site: Site): Text | null {
     if (d?.can_foreigners_buy) faq.push([P.qForeign(inC), String(d.can_foreigners_buy)]);
     if (F.cost) faq.push([P.qCosts(inC), P.aCosts(F.cost.pct, String(d!.purchase_costs_breakdown || ""), money(F.median), money(F.cost.lo), money(F.cost.hi))]);
     if (lowHigh) faq.push([P.qRegion(inC), P.aRegion(lowHigh[0], lowHigh[1])]);
-  } else if (f.kind === "band" || f.kind === "regionBand") {
+  } else if (f.kind === "band" || f.kind === "regionBand" || f.kind === "bedsBand") {
     push(qCheapest()); push(qCount()); push(qSize());
     if (F.cost && F.cost.maxAsk) faq.push([P.qAllIn(money(f.cap!), inC), P.aAllIn(money(f.cap!), F.cost.pct, money(F.cost.capLo), money(F.cost.capHi), money(F.cost.maxAsk), F.cost.fit)]);
     if (f.kind === "band") push(qWhere());
@@ -211,6 +232,7 @@ export function compose(F: Facts, P: Pack, site: Site): Text | null {
     group(P.more.setting, sib("setting").map(link));
     group(P.more.type, sib("ptype").map(link));
     group(P.more.beds, sib("beds").sort((a, b) => a.beds! - b.beds!).map(link));
+    if (f.kind === "beds" || f.kind === "bedsBand") group(P.label({ kind: "beds", beds: f.beds }), sib("bedsBand", (p) => p.beds === f.beds).sort((a, b) => a.cap! - b.cap!).map(link));
     if (f.regionSlug) group(P.more.town, sib("town", (p) => p.regionSlug === f.regionSlug).map(link));
     group(P.more.region, sib("region").slice(0, 24).map(link));
     group(P.more.area, sib("area").map(link));
@@ -254,11 +276,12 @@ export function compose(F: Facts, P: Pack, site: Site): Text | null {
     if (f.kind !== "country") crumbs.push([P.crumbCountry(P.country(f.country!)), `/homes/${f.cc}`]);
     if ((f.kind === "town" || f.kind === "regionBand" || f.kind === "ccyBand") && f.regionSlug) crumbs.push([pl(f.region!), `/homes/${f.cc}/${f.regionSlug}`]);
     if (f.kind === "regionBand" && f.area) crumbs.push([areaLabel, `/homes/${f.cc}/${f.area}`]);
+    if (f.kind === "bedsBand" && site.live.has(f.parent) && f.parent !== `/homes/${f.cc}`) crumbs.push([P.label({ kind: "beds", beds: f.beds }), f.parent]);
     crumbs.push([f.kind === "country" ? P.crumbCountry(P.country(f.country!)) : P.label(f), f.path]);
   } else crumbs.push([P.crumbCheap, "/cheap-houses"], [P.label(f), f.path]);
 
   const cards = f.homes.slice(0, CARDS);
-  const rows = f.homes.slice().sort((a, b) => a.price_eur - b.price_eur || String(a.slug).localeCompare(String(b.slug))).slice(0, ROWS);
+  const rows = f.homes.slice().sort((a, b) => a.price_eur - b.price_eur || String(a.slug).localeCompare(String(b.slug))).slice(0, P.t2 && f.homes.length >= BIG ? ROWS_BIG : ROWS);
   for (const h of new Set([...cards, ...rows])) { tt(h); pl(ref(h).town); const rg = regionName(h); if (rg) pl(rg); }
   if (!ok) return null;
   // the median of every region of a country, cheapest first; left out when a region has no name in this language
@@ -268,9 +291,40 @@ export function compose(F: Facts, P: Pack, site: Site): Text | null {
     if (named.every(([n]) => n != null)) regionTable = named.map(([n, r]): Text["regionTable"][number] => [n!, r.path && site.live.has(r.path) ? r.path : "", r.n, money(r.median)]);
   }
   const img = f.homes.find((h) => h.image_urls?.[0])?.image_urls?.[0];
+  let t2: T2Text | null = null;
+  if (P.t2) {
+    const W = P.t2; const t = F.t2;
+    const topLabel = { best: W.top.best, cheapest: W.top.cheapest, space: W.top.space };
+    const towns = t.towns.map(({ name, path, n, median }) => [P.place(name, f.cc), path, n, money(median)] as const);
+    const townLink: Record<string, string> = {};
+    if (f.cc) { const tp = site.pages.filter((p) => p.kind === "town" && p.cc === f.cc && !p.thin); for (const h of new Set([...cards, ...rows])) { const x = tp.find((p) => p.town === ref(h).town && p.homes.some((y) => y.slug === h.slug)); if (x && x.path !== f.path) townLink[String(h.slug)] = x.path; } }
+    // the filter by the sea inside the page: only where it splits the list, and never on a page that is about the sea
+    const seaN = f.homes.filter(bySea).length;
+    const seaish = f.kind === "setting" && f.key === "by-the-sea" || ["by-the-sea", "near-the-beach", "with-sea-view"].includes(String(f.key)) || !!(f.area && /coast|costa|riviera|island/.test(String(f.area)));
+    const seaPage = [f.cc ? `/homes/${f.cc}/by-the-sea` : "", "/cheap-houses/by-the-sea"].find((p) => p && site.live.has(p)) || "";
+    const mapQ = new URLSearchParams({ ...(f.country ? { country: String(f.country) } : {}), ...(eurCap(f) ? { price: String(eurCap(f)) } : {}) }).toString();
+    t2 = {
+      top: t.top3.map((x) => [topLabel[x.key], x.ref.home] as [string, Home]),
+      order: W.order(P.th.price),
+      money: t.money3.length === 3 ? W.money3(t.money3.map((r) => ({ lo: money(r.lo), hi: money(r.hi), n: r.n, sqm: r.sqm, beds: r.beds }))) : "",
+      townsTitle: towns.length && towns.every(([n]) => n != null) ? W.townsTitle(pl(f.region || "")) : "", towns: towns.every(([n]) => n != null) ? towns.map(([n, p, k, m]) => [n!, p, k, m]) : [],
+      near: t.nearRegions.map((r): Link => [P.place(r.name, f.cc) || "", r.path, r.n]).filter(([n]) => !!n),
+      checked: W.checked(t.checked30, F.n),
+      removed: t.removed30 && f.cc && site.live.has(`/homes/${f.cc}`) ? W.removed(t.removed30, inC) : "",
+      howChosen: W.howChosen,
+      ppsqmRef: F.ppsqm ? W.ppsqmRef(P.perSqm(F.ppsqm)) : "",
+      sea: !seaish && seaN >= MIN_SEA && seaN < f.homes.length && seaPage !== f.path ? { n: seaN, page: seaPage } : null,
+      map: `/map${mapQ ? `?${mapQ}` : ""}`,
+      csvName: `realhunt-${f.path.split("/").filter(Boolean).join("-")}.csv`,
+      townLink,
+      pager: f.kind === "country" && !f.thin && f.homes.length > PAGED ? { of: Math.ceil(f.homes.length / CARDS), base: f.path } : null,
+      total: F.n,
+    };
+  }
   return {
     path: f.path, h1, title: P.title(h1, F.n, money(F.min)), desc: P.desc(F, what), crumbs,
-    updated: P.updated(P.date(F.updated), F.newest?.day ? P.date(F.newest.day) : null), lede, kpi, chips,
+    // idea 72: the day this list last changed, not the day of the build
+    updated: P.t2 && F.t2.lastChange ? P.t2.lastChange(P.date(F.t2.lastChange)) : P.updated(P.date(F.updated), F.newest?.day ? P.date(F.newest.day) : null), lede, kpi, chips,
     gridTitle: f.ranked ? P.gridTitleRank(f.key!, F.n) : P.gridTitle(F.n, cards.length), gridMore: F.n > cards.length ? P.gridMore(cards.length, F.n) : "", cards,
     tableTitle: P.tableTitle(F.n, rows.length), rows,
     factsTitle: P.factsTitle(F), facts,
@@ -278,11 +332,15 @@ export function compose(F: Facts, P: Pack, site: Site): Text | null {
     watch: watchOut, faq,
     moreTitle: P.moreTitle(F), more, foot, footLinks,
     image: img ? (String(img).startsWith("http") ? String(img) : SITE + img) : `${SITE}/og-home.jpg`,
-    lastmod: F.newest?.day || null,
+    lastmod: (P.t2 && F.t2.lastChange) || F.newest?.day || null,
     first, how, fx: x.fx ? { ccy: x.fx.ccy, rate: x.fx.rate } : null, notes: site.notes ? site.notes(F, P.lang) : [],
     regionsTitle: regionTable.length ? P.n20.regionsTitle(inC) : "", regionTable,
+    t2,
   };
 }
+const MIN_SEA = 3;
+/** The calculator of /tools made for one country (seo/tools/pages.ts). */
+export const COUNTRY_TOOL: Record<string, string> = { portugal: "portugal-imt", france: "france-notary-fees", germany: "germany-property-transfer-tax", spain: "spain-non-resident-tax", "united-kingdom": "uk-stamp-duty-non-resident" };
 
 // ------------------------------------------------------------------------------------------------ HTML
 const rich = (s: string, href: (p: string) => string) => esc(s).replace(LINK, (_m, p: string, t: string) => `<a href="${href(p)}">${t}</a>`);
@@ -304,7 +362,10 @@ export function renderBody(T: Text, P: Pack, o: RenderOpts): string {
   // idea 22: how long the home has been on RealHunt, counted to the day of the data, as on the home page
   const daysOn = (h: Home) => { const d = ref(h).day; const n = d ? Math.floor((Date.parse(o.updated) - Date.parse(d)) / 86400000) : NaN; return Number.isFinite(n) && n >= 0 ? P.card.days(n) : ""; };
   const meta = (h: Home) => [h.sqm > 0 ? `${h.sqm} m²` : "", ref(h).beds > 0 ? P.card.beds(ref(h).beds) : "", h.sqm > 0 ? P.perSqm(Math.round(h.price_eur / h.sqm)) : "", daysOn(h)].filter(Boolean).join(" · ");
-  const card = (h: Home, i: number) => {
+  const W = P.t2; const t2 = W ? T.t2 : null;
+  // idea 70: the monthly community fee as the listing states it, or that it does not (homes in a shared building)
+  const fee = (h: Home) => (!W ? "" : Number(h.hoa_monthly) > 0 ? W.fee(P.ccy(Number(h.hoa_monthly), String(h.hoa_currency || "EUR").toUpperCase())) : h.hoa_unknown === true ? W.feeUnknown : "");
+  const card = (h: Home, i: number, badge = "", eager = false) => {
     const full = h.image_urls?.[0] ? toMedia(String(h.image_urls[0])) : ""; const small = full ? thumb(full) : ""; const set = full ? cardSrcSet(full) : undefined;
     const title = P.homeTitle(h) || ""; const why = firstSentence(P.homeWhy(h));
     const drop = Number(h.price_drop) > 0 && h.price_eur > 0 ? Math.round((Number(h.price_drop) / (h.price_eur + Number(h.price_drop))) * 100) : 0;
@@ -312,15 +373,18 @@ export function renderBody(T: Text, P: Pack, o: RenderOpts): string {
       // ideas 57 and 64 of the second list (21 Nov 2026): two sizes when the snapshot says both copies exist (the 480 px one
       // on a phone, the 800 px one on a dense wide screen); only the first card is asked for first, the next two load
       // at once, the rest when scrolled to
-      ? `<img src="${esc(small)}"${set ? ` srcset="${esc(set)}" sizes="${esc(CARD_SIZES)}"` : ""} alt="${esc(`${title}, ${placeOf(h)}`)}" width="480" height="360" ${i === 0 ? 'fetchpriority="high"' : i < 3 ? "" : 'loading="lazy"'} decoding="async"${small !== full ? ` onerror="this.onerror=null;this.removeAttribute('srcset');this.src='${esc(full)}'"` : ""} />`
+      // idea 79: the alt says what, where and for how much ("Village house in Terque, Almería, €79,500")
+      ? `<img src="${esc(small)}"${set ? ` srcset="${esc(set)}" sizes="${esc(CARD_SIZES)}"` : ""} alt="${esc(`${title}${title.includes(ref(h).town) ? "" : `, ${placeOf(h)}`}, ${P.money(h.price_eur)}`)}" width="480" height="360" ${eager ? (i === 0 ? 'fetchpriority="high"' : "") : i === 0 && !t2?.top.length ? 'fetchpriority="high"' : i < 3 && !t2?.top.length ? "" : 'loading="lazy"'} decoding="async"${small !== full ? ` onerror="this.onerror=null;this.removeAttribute('srcset');this.src='${esc(full)}'"` : ""} />`
       : `<span class="ls-noph">${esc(P.card.noPhoto)}</span>`;
-    return `<li><a class="ls-card" href="${href(`/deal/${h.slug}`)}"><span class="ls-ph"${o.colors?.[h.slug] ? ` style="background:${esc(o.colors[h.slug])}"` : ""}>${img}`
-      + (h.nota != null ? `<b class="ls-score">${esc(P.card.score)} ${esc(h.nota)}</b>` : "")
+    // idea 97: the title of each home is an H3 under the section's H2 (H1 > H2 sections > H3 homes)
+    return `<li${t2 && bySea(h) ? " data-sea" : ""}><a class="ls-card" href="${href(`/deal/${h.slug}`)}"><span class="ls-ph"${o.colors?.[h.slug] ? ` style="background:${esc(o.colors[h.slug])}"` : ""}>${img}`
+      + (badge ? `<b class="ls-score ls-pick">${esc(badge)}</b>` : h.nota != null ? `<b class="ls-score">${esc(P.card.score)} ${esc(h.nota)}</b>` : "")
       + (drop >= 1 ? `<i class="ls-tag ls-drop">${esc(P.card.drop(drop))}</i>` : isNew(h) ? `<i class="ls-tag">${esc(P.card.isNew)}</i>` : "")
-      + `</span><span class="ls-b"><strong>${esc(P.money(h.price_eur))}${approx(h)}</strong><span class="ls-t">${esc(title)}</span><small>${esc(placeOf(h))}</small>`
-      + (meta(h) ? `<small class="ls-m">${esc(meta(h))}</small>` : "") + (why ? `<em>${esc(why)}</em>` : "") + `</span></a></li>`;
+      + `</span><span class="ls-b"><strong>${esc(P.money(h.price_eur))}${approx(h)}</strong><h3 class="ls-t">${esc(title)}</h3><small>${esc(placeOf(h))}</small>`
+      + (meta(h) ? `<small class="ls-m">${esc(meta(h))}</small>` : "") + (fee(h) ? `<small class="ls-fee">${esc(fee(h))}</small>` : "") + (why && !badge ? `<em>${esc(why)}</em>` : "") + `</span></a></li>`;
   };
-  const row = (h: Home) => `<tr><th scope="row"><a href="${href(`/deal/${h.slug}`)}">${esc(P.homeTitle(h) || "")}</a></th><td class="ls-c-place">${esc(placeOf(h))}</td><td class="ls-n">${esc(P.money(h.price_eur))}${approx(h)}</td>`
+  const townA = (h: Home) => { const p = t2?.townLink[String(h.slug)]; return p ? `<a href="${href(p)}">${esc(placeOf(h))}</a>` : esc(placeOf(h)); };
+  const row = (h: Home) => `<tr><th scope="row"><a href="${href(`/deal/${h.slug}`)}">${esc(P.homeTitle(h) || "")}</a></th><td class="ls-c-place">${townA(h)}</td><td class="ls-n">${esc(P.money(h.price_eur))}${approx(h)}</td>`
     + `<td class="ls-n">${h.sqm > 0 ? `${esc(h.sqm)} m²` : "·"}</td><td class="ls-n ls-c-pp">${h.sqm > 0 ? esc(P.perSqm(Math.round(h.price_eur / h.sqm))) : "·"}</td><td class="ls-n ls-c-beds">${ref(h).beds > 0 ? ref(h).beds : "·"}</td>`
     + `<td class="ls-n">${h.nota != null ? esc(h.nota) : "·"}</td><td class="ls-n ls-c-added">${ref(h).day ? `<time datetime="${ref(h).day}">${esc(P.dateShort(ref(h).day!))}</time>` : "·"}</td></tr>`;
   const th = P.th;
@@ -331,15 +395,25 @@ export function renderBody(T: Text, P: Pack, o: RenderOpts): string {
   return `<main class="rh-static" data-rh-keep data-rh-static data-ls${o.lang ? ` lang="${o.lang}"` : ""}>`
     + `<nav class="ls-crumbs" aria-label="Breadcrumb">${T.crumbs.map(([n, p], i) => (i === T.crumbs.length - 1 ? `<span>${esc(n)}</span>` : `<a href="${href(p)}">${esc(n)}</a>`)).join(" › ")}</nav>`
     + `<style>${o.css}</style>${WAIT}`
-    + `<h1>${esc(T.h1)}</h1><p class="ls-upd">${esc(T.updated)}</p>`
+    + `<h1>${esc(T.h1)}</h1><p class="ls-upd">${esc(T.updated)}${t2 ? ` <a class="ls-skip" href="#homes">${esc(W!.skip)}</a>` : ""}</p>`
+    // ideas 51 and 58: on a phone the first photo is in the first screen: three picks before any paragraph
+    + (t2 && t2.top.length ? `<section class="ls-top" aria-labelledby="ls-top-h"><h2 id="ls-top-h" class="ls-vh">${esc(W!.topTitle)}</h2><ol class="ls-grid ls-top3">${t2.top.map(([l, h], i) => card(h, i, l, true)).join("")}</ol></section>` : "")
     + `<p class="ls-lede">${T.lede.map(R).join(" ")}</p>`
     + (T.first ? `<aside class="ls-first"><b>${esc(P.firstTitle)}</b><p>${esc(T.first)}</p><p class="ls-links"><a href="${href("/can-i-buy")}">${esc(P.cLinks.nat)}</a> · <a href="#costs">${esc(T.costsTitle)}</a></p></aside>` : "")
     + (T.how ? `<p class="ls-how">${R(T.how)}</p>` : "")
     + `<dl class="ls-kpi">${T.kpi.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>`
     + (T.chips.length > 1 ? `<nav class="ls-chips" aria-label="${esc(P.more.budget)}">${T.chips.map((c) => a(c, c[1] === T.path, "ls-chip")).join("")}</nav>` : "")
-    + `<h2 id="homes">${esc(T.gridTitle)}</h2><ol class="ls-grid">${T.cards.map(card).join("")}</ol>` + (T.gridMore ? `<p class="ls-note">${esc(T.gridMore)}</p>` : "")
-    + `<h2 id="compare">${esc(T.tableTitle)}</h2><div class="ls-tw" tabindex="0" role="region" aria-label="${esc(T.tableTitle)}"><table><thead><tr><th scope="col">${esc(th.home)}</th><th scope="col" class="ls-c-place">${esc(th.place)}</th><th scope="col" class="ls-n">${esc(th.price)}</th><th scope="col" class="ls-n">${esc(th.size)}</th><th scope="col" class="ls-n ls-c-pp">${esc(th.ppsqm)}</th><th scope="col" class="ls-n ls-c-beds">${esc(th.beds)}</th><th scope="col" class="ls-n">${esc(th.score)}</th><th scope="col" class="ls-n ls-c-added">${esc(th.added)}</th></tr></thead><tbody>${T.rows.map(row).join("")}</tbody></table></div>`
+    + `<h2 id="homes">${esc(T.gridTitle)}</h2>`
+    + (t2 ? `<p class="ls-order">${t2.order ? R(t2.order) : ""}${t2.sea ? ` <button type="button" class="ls-seabtn" aria-pressed="false" data-on="${esc(W!.seaAll)}" data-off="${esc(W!.seaOnly(t2.sea.n))}" onclick="${esc(SEA_JS)}">${esc(W!.seaOnly(t2.sea.n))}</button>${t2.sea.page ? ` <a href="${href(t2.sea.page)}">${esc(W!.seaPage)}</a>` : ""}` : ""} <a href="${href(t2.map)}">${esc(W!.map)}</a></p>` : "")
+    + `<ol class="ls-grid">${T.cards.map((h, i) => card(h, i)).join("")}</ol>` + (T.gridMore ? `<p class="ls-note">${esc(T.gridMore)}</p>` : "")
+    + (t2?.pager ? pagerHtml(W!, 1, t2.pager.of, t2.pager.base, href) : "")
+    + `<h2 id="compare">${esc(T.tableTitle)}</h2>`
+    + (t2 ? `<p class="ls-note">${t2.ppsqmRef ? `${esc(t2.ppsqmRef)} ` : ""}<button type="button" class="ls-csv" data-file="${esc(t2.csvName)}" onclick="${esc(CSV_JS)}">${esc(W!.csv)}</button></p>` : "")
+    + `<div class="ls-tw" tabindex="0" role="region" aria-label="${esc(T.tableTitle)}"><table><thead><tr><th scope="col">${esc(th.home)}</th><th scope="col" class="ls-c-place">${esc(th.place)}</th><th scope="col" class="ls-n">${esc(th.price)}</th><th scope="col" class="ls-n">${esc(th.size)}</th><th scope="col" class="ls-n ls-c-pp">${esc(th.ppsqm)}</th><th scope="col" class="ls-n ls-c-beds">${esc(th.beds)}</th><th scope="col" class="ls-n">${esc(th.score)}</th><th scope="col" class="ls-n ls-c-added">${esc(th.added)}</th></tr></thead><tbody>${T.rows.map(row).join("")}</tbody></table></div>`
     + (T.facts.length ? `<h2 id="facts">${esc(T.factsTitle)}</h2><ul class="ls-facts">${T.facts.map((x) => `<li>${R(x)}</li>`).join("")}</ul>` : "")
+    + (t2?.money ? `<h2 id="money">${esc(W!.moneyTitle)}</h2><p>${R(t2.money)}</p>` : "")
+    + (t2 && t2.towns.length ? `<h2 id="towns">${esc(t2.townsTitle)}</h2><div class="ls-tw"><table class="ls-ct"><thead><tr><th scope="col">${esc(W!.town)}</th><th scope="col" class="ls-n">${esc(P.kpi.homes)}</th><th scope="col" class="ls-n">${esc(P.kpi.median)}</th></tr></thead><tbody>`
+      + t2.towns.map(([n, p, k, m]) => `<tr><th scope="row">${p ? `<a href="${href(p)}">${esc(n)}</a>` : esc(n)}</th><td class="ls-n">${k}</td><td class="ls-n">${esc(m)}</td></tr>`).join("") + `</tbody></table></div>` : "")
     + (T.regionTable.length ? `<h2 id="regions">${esc(T.regionsTitle)}</h2><div class="ls-tw"><table class="ls-ct"><thead><tr><th scope="col">${esc(P.n20.region)}</th><th scope="col" class="ls-n">${esc(P.kpi.homes)}</th><th scope="col" class="ls-n">${esc(P.kpi.median)}</th></tr></thead><tbody>`
       + T.regionTable.map(([n, p, k, m]) => `<tr><th scope="row">${p ? `<a href="${href(p)}">${esc(n)}</a>` : esc(n)}</th><td class="ls-n">${k}</td><td class="ls-n">${esc(m)}</td></tr>`).join("") + `</tbody></table></div>` : "")
     + (T.costsTitle ? `<h2 id="costs">${esc(T.costsTitle)}</h2>` + T.costs.map((x) => `<p>${R(x)}</p>`).join("")
@@ -348,8 +422,27 @@ export function renderBody(T: Text, P: Pack, o: RenderOpts): string {
     + notes
     + (T.watch.length ? `<h2 id="watch">${esc(P.watchTitle)}</h2><ul class="ls-facts ls-watch">${T.watch.map((x) => `<li>${R(x)}</li>`).join("")}</ul>` : "")
     + (T.faq.length ? `<h2 id="faq">${esc(P.faqTitle)}</h2><div class="ls-faq">${T.faq.map(([q, x]) => `<h3>${esc(q)}</h3><p>${esc(plain(x))}</p>`).join("")}</div>` : "")
+    + (t2 && t2.near.length ? `<h2 id="near">${esc(W!.nearTitle)}</h2><div class="ls-more"><p>${t2.near.map((x) => a(x, false, "ls-chip")).join(" ")}</p></div>` : "")
     + (T.more.length ? `<h2 id="more">${esc(T.moreTitle)}</h2><div class="ls-more">${T.more.map(([l, links]) => `<p><b>${esc(l)}</b> ${links.map((x) => a(x, false, "ls-chip")).join(" ")}</p>`).join("")}</div>` : "")
+    + (t2 ? `<p class="ls-foot ls-chosen">${esc(W!.howChosen)} <a href="${href("/how-we-check-homes")}">${esc(W!.howChosenLink)}</a> ${esc(t2.checked)}${t2.removed ? ` ${esc(t2.removed)} <a href="${href("/research/removed-homes")}">${esc(W!.removedLink)}</a>` : ""}</p>` : "")
     + `<p class="ls-foot">${T.foot.map(esc).join(" ")}</p><p class="ls-links">${T.footLinks.map((l) => a(l)).join(" · ")}</p></main>`;
+}
+
+// Two small handlers written into the page, so they work on the first paint and inside the app (which shows this
+// same HTML): no address changes, nothing is stored, nothing is sent.
+/** idea 83: show only the homes by the sea (cards marked data-sea) and back. */
+const SEA_JS = "var m=this.closest('[data-ls]');var on=!m.hasAttribute('data-ls-sea');if(on)m.setAttribute('data-ls-sea','');else m.removeAttribute('data-ls-sea');this.setAttribute('aria-pressed',on?'true':'false');this.textContent=this.getAttribute(on?'data-on':'data-off')";
+/** idea 95: the comparison table as a CSV file, built from the table itself. */
+const CSV_JS = String.raw`var t=this.closest('[data-ls]').querySelector('#compare ~ .ls-tw table');if(!t)return;var q=function(x){return '"'+String(x).replace(/\s+/g,' ').trim().replace(/"/g,'""')+'"'};var c=[];for(var i=0;i<t.rows.length;i++){var r=t.rows[i],l=[];for(var j=0;j<r.cells.length;j++)l.push(q(r.cells[j].textContent));c.push(l.join(','))}var a=document.createElement('a');a.href=window.URL.createObjectURL(new window.Blob(['﻿'+c.join('\r\n')],{type:'text/csv;charset=utf-8'}));a.download=this.getAttribute('data-file')||'realhunt.csv';document.body.appendChild(a);a.click();a.remove()`;
+
+/** Links to the numbered pages of a country (idea 66). */
+export function pagerHtml(W: NonNullable<Pack["t2"]>, cur: number, of: number, base: string, href: (p: string) => string): string {
+  const url = (n: number) => (n === 1 ? base : `${base}/page/${n}`);
+  const items: string[] = [];
+  if (cur > 1) items.push(`<a rel="prev" href="${href(url(cur - 1))}">${esc(W.prev)}</a>`);
+  for (let n = 1; n <= of; n++) items.push(n === cur ? `<span aria-current="page">${n}</span>` : `<a href="${href(url(n))}">${n}</a>`);
+  if (cur < of) items.push(`<a rel="next" href="${href(url(cur + 1))}">${esc(W.next)}</a>`);
+  return `<nav class="ls-pager" aria-label="${esc(W.pager)}">${items.join(" ")}</nav>`;
 }
 
 export function renderLd(T: Text, P: Pack, url: (path: string) => string): object[] {

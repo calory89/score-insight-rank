@@ -16,13 +16,15 @@ const LOCAL: Record<string, string> = { Crete: "Creta", Rhodes: "Rodas", Corfu: 
   "West Zealand": "Selandia Occidental", "South Jutland": "Jutlandia Meridional", Peloponnese: "Peloponeso", Saxony: "Sajonia", Thuringia: "Turingia", "Saxony-Anhalt": "Sajonia-Anhalt", "Greater Poland": "Gran Polonia", "Lower Silesia": "Baja Silesia", Silesia: "Silesia", Masovia: "Mazovia",
   Pomerania: "Pomerania", "West Pomerania": "Pomerania Occidental", "Warmia-Masuria": "Varmia y Masuria", Subcarpathia: "Subcarpacia", "Kuyavia-Pomerania": "Cuyavia y Pomerania", Sicily: "Sicilia", Sardinia: "Cerdeña", Apulia: "Apulia", Cyprus: "Chipre" };
 const place = (n: string, _cc?: string, where?: "card") => (/^near /.test(n) ? (where === "card" ? `cerca de ${n.slice(5)}` : `la zona de ${n.slice(5)}`) : LOCAL[n] && esPlace(n) === n ? LOCAL[n] : esPlace(n));
+const COUNTRY_ES: Record<string, string> = { "Dominican Republic": "República Dominicana", Thailand: "Tailandia" };
+const cEs = (c: string) => COUNTRY_ES[c] || esPlace(c);
 const s = (n: number, one: string, many: string) => (n === 1 ? one : many);
 const list = (l: Named[]) => l.map((x) => `${x.name} (${x.n})`).join(", ");
 const upper = (x: string) => x.charAt(0).toUpperCase() + x.slice(1);
 const pc = (x: string) => x.replace(/(\d)\.(\d)/g, "$1,$2").replace(/\s*[-–]\s*/g, " a ");
 const dot = (x: string) => (x ? (/[.!?]$/.test(x.trim()) ? `: ${x.trim()}` : `: ${x.trim()}.`) : ".");
 const range = (lo: string, hi: string) => (lo === hi ? `unos ${lo}` : `de ${lo} a ${hi}`);
-const inC = (c: string) => `en ${theEs(esPlace(c))}`;
+const inC = (c: string) => `en ${theEs(cEs(c))}`;
 
 // [plural, singular, "cheap" plural, "cheapest" singular]
 const NOUN = {
@@ -105,12 +107,13 @@ function what(F: Facts, form: Form = "many"): string {
     case "combo": return f.key === "apartments" || f.key === "houses" ? `${NOUN[f.key === "apartments" ? "apartment" : "house"][FORM[form]]} en venta${where}${under}` : `${KEYED[f.key!](b, form)} en venta${where}${under}`;
     case "area": return `${b} en venta ${areaOf(f)?.inEs || ""}`;
     case "near": return `${b} en venta a menos de ${NEAR_KM} km de ${cityOf(f)}`;
-    case "region": return `${b} en venta en ${place(f.region!)} (${esPlace(f.country!)})`;
+    case "region": return `${b} en venta en ${place(f.region!)} (${cEs(f.country!)})`;
     case "town": return `${b} en venta en ${f.town} (${place(f.region!)})`;
-    case "regionBand": return f.area ? `${b} en venta ${areaOf(f)?.inEs || ""}${under}` : `${b} en venta en ${place(f.region!)} (${esPlace(f.country!)})${under}`;
+    case "regionBand": return f.area ? `${b} en venta ${areaOf(f)?.inEs || ""}${under}` : `${b} en venta en ${place(f.region!)} (${cEs(f.country!)})${under}`;
     case "setting": case "feature": case "gfeature": return `${KEYED[f.key!](b, form)} en venta${where}`;
     case "beds": return `${b} de ${f.beds === 4 ? "4 o más dormitorios" : `${f.beds} ${s(f.beds!, "dormitorio", "dormitorios")}`} en venta${where}`;
-    case "ccyBand": if (f.region) return `${b} en venta en ${place(f.region)} (${esPlace(f.country!)})${under}`; return `${b} en venta${where}${under}`;
+    case "bedsBand": return `${b} de ${f.beds === 4 ? "4 o más dormitorios" : `${f.beds} ${s(f.beds!, "dormitorio", "dormitorios")}`} en venta${where}${under}`;
+    case "ccyBand": if (f.region) return `${b} en venta en ${place(f.region)} (${cEs(f.country!)})${under}`; return `${b} en venta${where}${under}`;
     default: return `${b} en venta${where}${under}`;
   }
 }
@@ -121,7 +124,8 @@ export const es: Pack = {
   perSqm: (n) => `${num(n)}${NB}€/m²`,
   date: (d) => `${Number(d.slice(8, 10))} de ${MONTHS[Number(d.slice(5, 7)) - 1]} de ${d.slice(0, 4)}`,
   dateShort: (d) => `${Number(d.slice(8, 10))} ${SHORT[Number(d.slice(5, 7)) - 1]} ${d.slice(0, 4)}`,
-  country: (c) => esPlace(c),
+  // 26-nov-2026: countries the site-wide map (src/lib/lang.ts) does not carry yet
+  country: (c) => cEs(c),
   inC,
   place,
   homeTitle: (h) => String(h.title_es || "") || null,
@@ -133,8 +137,8 @@ export const es: Pack = {
   desc: (F, w) => `${F.f.ranked ? `${fem(w) ? "Las" : "Los"} ${w}` : `${F.n} ${w}`}, de ${money(F.min)} (${/^near /.test(F.cheapest.town) ? place(F.cheapest.town, undefined, "card") : `en ${place(F.cheapest.town, undefined, "card")}`}) a ${money(F.max)}. Precio mediano: ${money(F.median)}${F.scoreAvg ? `; nota media, ${F.scoreAvg} de 98` : ""}. Fotos, tamaños, gastos de compra y en qué fijarse.`,
   crumbRoot: "RealHunt", crumbCheap: "Casas baratas",
   crumbCountry: (c) => `Casas en ${theEs(c)}`,
-  label: (f) => (f.kind === "combo" ? `${LABEL[f.key!] || f.key}, menos de ${money(f.cap!)}` : f.kind === "ccyBand" ? `Menos de ${ccy(f.cap!, f.ccy!)}` : f.kind === "area" ? areaOf(f)?.es || String(f.area) : f.kind === "near" ? `Cerca de ${cityOf(f)}`
-    : f.cap ? `Menos de ${money(f.cap)}` : f.kind === "region" ? upper(place(String(f.region)).replace(/^la /, "")) : f.kind === "town" ? String(f.town) : f.kind === "beds" ? (f.beds === 4 ? "4 o más dormitorios" : `${f.beds} ${s(f.beds!, "dormitorio", "dormitorios")}`) : f.kind === "country" ? esPlace(String(f.country)) : LABEL[f.key!] || String(f.key)),
+  label: (f) => (f.kind === "bedsBand" ? `${f.beds === 4 ? "4 o más dormitorios" : `${f.beds} ${s(f.beds!, "dormitorio", "dormitorios")}`}, menos de ${money(f.cap!)}` : f.kind === "combo" ? `${LABEL[f.key!] || f.key}, menos de ${money(f.cap!)}` : f.kind === "ccyBand" ? `Menos de ${ccy(f.cap!, f.ccy!)}` : f.kind === "area" ? areaOf(f)?.es || String(f.area) : f.kind === "near" ? `Cerca de ${cityOf(f)}`
+    : f.cap ? `Menos de ${money(f.cap)}` : f.kind === "region" ? upper(place(String(f.region)).replace(/^la /, "")) : f.kind === "town" ? String(f.town) : f.kind === "beds" ? (f.beds === 4 ? "4 o más dormitorios" : `${f.beds} ${s(f.beds!, "dormitorio", "dormitorios")}`) : f.kind === "country" ? cEs(String(f.country)) : LABEL[f.key!] || String(f.key)),
   updated: (d, newest) => `Actualizado el ${d}.${newest ? ` Última vivienda añadida el ${newest}.` : ""}`,
   l1: (n, w, min, max) => (min === max ? `RealHunt tiene hoy ${n} ${w}, al mismo precio: ${min}.` : `RealHunt tiene hoy ${n} ${w}, con precios de ${min} a ${max}.`),
   l2: (title, town, price, sqm, beds) => `La más barata cuesta ${price}: ${title}, en ${town}${sqm || beds ? ` (${[sqm ? `${sqm} m²` : "", beds ? `${beds} ${s(beds, "dormitorio", "dormitorios")}` : ""].filter(Boolean).join(", ")})` : ""}.`,
@@ -282,4 +286,32 @@ export const es: Pack = {
   filter: "Filtrar y ordenar estas viviendas",
   method: "Cómo funciona la nota",
   moved: "Esta página se ha movido.",
+  t2: {
+    skip: "Ir a las viviendas",
+    topTitle: "Tres de esta lista", top: { best: "Mejor nota", cheapest: "La más barata", space: "Más metros por el dinero" },
+    order: (table) => `Ordenadas por la nota de RealHunt, de mejor a peor. Para verlas de más barata a más cara, mira [[#compare|la tabla de abajo]]: toca un encabezado como ${table} para ordenarla.`,
+    moneyTitle: "Qué compra tu dinero aquí",
+    money3: (r) => `Divididas por precio en tres grupos del mismo tamaño: ${r.map((x) => `de ${x.lo} a ${x.hi}, ${x.n} viviendas${x.sqm ? ` con una mediana de ${x.sqm} m²` : ""}${x.beds ? `, casi siempre con ${x.beds === 4 ? "4 dormitorios o más" : `${x.beds} ${s(x.beds, "dormitorio", "dormitorios")}`}` : ""}`).join("; ")}.`,
+    townsTitle: (region) => `Precio mediano por municipio en ${region}`, town: "Municipio",
+    nearTitle: "Regiones cercanas",
+    sqmPerBed: (m2, n) => `Espacio por dormitorio: una mediana de ${m2} m² por dormitorio, en ${s(n, "el anuncio que da", `los ${n} anuncios que dan`)} la superficie y los dormitorios.`,
+    checked: (k, n) => `${k} de estas ${n} viviendas ${s(k, "se comprobó", "se comprobaron")} con su anuncio original en los últimos 30 días.`,
+    removed: (k, inC) => `${k} ${s(k, "vivienda", "viviendas")} ${inC} ${s(k, "salió", "salieron")} de RealHunt o ${s(k, "se marcó", "se marcaron")} como ya no a la venta en los últimos 30 días.`, removedLink: "Ver el registro de casas retiradas",
+    howChosen: "Cómo elegimos estas viviendas: una persona lee cada anuncio y comprueba precio, tamaño, fotos y lugar antes de publicarlo, y la revisión de cada noche lo retira cuando el anuncio desaparece.", howChosenLink: "Cómo revisamos las casas",
+    fee: (a) => `Comunidad ${a} al mes`, feeUnknown: "Cuota de comunidad no indicada",
+    ppsqmRef: (v) => `Precio mediano por m² de esta lista: ${v}.`,
+    seaOnly: (n) => `Ver solo las ${n} junto al mar`, seaAll: "Ver todas", seaPage: "Todas las viviendas junto al mar",
+    csv: "Descargar esta tabla (CSV)",
+    map: "Ver estas viviendas en el mapa",
+    page: (n, of) => `página ${n} de ${of}`, pageH1: (h1, n) => `${h1}: página ${n}`, pageLede: (from, to, n) => `Viviendas ${from} a ${to} de ${n}, de mejor a peor nota. La primera página tiene los precios, los gastos y las preguntas de todo el país.`,
+    pager: "Páginas de esta lista", prev: "Anterior", next: "Siguiente", pageFirst: "Primera página",
+    hub: {
+      title: (n, c) => `Casas en venta por país: ${num(n)} viviendas en ${c} países`, h1: "Casas en venta, país por país",
+      lede: (n, c, d) => `RealHunt reúne ${num(n)} viviendas en ${c} países, cada una revisada por una persona. Elige un país para ver sus viviendas, precios, gastos de compra y normas para extranjeros. Recuentos del ${d}.`,
+      th: { country: "País", homes: "Viviendas", from: "Desde", median: "Precio mediano", guide: "Guía de compra" }, guide: "Guía", crumb: "Casas por país",
+      desc: (n, c) => `${num(n)} viviendas en venta en ${c} países, cada una revisada por una persona: cuántas hay, la más barata y el precio mediano de cada país, con su guía de compra.`,
+    },
+    tools: { "portugal-imt": "Calculadora del IMT y el impuesto de timbre de Portugal", "france-notary-fees": "Calculadora de gastos de notaría en Francia", "germany-property-transfer-tax": "Calculadora del impuesto de transmisiones en Alemania", "spain-non-resident-tax": "Calculadora del impuesto de no residentes en España", "uk-stamp-duty-non-resident": "Calculadora del impuesto de timbre del Reino Unido para no residentes", "home-running-costs": "Gastos anuales de mantener una casa" },
+    lastChange: (d) => `Lista cambiada por última vez el ${d}.`,
+  },
 };

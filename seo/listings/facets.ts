@@ -46,7 +46,7 @@ export const REGION_CCY_CAPS: Record<"USD" | "GBP", number[]> = { USD: [100000, 
 
 export type Home = Record<string, any>;
 export type Kind = "country" | "band" | "region" | "setting" | "ptype" | "beds" | "feature" | "town" | "regionBand" | "gband" | "gfeature"
-  | "combo" | "ccyBand" | "area" | "near";
+  | "combo" | "ccyBand" | "area" | "near" | "bedsBand";
 export type Facet = {
   path: string; kind: Kind; homes: Home[]; parent: string; thin?: boolean;
   cc?: string; country?: string; cap?: number; region?: string; regionSlug?: string; town?: string; key?: string; beds?: number;
@@ -107,7 +107,11 @@ function testOf(key: string, today: string): ((r: Home) => boolean) | null {
   const s = SETTINGS.find(([k]) => k === key) || FEATURES.find(([k]) => k === key); if (s) return s[1];
   const t = TRAITS.find((x) => x.key === key && !x.rank); return t ? (r) => t.test(r, { today }) : null;
 }
-const reserved = (slug: string) => RESERVED.has(slug) || /^under-\d+$/.test(slug) || /^\d-bedroom$/.test(slug);
+const reserved = (slug: string) => RESERVED.has(slug) || slug === "page" || /^under-\d+$/.test(slug) || /^\d-bedroom$/.test(slug);
+/** 26-nov-2026 (list 1000, idea 61): bedrooms and a budget together (/homes/spain/3-bedroom/under-100000), in the
+ * BEDS_BAND_TOP countries with most homes, from 3 homes and through the near-copy rule like every other page. */
+export const BEDS_BAND_TOP = 4;
+export const BEDS_BAND_CAPS = [50000, 80000, 100000, 150000, 200000];
 
 export const jaccard = (a: Set<string>, b: Set<string>) => {
   let inter = 0; for (const x of a) if (b.has(x)) inter++;
@@ -156,6 +160,7 @@ export function buildFacets(all: Home[], opts: Opts = {}): Plan {
   };
   const ranked = (list: Home[], order: (a: Home, b: Home) => number, n = RANK_N) => list.slice().sort(order).slice(0, n);
   const combos: { S: ReturnType<typeof scope>; f: Facet; order: number }[] = [];
+  const bedsBands: { S: ReturnType<typeof scope>; f: Facet }[] = [];
 
   const byCountry = new Map<string, Home[]>();
   for (const r of rows) { const cc = countrySlug(r.country); if (cc) (byCountry.get(cc) || byCountry.set(cc, []).get(cc)!).push(r); }
@@ -246,6 +251,14 @@ export function buildFacets(all: Home[], opts: Opts = {}): Plan {
       if (list.length >= MIN) combos.push({ S, order, f: { path: `/cheap-houses/${key}-under-${cap}-in-${cc}`, kind: "combo", cc, country, key, cap, homes: list, parent: hub } });
     });
 
+    // bedrooms + budget, in the biggest countries (added after every other family, so it never takes the place of an older page); a budget that lists (nearly) the same homes as the bedrooms page
+    // or a smaller budget is a near-copy and is not generated
+    if (bigness.indexOf(cc) < BEDS_BAND_TOP) for (const b of [1, 2, 3, 4]) {
+      const withB = homes.filter((h) => (b === 4 ? bedsOf(h) >= 4 : bedsOf(h) === b));
+      const bedsPath = `${hub}/${b}-bedroom`;
+      for (const p of BEDS_BAND_CAPS)
+        bedsBands.push({ S, f: { path: `${bedsPath}/under-${p}`, kind: "bedsBand", cc, country, beds: b, cap: p, homes: withB.filter((h) => h.price_eur <= p), parent: pages.some((x) => x.path === bedsPath) ? bedsPath : hub } });
+    }
     // Older /cheap-houses addresses that named the same search as a /homes page: they follow that page.
     const where = (p: string): string => (pages.some((f) => f.path === p) ? p : redirects[p] ? where(redirects[p]) : hub);
     for (const p of [30000, 50000, 75000]) redirects[`/cheap-houses/under-${p}-in-${cc}`] = where(`${hub}/under-${p === 75000 ? 80000 : p}`);
@@ -282,6 +295,7 @@ export function buildFacets(all: Home[], opts: Opts = {}): Plan {
     if (kept >= COMBO_MAX && !free) continue;
     if (c.S.add(c.f, MIN, undefined, true) === c.f && !free) kept++;
   }
+  for (const b of bedsBands) b.S.add(b.f, MIN, undefined, true);
 
   // A redirect never points at another redirect or at itself.
   const live = new Set(pages.map((f) => f.path));

@@ -104,7 +104,8 @@ describe("what the pages say", () => {
     expect(T.h1).toContain(en.money(f.cap!));
     expect(plain(T.lede[0])).toContain(String(f.homes.length));
     const html = renderBody(T, en, { css: "", updated: E.W.ctx.updated });
-    expect((html.match(/<li><a class="ls-card"/g) || []).length).toBe(Math.min(30, f.homes.length));
+    // the grid has every card; the three picks above the text (26-nov-2026) are counted apart
+    expect((html.replace(/<section class="ls-top"[\s\S]*?<\/section>/, "").match(/<li[^>]*><a class="ls-card"/g) || []).length).toBe(Math.min(30, f.homes.length));
     expect((html.match(/<h2/g) || []).length).toBeGreaterThanOrEqual(5);
     const ld = renderLd(T, en, (p) => "https://realhunt.co" + p) as any[];
     expect(ld.map((x) => x["@type"])).toEqual(["BreadcrumbList", "ItemList", "FAQPage"]);

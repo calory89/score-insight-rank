@@ -244,6 +244,7 @@ const AppRoutes = () => (
       <Route path="/alerts" element={<Community />} />
       <Route path="/alerts/confirm" element={<Community />} />
       <Route path="/help-buying" element={<Community />} />
+      <Route path="/homes" element={<Community />} />
       <Route path="/homes/:country" element={<Community />} />
       <Route path="/homes/:country/:cap" element={<Community />} />
       <Route path="/homes/:country/:cap/:sub" element={<Community />} />
