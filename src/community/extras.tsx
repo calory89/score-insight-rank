@@ -471,21 +471,11 @@ export function Filters({ countries, value: applied, onChange, expanded = false 
         {(value.fresh || !qc || (qc.fresh ?? 3) >= 3) && <label className="hunt-check"><input type="checkbox" checked={!!value.fresh} onChange={(e) => setDraft({ ...value, fresh: e.target.checked })} /> <span>{t("Advert confirmed online in the last 30 days")}</span></label>}
         {/* 26-nov-2026 (list of 1,000, batch 12: 552-554, 566): fee, distances, quiet and type. An option only
             shows when it leaves 3+ homes with the other filters (same rule as the quick filters). */}
-        <label><span>{t("Monthly fee")}</span>
-          <select value={value.fee ?? ""} onChange={(e) => setDraft({ ...value, fee: e.target.value === "" ? null : Number(e.target.value) })}>
+        {([["fee", "Monthly fee", FEE_STEPS], ["sea", "Sea", SEA_STEPS], ["air", "Airport", AIR_STEPS]] as const).map(([k, l, steps]) => { const cur = (value as any)[k];
+          return <label key={k}><span>{t(l)}</span><select value={cur ?? ""} onChange={(e) => setDraft({ ...value, [k]: e.target.value === "" ? null : Number(e.target.value) })}>
             <option value="">{t("Any")}</option>
-            {FEE_STEPS.filter((v) => value.fee === v || !qc || (qc["fee_" + v] ?? 3) >= 3).map((v) => <option key={v} value={v}>{v === 0 ? t("No community fee") : t("Up to €{n}/month").replace("{n}", String(v))}{qc?.["fee_" + v] != null ? ` (${qc["fee_" + v]})` : ""}</option>)}
-          </select></label>
-        <label><span>{t("Sea")}</span>
-          <select value={value.sea || ""} onChange={(e) => setDraft({ ...value, sea: e.target.value ? Number(e.target.value) : null })}>
-            <option value="">{t("Any")}</option>
-            {SEA_STEPS.filter((v) => value.sea === v || !qc || (qc["sea_" + v] ?? 3) >= 3).map((v) => <option key={v} value={v}>{t("Up to {n} km").replace("{n}", String(v))}{qc?.["sea_" + v] != null ? ` (${qc["sea_" + v]})` : ""}</option>)}
-          </select></label>
-        <label><span>{t("Airport")}</span>
-          <select value={value.air || ""} onChange={(e) => setDraft({ ...value, air: e.target.value ? Number(e.target.value) : null })}>
-            <option value="">{t("Any")}</option>
-            {AIR_STEPS.filter((v) => value.air === v || !qc || (qc["air_" + v] ?? 3) >= 3).map((v) => <option key={v} value={v}>{t("Up to {n} km").replace("{n}", String(v))}{qc?.["air_" + v] != null ? ` (${qc["air_" + v]})` : ""}</option>)}
-          </select></label>
+            {steps.filter((v) => cur === v || !qc || (qc[k + "_" + v] ?? 3) >= 3).map((v) => <option key={v} value={v}>{k !== "fee" ? t("Up to {n} km").replace("{n}", "" + v) : v ? t("Up to €{n}/month").replace("{n}", "" + v) : t("No community fee")}{qc?.[k + "_" + v] != null ? ` (${qc[k + "_" + v]})` : ""}</option>)}
+          </select></label>; })}
         <label><span>{t("Home type")}</span>
           <select value={value.ptype || ""} onChange={(e) => setDraft({ ...value, ptype: e.target.value })}>
             <option value="">{t("Any")}</option>

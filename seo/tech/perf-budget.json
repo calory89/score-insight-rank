@@ -13,7 +13,7 @@
     "html_kb": 30,
     "blocking_css_kb": 28,
     "entry_js_kb": 86,
-    "route_js_kb": 460,
+    "route_js_kb": 465,
     "requests_in_html": 40,
     "high_priority_images": 3
   },
