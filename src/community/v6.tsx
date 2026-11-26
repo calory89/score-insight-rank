@@ -180,6 +180,9 @@ export function DetailGallery({ deal }: { deal: Deal }) {
   useEffect(() => { preloadImages(imgs.slice(i+1,i+2)); }, [deal.id,i]);
   if (!imgs.length) return null;
   const open = (n: number) => { setLb(n); bumpIx(); };
+  // 26-nov-2026 (list of 1,000, idea 5): each photo says which one it is ("..., photo 2 of 8"), in the page's language
+  const es = isEs(), name = es && (deal as any).title_es ? String((deal as any).title_es) : niceTitle(deal);
+  const alt = (n: number) => es ? `${name}, foto ${n + 1} de ${imgs.length}` : `${name}, photo ${n + 1} of ${imgs.length}`;
   // 10-nov-2026 speed: the main photo sits over its small card copy (usually already downloaded by the feed, and the
   // first thing the prerendered page paints, see seo/dealShell.ts), so a heavy photo sharpens in place instead of
   // leaving a grey box. A missing copy just shows nothing behind the photo.
@@ -190,11 +193,11 @@ export function DetailGallery({ deal }: { deal: Deal }) {
   return (
     <div className="hv-gallery" style={{ backgroundColor: cardColor(deal.slug) }}>
       <div className={"hv-mosaic n" + Math.min(imgs.length, 5)}>
-        {imgs.slice(0, 5).map((u, n) => <button key={u + n} style={lq(u, n)} onClick={() => open(n)} aria-label={`Open photo ${n + 1}`}><PropertyImage {...offer(u, n)} src={u} fallback={imgs.find(x=>x!==u)} alt={`${niceTitle(deal)}, ${n+1}`} loading={n===0?"eager":"lazy"} /></button>)}
+        {imgs.slice(0, 5).map((u, n) => <button key={u + n} style={lq(u, n)} onClick={() => open(n)} aria-label={`Open photo ${n + 1}`}><PropertyImage {...offer(u, n)} src={u} fallback={imgs.find(x=>x!==u)} alt={alt(n)} loading={n===0?"eager":"lazy"} /></button>)}
         {imgs.length > 1 && <button className="hv-mosaic-all" onClick={() => open(0)}><Grid2x2 size={16} /> Show all {imgs.length} photos</button>}
       </div>
       <div className="hv-carousel" ref={track} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
-        {imgs.map((u, n) => <button key={u + n} style={lq(u, n)} onClick={() => open(n)} aria-label={`Open photo ${n + 1}`}><PropertyImage {...offer(u, n)} src={u} fallback={imgs.find(x=>x!==u)} alt={`${niceTitle(deal)}, ${n+1}`} loading={n===0?"eager":"lazy"} /></button>)}
+        {imgs.map((u, n) => <button key={u + n} style={lq(u, n)} onClick={() => open(n)} aria-label={`Open photo ${n + 1}`}><PropertyImage {...offer(u, n)} src={u} fallback={imgs.find(x=>x!==u)} alt={alt(n)} loading={n===0?"eager":"lazy"} /></button>)}
       </div>
       {imgs.length > 1 && <span className="hv-carousel-count">{i + 1} / {imgs.length}</span>}
       {lb !== null && <Lightbox images={imgs} start={lb} title={niceTitle(deal)} onClose={() => setLb(null)} />}

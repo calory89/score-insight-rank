@@ -306,7 +306,8 @@ export function writeEsTwins(root: string, pass: EsPass, render: Render, written
       const faq = /<h2>Preguntas sobre comprar en [\s\S]*?(?=<h2>Otros países<\/h2>)/.exec(b)?.[0] || "";
       if (nav || faq) h = h.replace("<h2>Otros países</h2>", () => nav + faq + "<h2>Otros países</h2>");
     }
-    if (cUrl && has.has(cUrl)) h = h.replace('<p><a href="/es">Las mejores casas</a>', () => `<p><a href="${esUrl(cUrl).slice(SITE.length)}">Todas las casas en ${esc(pass.the(c!))}</a> · <a href="/es">Las mejores casas</a>`);
+    // a home links to its Spanish country page only when that page is indexable (26-nov-2026, list of 1,000 idea 14)
+    if (cUrl && has.has(cUrl) && !planned.find((p) => p.r.url === cUrl)?.r.o.noindex) h = h.replace('<p><a href="/es">Las mejores casas</a>', () => `<p><a href="${esUrl(cUrl).slice(SITE.length)}">Todas las casas en ${esc(pass.the(c!))}</a> · <a href="/es">Las mejores casas</a>`);
     fs.writeFileSync(file, h);
     const cover = measureHtml(h);
     byHand.pages++; byHand.words += cover.words; byHand.english += cover.english;

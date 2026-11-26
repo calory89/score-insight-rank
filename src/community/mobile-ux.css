@@ -67,6 +67,19 @@ html.rh-sheet-open .hv-tabbar, html.rh-sheet-open .rh-compare-tray { visibility:
   .hv-detailbar { min-height: 64px; }
   .hv-detailbar .hunt-primary { min-height: 44px; display: inline-flex; align-items: center; gap: 4px; }
 }
+/* 26-nov-2026: the bar is never wider than the screen. The price keeps its full width (8-nov rule in minimal.css), the
+   place gives way, the listing button keeps a fixed size and cuts its own label before the bar grows.
+   And nothing in the page under it can widen the layout (a wider page made this fixed bar 441 / 553 px on a 390 px
+   phone and cut "View listing"): clip, not hidden, so the sticky side card and the photo viewer keep working.
+   The place keeps its two clamped lines (rh2-design.css, idea 6 of list 2). */
+@media (max-width: 759.98px) {
+  .hv-detailbar { box-sizing: border-box; width: 100%; max-width: 100vw; overflow: hidden; }
+  .hv-detailbar > * { flex-shrink: 0; }
+  .hv-detailbar > .hv-detailbar-price { flex: 1 1 0; min-width: 0; overflow: hidden; }
+  .hv-detailbar > .hunt-primary { flex: none; max-width: 46%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .hv-detail { overflow-x: clip; }
+  .hv-detail .hunt-detail-grid > * { min-width: 0; }
+}
 /* the photo viewer covers the whole screen: no action bar on top of it */
 body:has(.hunt-lightbox) .hv-detailbar, html.rh-sheet-open .hv-detailbar { display: none !important; }
 

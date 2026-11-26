@@ -19,7 +19,7 @@ export function KeyFacts({ deal }: { deal: any }) {
           </button>
         </li>
       ) : (
-        <li key={f.k}><strong>{f.value}</strong><span>{t(f.label)}</span></li>
+        <li key={f.k}><strong>{f.value}</strong><span>{t(f.label)}</span>{f.sqft ? <span>{f.sqft.toLocaleString(isEs() ? "es-ES" : "en")} {isEs() ? "pies²" : "sq ft"}</span> : null}</li>
       ))}
     </ul>
   );

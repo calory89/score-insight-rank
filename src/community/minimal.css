@@ -138,11 +138,13 @@
 .hunt .rh-ph { margin: 0 0 var(--s-4); }
 .hunt .rh-ph .hunt-price { margin: 0 0 var(--s-2); }
 .hunt .rh-ph-lines { margin: 0; display: grid; gap: 4px; max-width: 420px; }
-.hunt .rh-ph-lines > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 2px 0; }
+.hunt .rh-ph-lines > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 2px 0; min-width: 0; }
 .hunt .rh-ph-lines dt { flex: 0 1 auto; min-width: 0; font-size: 14.5px; color: var(--c-ink-2); font-weight: 500; }
-.hunt .rh-ph-lines dd { flex: none; max-width: 58%; white-space: nowrap; margin: 0; font-size: 15px; font-weight: 650; color: var(--c-ink); text-align: right; font-variant-numeric: tabular-nums; }
+/* 26-nov-2026: a long answer ("Community fee and yearly tax not stated", longer in Spanish) wraps inside its 58 % instead
+   of pushing the row, and with it the whole page and the phone action bar, past the screen (441 / 553 px on a 390 px phone) */
+.hunt .rh-ph-lines dd { flex: 0 1 auto; min-width: 0; max-width: 58%; white-space: nowrap; margin: 0; font-size: 15px; font-weight: 650; color: var(--c-ink); text-align: right; font-variant-numeric: tabular-nums; }
 .hunt .rh-ph-lines dd small { display: block; white-space: normal; font-size: 12px; font-weight: 500; color: var(--c-ink-3); }
-.hunt .rh-ph-lines dd.is-unknown { font-weight: 550; color: var(--c-warn); font-size: 14px; }
+.hunt .rh-ph-lines dd.is-unknown { white-space: normal; overflow-wrap: anywhere; font-weight: 550; color: var(--c-warn); font-size: 14px; }
 .hunt .rh-ph .hv-rent { display: inline-block; margin-top: var(--s-2); }
 .hunt .rh-ph-quiet { display: flex; flex-wrap: wrap; gap: 2px 0; margin: var(--s-3) 0 0; font-size: 13px; line-height: 1.5; color: var(--c-ink-3); }
 .hunt .rh-ph-quiet > span:not(:last-child)::after { content: "·"; margin: 0 7px; color: var(--c-ink-3); }

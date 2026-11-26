@@ -2,7 +2,7 @@
 // same order as src/community/homeArticle.ts (which crawlers read in English), written as Spanish sentences instead of
 // being stitched together by the dictionary. `dest` must be the Spanish destinations entry (localizeRows with
 // src/data/destinations-es.json); the costs note, yearly tax and "can foreigners buy" then come in Spanish too.
-import type { Article, ArticleCtx } from "./homeArticle";
+import { priceVerdict, type Article, type ArticleCtx } from "./homeArticle";
 import { esPlace } from "../lib/lang"; // relative: seo/prerender.ts (no "@" alias at build time) uses this file too
 import { theEs } from "./seo2data";
 import { perSqm } from "./sqmLogic";
@@ -46,6 +46,9 @@ export function homeArticleEs(r: Row, ctx: ArticleCtx): Article {
     const cheaper = ctx.countryHomes.filter((x) => x.price_eur < r.price_eur).length;
     if (ctx.countryHomes.length >= 3) priceP.push(`${cheaper} de las ${ctx.countryHomes.length} casas de ${inC} en RealHunt tienen un precio de venta más bajo.`);
   }
+  // idea 22 (26-nov-2026): la respuesta primero, en una frase con la cifra
+  const verdict = priceVerdict(r, ctx, "es", esPlace);
+  if (verdict) priceP.unshift(verdict);
   if (priceP.length) {
     priceP.push("El precio de venta es lo que pide el vendedor, no lo que se paga al final. Compáralo con ventas recientes en el mismo pueblo antes de hacer una oferta.");
     sections.push({ h: `¿Es ${eur(r.price_eur)} un buen precio para esta casa?`, p: priceP });

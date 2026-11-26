@@ -119,12 +119,14 @@ export type ShellInput = {
   lang?: "es";
   /** caption of the main photo: place and price, in the language of the page */
   caption?: string;
+  /** the listing page of this kind of home in the country ("/homes/spain/village-houses"), when it is live */
+  catHref?: string;
   /** offer the 800 px copy of the main photo (src/lib/thumbs.ts MID_PHOTOS); set by tests, otherwise the switch decides */
   midPhotos?: boolean;
 };
 
 /** The shell and the embedded row. Put it first inside #root, before the article. */
-export function dealShell({ row, photos, color, crumbs, lang, lowRes, midPhotos, caption }: ShellInput): string {
+export function dealShell({ row, photos, color, crumbs, lang, lowRes, midPhotos, caption, catHref }: ShellInput): string {
   const set = midSrcSet(photos[0], midPhotos);
   // a copy that is not there: the offer is dropped and the browser loads the full photo
   // idea 87 (21 Nov 2026): a main photo that does not answer is replaced by the next photo of the home, as the app does
@@ -136,10 +138,11 @@ export function dealShell({ row, photos, color, crumbs, lang, lowRes, midPhotos,
   const esTitle = title === String(row.title || "").trim() && typeof row.title_es === "string" && row.title_es.trim() ? row.title_es.trim() : "";
   const n = Math.min(photos.length, 5);
   const cat = CATEGORY[row.category] || row.category || "";
-  const eye = lang === "es" ? "" : [...crumbs.map(([l, h]) => (h ? `<a href="${esc(h)}">${esc(l)}</a>` : `<span>${esc(l)}</span>`)), cat ? esc(cat) : ""].filter(Boolean).join(" · ");
+  const eye = lang === "es" ? "" : [...crumbs.map(([l, h]) => (h ? `<a href="${esc(h)}">${esc(l)}</a>` : `<span>${esc(l)}</span>`)), cat ? (catHref ? `<a href="${esc(catHref)}">${esc(cat)}</a>` : esc(cat)) : ""].filter(Boolean).join(" · ");
   // the other photos are named like the app names them ("<title>, 2"); a Spanish page without a Spanish title leaves them empty
   const altBase = lang === "es" ? esTitle : title;
-  const altN = (i: number) => (altBase ? esc(`${altBase}, ${i + 1}`) : "");
+  // idea 5 (26-nov-2026): "..., photo 2 of 8" / "..., foto 2 de 8", as the app names them
+  const altN = (i: number) => (altBase ? esc(lang === "es" ? `${altBase}, foto ${i + 1} de ${photos.length}` : `${altBase}, photo ${i + 1} of ${photos.length}`) : "");
   const imgs = photos.slice(0, 5).map((u, i) => i === 0
     ? `<b${lowRes ? ` style="background:url(&quot;${esc(lowRes)}&quot;) center/cover no-repeat"` : ""}><img src="${esc(u)}" alt="${esc(shellAlt(row, lang === "es" && esTitle ? esTitle : title, lang))}" fetchpriority="high" decoding="async" data-rh-sized${offer}></b>`
     : `<b><img src="${esc(u)}" alt="${altN(i)}" loading="lazy" decoding="async" data-rh-sized></b>`).join("");
