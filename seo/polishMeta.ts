@@ -66,8 +66,30 @@ export function titleCandidates(title: string, lang: Lang, kind: Kind): string[]
   // ...then the shorter wording of each one that a rule knows
   const out = [...base];
   for (const x of base) for (const [re, alts] of TITLE_RULES[lang]) if (re.test(x)) for (const alt of alts) out.push(x.replace(re, alt));
+  // ...and last, the same title with filler words taken out one step at a time (each step keeps the earlier ones):
+  // "Viviendas baratas con jardín en venta en Italia por menos de 100.000 €" -> "Casas con jardín en Italia por menos de 100.000 €"
+  for (const x of [...out]) { let y = x; for (const [re, to] of SQUEEZE[lang]) { const z = y.replace(re, to as any); if (z !== y) { y = z; out.push(y); } } }
   return [...new Set(out)];
 }
+
+// Words a search result can do without, in the order they go. Only wording: the place, the price and the answer stay.
+const SQUEEZE: Record<Lang, [RegExp, string | ((m: string, w: string) => string)][]> = {
+  en: [
+    [/ for sale(?= in | under |$| \()/, ""],
+    [/ citizen buy property in /, " citizen buy a home in "],
+    [/ citizen buy a home in /, " citizen buy in "],
+    [/^Cheap ([a-z])/, "$1"],
+    [/^Cheap (\d)/, "$1"],
+    [/^(houses|homes|flats|apartments|villas|cottages|farmhouses) /, (_m: string, w: string) => w[0].toUpperCase() + w.slice(1) + " "],
+  ],
+  es: [
+    [/ en venta(?= en | por |$| \()/, ""],
+    [/^Viviendas /, "Casas "],
+    [/ comprar casa en /, " comprar en "],
+    [/, con condiciones$/, " con condiciones"],
+    [/^(Casas|Pisos)( de pueblo| de piedra)? (baratas|baratos) /, "$1$2 "],
+  ],
+};
 
 /** The title to use: the fullest wording that fits in TITLE_MAX and no other page has, with the brand when it fits. */
 export function pickTitle(title: string, lang: Lang, kind: Kind, taken: Set<string> = new Set()): string {

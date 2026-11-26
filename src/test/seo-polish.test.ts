@@ -21,7 +21,11 @@ describe("titles", () => {
     expect(pickTitle("Cómo comprar una casa en Grecia siendo extranjero: pasos, impuestos y gastos · RealHunt", "es", "guide")).toBe("Cómo comprar casa en Grecia siendo extranjero · RealHunt");
     expect(pickTitle("How to buy a home in Poland as a foreigner: steps, taxes and costs · RealHunt", "en", "guide")).toBe("How to buy a home in Poland as a foreigner: steps and costs");
     expect(pickTitle("Can a Swiss citizen buy property in Spain? Yes · Rules for Swiss buyers (November 2026) · RealHunt", "en", "canbuy")).toBe("Can a Swiss citizen buy property in Spain? Yes · RealHunt");
-    expect(pickTitle("¿Puede un estadounidense comprar una vivienda en los Países Bajos? Sí · Normas para compradores estadounidenses (noviembre de 2026) · RealHunt", "es", "canbuy")).toBe("¿Puede un estadounidense comprar casa en los Países Bajos? Sí");
+    expect(pickTitle("¿Puede un estadounidense comprar una vivienda en los Países Bajos? Sí · Normas para compradores estadounidenses (noviembre de 2026) · RealHunt", "es", "canbuy")).toBe("¿Puede un estadounidense comprar en los Países Bajos? Sí");
+    // filler words go one at a time until the title fits: place, price and answer stay
+    expect(pickTitle("Viviendas baratas con jardín en venta en Italia por menos de 100.000 € · RealHunt", "es", "cheap")).toBe("Casas baratas con jardín en Italia por menos de 100.000 €");
+    expect(pickTitle("Cheap houses for sale in New Brunswick, Canada under €100,000 · RealHunt", "en", "region")).toBe("Cheap houses in New Brunswick, Canada under €100,000");
+    expect(pickTitle("Can a Danish citizen buy property in the Dominican Republic? Yes · RealHunt", "en", "canbuy")).toBe("Can a Danish citizen buy in the Dominican Republic? Yes");
   });
   it("puts what a home is before its price", () => {
     expect(pickTitle("€85,000 · 2-bedroom flat with a Lake Como view terrace · RealHunt", "en", "deal")).toBe("2-bedroom flat with a Lake Como view terrace · €85,000");

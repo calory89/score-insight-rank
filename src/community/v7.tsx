@@ -174,7 +174,7 @@ function usePosts() {
 
 export function BlogIndex() {
   const posts = usePosts();
-  useEffect(() => { setMeta("RealHunt blog: data and guides on cheap homes around the world", "Original data and plain-English guides on affordable homes: prices by country, buying rules, rent vs buy."); }, []);
+  useEffect(() => { setMeta("RealHunt blog: data and guides on cheap homes worldwide", "Original data and plain-English guides on affordable homes: prices by country, buying rules, rent vs buy."); }, []);
   return (
     <div className="hunt-wrap hunt-page hv-blog">
       <span className="hunt-eyebrow">RealHunt Research</span>
