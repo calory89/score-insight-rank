@@ -39,5 +39,22 @@
       "kb": 1600,
       "requests": 70
     }
-  }
+  },
+  "warn_html_raw_kb": {
+    "deal": 120,
+    "listing": 100,
+    "languages": 100,
+    "other": 100
+  },
+  "warn_note": "Tanda 16 (26-nov-2026): uncompressed HTML per family, reported in the build log and dist/seo-audit.json tech.perf.sizes; a warning, not a failure.",
+  "chunk_max_kb": 120,
+  "chunk_note": "Tanda 16 idea 800: no script of the public home-page route (entry and everything vite.config.ts preloads for it) over 120 KB gzip; checked by scripts/check-bundle.mjs.",
+  "lcp_goal_ms": {
+    "home": 1500,
+    "deal": 1500,
+    "country": 1500,
+    "band": 1500,
+    "map": 2500
+  },
+  "lcp_note": "Tanda 16 idea 757: LCP goal per family, Chrome with 1.6 Mbit/s, 150 ms and 4x slower processor (iPhone 13 screen). Measured 26-nov-2026 on a local build: home 1568 ms, /homes/spain 1280, deal 1164, /es deal 1280, map 6696 (tiles). Not a CI failure yet: CI has no browser run (minutes are limited)."
 }

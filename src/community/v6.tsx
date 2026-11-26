@@ -18,6 +18,7 @@ import { feedAll, niceTitle, Lightbox, type Row } from "./extras";
 import { useVote, SaveHeart, ShareButton, remember, rowCache, preloadImages } from "./v4";
 import COLORS from "@/data/card-colors.json";
 import { ThumbImg } from "./thumbimg";
+import { WhenVisible } from "@/lib/whenVisible";
 
 const HomesMap = lazy(() => import("./homesmap"));
 const num = (v: number = 0) => new Intl.NumberFormat("en").format(v);
@@ -261,9 +262,12 @@ export function Nearby({ deal }: { deal: Deal }) {
     <section className="hv-nearby">
       <h2>Where it is</h2>
       {/* Every home in the same country on one map, this one in orange and open; zoom and drag freely. */}
-      <Suspense fallback={<div className="hm is-embedded hm-detail"><div className="hm-map" /></div>}>
-        <HomesMap params={{ scope: "all", country: deal.country }} focus={deal.slug} openFocus={false} around={{ lat: n.lat, lng: n.lng, zoom: regionOnly ? 7 : 11 }} embedded className="hm-detail" />
-      </Suspense>
+      {/* 26-nov-2026 (Tanda 16, 760): Leaflet and the tiles load only when the map comes near the screen */}
+      <WhenVisible fallback={<div className="hm is-embedded hm-detail"><div className="hm-map" /></div>}>
+        <Suspense fallback={<div className="hm is-embedded hm-detail"><div className="hm-map" /></div>}>
+          <HomesMap params={{ scope: "all", country: deal.country }} focus={deal.slug} openFocus={false} around={{ lat: n.lat, lng: n.lng, zoom: regionOnly ? 7 : 11 }} embedded className="hm-detail" />
+        </Suspense>
+      </WhenVisible>
       <p className="hunt-fine"><MapPin size={13} /> {deal.location_name}{regionOnly ? " · the seller only gives the region" : " · approximate area, not the exact house"} · <Link to={`/map?country=${encodeURIComponent(deal.country)}&focus=${encodeURIComponent(deal.slug)}`}>{t("Open the big map")}</Link></p>
       {items.length > 0 && <ul>{items.map(([i, a, b]) => <li key={a}>{i}<span>{a}</span><b>{b}</b></li>)}</ul>}
       <p className="hunt-fine">{car ? t("Distances are straight lines, measured from the town. The drive to the airport is an estimate: roads about a third longer, at about 70 km/h.") : t("Distances are straight lines, measured from the town.")}</p>

@@ -34,10 +34,12 @@ export function techChecks() {
       if (dupes.groups.length) console.log(`[rh-tech-checks] homes that may be the same home twice:\n` + dupes.groups.map((g) => `  - ${g.why}: ${g.slugs.join(", ")}`).join("\n"));
       const auditFile = path.join(root, "seo-audit.json");
       if (fs.existsSync(auditFile)) {
-        try { const a = JSON.parse(fs.readFileSync(auditFile, "utf8")); (a.tech ||= {}).perf = { goal: perf.goal, pages: perf.pages }; a.tech.dupes = dupes.groups; for (const f of dupes.failures) (a.failures ||= []).push("duplicate home: " + f); for (const f of perf.failures) (a.failures ||= []).push("speed budget: " + f); fs.writeFileSync(auditFile, JSON.stringify(a, null, 1) + "\n"); } catch { /* the audit keeps what it had */ }
+        try { const a = JSON.parse(fs.readFileSync(auditFile, "utf8")); (a.tech ||= {}).perf = { goal: perf.goal, pages: perf.pages, sizes: perf.sizes }; a.tech.dupes = dupes.groups; for (const f of dupes.failures) (a.failures ||= []).push("duplicate home: " + f); for (const f of perf.failures) (a.failures ||= []).push("speed budget: " + f); fs.writeFileSync(auditFile, JSON.stringify(a, null, 1) + "\n"); } catch { /* the audit keeps what it had */ }
       }
       const line = Object.entries(perf.pages).map(([k, p]) => `${k} ${p.html_kb}+${p.blocking_css_kb}+${p.route_js_kb} KB, ${p.requests_in_html} files`).join("; ");
       console.log(`[rh-tech-checks] speed budget (HTML + blocking CSS + scripts, gzip): ${line}${cleaned ? `; em dashes removed from ${cleaned} data file(s)` : ""}`);
+      const big = Object.entries(perf.sizes).filter(([, r]) => r.over).map(([f, r]) => `${f} ${r.over} of ${r.pages} over ${r.limit_kb} KB (biggest ${r.biggest[0]?.path} ${r.biggest[0]?.kb} KB)`);
+      if (big.length) console.log(`[rh-tech-checks] HTML size warning (uncompressed, Tanda 16 idea 767): ${big.join("; ")}`);
       if (dupes.failures.length) {
         const msg = `[rh-tech-checks] a home is published twice:\n` + dupes.failures.map((f) => "  - " + f).join("\n");
         if (process.env.RH_SEO_SOFT === "1") console.warn(msg); else throw new Error(msg);

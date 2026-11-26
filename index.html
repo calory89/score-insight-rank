@@ -3,7 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="preconnect" href="https://oykcsmextclpdnugixqz.supabase.co" />
+    <!-- 26-nov-2026 (Tanda 16, 796): the site talks to its database through realhunt.co/__sb (same origin), so a full
+         early connection to supabase.co was wasted on almost every visit; only its name is looked up now (photos of
+         live finds that have no copy yet still come from there). -->
+    <link rel="dns-prefetch" href="https://oykcsmextclpdnugixqz.supabase.co" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="alternate" type="application/rss+xml" title="RealHunt: new homes" href="https://realhunt.co/feed.xml" />
     <link rel="alternate" type="application/atom+xml" title="RealHunt: new homes (Atom)" href="https://realhunt.co/feed.atom" />
