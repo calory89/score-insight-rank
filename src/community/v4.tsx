@@ -6,12 +6,14 @@ import {PropertyImage, ComparePick} from "./BuyerTools";
 import {storage, usePreference} from "./buyer-state";
 import {t} from "./i18n";
 import { isEs } from "@/lib/lang";
+// the sheet is fetched on the first tap only (26-nov-2026: keeps /map under its speed budget)
+const MoreSheet = lazy(() => import("./moresheet").then((m) => ({ default: m.MoreSheet })));
 // RealHunt v4 UX (23-sep-2026): visual cards with the price on the photo, double tap to vote,
 // one-tap story sharing, a mobile tab bar, a sticky action bar on the home page and instant
 // navigation (cached rows, prefetched detail, preloaded photos).
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Heart, Share2, Bookmark, Home as HomeIcon, Layers, MapPin, User, Bell, Trophy, ArrowUpRight, TrendingDown, BadgeCheck, Flame } from "lucide-react";
+import { Heart, Share2, Bookmark, Home as HomeIcon, Layers, MapPin, User, Bell, Trophy, Menu as MenuIcon, ArrowUpRight, TrendingDown, BadgeCheck, Flame } from "lucide-react";
 import { FLAG, bumpIx, track } from "@/lib/rh";
 import { money, votePreview, type Deal, type Session } from "./api";
 import { useCommunity } from "./ctx";
@@ -405,16 +407,25 @@ export function Freshness({ feed, visitors }: { feed: any; visitors?: number }) 
 // ---------------------------------------------------------------- mobile tab bar
 export function TabBar() {
   const { pathname } = useLocation();
+  const [more, setMore] = useState(false);
+  const moreBtn = useRef<HTMLButtonElement>(null);
+  useEffect(() => setMore(false), [pathname]);
   if (pathname.startsWith("/deal/")) return null; // the home page has its own action bar
   const is = (p: string) => (p === "/" ? pathname === "/" : pathname.startsWith(p));
+  const es = isEs();
+  // 26-nov-2026 (batch 11: 506, 544): labels in Spanish on /es, and "More" (content sections, profile, language)
+  // in place of "Profile", which now sits inside it
   return (
-    <nav className="hv-tabbar" aria-label="App navigation">
-      <Link to="/" aria-current={is("/") ? "page" : undefined} onClick={() => { if (pathname === "/") window.scrollTo({ top: 0, behavior: "smooth" }); }}><HomeIcon size={21} /><span>Explore</span></Link>
-      <Link to="/top" aria-current={is("/top") ? "page" : undefined}><Trophy size={21} /><span>Top 100</span></Link>
-      <Link to="/map" aria-current={is("/map") ? "page" : undefined}><MapPin size={21} /><span>Map</span></Link>
-      <Link to="/hunt/saved" aria-current={is("/hunt/saved") ? "page" : undefined}><Bookmark size={21} /><span>{isEs() ? "Guardadas" : "Saved"}</span></Link>
-      <Link to="/me" aria-current={is("/me") || is("/hunt/mine") ? "page" : undefined}><User size={21} /><span>Profile</span></Link>
-    </nav>
+    <>
+      <nav className="hv-tabbar" aria-label={es ? "Navegación" : "App navigation"}>
+        <Link to="/" aria-current={is("/") ? "page" : undefined} onClick={() => { if (pathname === "/") window.scrollTo({ top: 0, behavior: "smooth" }); }}><HomeIcon size={21} /><span>{es ? "Explorar" : "Explore"}</span></Link>
+        <Link to="/top" aria-current={is("/top") ? "page" : undefined}><Trophy size={21} /><span>{es ? "Las mejores" : "Top 100"}</span></Link>
+        <Link to="/map" aria-current={is("/map") ? "page" : undefined}><MapPin size={21} /><span>{es ? "Mapa" : "Map"}</span></Link>
+        <Link to="/hunt/saved" aria-current={is("/hunt/saved") ? "page" : undefined}><Bookmark size={21} /><span>{es ? "Guardadas" : "Saved"}</span></Link>
+        <button ref={moreBtn} type="button" className="hv-tab-more" aria-haspopup="dialog" aria-expanded={more} aria-current={is("/me") || is("/hunt/mine") ? "page" : undefined} onClick={() => setMore(true)}><MenuIcon size={21} /><span>{es ? "Más" : "More"}</span></button>
+      </nav>
+      {more && <Suspense fallback={null}><MoreSheet onClose={() => { setMore(false); requestAnimationFrame(() => moreBtn.current?.focus()); }} /></Suspense>}
+    </>
   );
 }
 

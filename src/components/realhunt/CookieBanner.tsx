@@ -20,7 +20,8 @@ const CookieBanner = () => {
   const [show, setShow] = useState(false);
   useEffect(() => { try { const v = localStorage.getItem(KEY); if (v === "all") enableTracking(); if (!v) setShow(true); } catch { setShow(true); } }, []);
   const set = (v: "all" | "essential") => { try { localStorage.setItem(KEY, v); } catch {} if (v === "all") { enableTracking(); window.dispatchEvent(new Event("rh:consent")); track(location.pathname === "/" ? "home_view" : "page_view"); } setShow(false); window.dispatchEvent(new Event("rh:consent")); };
-  if (!show) return null;
+  // 26-nov-2026 (533): never over a widget framed by another site (/embed/...), where nothing is tracked anyway
+  if (!show || /^\/(es\/)?embed(\/|$)/.test(location.pathname)) return null;
   const x = isEs() ? TXT.es : TXT.en;
   return createPortal(
     <div className="rh-cookie-banner fixed bottom-0 inset-x-0 z-[70] p-3 md:p-4" role="region" aria-label={x.label}>

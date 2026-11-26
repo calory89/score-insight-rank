@@ -33,3 +33,50 @@
 @media (prefers-reduced-motion: reduce) { .hx-img img { transition: none; } .hx-skel .hx-img { animation: none; } }
 /* phones: the filter chips scroll away with the page, so the photos get the whole screen */
 @media (max-width: 760px) { .hv-home .rh-sticky-filters { position: static !important; top: auto !important; box-shadow: none !important; } .hx-hero { padding-top: 8px; } .hx-hero h1 { margin-bottom: 10px; } }
+
+/* 26-nov-2026 (batch 11): "Explore RealHunt" under the first homes (src/community/homesections.tsx). Plain lists of
+   links; chips wrap instead of being cut at the screen edge; every target is at least 44 px tall on touch screens. */
+.rh-hsec { margin: 36px 0 8px; max-width: 1180px; }
+.rh-hsec > h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 6px; }
+.rh-hsec h3 { font-size: 15px; font-weight: 800; margin: 18px 0 8px; }
+.rh-hsec ul, .rh-hsec ol { list-style: none; padding: 0; margin: 0; }
+.rh-hsec a { color: inherit; }
+.rh-hsec-countries { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 4px 14px; }
+.rh-hsec-countries a { display: flex; align-items: center; justify-content: space-between; min-height: 40px; text-decoration: none; border-bottom: 1px solid #E2E3E6; font-size: 14.5px; }
+.rh-hsec-countries small { color: #5b6068; font-size: 13px; }
+.rh-hsec-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.rh-hsec-chips a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border: 1px solid #D3D5D9; border-radius: 999px; text-decoration: none; font-size: 14px; font-weight: 600; }
+.rh-hsec-chips a:hover, .rh-hsec-countries a:hover { border-color: #111214; }
+.rh-hsec-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0 28px; }
+.rh-hsec-cols li a { display: inline-flex; align-items: center; min-height: 36px; font-size: 14.5px; }
+.rh-hsec-how ol { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; counter-reset: hs; }
+.rh-hsec-how li { counter-increment: hs; padding: 12px 14px; border: 1px solid #E2E3E6; border-radius: 14px; font-size: 14px; line-height: 1.45; }
+.rh-hsec-how li::before { content: counter(hs); display: inline-flex; width: 24px; height: 24px; align-items: center; justify-content: center; border-radius: 999px; background: #111214; color: #fff; font-weight: 800; font-size: 12px; margin-right: 8px; }
+.rh-hsec-how li span { display: block; color: #4f545b; margin-top: 4px; }
+.rh-hsec-how p { font-size: 14px; margin: 12px 0 0; }
+@media (pointer: coarse) { .rh-hsec-chips a, .rh-hsec-countries a, .rh-hsec-cols li a { min-height: 44px; } }
+html.rh-dark .rh-hsec-countries a, html.rh-dark .rh-hsec-how li { border-color: #2A2C30; }
+html.rh-dark .rh-hsec-countries small, html.rh-dark .rh-hsec-how li span { color: #B9BCC2; }
+html.rh-dark .rh-hsec-chips a { border-color: #3A3D42; }
+html.rh-dark .rh-hsec-how li::before { background: #ECEDEE; color: #111214; }
+
+/* 26-nov-2026 (505, 534): section links in the desktop header (Community.tsx Shell). Text only, so they fit next to
+   the icons; hidden on smaller screens, where the tab bar's "More" sheet carries them. */
+.hunt .hunt-header nav .hunt-sec { display: none !important; font-size: 14px; font-weight: 600; color: #4f545b; text-decoration: none; padding: 6px 2px; border-bottom: 2px solid transparent; }
+.hunt .hunt-header nav .hunt-sec:hover { color: #111214; }
+.hunt .hunt-header nav .hunt-sec.is-on { color: #111214; border-bottom-color: #E8551F; }
+@media (min-width: 1100px) { .hunt .hunt-header nav .hunt-sec { display: inline-flex !important; align-items: center; } }
+html.rh-dark .hunt .hunt-header nav .hunt-sec { color: #B9BCC2; }
+html.rh-dark .hunt .hunt-header nav .hunt-sec:is(:hover, .is-on) { color: #ECEDEE; }
+
+/* 26-nov-2026 (506, 521): the tab bar's "More" sheet (src/community/moresheet.tsx), same frame as the filter sheet */
+.rh-more-links { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; padding: 4px 16px 8px; }
+.rh-more-links a { display: flex; align-items: center; min-height: 48px; border-bottom: 1px solid #E2E3E6; color: inherit; text-decoration: none; font-size: 15px; font-weight: 600; }
+.rh-more-lang { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px calc(16px + env(safe-area-inset-bottom)); font-size: 14px; color: #4f545b; }
+.rh-more-lang .rh-lang button { min-width: 44px; min-height: 44px; }
+.hunt.is-dark .rh-more-links a { border-color: #2A2C30; }
+.hunt.is-dark .rh-more-lang { color: #B9BCC2; }
+
+/* 26-nov-2026 (508): on phones the vibe row scrolls sideways; a fade at the right edge shows there is more, instead of
+   a photo cut flat at the screen edge */
+@media (max-width: 760px) { .hv-home .hv-vibes { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); padding-right: 28px; } }

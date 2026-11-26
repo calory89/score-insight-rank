@@ -408,6 +408,11 @@ function build(root: string, es?: EsPass) {
       `${css}<main class="rh-static rh-hs" id="rh-home-static"><h1>The best homes abroad, checked and scored</h1><p>${esc(homeDesc)}</p>`
       + `<ol>${top.map(card).join("")}</ol>`
       + `<h2>Homes by country</h2><p>${countryLinks.map(([k, v]) => `<a href="/homes/${esc(k)}">${esc(v.name)} (${v.homes.length})</a>`).join(" · ")}</p>`
+      // 26-nov-2026 (batch 11: 502, 511, 549): budget lists, guides, calculators and research one click from "/", and how
+      // RealHunt works in three steps; the same blocks as the app's "Explore RealHunt" (src/community/homesections.tsx)
+      + `<h2>Homes by budget</h2><p>${[30000, 50000, 75000, 100000].map((b) => `<a href="/cheap-houses/under-${b}">Under ${esc(eur(b))}</a>`).join(" · ")} · <a href="/cheap-houses/by-the-sea">By the sea</a></p>`
+      + `<h2>Before you buy</h2><p><a href="/guide">Buying guides by country</a> · <a href="/tools">Free calculators</a> · <a href="/costs">Buying costs by country</a> · <a href="/can-i-buy">Can a foreigner buy there?</a> · <a href="/research">Research and data</a></p>`
+      + `<h2>How RealHunt works</h2><ol><li><strong>We search</strong> property portals around the world, every day.</li><li><strong>A person checks</strong> photos, price and place before a home goes live; adverts are checked again every night.</li><li><strong>We score</strong> price, location, space and condition out of 100. We never sell homes: we send you to the seller.</li></ol>`
       + `<p><a href="/new">New homes</a> · <a href="/price-drops">Price drops</a> · <a href="/what-100k-buys">What €100,000 buys</a> · <a href="/cheap-houses">Cheap houses by country and price</a> · <a href="/can-i-buy">Can I buy there?</a> · <a href="/buying-costs">Buying costs</a> · <a href="/map">Map</a> · <a href="/blog">Guides and research</a> · <a href="/method">How the score works</a></p></main>`
       + `<script>if(location.pathname!=="/"){var e=document.getElementById("rh-home-static");if(e)e.parentNode.removeChild(e)}</script>`,
       [{ "@context": "https://schema.org", "@type": "ItemList", name: "The best homes on RealHunt", numberOfItems: rows.length,
@@ -420,7 +425,11 @@ function build(root: string, es?: EsPass) {
     const descEs = `${rows.length} casas en venta en ${countryLinks.length} países, revisadas una a una por una persona, puntuadas de 70 a 98 y ordenadas de mejor a peor. Casas nuevas cada día.`;
     page(`${SITE}/es`, "RealHunt: las mejores casas de cada país, ordenadas por nota", descEs, DEF,
       `${css}<main class="rh-static rh-hs" id="rh-home-static"><h1>Las mejores casas en el extranjero, revisadas y con nota</h1><p>${esc(descEs)}</p>`
-      + `<ol>${topEs.map(cardEs).join("")}</ol><h2>Casas por país</h2><p>${countryLinks.filter(([, x]) => x.homes.filter((h) => h.title_es).length >= MIN_LIST).map(([k, x]) => `<a href="/es/homes/${esc(k)}">${esc(esC(x.name))} (${x.homes.length})</a>`).join(" · ")}</p><p><a href="/">English</a></p></main>`
+      + `<ol>${topEs.map(cardEs).join("")}</ol><h2>Casas por país</h2><p>${countryLinks.filter(([, x]) => x.homes.filter((h) => h.title_es).length >= MIN_LIST).map(([k, x]) => `<a href="/es/homes/${esc(k)}">${esc(esC(x.name))} (${x.homes.length})</a>`).join(" · ")}</p>`
+      + `<h2>Casas por presupuesto</h2><p>${[30000, 50000, 75000, 100000].map((b) => `<a href="/es/cheap-houses/under-${b}">Menos de ${esc(euro(b))}</a>`).join(" · ")} · <a href="/es/cheap-houses/by-the-sea">Cerca del mar</a></p>`
+      + `<h2>Antes de comprar</h2><p><a href="/es/guide">Guías de compra por país</a> · <a href="/es/tools">Calculadoras gratis</a> · <a href="/es/costs">Costes de compra por país</a> · <a href="/es/research">Estudios y datos</a></p>`
+      + `<h2>Cómo funciona RealHunt</h2><ol><li><strong>Buscamos</strong> en portales inmobiliarios de todo el mundo, cada día.</li><li><strong>Una persona revisa</strong> fotos, precio y lugar antes de publicar cada casa; cada noche comprobamos que el anuncio sigue.</li><li><strong>Puntuamos</strong> precio, ubicación, espacio y estado sobre 100. No vendemos casas: te enviamos al vendedor.</li></ol>`
+      + `<p><a href="/">English</a></p></main>`
       + `<script>if(!/^\\/es\\/?$/.test(location.pathname)){var e=document.getElementById("rh-home-static");if(e)e.parentNode.removeChild(e)}</script>`,
       [{ "@context": "https://schema.org", "@type": "ItemList", name: "Las mejores casas en RealHunt", inLanguage: "es", numberOfItems: rows.length,
         itemListElement: topEs.map((h, i) => ({ "@type": "ListItem", position: i + 1, url: `${SITE}/es/deal/${h.slug}`, name: h.title_es })) }],

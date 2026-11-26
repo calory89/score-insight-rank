@@ -56,6 +56,7 @@ import { FindHomePage, FindHomeCTA } from "./findhome";
 import BestRoute from "./best"; // stays here: its CSS must keep its place in the cascade
 import { ScoreBars, BestPerCountry, RankRow, RankHead, RankSkeleton, ScoreHelp, NearestHomes, NearCity } from "./scores";
 import { HomeCard, HomeCardSkeleton } from "./homecards";
+
 import { LogoMark } from "@/components/realhunt/Logo";
 import { isEs, esPlace, searchQuery } from "@/lib/lang";
 import { guestSaves, isGuestSaved, toggleGuestSave, clearGuestSaves, type GuestSave } from "./guestSaves";
@@ -97,6 +98,7 @@ const GoneNotice = lazy(() => import("./n9/HomeStatus").then((m) => ({ default: 
 const UnconfirmedNotice = lazy(() => import("./n9/HomeStatus").then((m) => ({ default: m.UnconfirmedNotice })));
 const CheckedBlock = lazy(() => import("./n9/HomeStatus").then((m) => ({ default: m.CheckedBlock })));
 const Helpful = lazy(() => import("./n9/Helpful"));
+const HomeSections = lazy(() => import("./homesections").then((m) => ({ default: m.HomeSections }))); // 26-nov-2026 (batch 11), below the first homes
 const SinceVisit = lazy(() => import("./n9/SinceVisit"));
 // 21-nov-2026 (round n10, list2 33, 37, 45, 48): lazy, see src/community/n10.
 const PriceHistory = lazy(() => import("./n10/HomeExtras").then((m) => ({ default: m.PriceHistory })));
@@ -115,7 +117,6 @@ import {
   Plus,
   Search,
   Trophy,
-  Gauge,
   Flag,
   X,
   Check,
@@ -217,7 +218,8 @@ function Shell({ children }: { children: ReactNode }) {
     // Child pages set their own title in effects that run before this one, so they must be listed here or the
     // default title overwrites theirs (country pages, /method and /alerts showed the home title before 24-oct-2026).
     if (/^\/(deal\/|find-my-home|extension|insider|blog|cheap-houses|new-builds|developers|inbox|compare|costs|research|agents|homes\/|homes$|method|alerts|can-i-buy|buying-costs|tools|about|top|guide|new|sitemap|what-100k-buys|price-drops|sources|swipe|map|leaderboard|winners|best|weather|saved|legal|hunter\/|b\/|live-search|press|embed|for-ai|editorial-policy|how-we-check-homes|what-we-reject|what-we-never-do|how-we-make-money|corrections)/.test(location.pathname)) return;
-    document.title = "RealHunt: The best homes in every country, ranked by score";
+    // 26-nov-2026 (514): the same words as the prerendered <title> (seo/prerender.ts), and the Spanish one on /es
+    document.title = isEs() ? "RealHunt: las mejores casas de cada país, ordenadas por nota" : "RealHunt: the best homes in every country, ranked by score";
   }, [location.pathname]);
   // A vote clicked while signed out is remembered and cast as soon as the person is in, so nobody
   // has to find the home again and click twice.
@@ -290,7 +292,12 @@ function Shell({ children }: { children: ReactNode }) {
           <nav aria-label="Main navigation">
             <Link to="/top" className="hunt-browse hunt-top100" aria-label="Top 100"><Trophy size={16} /> Top 100</Link>
             <Link to="/map" className="hunt-browse hunt-maplink" aria-current={location.pathname === "/map" ? "page" : undefined}><MapPin size={16} /> {t("Map")}</Link>
-            <Link to="/extension" className="hunt-browse hunt-ext" title="Free Chrome extension: see the score of any home on any property site"><Gauge size={16} /> Score any home</Link>
+            {/* 26-nov-2026 (505, 534): the content sections in the desktop bar, with the current one marked; the Chrome
+                extension moved to the footer (Homes group) */}
+            {(isEs() ? [["/homes", "Países"], ["/guide", "Guías"], ["/tools", "Calculadoras"], ["/research", "Estudios"]] : [["/homes", "Countries"], ["/guide", "Guides"], ["/tools", "Calculators"], ["/research", "Research"]]).map(([to, l]) => {
+              const on = location.pathname === to || location.pathname.startsWith(to + "/");
+              return <Link key={to} to={to} className={"hunt-sec" + (on ? " is-on" : "")} aria-current={on ? "page" : undefined}>{l}</Link>;
+            })}
             <Link to="/?search=1" className="hunt-browse">
               <Search size={16} />
               Search
@@ -909,6 +916,8 @@ function Home() {
               {index === 17 && plain && !maxPrice && sort === "score" && <div className="hx-span"><NearCity /></div>}
               {index === 23 && plain && !maxPrice && sort === "score" && <div className="hx-span"><BestPerCountry /></div>}
               {index === 29 && plain && <div className="hx-span"><SponsoredCard /></div>}
+              {/* 26-nov-2026 (batch 11): inside the list, because the feed loads more homes as you scroll and the end is rarely reached */}
+              {index === 35 && plain && sort === "score" && <div className="hx-span"><Suspense fallback={null}><HomeSections countries={feed?.countries_count || {}} /></Suspense></div>}
             </Fragment>
           ))}
         {feed && busy && feed.rows.length > 0 && feed.rows.length < feed.total && [0, 1, 2].map((n) => <HomeCardSkeleton key={"more" + n} />)}

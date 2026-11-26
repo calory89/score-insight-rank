@@ -108,13 +108,17 @@ type L = [string, string, boolean?];
 const GROUPS: { key: string; title: string; links: L[] }[] = [
   { key: "homes", title: "Homes", links: [["/", "All homes"], ["/cheap-houses", "Cheap houses"], ["/new-builds", "New builds"], ["/new", "New homes"], ["/top", "Top 100 rankings"], ["/insider", "Insider"], ["/alerts", "Alerts"], ["/help-buying", "Help buying", true], ...COUNTRIES.map(([k, l]) => [`/homes/${k}`, `Homes in ${l}`, true] as L)] },
   { key: "research", title: "Research", links: [["/blog", "Research"], ["/costs", "Real costs"], ["/research", "Data to quote"], ["/research/prices", "Prices by country"], ["/what-100k-buys", "What €100,000 buys"], ["/price-drops", "Price drops"], ["/sources", "Where the homes come from"], ["/research/property-portals", "Property portals by country"], ["/research/country-facts", "Key facts by country"], ["/research/open-data", "Open data"], ["/research/new-builds", "New-build report"], ["/method", "How the score works"], ["/top/how-we-rank", "How we rank"], ["/guide", "Guides", true]] },
-  { key: "company", title: "Company", links: [["/about", "About us"], ["/press", "Press page"], ["/editorial-policy", "Editorial policy"], ["/agents", "For agents"], ["/network", "For developers"], ["/leaderboard", "Hunters", true], ["/invite", "Invite", true], ["/sitemap", "Site map"]] },
+  // 26-nov-2026 (batch 11: 507, 530): guides, calculators and the country pages get their own group
+  { key: "learn", title: "Guides and tools", links: [["/homes", "All countries"], ["/guide", "Buying guides"], ["/tools", "Free calculators"], ["/costs", "Buying costs"], ["/can-i-buy", "Can I buy there?"], ["/countries", "Compare countries"], ["/extension", "Score any home"]] },
+  { key: "company", title: "Company", links: [["/about", "About us"], ["/press", "Press page"], ["/editorial-policy", "Editorial policy"], ["/agents", "For agents"], ["/network", "For developers"], ["/contact", "Contact"], ["/leaderboard", "Hunters", true], ["/invite", "Invite", true], ["/sitemap", "Site map"]] },
   // 20-nov-2026: the pages that say how homes are checked and what RealHunt never does (seo/trustMore.ts)
   { key: "trust", title: "Trust", links: [["/method", "How the score works", true], ["/how-we-check-homes", "How we check homes"], ["/what-we-reject", "Which homes we reject"], ["/editorial-policy", "Editorial policy", true], ["/corrections", "Corrections"], ["/how-we-make-money", "How we make money"], ["/what-we-never-do", "What we never do"]] },
   { key: "legal", title: "Legal", links: [["/legal/privacy", "Privacy"], ["/legal/terms", "Terms"], ["/sitemap", "Site map"]] },
 ];
 // 21-nov-2026: written whole in Spanish here ("Casas en Italia"): the split "Homes in" + country stayed English on /es pages
-const label = (s: string) => (s.startsWith("Homes in ") ? (isEs() ? `Casas en ${esPlace(s.slice(9))}` : s) : t(s));
+// 26-nov-2026: the new group's words, written whole in Spanish (they are not in the dictionary)
+const ES_NEW: Record<string, string> = { "Guides and tools": "Guías y herramientas", "All countries": "Todos los países", "Buying guides": "Guías de compra", "Free calculators": "Calculadoras gratis", "Buying costs": "Costes de compra", "Can I buy there?": "¿Puedo comprar allí?", "Compare countries": "Comparar países", "Score any home": "Puntúa cualquier casa", "Contact": "Contacto" };
+const label = (s: string) => (s.startsWith("Homes in ") ? (isEs() ? `Casas en ${esPlace(s.slice(9))}` : s) : isEs() && ES_NEW[s] ? ES_NEW[s] : t(s));
 
 export function FooterLinks({ admin = false }: { admin?: boolean }) {
   const [open, setOpen] = useState<string | null>(null);
@@ -126,7 +130,7 @@ export function FooterLinks({ admin = false }: { admin?: boolean }) {
         if (g.key === "legal" && admin) links.push(<Link key="mod" to="/hunt/admin">Moderation</Link>, <Link key="inbox" to="/hunt/inbox">Inbox</Link>);
         return (
           <div key={g.key} className={"rh-fgroup" + (on ? " is-open" : "")}>
-            <h2 className="rh-fgroup-h"><button type="button" aria-expanded={on} aria-controls={"rh-fg-" + g.key} onClick={() => setOpen(on ? null : g.key)}>{t(g.title)}<ChevronDown size={18} aria-hidden="true" /></button></h2>
+            <h2 className="rh-fgroup-h"><button type="button" aria-expanded={on} aria-controls={"rh-fg-" + g.key} onClick={() => setOpen(on ? null : g.key)}>{label(g.title)}<ChevronDown size={18} aria-hidden="true" /></button></h2>
             <div className="rh-fgroup-links" id={"rh-fg-" + g.key}>{links}</div>
           </div>
         );
