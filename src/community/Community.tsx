@@ -2062,7 +2062,7 @@ export default function Community() {
       <TopMethodPage />
     ) : path === "/about" || path === "/about/" ? (
       <AboutPage />
-    ) : path === "/new" || path === "/research/prices" || path === "/sitemap" || path.startsWith("/sitemap/") || path === "/what-100k-buys" || path === "/price-drops" || path === "/sources" || path.startsWith("/sources/") || isAssetPath(path) || isKnowledgePath(path) ? (
+    ) : path === "/new" || path === "/regions" || path === "/research/prices" || path === "/sitemap" || path.startsWith("/sitemap/") || path === "/what-100k-buys" || path === "/price-drops" || path === "/sources" || path.startsWith("/sources/") || isAssetPath(path) || isKnowledgePath(path) ? (
       <StaticPage />
     ) : path === "/top/mine" ? (
       <TopMinePage />

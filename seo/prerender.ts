@@ -562,7 +562,7 @@ function build(root: string, es?: EsPass) {
   const posts: any[] = readJson("src/data/blog.json", []);
   const blogRss = `<link rel="alternate" type="application/rss+xml" title="RealHunt Research" href="${SITE}/blog/rss.xml" />`;
   const card = (p: any) => `<li><a href="/blog/${esc(p.slug)}"><strong>${esc(p.title)}</strong></a> <span>${esc(p.desc)}</span></li>`;
-  page(`${SITE}/blog`, "RealHunt Research · Data on cheap homes around the world", "Original data and plain-English guides on affordable homes: prices by country, buying rules, rent vs buy.", posts[0] ? abs(posts[0].image) : DEF,
+  page(`${SITE}/blog`, "RealHunt blog: data and guides on cheap homes around the world", "Original data and plain-English guides on affordable homes: prices by country, buying rules, rent vs buy.", posts[0] ? abs(posts[0].image) : DEF,
     `<main class="rh-static"><h1>RealHunt Research</h1><p>Studies and guides built from the homes on RealHunt.</p><ul>${posts.map(card).join("")}</ul></main>`,
     [crumbs([["RealHunt", SITE + "/"], ["Research", SITE + "/blog"]])], { lastmod: maxDay(posts.map((p) => p.date)), group: "content", head: blogRss });
   for (const p of posts) {

@@ -111,6 +111,8 @@ export function listingPages(plan: ListingPlan, rows: Home[], page: PageFn, lang
   }
   // idea 53: every country on one page
   if (P.t2) { const hubH = homesHub(plan, P, W, css); page(`${SITE}/homes`, hubH.title, hubH.desc, hubH.image, hubH.body, hubH.ld, { group: "places", lastmod: W.ctx.updated }); n++; }
+  // idea 101 (cierre, 26-nov-2026): every region page on one page, country by country
+  if (P.lang === "en" || P.lang === "es") { const R = regionsHub(plan, P, W, css); if (R) { page(`${SITE}/regions`, R.title, R.desc, R.image, R.body, R.ld, { group: "places", lastmod: W.ctx.updated }); n++; } }
   // The hub: every search, grouped, with its count.
   const hubT = hub(plan, P, W.ctx.updated);
   page(`${SITE}/cheap-houses`, hubT.title, hubT.desc, `${SITE}/og-home.jpg`, hubT.body(css), hubT.ld, { group: "places" });
@@ -145,7 +147,7 @@ function hub(plan: ListingPlan, P: Pack, updated: string) {
       + (sn && inSeason.length ? `<h2>${esc(P.season.title)}</h2><div class="ls-more ls-season">${chips(P.season[sn.name], inSeason)}</div>` : "")
       + `<h2>${t.all}</h2><div class="ls-more">${chips(P.more.budget, global.filter((p) => p.kind === "gband"))}${chips(P.more.ccy, global.filter((p) => p.kind === "ccyBand"))}${chips(P.more.feature, global.filter((p) => p.kind === "gfeature" && !p.ranked))}`
       + `${chips(P.more.combo, global.filter((p) => p.kind === "combo"))}${chips(P.more.ranked, global.filter((p) => p.kind === "gfeature" && p.ranked))}${chips(P.more.near, global.filter((p) => p.kind === "near"))}</div>`
-      + `<h2>${t.by}</h2><div class="ls-more">${hubs.map(country).join("")}</div></main>`,
+      + `<h2>${t.by}</h2><p class="ls-links"><a href="/homes">${esc(P.t2?.hub.crumb || t.by)}</a> · <a href="/regions">${esL ? "Todas las regiones" : "Every region"}</a></p><div class="ls-more">${hubs.map(country).join("")}</div></main>`,
     ld: [{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: P.crumbRoot, item: SITE + "/" }, { "@type": "ListItem", position: 2, name: P.crumbCheap, item: SITE + "/cheap-houses" }] }] as object[],
   };
 }
@@ -196,12 +198,58 @@ function homesHub(plan: ListingPlan, P: Pack, W: World, css: string) {
     + `<h1>${esc(H.h1)}</h1><p class="ls-lede">${esc(H.lede(sc.homes, sc.countries, date))}</p>`
     + `<ol class="ls-grid ls-hub" id="homes">${list.map(card).join("")}</ol>`
     + `<h2 id="compare">${esc(H.title(sc.homes, sc.countries))}</h2><div class="ls-tw" tabindex="0" role="region" aria-label="${esc(H.h1)}"><table><thead><tr><th scope="col">${esc(H.th.country)}</th><th scope="col" class="ls-n">${esc(H.th.homes)}</th><th scope="col" class="ls-n">${esc(H.th.from)}</th><th scope="col" class="ls-n">${esc(H.th.median)}</th><th scope="col">${esc(H.th.guide)}</th></tr></thead><tbody>${rows}</tbody></table></div>`
-    + `<p class="ls-foot">${esc(P.notAgent)}</p><p class="ls-links"><a href="/cheap-houses">${esc(P.more.all)}</a> · <a href="/method">${esc(P.method)}</a></p></main>`;
+    + `<p class="ls-foot">${esc(P.notAgent)}</p><p class="ls-links"><a href="/cheap-houses">${esc(P.more.all)}</a> · <a href="/regions">${P.lang === "es" ? "Todas las regiones" : "Every region"}</a> · <a href="/method">${esc(P.method)}</a></p></main>`;
   const first = list.map((c) => c.homes.find((x) => x.image_urls?.[0])).find(Boolean);
   return {
     title: H.title(sc.homes, sc.countries), desc: H.desc(sc.homes, sc.countries), image: first ? abs(first) : `${SITE}/og-home.jpg`, body,
     ld: [{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: P.crumbRoot, item: SITE + "/" }, { "@type": "ListItem", position: 2, name: H.crumb, item: SITE + "/homes" }] },
       { "@context": "https://schema.org", "@type": "ItemList", name: H.h1, numberOfItems: list.length, itemListElement: list.map((c, i) => ({ "@type": "ListItem", position: i + 1, url: SITE + c.path, name: P.country(String(c.country)) })) }] as object[],
+  };
+}
+
+/** The region pages a /regions hub lists: live region pages of live country pages, grouped by country, biggest first. */
+export function regionGroups(plan: Pick<ListingPlan, "pages">) {
+  const countries = plan.pages.filter((p) => p.kind === "country" && !p.thin);
+  return countries.map((c) => ({ c, regions: plan.pages.filter((p) => p.kind === "region" && !p.thin && p.cc === c.cc).sort((a, b) => b.homes.length - a.homes.length || String(a.region).localeCompare(String(b.region))) }))
+    .filter((g) => g.regions.length > 0)
+    .sort((a, b) => b.regions.reduce((s, r) => s + r.homes.length, 0) - a.regions.reduce((s, r) => s + r.homes.length, 0) || a.c.path.localeCompare(b.c.path));
+}
+
+/** /regions and /es/regions (idea 101): every region with its own page, its count, cheapest and median price, and the
+ * towns of it that have a page. Only pages that exist are linked; no page is listed twice. */
+function regionsHub(plan: ListingPlan, P: Pack, W: World, css: string) {
+  const groups = regionGroups(plan); if (!groups.length) return null;
+  const esL = P.lang === "es";
+  const nReg = groups.reduce((s, g) => s + g.regions.length, 0);
+  const nHomes = new Set(groups.flatMap((g) => g.regions.flatMap((r) => r.homes.map((h) => h.slug)))).size;
+  const date = P.date(W.ctx.updated);
+  const t = esL
+    ? { crumb: "Regiones", h1: "Casas en venta por región", title: `Casas en venta por región: ${nReg} regiones en ${groups.length} países`,
+      lede: `${nReg} regiones de ${groups.length} países tienen su propia página en RealHunt, con ${nHomes} viviendas revisadas por una persona. Cada región sale cuando tiene al menos 3 viviendas. Recuentos del ${date}.`,
+      desc: `${nReg} regiones con casas en venta en ${groups.length} países: cuántas viviendas hay, la más barata y el precio mediano de cada región, con enlace a sus pueblos.`,
+      th: ["Región", "Viviendas", "Desde", "Precio mediano", "Pueblos con página"], all: "Todas las viviendas de", jump: "Ir al país" }
+    : { crumb: "Regions", h1: "Homes for sale by region", title: `Homes for sale by region: ${nReg} regions in ${groups.length} countries`,
+      lede: `${nReg} regions in ${groups.length} countries have their own page on RealHunt, with ${nHomes} homes checked by a person. A region gets a page once it has at least 3 homes. Counts of ${date}.`,
+      desc: `${nReg} regions with homes for sale in ${groups.length} countries: how many homes, the cheapest and the median price of each region, with links to its towns.`,
+      th: ["Region", "Homes", "From", "Median price", "Towns with a page"], all: "Every home in", jump: "Go to a country" };
+  const towns = (r: Facet) => plan.pages.filter((p) => p.kind === "town" && !p.thin && p.cc === r.cc && p.regionSlug === r.regionSlug)
+    .sort((a, b) => b.homes.length - a.homes.length || String(a.town).localeCompare(String(b.town))).slice(0, 6);
+  const row = (r: Facet) => { const prices = r.homes.map((x) => x.price_eur);
+    return `<tr><th scope="row"><a href="${esc(r.path)}">${esc(P.label(r))}</a></th><td class="ls-n">${r.homes.length}</td><td class="ls-n">${esc(P.money(Math.min(...prices)))}</td><td class="ls-n">${esc(P.money(median(prices)))}</td><td>${towns(r).map((x) => `<a href="${esc(x.path)}">${esc(x.town)}</a>`).join(", ") || "·"}</td></tr>`; };
+  const anchor = (cc?: string) => `r-${String(cc || "").replace(/[^a-z0-9-]/g, "")}`;
+  const section = (g: (typeof groups)[number]) => { const name = P.country(String(g.c.country));
+    return `<h2 id="${anchor(g.c.cc)}"><a href="${esc(g.c.path)}">${esc(name)}</a> · ${g.regions.length}</h2><div class="ls-tw" tabindex="0" role="region" aria-label="${esc(`${t.crumb}: ${name}`)}"><table><thead><tr>${t.th.map((h, i) => `<th scope="col"${i > 0 && i < 4 ? ' class="ls-n"' : ""}>${esc(h)}</th>`).join("")}</tr></thead><tbody>${g.regions.map(row).join("")}</tbody></table></div>`
+      + `<p class="ls-links"><a href="${esc(g.c.path)}">${esc(`${t.all} ${name}`)} (${g.c.homes.length})</a></p>`; };
+  const jump = `<nav class="ls-more" aria-label="${esc(t.jump)}"><p>${groups.map((g) => `<a class="ls-chip" href="#${anchor(g.c.cc)}">${esc(P.country(String(g.c.country)))} <small>${g.regions.length}</small></a>`).join(" ")}</p></nav>`;
+  const body = `<main class="rh-static" data-rh-keep data-rh-static data-ls><nav class="ls-crumbs" aria-label="Breadcrumb"><a href="/">${esc(P.crumbRoot)}</a> › <a href="/homes">${esc(P.t2?.hub.crumb || (esL ? "Casas por país" : "Homes by country"))}</a> › <span>${esc(t.crumb)}</span></nav><style>${css}</style>${WAIT}`
+    + `<h1>${esc(t.h1)}</h1><p class="ls-lede">${esc(t.lede)}</p>${jump}${groups.map(section).join("")}`
+    + `<p class="ls-foot">${esc(P.notAgent)}</p><p class="ls-links"><a href="/homes">${esc(P.t2?.hub.crumb || "")}</a> · <a href="/cheap-houses">${esc(P.more.all)}</a> · <a href="/method">${esc(P.method)}</a></p></main>`;
+  const first = groups[0].regions[0].homes.find((x) => x.image_urls?.[0]);
+  const all = groups.flatMap((g) => g.regions);
+  return {
+    title: t.title, desc: t.desc, image: first ? abs(first) : `${SITE}/og-home.jpg`, body,
+    ld: [{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [{ "@type": "ListItem", position: 1, name: P.crumbRoot, item: SITE + "/" }, { "@type": "ListItem", position: 2, name: P.t2?.hub.crumb || t.crumb, item: SITE + "/homes" }, { "@type": "ListItem", position: 3, name: t.crumb, item: SITE + "/regions" }] },
+      { "@context": "https://schema.org", "@type": "ItemList", name: t.h1, numberOfItems: all.length, itemListElement: all.map((r, i) => ({ "@type": "ListItem", position: i + 1, url: SITE + r.path, name: `${P.label(r)}, ${P.country(String(r.country))}` })) }] as object[],
   };
 }
 
