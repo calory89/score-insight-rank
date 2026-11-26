@@ -27,5 +27,7 @@ jobs:
       - name: SEO and speed report of this build
         if: ${{ !cancelled() }}
         run: node seo/tech/ciSummary.mjs
+      - name: Data-quality checks (scripts/quality, batch 19)
+        run: python3 -m unittest scripts/test_quality.py && python3 scripts/quality/audit.py --only snapshot_counts,status_approved,slug_stable --strict
       - name: Thumbnail script self-test
         run: python3 scripts/make_thumbs.py --selftest

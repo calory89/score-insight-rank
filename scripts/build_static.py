@@ -126,6 +126,14 @@ try:
     print("split_es:", split_es.split(OUT), "homes with Spanish texts")
 except Exception as e:
     print("split_es failed (the site keeps serving the full snapshot):", e)
+# 26-nov-2026 (list of 1,000, batch 19): daily data-quality audit (scripts/quality/audit.py). Prints the review lists
+# and writes public/data/quality.json with counts only (idea 920). Compares with the committed snapshot (HEAD), which
+# is yesterday's, so a changed slug shows up (943). Never stops the build and changes no data.
+try:
+    from quality import audit as _quality
+    _quality.main(["--snapshot", os.path.join(OUT, "rh-static.json"), "--prev-git", "HEAD", "--public", os.path.join(OUT, "quality.json")])
+except Exception as e:
+    print("quality audit skipped:", e)
 lists = {d: rpc("top_list", {"p_dest": d}) for d in ["bali", "phuket", "tulum", "batumi", "samui"]}
 json.dump(lists, open(os.path.join(OUT, "top-lists.json"), "w", encoding="utf8"), separators=(",", ":"), ensure_ascii=False)
 slugs = sorted({x["slug"] for v in lists.values() for x in (v or []) if re.match(r"^[a-z0-9-]+$", x["slug"])})
