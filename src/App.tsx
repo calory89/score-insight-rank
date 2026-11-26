@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ScrollKeeper from "./components/realhunt/ScrollKeeper";
+import RouteA11y from "@/components/realhunt/RouteA11y";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -334,7 +335,8 @@ const App = () => (
                 <ScrollKeeper />
                 <Extras />
                 <PageTracker>
-                  <main id="main-content"><AppRoutes /></main>
+                  <RouteA11y />
+                  <div id="main-content" tabIndex={-1}><AppRoutes /></div>
                 </PageTracker>
                 <Suspense fallback={null}><CookieBanner /><CommunityEmailCapture /></Suspense>
               </BrowserRouter>

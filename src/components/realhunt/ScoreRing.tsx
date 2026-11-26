@@ -22,8 +22,8 @@ const ScoreRing = ({ score, size = "md" }: Props) => {
   const fontSize = size === "lg" ? 20 : size === "sm" ? 11 : 14;
 
   return (
-    <span className="inline-flex items-center justify-center relative" style={{ width: dim, height: dim }}>
-      <svg width={dim} height={dim} className="-rotate-90">
+    <span role="img" aria-label={`Score ${Math.round(score)} out of 10`} className="inline-flex items-center justify-center relative" style={{ width: dim, height: dim }}>
+      <svg width={dim} height={dim} className="-rotate-90" aria-hidden="true" focusable="false">
         <circle cx={dim / 2} cy={dim / 2} r={r} fill="none" stroke="#e5e7eb" strokeWidth={stroke} />
         <circle
           cx={dim / 2}
@@ -37,7 +37,7 @@ const ScoreRing = ({ score, size = "md" }: Props) => {
           strokeLinecap="round"
         />
       </svg>
-      <span className={`absolute font-mono font-bold tabular-nums ${t.text}`} style={{ fontSize }}>
+      <span aria-hidden="true" className={`absolute font-mono font-bold tabular-nums ${t.text}`} style={{ fontSize }}>
         {Math.round(score)}
       </span>
     </span>

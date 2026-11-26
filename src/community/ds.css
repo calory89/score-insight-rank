@@ -503,3 +503,88 @@ html.rh-dark .rh-auth .hover\:bg-paper:hover { background: #26282B !important; }
   .hunt details[open]:not(.rh2-faq details):not(.rh-chk-q) > summary:not(:has(svg))::before { transform: rotate(90deg); }
   .hunt select { min-height: 44px !important; }
 }
+
+/* ==========================================================================
+   Accessibility pass (26-nov-2026, list of 1,000, batch 17: 801-850).
+   Measured with axe-core and a text/target scan on 20 pages at 390 px (scripts/a11y-check.mjs).
+   ========================================================================== */
+
+/* 816: one visible focus ring for everything you can reach with the keyboard, inside and outside the shell */
+.hunt :is(a, button, summary, [role="button"], [role="tab"], [tabindex]:not([tabindex="-1"])):focus-visible,
+.rh-auth :is(a, button):focus-visible, .rh-static :is(a, button, summary):focus-visible {
+  outline: 3px solid var(--c-focus, #D4420C); outline-offset: 2px; border-radius: 4px;
+}
+.hunt :is(input, select, textarea):focus-visible, .rh-auth :is(input):focus-visible { outline: 3px solid var(--c-focus, #D4420C); outline-offset: 1px; }
+/* headings that receive focus after a route change (840) do not show a ring to mouse users */
+.hunt :is(h1, h2)[tabindex="-1"]:focus { outline: none; }
+.hunt :is(h1, h2)[tabindex="-1"]:focus-visible { outline: 2px dashed var(--c-ink-3); outline-offset: 4px; }
+
+/* 805: the skip link shows on keyboard focus, above the sticky header */
+a[href="#main-content"]:focus { position: fixed !important; top: 8px; left: 8px; z-index: 1000; width: auto; height: auto; clip: auto; padding: 10px 16px; background: #111214; color: #fff; border-radius: 10px; font: 600 15px/1.2 Inter, system-ui, sans-serif; outline: 3px solid #FF8F62; outline-offset: 2px; }
+
+/* 803: grey text at 4.5:1 or better. The older layers used #797E89 (4.07:1) and #FF5A1F links (3.1:1). */
+.hunt :is(.hm-pop small, .hunt-filter-row label, .hunt-x, .hunt-keepgoing > button) { color: var(--c-ink-3); }
+.hunt .rh-static :is(a, .rh-bc a), .hunt .rh-static em > a { color: var(--c-accent-ink); }
+.hunt .hunt-minicard small, .hunt .hunt-minicard div > small { color: var(--c-ink-3); }
+
+/* 809: no text under 12 px on phones (tab bar, filter labels, key facts, small notes, map legend and clusters) */
+.hunt .hv-tabbar :is(a, button) > span { font-size: 12px; }
+@media (pointer: coarse), (max-width: 700px) {
+  .hunt .hv-tabbar a, .hunt .hv-tabbar button { font-size: 12px; }
+}
+.hunt .hunt-filter-row label > span, .hunt .hunt-filter-row label { font-size: 12px; }
+.hunt ul.rh-kf > li > span, .hunt li.is-score > button > span { font-size: 12px; }
+.hunt .rh-chk-offer small, .hunt .hunt-detail-grid .hunt-report { font-size: 12px; }
+.hunt .hm-legend span { font-size: 12px; }
+.hm-cl small { font-size: 12px; line-height: 1.1; }
+
+/* 845: links in running text are always underlined, not told apart by colour alone */
+.hunt .rh-static :is(p, li, td, dd) a:not([class]), .hunt .hunt-page :is(p, li) > a:not([class]), .rh-auth p a {
+  text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px;
+}
+
+/* 808: on touch screens every control is at least 44 x 44; small links in rows (breadcrumbs, "Guide") get 24 px
+   everywhere (WCAG 2.2 target size) and 44 px tall on touch */
+.hunt :is(.rh-bc, .hv-crumbs) a, .hunt .ls-card a, .hunt .rh-static nav a { display: inline-flex; align-items: center; min-height: 24px; }
+.hunt .hunt-footer a { display: inline-flex; align-items: center; min-height: 24px; }
+@media (pointer: coarse) {
+  .hunt :is(.rh-bc, .hv-crumbs) a { min-height: 44px; }
+  .hunt .leaflet-control-attribution a { display: inline-block; padding: 6px 2px; }
+}
+
+/* 812: reduced motion everywhere (carousels, skeletons, fades, smooth scroll), not only on buttons */
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within { scroll-behavior: auto !important; }
+  .hunt *, .hunt *::before, .hunt *::after, .rh-auth, .rh-auth * {
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important;
+  }
+}
+
+/* 831: text on photos sits on a solid dark chip (counter "3 / 8", rank badge), 7:1 or better */
+.hunt .rh-gal-count { background: rgba(0, 0, 0, .78); color: #fff; }
+.hunt :is(.hx-rank, .hunt-rank) { background: rgba(17, 18, 20, .85); color: #fff; }
+
+/* 802, 828: card galleries show their previous/next buttons when the keyboard is inside them */
+.hunt .rh-gal:focus-within .rh-gal-nav { display: flex; }
+
+/* 836: chip rows that scroll sideways can be reached and scrolled with the keyboard */
+.hunt :is(.hunt-chips, .rf-life, .hm-regions):focus-visible { outline: 3px solid var(--c-focus); outline-offset: 2px; }
+
+/* 825: dark mode keeps secondary text and links readable */
+.hunt.is-dark .rh-static :is(a, .rh-bc a) { color: #FF8F62; }
+.hunt.is-dark :is(.hm-pop small, .hunt-filter-row label, .hunt-minicard small) { color: var(--c-ink-3); }
+/* older layers that kept light colours in dark mode (axe, dark scheme, 20 pages) */
+.hunt.is-dark .rh-static { color: var(--c-ink); }
+.hunt.is-dark .rh-static :is(.rh-bc, .rh-bc [aria-current], nav [aria-current]) { color: var(--c-ink-3); }
+.hunt.is-dark .rh-nc-card { background: var(--c-surface); border-color: var(--c-line); }
+.hunt.is-dark .rh-nc-body small { color: var(--c-ink-3); }
+.hunt.is-dark .rh-lang button { color: var(--c-ink-3); }
+.hunt.is-dark .rh-lang button[aria-pressed="true"] { color: var(--c-ink); }
+.hunt.is-dark .rh-static[data-ls] :is(.ls-chips, .ls-more) small { opacity: 1; color: inherit; }
+.hunt.is-dark .hv-blog-card small { color: #FF8F62; }
+.hunt.is-dark :is(.hv-blog-card em, dl dt, li > em) { color: var(--c-ink-3); }
+
+/* 821: at 200 % zoom (320 px wide) long words, prices and tables do not push the page sideways */
+.hunt .rh-static { overflow-wrap: anywhere; }
+.hunt .rh-static pre { white-space: pre-wrap; }
+

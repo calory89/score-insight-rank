@@ -13,8 +13,8 @@ const ScoreBadge = ({ score, size = "md" }: ScoreBadgeProps) => {
   const t = tone(score);
   const sz = size === "lg" ? "text-2xl px-3 py-1.5" : size === "sm" ? "text-xs px-1.5 py-0.5" : "text-sm px-2 py-1";
   return (
-    <span className={`inline-flex items-center justify-center rounded-md font-mono font-semibold tabular-nums ring-1 ${t.bg} ${t.text} ${t.ring} ${sz}`}>
-      {score.toFixed(1)}
+    <span role="img" aria-label={`Score ${score.toFixed(1)} out of 10`} className={`inline-flex items-center justify-center rounded-md font-mono font-semibold tabular-nums ring-1 ${t.bg} ${t.text} ${t.ring} ${sz}`}>
+      <span aria-hidden="true">{score.toFixed(1)}</span>
     </span>
   );
 };

@@ -27,13 +27,14 @@ export function useScore(deal: { id?: string; nota?: number; dims?: any; amen?: 
 export { DIMS, AMEN } from "./dims";
 import { DIMS, AMEN } from "./dims";
 import { ThumbImg } from "./thumbimg";
+import { scoreLabel } from "@/lib/a11y";
 const tone = (v: number) => (v >= 80 ? "is-great" : v >= 60 ? "is-good" : v >= 40 ? "is-ok" : "is-low");
 const gtone = (n: number) => (n >= 90 ? "is-top" : n >= 80 ? "is-great" : "is-good");
 
 export function ScoreBadge({ deal }: { deal: any }) {
   const s = useScore(deal);
   if (!s) return null;
-  return <span className={"hv-score " + gtone(s.n)} title={t("RealHunt score")} aria-label={`${t("RealHunt score")} ${s.n}`}>{s.n}</span>;
+  return <span role="img" className={"hv-score " + gtone(s.n)} title={t("RealHunt score")} aria-label={scoreLabel(s.n)}>{s.n}</span>;
 }
 
 export function ScoreBars({ deal }: { deal: any }) {

@@ -36,6 +36,7 @@ const theC = (n: string) => (/^(United |Netherlands$|Dominican Republic$|Czech R
 import { regionOf, slugify, isPriceCap, HOME_TYPES } from "./regions";
 import { thumb, onThumbError } from "@/lib/thumbs";
 import { HomesFilterLink } from "./homesFilterLink";
+import { photoOf } from "@/lib/a11y";
 export type FeedParams = { scope?: string; country?: string; category?: string; max_price?: number | null; min_price?: number | null; min_beds?: number | null; price_drop?: boolean; min_sqm?: number | null; sort?: string; limit?: number; offset?: number; ids?: string[]; q?: string; terms?: string[]; min_score?: number | null; need?: string[]; dim_min?: Record<string, number>; costs?: string; fresh?: boolean } & ExtraParams;
 // Guest pass: someone who opens an Insider's invite link (?ref=code) sees the Insider homes too, for
 // 7 days, so what an Insider shares never shows up blurred. The server checks the code belongs to an
@@ -261,14 +262,15 @@ export function Lightbox({ images, start = 0, title, onClose }: { images: string
     <div {...touch} onKeyDown={e=>{if(e.key!=="Tab")return;const nodes=Array.from(e.currentTarget.querySelectorAll<HTMLElement>("button:not([disabled]), [tabindex=\"0\"]"));const first=nodes[0],last=nodes[nodes.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}} className="hunt-lightbox" role="dialog" aria-modal="true" aria-label={`${title} photos`}>
       <button ref={closeRef} className="hunt-lb-close" aria-label="Close photos" onClick={onClose}><X size={22} /></button>
       <div className={"hunt-lb-track" + (zoom !== null ? " is-zoomed" : "")} ref={ref} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
-        {images.map((src, n) => <div key={n} className={"hunt-lb-slide" + (zoom === n ? " is-zoom" : "")}><PropertyImage src={src} fallback={images.find(x=>x!==src)} sizes="100vw" alt={`${title}, photo ${n + 1}`} loading={Math.abs(n - start) < 2 ? "eager" : "lazy"}
+        {images.map((src, n) => <div key={n} className={"hunt-lb-slide" + (zoom === n ? " is-zoom" : "")}><PropertyImage src={src} fallback={images.find(x=>x!==src)} sizes="100vw" alt={`${title}, photo ${n + 1} of ${images.length}`} loading={Math.abs(n - start) < 2 ? "eager" : "lazy"}
           style={zoom === n ? { transformOrigin: origin } : undefined}
           onClick={(e) => { if (zoom === n) { setZoom(null); return; } const r = e.currentTarget.getBoundingClientRect(); setOrigin(`${((e.clientX - r.left) / r.width) * 100}% ${((e.clientY - r.top) / r.height) * 100}%`); setZoom(n); }} /></div>)}
       </div>
       {images.length > 1 && <>
         <button className="hunt-lb-prev" aria-label="Previous photo" onClick={() => go(-1)}><ChevronLeft size={26} /></button>
         <button className="hunt-lb-next" aria-label="Next photo" onClick={() => go(1)}><ChevronRight size={26} /></button>
-        <span className="hunt-lb-count">{i + 1} / {images.length}</span>
+        <span className="hunt-lb-count" aria-hidden="true">{i + 1} / {images.length}</span>
+        <span className="sr-only" aria-live="polite" aria-atomic="true">{photoOf(i + 1, images.length)}</span>
       </>}
     </div>
   );
@@ -990,7 +992,7 @@ export function LangSwitch({ compact = false }: { compact?: boolean }) {
   const l = getLang();
   return (
     <span className={"rh-lang" + (compact ? " is-compact" : "")} role="group" aria-label="Language" translate="no">
-      {LANGS.map((x) => <button key={x.code} type="button" className={l === x.code ? "is-on" : ""} aria-pressed={l === x.code} onClick={() => setLang(x.code)} title={x.label}>{x.code.toUpperCase()}</button>)}
+      {LANGS.map((x) => <button key={x.code} type="button" className={l === x.code ? "is-on" : ""} aria-pressed={l === x.code} onClick={() => setLang(x.code)} title={x.label} aria-label={x.label} lang={x.code}>{x.code.toUpperCase()}</button>)}
     </span>
   );
 }
