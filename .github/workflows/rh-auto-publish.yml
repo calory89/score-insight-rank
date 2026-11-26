@@ -124,6 +124,13 @@ jobs:
             total=$(git ls-tree -r --name-only HEAD | wc -l)
             echo "files in deploy: $total"
             [ "$total" -le 95000 ] || { echo "too many files for Cloudflare Pages ($total)"; return 1; }
+            # 26 Nov 2026: the Pages project realhunt-media (serves realhunt.co, root _s/realhunt.co) is capped at
+            # 20,000 files by the account's plan, and its build step adds the shared assets the pages need (about as many
+            # as dist/assets). Over the cap every deploy fails and the site keeps serving an old build without warning
+            # (15:13-19:00 UTC that day). Stop here instead, with the numbers.
+            rh=$(git ls-tree -r --name-only HEAD -- _s/realhunt.co | wc -l); ra=$(find "$GITHUB_WORKSPACE/dist/assets" -type f | wc -l)
+            echo "realhunt-media deploy: $rh files + about $ra shared assets = $((rh + ra)) (limit 20,000, guard 19,600)"
+            [ $((rh + ra)) -le 19600 ] || { echo "realhunt-media would go over the 20,000-file limit of Cloudflare Pages: bundle more pages (seo/pack.ts) before publishing"; return 1; }
             for t in "" "_s/"; do
               before=$(git ls-tree --name-only "HEAD~1:$t" | sort); after=$(git ls-tree --name-only "HEAD:$t" | sort)
               missing=$(comm -23 <(echo "$before") <(echo "$after"))

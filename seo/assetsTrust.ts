@@ -85,7 +85,11 @@ export function writeTrust(c: AssetCtx, rows: Home[], sets: Sets) {
   const dimCount = (key: string) => rows.filter((r) => r.dims && r.dims[key] != null).length;
 
   // ---------------------------------------------------------------- files the embeds point at
-  for (const r of rows) if (r.nota != null && /^[A-Za-z0-9_-]+$/.test(r.slug)) write(c.root, `badge/score/${r.slug}.svg`, scoreBadgeSvg(r.nota));
+  // 26 Nov 2026: one file for all score badges ({ slug: svg }); the realhunt.co worker (rh-badge-1) serves
+  // /badge/score/<slug>.svg from it. One file per home pushed the realhunt-media deploy over the 20,000-file limit.
+  const badges: Record<string, string> = {};
+  for (const r of rows) if (r.nota != null && /^[A-Za-z0-9_-]+$/.test(r.slug)) badges[r.slug] = scoreBadgeSvg(r.nota);
+  write(c.root, "badge/score.json", JSON.stringify(badges));
   write(c.root, "badge/realhunt-data.svg", dataBadgeSvg("Data: RealHunt"));
   write(c.root, "badge/realhunt-datos.svg", dataBadgeSvg("Datos: RealHunt"));
   for (const x of cs) {
