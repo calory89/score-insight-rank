@@ -6,18 +6,15 @@
 import { snapshotRaw } from "@/lib/snapshotRaw";
 import { lazy, Suspense, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Bell, Check, Link2, NotebookPen, Scale, X } from "lucide-react";
+import { Bell, Check, Scale, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { mediaDeep } from "@/lib/media";
-import { thumb, onThumbError } from "@/lib/thumbs";
 import { money } from "./api";
 import { t } from "./i18n";
 import { useCommunity } from "./ctx";
 import { usePreference } from "./buyer-state";
-import { COMPARE_KEY, MAX_COMPARE, compareHref, priceChange, rememberSavedPrice, savedPrices } from "./compareLogic";
-import { NOTES_KEY, cleanNotes, listHref, parseList } from "./n10/logic";
-import { isGuestSaved, toggleGuestSave } from "./guestSaves";
+import { COMPARE_KEY, MAX_COMPARE, compareHref, rememberSavedPrice } from "./compareLogic";
 import "./compare-tools.css";
 
 // The public snapshot, read directly (importing @/lib/static-db here would patch supabase.rpc a second time).
@@ -114,97 +111,16 @@ export function PriceWatch({ d }: { d: { slug: string; title?: string | null; pr
 }
 
 // ------------------------------------------------------------------------------------------ saved page
+// The saved page and shared lists live in their own chunk (compareSavedUi.tsx, 26-nov-2026): only /hunt/saved needs them.
 export type SavedItem = { id?: string; slug: string; title: string; price_eur: number | null; image: string | null };
-export function SavedHomes({ items, empty, share = true }: { items: SavedItem[]; empty?: ReactNode; share?: boolean }) {
-  const [rawNotes] = usePreference<unknown>(NOTES_KEY, {});
-  const notes = cleanNotes(rawNotes);
-  const [now, setNow] = useState<Record<string, { p: number | null; drop: boolean; img?: string | null }>>({});
-  const [, setList] = useCompare();
-  useEffect(() => {
-    let on = true;
-    loadRows().then((rows) => {
-      if (!on) return;
-      const m: Record<string, { p: number | null; drop: boolean; img?: string | null }> = {};
-      for (const it of items) { const r = rows.find((x: any) => x.slug === it.slug); if (r) m[it.slug] = { p: r.price_eur ?? null, drop: Number(r.price_drop) > 0, img: r.image_urls?.[0] || null }; }
-      setNow(m);
-    }).catch(() => {});
-    return () => { on = false; };
-  }, [items.map((i) => i.slug).join(",")]);
-  const saved = savedPrices();
-  // First time a save is seen here without a stored price: remember the price it had at save time if we know it.
-  useEffect(() => { for (const it of items) rememberSavedPrice(it.slug, it.price_eur); }, [items.map((i) => i.slug).join(",")]);
-  if (!items.length) return <>{empty}</>;
-  const slugs = items.map((i) => i.slug);
-  return (
-    <>
-      {(items.length >= 2 || share) && (
-        <div className="rh-saved-bar">
-          {items.length >= 2 && <Link className="hunt-secondary" to={compareHref(slugs.slice(0, MAX_COMPARE))} onClick={() => setList(slugs.slice(0, MAX_COMPARE))}><Scale size={16} aria-hidden="true" /> {t("Compare saved")}</Link>}
-          {share && <ShareListButton slugs={slugs} />}
-          {items.length > MAX_COMPARE && <small>{t("The first four saved homes. Add or remove homes on the compare page.")}</small>}
-        </div>
-      )}
-      <div className="hunt-small-grid rh-saved-grid">
-        {items.map((d) => {
-          const cur = now[d.slug]?.p ?? d.price_eur;
-          const then = saved[d.slug]?.p ?? d.price_eur;
-          const ch = priceChange(then, cur);
-          const dropped = (ch && ch.diff < 0) || now[d.slug]?.drop;
-          const img = d.image || now[d.slug]?.img || null;
-          return (
-            <div className="rh-saved-card" key={d.slug}>
-              <Link className="hunt-mini" to={`/deal/${encodeURIComponent(d.slug)}`}>
-                <span className="rh-saved-img">
-                  {img ? <img src={thumb(img)} alt={d.title} loading="lazy" onError={(e) => onThumbError(e.currentTarget, img)} /> : <span className="rh-saved-noimg" />}
-                  {dropped && <span className="rh-saved-badge">{t("Price dropped")}</span>}
-                </span>
-                <div>
-                  <strong>{cur ? money(cur) : ""}</strong>
-                  {ch && <span className={"rh-saved-change " + (ch.diff < 0 ? "is-down" : "is-up")}>{`${ch.diff < 0 ? "−" : "+"}${money(Math.abs(ch.diff))} (${ch.diff < 0 ? "−" : "+"}${Math.abs(ch.pct)}%)`} <span>{t("since you saved")}</span></span>}
-                  <h2>{d.title}</h2>
-                  {notes[d.slug] && <p className="rh-saved-note"><NotebookPen size={13} aria-hidden="true" /> <span>{notes[d.slug].text}</span></p>}
-                </div>
-              </Link>
-              <CompareToggle deal={d} className="rh-saved-cmp" />
-            </div>
-          );
-        })}
-      </div>
-    </>
-  );
+const SavedUi = () => import("./compareSavedUi");
+const LazySaved = lazy(() => SavedUi().then((m) => ({ default: m.SavedHomes })));
+const LazyShared = lazy(() => SavedUi().then((m) => ({ default: m.SharedList })));
+const LazySuggest = lazy(() => SavedUi().then((m) => ({ default: m.SavedSuggestions })));
+const wait = <div className="rh-cmp-skel" aria-busy="true"><i /><i /></div>;
+export function SavedHomes(p: { items: SavedItem[]; empty?: ReactNode; share?: boolean }) {
+  if (!p.items.length) return <>{p.empty}</>;
+  return <Suspense fallback={wait}><LazySaved {...p} /></Suspense>;
 }
-
-// ------------------------------------------------------------------------------------- shared list (list2 28)
-// "Share this list" puts the saved homes in a link (/hunt/saved?homes=a,b,c). Nothing is stored on a server: whoever
-// opens the link sees the same homes and can keep them in their own browser.
-function ShareListButton({ slugs }: { slugs: string[] }) {
-  const [done, setDone] = useState(false);
-  useEffect(() => { if (!done) return; const id = setTimeout(() => setDone(false), 2500); return () => clearTimeout(id); }, [done]);
-  const url = (typeof location !== "undefined" ? location.origin : "https://realhunt.co") + listHref(slugs);
-  const go = async () => {
-    try { (window as any).clarity?.("event", "saved_list_share"); } catch { /* blocked */ }
-    try { if ((navigator as any).share && matchMedia("(pointer: coarse)").matches) { await (navigator as any).share({ title: t("My saved homes on RealHunt"), url }); return; } } catch { return; }
-    try { await navigator.clipboard.writeText(url); setDone(true); } catch { window.prompt(t("Copy this link"), url); }
-  };
-  return <button type="button" className="hunt-secondary" onClick={go} aria-live="polite">{done ? <Check size={16} aria-hidden="true" /> : <Link2 size={16} aria-hidden="true" />} {t(done ? "Link copied" : "Share this list")}</button>;
-}
-
-/** A list someone shared by link: the homes in their order, and one button to keep them all on this device. */
-export function SharedList({ raw }: { raw: string }) {
-  const slugs = parseList(raw);
-  const [rows, setRows] = useState<any[] | null>(null);
-  const [kept, setKept] = useState(false);
-  useEffect(() => { let on = true; loadRows().then((r) => { if (on) setRows(slugs.map((s) => r.find((x: any) => x.slug === s)).filter(Boolean)); }).catch(() => on && setRows([])); return () => { on = false; }; }, [raw]);
-  const items: SavedItem[] = (rows || []).map((d: any) => ({ id: d.id, slug: d.slug, title: d.title, price_eur: d.price_eur ?? null, image: d.image_urls?.[0] || null }));
-  const keepAll = () => { for (const d of rows || []) if (!isGuestSaved(d.id)) toggleGuestSave(d); setKept(true); };
-  return (
-    <section className="rh-shared-list" aria-labelledby="rh-shared-h">
-      <h2 id="rh-shared-h">{t("A list of homes shared with you")}</h2>
-      {!rows ? <div className="rh-cmp-skel" aria-busy="true"><i /><i /></div> : !items.length ? <p>{t("These homes are no longer on RealHunt.")}</p> : <>
-        <p className="hunt-fine">{items.length === 1 ? t("1 home") : `${items.length} ${t("homes")}`}{slugs.length > items.length ? ` · ${t("some homes in the link are no longer on RealHunt")}` : ""}</p>
-        <div className="hunt-row"><button type="button" className="hunt-primary" onClick={keepAll} disabled={kept}>{kept ? <><Check size={16} aria-hidden="true" /> {t("Saved on this device")}</> : t("Save them all on this device")}</button></div>
-        <SavedHomes items={items} share={false} />
-      </>}
-    </section>
-  );
-}
+export function SharedList(p: { raw: string }) { return <Suspense fallback={wait}><LazyShared {...p} /></Suspense>; }
+export function SavedSuggestions() { return <Suspense fallback={null}><LazySuggest /></Suspense>; }

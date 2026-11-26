@@ -49,7 +49,7 @@ import { SaveNudgeMount } from "./n9/mount";
 import { SourceLine, GroupBadge } from "./n10/inline";
 import { feed as feedV3, type FeedParams, type Row, Filters, StatusTags, VerifiedLine, CostPanel, Lightbox, SimilarHomes, InfoRequest, DropBar, Personalise, ExploreLinks, SwipePage, LeaderboardPage, InvitePage, CollectionPage, GuidePage, GUIDES, HomesPage, ServicesPage, AlertsPage, AdminInbox, AdminVerify, InstallButton, LangSwitch, useLangVersion, useReferralCapture, ShareSavedToggle, LivePodium, bumpStreak, streakNow, shareRow } from "./extras";
 import { CardCheck, CheckLayer } from "./check";
-import { CompareTray, CompareRoute, PriceWatch, SavedHomes, SharedList } from "./compareTools";
+import { CompareTray, CompareRoute, PriceWatch, SavedHomes, SavedSuggestions, SharedList } from "./compareTools";
 const slugCountryKey = (c?: string | null) => String(c || "").toLowerCase().trim().replace(/\s+/g, "-");
 import { t } from "./i18n";
 import { FindHomePage, FindHomeCTA } from "./findhome";
@@ -59,7 +59,7 @@ import { HomeCard, HomeCardSkeleton } from "./homecards";
 
 import { LogoMark } from "@/components/realhunt/Logo";
 import { isEs, esPlace, searchQuery } from "@/lib/lang";
-import { guestSaves, isGuestSaved, toggleGuestSave, clearGuestSaves, type GuestSave } from "./guestSaves";
+import { guestSaves, isGuestSaved, toggleGuestSave, clearGuestSaves, keepGuestSaves, mergeGuestSaves, GUEST_MAX, type GuestSave } from "./guestSaves";
 import { Card4, CardSkeleton, Freshness, TabBar, DetailBar, HeartVote, ShareButton, SaveHeart, remember, rowCache, takeDetail, prefetchDetail, preloadImages } from "./v4";
 import { bumpIx, FLAG as FLAG_ } from "@/lib/rh";
 import { bumpStat } from "./v4";
@@ -243,10 +243,13 @@ function Shell({ children }: { children: ReactNode }) {
     const g = guestSaves();
     if (!g.length) return;
     (async () => {
-      for (const x of g) { if (!session.saved.includes(x.id)) { try { await api("save", session.token, { id: x.id, saved: true }); } catch { /* gone or already saved */ } } }
-      setSession((s: Session | null) => s ? { ...s, saved: Array.from(new Set([...s.saved, ...g.map((x) => x.id)])) } : s);
-      clearGuestSaves();
-      setNotice(g.length === 1 ? "Your saved home is now in your account." : `Your ${g.length} saved homes are now in your account.`);
+      // list 851 (26-nov-2026): a save that failed stays on this device and is tried again next time
+      const r = await mergeGuestSaves(g, session.saved, (id) => api("save", session.token, { id, saved: true }));
+      setSession((s: Session | null) => s ? { ...s, saved: Array.from(new Set([...s.saved, ...r.moved])) } : s);
+      if (r.failed.length) keepGuestSaves(r.failed); else clearGuestSaves();
+      const n = r.moved.length;
+      if (n) setNotice(n === 1 ? "Your saved home is now in your account." : `Your ${n} saved homes are now in your account.`);
+      else if (r.failed.length) setNotice("We could not move your saved homes yet. They are still on this device; we will try again.");
     })();
   }, [user?.id, session?.token]);
   useEffect(() => {
@@ -1717,6 +1720,7 @@ function Mine() {
         <SavedSearches />
         <p className="hunt-guest-note">Saved on this device. <button className="hunt-link" onClick={requireUser}>Create a free account</button> to keep them on your phone and computer and get an email if the price drops.</p>
         <SavedHomes items={guest.map((g) => ({ id: g.id, slug: g.slug, title: g.title, price_eur: g.price_eur, image: g.image }))} />
+        {guest.length >= GUEST_MAX - 20 && <p className="hunt-fine" role="note">{`${guest.length} / ${GUEST_MAX}`} {t("homes saved on this device. Past that the oldest ones make room for new ones; a free account keeps them all.")}</p>}
       </div>
     );
   if (!user)
@@ -1730,6 +1734,7 @@ function Mine() {
         </div>
         <p className="hunt-fine">{t("Saved homes on another device? Sign in to see them here.")}</p>
         {pathname.endsWith("saved") && <SavedSearches />}
+        {pathname.endsWith("saved") && <SavedSuggestions />}
       </div>
     );
   return (
@@ -1750,7 +1755,7 @@ function Mine() {
       {!data ? (
         error ? null : <Loading />
       ) : pathname.endsWith("saved") ? (
-        <SavedHomes items={data.saved.map((d: any) => ({ id: d.id, slug: d.slug, title: d.title, price_eur: d.price_eur ?? null, image: d.image_urls?.[0] || null }))} empty={<p>{t("No saved homes yet. Tap the bookmark on any home to keep it here.")}</p>} />
+        <SavedHomes items={data.saved.map((d: any) => ({ id: d.id, slug: d.slug, title: d.title, price_eur: d.price_eur ?? null, image: d.image_urls?.[0] || null }))} empty={<><p>{t("No saved homes yet. Tap the bookmark on any home to keep it here.")}</p><SavedSuggestions /></>} />
       ) : (
         <>
           <Link className="hunt-primary" to="/submit">

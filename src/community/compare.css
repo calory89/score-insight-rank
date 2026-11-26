@@ -125,3 +125,5 @@
   .rh-cmp-gh { position: static; padding-top: 12px; }
   a[href]::after { content: none !important; }
 }
+/* 26-nov-2026 (batch 18): clear all */
+.rh-cmp-clear { display: inline-flex; align-items: center; gap: 5px; min-height: 44px; font-size: 13px; }

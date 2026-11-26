@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import ListingInfo from "@/components/realhunt/ListingInfo";
 import RHNav from "@/components/realhunt/RHNav";
 import AuthModal from "@/components/realhunt/AuthModal";
-import { Heart, Bell, MessageSquare, User, LogOut, Check, Trash2, Share2, Gift, Columns, LayoutDashboard, Sparkles, Clock, ChevronRight, Map } from "lucide-react";
+import { Heart, Bell, MessageSquare, User, LogOut, Check, Download, Trash2, Share2, Gift, Columns, LayoutDashboard, Sparkles, Clock, ChevronRight, Map } from "lucide-react";
 import { db, eur, FLAG, norm, IG, srcSet, track, MAX_PRICE } from "@/lib/rh";
 
 const TABS = [["home", "Overview", LayoutDashboard], ["saved", "Saved homes", Heart], ["alerts", "Alerts", Bell], ["requests", "My requests", MessageSquare], ["profile", "Profile", User]] as const;
@@ -128,6 +128,15 @@ const Account = () => {
               </div>
               <button className="rh-btn-primary self-start inline-flex items-center gap-2 mt-2">{ok ? <><Check size={15} /> Saved</> : "Save"}</button>
               {p.referral_code && <div className="mt-6 border border-hairline rounded-2xl bg-white p-5"><p className="font-display text-[18px] inline-flex items-center gap-2"><Gift size={16} /> Invite a friend</p><p className="text-[13px] text-ink-muted mt-1">Both of you get new homes 24 hours before everyone else.</p><div className="mt-3 flex gap-2"><input readOnly value={`https://realhunt.co/?ref=${p.referral_code}`} className={inp + " flex-1 text-[13px]"} /><button type="button" onClick={() => copy(`https://realhunt.co/?ref=${p.referral_code}`, "ref")} className="rh-btn-primary !px-4 !py-2.5 !text-[13px]">{copied === "ref" ? "Copied" : "Copy"}</button></div></div>}
+              {/* list 884 (26-nov-2026): everything this page knows about you as one file, and how to close the account */}
+              <div className="mt-6 border border-hairline rounded-2xl bg-white p-5">
+                <p className="font-display text-[18px] inline-flex items-center gap-2"><Download size={16} /> Your data</p>
+                <p className="text-[13px] text-ink-muted mt-1">Download your profile, saved homes, alerts and requests as one file. To delete your account and everything in it, write to us from this email address and we confirm by email once it is done.</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button type="button" onClick={() => { try { const data = { exported_at: new Date().toISOString(), profile: { ...p, email: p.email || user.email }, saved_homes: saved, alerts, requests: reqs }; const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" })); const a = document.createElement("a"); a.href = url; a.download = "realhunt-my-data.json"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000); track("account_export"); } catch { /* old browser */ } }} className="rh-btn-primary !px-4 !py-2.5 !text-[13px] inline-flex items-center gap-1.5"><Download size={14} /> Download my data</button>
+                  <a href={`mailto:carlos@equinoxinvestmentgroup.com?subject=${encodeURIComponent("Delete my RealHunt account")}&body=${encodeURIComponent(`Please delete my RealHunt account (${p.email || user.email}) and all its data.`)}`} className="px-4 py-2.5 rounded-full border border-hairline text-[13px] hover:border-ink inline-flex items-center gap-1.5"><Trash2 size={14} /> Ask to delete my account</a>
+                </div>
+              </div>
             </form>
           )}
 

@@ -6,11 +6,12 @@
 // Facts come from the public snapshot (/data/rh-static.json) and src/community/checkLogic.ts.
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Check, Plus, Printer, Scale, Search, Share2, X } from "lucide-react";
+import { Calculator, Check, Download, Plus, Printer, Scale, Search, Share2, Trash2, X } from "lucide-react";
 import { loadRows } from "./compareTools";
 import { thumb, onThumbError } from "@/lib/thumbs";
 import { money } from "./api";
 import { t } from "./i18n";
+import { tr } from "@/lib/lang";
 import { useCommunity } from "./ctx";
 import { useBuyerGroup } from "./check";
 import { GROUPS, type Group } from "./checkLogic";
@@ -18,9 +19,11 @@ import { DIMS } from "./dims";
 import { guestSaves } from "./guestSaves";
 import { usePreference } from "./buyer-state";
 import { COMPARE_KEY, MAX_COMPARE, bestIndexes, compareHref, facts, parseIds, type Better, type CompareRow, type Facts, type Place } from "./compareLogic";
+import { areaMedian, download, toCsv, vsMedian } from "./compareSavedUi";
 import "./compare.css";
 
-type Line = { k: string; label: string; help?: string; show: (f: Facts, d: CompareRow) => ReactNode; v?: (f: Facts) => number | null; better?: Better; when?: (fs: Facts[]) => boolean };
+type F = Facts & { area: { scope: string; median: number; n: number } | null; vsArea: number | null };
+type Line = { k: string; label: string; help?: string; show: (f: F, d: CompareRow) => ReactNode; v?: (f: F) => number | null; better?: Better; when?: (fs: F[]) => boolean };
 const NA = () => <span className="rh-cmp-na">{t("Not stated")}</span>;
 const kmText = (p: Place) => (p ? (p.km < 1 ? t("under 1 km") : `${p.km < 10 ? Math.round(p.km * 10) / 10 : Math.round(p.km)} km`) : null);
 const place = (p: Place, withName = true) => (p ? <>{kmText(p)}{withName && p.name ? <small>{p.name}</small> : null}</> : <NA />);
@@ -32,6 +35,7 @@ const GROUPS_OF_ROWS: { title: string; lines: Line[] }[] = [
   { title: "Price & costs", lines: [
     { k: "price", label: "Price", show: (f) => (f.price ? <strong>{money(f.price)}</strong> : <NA />), v: (f) => f.price, better: "min" },
     { k: "perSqm", label: "Price per m²", show: (f) => (f.perSqm ? `${money(f.perSqm)}/m²` : <NA />), v: (f) => f.perSqm, better: "min" },
+    { k: "vsArea", label: "Price per m² against the area", help: "Against the median of the homes on RealHunt in the same region, or the country when the region has fewer than five", show: (f) => (f.area && f.vsArea != null ? <>{f.vsArea === 0 ? t("Same as the median") : <>{`${f.vsArea < 0 ? "−" : "+"}${Math.abs(f.vsArea)}%`} {t(f.vsArea < 0 ? "below the median" : "above the median")}</>}<small>{money(f.area.median)}/m² · {f.area.scope} · {f.area.n} {t("homes")}</small></> : <NA />), v: (f) => f.vsArea, better: "min", when: (fs) => fs.some((f) => f.vsArea != null) },
     { k: "allIn", label: "All-in to buy", help: "Price plus typical taxes and fees to buy in that country", show: (f) => (f.allInLow ? <>≈ {money(nice(f.allInLow))}{f.allInHigh && Math.round(f.allInHigh) !== Math.round(f.allInLow) ? <small>{t("up to")} {money(nice(f.allInHigh))}</small> : null}</> : <NA />), v: (f) => f.allInLow, better: "min" },
     { k: "monthly", label: "Monthly costs", help: "Community fee (HOA) plus property tax, when the listing states them", show: (f) => (f.monthly ? <>≈ {money(Math.round(f.monthly))}<small>{t("a month")}</small></> : <NA />), v: (f) => f.monthly, better: "min" },
     { k: "pct", label: "Buying costs", help: "Taxes, notary and registry as a share of the price", show: (f) => pctText(f.costPct) || <NA />, v: (f) => (f.costPct ? f.costPct[0] : null), better: "min" },
@@ -84,14 +88,35 @@ export default function ComparePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
   useEffect(() => { document.title = t("Compare homes side by side") + " · RealHunt"; }, []);
+  // list 854: a comparison link is for people, not for search engines (every mix of homes would be a page)
+  useEffect(() => {
+    let m = document.querySelector('meta[name="robots"]') as HTMLMetaElement | null; const before = m?.content ?? null;
+    if (!m) { m = document.createElement("meta"); m.name = "robots"; document.head.appendChild(m); }
+    m.content = "noindex, follow";
+    return () => { if (m) { if (before == null) m.remove(); else m.content = before; } };
+  }, []);
 
   const homes = useMemo(() => (rows ? ids.map((s) => rows.find((r) => r.slug === s)).filter(Boolean) as CompareRow[] : []), [rows, key]);
-  const fs = useMemo(() => homes.map((h) => facts(h, group as Group)), [homes, group]);
+  const fs = useMemo(() => homes.map((h) => { const f = facts(h, group as Group); const area = rows ? areaMedian(h, rows) : null; return { ...f, area, vsArea: area ? vsMedian(f.perSqm, area.median) : null }; }), [homes, group, rows]);
   const missing = rows ? ids.filter((s) => !rows.some((r) => r.slug === s)) : [];
   const setIds = (next: string[]) => { setStored(next); navigate(next.length ? compareHref(next) : "/compare", { replace: true }); };
   const remove = (slug: string) => setIds(ids.filter((s) => s !== slug));
   const add = (slug: string) => { if (ids.includes(slug) || ids.length >= MAX_COMPARE) return; setIds([...ids, slug]); setAdding(false); };
 
+  // list 887: the two first homes in the "compare the total cost of two homes" calculator, prices filled in
+  const calcHref = homes.length >= 2 && homes[0].price_eur && homes[1].price_eur && homes[0].country && homes[1].country
+    ? `/tools/compare-buying-costs?a=${encodeURIComponent(String(homes[0].country).toLowerCase().replace(/\s+/g, "-"))}&pa=${Math.round(homes[0].price_eur)}&b=${encodeURIComponent(String(homes[1].country).toLowerCase().replace(/\s+/g, "-"))}&pb=${Math.round(homes[1].price_eur)}`
+    : null;
+  // list 895: every row of the table, as text, one column per home
+  function csv() {
+    const all = [...lines.flatMap((g) => g.lines), ...(hasDims ? dimLines : [])];
+    const text = (node: ReactNode): string => typeof node === "string" || typeof node === "number" ? String(node) : Array.isArray(node) ? node.map(text).join(" ") : node && typeof node === "object" && "props" in (node as any) ? text((node as any).props.children) : "";
+    const head = ["", ...homes.map((h) => String(h.title || h.slug).trim())];
+    const body: unknown[][] = [["URL", ...homes.map((h) => `${location.origin}/deal/${encodeURIComponent(h.slug)}`)]];
+    for (const l of all) body.push([tr(l.label), ...homes.map((h, i) => { const v = text(l.show(fs[i], h)).replace(/\s+/g, " ").trim(); return v ? tr(v) : tr("Not stated"); })]);
+    download("realhunt-compare.csv", toCsv(head, body));
+    try { (window as any).clarity?.("event", "compare_csv"); } catch { /* blocked */ }
+  }
   async function share() {
     const url = location.origin + compareHref(ids);
     try {
@@ -148,6 +173,9 @@ export default function ComparePage() {
           </label>
           {n > 0 && <button type="button" className="hunt-secondary" onClick={share}><Share2 size={16} aria-hidden="true" /> {t("Share link")}</button>}
           {n > 0 && <button type="button" className="hunt-secondary" onClick={() => window.print()}><Printer size={16} aria-hidden="true" /> {t("Print")}</button>}
+          {n > 0 && <button type="button" className="hunt-secondary" onClick={csv}><Download size={16} aria-hidden="true" /> {t("Download CSV")}</button>}
+          {n >= 2 && calcHref && <Link className="hunt-secondary" to={calcHref}><Calculator size={16} aria-hidden="true" /> {t("Buying costs calculator")}</Link>}
+          {ids.length > 0 && <button type="button" className="hunt-link rh-cmp-clear" onClick={() => setIds([])}><Trash2 size={15} aria-hidden="true" /> {t("Clear all")}</button>}
           {ids.length < MAX_COMPARE && <button type="button" className="hunt-primary" aria-expanded={adding} onClick={() => setAdding((v) => !v)}><Plus size={16} aria-hidden="true" /> {t("Add home")}</button>}
         </div>
         {adding && rows && <AddHome rows={rows} ids={ids} onAdd={add} onClose={() => setAdding(false)} />}

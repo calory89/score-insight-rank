@@ -1,4 +1,4 @@
-import { isGuestSaved, toggleGuestSave } from "./guestSaves";
+import { isGuestSaved, savedNotice, toggleGuestSave } from "./guestSaves";
 import { fmtDay } from "@/lib/dates";
 import { barPlace } from "./keyfactsLogic";
 import { rememberSavedPrice } from "./savedPrice";
@@ -243,7 +243,7 @@ export function SaveHeart({ deal, className = "hv-save" }: { deal: Deal; classNa
           // No account needed to save: kept in this browser and moved to the account on sign-in.
           const now = toggleGuestSave(deal as any);
           if (now) rememberSavedPrice(deal.slug, deal.price_eur, true);
-          setNotice(now ? "Saved on this device. Create a free account to keep it everywhere." : "Removed from saved.");
+          setNotice(now ? savedNotice(deal as any, true) : "Removed from saved.");
           if (now) { bumpStat("saves"); track("community_save", { find: deal.slug, meta: { guest: true } }); }
           bumpIx();
           return;
@@ -252,7 +252,7 @@ export function SaveHeart({ deal, className = "hv-save" }: { deal: Deal; classNa
         try {
           await call("save", { id: deal.id, saved: !saved });
           setSession((s: Session) => ({ ...s, saved: saved ? s.saved.filter((x) => x !== deal.id) : [...s.saved, deal.id] }));
-          setNotice(saved ? "Removed from saved." : "Saved ✓ Add it to a board from its page.");
+          setNotice(saved ? "Removed from saved." : savedNotice(deal as any, false));
           if (!saved) {bumpStat("saves");track("community_save",{find:deal.slug});rememberSavedPrice(deal.slug, deal.price_eur, true);}
           bumpIx();
         } catch (err) { setNotice((err as Error).message); } finally { setBusy(false); }
