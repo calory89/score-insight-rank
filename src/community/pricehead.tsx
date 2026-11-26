@@ -11,7 +11,7 @@ import { rates, ratesDate, visitorCurrency } from "./extras";
 import { usePreference } from "./buyer-state";
 import { isEs } from "@/lib/lang";
 import { PICK_CCY, listingCurrency } from "./n10/logic";
-import { dayLabel } from "./n9/status";
+import { dayLabel, isGone, isUnconfirmed } from "./n9/status";
 import { priceSummary, vsMedian, MONTHLY_LABEL, costsNotStated, NOT_STATED_LABEL } from "./priceLogic";
 import type { CheckRow } from "./checkLogic";
 import { perSqm, livingSqm } from "./sqmLogic";
@@ -82,4 +82,15 @@ export function PriceHead({ d, hidePer = false, after }: { d: CheckRow & { sqm?:
       )}
     </div>
   );
+}
+
+/** 26-nov-2026 (list of 1,000, idea 11): the day the nightly check last found the original advert online, right under
+ * the price (it was only at the end of the page). Not shown when a person checked it (VerifiedLine says so) or when the
+ * advert is gone or unconfirmed (their notices say it). */
+export function CheckedLine({ d }: { d: { verified_at?: string | null; src_ok_at?: string | null; sold_reports?: number | null; available_reports?: number | null; src_last?: string | null } }) {
+  if (d.verified_at || !d.src_ok_at || isGone(d as any) || isUnconfirmed(d as any)) return null;
+  const es = isEs(), day = dayLabel(d.src_ok_at, es ? "es" : "en");
+  if (!day) return null;
+  const iso = new Date(d.src_ok_at).toISOString().slice(0, 10);
+  return <p className="hunt-fine rh-ph-checked">{es ? "Anuncio original visto publicado el " : "Original advert found online on "}<time dateTime={iso}>{day}</time></p>;
 }

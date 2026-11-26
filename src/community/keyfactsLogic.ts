@@ -2,14 +2,17 @@
 // src/test/keyfacts.test.ts. Only numbers the listing gives: a tile is left out when its number is missing.
 // 21-nov-2026 (list 2 ideas 74 and 85): €/m² only for a living area (./sqmLogic), bathrooms only when the advert gives them.
 import { perSqm } from "./sqmLogic";
-export type KeyFact = { k: "sqm" | "per" | "beds" | "baths" | "score"; label: string; value: string };
+export type KeyFact = { k: "sqm" | "per" | "beds" | "baths" | "score"; label: string; value: string; /** the size in square feet, for US and UK homes (idea 45) */ sqft?: number };
+/** Countries where buyers read sizes in square feet: the size tile adds them (26-nov-2026, list of 1,000 idea 45). */
+export const SQFT_COUNTRIES = new Set(["United States", "United Kingdom"]);
+export const SQFT_PER_M2 = 10.7639;
 
 const eur = (n: number) => new Intl.NumberFormat("en-IE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(n);
 
-export function keyFacts(d: { price_eur?: number | null; sqm?: number | null; bedrooms?: number | null; bathrooms?: number | null; title?: string | null; why_great?: string | null; why_cheap?: string | null }, score?: number | null): KeyFact[] {
+export function keyFacts(d: { price_eur?: number | null; sqm?: number | null; bedrooms?: number | null; bathrooms?: number | null; title?: string | null; why_great?: string | null; why_cheap?: string | null; country?: string | null }, score?: number | null): KeyFact[] {
   const out: KeyFact[] = [];
   const sqm = d.sqm != null && d.sqm > 0 ? Math.round(d.sqm) : null;
-  if (sqm) out.push({ k: "sqm", label: "Size", value: `${sqm} m²` });
+  if (sqm) out.push({ k: "sqm", label: "Size", value: `${sqm} m²`, ...(SQFT_COUNTRIES.has(String(d.country || "")) ? { sqft: Math.round(sqm * SQFT_PER_M2) } : {}) });
   const per = perSqm(d);
   if (per > 0) out.push({ k: "per", label: "Price per m²", value: eur(Math.round(per)) });
   if (d.bedrooms != null && d.bedrooms >= 0) out.push({ k: "beds", label: "Bedrooms", value: String(d.bedrooms) });

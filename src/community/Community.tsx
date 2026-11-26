@@ -69,7 +69,7 @@ import { PodiumHero, Vibes, VIBES, SmartSearch, EmptyState, DetailGallery, Ameni
 import { useTheme, ThemeButton, Welcome, BoardButton, BoardsSection, BoardPage, CompareButton, ComparePage, MapFab, NotifBell, ProfilePage, saveOrder, useHomeSwipe, HomeNav } from "./v5";
 import { Ctx, useCommunity } from "./ctx";
 import { AccountMenu } from "./accountmenu";
-import { PriceHead } from "./pricehead";
+import { PriceHead, CheckedLine } from "./pricehead";
 import { seedBootRow, openedHere } from "./bootrow";
 seedBootRow(rowCache); // a home page opened directly paints from the row in its own HTML (seo/dealShell.ts)
 const MapView = lazy(() => import("./map"));
@@ -967,6 +967,8 @@ function Availability({ dealId }: { dealId: string }) {
   );
 }
 
+// the address and title the visit started with (the prerendered page of a home has the right title already)
+const FIRST_PAGE = typeof window === "undefined" ? { path: "", title: "" } : { path: location.pathname.replace(/\/$/, ""), title: /\/deal\//.test(location.pathname) ? document.title : "" };
 function Detail() {
   const [detailParams] = useSearchParams();
   const scope = "all"; void detailParams;
@@ -1003,8 +1005,12 @@ function Detail() {
   useEffect(() => { if (d?.image_urls) preloadImages(d.image_urls.slice(0, 8)); }, [d?.id]);
   useEffect(() => {
     if (!d) return;
-    const where = d.location_name || d.country || "";
-    document.title = `${d.price_eur != null ? money(d.price_eur) + " · " : ""}${cleanTitle(d)}${where && !cleanTitle(d).includes(where) ? " · " + where : ""} · RealHunt`;
+    // 26-nov-2026 (list of 1,000, idea 3): the same title as the prerendered page (src/community/homeLead.ts); the page
+    // this visit opened on keeps the title its HTML came with (it may be the longer one two homes with the same short
+    // title get)
+    // (loaded on its own: the title rules stay out of the first scripts, which have a size budget)
+    if (location.pathname.replace(/\/$/, "") === FIRST_PAGE.path && FIRST_PAGE.title) document.title = FIRST_PAGE.title;
+    else { document.title = `${cleanTitle(d)} · RealHunt`; if (d.price_eur != null) import("./homeTitle").then((m) => { if (location.pathname.endsWith("/" + d.slug)) document.title = m.dealDocTitle(d as any, isEs() ? "es" : "en"); }).catch(() => {}); }
     const desc = `${cleanTitle(d)}${d.price_eur != null ? " for " + money(d.price_eur) : ""}. Scored and ranked by RealHunt.`;
     const set = (sel: string, attr: string, key: string, val: string) => {
       let m = document.head.querySelector(sel) as HTMLMetaElement | null;
@@ -1043,7 +1049,7 @@ function Detail() {
           <GroupBadge d={d as any} />
           <PriceHead d={d as any} hidePer={!!(d.sqm && d.price_eur)} after={<KeyFacts deal={d} />} />
           <StatusTags deal={d as Row} />
-          <VerifiedLine deal={d as Row} />
+          <VerifiedLine deal={d as Row} /><CheckedLine d={d as any} />
           <AiCheckNote d={d as any} />
           {isGone(d as any) && <div className="n9-gone-slot"><Suspense fallback={null}><GoneNotice deal={d as any} /></Suspense></div>}
           {isUnconfirmed(d as any) && <div className="n9-gone-slot"><Suspense fallback={null}><UnconfirmedNotice deal={d as any} /></Suspense></div>}
@@ -1074,9 +1080,10 @@ function Detail() {
             <BoardButton deal={d} />
             <ComparePick deal={d as Row} />
           </div>
-          <p className="hunt-fine">
-            {num(d.views)} {t("views")}{Number(d.saves) > 0 && <>{", "}{num(d.saves)} {t("saves")}</>}
-          </p>
+          {/* idea 49: no "0 views": a counter is shown only when there is something to count */}
+          {(Number(d.views) > 0 || Number(d.saves) > 0) && <p className="hunt-fine">
+            {Number(d.views) > 0 && <>{num(d.views)} {t("views")}</>}{Number(d.views) > 0 && Number(d.saves) > 0 && ", "}{Number(d.saves) > 0 && <>{num(d.saves)} {t("saves")}</>}
+          </p>}
           <ScoreBars deal={d} />
           <DecisionFacts deal={d as Row}/><TaxPanel deal={d as Row}/><Nearby deal={d} />
           <Suspense fallback={null}><CheckedBlock deal={d as any} /></Suspense>

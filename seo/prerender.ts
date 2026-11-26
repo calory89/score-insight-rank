@@ -17,7 +17,7 @@ import path from "path";
 import fs from "fs";
 import { weatherShell } from "../src/pages/wx/shell";
 import { DIMS, AMEN } from "../src/community/dims";
-import { regionOf, slugify, HOME_TYPES } from "../src/community/regions";
+import { regionOf, slugify, HOME_TYPES, locationParts } from "../src/community/regions";
 import { homeArticle } from "../src/community/homeArticle";
 import { toMedia } from "../src/lib/media";
 import { writeLlmsFull } from "./llmsFull";
@@ -25,10 +25,12 @@ import { thumb, learnThumbs } from "../src/lib/thumbs";
 import { dealShell, DEAL_SHELL_HEAD } from "./dealShell";
 import { dealStatusHtml, dealAvailability } from "./dealStatus";
 import { glossaryLine, scoreLine, sourceNotes } from "./dealNotes";
+import { featuresHtml, nearbyHtml, amenLd, risksHtml, priceHistoryHtml, priceBefore, scoreRankText, calcLink, sameTown, bySimilarRule, siblings, sourcePath, correctionHtml, placeOnce, regionCompareHtml, distancesLine, linkFirst } from "./dealExtras";
+import { shellTitle } from "./dealShell";
 import { type CanBuyData, statusLabel, UPDATED, UPDATED_ES, canBuyPairs, canBuyCountries, canBuySlug, ruleFor, residencyFor, canBuyFaq, canBuyMeta, fill, costLines, costCountries, nameOf, fmtMoney } from "../src/community/seo2data";
 import { homeArticleEs } from "../src/community/homeArticleEs";
-import { homeLead, homeTitle as shortTitle, homeKind } from "../src/community/homeLead";
-import { isGone } from "../src/community/n9/status";
+import { homeLead, homeKind, titleFlag, dealTitle } from "../src/community/homeLead";
+import { isGone, isUnconfirmed } from "../src/community/n9/status";
 import { localizeRows, theEs } from "../src/community/seo2data";
 import { esPlace } from "../src/lib/lang";
 import { type EsPass, type PageRec, type Twin, createEsPass, writeEsTwins, coverageSummary, placesEs } from "./es";
@@ -175,13 +177,32 @@ function build(root: string, es?: EsPass) {
   const destEsForArticle: Record<string, any> = es ? destForArticle : localizeRows(destForArticle, (() => { try { return JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "src/data/destinations-es.json"), "utf8")); } catch { return {}; } })());
   // 20-nov-2026 (ideas 15, 23, 25): short titles, what and where first, then the price. A home whose advert is gone says
   // so first. Two homes that would get the same short title keep their descriptive title instead.
-  const pageTitle = (r: any, lang: "en" | "es") => (isGone(r) ? (lang === "es" ? "Vendida o retirada: " : "Sold or withdrawn: ") : "") + shortTitle(r, lang, isGone(r) ? 40 : 60);
+  // 26-nov-2026 (idea 44): a home nobody could confirm is still for sale says so in the title and the share card too
+  // (src/community/homeLead.ts: the app sets the same title)
+  const flagOf = titleFlag;
+  const pageTitle = dealTitle;
   const titleCount = new Map<string, number>();
   for (const d of deals) { const r = bySlug.get(d.slug); if (!r) continue; for (const lg2 of ["en", "es"] as const) { const t = lg2 + ":" + pageTitle(r, lg2); titleCount.set(t, (titleCount.get(t) || 0) + 1); } }
-  const titleOf = (r: any, lang: "en" | "es", fallback: string) => { const t = pageTitle(r, lang); return (titleCount.get(lang + ":" + t) || 0) > 1 ? (isGone(r) ? (lang === "es" ? "Vendida o retirada: " : "Sold or withdrawn: ") : "") + fallback : t; };
+  const titleOf = (r: any, lang: "en" | "es", fallback: string) => { const t = pageTitle(r, lang); return (titleCount.get(lang + ":" + t) || 0) > 1 ? flagOf(r, lang) + fallback : t; };
   // ideas 17 and 18: homes of the same country at the nearest asking price
   const nearPrice = (r: any, list: any[], n: number, skip: Set<string>) => list.filter((x) => x.slug !== r.slug && !skip.has(x.slug) && x.price_eur > 0)
     .sort((a, b) => Math.abs(Math.log(a.price_eur / r.price_eur)) - Math.abs(Math.log(b.price_eur / r.price_eur)) || String(a.slug).localeCompare(String(b.slug))).slice(0, n);
+  // /sources/<portal> exists for a portal with at least MIN_LIST homes (same rule as the block further down)
+  const srcCount = new Map<string, number>();
+  for (const r of ranked) { const dom = String(r.source_domain || "").toLowerCase().replace(/^www\./, ""); if (dom && !/instagram|facebook|tiktok/.test(dom)) srcCount.set(dom, (srcCount.get(dom) || 0) + 1); }
+  const srcLink = (r: any, lang: "en" | "es") => { const dom = String(r.source_domain || "").toLowerCase().replace(/^www\./, ""); return dom && (srcCount.get(dom) || 0) >= MIN_LIST ? `<a href="${lang === "es" ? "/es" : ""}${esc(sourcePath(dom))}">${esc(dom)}</a>` : esc(r.source_domain); };
+  // idea 12: the calculator of the country with the price filled in; /buying-costs/<country> exists for these
+  const hasCosts = (cc: string) => !!(destForArticle[cc]?.purchase_costs_pct && guidesForArticle[cc]);
+  // idea 15 / 40 / 32: cards with a photo for related homes
+  const relCard = (x: any, lang: "en" | "es") => {
+    const u = x.image_urls?.[0] ? thumb(toMedia(String(x.image_urls[0]))) : "";
+    const t = lang === "es" ? x.title_es || x.title : x.title;
+    const where = lang === "es" ? placesEs(String(x.location_name || x.country || "").split(", ").map((y: string) => esPlace(y.trim())).join(", ")) : x.location_name || x.country;
+    const price = lang === "es" ? Math.round(x.price_eur).toLocaleString("es-ES") + " €" : eur(x.price_eur);
+    return `<li><a href="${lang === "es" ? "/es" : ""}/deal/${esc(x.slug)}">${u ? `<img src="${esc(u)}" alt="${esc(`${t}, ${where}`)}" width="480" height="360" loading="lazy" decoding="async">` : ""}<strong>${esc(price)}</strong> <span>${esc(t)}</span> <small>${esc(where)}${x.nota != null ? ` · ${lang === "es" ? "nota" : "score"} ${esc(x.nota)}` : ""}${x.sqm ? ` · ${esc(x.sqm)} m²` : ""}${x.bedrooms ? ` · ${esc(x.bedrooms)} ${lang === "es" ? "dorm." : "bed"}` : ""}</small></a></li>`;
+  };
+  const relCss = `<style>.rh-rel-cards{list-style:none;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}.rh-rel-cards a{display:block;color:inherit;text-decoration:none}.rh-rel-cards img{display:block;width:100%;height:auto;aspect-ratio:4/3;object-fit:cover;border-radius:12px;background:#eceef1}.rh-rel-cards strong,.rh-rel-cards span,.rh-rel-cards small{display:block}.rh-rel-cards small{color:#5b6470}</style>`;
+  const townOf = (x: any) => (locationParts(x.location_name)[0] || "").replace(/^near /i, "").trim();
   const mdHead = (u: string, lang: "en" | "es" = "en") => `<link rel="alternate" type="text/markdown" title="${lang === "es" ? "Texto limpio" : "Clean text"}" href="${esc(u)}.md" />`;
   for (const d of deals) {
     if (!d?.slug || !/^[A-Za-z0-9_-]+$/.test(d.slug)) continue;
@@ -190,21 +211,27 @@ function build(root: string, es?: EsPass) {
     const cc = slugCountry(d.country || r?.country || "");
     const cName = d.country || r?.country || "";
     const trail: [string, string][] = [["RealHunt", SITE + "/"]];
-    if (cc && !REGIONS.has(cc)) trail.push([`Homes in ${cName}`, `${SITE}/homes/${cc}`]);
+    // idea 14 (26-nov-2026): links only to a country page that is live and indexable (a country with too few homes has none)
+    const cLive = !!cc && !REGIONS.has(cc) && plan.live.has(`/homes/${cc}`);
+    if (cLive) trail.push([`Homes in ${cName}`, `${SITE}/homes/${cc}`]);
     const rp = r ? regionPage(r) : null;
     if (rp) trail.push([rp.name, `${SITE}/homes/${rp.cc}/${rp.slug}`]);
-    trail.push([d.title, url]);
+    // idea 4 (26-nov-2026): the last crumb is the short title of the home (the h1), not "€38,000 · title"
+    trail.push([r ? shellTitle(r) : String(d.title || "").replace(/^\s*€\s?[\d.,]+\s*(k\b)?\s*[·\-–:|]\s*/i, ""), url]);
     let body: string | undefined;
     const ld: object[] = [crumbs(trail)];
     if (r) {
       const dims = DIMS.filter(([k]) => r.dims?.[k] != null);
       const amen = AMEN.filter(([k]) => (r.amen || []).includes(k)).map(([, l]) => l);
-      const near = r.nearby || {};
-      const nearList = [["sea", "Sea"], ["lake", "Lake"], ["shop", "Shop"], ["train", "Train"], ["airport", "Airport"], ["hospital", "Hospital"]]
-        .filter(([k]) => near[k]?.km != null).map(([k, l]) => `<li>${esc(l)}: ${esc(near[k].name || "")} · ${esc(near[k].km)} km</li>`).join("");
       const art = (es ? homeArticleEs : homeArticle)(r, { countryHomes: byCountry.get(cc) || [r], regionHomes: rp?.homes, regionName: rp?.name, dest: destForArticle[cc] || null, hasGuide: !!guidesForArticle[cc], areaInLead: true });
       const sameRegion = rp ? rp.homes.filter((x) => x.slug !== r.slug).slice(0, 6) : [];
       const similar = (sameRegion.length >= 3 ? sameRegion : ranked.filter((x) => x.slug !== r.slug && x.country === r.country).slice(0, 6));
+      // 26-nov-2026 (ideas 40, 15, 32): other homes in the same town first, similar homes by a rule said in the text,
+      // and the previous and next home of the region by score
+      const townHomes = sameTown(r, byCountry.get(cc) || []);
+      const rule = bySimilarRule(r, byCountry.get(cc) || [], 6, new Set(townHomes.map((x) => x.slug)));
+      const sib = rp ? siblings(r, rp.homes) : { prev: null, next: null };
+      const calc = calcLink(r, cc, "en", hasCosts(cc));
       const band = plan.bandFor(cc, r.price_eur);
       const lead = homeLead(r, { countryHomes: byCountry.get(cc) || [r], regionHomes: rp?.homes, regionName: rp?.name }, es ? "es" : "en");
       const samePrice = nearPrice(r, byCountry.get(cc) || [], 6, new Set(similar.map((x) => x.slug)));
@@ -214,30 +241,41 @@ function build(root: string, es?: EsPass) {
       const shell = dealShell({
         row: r, lowRes: lowRes(r), photos: (r.image_urls || []).filter(Boolean).map((u: string) => toMedia(String(u))), color: cardColors[r.slug],
         caption: `${r.location_name || cName}, ${eur(r.price_eur)}`,
-        crumbs: [[r.country || "", cc ? `/homes/${cc}` : ""], ...(rg ? [[rg, rp ? `/homes/${rp.cc}/${rp.slug}` : ""] as [string, string]] : [])].filter(([l]) => l) as [string, string][],
+        // idea 21: the kind of home links to its listing page in the country when that page is live
+        catHref: ((t) => (t && cLive && plan.live.has(`/homes/${cc}/${t}`) ? `/homes/${cc}/${t}` : ""))(Object.keys(HOME_TYPES).find((k) => HOME_TYPES[k].cat === r.category) || ""),
+        crumbs: [[r.country || "", cLive ? `/homes/${cc}` : ""], ...(rg ? [[rg, rp ? `/homes/${rp.cc}/${rp.slug}` : ""] as [string, string]] : [])].filter(([l]) => l) as [string, string][],
       });
       body = shell + `<main class="rh-static"><article>${navHtml(trail)}`
-        + lead.map((t, i) => `<p class="rh-lead"${i ? "" : ' id="answer"'}>${esc(t)}</p>`).join("")
+        // idea 20: the region in the answer links to its page; idea 41: the key distances right under it
+        + lead.map((t, i) => `<p class="rh-lead"${i ? "" : ' id="answer"'}>${i || !rp ? esc(t) : linkFirst(esc(t), rp.name, `/homes/${rp.cc}/${rp.slug}`)}</p>`).join("")
+        + distancesLine(r, "en")
         + dealStatusHtml(r, "en")
-        + (r.nota != null ? `<h2>RealHunt score: ${esc(r.nota)} / 98</h2><p data-rh-scoreline><strong>${esc(scoreLine(r))}</strong></p><p>Every home on RealHunt passed a hand check first, so the grade starts at 70. The rest compares this home with every other home on the site. <a href="/method">How the score works</a>.</p><ul>${dims.map(([k, l, help]) => `<li>${esc(l)}: <strong>${esc(r.dims[k])}</strong>/100 · ${esc(help)}</li>`).join("")}</ul>` : "")
+        + priceHistoryHtml(r, "en")
+        + (r.nota != null ? `<h2>RealHunt score ${esc(scoreRankText(r, ranked, "en") || `${r.nota} of 98`)}</h2><p data-rh-scoreline><strong>${esc(scoreLine(r))}</strong></p><p>Every home on RealHunt passed a hand check first, so the grade starts at 70. The rest compares this home with every other home on the site. <a href="/method">How the score works</a>.</p><ul>${dims.map(([k, l, help]) => `<li>${esc(l)}: <strong>${esc(r.dims[k])}</strong>/100 · ${esc(help)}</li>`).join("")}</ul>` : "")
         + (r.why_great ? `<h2>Why it made the list</h2><p>${esc(r.why_great)}</p>` : "")
         + art.sections.map((x) => `<h2>${esc(x.h)}</h2>${x.p.map((t) => `<p>${esc(t)}</p>`).join("")}`).join("")
-        + (guidesForArticle[cc] ? `<p><a href="/guide/${esc(cc)}">How to buy a home in ${esc(the(cName))}, step by step</a>${destForArticle[cc] ? ` · <a href="/costs/${esc(cc)}">Costs and taxes in ${esc(the(cName))}</a>` : ""}</p>` : "")
+        + (rp ? regionCompareHtml(r, rp.homes, rp.name, "en") : "")
+        + (guidesForArticle[cc] || calc ? `<p>${[guidesForArticle[cc] ? `<a href="/guide/${esc(cc)}">How to buy a home in ${esc(the(cName))} as a foreigner, step by step</a>` : "", guidesForArticle[cc] && destForArticle[cc] ? `<a href="/costs/${esc(cc)}">Costs and taxes in ${esc(the(cName))}</a>` : "", calc ? `<a href="${esc(calc[0])}">${esc(calc[1])}</a>` : "", guidesForArticle[cc] ? `<a href="/can-i-buy">Can foreigners buy in ${esc(the(cName))}? The rules by nationality</a>` : ""].filter(Boolean).join(" · ")}</p>` : "")
         + glossaryLine(cc)
-        + (amen.length ? `<h2>Features</h2><p>${esc(amen.join(", "))}</p>` : "")
-        + (nearList ? `<h2>What is nearby</h2><ul>${nearList}</ul>` : "")
+        + featuresHtml(r, "en")
+        + nearbyHtml(r, "en")
+        + risksHtml(r, "en")
         + (art.faq.length ? `<h2>Questions about this home</h2>${art.faq.map(([q, a]) => `<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join("")}` : "")
-        + (r.source_domain ? `<p>Listed on ${esc(r.source_domain)}. RealHunt is not an estate agent and does not sell this home; sign in to open the original listing and contact the seller.</p>` : "")
+        + (r.source_domain ? `<p>Listed on ${srcLink(r, "en")}. RealHunt is not an estate agent and does not sell this home; sign in to open the original listing and contact the seller.</p>` : "")
+        + correctionHtml(r.slug, "en")
+        + (townHomes.length ? `<h2>Other homes in ${esc(townOf(r) || cName)}</h2><ul class="rh-rel-cards">${townHomes.map((x) => relCard(x, "en")).join("")}</ul>` : "")
+        + (rule.rows.length >= 3 ? `<h2>Similar homes</h2><p>Same country, asking price within 25% of this one${rule.sameBeds ? `, and ${esc(r.bedrooms)} ${Number(r.bedrooms) === 1 ? "bedroom" : "bedrooms"} too` : ""}.</p><ul class="rh-rel-cards">${rule.rows.map((x) => relCard(x, "en")).join("")}</ul>` : "")
+        + (sib.prev || sib.next ? `<p data-rh-sib>${sib.prev ? `<a href="/deal/${esc(sib.prev.slug)}" rel="prev">Previous home in ${esc(rp!.name)}: ${esc(sib.prev.title)}</a>` : ""}${sib.prev && sib.next ? " · " : ""}${sib.next ? `<a href="/deal/${esc(sib.next.slug)}" rel="next">Next home in ${esc(rp!.name)}: ${esc(sib.next.title)}</a>` : ""}</p>` : "")
         + (similar.length ? `<h2>More homes in ${esc(sameRegion.length >= 3 && rp ? rp.name : cName)}</h2><ul>${similar.map(homeLi).join("")}</ul>` : "")
         + (samePrice.length ? `<h2>Homes in ${esc(the(cName))} at a similar price</h2><ul>${samePrice.map(homeLi).join("")}</ul>` : "")
-        + (cc && !REGIONS.has(cc) ? `<p><a href="/homes/${esc(cc)}">All homes in ${esc(cName)}</a>${rp ? ` · <a href="/homes/${esc(rp.cc)}/${esc(rp.slug)}">All homes in ${esc(rp.name)}</a>` : ""}${band ? ` · <a href="${esc(band.path)}">Homes under ${esc(eur(band.cap))} in ${esc(cName)}</a>` : ""} · <a href="/costs">What it costs to buy abroad</a></p>` : "")
+        + (cc && !REGIONS.has(cc) ? `<p>${cLive ? `<a href="/homes/${esc(cc)}">All homes in ${esc(cName)}</a> · ` : ""}${rp ? `<a href="/homes/${esc(rp.cc)}/${esc(rp.slug)}">All homes in ${esc(rp.name)}</a> · ` : ""}${band ? `<a href="${esc(band.path)}">Homes under ${esc(eur(band.cap))} in ${esc(cName)}</a> · ` : ""}<a href="/costs">What it costs to buy abroad</a></p>` : "")
         + `</article></main>`;
       const images = (r.image_urls || []).slice(0, 6).map((u: string) => abs(u));
       if (art.faq.length) ld.push({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: art.faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) });
       ld.push({
         "@context": "https://schema.org", "@type": "RealEstateListing", url, name: r.title, description: r.why_great || d.desc,
         image: images, datePosted: day(r.publish_at || r.approved_at) || undefined,
-        offers: { "@type": "Offer", price: r.price_eur, priceCurrency: "EUR", ...(dealAvailability(r) ? { availability: dealAvailability(r) } : {}), url },
+        offers: { "@type": "Offer", price: r.price_eur, priceCurrency: "EUR", ...(dealAvailability(r) ? { availability: dealAvailability(r) } : {}), url, ...(priceBefore(r) ? { priceSpecification: [{ "@type": "UnitPriceSpecification", price: r.price_eur, priceCurrency: "EUR" }, { "@type": "UnitPriceSpecification", price: priceBefore(r), priceCurrency: "EUR", priceType: "https://schema.org/StrikethroughPrice" }] } : {}) },
         about: {
           "@type": homeKind(r).ld, name: r.title, accommodationCategory: homeKind(r).en,
           address: { "@type": "PostalAddress", addressLocality: r.location_name || undefined, addressRegion: rg || undefined, addressCountry: cName || undefined },
@@ -253,8 +291,11 @@ function build(root: string, es?: EsPass) {
     // 10-nov-2026: its small card copy when there is one (painted first, the full photo sharpens over it), else the photo.
     const hero = r?.image_urls?.[0] ? lowRes(r) || toMedia(String(r.image_urls[0])) : "";
     const enTitle = r ? titleOf(r, es ? "es" : "en", d.title) : d.title;
-    const enDesc = r && isGone(r) ? (es ? "El anuncio original ya no está publicado. " : "The original advert is no longer online. ") + d.desc : d.desc;
-    page(url, `${enTitle} · RealHunt`, enDesc, d.image || DEF, body, ld, { lastmod: homeDay(r), group: "homes", head: (hero ? `<link rel="preload" as="image" href="${esc(hero)}" fetchpriority="high" />` : "") + (r ? DEAL_SHELL_HEAD + mdHead(url) : "") || undefined,
+    // idea 18: the place is not said twice ("... in Alpujarra de la Sierra for €38,000. Granada, Spain.")
+    const enDesc = (r && isGone(r) ? (es ? "El anuncio original ya no está publicado. " : "The original advert is no longer online. ") : r && isUnconfirmed(r) ? (es ? "No hemos podido confirmar que siga a la venta. " : "We could not confirm it is still for sale. ") : "") + placeOnce(String(d.desc || ""));
+    // idea 34: the share card says what its photo shows
+    const imgAlt = (t: string) => `<meta property="og:image:alt" content="${esc(t)}" /><meta name="twitter:image:alt" content="${esc(t)}" />`;
+    page(url, `${enTitle} · RealHunt`, enDesc, d.image || DEF, body, ld, { lastmod: homeDay(r), group: "homes", head: (hero ? `<link rel="preload" as="image" href="${esc(hero)}" fetchpriority="high" />` : "") + (r ? DEAL_SHELL_HEAD + relCss + mdHead(url) + imgAlt(shellTitle(r)) : "") || undefined,
       // 10-nov-2026: the home's photos in the sitemap (Google Images), up to 5 per home
       images: (r?.image_urls || []).slice(0, 5).map((u: string) => abs(String(u))),
       alt: r?.title_es ? { en: url, es: `${SITE}/es/deal/${d.slug}` } : undefined });
@@ -273,31 +314,48 @@ function build(root: string, es?: EsPass) {
       // ideas 16 and 25: the Spanish description is written for this page (what, price, where), and seo/polish.ts adds
       // the score and the size, as on the English page. Before, it was the first 155 characters of the long text.
       const whereEs = ((p: string) => (p.includes(esC(cName)) ? p : `${p}, ${esC(cName)}`))(placeEsOf(r));
-      const descEs = (isGone(r) ? "El anuncio original ya no está publicado. " : "") + `${r.title_es} por ${euro(r.price_eur)}. ${whereEs[0].toUpperCase() + whereEs.slice(1)}.`;
+      const descEs = (isGone(r) ? "El anuncio original ya no está publicado. " : isUnconfirmed(r) ? "No hemos podido confirmar que siga a la venta. " : "") + placeOnce(`${r.title_es} por ${euro(r.price_eur)}. ${whereEs[0].toUpperCase() + whereEs.slice(1)}.`);
       const ctxA = { countryHomes: byCountry.get(cc) || [r], regionHomes: rp?.homes, regionName: rp?.name };
       const leadEs = homeLead(r, ctxA, "es");
       const artEs = homeArticleEs(r, { ...ctxA, dest: destEsForArticle[cc] || null, hasGuide: !!guidesForArticle[cc], areaInLead: true });
+      const esHomes = (byCountry.get(cc) || []).filter((x) => x.title_es);
+      const townEs = sameTown(r, esHomes);
+      const ruleEs = bySimilarRule(r, esHomes, 6, new Set(townEs.map((x) => x.slug)));
+      const sibEs = rp ? siblings(r, rp.homes.filter((x) => x.title_es)) : { prev: null, next: null };
+      const calcEs = calcLink(r, cc, "es", hasCosts(cc));
       const liEs = (x: any) => `<li><a href="/es/deal/${esc(x.slug)}"><strong>${esc(euro(x.price_eur))}</strong> · ${esc(x.title_es)}</a> · ${esc(placeEsOf(x))}${x.nota != null ? ` · nota ${esc(x.nota)}` : ""}${x.sqm ? ` · ${esc(x.sqm)} m²` : ""}</li>`;
       // same first paint as the English page (seo/dealShell.ts), with the Spanish title in the HTML
       const bodyEs = dealShell({ row: r, lang: "es", lowRes: lowRes(r), photos: (r.image_urls || []).filter(Boolean).map((u: string) => toMedia(String(u))), color: cardColors[r.slug], crumbs: [], caption: `${placeEsOf(r)}, ${euro(r.price_eur)}` })
         + `<main class="rh-static" lang="es"><article><nav aria-label="Ruta"><a href="/es">RealHunt</a> › ${esc(r.title_es)}</nav>`
-        + leadEs.map((t, i) => `<p class="rh-lead"${i ? "" : ' id="answer"'}>${esc(t)}</p>`).join("")
+        + leadEs.map((t, i) => `<p class="rh-lead"${i ? "" : ' id="answer"'}>${i || !rp ? esc(t) : linkFirst(esc(t), esPlace(rp.name), `/es/homes/${rp.cc}/${rp.slug}`)}</p>`).join("")
+        + distancesLine(r, "es")
         + (usdEs(r.price_eur) ? `<p class="rh-usd-line"><strong>${esc(euro(r.price_eur))}</strong>${usdEs(r.price_eur)}</p>` : "")
         + dealStatusHtml(r, "es")
-        + (r.nota != null ? `<h2>Nota RealHunt: ${esc(r.nota)} / 98</h2><p data-rh-scoreline><strong>${esc(scoreLine(r, "es"))}</strong></p><p>Todas las casas de RealHunt pasan antes una revisión hecha por una persona, por eso la nota empieza en 70. El resto compara esta casa con todas las demás de la web.</p>` : "")
+        + priceHistoryHtml(r, "es")
+        + (r.nota != null ? `<h2>Nota RealHunt ${esc(scoreRankText(r, ranked, "es") || `${r.nota} de 98`)}</h2><p data-rh-scoreline><strong>${esc(scoreLine(r, "es"))}</strong></p><p>Todas las casas de RealHunt pasan antes una revisión hecha por una persona, por eso la nota empieza en 70. El resto compara esta casa con todas las demás de la web. <a href="/es/method">Cómo funciona la nota</a>.</p>` : "")
         + (r.why_great_es ? `<h2>Por qué está en la lista</h2><p>${esc(r.why_great_es)}</p>` : "")
         + (r.why_cheap_es ? `<h2>Por qué es tan barata</h2><p>${esc(r.why_cheap_es)}</p>` : "")
         + artEs.sections.map((x) => `<h2>${esc(x.h)}</h2>${x.p.map((t) => `<p>${esc(t)}</p>`).join("")}`).join("")
+        + (rp ? regionCompareHtml(r, rp.homes, esPlace(rp.name), "es") : "")
+        + (calcEs ? `<p><a href="${esc(calcEs[0])}">${esc(calcEs[1])}</a> · <a href="/es/can-i-buy">¿Pueden comprar los extranjeros en ${esc(theEs(esC(cName)))}? Las normas por nacionalidad</a></p>` : "")
+        // idea 2 (26-nov-2026): the Spanish page has the features and what is nearby, as the English one
+        + featuresHtml(r, "es")
+        + nearbyHtml(r, "es")
+        + risksHtml(r, "es")
         + (artEs.faq.length ? `<h2>Preguntas sobre esta casa</h2>${artEs.faq.map(([q, a]) => `<h3>${esc(q)}</h3><p>${esc(a)}</p>`).join("")}` : "")
-        + (r.source_domain ? `<p>Anunciada en ${esc(r.source_domain)}. RealHunt no es una inmobiliaria y no vende esta casa: el anuncio original te pone en contacto con el vendedor.</p>` : "")
+        + (r.source_domain ? `<p>Anunciada en ${srcLink(r, "es")}. RealHunt no es una inmobiliaria y no vende esta casa: el anuncio original te pone en contacto con el vendedor.</p>` : "")
+        + correctionHtml(r.slug, "es")
         + glossaryLine(cc, "es")
-        + (simEs.length ? `<h2>Más casas parecidas</h2><ul>${simEs.map(liEs).join("")}</ul>` : "")
+        + (townEs.length ? `<h2>Otras casas en ${esc(esPlace(townOf(r)) || esC(cName))}</h2><ul class="rh-rel-cards">${townEs.map((x) => relCard(x, "es")).join("")}</ul>` : "")
+        + (ruleEs.rows.length >= 3 ? `<h2>Casas parecidas</h2><p>Mismo país, precio de venta como mucho un 25 % por encima o por debajo de este${ruleEs.sameBeds ? ` y también ${esc(r.bedrooms)} ${Number(r.bedrooms) === 1 ? "dormitorio" : "dormitorios"}` : ""}.</p><ul class="rh-rel-cards">${ruleEs.rows.map((x) => relCard(x, "es")).join("")}</ul>` : "")
+        + (sibEs.prev || sibEs.next ? `<p data-rh-sib>${sibEs.prev ? `<a href="/es/deal/${esc(sibEs.prev.slug)}" rel="prev">Casa anterior en ${esc(esPlace(rp!.name))}: ${esc(sibEs.prev.title_es)}</a>` : ""}${sibEs.prev && sibEs.next ? " · " : ""}${sibEs.next ? `<a href="/es/deal/${esc(sibEs.next.slug)}" rel="next">Casa siguiente en ${esc(esPlace(rp!.name))}: ${esc(sibEs.next.title_es)}</a>` : ""}</p>` : "")
+        + (simEs.length ? `<h2>Más casas de la zona</h2><ul>${simEs.map(liEs).join("")}</ul>` : "")
         + (priceEs.length ? `<h2>Casas en ${esc(theEs(esC(cName)))} por un precio parecido</h2><ul>${priceEs.map(liEs).join("")}</ul>` : "")
         + `<p><a href="/es">Las mejores casas</a> · <a href="/deal/${esc(d.slug)}">English</a></p></article></main>`;
       const kind = homeKind(r);
       const ldEs: object[] = [{ "@context": "https://schema.org", "@type": "RealEstateListing", url: esUrl, name: r.title_es, description: r.why_great_es || descEs, inLanguage: "es", image: (r.image_urls || []).slice(0, 5).map((u: string) => abs(String(u))),
         datePosted: day(r.publish_at || r.approved_at) || undefined,
-        offers: { "@type": "Offer", price: r.price_eur, priceCurrency: "EUR", ...(dealAvailability(r) ? { availability: dealAvailability(r) } : {}), url: esUrl },
+        offers: { "@type": "Offer", price: r.price_eur, priceCurrency: "EUR", ...(dealAvailability(r) ? { availability: dealAvailability(r) } : {}), url: esUrl, ...(priceBefore(r) ? { priceSpecification: [{ "@type": "UnitPriceSpecification", price: r.price_eur, priceCurrency: "EUR" }, { "@type": "UnitPriceSpecification", price: priceBefore(r), priceCurrency: "EUR", priceType: "https://schema.org/StrikethroughPrice" }] } : {}) },
         about: {
           "@type": kind.ld, name: r.title_es, accommodationCategory: kind.es,
           address: { "@type": "PostalAddress", addressLocality: r.location_name ? placeEsOf(r) : undefined, addressRegion: rp?.name ? esPlace(rp.name) : undefined, addressCountry: esC(cName) || undefined },
@@ -305,10 +363,11 @@ function build(root: string, es?: EsPass) {
           ...(r.sqm ? { floorSize: { "@type": "QuantitativeValue", value: r.sqm, unitCode: "MTK" } } : {}),
           ...(r.bedrooms ? { numberOfBedrooms: r.bedrooms } : {}),
           ...(Number(r.bathrooms) > 0 ? { numberOfBathroomsTotal: Number(r.bathrooms) } : {}), // idea 85: only when the advert gives it
+          ...(amenLd(r, "es").length ? { amenityFeature: amenLd(r, "es") } : {}), // idea 2
         } }];
       if (artEs.faq.length) ldEs.push({ "@context": "https://schema.org", "@type": "FAQPage", inLanguage: "es", mainEntity: artEs.faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) });
       page(esUrl, `${placesEs(titleOf(r, "es", `${euro(r.price_eur)} · ${r.title_es}`))} · RealHunt`, placesEs(descEs), d.image || DEF, bodyEs, ldEs.map(deepEs),
-        { lastmod: homeDay(r), group: "es", lang: "es", alt: { en: url, es: esUrl }, head: (hero ? `<link rel="preload" as="image" href="${esc(hero)}" fetchpriority="high" />` : "") + DEAL_SHELL_HEAD + mdHead(esUrl, "es") });
+        { lastmod: homeDay(r), group: "es", lang: "es", alt: { en: url, es: esUrl }, head: (hero ? `<link rel="preload" as="image" href="${esc(hero)}" fetchpriority="high" />` : "") + DEAL_SHELL_HEAD + relCss + mdHead(esUrl, "es") + imgAlt(String(r.title_es)) });
     }
   }
 

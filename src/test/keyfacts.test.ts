@@ -44,3 +44,11 @@ describe("dates in the language of the page", () => {
     expect(fmtDay("not a date")).toBe("");
   });
 });
+
+describe("square feet for US and UK homes (list of 1,000, idea 45)", () => {
+  it("adds the size in square feet only where buyers read it", () => {
+    expect(keyFacts({ price_eur: 200000, sqm: 150, bedrooms: 3, country: "United States" })[0]).toMatchObject({ k: "sqm", value: "150 m²", sqft: 1615 });
+    expect(keyFacts({ price_eur: 200000, sqm: 90, country: "United Kingdom" })[0].sqft).toBe(969);
+    expect(keyFacts({ price_eur: 200000, sqm: 150, country: "Spain" })[0].sqft).toBeUndefined();
+  });
+});

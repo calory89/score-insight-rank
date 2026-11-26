@@ -285,8 +285,12 @@ export function polish(root: string, opts: PolishOpts = {}): Audit {
     if (pg.trail.length) {
       // a template's trail: the steps in between must be pages of the same language that exist
       mid = pg.trail.slice(1, -1).map(([n, p]): [string, string] => { const t = get(p); return t && t.lang === pg.lang ? [n, p] : pg.lang === "es" && get(withEs(stripEs(p))) ? [get(withEs(stripEs(p)))!.label, withEs(stripEs(p))] : ["", ""]; }).filter(([n]) => n);
-    } else mid = ancestors(pg).filter((p) => get(p) && get(p)!.lang === pg.lang).map((p) => [get(p)!.label, p]);
-    pg.trail = [["RealHunt", h], ...mid, [pg.label, pg.path]];
+    } else mid = ancestors(pg).filter((p) => get(p) && get(p)!.lang === pg.lang && (pg.kind !== "deal" || live(p))).map((p) => [get(p)!.label, p]); // a home's trail skips a noindex country page (26-nov-2026, list of 1,000 idea 14)
+    // 26-nov-2026 (list of 1,000, idea 4): a home page's last crumb is the short title of the home, without the price
+    // in front (pg.label keeps the price for the links to the home elsewhere)
+    const r = pg.kind === "deal" ? bySlug.get(pg.en.slice(6)) : null;
+    const last = r ? String((pg.lang === "es" ? r.title_es || r.title : r.title) || "").trim() || pg.label : pg.label;
+    pg.trail = [["RealHunt", h], ...mid, [last, pg.path]];
   };
   const writeTrail = (pg: Pg) => {
     if (!pg.trail.length) return;

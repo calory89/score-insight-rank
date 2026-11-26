@@ -23,6 +23,21 @@ const range = (s?: string | null): [number, number] | null => { const m = String
 const the = (n: string) => (/^(United |Netherlands$|Dominican Republic$|Czech Republic$|Philippines$)/.test(n) ? "the " + n : n);
 const town = (r: Row) => String(r.location_name || r.country || "").split(",")[0].trim().replace(/^near /, "");
 
+/** "In short: 38% below the median price per m² for Granada on RealHunt." The most local median with at least 3 homes
+ * with a size (the region, else the country with 5), the same medians as the sentences under it. "" without a size. */
+export function priceVerdict(r: Row, ctx: ArticleCtx, lang: "en" | "es", placeName?: (s: string) => string): string {
+  const own = ppsqm(r);
+  if (!own) return "";
+  const rH = (ctx.regionHomes || []).filter((x) => ppsqm(x) > 0), cH = ctx.countryHomes.filter((x) => ppsqm(x) > 0);
+  const useRegion = rH.length >= 3 && !!ctx.regionName;
+  const med = useRegion ? median(rH.map(ppsqm)) : cH.length >= 5 ? median(cH.map(ppsqm)) : 0;
+  if (!med) return "";
+  const d = Math.round(((own - med) / med) * 100);
+  const nm = (placeName || ((x: string) => x))(useRegion ? String(ctx.regionName) : String(r.country || ""));
+  if (lang === "es") return Math.abs(d) < 3 ? `En resumen: en línea con la mediana del precio por m² de ${nm} en RealHunt.` : `En resumen: un ${Math.abs(d)} % ${d < 0 ? "por debajo" : "por encima"} de la mediana del precio por m² de ${nm} en RealHunt.`;
+  return Math.abs(d) < 3 ? `In short: in line with the median price per m² for ${useRegion ? nm : the(nm)} on RealHunt.` : `In short: ${Math.abs(d)}% ${d < 0 ? "below" : "above"} the median price per m² for ${useRegion ? nm : the(nm)} on RealHunt.`;
+}
+
 export function homeArticle(r: Row, ctx: ArticleCtx): Article {
   const country = String(r.country || "");
   const inC = the(country);
@@ -48,6 +63,9 @@ export function homeArticle(r: Row, ctx: ArticleCtx): Article {
     const cheaper = ctx.countryHomes.filter((x) => x.price_eur < r.price_eur).length;
     if (ctx.countryHomes.length >= 3) priceP.push(`${cheaper} of the ${ctx.countryHomes.length} homes in ${inC} on RealHunt have a lower asking price.`);
   }
+  // 26-nov-2026 (list of 1,000, idea 22): the answer first, in one sentence with the figure, then the detail
+  const verdict = priceVerdict(r, ctx, "en");
+  if (verdict) priceP.unshift(verdict);
   if (priceP.length) {
     priceP.push("Asking prices are what the seller asks, not what homes sell for. Compare with recent sales in the same village before you make an offer.");
     sections.push({ h: `Is ${eur(r.price_eur)} a good price for this home?`, p: priceP });
