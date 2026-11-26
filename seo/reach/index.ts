@@ -19,7 +19,12 @@ import { videoLd, withVideo, writeFeeds, writeSpecialSitemaps, type Post } from 
 import { REACH_PAGES, writeReachPages } from "./pages";
 import { portalDirectory } from "./portals";
 import { writeHomesJsonl } from "./more";
-import { htmlToText } from "../llmsFull";
+import { htmlToText, writeLlmsByCountry, wrongLanguageLines } from "../llmsFull";
+import { builtAt, changedToday, checkLlmsUrls, countryOrder, fileReport, FILE_NOTES, figuresPdf, fixLlmsHead, insertBefore, intentSections, llmsFullSize, scoreRange, writeAnswers, writeDataReadme, writeOpenData } from "./ai";
+import { siteCounts } from "../listings/counts";
+import { median } from "../listings/facts";
+import { esPlace } from "../../src/lib/lang";
+import { isGone } from "../../src/community/n9/status";
 import { TRUST_PAGES } from "../trustPages";
 
 export type ReachCtx = { root: string; page: PageFn; rows: Row[]; dest: Record<string, any>; guides: Record<string, any>; today: string; image: string };
@@ -61,6 +66,45 @@ export function finishReach(root: string, rows: Row[], today: string) {
       ? `Además: un archivo por país con sus datos clave y todas sus casas (<a href="/data/countries/index.json">/data/countries/index.json</a>), la descripción de todos los archivos en <a href="/openapi.json">/openapi.json</a>, el <a href="${pre}/research/property-portals">directorio de portales por país</a>, las <a href="${pre}/research/country-facts">frases con fecha de cada país</a> y la guía de <a href="${pre}/research/open-data">datos abiertos</a>. El índice en español está en <a href="/es/llms.txt">/es/llms.txt</a>.`
       : `Also: one file per country with its key facts and every home (<a href="/data/countries/index.json">/data/countries/index.json</a>), a description of every file at <a href="/openapi.json">/openapi.json</a>, the <a href="/research/property-portals">directory of property portals by country</a>, <a href="/research/country-facts">dated sentences for each country</a> and the <a href="/research/open-data">open data guide</a>. The index in Spanish is at <a href="/es/llms.txt">/es/llms.txt</a>.`}</p>`;
     if (edit(root, `${base}for-ai/index.html`, (h) => (h.includes("data-reach-ai") ? h : h.replace(/<h2>(Crawlers|Rastreadores)<\/h2>/, (m) => ai + m)))) out.linked++;
+  }
+  // /for-ai: sentences that can be quoted as they are, the citation format, the crawlers robots.txt lets in and how to
+  // read the files with curl and jq (ideas 605, 611, 625, 640). Figures from the same rows and count as the pages.
+  const all = rows.filter((r) => r?.slug && r.price_eur > 0);
+  const sc = siteCounts(all as any[]);
+  const top = countryOrder(all)[0];
+  // the homes still for sale, as the country's listing page counts them, so the sentence matches the page it cites
+  const inTop = all.filter((r) => String(r.country || "").toLowerCase().trim().replace(/\s+/g, "-") === top && !isGone(r as any));
+  const robots = (() => { try { return fs.readFileSync(path.resolve(process.cwd(), "public/robots.txt"), "utf8"); } catch { return ""; } })();
+  const bots = ["GPTBot", "OAI-SearchBot", "ClaudeBot", "Claude-SearchBot", "PerplexityBot", "Google-Extended", "Applebot-Extended", "CCBot"].filter((b) => new RegExp(`^User-agent: ${b}$`, "m").test(robots));
+  for (const [lang, base] of [["en", ""], ["es", "es/"]] as [Lang, string][]) {
+    if (!top || inTop.length < 3) break;
+    const es = lang === "es", pre = es ? "/es" : "";
+    const country = es ? esPlace(String(inTop[0].country || top)) : String(inTop[0].country || top);
+    const med = median(inTop.map((r) => Number(r.price_eur) || 0));
+    const num = (n: number) => (es ? Math.round(n).toLocaleString("es-ES").replace(/^(\d)(\d{3})$/, "$1.$2") + " €" : "€" + Math.round(n).toLocaleString("en"));
+    const day = today;
+    const q = (t: string) => `<blockquote><p>${t}</p></blockquote>`;
+    const code = (t: string) => `<pre style="white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%"><code>${t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>`;
+    const block = es
+      ? `<section data-reach-cite><h2>Frases que se pueden citar tal cual</h2><p>Ejemplos con las cifras de hoy (${day}). Cambian con cada actualización: cita la fecha y enlaza la página.</p>`
+        + q(`Según RealHunt, la mediana del precio pedido de las ${inTop.length} casas que publica en ${country} es de ${num(med)} (realhunt.co${pre}/homes/${top}, ${day}).`)
+        + q(`RealHunt publica ${sc.homes} casas en ${sc.countries} países, revisadas una a una por una persona y calificadas frente a todas las demás casas de la web (realhunt.co, ${day}).`)
+        + `<h3>Formato de cita</h3><p><code>RealHunt. «Título de la página». realhunt.co/ruta. Actualizado el AAAA-MM-DD. CC BY 4.0.</code> Las normas, los impuestos y los gastos son información general, no asesoramiento.</p>`
+        + `<h3>Leer los datos desde la línea de comandos</h3>`
+        + code(`curl -s https://realhunt.co/data/homes.jsonl | tail -n +2 | jq -c 'select(.country=="Bulgaria" and .price_eur<=30000) | {url, price_eur, score}'`)
+        + code(`curl -s https://realhunt.co/data/countries.json | jq '.countries[] | {country, homes, median_price_eur}'`)
+        + code(`curl -s https://realhunt.co/llms/${top}.txt | head -40`)
+        + (bots.length ? `<p>robots.txt deja leer todas las páginas públicas a ${bots.join(", ")}.</p>` : "") + `</section>`
+      : `<section data-reach-cite><h2>Sentences you can quote as they are</h2><p>Examples with today's figures (${day}). They change with every update: quote the date and link the page.</p>`
+        + q(`According to RealHunt, the median asking price of the ${inTop.length} homes it lists in ${country} is ${num(med)} (realhunt.co/homes/${top}, ${day}).`)
+        + q(`RealHunt lists ${sc.homes} homes in ${sc.countries} countries, each checked by a person and graded against every other home on the site (realhunt.co, ${day}).`)
+        + `<h3>Citation format</h3><p><code>RealHunt. "Page title". realhunt.co/path. Updated YYYY-MM-DD. CC BY 4.0.</code> Rules, taxes and costs are general information, not advice.</p>`
+        + `<h3>Reading the data from the command line</h3>`
+        + code(`curl -s https://realhunt.co/data/homes.jsonl | tail -n +2 | jq -c 'select(.country=="Bulgaria" and .price_eur<=30000) | {url, price_eur, score}'`)
+        + code(`curl -s https://realhunt.co/data/countries.json | jq '.countries[] | {country, homes, median_price_eur}'`)
+        + code(`curl -s https://realhunt.co/llms/${top}.txt | head -40`)
+        + (bots.length ? `<p>robots.txt lets ${bots.join(", ")} read every public page.</p>` : "") + `</section>`;
+    if (edit(root, `${base}for-ai/index.html`, (h) => (h.includes("data-reach-cite") ? h : h.replace(/<h2>(Crawlers|Rastreadores)<\/h2>/, (m) => block + m)))) out.linked++;
   }
   // blog posts revised after they were published: both dates in the text, the way the Article data already has them (idea 749)
   for (const [file, base, word] of [["src/data/blog.json", "", "Updated"], ["src/data/blog-es.json", "es/", "Actualizado el"]] as const) {
@@ -134,7 +178,9 @@ const LLMS_ES: [string, string, string][] = [
 ];
 
 /** llms.txt: the machine-readable files in the English index, and the index in Spanish at /es/llms.txt. */
-export function writeLlms(root: string, idx: Indexed, rows: Row[], today: string, listingMd: Set<string> = new Set()): { en: boolean; es: number } {
+export type LlmsExtra = { byCountry?: { key: string; name: string; homes: number }[]; answers?: { en: number; es: number }; when?: string };
+export function writeLlms(root: string, idx: Indexed, rows: Row[], today: string, listingMd: Set<string> = new Set(), extra: LlmsExtra = {}): { en: boolean; es: number } {
+  const when = extra.when || builtAt();
   const has = (rel: string) => fs.existsSync(path.join(root, rel));
   const out = { en: false, es: 0 };
   const llms = path.join(root, "llms.txt");
@@ -151,14 +197,22 @@ export function writeLlms(root: string, idx: Indexed, rows: Row[], today: string
         + (has("data/homes.jsonl") ? `- [Every home, one JSON object per line (JSON Lines)](${SITE}/data/homes.jsonl): address, price, size, score and its one-line summary, state\n` : "")
         + `- One home as clean text: the address of its page followed by .md, for example ${SITE}/deal/<slug>.md\n`
         + (has("research/removed-homes.json") ? `- [Homes taken off the site and price changes, with dates (JSON)](${SITE}/research/removed-homes.json) ([CSV](${SITE}/research/removed-homes.csv))\n` : "")
+        + (has("data/countries.json") ? `- [Every country in one file: homes, median, buying costs, rule for foreigners](${SITE}/data/countries.json); [costs](${SITE}/data/costs.json), [rules by nationality](${SITE}/data/can-i-buy.json), [glossary](${SITE}/data/glossary.json)\n` : "")
+        + (has("data/homes.csv") ? `- [Every home as CSV](${SITE}/data/homes.csv); what each field means: ${SITE}/data/README.md\n` : "")
+        + (has("feeds/price-drops.json") ? `- [Price drops (JSON Feed)](${SITE}/feeds/price-drops.json) and [homes taken off the site (JSON Feed)](${SITE}/feeds/removed.json)\n` : "")
+        + `- [Pages added or changed in the last build](${SITE}/data/changed-today.txt)\n`
+        + (extra.answers?.en ? `- [Short answers to buying questions, one Markdown file each, with official sources](${SITE}/answers/index.md)\n` : "")
         + `- Licence of text and figures: CC BY 4.0 (${LICENSE}); photos belong to the original listings\n\n`
         + `## How the homes are checked\n\n` + TRUST_PAGES.filter(([p]) => idx.has(SITE + p)).map(([p, n]) => `- [${n}](${SITE}${p})` + (has(p.slice(1) + ".md") ? ` ([Markdown](${SITE}${p}.md))` : "")).join("\n") + "\n\n"
         + `## Other languages\n\n- [Índice en español](${SITE}/es/llms.txt)\n` + OTHER_LLMS.filter(([l]) => has(`${l}/llms.txt`)).map(([l, n]) => `- [${n}](${SITE}/${l}/llms.txt)`).join("\n") + "\n\n";
       // the countries with the figures of the day replace the plain list of seo/prerender.ts
-      const cs = llmsCountries(root, listingMd);
+      const cs = llmsCountries(root, listingMd, (u) => idx.has(u));
       const at = txt.indexOf("## Countries");
       const rest = at >= 0 ? (cs ? txt.slice(0, at) + block + cs : txt.slice(0, at) + block + txt.slice(at)) : txt.replace(/\n*$/, "\n\n") + block + cs;
-      fs.writeFileSync(llms, rest);
+      let full = fixLlmsHead(rest, rows, when);
+      full = insertBefore(full, "## Data to quote", intentSections(root, (u) => idx.has(u), rows, "en"), "## The best pages for what you came for");
+      if (extra.byCountry?.length) full = insertBefore(full, "## Countries", `## One file per country\n\nEach file holds the country's listing page, its buying guide and costs, and every home: ${SITE}/llms/<country>.txt\n\n${extra.byCountry.map((c) => `- [${c.name}](${SITE}/llms/${c.key}.txt): ${c.homes} homes`).join("\n")}\n\n`, "## One file per country");
+      fs.writeFileSync(llms, full);
       out.en = true;
     }
   }
@@ -169,13 +223,17 @@ export function writeLlms(root: string, idx: Indexed, rows: Row[], today: string
     for (const r of rows) { const k = String(r.country || "").toLowerCase().trim().replace(/\s+/g, "-"); if (k) byCountry.set(k, (byCountry.get(k) || 0) + 1); }
     const countries = [...byCountry].filter(([k]) => idx.has(`${SITE}/es/homes/${k}`)).sort((a, b) => b[1] - a[1]);
     const nameOf = (k: string) => { const f = path.join(root, "es", "homes", k, "index.html"); const h1 = fs.existsSync(f) ? /<h1[^>]*>([\s\S]*?)<\/h1>/.exec(fs.readFileSync(f, "utf8"))?.[1].replace(/<[^>]+>/g, "").trim() : ""; return h1 || k; };
-    const txt = `# RealHunt\n\n> RealHunt publica casas baratas en venta en todo el mundo (la mayoría por menos de 100.000 €), revisadas una a una por una persona y calificadas de 70 a 98 frente a todas las demás casas de la web. No es una inmobiliaria: cada casa enlaza con su anuncio original.\n\n`
-      + `Hoy: ${rows.length} casas en ${byCountry.size} países. Actualizado el ${today}. Índice en inglés, con todas las páginas: ${SITE}/llms.txt. Los textos y las cifras se pueden citar con un enlace a la página de origen (CC BY 4.0); las normas, los impuestos y los gastos son información general, no asesoramiento jurídico ni fiscal.\n\n`
+    const sc = siteCounts(rows as any[]), sr = scoreRange(rows) || [70, 98];
+    const txt = `# RealHunt\n\n> RealHunt publica casas baratas en venta en todo el mundo (la mayoría por menos de 100.000 €), revisadas una a una por una persona y calificadas de ${sr[0]} a ${sr[1]} frente a todas las demás casas de la web. No es una inmobiliaria: cada casa enlaza con su anuncio original.\n\n`
+      + `Hoy: ${sc.homes} casas en ${sc.countries} países (un país cuenta a partir de 3 casas). Actualizado el ${when}. Índice en inglés, con todas las páginas: ${SITE}/llms.txt. Los textos y las cifras se pueden citar con un enlace a la página de origen (CC BY 4.0); las normas, los impuestos y los gastos son información general, no asesoramiento jurídico ni fiscal.\n\n`
       + `## Páginas principales\n\n${pages.map(([p, n, d]) => `- [${n}](${SITE}${p}): ${d}`).join("\n")}\n\n`
+      + intentSections(root, (u) => idx.has(u), rows, "es")
       + `## Archivos para máquinas\n\n- [Descripción OpenAPI de todos los archivos](${SITE}/openapi.json)\n- [Países: cifras clave y dirección de cada archivo](${SITE}/data/countries/index.json)\n- Por país, en español: ${SITE}/data/countries/<país>.es.md (texto limpio) y ${SITE}/data/countries/<país>.es.pdf (hoja de datos de una página)\n`
       + (has("es/feed.xml") ? `- Casas nuevas en español: ${SITE}/es/feed.xml (RSS)\n` : "") + (has("es/blog/rss.xml") ? `- Estudios en español: ${SITE}/es/blog/rss.xml (RSS)\n` : "")
       + (has("es/method.md") ? `- Método en Markdown: ${SITE}/es/method.md\n` : "")
       + (has("data/homes.jsonl") ? `- Todas las casas, un objeto JSON por línea (con el título en español en title_es): ${SITE}/data/homes.jsonl\n` : "")
+      + (has("data/countries.json") ? `- Todos los países en un archivo (casas, mediana, gastos de compra, norma para extranjeros): ${SITE}/data/countries.json\n` : "")
+      + (extra.answers?.es ? `- [Respuestas cortas a las preguntas de compra, un archivo Markdown cada una, con fuentes oficiales](${SITE}/es/answers/index.md)\n` : "")
       + (countries.length ? `\n## Países\n\n${countries.map(([k, n]) => `- [${nameOf(k)}](${SITE}/es/homes/${k}): ${n} casas` + (listingMd.has(`/es/homes/${k}.md`) ? `. Texto: ${SITE}/es/homes/${k}.md` : "")).join("\n")}\n` : "");
     fs.mkdirSync(path.join(root, "es"), { recursive: true });
     fs.writeFileSync(path.join(root, "es", "llms.txt"), txt);
@@ -199,7 +257,9 @@ export function writeListingMd(root: string, idx: Indexed, today: string): strin
     if (b < 0) continue;
     const text = htmlToText(h.slice(a, b).replace(/<style[\s\S]*?<\/style>/g, ""));
     if (text.length < 300) continue;
-    fs.writeFileSync(path.join(root, `${rel}.md`), `${text}\n\n---\n${m[1] ? "Fuente" : "Source"}: ${url} (RealHunt, ${today}). ${m[1] ? "Licencia CC BY 4.0: se puede citar con un enlace a la página." : "Licence CC BY 4.0: quote it with a link to the page."}\n`);
+    const title = (/<title>([^<]*)<\/title>/.exec(h)?.[1] || "").replace(/&amp;/g, "&").trim();
+    const top = m[1] ? `Título: ${title}\nURL: ${url}\nActualizado: ${today}\nLicencia: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)\n\n` : `Title: ${title}\nURL: ${url}\nUpdated: ${today}\nLicence: CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)\n\n`;
+    fs.writeFileSync(path.join(root, `${rel}.md`), `${top}${text}\n\n---\n${m[1] ? "Fuente" : "Source"}: ${url} (RealHunt, ${today}). ${m[1] ? "Licencia CC BY 4.0: se puede citar con un enlace a la página." : "Licence CC BY 4.0: quote it with a link to the page."}\n`);
     if (!h.includes(`href="${url}.md"`)) { h = h.replace("</head>", () => `<link rel="alternate" type="text/markdown" href="${url}.md" /></head>`); fs.writeFileSync(f, h); }
     done.push(`/${rel}.md`);
   }
@@ -207,10 +267,10 @@ export function writeListingMd(root: string, idx: Indexed, today: string): strin
 }
 
 /** llms.txt, countries: the figures of the day and the address of every clean-text and data copy (idea 41). */
-export function llmsCountries(root: string, listingMd: Set<string>): string {
+export function llmsCountries(root: string, listingMd: Set<string>, indexable: (url: string) => boolean = () => true): string {
   let idx: any = null; try { idx = JSON.parse(fs.readFileSync(path.join(root, "data/countries/index.json"), "utf8")); } catch { return ""; }
   const eur = (n: number) => "€" + Math.round(n).toLocaleString("en");
-  const lines = (idx?.countries || []).filter((c: any) => c?.key && c.homes > 0).map((c: any) => {
+  const lines = (idx?.countries || []).filter((c: any) => c?.key && c.homes > 0 && indexable(String(c.page || `${SITE}/homes/${c.key}`))).map((c: any) => {
     let f: any = {}; try { f = JSON.parse(fs.readFileSync(path.join(root, `data/countries/${c.key}.json`), "utf8")); } catch { /* no country file */ }
     const s = f.summary || {};
     const costs = c.costs_pct_low != null ? `; buying costs about ${c.costs_pct_low === c.costs_pct_high || c.costs_pct_high == null ? c.costs_pct_low : `${c.costs_pct_low} to ${c.costs_pct_high}`}% on top of the price` : "";
@@ -287,7 +347,13 @@ export function reachPost(root: string, opts: { live?: boolean } = {}) {
 
   const listingMd = writeListingMd(root, idx, today);
   rep.listing_markdown = listingMd.length;
-  rep.llms = writeLlms(root, idx, rows, today, new Set(listingMd));
+  const indexable = (u: string) => idx.has(u);
+  const answers = writeAnswers(root, indexable);
+  rep.answers = answers;
+  const byCountry = writeLlmsByCountry(root, indexable, today);
+  rep.llms_by_country = byCountry.length;
+  rep.open_data = writeOpenData(root, today, indexable);
+  rep.llms = writeLlms(root, idx, rows, today, new Set(listingMd), { byCountry, answers });
   rep.sitemaps = writeSpecialSitemaps(root, { rows, posts: readJson("src/data/blog.json", []) as Post[], postsEs: readJson("src/data/blog-es.json", []) as Post[], today, indexable: (u) => idx.has(u) });
   rep.robots_lines_added = finishRobots(root);
 
@@ -303,6 +369,30 @@ export function reachPost(root: string, opts: { live?: boolean } = {}) {
       rep.indexnow = { compared: !!prev, added: ch.added.length, changed: ch.changed.length, removed: ch.removed.length };
     }
   } catch { /* no state file: indexnow.py falls back to the dates of the sitemaps */ }
+  // the pages new or changed in this build, for crawlers that read a plain list (idea 637)
+  let ch: any = null; try { ch = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), ".rh-indexnow.json"), "utf8")); } catch { ch = null; }
+  const changed = changedToday(idx, today, ch?.compared ? ch : null);
+  fs.mkdirSync(path.join(root, "data"), { recursive: true });
+  fs.writeFileSync(path.join(root, "data/changed-today.txt"), changed.join("\n") + (changed.length ? "\n" : ""));
+  rep.changed_today = changed.length;
+  rep.press_pdf = figuresPdf(root, rows, today);
+  rep.data_readme = writeDataReadme(root, today);
+  // every address of llms.txt is a page that is indexable or a file that exists (ideas 624 and 643)
+  try {
+    const fams = (readJson("seo/reach/families.json", { families: [] }).families || []) as [string, string][];
+    for (const f of ["llms.txt", "es/llms.txt"]) if (fs.existsSync(path.join(root, f))) {
+      const chk = checkLlmsUrls(root, fs.readFileSync(path.join(root, f), "utf8"), indexable, fams);
+      rep[f === "llms.txt" ? "llms_check" : "llms_check_es"] = chk;
+      if (chk.missing.length) console.warn(`[rh-reach] ${f}: ${chk.missing.length} addresses are not indexable pages or files: ${chk.missing.slice(0, 8).join(" ")}`);
+    }
+  } catch (e) { console.warn("[rh-reach] llms check skipped:", (e as Error).message); }
+  rep.llms_full = llmsFullSize(root);
+  // idea 614: Spanish lines inside the English reference text, and English lines inside the Spanish index
+  try {
+    const wrong = { en: wrongLanguageLines(fs.readFileSync(path.join(root, "llms-full.txt"), "utf8"), "en"), es: fs.existsSync(path.join(root, "es/llms.txt")) ? wrongLanguageLines(fs.readFileSync(path.join(root, "es/llms.txt"), "utf8"), "es") : [] };
+    rep.wrong_language_lines = { en: wrong.en.length, es: wrong.es.length, sample: [...wrong.en.slice(0, 3), ...wrong.es.slice(0, 3)].map((l) => l.slice(0, 120)) };
+    if (wrong.en.length + wrong.es.length) console.warn(`[rh-reach] lines in the wrong language: ${wrong.en.length} in llms-full.txt, ${wrong.es.length} in es/llms.txt`);
+  } catch { /* no llms-full.txt */ }
 
   let build: any = {}; try { build = JSON.parse(fs.readFileSync(path.join(root, "build.json"), "utf8")); } catch { /* no build.json */ }
   let live: unknown = [];
@@ -311,7 +401,8 @@ export function reachPost(root: string, opts: { live?: boolean } = {}) {
   fs.writeFileSync(path.join(root, "releases.json"), JSON.stringify(releases) + "\n");
   rep.releases = releases.length;
 
-  rep.files = ["openapi.json", "data/countries/index.json", "feed.atom", "feed.json", "blog/atom.xml", "blog/feed.json", "es/feed.xml", "es/blog/rss.xml", "es/llms.txt", "sitemap-news.xml", "data/realhunt-best-homes.kml", "data/realhunt-homes.geojson", "research/property-portals.csv"].filter((f) => fs.existsSync(path.join(root, f)));
+  rep.data_files = Object.fromEntries(fileReport(root, Object.keys(FILE_NOTES)));
+  rep.files = ["openapi.json", "data/countries.json", "data/homes.csv", "data/README.md", "feeds/price-drops.json", "humans.txt", ".well-known/security.txt", "data/countries/index.json", "feed.atom", "feed.json", "blog/atom.xml", "blog/feed.json", "es/feed.xml", "es/blog/rss.xml", "es/llms.txt", "sitemap-news.xml", "data/realhunt-best-homes.kml", "data/realhunt-homes.geojson", "research/property-portals.csv"].filter((f) => fs.existsSync(path.join(root, f)));
   fs.writeFileSync(path.join(root, "reach.json"), JSON.stringify(rep, null, 1) + "\n");
   return rep;
 }

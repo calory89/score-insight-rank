@@ -70,3 +70,46 @@ export function writeLlmsFull(root: string, entries: Entry[], rows: any[], today
   fs.writeFileSync(path.join(root, "llms-full.txt"), parts.join(""));
   return pages;
 }
+
+/** One text file per country, /llms/<country>.txt (26-nov-2026, list of 1,000, idea 603): the country's listing page,
+ * its buying guide and costs page, then the country data file with every home. An assistant asked about one country
+ * reads 30-150 KB instead of the whole llms-full.txt. Only countries whose listing page is indexable. */
+export function writeLlmsByCountry(root: string, indexable: (url: string) => boolean, today: string, cap = 300_000): { key: string; name: string; homes: number; bytes: number }[] {
+  const fileOf = (p: string) => path.join(root, p.replace(/^\/+/, ""), "index.html");
+  let idx: any = null; try { idx = JSON.parse(fs.readFileSync(path.join(root, "data/countries/index.json"), "utf8")); } catch { return []; }
+  const out: { key: string; name: string; homes: number; bytes: number }[] = [];
+  for (const c of idx?.countries || []) {
+    const k = String(c?.key || "");
+    if (!/^[a-z0-9-]+$/.test(k) || !indexable(`${SITE}/homes/${k}`)) continue;
+    const parts = [`# RealHunt: ${c.country}\n\n> Homes for sale in ${c.country} on RealHunt, with the buying guide and the costs of buying there. Updated ${today}. ${c.homes} homes. Index of every country: ${SITE}/llms.txt. Licence CC BY 4.0: quote it with a link to the page it comes from. Legal and tax notes are general information, not advice.\n`];
+    let size = Buffer.byteLength(parts[0]);
+    for (const p of [`/homes/${k}`, `/guide/${k}`, `/costs/${k}`]) {
+      if (!indexable(SITE + p)) continue;
+      const text = htmlToText(mainOf(fileOf(p)));
+      if (text.length < 200) continue;
+      const block = `\n\n---\nSource: ${SITE}${p}\n\n${text}\n`;
+      if (size + Buffer.byteLength(block) > cap) continue;
+      parts.push(block); size += Buffer.byteLength(block);
+    }
+    const mdf = path.join(root, `data/countries/${k}.md`);
+    if (fs.existsSync(mdf)) {
+      const block = `\n\n---\nSource: ${SITE}/data/countries/${k}.md\n\n${fs.readFileSync(mdf, "utf8").trim()}\n`;
+      const room = cap - size;
+      if (room > 2000) { const b = Buffer.from(block); const cut = b.length > room ? b.subarray(0, room).toString("utf8").replace(/\n[^\n]*$/, "\n\n(cut here: the full list is in the data file above)\n") : block; parts.push(cut); size += Buffer.byteLength(cut); }
+    }
+    fs.mkdirSync(path.join(root, "llms"), { recursive: true });
+    fs.writeFileSync(path.join(root, "llms", `${k}.txt`), parts.join(""));
+    out.push({ key: k, name: String(c.country), homes: Number(c.homes) || 0, bytes: size });
+  }
+  return out;
+}
+
+/** Spanish words that give away a Spanish sentence inside the English text (idea 614). Only words that are not English. */
+const ES_WORDS = /\b(las casas|una casa|también|según|precio mediano|dormitorios|vivienda|comprar casa|gastos de compra|además|están)\b/i;
+const EN_WORDS = /\b(the homes|bedrooms|buying costs|asking price|for sale|which|their|would)\b/i;
+/** Lines of a text in the wrong language: Spanish inside English, or English inside Spanish. Titles of homes and
+ * names of places are left out (a Spanish village name is not a mistake). */
+export function wrongLanguageLines(text: string, lang: "en" | "es"): string[] {
+  const re = lang === "en" ? ES_WORDS : EN_WORDS;
+  return text.split("\n").filter((l) => !/^- .*\| https:\/\/realhunt\.co\/deal\//.test(l) && !/^Source: /.test(l) && !/https?:\/\/\S*$/.test(l.trim()) && re.test(l.replace(/\[[^\]]*\]\([^)]*\)/g, "")));
+}

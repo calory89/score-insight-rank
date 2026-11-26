@@ -16,6 +16,7 @@ import { MIN_RANK, MIN_SHOW, cKey, countryStats, type CountryStat, type Home } f
 import { LICENSE, PRESS_EMAIL, SITE, kit, mdTable, type Kit, type Lang } from "../assetsKit";
 import { makePdf, pdfPages, type Line } from "./pdf";
 import { countryEs } from "./portals";
+import { round3 } from "./ai";
 
 export type Row = Home & { lat?: number | null; lng?: number | null; why_great?: string; why_great_es?: string; category?: string; publish_at?: string | null; approved_at?: string | null; video_url?: string | null; image_urls?: string[] };
 export type Fact = CountryStat & {
@@ -135,7 +136,7 @@ function countryPdf(k: Kit, f: Fact, today: string): Buffer {
 const publicHome = (r: Row) => ({
   url: `${SITE}/deal/${r.slug}`, title: String(r.title || "").replace(/\s+/g, " ").trim(), title_es: r.title_es ? String(r.title_es).replace(/\s+/g, " ").trim() : null, country: r.country || null, region: regionOf(r as any) || null, place: r.location_name || null,
   price_eur: r.price_eur, size_sqm: r.sqm ?? null, bedrooms: r.bedrooms ?? null, score: r.nota ?? null, added: added(r) || null,
-  lat: r.lat ?? null, lng: r.lng ?? null, listed_on: r.source_domain || null, summary: String(r.why_great || "").replace(/\s+/g, " ").trim() || null,
+  lat: round3(r.lat), lng: round3(r.lng), listed_on: r.source_domain || null, summary: String(r.why_great || "").replace(/\s+/g, " ").trim() || null,
 });
 
 /** Writes every file of /data and /openapi.json. Returns how many files it wrote. */
@@ -170,11 +171,11 @@ export function writeDataFiles(root: string, both: Record<Lang, Fact[]>, rows: R
 
   const geo = rows.filter((r) => typeof r.lat === "number" && typeof r.lng === "number" && r.price_eur > 0);
   put("data/realhunt-homes.geojson", JSON.stringify({ type: "FeatureCollection", name: "RealHunt homes", updated: today, license: LICENSE, attribution: "RealHunt (realhunt.co)",
-    features: geo.map((r) => ({ type: "Feature", geometry: { type: "Point", coordinates: [Math.round(r.lng! * 1e5) / 1e5, Math.round(r.lat! * 1e5) / 1e5] }, properties: { url: `${SITE}/deal/${r.slug}`, title: String(r.title || "").trim(), country: r.country || null, price_eur: r.price_eur, size_sqm: r.sqm ?? null, score: r.nota ?? null } })) }) + "\n");
+    features: geo.map((r) => ({ type: "Feature", geometry: { type: "Point", coordinates: [Math.round(r.lng! * 1e3) / 1e3, Math.round(r.lat! * 1e3) / 1e3] }, properties: { url: `${SITE}/deal/${r.slug}`, title: String(r.title || "").trim(), country: r.country || null, price_eur: r.price_eur, size_sqm: r.sqm ?? null, score: r.nota ?? null } })) }) + "\n");
   // the ten best-scored homes of each country, a folder per country: opens in Google Earth, imports into Google My Maps
   put("data/realhunt-best-homes.kml", `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>RealHunt: the best-scored cheap homes by country</name><description>${esc(`The ten best-scored homes of each country on RealHunt, ${en.date(today)}. Each point links to the home. ${SITE}`)}</description>\n`
     + facts.map((f) => { const hs = f.homes.filter((r) => typeof r.lat === "number" && typeof r.lng === "number").slice(0, 10); return hs.length ? `<Folder><name>${esc(f.name)}</name>` + hs.map((r) =>
-      `<Placemark><name>${esc(`${en.eur(r.price_eur)} · ${String(r.title || "").trim()}`)}</name><description>${esc(`${r.location_name || f.name}. ${r.sqm ? r.sqm + " m². " : ""}RealHunt score ${r.nota ?? "n/a"}. ${SITE}/deal/${r.slug}`)}</description><Point><coordinates>${Math.round(r.lng! * 1e5) / 1e5},${Math.round(r.lat! * 1e5) / 1e5},0</coordinates></Point></Placemark>`).join("") + `</Folder>\n` : ""; }).join("")
+      `<Placemark><name>${esc(`${en.eur(r.price_eur)} · ${String(r.title || "").trim()}`)}</name><description>${esc(`${r.location_name || f.name}. ${r.sqm ? r.sqm + " m². " : ""}RealHunt score ${r.nota ?? "n/a"}. ${SITE}/deal/${r.slug}`)}</description><Point><coordinates>${Math.round(r.lng! * 1e3) / 1e3},${Math.round(r.lat! * 1e3) / 1e3},0</coordinates></Point></Placemark>`).join("") + `</Folder>\n` : ""; }).join("")
     + `</Document></kml>\n`);
 
   put("openapi.json", JSON.stringify(openApi(facts, today), null, 1) + "\n");
@@ -187,6 +188,13 @@ export function openApi(facts: Fact[], today: string) {
   const cParam = { name: "country", in: "path", required: true, description: "Country key: lower case, words joined with a hyphen.", schema: { type: "string", enum: keys } };
   const ok = (description: string, type: string, schema?: object) => ({ "200": { description, content: { [type]: schema ? { schema } : {} } } });
   const home = { type: "object", properties: { url: { type: "string", format: "uri" }, title: { type: "string" }, title_es: { type: ["string", "null"], description: "The title in Spanish, when there is one." }, country: { type: ["string", "null"] }, region: { type: ["string", "null"] }, place: { type: ["string", "null"] }, price_eur: { type: "number", description: "Asking price in euros from the original listing." }, size_sqm: { type: ["number", "null"] }, bedrooms: { type: ["number", "null"] }, score: { type: ["number", "null"], description: "RealHunt score, 70 to 98. RealHunt's own grade, not a valuation." }, added: { type: ["string", "null"], format: "date" }, lat: { type: ["number", "null"] }, lng: { type: ["number", "null"] }, listed_on: { type: ["string", "null"], description: "Domain of the original listing." }, summary: { type: ["string", "null"] } } };
+  const sn = { type: ["string", "null"] }, nn = { type: ["number", "null"] }, lvl = { type: ["string", "null"], enum: ["low", "medium", "high", null] };
+  const homeLine = { type: "object", required: ["url", "slug", "price_eur", "state"], properties: { url: { type: "string", format: "uri" }, slug: { type: "string" }, title: { type: "string" }, title_es: sn, country: sn, region: sn, place: sn,
+    lat: { ...nn, description: "Rounded to 3 decimals (about 100 m)." }, lng: { ...nn, description: "Rounded to 3 decimals (about 100 m)." }, price_eur: { type: "number" }, size_sqm: nn, eur_per_sqm: nn, bedrooms: nn, score: nn, score_summary: sn, added: { ...sn, format: "date" },
+    state: { type: "string", enum: ["listed", "unconfirmed", "advert_offline"] }, listed_on: sn,
+    monthly_fee: { ...nn, description: "Community fee (HOA) per month as the listing states it, in costs_currency." }, yearly_tax: { ...nn, description: "Property tax per year as the listing states it, in costs_currency." }, costs_currency: sn,
+    fee_unknown: { type: "boolean", description: "A flat whose listing does not state its community fee." }, flood_indicator: { ...lvl, description: "Rough indicator from height and distance to the sea and rivers, not an official flood map." },
+    noise_indicator: { ...lvl, description: "From the distance to motorways and railways (OpenStreetMap)." }, airport_km: nn, last_confirmed: { ...sn, format: "date", description: "Last day our nightly check read the advert as still for sale (src_ok_at)." } } };
   return {
     openapi: "3.1.0",
     info: { title: "RealHunt open data", version: today, summary: "Cheap homes for sale around the world, each checked by a person and scored, with buying rules and costs by country.",
@@ -205,6 +213,17 @@ export function openApi(facts: Fact[], today: string) {
       "/research/property-portals.json": { get: { operationId: "getPropertyPortals", summary: "Property portals by country: name, domain and link", responses: ok("The directory", "application/json") } },
       "/data/realhunt-homes.geojson": { get: { operationId: "getHomesGeoJson", summary: "Every home with coordinates, as GeoJSON points", responses: ok("GeoJSON", "application/geo+json") } },
       "/data/realhunt-best-homes.kml": { get: { operationId: "getBestHomesKml", summary: "The ten best-scored homes of each country, as KML", responses: ok("KML", "application/vnd.google-earth.kml+xml") } },
+      "/data/homes.jsonl": { get: { operationId: "getHomesJsonl", summary: "Every home, one JSON object per line. The first line describes the file (_about, updated, license); every other line is a HomeLine",
+        description: "Read it line by line and skip the first. Example: curl -s https://realhunt.co/data/homes.jsonl | tail -n +2 | jq -c 'select(.price_eur <= 30000)'", responses: ok("JSON Lines", "application/jsonl", { $ref: "#/components/schemas/HomeLine" }) } },
+      "/data/homes.csv": { get: { operationId: "getHomesCsvAll", summary: "The same homes and fields as homes.jsonl, one row each (UTF-8 with BOM). Fields: https://realhunt.co/data/README.md", responses: ok("CSV", "text/csv") } },
+      "/data/countries.json": { get: { operationId: "getCountriesAll", summary: "Every country in one file: homes, median price, cheapest, buying costs and the rule for foreign buyers, with sources", responses: ok("JSON", "application/json") } },
+      "/data/costs.json": { get: { operationId: "getCosts", summary: "Buying costs, yearly taxes and the rule for foreigners by country, with sources (the data behind /costs)", responses: ok("JSON", "application/json") } },
+      "/data/can-i-buy.json": { get: { operationId: "getCanIBuy", summary: "Who can buy a home where, by nationality group (the data behind /can-i-buy)", responses: ok("JSON", "application/json") } },
+      "/data/glossary.json": { get: { operationId: "getGlossary", summary: "Words of a home purchase by country, as schema.org DefinedTermSet (JSON-LD)", responses: ok("JSON-LD", "application/ld+json") } },
+      "/data/changed-today.txt": { get: { operationId: "getChangedToday", summary: "Addresses of the pages added or changed in the last build, one per line", responses: ok("Text", "text/plain") } },
+      "/feeds/price-drops.json": { get: { operationId: "getPriceDrops", summary: "Price drops, newest first (JSON Feed 1.1). Also /feeds/removed.json for homes taken off the site", responses: ok("JSON Feed", "application/feed+json") } },
+      "/llms/{country}.txt": { get: { operationId: "getCountryForAssistants", summary: "One country for AI assistants: its listing page, buying guide, costs and every home, as text", parameters: [cParam], responses: ok("Text", "text/plain") } },
+      "/answers/{slug}.md": { get: { operationId: "getAnswer", summary: "The short answer to one buying question, with its official sources. Index: /answers/index.md; Spanish: /es/answers/{slug}.md", parameters: [{ name: "slug", in: "path", required: true, schema: { type: "string" } }], responses: ok("Markdown", "text/markdown") } },
       "/llms.txt": { get: { operationId: "getIndexForAssistants", summary: "Short index of the site for AI assistants. Spanish: /es/llms.txt", responses: ok("Text", "text/plain") } },
       "/llms-full.txt": { get: { operationId: "getFullText", summary: "Method, data, costs, guides and every home in one text file", responses: ok("Text", "text/plain") } },
       "/feed.json": { get: { operationId: "getNewHomesFeed", summary: "The newest homes (JSON Feed 1.1). Also /feed.xml (RSS) and /feed.atom (Atom)", responses: ok("JSON Feed", "application/feed+json") } },
@@ -214,7 +233,7 @@ export function openApi(facts: Fact[], today: string) {
         parameters: [{ name: "country", in: "query", schema: { type: "string", enum: keys } }, { name: "max", in: "query", description: "Highest price in euros", schema: { type: "integer" } }, { name: "min", in: "query", description: "Lowest price in euros", schema: { type: "integer" } }, { name: "beds", in: "query", description: "Fewest bedrooms", schema: { type: "integer" } }, { name: "sqm", in: "query", description: "Smallest size in m²", schema: { type: "integer" } }],
         responses: ok("HTML", "text/html") } },
     },
-    components: { schemas: { Home: home } },
+    components: { schemas: { Home: home, HomeLine: homeLine } },
   };
 }
 
