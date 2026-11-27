@@ -47,8 +47,9 @@ export function titleCandidates(title: string, lang: Lang, kind: Kind): string[]
   let core = stripBrand(title);
   // A home: "€85,000 · 2-bedroom flat with a Lake Como view terrace" -> what first, price after it.
   if (kind === "deal") {
-    const m = lang === "es" ? /^([\d.]+ €) · (.+)$/.exec(core) : /^(€[\d,]+) · (.+)$/.exec(core);
-    if (m) core = `${m[2]} · ${m[1]}`;
+    // (a status in front, "Not confirmed: €59,300 · ...", stays in front)
+    const m = lang === "es" ? /^((?:[^:·€]+: )?)([\d.]+ €) · (.+)$/.exec(core) : /^((?:[^:·€]+: )?)(€[\d,]+) · (.+)$/.exec(core);
+    if (m) core = `${m[1]}${m[3]} · ${m[2]}`;
   }
   // the wordings of the title itself, fullest first...
   const base = [core];
@@ -69,10 +70,28 @@ export function titleCandidates(title: string, lang: Lang, kind: Kind): string[]
   // ...and last, the same title with filler words taken out one step at a time (each step keeps the earlier ones):
   // "Viviendas baratas con jardín en venta en Italia por menos de 100.000 €" -> "Casas con jardín en Italia por menos de 100.000 €"
   for (const x of [...out]) { let y = x; for (const [re, to] of SQUEEZE[lang]) { const z = y.replace(re, to as any); if (z !== y) { y = z; out.push(y); } } }
+  // a home whose name is too long: first the "with ..." part before the place goes, then a "with ..." part at the end
+  // ("two-bedroom flat with a sea-view terrace in Kavarna · €66,000" -> "two-bedroom flat in Kavarna · €66,000")
+  if (kind === "deal") for (const x of [...out]) {
+    const w = lang === "es" ? "con" : "with", at = lang === "es" ? "en" : "in";
+    // keep the first thing it is "with" when that is enough: "with fjord views and solar panels on 1,700 m² in" -> "with fjord views in"
+    const y1 = x.replace(new RegExp(`( ${w} [^·,]*?)(?: ${lang === "es" ? "y" : "and"} |, | on | ${lang === "es" ? "de" : "of"} )[^·]*?(?= ${at} \\p{Lu})`, "u"), "$1");
+    if (y1 !== x) out.push(y1);
+    const a = x.replace(new RegExp(` ${w} [^·]*?(?= ${at} \\p{Lu})`, "u"), "");
+    if (a !== x) out.push(a);
+    for (const y of [x, a]) { const b = y.replace(new RegExp(` ${w} [^·]*?(?= · |$)`), ""); if (b !== y && b.length >= 20) out.push(b); }
+  }
+  // a home, last: shorter words for the price, the bedrooms and the status
+  if (kind === "deal") for (const x of [...out]) { let y = x; for (const [re, to] of DEAL_SQUEEZE[lang]) { const z = y.replace(re, to); if (z !== y) { y = z; out.push(y); } } }
   // an article: its headline without the part after the last colon ("..., scored: price, beach and facilities")
   if (kind === "blog") for (const x of [...out]) { const i = x.lastIndexOf(": "); if (i >= 25) out.push(x.slice(0, i)); }
   return [...new Set(out)];
 }
+
+const DEAL_SQUEEZE: Record<Lang, [RegExp, string][]> = {
+  en: [[/ for (€[\d,]+)$/, " · $1"], [/(\d)-bedroom /, "$1-bed "], [/^Sold or withdrawn: /, "Off the market: "], [/\b\d+-bed /, ""]],
+  es: [[/ por ([\d.]+\s?€)$/, " · $1"], [/ de (\d+) dormitorios? /, " de $1 hab. "], [/^Vendida o retirada: /, "Fuera de venta: "], [/ de \d+ hab\. /, " "]],
+};
 
 // Words a search result can do without, in the order they go. Only wording: the place, the price and the answer stay.
 const SQUEEZE: Record<Lang, [RegExp, string | ((m: string, w: string) => string)][]> = {

@@ -31,7 +31,7 @@ describe("titles", () => {
     expect(pickTitle("€85,000 · 2-bedroom flat with a Lake Como view terrace · RealHunt", "en", "deal")).toBe("2-bedroom flat with a Lake Como view terrace · €85,000");
     expect(pickTitle("85.000 € · Apartamento de 1 dormitorio en Murcia · RealHunt", "es", "deal")).toBe("Apartamento de 1 dormitorio en Murcia · 85.000 € · RealHunt");
     // a headline that does not fit keeps all its words: nothing is cut in the middle
-    expect(pickTitle("€90,500 · Villa with fjord views and solar panels on 1,700 m² in Hygum · RealHunt", "en", "deal")).toBe("Villa with fjord views and solar panels on 1,700 m² in Hygum · €90,500");
+    expect(pickTitle("€90,500 · Villa with fjord views and solar panels on 1,700 m² in Hygum · RealHunt", "en", "deal")).toBe("Villa with fjord views in Hygum · €90,500 · RealHunt");
   });
   it("never gives two pages the same title", () => {
     const taken = new Set<string>();
@@ -312,6 +312,14 @@ describe("the pass over a built site", () => {
 });
 
 describe("short descriptions get a closing sentence that is true of every page of their kind", () => {
+  it("a long home name loses its with-part and keeps place and price", () => {
+    expect(pickTitle("€66,000 · Ready-to-move-in two-bedroom flat with a sea-view terrace in Kavarna · RealHunt", "en", "deal")).toBe("Ready-to-move-in two-bedroom flat in Kavarna · €66,000");
+    expect(pickTitle("Not confirmed: €59,300 · Bright as-new tiny house with sleeping loft and heat pump", "en", "deal")).toBe("Not confirmed: Bright as-new tiny house · €59,300 · RealHunt");
+  });
+  it("a home with a status keeps place and price in 60 characters", () => {
+    expect(pickTitle("Vendida o retirada: Casa de 2 dormitorios en Cumbres de San Bartolomé por 43.000 €", "es", "deal").length).toBeLessThanOrEqual(60);
+    expect(pickTitle("Sold or withdrawn: 2-bedroom house in Rogny-les-Sept-Écluses for €65,000", "en", "deal")).toBe("Off the market: house in Rogny-les-Sept-Écluses · €65,000");
+  });
   it("an article title drops what follows its last colon when it does not fit", () => {
     expect(pickTitle("Las mejores obras nuevas de Tulum, puntuadas: precio, playa e instalaciones", "es", "blog")).toBe("Las mejores obras nuevas de Tulum, puntuadas · RealHunt");
   });

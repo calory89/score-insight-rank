@@ -3,6 +3,7 @@
 // home-lead.test.ts and deal-batch1.test.ts.
 import { esPlace } from "../lib/lang"; // relative: seo/prerender.ts (no "@" alias at build time) uses this file too
 import { locationParts } from "./regions";
+import { pickTitle } from "../../seo/polishMeta"; // the same wording the prerendered page gets from seo/polish.ts
 import { isGone, isUnconfirmed } from "./n9/status";
 
 type Row = Record<string, any>;
@@ -98,5 +99,5 @@ export function titleFlag(r: Row, lang: "en" | "es"): string {
 export const dealTitle = (r: Row, lang: "en" | "es") => titleFlag(r, lang) + homeTitle(r, lang, titleFlag(r, lang) ? 40 : 60);
 /** The browser title the app sets: dealTitle with " · RealHunt" when it fits in 60 characters, the rule of
  * pickTitle() in seo/polishMeta.ts for a home page (compared in src/test/deal-title.test.ts). */
-export const dealDocTitle = (r: Row, lang: "en" | "es") => { const t = dealTitle(r, lang); return (t + " · RealHunt").length <= 60 ? t + " · RealHunt" : t; };
+export const dealDocTitle = (r: Row, lang: "en" | "es") => pickTitle(dealTitle(r, lang) + " · RealHunt", lang, "deal");
 
