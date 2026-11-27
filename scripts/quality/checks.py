@@ -30,6 +30,9 @@ KIND_ALIASES = {
     "row house": "townhouse", "chalé": "chalet", "chale": "chalet", "cortijo": "farmhouse", "masía": "farmhouse", "masia": "farmhouse",
     "finca": "farmhouse", "farm": "farmhouse", "rustico": "farmhouse", "casale": "farmhouse", "stuga": "cottage", "sommerhus": "cottage",
     "cabaña": "cabin", "hut": "cabin", "log cabin": "cabin", "bungalow": "bungalow", "minka": "house", "akiya": "house",
+    # ronda 19: house types named in titles (US, France, Japan, Greece) and Sardinian and US farm names
+    "kominka": "house", "longère": "house", "longere": "house", "ranch": "house", "colonial": "house", "victorian": "house",
+    "a-frame": "cabin", "mansion": "house", "homestead": "farmhouse", "stazzo": "farmhouse",
 }
 
 # Idea 922: words that promise money, in the 7 languages of the site (seo/tech/rules.ts RETURNS covers en and es).
