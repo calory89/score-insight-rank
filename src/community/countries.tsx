@@ -12,6 +12,7 @@ import { money } from "./api";
 import { MiniCard, type Row } from "./extras";
 const theC = (n: string) => (/^(United |Netherlands$|Dominican Republic$|Czech Republic$|Philippines$)/.test(n) ? "the " + n : n);
 import { t } from "./i18n";
+import { isEs, esPlace as esCountry } from "@/lib/lang";
 
 const GUIDES = GUIDES_JSON as Record<string, { name: string }>;
 const DESTS = DEST_JSON as Record<string, any>;
@@ -77,7 +78,17 @@ export function CountriesPage() {
     <div className="hunt-wrap hunt-page rh-cmp">
       <nav className="hv-crumbs"><Link to="/">RealHunt</Link> › <Link to="/countries">{t("Compare countries")}</Link> › <span>{A!.name} vs {B!.name}</span></nav>
       <h1>{A!.name} vs {B!.name}: {t("where is a cheap home better value?")}</h1>
-      {cheaper && <p>{pct(cheaper[0].ppsqm, cheaper[1].ppsqm) < 3 ? <>On RealHunt, homes in {theC(A!.name)} and {B!.name} cost about the same per m² ({money(Math.round(A!.ppsqm))} and {money(Math.round(B!.ppsqm))}), with median prices of {money(A!.med)} and {money(B!.med)}.</> : <>On RealHunt, homes in <b>{cheaper[0].name}</b> cost a median {money(Math.round(cheaper[0].ppsqm))} per m², {pct(cheaper[0].ppsqm, cheaper[1].ppsqm)}% less than in {theC(cheaper[1].name)} ({money(Math.round(cheaper[1].ppsqm))} per m²).</>}{lowCost(da.purchase_costs_pct) && lowCost(db.purchase_costs_pct) ? ` Buying costs start at about ${da.purchase_costs_pct.split(/[-–]/)[0]}% in ${theC(A!.name)} and ${db.purchase_costs_pct.split(/[-–]/)[0]}% in ${theC(B!.name)}.` : ""}</p>}
+      {cheaper && (isEs() ? <p translate="no">{(() => {
+        // ronda 29: the Spanish page got this sentence half in English (the translator works node by node and this
+        // one mixes text and values); it is written in Spanish here, with Spanish country names
+        const n = (x: string) => esCountry(x), eur = (v: number) => `${String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ".")} €`, cut = (s: string) => String(s).split(/[-–]/)[0].replace(".", ",");
+        const first = pct(cheaper[0].ppsqm, cheaper[1].ppsqm) < 3
+          ? `En RealHunt, las casas en ${n(A!.name)} y en ${n(B!.name)} cuestan más o menos lo mismo por m² (${eur(Math.round(A!.ppsqm))} y ${eur(Math.round(B!.ppsqm))}), con precios medianos de ${eur(A!.med)} y ${eur(B!.med)}.`
+          : `En RealHunt, las casas en ${n(cheaper[0].name)} cuestan una mediana de ${eur(Math.round(cheaper[0].ppsqm))} por m², un ${pct(cheaper[0].ppsqm, cheaper[1].ppsqm)} % menos que en ${n(cheaper[1].name)} (${eur(Math.round(cheaper[1].ppsqm))} por m²).`;
+        const costs = lowCost(da.purchase_costs_pct) && lowCost(db.purchase_costs_pct) ? ` Los gastos de compra empiezan en un ${cut(da.purchase_costs_pct)} % en ${n(A!.name)} y un ${cut(db.purchase_costs_pct)} % en ${n(B!.name)}.` : "";
+        return first + costs;
+      })()}</p> : <p>{pct(cheaper[0].ppsqm, cheaper[1].ppsqm) < 3 ? <>On RealHunt, homes in {theC(A!.name)} and {B!.name} cost about the same per m² ({money(Math.round(A!.ppsqm))} and {money(Math.round(B!.ppsqm))}), with median prices of {money(A!.med)} and {money(B!.med)}.</> : <>On RealHunt, homes in <b>{cheaper[0].name}</b> cost a median {money(Math.round(cheaper[0].ppsqm))} per m², {pct(cheaper[0].ppsqm, cheaper[1].ppsqm)}% less than in {theC(cheaper[1].name)} ({money(Math.round(cheaper[1].ppsqm))} per m²).</>}{lowCost(da.purchase_costs_pct) && lowCost(db.purchase_costs_pct) ? ` Buying costs start at about ${da.purchase_costs_pct.split(/[-–]/)[0]}% in ${theC(A!.name)} and ${db.purchase_costs_pct.split(/[-–]/)[0]}% in ${theC(B!.name)}.` : ""}</p>)}
+
       <div className="hv-costs-table"><table><thead><tr><th></th><th>{A!.name}</th><th>{B!.name}</th></tr></thead>
         <tbody>{rows.map(([l, a, b]) => <tr key={l}><th scope="row">{l}</th><td>{a}</td><td>{b}</td></tr>)}</tbody></table></div>
       <p className="hunt-fine">{t("Prices describe the homes on RealHunt, each checked by a person, not every home in each country. Rules and taxes: general information, not legal or tax advice.")}</p>
