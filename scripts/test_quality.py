@@ -140,5 +140,11 @@ class Report(unittest.TestCase):
         self.assertEqual(len(res), len(checks.CHECKS))
 
 
+class TitleJunk(unittest.TestCase):
+    def test_zero_bed(self):
+        c = ctx([row("a"), row("b", title="Renovated 0-bed condo in Little River"), row("c", title_es="Condo de 0 dormitorios en X")])
+        self.assertEqual([x["slug"] for x in checks.check_title_junk(c)], ["b", "c"])
+
+
 if __name__ == "__main__":
     unittest.main()

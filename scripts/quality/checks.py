@@ -500,6 +500,19 @@ def check_es_titles(ctx):
     return out
 
 
+ZERO_BED = re.compile(r"\b0[- ]?(?:bed|bedroom|br)s?\b|\bde 0 dormitorios?\b|\bnull\b|\bundefined\b|\bNaN\b", re.I)
+
+
+def check_title_junk(ctx):
+    """Ronda 18 of RealHunt 100/100: a title with "0-bed", "de 0 dormitorios", null, undefined or NaN in it."""
+    out = []
+    for r in ctx.rows:
+        for k in ("title", "title_es"):
+            t = r.get(k) or ""
+            if ZERO_BED.search(t): out.append(_home(r, f"{k} has a zero bedroom count or an empty value in it", **{k: t}))
+    return out
+
+
 def check_why_great_numbers(ctx):
     """941: the price, m² and bedrooms written in why_great match the home's data. A € amount that differs by more than
     5 % from the price goes to review, unless the words before it say it is an old price, a median or a budget."""
@@ -589,7 +602,7 @@ CHECKS = [
     ("photo_dupes", "907", check_photo_dupes), ("same_home", "908", check_same_home), ("kinds", "909", check_kinds),
     ("places", "910", check_places), ("photos", "911, 912", check_photos), ("unconfirmed", "915", check_unconfirmed),
     ("sales_words", "922", check_sales_words), ("surface", "923", check_surface), ("legal_flags", "924, 925", check_legal_flags),
-    ("source_links", "926", check_source_links), ("es_titles", "927", check_es_titles), ("thin_countries", "930", check_thin_countries),
+    ("source_links", "926", check_source_links), ("es_titles", "927", check_es_titles), ("title_junk", "r18", check_title_junk), ("thin_countries", "930", check_thin_countries),
     ("top_scores", "932", check_top_scores), ("agency_bias", "938", check_agency_bias), ("gone_by_portal", "939", check_gone_by_portal),
     ("why_great_numbers", "941", check_why_great_numbers), ("translations", "945", check_translations),
     ("gone_out_of_build", "948", check_gone_out_of_build), ("research_medians", "949", check_research_medians),
