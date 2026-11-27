@@ -551,7 +551,17 @@ function build(root: string, es?: EsPass) {
   page(`${SITE}/winners`, "Winners: the best homes each week · RealHunt", "The homes that topped RealHunt each week, with their price and score.", DEF);
   page(`${SITE}/best`, "The best homes on RealHunt, by country · RealHunt", "The top-scored homes in each country on RealHunt, checked by a person and ranked best first.", DEF,
     `<main class="rh-static"><h1>The best homes, by country</h1><ul>${countryLinks.map(([k, v]) => `<li><a href="/homes/${esc(k)}">Best homes in ${esc(v.name)}</a>: ${v.homes[0] ? `${esc(v.homes[0].title)}, ${esc(eur(v.homes[0].price_eur))}` : ""}</li>`).join("")}</ul></main>`);
-  page(`${SITE}/help-buying`, "Help buying a home abroad · RealHunt", "Local lawyers, translators, surveys and tax numbers for buying a house in another country.", DEF);
+  // ronda 22: the page is an app screen, but what a crawler (and a visitor without scripts) gets is now a short guide
+  // to the four things a foreign buyer usually needs, with the pages that have each country's rules and costs.
+  {
+    const gs: Record<string, { name: string }> = readJson("src/data/guides.json", {});
+    const gl = Object.entries(gs).sort((a, b) => a[1].name.localeCompare(b[1].name)).map(([k, g]) => `<li><a href="/guide/${esc(k)}">${esc(g.name)}</a></li>`).join("");
+    page(`${SITE}/help-buying`, "Help buying a home abroad · RealHunt", "Local lawyers, translators, surveys and tax numbers for buying a house in another country.", DEF,
+      `<main class="rh-static"><h1>Help buying a home abroad</h1><p>Buying a house in another country usually takes four things besides the money: a tax number for foreigners, a lawyer or notary who checks that the seller owns the home and that nothing is owed on it, a translation of the contract into a language you read, and a survey of the building before you sign. Which ones are required, who provides them and what they cost changes from country to country.</p>`
+      + `<h2>Where to find the rules of each country</h2><ul><li><a href="/can-i-buy">Can I buy there? Rules by nationality</a></li><li><a href="/costs">Buying costs abroad: taxes, notary and registry fees on top of the price</a></li><li><a href="/buying-costs">Buying-cost calculator for a price and a country</a></li><li><a href="/guide">Buying guides: the steps, papers and yearly costs</a></li></ul>`
+      + (gl ? `<h2>Buying guides by country</h2><ul>${gl}</ul>` : "") + `<p>RealHunt is not an estate agent and does not give legal or tax advice: every home links to its original listing, and a local lawyer is the person to confirm the rules before you pay a deposit.</p></main>`,
+      [crumbs([["RealHunt", SITE + "/"], ["Help buying", SITE + "/help-buying"]])]);
+  }
   page(`${SITE}/insider`, "RealHunt Insider · The secret Top 5 of the week", "Invite 3 friends and unlock the secret weekly Top 5: the homes furthest below their country's typical price. Free.", DEF);
   page(`${SITE}/contact`, "Contact RealHunt", "Write to the RealHunt team about a home, a listing, a partnership or press.", DEF,
     `<main class="rh-static"><h1>Contact RealHunt</h1><p>Email: <!--email_off-->carlos@equinoxinvestmentgroup.com<!--/email_off--></p><p>RealHunt is run by Equinox Investment Group LLC. <a href="/about">About us</a>.</p></main>`);
