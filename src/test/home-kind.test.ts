@@ -10,8 +10,8 @@ const rows: any[] = JSON.parse(fs.readFileSync(path.resolve(__dirname, "../../pu
 // the words of an advert title that name each kind
 const SAYS: Record<string, RegExp> = {
   studio: /\bstudio\b/i, penthouse: /\bpenthouse\b/i, duplex: /\bduplex\b/i, flat: /\b(flat|apartment|condo)\b/i, loft: /\bloft\b/i,
-  townhouse: /\b(town ?house|row ?house|end[ -]terrace)\b/i, villa: /\bvilla\b/i, bungalow: /\bbungalow\b/i, farmhouse: /\bfarm ?house\b/i,
-  cottage: /\bcottage\b/i, chalet: /\bchalet\b/i, cabin: /\bcabin\b/i, house: /\b(house|home)\b/i,
+  townhouse: /\b(town ?house|row ?house|end[ -]terrace)\b/i, villa: /\bvilla\b/i, bungalow: /\bbungalow\b/i, farmhouse: /\b(farm ?house|farm|cortijo|stazzo|homestead)\b/i,
+  cottage: /\b(cottage|stuga)\b/i, chalet: /\bchalet\b/i, cabin: /\b(cabin|a-frame)\b/i, house: /\b(house|home|ranch|colonial|victorian|mansion|longère|kominka)\b/i, // ronda 19: house types the advert names
 };
 
 describe("short titles say what the advert says (idea 4)", () => {
