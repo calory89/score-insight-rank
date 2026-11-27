@@ -67,18 +67,7 @@ export function liveChips(p: LiveQuery): { k: string; label: string; value?: str
 }
 
 /** A sentence for the live search made from the feed's URL filters (used by the "Search the whole web" card). */
-export function liveQueryFromParams(sp: URLSearchParams): string {
-  const get = (k: (typeof FILTER_KEYS)[number]) => (sp.get(k) || "").trim();
-  const parts: string[] = [];
-  const beds = Number(get("beds")) || 0;
-  parts.push(beds ? `${beds} bedroom homes` : "homes");
-  const where = [get("q"), get("country").split(",")[0]].filter(Boolean).join(", ");
-  if (where) parts.push("in " + where);
-  const max = Number(get("price")) || 0, min = Number(get("min")) || 0;
-  if (max) parts.push(`under €${max.toLocaleString("en")}`);
-  if (min) parts.push(`over €${min.toLocaleString("en")}`);
-  return where ? parts.join(" ") : "";
-}
+export { liveQueryFromParams } from "./livequery";
 
 /** Progress text for a stage: static English strings (for t()) and the numbers to put around them. */
 export function stageParts(st: LiveStatus["stage"]): { text: string; n?: number; of?: number } {

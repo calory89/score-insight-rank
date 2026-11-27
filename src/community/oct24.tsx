@@ -8,13 +8,7 @@ import { money } from "./api";
 import { AlertForm } from "./extras";
 import { t } from "./i18n";
 import { perSqm } from "./sqmLogic";
-import { homeArticle } from "./homeArticle";
-import { homeArticleEs } from "./homeArticleEs";
-import { localizeRows } from "./seo2data";
-import DESTS_ES from "@/data/destinations-es.json";
-import { isEs } from "@/lib/lang";
-import { regionOf, slugify, locationParts } from "./regions";
-import DESTS from "@/data/destinations.json";
+import { locationParts } from "./regions";
 
 // Inline sign-up after the first rows of homes: the moment someone has seen enough to want more.
 export function InlineAlert({ countries, country }: { countries: string[]; country?: string }) {
@@ -137,28 +131,3 @@ export function AlertConfirmPage() {
   );
 }
 
-// The written article on each home page, the same text crawlers read (src/community/homeArticle.ts).
-let allRows: Promise<any[]> | null = null;
-const rowsP = () => (allRows ||= snapshotRaw().then((s: any) => s.rows || []).catch(() => []));
-export function HomeArticle({ d }: { d: any }) {
-  const [rows, setRows] = useState<any[] | null>(null);
-  useEffect(() => { let on = true; rowsP().then((x) => { if (on) setRows(x); }); return () => { on = false; }; }, [d?.slug]);
-  const art = useMemo(() => {
-    if (!rows || !d?.country) return null;
-    const key = (c: string) => String(c || "").toLowerCase().trim().replace(/\s+/g, "-");
-    const cc = key(d.country);
-    const countryHomes = rows.filter((r) => key(r.country) === cc);
-    const rg = regionOf(d);
-    const regionHomes = rg ? countryHomes.filter((r) => slugify(regionOf(r)) === slugify(rg)) : [];
-    const es = isEs(); // 8-nov-2026: the Spanish page gets the article written in Spanish (homeArticleEs.ts)
-    const dests: any = es ? localizeRows(DESTS as any, DESTS_ES as any) : DESTS;
-    return (es ? homeArticleEs : homeArticle)({ ...rows.find((r) => r.slug === d.slug), ...d }, { countryHomes: countryHomes.length ? countryHomes : [d], regionHomes: regionHomes.length >= 3 ? regionHomes : undefined, regionName: regionHomes.length >= 3 ? rg : undefined, dest: dests[cc] || null });
-  }, [rows, d]);
-  if (!art) return null;
-  return (
-    <section className="rh-home-article">
-      {art.sections.map((s) => <div key={s.h}><h2>{s.h}</h2>{s.p.map((p) => <p key={p}>{p}</p>)}</div>)}
-      {art.faq.length > 0 && <div className="rh-faq"><h2>{t("Questions about this home")}</h2>{art.faq.map(([q, a]) => <details key={q}><summary>{q}</summary><p>{a}</p></details>)}</div>}
-    </section>
-  );
-}

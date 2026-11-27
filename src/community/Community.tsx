@@ -39,7 +39,7 @@ import { isAssetPath } from "./assetRoutes";
 import { isKnowledgePath } from "./knowledgeRoutes";
 import { isToolPath } from "../tools/paths";
 import { RelatedBlock } from "./related";
-import { InlineAlert, HomeFaq, MortgageCalc, AlertConfirmPage, HomeArticle } from "./oct24";
+import { InlineAlert, HomeFaq, MortgageCalc, AlertConfirmPage } from "./oct24";
 import { regionOf, slugify } from "./regions";
 import { InsiderPage, InsiderStrip, BlogIndex, BlogPost } from "./v7";
 import { ListingRoute, ListingMissing } from "./listingRoute";
@@ -66,7 +66,7 @@ import { bumpStat } from "./v4";
 import { FindSearch, FindBar, SavedSearches } from "./findui";
 import { LiveSearchCard } from "./livecta";
 import { AiCheckNote, AiQueue } from "./aicheck";
-import { liveQueryFromParams } from "./livelogic";
+import { liveQueryFromParams } from "./livequery";
 import { PodiumHero, Vibes, VIBES, SmartSearch, EmptyState, DetailGallery, Amenities, Nearby, VideoTour } from "./v6";
 import { useTheme, ThemeButton, Welcome, BoardButton, BoardsSection, BoardPage, CompareButton, ComparePage, MapFab, NotifBell, ProfilePage, saveOrder, useHomeSwipe, HomeNav } from "./v5";
 import { Ctx, useCommunity } from "./ctx";
@@ -98,6 +98,7 @@ const GoneNotice = lazy(() => import("./n9/HomeStatus").then((m) => ({ default: 
 const UnconfirmedNotice = lazy(() => import("./n9/HomeStatus").then((m) => ({ default: m.UnconfirmedNotice })));
 const CheckedBlock = lazy(() => import("./n9/HomeStatus").then((m) => ({ default: m.CheckedBlock })));
 const Helpful = lazy(() => import("./n9/Helpful"));
+const HomeArticle = lazy(() => import("./homeArticleView")); // ronda 25: the article writers load with the home page
 const HomeSections = lazy(() => import("./homesections").then((m) => ({ default: m.HomeSections }))); // 26-nov-2026 (batch 11), below the first homes
 const SinceVisit = lazy(() => import("./n9/SinceVisit"));
 // 21-nov-2026 (round n10, list2 33, 37, 45, 48): lazy, see src/community/n10.
@@ -1081,7 +1082,7 @@ function Detail() {
           {!isEs() && <TranslateBar text={[cleanTitle(d), d.why_great].filter(Boolean).join("\n\n")} />}
           <CheckLayer d={d as any} />
           <Suspense fallback={null}><Unknowns d={d as any} /></Suspense>
-          <HomeArticle d={d} />
+          <Suspense fallback={null}><HomeArticle d={d} /></Suspense>
           <div className="hunt-detail-actions hv-detail-actions">
             {listing}
             <SaveHeart deal={d} className="hunt-save hv-save-inline" />
