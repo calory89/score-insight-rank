@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ImgHTMLAttributes } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Bookmark, Scale, Eye, X, ChevronLeft, ChevronRight } from 'lucide-react';
-import variants from '@/data/image-variants.json';
+import { smallVariant } from '@/data/imageVariants'; // ronda 26: packed list instead of the 52 KB JSON
 import { MEDIA, toMedia, fromMedia } from '@/lib/media';
 import { isThumb } from '@/lib/thumbs';
 import { useCommunity } from './ctx';
@@ -16,7 +16,7 @@ import { HeartVote, SaveHeart } from "./v4";
 export function PropertyImage({src, fallback, ...props}: ImgHTMLAttributes<HTMLImageElement> & {fallback?: string}) {
  const [failed,setFailed]=useState<string[]>([]);
  const [noSet,setNoSet]=useState(false); // the smaller copy offered in srcSet is not there: the photo itself is loaded
- const original=String(src || ''); const v=(variants as Record<string,string>)[fromMedia(original)]; const small=v ? (original.startsWith(MEDIA) ? toMedia(v) : v) : undefined;
+ const original=String(src || ''); const v=smallVariant(fromMedia(original)); const small=v ? (original.startsWith(MEDIA) ? toMedia(v) : v) : undefined;
  const current = !failed.includes(original) ? original : fallback && !failed.includes(fallback) ? fallback : '';
  if(!current) return <span className="rh-photo-missing" role="img" aria-label={props.alt || t('Photo unavailable')}>{t('Photo unavailable')}</span>;
  return <picture className="rh-picture">{small && !props.sizes && !failed.includes(small) && current===original && <source media="(max-width: 700px)" srcSet={small}/>}<img {...props} srcSet={noSet||current!==original?undefined:props.srcSet} src={current} decoding="async" onError={e=>{const bad=e.currentTarget.currentSrc;if(props.srcSet&&!noSet&&isThumb(bad)){setNoSet(true);return;}const selected=small&&bad.endsWith(small)?small:current;setFailed(f=>[...f,selected]);}} /></picture>;
