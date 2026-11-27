@@ -596,3 +596,7 @@ a[href="#main-content"]:focus { position: fixed !important; top: 8px; left: 8px;
 
 /* ronda 28: "Top 100" broke into two lines in the desktop header (es, 1366 px); header links stay on one line */
 .hunt .hunt-header nav a, .hunt .hunt-header nav button { white-space: nowrap; }
+
+/* ronda 29: the yes/no filters (price dropped, confirmed in 30 days, quiet) put the box above an upper-case label,
+   because ".hunt label" makes every label a column; they read as one line: box, then the words */
+.hunt .hunt-filter-row label.hunt-check { flex-direction: row; text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 500; color: var(--c-ink, #111214); align-self: end; min-height: 44px; }
