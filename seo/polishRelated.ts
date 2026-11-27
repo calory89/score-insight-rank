@@ -184,7 +184,10 @@ export function relatedRows(pg: Pg, c: RelCtx): Row[] {
     country(pg.cc, false);
     // a guide also shows what is for sale today: the five best-scored homes of its country (idea 123)
     if (pg.kind === "guide") add(`${s.homesNow} ${c.inThe(pg.cc, lang)}`, K("deal", pg.cc).slice().sort((x, y) => (Number(c.bySlug.get(y.en.slice(6))?.nota) || 0) - (Number(c.bySlug.get(x.en.slice(6))?.nota) || 0) || x.path.localeCompare(y.path)).slice(0, 5).flatMap((p) => link(p)), true);
-    const all = K(pg.kind); const i = all.indexOf(pg);
+    // ronda 28: the question page about this country ("Why are houses so cheap in France?") from its guide
+    if (pg.kind === "guide") { const q = K("guide").find((p) => p.en === `/guide/questions/why-are-houses-so-cheap-in-${pg.cc}` && p.lang === lang); if (q) add(s.more, link(q, q.h1[0] || q.label)); }
+    // ronda 28: only pages of a country (the guide by subject, /guide/buying, showed up as a country called "Buying")
+    const all = K(pg.kind).filter((p) => p === pg || K("country", p.cc).length > 0); const i = all.indexOf(pg);
     add(s.otherCountries, after(all, Math.max(i, 0), 6).flatMap((p) => link(p, c.nameOf(p.cc, lang))));
   } else if (pg.kind === "pair") {
     const [a, b] = pg.en.slice(11).split("-vs-");
