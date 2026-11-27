@@ -405,7 +405,7 @@ function build(root: string, es?: EsPass) {
     const homeDesc = `${rows.length} homes for sale in ${countryLinks.length} countries, each one checked by a person, scored from 70 to 98 and ranked best first. New homes every day.`;
     page(`${SITE}/`, "RealHunt: the best homes in every country, ranked by score",
       "The best homes in Europe, the US, Canada, Mexico and beyond, each one scored from 70 to 98 and ranked best first. New homes every day.", DEF,
-      `${css}<main class="rh-static rh-hs" id="rh-home-static"><h1>The best homes abroad, checked and scored</h1><p>${esc(homeDesc)}</p>`
+      `${css}<main class="rh-static rh-hs" id="rh-home-static" data-rh-keep><h1>The best homes abroad, checked and scored</h1><p>${esc(homeDesc)}</p>`
       + `<ol>${top.map(card).join("")}</ol>`
       + `<h2>Homes by country</h2><p>${countryLinks.map(([k, v]) => `<a href="/homes/${esc(k)}">${esc(v.name)} (${v.homes.length})</a>`).join(" · ")}</p>`
       // 26-nov-2026 (batch 11: 502, 511, 549): budget lists, guides, calculators and research one click from "/", and how
@@ -424,7 +424,7 @@ function build(root: string, es?: EsPass) {
       `<li><a href="/es/deal/${esc(r.slug)}">${cardImg(r, i).replace(/alt="[^"]*"/, `alt="${esc(`${r.title_es}, ${r.location_name || r.country}`)}"`)}<strong>${esc(euro(r.price_eur))}</strong><span>${esc(r.title_es)}</span><small>${esc(r.location_name || r.country)}${r.nota != null ? ` · nota ${esc(r.nota)}` : ""}${r.sqm ? ` · ${esc(r.sqm)} m²` : ""}</small></a></li>`;
     const descEs = `${rows.length} casas en venta en ${countryLinks.length} países, revisadas una a una por una persona, puntuadas de 70 a 98 y ordenadas de mejor a peor. Casas nuevas cada día.`;
     page(`${SITE}/es`, "RealHunt: las mejores casas de cada país, ordenadas por nota", descEs, DEF,
-      `${css}<main class="rh-static rh-hs" id="rh-home-static"><h1>Las mejores casas en el extranjero, revisadas y con nota</h1><p>${esc(descEs)}</p>`
+      `${css}<main class="rh-static rh-hs" id="rh-home-static" data-rh-keep><h1>Las mejores casas en el extranjero, revisadas y con nota</h1><p>${esc(descEs)}</p>`
       + `<ol>${topEs.map(cardEs).join("")}</ol><h2>Casas por país</h2><p>${countryLinks.filter(([, x]) => x.homes.filter((h) => h.title_es).length >= MIN_LIST).map(([k, x]) => `<a href="/es/homes/${esc(k)}">${esc(esC(x.name))} (${x.homes.length})</a>`).join(" · ")}</p>`
       + `<h2>Casas por presupuesto</h2><p>${[30000, 50000, 75000, 100000].map((b) => `<a href="/es/cheap-houses/under-${b}">Menos de ${esc(euro(b))}</a>`).join(" · ")} · <a href="/es/cheap-houses/by-the-sea">Cerca del mar</a></p>`
       + `<h2>Antes de comprar</h2><p><a href="/es/guide">Guías de compra por país</a> · <a href="/es/tools">Calculadoras gratis</a> · <a href="/es/costs">Costes de compra por país</a> · <a href="/es/research">Estudios y datos</a></p>`
