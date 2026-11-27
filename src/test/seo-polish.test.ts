@@ -312,6 +312,9 @@ describe("the pass over a built site", () => {
 });
 
 describe("short descriptions get a closing sentence that is true of every page of their kind", () => {
+  it("an article title drops what follows its last colon when it does not fit", () => {
+    expect(pickTitle("Las mejores obras nuevas de Tulum, puntuadas: precio, playa e instalaciones", "es", "blog")).toBe("Las mejores obras nuevas de Tulum, puntuadas · RealHunt");
+  });
   it("country, hub and blog pages reach 120 characters", () => {
     const c = polishDesc("6 apartments for sale in Bulgaria, from €58,900 (in Byala) to €89,000. Median €69,000, average score 91 of 98.", { lang: "en", kind: "country", title: "x" });
     expect(c.length).toBeGreaterThanOrEqual(120); expect(c.length).toBeLessThanOrEqual(155);

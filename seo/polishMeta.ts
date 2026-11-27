@@ -69,6 +69,8 @@ export function titleCandidates(title: string, lang: Lang, kind: Kind): string[]
   // ...and last, the same title with filler words taken out one step at a time (each step keeps the earlier ones):
   // "Viviendas baratas con jardín en venta en Italia por menos de 100.000 €" -> "Casas con jardín en Italia por menos de 100.000 €"
   for (const x of [...out]) { let y = x; for (const [re, to] of SQUEEZE[lang]) { const z = y.replace(re, to as any); if (z !== y) { y = z; out.push(y); } } }
+  // an article: its headline without the part after the last colon ("..., scored: price, beach and facilities")
+  if (kind === "blog") for (const x of [...out]) { const i = x.lastIndexOf(": "); if (i >= 25) out.push(x.slice(0, i)); }
   return [...new Set(out)];
 }
 
@@ -78,16 +80,23 @@ const SQUEEZE: Record<Lang, [RegExp, string | ((m: string, w: string) => string)
     [/ for sale(?= in | under |$| \()/, ""],
     [/ citizen buy property in /, " citizen buy a home in "],
     [/ citizen buy a home in /, " citizen buy in "],
+    [/^(Can an? \S+) buy property in /, "$1 buy in "],
     [/^Cheap ([a-z])/, "$1"],
     [/^Cheap (\d)/, "$1"],
     [/^(houses|homes|flats|apartments|villas|cottages|farmhouses) /, (_m: string, w: string) => w[0].toUpperCase() + w.slice(1) + " "],
+    // last, the long country names in their usual short form
+    [/ in the United States\b/, " in the US"],
+    [/ in the United Kingdom\b/, " in the UK"],
   ],
   es: [
     [/ en venta(?= en | por |$| \()/, ""],
     [/^Viviendas /, "Casas "],
     [/ comprar casa en /, " comprar en "],
-    [/, con condiciones$/, " con condiciones"],
+    [/\? Sí, con condiciones$/, "? Con condiciones"],
     [/^(Casas|Pisos)( de pueblo| de piedra)? (baratas|baratos) /, "$1$2 "],
+    [/ de (\d+) o más dormitorios/, " de $1+ dormitorios"],
+    [/ (en|frente a) Estados Unidos\b/, " $1 EE. UU."],
+    [/\bRepública Dominicana\b/, "Rep. Dominicana"],
   ],
 };
 
