@@ -54,7 +54,7 @@ export function HomeCard({ deal, pos, href: ext, origPrice, rent, dist, noRank }
   const warm = ext ? undefined : () => { prefetchDetail(deal.slug, call); preloadImages((deal.image_urls || []).slice(0, 1)); };
   return (
     <div className="hx-wrap" onMouseEnter={warm} onTouchStart={warm} onFocus={warm}>
-      <Tag {...linkProps} className={"hx-card" + (pos <= 3 && !noRank ? " is-podium" : "")} aria-label={label}>
+      <Tag {...linkProps} className={"hx-card" + (pos <= 3 && !noRank ? " is-podium" : "")} title={label}>
         <span className="hx-img">
           {img ? <img src={thumb(img)} srcSet={cardSrcSet(img)} sizes={cardSrcSet(img) ? CARD_SIZES : undefined} alt={`${title}, ${where(deal)}`} width={480} height={360} loading={pos <= 3 ? "eager" : "lazy"} fetchPriority={pos === 1 ? "high" : "auto"} decoding="async" onError={(e) => onThumbError(e.currentTarget, img)} /> : null}
           {!noRank && <span className="hx-pos">#{pos}</span>}

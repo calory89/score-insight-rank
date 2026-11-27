@@ -29,7 +29,7 @@
     --rh-surface-2: #ECEDEE;
     --rh-ink: #111214;
     --rh-ink-muted: #313338;
-    --rh-ink-soft: #797E89;
+    --rh-ink-soft: #62666E; /* 4.5:1 or better on the grey panels (ronda 12) */
     --rh-accent: #D4420C;
     --rh-accent-soft: #ff8a5c;
     --rh-good: #1E6B4F;

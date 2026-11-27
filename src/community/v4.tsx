@@ -212,7 +212,7 @@ export function ShareButton({ deal, scope = "all", label = false }: { deal: Row;
   const { setNotice } = useCommunity();
   const [busy, setBusy] = useState(false);
   return (
-    <button className={"hv-share" + (label ? " has-label" : "")} aria-label="Share this home as a story" disabled={busy}
+    <button className={"hv-share" + (label ? " has-label" : "")} aria-label={label ? undefined : "Share this home as a story"} title="Share this home as a story" disabled={busy}
       onClick={async (e) => {
         e.preventDefault(); e.stopPropagation(); setBusy(true);
         try {

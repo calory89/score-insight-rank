@@ -691,7 +691,7 @@ function QuickSubmission({ initialUrl = "", standalone = false }: { initialUrl?:
     </div> : <form onSubmit={send}>
       <div className="hunt-quick-row">
         <label><span className="sr-only">Property listing URL</span><input type="url" name="property_url" required maxLength={2000} placeholder="Paste a listing link" value={url} onChange={e => setUrl(e.target.value)} /></label>
-        <button type="submit" aria-label="Send property" className="hunt-primary" disabled={busy || (!!user && !session)}>{busy ? t("Sending…") : t("Send link")}</button>
+        <button type="submit" className="hunt-primary" disabled={busy || (!!user && !session)}>{busy ? t("Sending…") : t("Send link")}</button>
       </div>
       {standalone && user && <label className="hunt-quick-note">Anything we should know? <span>(optional)</span><textarea maxLength={800} value={note} onChange={e => setNote(e.target.value)} /></label>}
       <label className="hunt-honeypot" aria-hidden="true">Website<input name="website" tabIndex={-1} autoComplete="off" value={honeypot} onChange={e => setHoneypot(e.target.value)} /></label>

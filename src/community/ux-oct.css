@@ -87,7 +87,7 @@ html.hm-lock, html.hm-lock body { overflow: hidden; }
 .hm-pop { display: grid; gap: 3px; width: 220px; color: #111214 !important; text-decoration: none !important; }
 .hm-pop img { width: 220px; height: 146px; object-fit: cover; border-radius: 10px; background: #E2E3E6; }
 .hm-pop b { font-size: 17px; margin-top: 4px; }
-.hm-pop small { color: #797E89; }
+.hm-pop small { color: #62666E; }
 .hm-pop em { font-style: normal; color: #D4420C; font-weight: 700; margin-top: 2px; }
 .hm .leaflet-popup-content { margin: 10px; }
 /* Bigger, touch-friendly controls */

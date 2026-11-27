@@ -992,7 +992,7 @@ export function LangSwitch({ compact = false }: { compact?: boolean }) {
   const l = getLang();
   return (
     <span className={"rh-lang" + (compact ? " is-compact" : "")} role="group" aria-label="Language" translate="no">
-      {LANGS.map((x) => <button key={x.code} type="button" className={l === x.code ? "is-on" : ""} aria-pressed={l === x.code} onClick={() => setLang(x.code)} title={x.label} aria-label={x.label} lang={x.code}>{x.code.toUpperCase()}</button>)}
+      {LANGS.map((x) => <button key={x.code} type="button" className={l === x.code ? "is-on" : ""} aria-pressed={l === x.code} onClick={() => setLang(x.code)} title={x.label} aria-label={`${x.code.toUpperCase()}, ${x.label}`} lang={x.code}>{x.code.toUpperCase()}</button>)}
     </span>
   );
 }

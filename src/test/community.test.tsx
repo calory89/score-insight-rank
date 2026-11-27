@@ -92,7 +92,7 @@ const open = (path = "/") =>
 // 7-oct-2026: the feed is a score ranking; cards no longer carry vote buttons.
 test("home cards show price and score and open the home", async () => {
   open();
-  const card = await screen.findByRole("link", { name: /Stone home by the sea, €39,000/ });
+  const card = await screen.findByRole("link", { name: /Stone home by the sea[\s\S]*€39,000/ });
   expect(card.getAttribute("href")).toContain("/deal/stone-home");
 });
 test("guests can save a home on this device without an account", async () => {
@@ -161,14 +161,14 @@ test('the home removes the old copy and asks for registration before a link subm
   expect(screen.queryByText('THE WORLD IS FULL OF GOOD FINDS')).toBeNull();
   expect(screen.queryByText(/A little place by the sea/)).toBeNull();
   fireEvent.change(screen.getByRole('textbox',{name:'Property listing URL'}),{target:{value:'https://example.org/new-home'}});
-  fireEvent.submit(screen.getByRole('button',{name:'Send property'}).closest('form')!);
+  fireEvent.submit(screen.getByRole('button',{name:'Send link'}).closest('form')!);
   expect(await screen.findByRole('dialog')).toHaveAttribute('data-return-to','/submit?quick=1&url=https%3A%2F%2Fexample.org%2Fnew-home');
   expect(mocks.rpc.mock.calls.some(([,p])=>p?.p_action==='quick_submit')).toBe(false);
 });
 test('a signed-in visitor submits just a link for private review', async () => {
   mocks.user={id:'signed-in'};
   open('/submit?quick=1&url=https%3A%2F%2Fexample.org%2Fnew-home');
-  const button=screen.getByRole('button',{name:'Send property'});
+  const button=screen.getByRole('button',{name:'Send link'});
   await waitFor(()=>expect(button).not.toBeDisabled());
   expect(screen.getByRole('textbox',{name:'Property listing URL'})).toHaveValue('https://example.org/new-home');
   expect(mocks.rpc.mock.calls.some(([,p])=>p?.p_action==='quick_submit')).toBe(false);
@@ -182,7 +182,7 @@ test('submission failures preserve the link and never claim it was received', as
   const previous=mocks.rpc.getMockImplementation()!;
   mocks.rpc.mockImplementation((name:string,p:any)=>p?.p_action==='quick_submit'?Promise.resolve({data:{error:'You have reached the submission limit'}}):previous(name,p));
   open('/submit?quick=1&url=https%3A%2F%2Fexample.org%2Fnew-home');
-  const button=screen.getByRole('button',{name:'Send property'});await waitFor(()=>expect(button).not.toBeDisabled());fireEvent.click(button);
+  const button=screen.getByRole('button',{name:'Send link'});await waitFor(()=>expect(button).not.toBeDisabled());fireEvent.click(button);
   expect(await screen.findByRole('alert')).toHaveTextContent('submission limit');
   expect(screen.getByRole('textbox',{name:'Property listing URL'})).toHaveValue('https://example.org/new-home');
   expect(screen.queryByText(/Received. Your property/)).toBeNull();

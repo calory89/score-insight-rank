@@ -14,12 +14,12 @@ export function KeyFacts({ deal }: { deal: any }) {
     <ul className={"rh-kf n" + list.length} aria-label={isEs() ? "Datos clave" : "Key facts"}>
       {list.map((f) => f.k === "score" ? (
         <li key={f.k} className="is-score">
-          <button type="button" onClick={toScore} aria-label={isEs() ? `Puntuación RealHunt ${f.value}. Mira qué mide cada parte` : `RealHunt score ${f.value}. See what each part measures`}>
-            <strong className={(s && s.n >= 90 ? "is-top" : s && s.n >= 80 ? "is-great" : "is-good")}>{f.value}</strong><span>{t(f.label)}</span>
+          <button type="button" onClick={toScore} aria-label={`${f.value} ${isEs() ? "Nota" : t(f.label)}. ${isEs() ? "Mira qué mide cada parte" : "See what each part measures"}`}>
+            <strong className={(s && s.n >= 90 ? "is-top" : s && s.n >= 80 ? "is-great" : "is-good")}>{f.value}</strong>{" "}<span>{t(f.label)}</span>
           </button>
         </li>
       ) : (
-        <li key={f.k}><strong>{f.value}</strong><span>{t(f.label)}</span>{f.sqft ? <span>{f.sqft.toLocaleString(isEs() ? "es-ES" : "en")} {isEs() ? "pies²" : "sq ft"}</span> : null}</li>
+        <li key={f.k}><strong>{f.value}</strong>{" "}<span>{t(f.label)}</span>{f.sqft ? <span>{f.sqft.toLocaleString(isEs() ? "es-ES" : "en")} {isEs() ? "pies²" : "sq ft"}</span> : null}</li>
       ))}
     </ul>
   );
