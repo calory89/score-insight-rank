@@ -310,3 +310,14 @@ describe("the pass over a built site", () => {
     expect(r3.failures).toEqual([]); // a warning for the owner, not a stopped publication
   });
 });
+
+describe("short descriptions get a closing sentence that is true of every page of their kind", () => {
+  it("country, hub and blog pages reach 120 characters", () => {
+    const c = polishDesc("6 apartments for sale in Bulgaria, from €58,900 (in Byala) to €89,000. Median €69,000, average score 91 of 98.", { lang: "en", kind: "country", title: "x" });
+    expect(c.length).toBeGreaterThanOrEqual(120); expect(c.length).toBeLessThanOrEqual(155);
+    const h = polishDesc("Write to the RealHunt team about a home, a listing, a partnership or press.", { lang: "en", kind: "page", title: "x" });
+    expect(h).toBe("Write to the RealHunt team about a home, a listing, a partnership or press. RealHunt ranks cheap homes around the world, each one checked by a person.");
+    const e = polishDesc("Escribe al equipo de RealHunt sobre una casa, un anuncio, una colaboración o prensa.", { lang: "es", kind: "page", title: "x" });
+    expect(e.length).toBeGreaterThanOrEqual(120); expect(e.length).toBeLessThanOrEqual(155);
+  });
+});

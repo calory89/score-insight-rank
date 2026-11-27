@@ -144,6 +144,10 @@ const PADS: Record<Lang, Partial<Record<Kind, string[]>>> = {
     canbuy: ["Plus buying costs, yearly taxes and the steps to buy.", "Plus costs, taxes and steps."],
     guide: ["General information, not legal advice."],
     deal: ["Checked by a person, with photos and a link to the original listing.", "Checked by a person."],
+    blog: ["From RealHunt, where every home is checked by a person.", "By RealHunt."],
+    country: ["Each one checked by a person, with photos and a link to the original listing.", "Each one checked by a person, with photos.", "Checked by a person."],
+    hub: ["RealHunt ranks cheap homes around the world, each one checked by a person.", "Cheap homes worldwide, each checked by a person.", "Every home checked by a person."],
+    page: ["RealHunt ranks cheap homes around the world, each one checked by a person.", "Cheap homes worldwide, each checked by a person.", "Every home checked by a person."],
   },
   es: {
     band: ["Casas nuevas cada día."], region: ["Casas nuevas cada día."], type: ["Casas nuevas cada día."], place: ["Casas nuevas cada día."],
@@ -154,6 +158,10 @@ const PADS: Record<Lang, Partial<Record<Kind, string[]>>> = {
     canbuy: ["Además, gastos de compra, impuestos anuales y pasos para comprar.", "Con gastos, impuestos y pasos."],
     guide: ["Información general, no asesoramiento jurídico."],
     deal: ["Revisada por una persona, con fotos y enlace al anuncio original.", "Revisada por una persona."],
+    blog: ["De RealHunt, donde cada casa la revisa una persona.", "Por RealHunt."],
+    country: ["Cada una revisada por una persona, con fotos y enlace al anuncio original.", "Cada una revisada por una persona, con fotos.", "Revisadas por una persona."],
+    hub: ["RealHunt clasifica casas baratas de todo el mundo, cada una revisada por una persona.", "Casas baratas de todo el mundo, revisadas por una persona.", "Cada casa, revisada por una persona."],
+    page: ["RealHunt clasifica casas baratas de todo el mundo, cada una revisada por una persona.", "Casas baratas de todo el mundo, revisadas por una persona.", "Cada casa, revisada por una persona."],
   },
 };
 
