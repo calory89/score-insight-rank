@@ -1896,7 +1896,7 @@
   .hv-detailbar { display: flex; align-items: center; gap: 8px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 90; background: rgba(255,255,255,.97); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-top: 1px solid #E2E3E6; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); }
   .hv-detailbar-price { display: flex; flex-direction: column; min-width: 0; flex: 1; }
   .hv-detailbar-price strong { font-size: 19px; font-weight: 800; letter-spacing: -.4px; }
-  .hv-detailbar-price span { font-size: 11.5px; color: #5E626A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hv-detailbar-price span { font-size: 12px; color: #5E626A; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .hv-detailbar .hunt-primary { padding: 12px 14px !important; font-size: 14px; white-space: nowrap; }
   .hv-detailbar .hv-heart { padding: 10px 12px; }
 }
