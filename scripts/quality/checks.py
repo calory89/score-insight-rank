@@ -67,7 +67,7 @@ WATERMARK_PORTALS = {"bienici.com": "agency logo on most photos", "pisos.com": "
 EN_WORDS = {"with", "and", "the", "house", "home", "flat", "apartment", "bedroom", "bedrooms", "garden", "sea", "view", "views",
             "near", "for", "sale", "village", "cottage", "town", "pool", "terrace", "bathroom", "studio", "of", "in"}
 # Words that are the same in Spanish or are proper names often kept.
-ES_OK = {"loft", "bungalow", "chalet", "duplex", "dúplex", "golf", "resort", "spa", "town"}
+ES_OK = {"loft", "bungalow", "chalet", "duplex", "dúplex", "golf", "resort", "spa", "town", "cottage"}  # cottage: used as is in Spanish (ronda 20)
 
 # Idea 926: a link to the advert that lands on a list or a home page of the portal, not on one home.
 SEARCH_PATH = re.compile(r"(/search|/buscar|/busqueda|/results?|/listings?/?$|/comprar/(viviendas|casas)/[^/]+/?$|/venta/[^/]+/?$|\?q=|[?&](page|sort)=)", re.I)
@@ -496,7 +496,10 @@ def check_es_titles(ctx):
     for r in ctx.rows:
         t = r.get("title_es")
         if not t: continue
-        words = {w for w in re.findall(r"[a-záéíóúñü]+", t.lower())}
+        # ronda 20: a capitalised word after the first is part of a name ("Leitrim Village", "Savage House")
+        t = re.sub(r"\btiny houses?\b", "", t, flags=re.I)  # a loan phrase in Spanish too
+        names = {w.lower() for w in re.findall(r"(?<=\s)[A-ZÁÉÍÓÚÑ][a-záéíóúñü]+", t)}
+        words = {w for w in re.findall(r"[a-záéíóúñü]+", t.lower())} - names
         bad = sorted((words & EN_WORDS) - ES_OK)
         bad = [w for w in bad if not (w in {"of", "in", "for"} and len(words) > 8)]  # short words inside proper names
         if bad: out.append(_home(r, f"Spanish title has English words: {', '.join(bad)}", title_es=t))
