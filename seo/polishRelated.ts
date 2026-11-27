@@ -267,7 +267,7 @@ export function sitemapPages(c: RelCtx): SitemapPage[] {
       const inner = groups.filter((g) => g.key !== "main").map((g) => { const l = list.filter((pg) => groupOf(pg) === g.key); return l.length ? `<h2>${esc(name(g))}</h2><ul>${sorted(l).map(li).join("")}</ul>` : ""; }).join("");
       out.push({
         path: `${pre}/sitemap/${cc}`, lang, title: `${s.smCountryTitle(c.inThe(cc, lang))} · RealHunt`, desc: s.smCountryDesc(c.inThe(cc, lang), homes, list.length - homes), label: c.nameOf(cc, lang),
-        body: `<main ${attrs}><h1>${esc(s.smCountryTitle(c.inThe(cc, lang)))}</h1><p>${esc(s.smIntro(list.length))}</p>${inner}<h2>${esc(s.siteMap)}</h2><p><a href="${pre}/sitemap">${esc(s.siteMap)}</a> · <a href="${pre}/sitemap/${groups.some((g) => g.key === "homes") ? "homes" : "countries"}">${esc(name(GROUPS.find((g) => g.key === (groups.some((x) => x.key === "homes") ? "homes" : "countries"))!))}</a></p></main>`,
+        body: `<main ${attrs}><h1>${esc(s.smCountryTitle(c.inThe(cc, lang)))}</h1><p>${esc(s.smIntro(list.length))}</p>${inner}<h2>${esc(s.smByCountry)}</h2><p>${ccs.filter((x) => x !== cc).map((x) => `<a href="${pre}/sitemap/${x}">${esc(c.nameOf(x, lang))}</a>`).join(" · ")}</p><h2>${esc(s.siteMap)}</h2><p><a href="${pre}/sitemap">${esc(s.siteMap)}</a> · <a href="${pre}/sitemap/${groups.some((g) => g.key === "homes") ? "homes" : "countries"}">${esc(name(GROUPS.find((g) => g.key === (groups.some((x) => x.key === "homes") ? "homes" : "countries"))!))}</a></p></main>`,
       });
     }
     const others = (key: string) => `<p>${[`<a href="${pre}/sitemap">${esc(s.siteMap)}</a>`, ...groups.filter((g) => g.key !== "main" && g.key !== key).map((g) => `<a href="${pre}/sitemap/${g.key}">${esc(name(g))}</a>`)].join(" · ")}</p>`;
