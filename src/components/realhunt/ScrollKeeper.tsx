@@ -6,13 +6,19 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 
 const KEY = "rh-scroll";
+// 27-nov-2026 (ronda 27): every page opened by a full load has the router key "default", so the scroll of the page
+// before (a list scrolled down) was restored on the next full load of a different page (a home opened mid-page).
+// Pages opened by a full load are keyed by their address instead, and only a reload or Back/Forward to such a page
+// brings its scroll back: opening it from a link starts at the top.
+const loadType = (): string => { try { return String((performance.getEntriesByType("navigation")[0] as any)?.type || ""); } catch { return ""; } };
+const keyOf = (l: { key: string; pathname: string; search: string }) => (l.key === "default" ? `default:${l.pathname}${l.search}` : l.key);
 const load = (): Record<string, number> => { try { return JSON.parse(sessionStorage.getItem(KEY) || "{}"); } catch { return {}; } };
 
 export default function ScrollKeeper() {
   const loc = useLocation();
   const nav = useNavigationType();
   const pos = useRef<Record<string, number>>(load());
-  const cur = useRef(loc.key);
+  const cur = useRef(keyOf(loc));
 
   useEffect(() => {
     try { if ("scrollRestoration" in history) history.scrollRestoration = "manual"; } catch {}
@@ -25,9 +31,11 @@ export default function ScrollKeeper() {
   }, []);
 
   useLayoutEffect(() => {
-    cur.current = loc.key;
+    const k = keyOf(loc);
+    cur.current = k;
     if (loc.hash) return;
-    const target = nav === "POP" ? pos.current[loc.key] ?? 0 : 0;
+    const fresh = loc.key === "default" && loadType() === "navigate";
+    const target = nav === "POP" && !fresh ? pos.current[k] ?? 0 : 0;
     try { sessionStorage.setItem(KEY, JSON.stringify(pos.current)); } catch {}
     const go = () => { if (Math.abs(window.scrollY - target) > 2) window.scrollTo({ top: target, behavior: "instant" as ScrollBehavior }); };
     go();
