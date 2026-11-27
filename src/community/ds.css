@@ -593,3 +593,6 @@ a[href="#main-content"]:focus { position: fixed !important; top: 8px; left: 8px;
 .hunt .rh-faq details > summary { padding: 10px 0; min-height: 44px; box-sizing: border-box; cursor: pointer; }
 .hunt .rh-mortgage > summary { min-height: 44px; box-sizing: border-box; }
 .hunt .hv-aside-links > a, .hunt .hv-aside-card > a.hv-aside-alert { display: inline-flex; align-items: center; min-height: 32px; }
+
+/* ronda 28: "Top 100" broke into two lines in the desktop header (es, 1366 px); header links stay on one line */
+.hunt .hunt-header nav a, .hunt .hunt-header nav button { white-space: nowrap; }

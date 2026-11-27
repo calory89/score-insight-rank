@@ -195,7 +195,7 @@ export function DetailGallery({ deal }: { deal: Deal }) {
     <div className="hv-gallery" style={{ backgroundColor: cardColor(deal.slug) }}>
       <div className={"hv-mosaic n" + Math.min(imgs.length, 5)}>
         {imgs.slice(0, 5).map((u, n) => <button key={u + n} style={lq(u, n)} onClick={() => open(n)} aria-label={`Open photo ${n + 1}`}><PropertyImage {...offer(u, n)} src={u} fallback={imgs.find(x=>x!==u)} alt={alt(n)} loading={n===0?"eager":"lazy"} /></button>)}
-        {imgs.length > 1 && <button className="hv-mosaic-all" onClick={() => open(0)}><Grid2x2 size={16} /> Show all {imgs.length} photos</button>}
+        {imgs.length > 1 && <button className="hv-mosaic-all" onClick={() => open(0)}><Grid2x2 size={16} /> <span translate="no">{isEs() ? `Ver las ${imgs.length} fotos` : `Show all ${imgs.length} photos`}</span></button>}
       </div>
       <div className="hv-carousel" ref={track} onScroll={(e) => setI(Math.round(e.currentTarget.scrollLeft / e.currentTarget.clientWidth))}>
         {imgs.map((u, n) => <button key={u + n} style={lq(u, n)} onClick={() => open(n)} aria-label={`Open photo ${n + 1}`}><PropertyImage {...offer(u, n)} src={u} fallback={imgs.find(x=>x!==u)} alt={alt(n)} loading={n===0?"eager":"lazy"} /></button>)}
