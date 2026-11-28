@@ -30,6 +30,11 @@ and, when the new copies do not all fit, makes only the ones of the homes that f
 order of the snapshot. The others are named in the output and made by a later run, once there is room; until then
 those homes show their original photo (their row has th = 0), exactly as when a copy fails.
 
+28-nov-2026 (later): the photos (finds/) and these copies (t/) are now published by their own Pages project,
+realhunt-img, built from the same folder of webs-estaticas (_rhbuild/img.py there), and realhunt-media leaves them
+out. Each project takes 20,000 files, so the room is now counted for realhunt-img alone: the files under finds/ and
+t/ of the site folder. The addresses do not change: the worker of realhunt-media asks realhunt-img for them.
+
 Keep thumb_key() in sync with thumb() and mid() in src/lib/thumbs.ts.
 """
 import io
@@ -49,9 +54,9 @@ MID_WIDTH, MID_MAX_H, MID_TARGET = 800, 1200, 90 * 1024
 EXTRA = ["/finds/DdOGB56ABXI-0.webp", "/finds/lake-como-peglio-85000-0.webp", "/finds/lake-como-plesio-89000-0.webp", "/finds/DcAr2EbIAqx-1.webp",
          "/finds/Dc56aI-icMP-1.webp", "/finds/DdPBLT2CLlb-1.webp", "/finds/acquappesa-sea-view-39000.webp", "/finds/grotte-santo-stefano-13000.webp"]
 UA = {"User-Agent": "realhunt-thumbs/1.0 (+https://realhunt.co)"}
-# Keep in sync with the realhunt-media check in .github/workflows/rh-auto-publish.yml (guard 19,600, at least 1,300
-# shared assets added by the Pages build). RESERVE is left free for the pages and data files of the next days.
-PAGES_GUARD, SHARED_MIN, RESERVE = 19600, 1300, 150
+# Keep in sync with the realhunt-img check in .github/workflows/rh-auto-publish.yml (guard 19,600 files under finds/
+# and t/). RESERVE is left free for the photos added by hand between two runs.
+PAGES_GUARD, RESERVE = 19600, 150
 
 
 def thumb_key(url):
@@ -107,14 +112,14 @@ def source_bytes(url, local_dir, site_root):
 
 
 def room_for_new_files(rows_path, site_root):
-    """How many more files the realhunt-media deploy can take, None when this is not the publish layout
-    (<dist>/data/<snapshot> next to <dist>/assets, and the site folder present): then nothing is limited."""
+    """How many more files the realhunt-img deploy (finds/ and t/ of the site folder) can take, None when this is
+    not the publish layout (<dist>/data/<snapshot> next to <dist>/assets, and the site folder present): then
+    nothing is limited."""
     dist_assets = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(rows_path))), "assets")
     if not os.path.isdir(site_root) or not os.path.isdir(dist_assets):
         return None
-    have = sum(len(files) for _, _, files in os.walk(site_root))
-    shared = max(SHARED_MIN, sum(len(files) for _, _, files in os.walk(dist_assets)))
-    return max(0, PAGES_GUARD - shared - have - RESERVE)
+    have = sum(len(files) for d in ("finds", "t") for _, _, files in os.walk(os.path.join(site_root, d)))
+    return max(0, PAGES_GUARD - have - RESERVE)
 
 
 def fit_to_budget(rows, todo, budget):
@@ -164,7 +169,7 @@ def main(rows_path, local_dir, site_root):
     if room is not None and len(todo) > room:
         fits = fit_to_budget(rows, todo, room)
         left_out = len(todo) - len(fits)
-        print(f"thumbnails: {left_out} of {len(todo)} new copies not made, realhunt-media has room for {room} more files only (limit 20,000); those homes show their original photo")
+        print(f"thumbnails: {left_out} of {len(todo)} new copies not made, realhunt-img has room for {room} more files only (limit 20,000); those homes show their original photo")
         todo = fits
     stats = {"made": 0, "failed": 0, "bytes": 0, "mid": 0}
 
@@ -263,6 +268,14 @@ def selftest():
     assert fit_to_budget(rows2, todo2, 0) == [] and len(fit_to_budget(rows2, todo2, 99)) == len(todo2)
     assert room_for_new_files("/nonexistent/data/x.json", "/nonexistent/site") is None
     import tempfile
+    with tempfile.TemporaryDirectory() as d:  # only finds/ and t/ count (realhunt-img); pages and data do not
+        site = os.path.join(d, "site"); snap = os.path.join(d, "dist", "data", "x.json")
+        for sub in ("finds", os.path.join("t", "finds"), "homes"):
+            os.makedirs(os.path.join(site, sub))
+        os.makedirs(os.path.join(d, "dist", "assets")); os.makedirs(os.path.dirname(snap))
+        for f in (os.path.join("finds", "a.webp"), os.path.join("t", "finds", "a.webp"), os.path.join("t", "index.txt"), os.path.join("homes", "x.html")):
+            open(os.path.join(site, f), "wb").write(b"x")
+        assert room_for_new_files(snap, site) == PAGES_GUARD - RESERVE - 3
     with tempfile.TemporaryDirectory() as d:
         os.makedirs(os.path.join(d, "t", "m", "sb"))
         open(os.path.join(d, "t", "m", "sb", "c-0.webp"), "wb").write(b"x")
