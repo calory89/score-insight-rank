@@ -1,7 +1,7 @@
 // The words of each calculator page, in English and in Spanish, written by hand. Every figure in a sentence is
 // computed with the same functions as the calculator (src/tools/logic.ts), never typed.
 import { DE_STATES, FR, fmt, type CountryData, type ToolData } from "../../src/tools/defs";
-import { AREA_SOURCE, IMT, IRNR, NOTAIRE, SCHENGEN, SDLT, affordable, convertArea, fees, imt, irnrImputed, mortgageOrCash, notaireFr, runningCosts, schengen, sdlt } from "../../src/tools/logic";
+import { AREA_SOURCE, IMT, IRNR, NOTAIRE, SCHENGEN, SDLT, affordable, convertArea, fees, imt, irnrImputed, mortgageOrCash, notaireFr, rentYears, runningCosts, schengen, sdlt, sellAndMove } from "../../src/tools/logic";
 import { esc, type Kit } from "../assetsKit";
 import type { ToolPage } from "./kit";
 
@@ -336,6 +336,60 @@ export function toolPages(x: Ctx): ToolPage[] {
         [t("Can I get a mortgage on a very cheap home abroad?", "¿Puedo conseguir una hipoteca para una casa muy barata en el extranjero?"), esc(t("Often not. Many banks set a minimum loan, lend a smaller share of the price to non-residents and refuse homes that need work. That is why most cheap homes are bought in cash. Ask a bank of the country before you make an offer that depends on a loan.", "Muchas veces no. Muchos bancos fijan un préstamo mínimo, prestan a los no residentes una parte menor del precio y rechazan casas que necesitan obras. Por eso la mayoría de las casas baratas se compran al contado. Pregunta a un banco del país antes de hacer una oferta que dependa de un préstamo."))],
         [t("Is paying in cash always cheaper?", "¿Pagar al contado sale siempre más barato?"), esc(t(`In money paid for the home, yes: the loan in the example adds ${m(r.interest)}. Whether that is worth it depends on what else you need the cash for, such as repairs, the taxes of the purchase and a reserve. The calculator shows both numbers and leaves the decision to you.`, `En dinero pagado por la casa, sí: el préstamo del ejemplo añade ${m(r.interest)}. Que compense depende de para qué más necesites el dinero, como las reformas, los impuestos de la compra y una reserva. La calculadora enseña las dos cifras y te deja la decisión.`))],
         [t("Does a mortgage change the taxes of the purchase?", "¿La hipoteca cambia los impuestos de la compra?"), t(`The transfer tax or VAT is the same. A loan adds its own costs (valuation, bank fees, sometimes a tax on the mortgage deed). See the <a href="/buying-costs">buying costs calculator</a> for the purchase itself.`, `El impuesto de transmisiones o el IVA es el mismo. El préstamo añade sus propios gastos (tasación, comisiones del banco, a veces un impuesto sobre la escritura de hipoteca). Mira la <a href="/buying-costs">calculadora de gastos de compra</a> para la compra en sí.`)],
+      ],
+    });
+  }
+
+  // ------------------------------------------------------------ years of your rent
+  {
+    const d = { price: 80000, rent: 1000, costsPct: 10 }, r = rentYears(d), hi = rentYears({ ...d, rent: 1500 }), m = (n: number) => f.num(n);
+    pages.push({
+      tool: "rent", path: "/tools/years-of-rent", embed: "years-of-rent", data: {}, read: READ,
+      title: t("How many years of rent does a cheap home cost?", "¿Cuántos años de alquiler cuesta una casa barata?"),
+      h1: t("Years of rent: what a cheap home costs in the rent you pay today", "Años de alquiler: lo que cuesta una casa barata en el alquiler que pagas hoy"),
+      desc: t(`Type the price of a home and the rent you pay: see how many years of that rent add up to the home with its taxes and fees. ${m(d.price)} home, ${m(d.rent)} a month: ${f.trim(r.years, 1)} years.`, `Escribe el precio de una casa y tu alquiler: mira cuántos años de ese alquiler suman la casa con impuestos y gastos. Casa de ${m(d.price)}, ${m(d.rent)} al mes: ${f.trim(r.years, 1)} años.`),
+      card: t("The price of a home, with its taxes and fees, counted in years of the rent you pay now.", "El precio de una casa, con sus impuestos y gastos, contado en años del alquiler que pagas ahora."),
+      lead: esc(t(`A home of ${m(d.price)} with 10% of taxes and fees costs ${m(r.total)} in total. At a rent of ${m(d.rent)} a month, that is ${f.num(r.months)} months of rent, or ${f.trim(r.years, 1)} years. Type your own rent and the price of the home you are looking at.`,
+        `Una casa de ${m(d.price)} con un 10 % de impuestos y gastos cuesta ${m(r.total)} en total. Con un alquiler de ${m(d.rent)} al mes, son ${f.num(r.months)} meses de alquiler, es decir, ${f.trim(r.years, 1)} años. Escribe tu alquiler y el precio de la casa que estás mirando.`)),
+      example: `<p>${esc(t(`The same home against a rent of ${m(hi.year / 12)} a month: ${f.num(hi.months)} months, or ${f.trim(hi.years, 1)} years. One year of that rent is ${m(hi.year)}, so the home with its taxes and fees costs ${f.trim(hi.years, 1)} times a year of rent.`,
+        `La misma casa frente a un alquiler de ${m(hi.year / 12)} al mes: ${f.num(hi.months)} meses, es decir, ${f.trim(hi.years, 1)} años. Un año de ese alquiler son ${m(hi.year)}, así que la casa con sus impuestos y gastos cuesta ${f.trim(hi.years, 1)} veces un año de alquiler.`))}</p>`,
+      how: [
+        esc(t("Total to buy = price × (1 + taxes and fees ÷ 100). Years of rent = total ÷ (monthly rent × 12). Months are rounded up to the next whole month.", "Total para comprar = precio × (1 + impuestos y gastos ÷ 100). Años de alquiler = total ÷ (alquiler mensual × 12). Los meses se redondean al mes entero siguiente.")),
+        esc(t("The share of taxes and fees is yours to type. It changes a lot from one country to another: use the buying costs calculator for the country of the home.", "El porcentaje de impuestos y gastos lo escribes tú. Cambia mucho de un país a otro: usa la calculadora de gastos de compra del país de la casa.")),
+        esc(t("The calculator compares two amounts and does not guess what rents, prices or interest rates will do.", "La calculadora compara dos cantidades y no adivina qué harán los alquileres, los precios ni los tipos de interés.")),
+      ],
+      sources: [{ label: t("Buying costs by country, for the share of taxes and fees (RealHunt)", "Gastos de compra por país, para el porcentaje de impuestos y gastos (RealHunt)"), url: k.url("/buying-costs") }],
+      faq: [
+        [t("Does this mean buying is better than renting?", "¿Significa esto que comprar es mejor que alquilar?"), esc(t("No. It only shows the size of the price next to a number you know well. An owner also pays yearly property tax, insurance, repairs and travel to the home, and a home abroad does not replace the place where you work.", "No. Solo enseña el tamaño del precio junto a una cifra que conoces bien. Un propietario también paga cada año impuesto sobre la propiedad, seguro, reparaciones y viajes a la casa, y una casa en el extranjero no sustituye el lugar donde trabajas."))],
+        [t("What does a home cost every year after buying?", "¿Qué cuesta una casa cada año después de comprarla?"), t(`It depends on the home. Add up your own figures with the <a href="/tools/home-running-costs">running costs calculator</a>.`, `Depende de la casa. Suma tus propias cifras con la <a href="/tools/home-running-costs">calculadora de gastos de mantener una casa</a>.`)],
+        [t("Which rent should I type?", "¿Qué alquiler debo escribir?"), esc(t("The rent you pay each month for your home today, without bills. If you share the rent, type your part and compare it with your part of the price.", "El alquiler que pagas cada mes por tu vivienda hoy, sin suministros. Si compartes el alquiler, escribe tu parte y compárala con tu parte del precio."))],
+      ],
+    });
+  }
+
+  // ------------------------------------------------------------ sell your home and buy a cheaper one
+  {
+    const d = { value: 300000, debt: 0, sellPct: 5, price: 80000, buyPct: 10 }, r = sellAndMove(d), debt = sellAndMove({ ...d, debt: 120000 }), m = (n: number) => f.num(n);
+    pages.push({
+      tool: "move", path: "/tools/sell-and-move", embed: "sell-and-move", data: {}, read: READ,
+      title: t("Sell your home and buy a cheaper one abroad: calculator", "Vender tu casa y comprar una más barata fuera"),
+      h1: t("Sell and move: what is left after buying a cheaper home", "Vender y mudarse: lo que te sobra después de comprar una casa más barata"),
+      desc: t(`Type what your home would sell for and the price of the home you would buy: see the cash left once the costs of selling and of buying are paid. Sell at ${m(d.value)}, buy at ${m(d.price)}: ${m(r.left)} left.`, `Escribe por cuánto venderías tu casa y el precio de la que comprarías: mira lo que te sobra pagados los gastos de vender y comprar. Vendes por ${m(d.value)}, compras por ${m(d.price)}: te sobran ${m(r.left)}.`),
+      card: t("The sale of your home, minus its costs and your mortgage, against a cheaper home with its taxes and fees.", "La venta de tu casa, menos sus gastos y tu hipoteca, frente a una casa más barata con sus impuestos y gastos."),
+      lead: esc(t(`Selling a home for ${m(d.value)} with 5% of selling costs leaves ${m(r.cash)}. A home of ${m(d.price)} with 10% of taxes and fees costs ${m(r.total)}, so ${m(r.left)} are left over. Type your own figures, including the mortgage you still owe.`,
+        `Vender una casa por ${m(d.value)} con un 5 % de gastos de venta deja ${m(r.cash)}. Una casa de ${m(d.price)} con un 10 % de impuestos y gastos cuesta ${m(r.total)}, así que te sobran ${m(r.left)}. Escribe tus propias cifras, incluida la hipoteca que aún debes.`)),
+      example: `<p>${esc(t(`The same sale with ${m(120000)} of mortgage still owed: the sale leaves ${m(debt.cash)} and, after buying the home of ${m(d.price)} with its costs, ${m(debt.left)} are left over. The mortgage comes out of the sale before anything else.`,
+        `La misma venta con ${m(120000)} de hipoteca pendiente: la venta deja ${m(debt.cash)} y, después de comprar la casa de ${m(d.price)} con sus gastos, te sobran ${m(debt.left)}. La hipoteca sale de la venta antes que nada.`))}</p>`,
+      how: [
+        esc(t("Cash from the sale = sale price − costs of selling − mortgage still owed. Costs of selling = sale price × the share you type (agent, lawyer, certificates).", "Dinero de la venta = precio de venta − gastos de vender − hipoteca pendiente. Gastos de vender = precio de venta × el porcentaje que escribas (agencia, abogado, certificados).")),
+        esc(t("New home in total = price × (1 + taxes and fees ÷ 100). Left over = cash from the sale − new home in total.", "Casa nueva en total = precio × (1 + impuestos y gastos ÷ 100). Lo que sobra = dinero de la venta − casa nueva en total.")),
+        esc(t("Tax on the gain of the sale is left out: the rules differ by country and by person. Ask a tax adviser before you count on the full amount.", "El impuesto sobre la ganancia de la venta no se incluye: las reglas cambian según el país y la persona. Consulta a un asesor fiscal antes de contar con el importe completo.")),
+      ],
+      sources: [{ label: t("Buying costs by country, for the share of taxes and fees (RealHunt)", "Gastos de compra por país, para el porcentaje de impuestos y gastos (RealHunt)"), url: k.url("/buying-costs") }],
+      faq: [
+        [t("Is the money left over mine to spend?", "¿El dinero que sobra es mío para gastar?"), esc(t("Not all of it, as a rule. Many countries tax the gain of a sale, some let you off when the money goes into another main home, and moving has its own costs. Keep a reserve for repairs and for the first year of bills.", "Por lo general, no todo. Muchos países gravan la ganancia de una venta, algunos la eximen si el dinero va a otra vivienda habitual, y mudarse tiene sus propios gastos. Guarda una reserva para reparaciones y para las facturas del primer año."))],
+        [t("Can I live in the country of the new home?", "¿Puedo vivir en el país de la casa nueva?"), t(`Owning a home does not give the right to live there. See <a href="/can-i-buy">who can buy in each country</a> and, for stays in the Schengen area, the <a href="/tools/schengen-90-180">90 days in 180 calculator</a>.`, `Ser propietario no da derecho a vivir allí. Mira <a href="/can-i-buy">quién puede comprar en cada país</a> y, para estancias en el espacio Schengen, la <a href="/tools/schengen-90-180">calculadora de 90 días en 180</a>.`)],
+        [t("What share should I type for the costs of selling?", "¿Qué porcentaje pongo para los gastos de vender?"), esc(t("The fee your agent has quoted plus the lawyer or notary and the certificates your country asks for. Five percent is a starting point, not a rule.", "La comisión que te haya dado tu agencia más el abogado o notario y los certificados que pida tu país. Un cinco por ciento es un punto de partida, no una regla."))],
       ],
     });
   }

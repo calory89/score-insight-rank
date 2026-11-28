@@ -97,3 +97,12 @@
 }
 .hm-regions .hm-reg-med { margin-left: 6px; font-weight: 400; font-size: 12px; opacity: .8; }
 .hunt .rh-chk-offer-in input { background: transparent; border: 0; box-shadow: none; padding: 0; border-radius: 0; }
+
+/* "In your numbers" (28-nov-2026) */
+.n10-yours-rent { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 14px; margin: 6px 0 0; }
+.n10-yours-rent input { width: 120px; min-height: 44px; padding: 8px 10px; border: 1px solid var(--rh-hairline, #E2E3E6); border-radius: 10px; font: inherit; background: var(--rh-surface, #fff); color: inherit; }
+.n10-yours-out { margin: 10px 0 0; font-size: 15px; }
+.n10-yours-out b { font-size: 22px; }
+.n10-yours-links { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 4px; font-size: 14px; }
+.n10-yours-links a { display: inline-block; padding: 5px 0; }
+.n10-yours-links a svg { vertical-align: -2px; margin-right: 4px; }

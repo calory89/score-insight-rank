@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { affordable, convertArea, fees, imt, irnrImputed, monthlyPayment, mortgageOrCash, notaireFr, progressive, runningCosts, schengen, sdlt } from "@/tools/logic";
+import { affordable, convertArea, fees, imt, irnrImputed, monthlyPayment, mortgageOrCash, notaireFr, progressive, rentYears, runningCosts, schengen, sdlt, sellAndMove } from "@/tools/logic";
 import { FR, TOOLS, fmt, formHtml, readState, writeQuery } from "@/tools/defs";
 
 describe("calculator sums", () => {
@@ -64,6 +64,22 @@ describe("calculator sums", () => {
     expect(c.jo).toBeCloseTo(61.73, 2);
     expect(convertArea(1, "tsubo").sqm).toBeCloseTo(3.3058, 4);
     expect(convertArea(1, "acre").ha).toBeCloseTo(0.40469, 5);
+  });
+  it("years of rent and sell and move", () => {
+    const r = rentYears({ price: 80000, rent: 1000, costsPct: 10 });
+    expect(r.total).toBeCloseTo(88000, 6);
+    expect(r.months).toBe(88);
+    expect(r.years).toBeCloseTo(7.3333, 3);
+    expect(rentYears({ price: 80000, rent: 0 })).toMatchObject({ months: 0, years: 0 });
+    const s = sellAndMove({ value: 300000, debt: 0, sellPct: 5, price: 80000, buyPct: 10 });
+    expect(s.cash).toBe(285000);
+    expect(s.total).toBeCloseTo(88000, 6);
+    expect(s.left).toBeCloseTo(197000, 6);
+    expect(s.enough).toBe(true);
+    expect(s.homes).toBe(3);
+    const short = sellAndMove({ value: 100000, debt: 60000, sellPct: 5, price: 80000, buyPct: 10 });
+    expect(short.enough).toBe(false);
+    expect(short.left).toBeCloseTo(-53000, 6);
   });
   it("mortgage, running costs and budget", () => {
     expect(monthlyPayment(56000, 4, 20)).toBeCloseTo(339.35, 2);

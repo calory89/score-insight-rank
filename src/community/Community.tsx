@@ -106,6 +106,7 @@ const PriceHistory = lazy(() => import("./n10/HomeExtras").then((m) => ({ defaul
 const Unknowns = lazy(() => import("./n10/HomeExtras").then((m) => ({ default: m.Unknowns })));
 const OfferHint = lazy(() => import("./n10/HomeExtras").then((m) => ({ default: m.OfferHint })));
 const HomeNote = lazy(() => import("./n10/HomeExtras").then((m) => ({ default: m.HomeNote })));
+const YourNumbers = lazy(() => import("./n10/HomeExtras").then((m) => ({ default: m.YourNumbers })));
 const AdminTools = lazy(() => import("./n10/AdminTools"));
 const ImportPreview = lazy(() => import("./n10/AdminTools").then((m) => ({ default: m.ImportPreview })));
 import {
@@ -1091,7 +1092,7 @@ function Detail() {
           <SourceLine d={d as any} open={!!(d.source_url && /^https?:\/\//i.test(d.source_url))} />
           <Suspense fallback={null}><HomeNote slug={d.slug} /></Suspense>
           <PriceWatch d={d} />
-          <Suspense fallback={null}><OfferHint d={d as any} /><PriceHistory slug={d.slug} price={d.price_eur} /></Suspense>
+          <Suspense fallback={null}><OfferHint d={d as any} /><PriceHistory slug={d.slug} price={d.price_eur} /><YourNumbers d={d as any} /></Suspense>
           <div className="hv-detail-more">
             <VideoTour deal={d} />
             <BoardButton deal={d} />

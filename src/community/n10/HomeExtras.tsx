@@ -2,7 +2,7 @@
 // say (48), the plain note after 90 days (45) and the visitor's private note (37). Logic in ./logic (tested).
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { HelpCircle, History, MessageSquareText, NotebookPen, Check } from "lucide-react";
+import { Calculator, HelpCircle, History, MessageSquareText, NotebookPen, Check, Plane } from "lucide-react";
 import { isEs } from "@/lib/lang";
 import { money } from "../api";
 import { dayLabel, type StatusRow } from "../n9/status";
@@ -98,5 +98,33 @@ export function HomeNote({ slug }: { slug: string }) {
         {saved && <button type="button" className="hunt-link" onClick={() => { setRaw(setNote(notes, slug, "")); setText(""); setOpen(false); }}>{L("Delete note", "Borrar nota")}</button>}
       </div>
     </form>
+  );
+}
+
+/** "In your numbers" (28-nov-2026): the price in years of the visitor's own rent, the sale of their own home against
+ * this one, and flights to the nearest airport. The rent stays in this browser only. */
+export function YourNumbers({ d }: { d: { slug: string; price_eur?: number | null; nearby?: any } }) {
+  const [rent, setRent] = usePreference<unknown>("rh_my_rent", "");
+  const price = Number(d.price_eur) || 0;
+  if (!price) return null;
+  const es = isEs(), pre = es ? "/es" : "";
+  const r = Number(String(rent ?? "").replace(",", "."));
+  const years = r > 0 ? price / (r * 12) : 0;
+  const ap = d.nearby?.airport, code = typeof ap?.code === "string" && /^[A-Z]{3}$/.test(ap.code) ? ap.code : "";
+  const one = (n: number) => (Math.round(n * 10) / 10).toString().replace(".", es ? "," : ".");
+  return (
+    <section className="n10-box n10-yours" aria-labelledby="n10-yours-h">
+      <h2 id="n10-yours-h"><Calculator size={18} aria-hidden="true" /> {L("This home in your numbers", "Esta casa en tus números")}</h2>
+      <label className="n10-yours-rent" htmlFor={"n10-rent-" + d.slug}>{L("Rent you pay now, per month", "Alquiler que pagas ahora, al mes")}
+        <input id={"n10-rent-" + d.slug} type="number" inputMode="decimal" min={0} step={50} value={String(rent ?? "")} placeholder="1000" onChange={(e) => setRent(e.target.value.slice(0, 9))} onBlur={() => { if (r > 0) ev("home_rent_years"); }} />
+      </label>
+      {years > 0 && <p className="n10-yours-out" aria-live="polite"><b>{one(years)}</b> {L(`years of your rent pay the asking price of ${money(price)}.`, `años de tu alquiler pagan el precio de ${money(price)}.`)}</p>}
+      <ul className="n10-yours-links">
+        <li><a className="hunt-link" href={`${pre}/tools/years-of-rent?p=${price}${r > 0 ? `&rent=${r}` : ""}`}>{L("Count it with taxes and fees", "Calcúlalo con impuestos y gastos")}</a></li>
+        <li><a className="hunt-link" href={`${pre}/tools/sell-and-move?p=${price}`}>{L("What is left if you sell your home and buy this one", "Lo que te sobra si vendes tu casa y compras esta")}</a></li>
+        {code && <li><a className="hunt-link" href={`https://www.google.com/travel/flights?q=${encodeURIComponent(`Flights to ${code}`)}`} target="_blank" rel="noopener nofollow" onClick={() => ev("home_flights")}><Plane size={15} aria-hidden="true" /> {L(`Flights to ${ap.name || code} (${code})`, `Vuelos a ${ap.name || code} (${code})`)}{ap.km != null ? L(`, ${Math.round(ap.km)} km from the home`, `, a ${Math.round(ap.km)} km de la casa`) : ""}</a></li>}
+      </ul>
+      <p className="n10-fine">{L("Your rent stays on this device. It compares two amounts of money and is not advice: an owner also pays yearly taxes, insurance and repairs.", "Tu alquiler se queda en este dispositivo. Compara dos cantidades de dinero y no es un consejo: un propietario también paga impuestos anuales, seguro y reparaciones.")}</p>
+    </section>
   );
 }

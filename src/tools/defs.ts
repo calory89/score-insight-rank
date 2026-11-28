@@ -1,7 +1,7 @@
 // The calculators as data: the fields of each form and one pure function that turns the state into the result
 // (HTML and the lines of the share image). The same function prints the worked example in the prerendered page
 // (seo/tools/) and redraws the result in the browser (src/tools/client.ts), so both always agree.
-import { AREA, IMT, IRNR, NOTAIRE, SCHENGEN, SDLT, affordable, convertArea, fees, imt, irnrImputed, mortgageOrCash, notaireFr, runningCosts, schengen, sdlt } from "./logic";
+import { AREA, IMT, IRNR, NOTAIRE, SCHENGEN, SDLT, affordable, convertArea, fees, imt, irnrImputed, mortgageOrCash, notaireFr, rentYears, runningCosts, schengen, sdlt, sellAndMove } from "./logic";
 
 export type Lang = "en" | "es";
 export type State = Record<string, string>;
@@ -311,7 +311,59 @@ const mortgage: Tool = {
   },
 };
 
-export const TOOLS: Record<string, Tool> = { costs, budget, compare, running, sdlt: sdltTool, imt: imtTool, notaire, grest, irnr, schengen: schengenTool, area, mortgage };
+// ---------------------------------------------------------------- years of your rent
+const rentTool: Tool = {
+  id: "rent",
+  defaults: () => ({ p: "80000", rent: "1000", costs: "10" }),
+  fields: (k) => [
+    { n: "p", label: k.t("Price of the home", "Precio de la casa"), type: "number", min: 0, step: 1000 },
+    { n: "rent", label: k.t("Rent you pay now, per month", "Alquiler que pagas ahora, al mes"), type: "number", min: 0, step: 50 },
+    { n: "costs", label: k.t("Taxes and fees of the purchase, % of the price", "Impuestos y gastos de la compra, % del precio"), type: "number", min: 0, max: 60, step: 0.5 },
+  ],
+  render(s, _d, k) {
+    const r = rentYears({ price: n(s.p), rent: n(s.rent), costsPct: n(s.costs) });
+    const m = (x: number) => k.money(x, "");
+    const none = k.t("Type your rent", "Escribe tu alquiler");
+    const html = boxes(box(k.t("Years of your rent", "Años de tu alquiler"), r.years ? k.trim(r.years, 1) : none, "is-total"), box(k.t("Months of rent", "Meses de alquiler"), r.months ? k.num(r.months) : none), box(k.t("Home with taxes and fees", "Casa con impuestos y gastos"), m(r.total)))
+      + tbl(["", k.t("Amount", "Importe")], [
+        [esc(k.t("Price of the home", "Precio de la casa")), esc(m(n(s.p)))],
+        [esc(k.t("Taxes and fees of the purchase", "Impuestos y gastos de la compra")), esc(m(r.costs))],
+        [`<b>${esc(k.t("Total to buy", "Total para comprar"))}</b>`, `<b>${esc(m(r.total))}</b>`],
+        [esc(k.t("Your rent in one year", "Tu alquiler en un año")), esc(m(r.year))]])
+      + note(esc(k.t("In the currency you typed. It compares two amounts of money and nothing else: an owner also pays yearly taxes, insurance and repairs, and a tenant keeps the freedom to leave. General information, not financial advice.", "En la moneda que hayas escrito. Compara dos cantidades de dinero y nada más: un propietario también paga impuestos anuales, seguro y reparaciones, y un inquilino conserva la libertad de irse. Información general, no asesoramiento financiero.")));
+    return { html, card: { title: k.t(`A ${m(n(s.p))} home in years of rent`, `Una casa de ${m(n(s.p))} en años de alquiler`), big: [k.t("Years of your rent", "Años de tu alquiler"), r.years ? k.trim(r.years, 1) : "-"], lines: [[k.t("Rent per month", "Alquiler al mes"), m(n(s.rent))], [k.t("Home with taxes and fees", "Casa con impuestos y gastos"), m(r.total)], [k.t("Months of rent", "Meses de alquiler"), r.months ? k.num(r.months) : "-"]] } };
+  },
+};
+
+// ---------------------------------------------------------------- sell your home and buy a cheaper one
+const moveTool: Tool = {
+  id: "move",
+  defaults: () => ({ v: "300000", debt: "0", sell: "5", p: "80000", buy: "10" }),
+  fields: (k) => [
+    { n: "v", label: k.t("What your home would sell for", "Por cuánto se vendería tu casa"), type: "number", min: 0, step: 5000 },
+    { n: "debt", label: k.t("Mortgage still owed on it", "Hipoteca que te queda por pagar"), type: "number", min: 0, step: 1000 },
+    { n: "sell", label: k.t("Costs of selling, % of the sale price", "Gastos de vender, % del precio de venta"), type: "number", min: 0, max: 60, step: 0.5 },
+    { n: "p", label: k.t("Price of the home you would buy", "Precio de la casa que comprarías"), type: "number", min: 0, step: 1000 },
+    { n: "buy", label: k.t("Taxes and fees of the purchase, % of the price", "Impuestos y gastos de la compra, % del precio"), type: "number", min: 0, max: 60, step: 0.5 },
+  ],
+  render(s, _d, k) {
+    const r = sellAndMove({ value: n(s.v), debt: n(s.debt), sellPct: n(s.sell), price: n(s.p), buyPct: n(s.buy) });
+    const m = (x: number) => (x < 0 ? "−" : "") + k.money(Math.abs(x), "");
+    const html = boxes(box(r.enough ? k.t("Left over after buying", "Te sobra después de comprar") : k.t("Short by", "Te falta"), m(Math.abs(r.left)), "is-total"), box(k.t("Cash from the sale", "Dinero de la venta"), m(r.cash)), box(k.t("New home with taxes and fees", "Casa nueva con impuestos y gastos"), m(r.total)))
+      + tbl(["", k.t("Amount", "Importe")], [
+        [esc(k.t("Sale price of your home", "Precio de venta de tu casa")), esc(m(n(s.v)))],
+        [esc(k.t("Costs of selling", "Gastos de vender")), esc(m(-r.sellCosts))],
+        [esc(k.t("Mortgage paid off", "Hipoteca cancelada")), esc(m(-n(s.debt)))],
+        [`<b>${esc(k.t("Cash from the sale", "Dinero de la venta"))}</b>`, `<b>${esc(m(r.cash))}</b>`],
+        [esc(k.t("Price of the new home", "Precio de la casa nueva")), esc(m(-n(s.p)))],
+        [esc(k.t("Taxes and fees of the purchase", "Impuestos y gastos de la compra")), esc(m(-r.buyCosts))],
+        [`<b>${esc(r.enough ? k.t("Left over", "Te sobra") : k.t("Short by", "Te falta"))}</b>`, `<b>${esc(m(Math.abs(r.left)))}</b>`]])
+      + note(esc(k.t("In the currency you typed. Tax on the gain of the sale is not included: it depends on your country, on how long you owned the home and on whether you lived in it. General information, not financial or tax advice.", "En la moneda que hayas escrito. No incluye el impuesto sobre la ganancia de la venta: depende de tu país, de cuántos años hayas tenido la casa y de si vivías en ella. Información general, no asesoramiento financiero ni fiscal.")));
+    return { html, card: { title: k.t(`Sell a ${m(n(s.v))} home, buy one for ${m(n(s.p))}`, `Vender una casa de ${m(n(s.v))} y comprar una de ${m(n(s.p))}`), big: [r.enough ? k.t("Left over after buying", "Te sobra después de comprar") : k.t("Short by", "Te falta"), m(Math.abs(r.left))], lines: [[k.t("Cash from the sale", "Dinero de la venta"), m(r.cash)], [k.t("New home with taxes and fees", "Casa nueva con impuestos y gastos"), m(r.total)]] } };
+  },
+};
+
+export const TOOLS: Record<string, Tool> = { costs, budget, compare, running, sdlt: sdltTool, imt: imtTool, notaire, grest, irnr, schengen: schengenTool, area, mortgage, rent: rentTool, move: moveTool };
 
 /** The state of a form: the defaults, then what the address carries. Unknown names are dropped. */
 export function readState(tool: Tool, data: ToolData, k: Fmt, query: string, base: State = {}): State {

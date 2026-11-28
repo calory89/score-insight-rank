@@ -140,6 +140,21 @@ export function mortgageOrCash(o: { price: number; down: number; rate: number; y
   const paid = monthly * n, interest = Math.max(0, paid - loan), setup = Math.max(0, o.setup || 0);
   return { deposit, loan, monthly, interest, setup, extra: interest + setup, totalMortgage: deposit + paid + setup, totalCash: price, kept: loan };
 }
+/** Years of the visitor's own rent that add up to the price of a home with its buying costs. */
+export function rentYears(o: { price: number; rent: number; costsPct?: number }) {
+  const price = Math.max(0, o.price), rent = Math.max(0, o.rent), pct = Math.min(60, Math.max(0, o.costsPct ?? 0));
+  const total = price * (1 + pct / 100), year = rent * 12;
+  const months = rent > 0 ? Math.ceil(total / rent) : 0;
+  return { total, costs: total - price, year, months, years: rent > 0 ? total / year : 0 };
+}
+/** What is left after selling the home the visitor owns and buying a cheaper one with its buying costs. */
+export function sellAndMove(o: { value: number; debt?: number; sellPct?: number; price: number; buyPct?: number }) {
+  const value = Math.max(0, o.value), debt = Math.max(0, o.debt || 0);
+  const sellPct = Math.min(60, Math.max(0, o.sellPct ?? 0)), buyPct = Math.min(60, Math.max(0, o.buyPct ?? 0));
+  const sellCosts = value * sellPct / 100, cash = value - sellCosts - debt;
+  const price = Math.max(0, o.price), buyCosts = price * buyPct / 100, total = price + buyCosts;
+  return { sellCosts, cash, buyCosts, total, left: cash - total, enough: cash >= total, homes: total > 0 ? Math.max(0, Math.floor(cash / total)) : 0 };
+}
 /** What a home costs to keep each year, from the owner's own figures, and how many years of those costs add up to
  * the price paid. */
 export function runningCosts(o: { price?: number; tax?: number; fees?: number; insurance?: number; utilities?: number; upkeep?: number; trips?: number; trip?: number; oneoff?: number; years?: number }) {
